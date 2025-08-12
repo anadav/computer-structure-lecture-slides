@@ -909,12 +909,6 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Cache Line Fill and Fill Buffers}
-
-\end{frame}
-
-% Add this frame to your existing beamer presentation
-% Place it after the "Line Fill and Fill Buffers" frame
 
 \begin{frame}{Fill Buffer Architecture}
 \begin{center}
@@ -955,9 +949,9 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
     \end{tabular}
 };
 
-% Arrows with labels
-\draw[arrow] (l1.east) -- node[above, label] {64B} (buf1.west);
-\draw[arrow] (buf3.east) -- node[above, label] {16B} (l2.west);
+% Arrows with labels (corrected direction: L2 -> buffers -> L1)
+\draw[arrow] (l2.west) -- node[above, label] {16B} (buf3.east);
+\draw[arrow] (buf1.west) -- node[above, label] {64B} (l1.east);
 
 % Optional: Add some detail text below
 \node[below, font=\footnotesize, text width=10cm, align=center] at (4.5,-2) {
@@ -967,6 +961,72 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 
 \end{tikzpicture}
 \end{center}
+\end{frame}
+
+\begin{frame}{Cache Line Fill and Fill Buffers}
+\begin{columns}[T]
+\begin{column}{0.7\textwidth}
+\begin{itemize}
+  \item Before inserting a new line into cache
+  \begin{itemize}
+    \item Put new line in a fill buffer
+  \end{itemize}
+  
+  \item Bus width considerations
+  \begin{itemize}
+    \item L2 to L1 bus may be narrower than cache line size
+    \item E.g., 16B bus width, 64B cache line $\Rightarrow$ 4 bus cycles
+    \item Fetch critical chunk (containing missed address) first
+    \item Fill buffer accumulates full line, then writes to cache
+    \item Search fill buffers in parallel with cache for data forwarding
+  \end{itemize}
+  
+  \item Streaming loads optimization
+  \begin{itemize}
+    \item SW/compiler hints for single-use data
+    \item E.g., scanning large arrays once
+    \item Line unlikely to be reused $\Rightarrow$ avoid cache pollution
+    \item Serve data directly from fill buffer without cache insertion
+  \end{itemize}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.3\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.6]
+  % Define colors
+  \definecolor{l1color}{RGB}{235, 205, 175}
+  \definecolor{l2color}{RGB}{200, 230, 180}
+  \definecolor{buffercolor}{RGB}{200, 190, 220}
+  
+  % L1 Cache
+  \draw[thick, fill=l1color] (0,0) rectangle (1.8,2.2);
+  \node[font=\footnotesize\bfseries] at (0.9,1.1) {L1};
+  \node[font=\footnotesize\bfseries] at (0.9,0.7) {cache};
+  
+  % Fill Buffers
+  \node[font=\footnotesize] at (3.5,2.8) {Fill};
+  \node[font=\footnotesize] at (3.5,2.3) {Buffers};
+  \foreach \i in {0,1,2,3} {
+    \draw[fill=buffercolor] ({2.8+\i*0.4},0.5) rectangle ({3.1+\i*0.4},1.7);
+  }
+  
+  % L2 Cache
+  \draw[thick, fill=l2color] (5.5,0) rectangle (7.3,2.2);
+  \node[font=\footnotesize\bfseries] at (6.4,1.1) {L2};
+  \node[font=\footnotesize\bfseries] at (6.4,0.7) {cache};
+  
+  % Arrows with correct direction (L2 -> buffers -> L1)
+  \draw[->, thick] (5.5,1.1) -- (4.4,1.1);
+  \draw[->, thick] (2.8,1.1) -- (1.8,1.1);
+  
+  % Labels
+  \node[font=\tiny] at (5.0,1.4) {16B};
+  \node[font=\tiny] at (2.3,1.4) {64B};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
 \end{frame}
 
 % Alternative version with more detail
