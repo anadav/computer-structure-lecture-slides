@@ -912,12 +912,36 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Performance Impact}
+
+\begin{frame}{Effect of Cache on Performance}
+
 \begin{itemize}
-  \item \textbf{MPI} (misses per instruction) = misses/access $\times$ accesses/instruction
-  \item Memory stall cycles $= \text{IC}\cdot \text{MPI}\cdot \text{miss penalty}$
-  \item CPU time $= \text{IC}\cdot(\text{CPI}_{exec}+\text{MPI}\cdot \text{miss penalty})\cdot \text{cycle time}$
+  \item \textbf{MPI — misses per instruction}
+  \begin{itemize}
+    \item MPI = $\frac{\text{\#cache misses}}{\text{\#instructions}} = \frac{\text{\#cache misses}}{\text{\#mem accesses}} \times \frac{\text{\#mem accesses}}{\text{\#instructions}}$
+    \item More correlative to performance than cache miss rate
+    \begin{itemize}
+      \item Takes into account also frequency of memory accesses
+    \end{itemize}
+  \end{itemize}
+  
+  \vspace{0.4cm}
+  
+  \item[\textcolor{blue}{$\diamond$}] \textbf{Memory stall cycles}
+  \begin{itemize}
+    \item[] = \#memory accesses $\times$ miss rate $\times$ miss penalty
+    \item[] = IC $\times$ MPI $\times$ miss penalty
+  \end{itemize}
+  
+  \vspace{0.4cm}
+  
+  \item[\textcolor{blue}{$\diamond$}] \textbf{CPU time}
+  \begin{itemize}
+    \item[] = (CPU execution cycles + Memory stall cycles) $\times$ cycle time
+    \item[] = IC $\times$ (CPI$_{\text{execution}}$ + MPI $\times$ Miss penalty) $\times$ cycle time
+  \end{itemize}
 \end{itemize}
+
 \end{frame}
 
 \begin{frame}{Classifying Misses: The 3Cs}
