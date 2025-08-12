@@ -1472,29 +1472,29 @@ Modified  & Yes & Yes  & No\\
 \node[state] (modified) at (3.5,-2.5) {Modified};
 
 % Self-loops - only one per state
-\path[arrow] 
-    (invalid) edge[loop left] node[font=\tiny] {any snoop} (invalid)
-    (shared) edge[loop above] node[font=\tiny, text width=1.5cm, align=center] {read hit,\\snoop read} (shared)
-    (exclusive) edge[loop right] node[font=\tiny] {read hit} (exclusive)
-    (modified) edge[loop below] node[font=\tiny, text width=1.5cm, align=center] {read/write\\hit} (modified);
+\path[arrow]
+    (invalid) edge[loop left, gray]node[font=\tiny, left, align=center] {write miss,\\any snoop} (invalid)
+    (shared) edge[loop above, gray] node[font=\tiny, text width=1.5cm, align=center] {read hit,\\snoop read} (shared)
+    (exclusive) edge[loop right, gray] node[font=\tiny] {read hit} (exclusive)
+    (modified) edge[loop below, gray] node[font=\tiny, text width=1.5cm, align=center] {read/write\\hit} (modified);
 
-% Transitions between states - all unidirectional
+% Transitions between states - all unidirectional with better separation
 \path[arrow]
     % From Invalid
-    (invalid) edge[bend left=20, cyan] node[font=\tiny, above, sloped, text width=2cm, align=center] {read miss \&\\others have it} (shared)
+    (invalid) edge[bend left=30, cyan] node[font=\tiny, above, sloped, text width=2cm, align=center] {read miss \&\\others have it} (shared)
     (invalid) edge[bend right=20, blue] node[font=\tiny, below, sloped, text width=1.8cm, align=center] {read miss,\\exclusive} (exclusive)
-    (invalid) edge[red] node[font=\tiny, below] {write miss} (modified)
     
-    % From Shared
-    (shared) edge[bend right=20, red] node[font=\tiny, above left, sloped] {snoop write} (invalid)
-    (shared) edge[blue] node[font=\tiny, right] {write hit} (modified)
+    % From Shared  
+    (shared) edge[red] node[font=\tiny, below, sloped] {snoop write} (invalid)
+%    (shared) edge[bend right=20, black] node[font=\tiny, below, sloped] {write hit} (exclusive)
     
     % From Exclusive  
-    (exclusive) edge[bend right=20, cyan] node[font=\tiny, below, sloped] {snoop read} (shared)
+    (exclusive) edge[bend right=20, cyan] node[font=\tiny, above, sloped] {snoop read} (shared)
     (exclusive) edge[black] node[font=\tiny, right, text width=1.5cm, align=center] {write hit} (modified)
+    (exclusive) edge[red] node[font=\tiny, below, text width=2.8cm, align=left] {snoop write} (invalid)
     
     % From Modified
-    (modified) edge[bend right=20, black] node[font=\tiny, above, sloped, text width=2cm, align=center] {snoop read\\write back} (shared)
+    (modified) edge[bend right=20, cyan] node[font=\tiny, above, sloped, text width=2cm, align=center] {snoop read\\write back} (shared)
     (modified) edge[red] node[font=\tiny, left] {snoop write} (invalid);
 
 \end{tikzpicture}
