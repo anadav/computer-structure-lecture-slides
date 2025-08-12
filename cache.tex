@@ -391,48 +391,68 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{\color{blue}Pseudo LRU (PLRU)}
+\begin{frame}{Pseudo LRU (PLRU)}
+\begin{columns}
+\begin{column}{0.6\textwidth}
 \begin{itemize}
-  \item \textbf{PLRU records a partial order using a tree structure}
+  \item \textbf{PLRU records partial order using tree structure}
   \begin{itemize}
-    \item[\textcolor{green}{$\checkmark$}] The ways of a set are in the leaves; the PLRU bits are the internal nodes
+    \item Ways at leaves; PLRU bits at internal nodes
+    \item For $n$ leaves: $n-1$ internal nodes (PLRU bits)
+  \end{itemize}
+  
+  \vspace{0.2cm}
+  
+  \item \textbf{Example: 4-way cache, 3 bits per set}
+  \begin{itemize}
+    \item Bit$_0$: order between \{0,1\} and \{2,3\}
+    \item Bit$_1$: order between ways 0 and 1
+    \item Bit$_2$: order between ways 2 and 3
+  \end{itemize}
+  
+  \vspace{0.2cm}
+  
+  \item \textbf{Update on access: point to accessed way}
+  \begin{itemize}
+    \item 0=left, 1=right
+    \item After accessing 0→3→2→1:
     \begin{itemize}
-      \item For $n$ leaves (ways) there are $n-1$ internal nodes (PLRU bits)
+      \item bit$_0$=0 → pair with way 1 (MRU)
+      \item bit$_1$=1 → way 1 (MRU)
+      \item bit$_2$=0 → way 2 over way 3
     \end{itemize}
   \end{itemize}
   
-  \vspace{0.3cm}
+  \vspace{0.2cm}
   
-  \item \textbf{Example: 4-ways, using 3 bits per-set:}
+  \item \textbf{Victim selection: follow opposite direction}
   \begin{itemize}
-    \item[\textcolor{green}{$\checkmark$}] Bit$_0$ specifies the access order between ways \{0,1\} and \{2,3\}
-    \item[\textcolor{green}{$\checkmark$}] Bit$_1$ specifies the access order between ways 0 and 1
-    \item[\textcolor{green}{$\checkmark$}] Bit$_2$ specifies the access order between ways 2 and 3
-  \end{itemize}
-  
-  \vspace{0.3cm}
-  
-  \item \textbf{When accessing a way update the PLRU bits to point to it (0-left, 1-right)}
-  \begin{itemize}
-    \item[\textcolor{green}{$\checkmark$}] E.g., after accessing ways 0$\rightarrow$3$\rightarrow$2$\rightarrow$1 the tree looks as follows:
-    \begin{itemize}
-      \item bit$_0$=0 points to the pair with way 1 (the MRU way)
-      \item bit$_1$=1 points to way 1 (the MRU way)
-      \item bit$_2$=0 points to way 2, which was accessed after way 3
-    \end{itemize}
-    \item[\textcolor{green}{$\checkmark$}] The way access order information is partial
-    \begin{itemize}
-      \item Cannot say if way 0 was accessed before/after ways 2 and 3
-    \end{itemize}
-  \end{itemize}
-  
-  \vspace{0.3cm}
-  
-  \item \textbf{Victim selection: follow the opposite directions pointed by the PLRU bits (0-right, 1-left)}
-  \begin{itemize}
-    \item[\textcolor{green}{$\checkmark$}] \textcolor{red}{Way 3 selected as victim, even though way 0 is the LRU way}
+    \item 0=right, 1=left
+    \item \textcolor{red}{May not select true LRU}
   \end{itemize}
 \end{itemize}
+\end{column}
+
+\begin{column}{0.4\textwidth}
+\centering
+\vspace{-0.5cm}
+
+\textbf{Initial Tree Structure:}
+
+\includegraphics[width=\textwidth]{svg/cache_plru_initial.pdf}
+
+\vspace{0.3cm}
+
+\textbf{After accessing 0→3→2→1:}
+
+\includegraphics[width=\textwidth]{svg/cache_plru_after_access.pdf}
+
+\vspace{0.2cm}
+\small
+\textcolor{red}{Victim: Way 3} \\
+\textcolor{blue}{MRU: Way 1}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Cache Line Size Trade-offs}
