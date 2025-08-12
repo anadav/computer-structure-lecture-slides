@@ -466,117 +466,136 @@
 \end{frame}
 
 \begin{frame}{2-Way Set Associative Cache -- Example}
+% Define colors for the whole frame
+\definecolor{tagcolor}{RGB}{100, 149, 237}    % Cornflower blue
+\definecolor{setcolor}{RGB}{255, 140, 0}       % Dark orange
+\definecolor{offsetcolor}{RGB}{220, 20, 60}    % Crimson
+\definecolor{datacolor}{RGB}{240, 240, 240}    % Light gray
 
 \begin{columns}[T]
-\begin{column}{0.55\textwidth}
+\begin{column}{0.52\textwidth}
 \centering
 \begin{tikzpicture}[scale=0.95]
+  
   % Address Fields section
-
-  \node[anchor=west, font=\footnotesize] at (0, 3.0) {Address Fields};
-  \vspace{0.2cm}
+  \node[anchor=west, font=\footnotesize\bfseries] at (0, 3.0) {Address Fields};
+  
   % Bit numbers
   \node[font=\tiny] at (0.3, 2.6) {31};
-  \node[font=\tiny] at (2.2, 2.6) {13 12};
-  \node[font=\tiny] at (3.4, 2.6) {5 4};
+  \node[font=\tiny] at (2.1, 2.6) {13};
+  \node[font=\tiny] at (2.4, 2.6) {12};
+  \node[font=\tiny] at (3.45, 2.6) {5};
+  \node[font=\tiny] at (3.75, 2.6) {4};
   \node[font=\tiny] at (4.4, 2.6) {0};
   
-  % Address fields boxes
-  \draw[thick] (0.5, 2.1) rectangle (2.2, 2.4);
-  \draw[thick] (2.2, 2.1) rectangle (3.6, 2.4);
-  \draw[thick] (3.6, 2.1) rectangle (4.4, 2.4);
+  % Address fields boxes with colors
+  \draw[thick, fill=tagcolor!20] (0.5, 2.1) rectangle (2.2, 2.4);
+  \draw[thick, fill=setcolor!20] (2.2, 2.1) rectangle (3.6, 2.4);
+  \draw[thick, fill=offsetcolor!20] (3.6, 2.1) rectangle (4.4, 2.4);
   
-  \node at (1.35, 2.25) {\tiny Tag};
-  \node at (2.9, 2.25) {\tiny Set};
-  \node at (4.0, 2.25) {\tiny Offset};
+  \node[font=\tiny] at (1.35, 2.25) {\textcolor{tagcolor}{\textbf{Tag}}};
+  \node[font=\tiny] at (2.9, 2.25) {\textcolor{setcolor}{\textbf{Set}}};
+  \node[font=\tiny] at (4.0, 2.25) {\textcolor{offsetcolor}{\textbf{Offset}}};
   
-  % Arrows pointing down from address fields
-  \draw[->, thick] (1.35, 2.1) -- (1.35, 1.6);
-  \draw[->, thick] (2.9, 2.1) -- (2.9, 1.3) -- (1.0, 1.3) -- (1.0, 0.6);
+  % Tag arrow
+  \draw[->, thick, tagcolor, shorten >=0pt] (1.35, 2.1) -- (1.35, 1.6) -- (3.65, 1.6) -- (3.65, 0.9);
+
+  % Improved arrows - Set arrow comes from left
+  \draw[->, thick, setcolor, shorten >=0pt] (2.9, 2.1) -- (2.9, 1.8) -- (-0.3, 1.8) -- (-0.3, 0.1) -- (0.0, 0.1);
+%  \draw[->, thick, setcolor, shorten >=0pt] (-0.3, 0.1) -- (2.7, 0.1);
   
   % Cache structure - Way #0
-  \node[font=\tiny] at (1.4, -1.8) {WAY \#0};
+  \node[font=\footnotesize\bfseries] at (1.4, -1.9) {Way 0};
   
-  % Tag Array Way 0
-  \draw[thick] (0.5, 0.8) rectangle (1.4, -1.0);
-  \foreach \y in {0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8}
+  % Tag Array Way 0 with taller rows
+  \draw[thick] (0.5, 0.9) rectangle (1.4, -1.1);
+  \foreach \y in {0.65, 0.35, 0.05, -0.25, -0.55, -0.85}
     \draw (0.5, \y) -- (1.4, \y);
-  % Fill some entries green
-  \fill[green!30] (0.5, 0.6) rectangle (1.4, 0.4);
-  \fill[green!30] (0.5, 0.2) rectangle (1.4, 0);
-  \fill[green!30] (0.5, 0) rectangle (1.4, -0.2);
-  \fill[green!30] (0.5, -0.2) rectangle (1.4, -0.4);
-  \fill[green!30] (0.5, -0.4) rectangle (1.4, -0.6);
+  % Fill with tag color
+  \fill[tagcolor!15] (0.5, 0.9) rectangle (1.4, -1.1);
+  % Add some specific entries
+  \node[font=\tiny] at (0.95, 0.5) {091A2};
+  \node[font=\tiny] at (0.95, 0.2) {...};
+  \node[font=\tiny] at (0.95, -0.1) {...};
+  \node[font=\tiny] at (0.95, -0.4) {...};
+  \node[font=\tiny] at (0.95, -0.7) {...};
+  \node[font=\tiny] at (0.95, -1.0) {...};
   
-  \node[font=\tiny] at (0.2, 0.1) {Set\#};
-  
-  % Data Array Way 0
-  \draw[thick] (1.4, 0.8) rectangle (2.5, -1.0);
-  \foreach \y in {0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8}
+  % Data Array Way 0 with taller rows
+  \draw[thick] (1.4, 0.9) rectangle (2.5, -1.1);
+  \foreach \y in {0.65, 0.35, 0.05, -0.25, -0.55, -0.85}
     \draw (1.4, \y) -- (2.5, \y);
+  \fill[datacolor] (1.4, 0.9) rectangle (2.5, -1.1);
   
-  \node[font=\tiny, rotate=90] at (0.7, 1.1) {Tag};
-  \node[font=\tiny, rotate=90] at (1.95, 1.1) {Line};
+  % Labels for Way 0
+  \node[font=\tiny, rotate=90] at (0.95, 1.2) {\textcolor{tagcolor}{\textbf{Tag}}};
+  \node[font=\tiny, rotate=90] at (1.95, 1.2) {\textbf{Data}};
   
-  \node[font=\tiny] at (0.95, -1.2) {Tag};
-  \node[font=\tiny] at (0.95, -1.45) {Array};
-  \node[font=\tiny] at (1.95, -1.2) {0 Data 31};
-  \node[font=\tiny] at (1.95, -1.45) {Array};
+  \node[font=\tiny] at (0.95, -1.35) {\textcolor{tagcolor}{Tag}};
+  \node[font=\tiny] at (0.95, -1.5) {\textcolor{tagcolor}{Array}};
+  \node[font=\tiny] at (1.95, -1.35) {Data};
+  \node[font=\tiny] at (1.95, -1.5) {Array};
   
   % Cache structure - Way #1
-  \node[font=\tiny] at (4.0, -1.8) {WAY \#1};
+  \node[font=\footnotesize\bfseries] at (4.0, -1.9) {Way 1};
   
-  % Tag Array Way 1
-  \draw[thick] (3.2, 0.8) rectangle (4.1, -1.0);
-  \foreach \y in {0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8}
+  % Tag Array Way 1 with taller rows
+  \draw[thick] (3.2, 0.9) rectangle (4.1, -1.1);
+  \foreach \y in {0.65, 0.35, 0.05, -0.25, -0.55, -0.85}
     \draw (3.2, \y) -- (4.1, \y);
-  % Fill some entries green
-  \fill[green!30] (3.2, 0.6) rectangle (4.1, 0.4);
-  \fill[green!30] (3.2, 0.2) rectangle (4.1, 0);
-  \fill[green!30] (3.2, 0) rectangle (4.1, -0.2);
-  \fill[green!30] (3.2, -0.2) rectangle (4.1, -0.4);
-  \fill[green!30] (3.2, -0.4) rectangle (4.1, -0.6);
+  % Fill with tag color
+  \fill[tagcolor!15] (3.2, 0.9) rectangle (4.1, -1.1);
   
-  \node[font=\tiny] at (2.9, 0.1) {Set\#};
-  
-  % Data Array Way 1
-  \draw[thick] (4.1, 0.8) rectangle (5.2, -1.0);
-  \foreach \y in {0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8}
+  % Data Array Way 1 with taller rows
+  \draw[thick] (4.1, 0.9) rectangle (5.2, -1.1);
+  \foreach \y in {0.65, 0.35, 0.05, -0.25, -0.55, -0.85}
     \draw (4.1, \y) -- (5.2, \y);
+  \fill[datacolor] (4.1, 0.9) rectangle (5.2, -1.1);
   
-  \node[font=\tiny, rotate=90] at (3.4, 1.1) {Tag};
-  \node[font=\tiny, rotate=90] at (4.65, 1.1) {Line};
+  % Labels for Way 1
+  \node[font=\tiny, rotate=90] at (3.65, 1.2) {\textcolor{tagcolor}{\textbf{Tag}}};
+  \node[font=\tiny, rotate=90] at (4.65, 1.2) {\textbf{Data}};
   
-  \node[font=\tiny] at (3.65, -1.2) {Tag};
-  \node[font=\tiny] at (3.65, -1.45) {Array};
-  \node[font=\tiny] at (4.65, -1.2) {0 Data 31};
-  \node[font=\tiny] at (4.65, -1.45) {Array};
+  \node[font=\tiny] at (3.65, -1.35) {\textcolor{tagcolor}{Tag}};
+  \node[font=\tiny] at (3.65, -1.5) {\textcolor{tagcolor}{Array}};
+  \node[font=\tiny] at (4.65, -1.35) {Data};
+  \node[font=\tiny] at (4.65, -1.5) {Array};
   
-  % Arrow to second way
-  \draw[->, thick] (1.35, 1.6) -- (3.6, 1.6) -- (3.6, 0.8);
   
 \end{tikzpicture}
 \end{column}
 
-\begin{column}{0.45\textwidth}
+\begin{column}{0.48\textwidth}
 \footnotesize
-Line Size: \hspace{0.2cm} 32 bytes = $2^5$ bytes\\
-Cache Size: 16KB = $2^{14}$ bytes\\
-\#lines = cache size / line size =\\
-\hspace{1.2cm} $2^{14} / 2^5 = 2^9$ = 512 lines\\
-\#ways: \hspace{0.5cm} 2\\
-\#sets = \#lines/\#ways = 256 = $2^8$ sets\\[4pt]
+\begin{tabular}{ll}
+\textbf{Line Size:} & $32$ bytes $= 2^5$ bytes\\
+\textbf{Cache Size:} & $16$ KB $= 2^{14}$ bytes\\
+\textbf{\# Lines:} & $\frac{\text{cache size}}{\text{line size}} = \frac{2^{14}}{2^5} = 512$ lines\\
+\textbf{\# Ways:} & $2$\\
+\textbf{\# Sets:} & $\frac{\text{\#lines}}{\text{\#ways}} = 256$ sets
+\end{tabular}
 
-Offset bits: $\log_2$(line size) = 5 bits\\
-Set bits: \hspace{0.3cm} $\log_2$(\#sets) = 8 bits\\
-Tag bits: \hspace{0.3cm} 32 -- (5+8) = 19 bits\\[4pt]
+\vspace{0.2cm}
+\begin{tabular}{ll}
+\textcolor{offsetcolor}{\textbf{Offset bits:}} & $\log_2(\text{line size}) = 5$ bits\\
+\textcolor{setcolor}{\textbf{Set bits:}} & $\log_2(\text{\#sets}) = 8$ bits\\
+\textcolor{tagcolor}{\textbf{Tag bits:}} & $32 - (5+8) = 19$ bits\\
+\end{tabular}
 
-Address 0x12345678\\
-{\scriptsize\texttt{0001 0010 0011 0100 010\textcolor{orange}{1 0110 011}\textcolor{red}{1 1000}}}\\[3pt]
+\vspace{0.3cm}
+\textbf{Example:} Address \texttt{0x12345678}\\[2pt]
+{\texttt{%
+\textcolor{tagcolor}{0001 0010 0011 0100 010}%
+\textcolor{setcolor}{1 0110 011}%
+\textcolor{offsetcolor}{1 1000}}}\\[4pt]
 
-\textcolor{red}{Offset:} 1 1000 = 0x18\\
-\textcolor{orange}{Set:} 1011 0011 = 0x0B3\\
-Tag: 000 1001 0001 1010 0010 = 0x091A2
+\footnotesize
+\begin{tabular}{ll}
+\textcolor{offsetcolor}{\textbf{Offset:}} & \texttt{11000} $= \mathtt{0x18}$\\
+\textcolor{setcolor}{\textbf{Set:}} & \texttt{10110011} $= \mathtt{0xB3}$\\
+\textcolor{tagcolor}{\textbf{Tag:}} & \texttt{0001001000110100010}\\
+                     & $= \mathtt{0x091A2}$\\
+\end{tabular}
 \end{column}
 \end{columns}
 \end{frame}
