@@ -473,9 +473,30 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 
 \begin{frame}{Prefetching}
 \begin{itemize}
-  \item \textbf{HW prefetch}: next-line/streaming, stride, and more general pattern detectors.
-  \item \textbf{SW prefetch}: explicit instructions (non-faulting hints).
-  \item Aggressiveness must be tuned; over-prefetching wastes bandwidth and pollutes caches.
+  \item \textbf{Hardware Data Prefetching -- predict future data accesses}
+  \begin{itemize}
+    \item Next sequential / Streaming prefetcher
+    \begin{itemize}
+      \item Triggered by an ascending access to very recently loaded data
+      \item Fetches the next line, assuming a streaming load
+    \end{itemize}
+    \item Stride prefetcher
+    \begin{itemize}
+      \item Tracks individual load instructions, detecting a regular stride
+      \item Prefetch address = current address + stride
+      \item Both forward and backward
+    \end{itemize}
+    \item General pattern prefetcher
+    \begin{itemize}
+      \item Identifies patterns of Load address distances
+    \end{itemize}
+  \end{itemize}
+  
+  \item \textbf{Data has to be prefetched before it is needed}
+  \begin{itemize}
+    \item The prefetcher aggressiveness has to be tuned
+    \item How fast and how far ahead to issue the prefetch request, such that data arrives on time, before it is needed
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
