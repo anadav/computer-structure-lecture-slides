@@ -1397,8 +1397,22 @@ struct merge {
 
 \begin{frame}{Non-Blocking Caches}
 \begin{itemize}
-  \item \textbf{Hit-under-miss}: allow hits to proceed while one miss is outstanding
-  \item \textbf{Miss-under-miss}: track multiple misses concurrently; requires MSHRs
+  \item \textbf{Hit Under Miss}
+  \begin{itemize}
+    \item Allow cache hits while one miss is in progress
+    \item Another miss has to wait
+    \item Relevant for an out-of-order execution CPU
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Miss Under Miss, Hit Under Multiple Misses}
+  \begin{itemize}
+    \item Allow hits and misses when other misses in progress
+    \item Memory system must allow multiple pending requests
+    \item Manage a list of outstanding cache misses
+    \begin{itemize}
+      \item When miss is served and data gets back, update list
+    \end{itemize}
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
