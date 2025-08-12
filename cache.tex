@@ -6,6 +6,13 @@
 \usepackage{listings}
 \usepackage{tikz}
 \usetheme{Madrid}
+% Show slide number as "current/total" in the footer
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertframenumber/\inserttotalframenumber
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
 \setbeamertemplate{navigation symbols}{}
 
 \title{Computer Structure -- Cache Memory}
@@ -29,54 +36,240 @@
 
 \begin{frame}{Memory Trade-Offs}
 \begin{itemize}
-  \item Large (dense) memories are \textbf{slow}.
-  \item Fast memories are \textbf{small}, expensive, and power-hungry.
-  \item Goal: make memory \emph{appear} large, fast, cheap, and low-power.
-  \item Solution: a \textbf{hierarchy} (L1/L2/L3 caches $\rightarrow$ DRAM).
+  \item Large (dense) memories are \textbf{slow}
+  \item Fast memories are \textbf{small}, expensive and consume high power
+  \item Goal: give the processor a feeling that it has a memory which is large (dense), fast, consumes low power, and cheap
+  \item Solution: a Hierarchy of memories
 \end{itemize}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+  % Define colors for the hierarchy
+  \definecolor{cpucolor}{RGB}{255,140,0}      % Orange
+  \definecolor{l1color}{RGB}{255,165,0}       % Orange
+  \definecolor{l2color}{RGB}{255,193,37}      % Yellow-orange
+  \definecolor{l3color}{RGB}{255,215,0}       % Gold
+  \definecolor{memcolor}{RGB}{220,220,220}    % Light gray
+  
+  % Memory hierarchy boxes
+  \node[rectangle, draw, fill=cpucolor, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (cpu) at (0,0) {CPU};
+  \node[rectangle, draw, fill=l1color, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (l1) at (2.5,0) {L1\\Cache};
+  \node[rectangle, draw, fill=l2color, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (l2) at (5,0) {L2\\Cache};
+  \node[rectangle, draw, fill=l3color, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (l3) at (7.5,0) {L3\\Cache};
+  \node[rectangle, draw, fill=memcolor, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (mem) at (10,0) {Memory\\(DRAM)};
+  
+  % Arrows between boxes
+  \draw[->, thick] (cpu.east) -- (l1.west);
+  \draw[->, thick] (l1.east) -- (l2.west);
+  \draw[->, thick] (l2.east) -- (l3.west);
+  \draw[->, thick] (l3.east) -- (mem.west);
+  
+  % Characteristics table below
+  \node[anchor=west, font=\bfseries] at (-0.5,-2.5) {Speed:};
+  \node[anchor=west] at (1.5,-2.5) {Fastest};
+  \draw[->, thick] (4.5,-2.5) -- (8.5,-2.5);
+  \node[anchor=east] at (10.5,-2.5) {Slowest};
+  
+  \node[anchor=west, font=\bfseries] at (-0.5,-3) {Size:};
+  \node[anchor=west] at (1.5,-3) {Smallest};
+  \draw[->, thick] (4.5,-3) -- (8.5,-3);
+  \node[anchor=east] at (10.5,-3) {Biggest};
+  
+  \node[anchor=west, font=\bfseries] at (-0.5,-3.5) {Cost:};
+  \node[anchor=west] at (1.5,-3.5) {Highest};
+  \draw[->, thick] (4.5,-3.5) -- (8.5,-3.5);
+  \node[anchor=east] at (10.5,-3.5) {Lowest};
+  
+  \node[anchor=west, font=\bfseries] at (-0.5,-4) {Power:};
+  \node[anchor=west] at (1.5,-4) {Highest};
+  \draw[->, thick] (4.5,-4) -- (8.5,-4);
+  \node[anchor=east] at (10.5,-4) {Lowest};
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{Why Hierarchy Works}
 \begin{itemize}
-  \item \textbf{Temporal locality}: recently used data/instructions will be used again soon.
-  \item \textbf{Spatial locality}: nearby data is likely to be used soon.
-  \item Smaller hardware can be faster; with locality and Amdahl's law $\Rightarrow$ hierarchy.
+  \item \textbf{Temporal Locality (Locality in Time):}
+  \begin{itemize}
+    \item If an item is referenced, it will tend to be referenced again soon
+    \item Example: code and variables in loops
+  \end{itemize}
+  $\Rightarrow$ \textbf{Keep recently accessed data closer to the processor}
+  
+  \vspace{0.5cm}
+  
+  \item \textbf{Spatial Locality (Locality in Space):}
+  \begin{itemize}
+    \item If an item is referenced, nearby items tend to be referenced soon
+    \item Example: scanning an array
+  \end{itemize}
+  $\Rightarrow$ \textbf{Move contiguous blocks closer to the processor}
+  
+  \vspace{0.5cm}
+  
+  \item \textbf{Locality + smaller HW is faster + Amdahl's law}\\
+  $\Rightarrow$ \textbf{memory hierarchy}
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Memory Hierarchy: Terminology}
 \begin{itemize}
-  \item \textbf{Hit/Miss}: whether a requested block is in a cache level.
-  \item \textbf{Hit rate}: fraction of accesses that hit a given level.
-  \item \textbf{Hit time}: time to determine hit/miss and return data on a hit.
-  \item \textbf{Miss penalty}: time to fetch/replace a block from the next level and deliver it.
-  \item \textbf{Average access time}: $t_{\text{eff}}=(t_{hit} \cdot HR) + (t_{miss} \cdot (1-HR))$.
+  \item \textbf{For each memory level define the following}
+  \begin{itemize}
+    \item \textcolor{green!60!black}{\textbf{Hit:}} data of the requested address is available in the cache level
+    \item \textcolor{green!60!black}{\textbf{Miss:}} data of the requested address is not available in the cache level
+    \item \textcolor{green!60!black}{\textbf{Hit Rate:}} the fraction of accesses that hit in that cache level
+    \begin{itemize}
+      \item For L1 cache: \#L1 hits / \#data accesses in the program
+      \item For L2 cache: \#L2 hits / \#L1 misses
+    \end{itemize}
+    \item \textcolor{green!60!black}{\textbf{Hit Time:}} time from data request till data received when hitting in the cache level; includes the time to determine hit/miss
+    \item \textcolor{green!60!black}{\textbf{Miss Rate}} = $1 - (\text{Hit Rate})$
+    \item \textcolor{green!60!black}{\textbf{Miss Penalty:}} Time to replace a block in the upper level + Time to deliver the block the processor
+  \end{itemize}
+  
+  \vspace{0.3cm}
+  
+  \item \textbf{Average memory-access time =}\\
+  \hspace{1cm} $t_{\text{effective}} = (\text{Hit time} \times \text{Hit Rate}) + (\text{Miss Time} \times \text{Miss rate})$\\
+  \hspace{2.2cm} $= (\text{Hit time} \times \text{Hit Rate}) + (\text{Miss Time} \times (1-\text{Hit rate}))$
+  \begin{itemize}
+    \item If hit rate is close to 1, $t_{\text{effective}}$ is close to Hit time
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Effective Memory Access Time: Example}
-Assume $t_{cache}=10$ns and $t_{mem}=100$ns:
+\begin{frame}{Effective Memory Access Time}
+\begin{itemize}
+  \item \textbf{Cache -- holds a subset of the memory}
+  \begin{itemize}
+    \item Hopefully -- the subset being used now
+  \end{itemize}
+  
+  \item \textbf{Effective memory access time}
+  \begin{itemize}
+    \item $t_{\text{effective}} = (t_{\text{cache}} \times \text{Hit Rate}) + (t_{\text{mem}} \times (1 - \text{Hit rate}))$
+    \item $t_{\text{mem}}$ includes the time it takes to detect a cache miss
+  \end{itemize}
+  
+  \item \textbf{Example}
+  \begin{itemize}
+    \item Assume $t_{\text{cache}} = 10$ nsec and $t_{\text{mem}} = 100$ nsec
+  \end{itemize}
+\end{itemize}
+
 \begin{center}
-\begin{tabular}{lrr}
-\toprule
-Hit Rate & $t_{\text{eff}}$ (ns) & Computation\\
-\midrule
-0.0   & 100.0 & $0\cdot 10 + 1\cdot 100$\\
-0.5   & 55.0  & $0.5\cdot 10 + 0.5\cdot 100$\\
-0.9   & 19.0  & $0.9\cdot 10 + 0.1\cdot 100$\\
-0.99  & 10.9  & $0.99\cdot 10 + 0.01\cdot 100$\\
-0.999 & 10.1  & $0.999\cdot 10 + 0.001\cdot 100$\\
-\bottomrule
+\begin{tabular}{c|c|l}
+\textbf{Hit Rate} & \textbf{$t_{\text{eff}}$ (nsec)} & \textbf{Computation} \\
+\hline
+0 & 100 & $(0.0 \times 10) + (1.0 \times 100)$ \\
+50 & 55 & $(0.5 \times 10) + (0.5 \times 100)$ \\
+90 & 19 & $(0.9 \times 10) + (0.1 \times 100)$ \\
+99 & 10.9 & $(0.99 \times 10) + (0.01 \times 100)$ \\
+99.9 & 10.1 & $(0.999 \times 10) + (0.001 \times 100)$ \\
 \end{tabular}
 \end{center}
+
+\begin{itemize}
+  \item $t_{\text{mem}}/t_{\text{cache}}$ goes up $\Rightarrow$ more important that hit-rate closer to 1
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Cache -- Main Idea}
+\begin{columns}[T]
+\begin{column}{0.65\textwidth}
 \begin{itemize}
-  \item Memory is partitioned into aligned \textbf{blocks} (e.g., 32/64B).
-  \item Cache holds a subset of memory as \textbf{lines}, each line $\leftrightarrow$ one block.
-  \item Address view = \texttt{[block\# | offset]}.
+  \item \textcolor{blue}{\textbf{The cache holds a small part of the entire memory}}
+  \begin{itemize}
+    \item Need to map parts of the memory into the cache
+  \end{itemize}
+  
+  \item \textcolor{blue}{\textbf{Main memory is (logically) partitioned into blocks}}
+  \begin{itemize}
+    \item Typical block size is 32 or 64 bytes
+    \item Blocks are aligned
+  \end{itemize}
+  
+  \item \textcolor{blue}{\textbf{The cache partitioned into cache lines}}
+  \begin{itemize}
+    \item Each cache line holds a memory block
+    \item Only a subset of the memory blocks are mapped to the cache at a given time
+    \item The cache views an address as
+  \end{itemize}
 \end{itemize}
+
+\vspace{0.3cm}
+% Address format at the bottom of text
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+  \node[anchor=west, font=\scriptsize] at (0, 0.3) {N-1};
+  \node[anchor=center, font=\scriptsize] at (1.5, 0) {Block \#};
+  \node[anchor=center, font=\scriptsize] at (2.8, 0) {offset};
+  \node[anchor=west, font=\scriptsize] at (3.2, 0.3) {6 5};
+  \node[anchor=west, font=\scriptsize] at (3.8, 0.3) {0};
+  
+  % Address format boxes
+  \draw[thick] (0.2, 0.1) rectangle (3.0, -0.3);
+  \draw[thick] (3.0, 0.1) rectangle (4.0, -0.3);
+\end{tikzpicture}
+\end{center}
+\end{column}
+
+\begin{column}{0.35\textwidth}
+\begin{tikzpicture}[scale=0.7]
+  % Define colors
+  \definecolor{lightblue}{RGB}{173,216,230}
+  \definecolor{lightgreen}{RGB}{144,238,144}
+  \definecolor{lightyellow}{RGB}{255,255,224}
+  \definecolor{lightpurple}{RGB}{221,160,221}
+  \definecolor{lightgray}{RGB}{211,211,211}
+  
+  % Memory column
+  \node[anchor=north, font=\bfseries, font=\small] at (1.2, 4.5) {memory};
+  \node[anchor=north, font=\tiny] at (1.2, 4.2) {Block \#};
+  \node[anchor=north, font=\tiny] at (2.0, 4.2) {64B};
+  
+  % Memory blocks with block numbers on the left
+  \foreach \i/\color in {0/lightgray, 1/lightgray, 2/lightgreen, 3/lightgray, 4/lightblue, 5/lightgray, 6/lightgray} {
+    \node[font=\tiny, anchor=east] at (0.7, 3.8-\i*0.35) {\i};
+    \node[rectangle, draw, minimum width=0.8cm, minimum height=0.3cm, fill=\color] (mem\i) at (1.2, 3.8-\i*0.35) {};
+  }
+  
+  % Dots for continuation
+  \node[font=\tiny] at (1.2, 1.4) {\vdots};
+  
+  % More memory blocks
+  \foreach \i/\color in {90/lightpurple, 91/lightgray, 92/lightyellow, 93/lightgray} {
+    \pgfmathsetmacro{\ypos}{1.0-(\i-90)*0.35}
+    \node[font=\tiny, anchor=east] at (0.7, \ypos) {\i};
+    \node[rectangle, draw, minimum width=0.8cm, minimum height=0.3cm, fill=\color] (mem\i) at (1.2, \ypos) {};
+  }
+  
+  % More dots
+  \node[font=\tiny] at (1.2, -0.4) {\vdots};
+  
+  % Cache column
+  \node[anchor=north, font=\bfseries, font=\small] at (3.2, 4.5) {cache};
+  
+  % Cache blocks split into tag and data - no spacing between boxes
+  \foreach \tag/\color/\ypos in {30/lightpurple/3.8, 2/lightgreen/3.45, 4/lightblue/3.1, 32/lightyellow/2.75} {
+    % Tag part (left)
+    \node[rectangle, draw, minimum width=0.4cm, minimum height=0.3cm, fill=\color, font=\tiny] at (2.8, \ypos) {\tag};
+    % Data part (right)
+    \node[rectangle, draw, minimum width=0.6cm, minimum height=0.3cm, fill=\color] (cache\ypos) at (3.3, \ypos) {};
+  }
+  
+  % Arrows from memory to cache
+  \draw[->, thick] (mem2.east) to[out=0, in=180] (3.0, 3.45);
+  \draw[->, thick] (mem4.east) to[out=0, in=180] (3.0, 3.1);
+  \draw[->, thick] (mem90.east) to[out=0, in=180] (3.0, 3.8);
+  \draw[->, thick] (mem92.east) to[out=0, in=180] (3.0, 2.75);
+  
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Cache Lookup (summary)}
