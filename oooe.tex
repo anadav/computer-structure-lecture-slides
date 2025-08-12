@@ -1,32 +1,35 @@
-
-\documentclass[aspectratio=169]{beamer}
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
 \usepackage{tikz}
-\usepackage{array}
-\usepackage{enumitem}
-\usepackage{xcolor}
-\usepackage{amsmath}
-\usetikzlibrary{automata,positioning,arrows.meta,backgrounds}
-\usetikzlibrary{arrows.meta,positioning,calc,matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
+\usetheme{Madrid}
 
-% Define colors
-\definecolor{myblue}{RGB}{0,0,255}
-\definecolor{mypurple}{RGB}{128,0,128}
-\definecolor{mygreen}{RGB}{0,128,0}
-\definecolor{myorange}{RGB}{255,140,0}
-\definecolor{lightblue}{RGB}{173,216,230}
-\definecolor{peach}{RGB}{255,218,185}
-\definecolor{lightpurple}{RGB}{230,230,250}
+% Define colors for registers
+\definecolor{r1color}{RGB}{255,0,0}
+\definecolor{r2color}{RGB}{0,128,0}
+\definecolor{r3color}{RGB}{255,165,0}
+\definecolor{r4color}{RGB}{128,0,128}
+\definecolor{r5color}{RGB}{0,0,255}
+\definecolor{r6color}{RGB}{255,165,0}
+\definecolor{r7color}{RGB}{0,0,0}
+\definecolor{r8color}{RGB}{0,128,0}
 
-\usetheme{default}
+% Show slide number as "current/total" in the footer
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertframenumber/\inserttotalframenumber
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
 \setbeamertemplate{navigation symbols}{}
 
-\title{Computer Structure\\\large Out-Of-Order Execution}
-\author{Lihu Rappoport}
-\institute{Technion -- Computer Science}
+\title{Computer Structure -- Out-Of-Order Execution}
+\author{Based on slides by Lihu Rappoport}
 \date{}
-
-\setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{footline}[frame number]
 
 \begin{document}
 
@@ -34,166 +37,348 @@
   \titlepage
 \end{frame}
 
-\begin{frame}
-\frametitle{What's Next}
-\begin{itemize}
-  \item[$\diamond$] \textbf{Goal:} minimize CPU Time
-  \begin{equation*}
-    	ext{CPU Time} = \text{clock cycle} \times \text{CPI} \times \text{IC}
-  \end{equation*}
-  \item[$\diamond$] So far we have learned
+\begin{frame}{What's Next}
   \begin{itemize}
-    \item[$\triangleright$] Minimize clock cycle $\Rightarrow$ add more pipe stages
-    \item[$\triangleright$] Minimize CPI $\Rightarrow$ use pipeline
-    \item[$\triangleright$] Minimize IC $\Rightarrow$ architecture
+    \item \textbf{Goal: minimize CPU Time}
+    \begin{equation*}
+      \text{CPU Time} = \text{clock cycle} \times \text{CPI} \times \text{IC}
+    \end{equation*}
+    
+    \item \textbf{So far we have learned}
+    \begin{itemize}
+      \item Minimize clock cycle $\Rightarrow$ add more pipe stages
+      \item Minimize CPI $\Rightarrow$ use pipeline
+      \item Minimize IC $\Rightarrow$ architecture
+    \end{itemize}
+    
+    \item \textbf{In a pipelined CPU}
+    \begin{itemize}
+      \item CPI w/o hazards is 1
+      \item CPI with hazards is $> 1$
+    \end{itemize}
+    
+    \item \textbf{Adding more pipe stages reduces clock cycle but increases CPI}
+    \begin{itemize}
+      \item Higher penalty due to control hazards
+      \item More data hazards
+    \end{itemize}
+    
+    \item \alert{What can we do? Further reduce the CPI!}
   \end{itemize}
-  \item[$\diamond$] In a pipelined CPU
-  \begin{itemize}
-    \item[$\triangleright$] CPI without hazards is 1
-    \item[$\triangleright$] CPI with hazards is $> 1$
-  \end{itemize}
-  \item[$\diamond$] Adding more pipe stages reduces clock cycle \emph{but} increases CPI
-  \begin{itemize}
-    \item[$\triangleright$] Higher penalty due to control hazards
-    \item[$\triangleright$] More data hazards
-  \end{itemize}
-  \item[$\diamond$] What can we do? \textbf{Further reduce the CPI!}
-\end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{A Superscalar CPU}
-\begin{itemize}
-  \item[$\diamond$] Duplicating hardware in one pipe stage won’t help
+\begin{frame}{A Superscalar CPU}
   \begin{itemize}
-    \item[$\triangleright$] e.g., have 2 ALUs
-    \item[$\triangleright$] the bottleneck moves to other stages
+    \item \textbf{Duplicating HW in one pipe stage won't help}
+    \begin{itemize}
+      \item e.g., have 2 ALUs
+      \item the bottleneck moves to other stages
+    \end{itemize}
   \end{itemize}
-  \item[$\diamond$] Getting IPC $>1$ requires fetching, decoding, executing, and retiring $>1$ instruction per clock
-\end{itemize}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=0.8]
+      % Single pipeline with bulge at EXE
+      \draw[fill=cyan!30] (0,0) rectangle (2,0.8) node[midway] {Fetch};
+      \draw[fill=cyan!30] (2,0) rectangle (4,0.8) node[midway] {Dec};
+      \draw[fill=cyan!50] (4,-0.3) rectangle (6,1.1);
+      \node at (5,0.4) {EXE};
+      \draw[fill=cyan!30] (6,0) rectangle (8,0.8) node[midway] {MEM};
+      \draw[fill=cyan!30] (8,0) rectangle (10,0.8) node[midway] {WB};
+      
+      % Curved lines showing bottleneck
+      \draw[thick] (3.8,0.4) .. controls (4,0.8) and (4,0.8) .. (4,0.4);
+      \draw[thick] (6,0.4) .. controls (6,0.8) and (6,0.8) .. (6.2,0.4);
+    \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item \textbf{Getting IPC $> 1$ requires to fetch, decode, exe, and retire $>1$ instruction per clock:}
+  \end{itemize}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=0.8]
+      % Dual pipeline
+      \foreach \y in {0, -1} {
+        \draw[->, thick] (-0.5,\y+0.4) -- (0,\y+0.4);
+        \draw[fill=cyan!30] (0,\y) rectangle (2,\y+0.8) node[midway] {Fetch};
+        \draw[->, thick] (2,\y+0.4) -- (2.5,\y+0.4);
+        \draw[fill=cyan!30] (2.5,\y) rectangle (4.5,\y+0.8) node[midway] {Dec};
+        \draw[->, thick] (4.5,\y+0.4) -- (5,\y+0.4);
+        \draw[fill=cyan!30] (5,\y) rectangle (7,\y+0.8) node[midway] {EXE};
+        \draw[->, thick] (7,\y+0.4) -- (7.5,\y+0.4);
+        \draw[fill=cyan!30] (7.5,\y) rectangle (9.5,\y+0.8) node[midway] {MEM};
+        \draw[->, thick] (9.5,\y+0.4) -- (10,\y+0.4);
+        \draw[fill=cyan!30] (10,\y) rectangle (12,\y+0.8) node[midway] {WB};
+        \draw[->, thick] (12,\y+0.4) -- (12.5,\y+0.4);
+      }
+    \end{tikzpicture}
+  \end{center}
 \end{frame}
 
-\begin{frame}{The Pentium\textregistered{} Processor (1993)}
-\begin{itemize}
-  \item Fetch and decode 2 instructions per cycle
-  \item At decode stage decide on \emph{pairing}: can the two instructions be executed in parallel
-  \item Pairing decision is based on
+\begin{frame}{The Pentium® Processor (1993)}
   \begin{itemize}
-    \item \textbf{Data dependencies:} 2\textsuperscript{nd} instruction must be independent of 1\textsuperscript{st}
+    \item \textbf{Fetch and decode 2 instructions per cycle}
+    
+    \item \textbf{At decode stage decide on \emph{pairing}:} can the two instructions be executed in parallel
+    
+    \item \textbf{Pairing decision is based on:}
     \begin{itemize}
-      \item If the 1\textsuperscript{st} instruction produces data needed by the 2\textsuperscript{nd} instruction, the 2\textsuperscript{nd} instruction cannot be executed in parallel to the 1\textsuperscript{st}.
-    \end{itemize}
-    \item \textbf{Resources:} U-pipe and V-pipe are not symmetric (save HW)
-    \begin{itemize}
-      \item Common instructions can execute on either pipe
-      \item Some instructions can execute only on the U-pipe
-      \item V-pipe can run a subset of the instructions that can run on U-pipe
-      \item If the 2\textsuperscript{nd} instruction requires the U-pipe, it cannot pair
-      \item Some instructions use resources of both pipes (and therefore cannot pair)
+      \item \textcolor{blue}{Data dependencies}: 2nd instruction must be independent of 1st
+      \begin{itemize}
+        \item If the 1st instruction produces data needed by the 2nd instruction, the 2nd instruction cannot be executed in parallel to the 1st instruction
+      \end{itemize}
+      
+      \item \textcolor{blue}{Resources}: U-pipe and V-pipe are not symmetric (save HW)
+      \begin{itemize}
+        \item Common instructions can execute on either pipe
+        \item Some instructions can execute only on the U-pipe
+        \item V-pipe can run a subset of the instructions that can run on U-pipe
+        \item If the 2nd instruction requires the U-pipe, it cannot pair
+        \item Some instructions use resources of both pipes (and therefore cannot pair)
+      \end{itemize}
     \end{itemize}
   \end{itemize}
-\end{itemize}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=0.9]
+      \draw[->, thick] (-0.5,0) -- (0,0);
+      \draw[->, thick] (-0.5,-0.5) -- (0,-0.5);
+      \draw[fill=cyan!30] (0,-0.75) rectangle (2,0.25) node[midway] {Fetch};
+      \draw[->, thick] (2,0) -- (2.5,0);
+      \draw[->, thick] (2,-0.5) -- (2.5,-0.5);
+      \draw[fill=cyan!30] (2.5,-0.75) rectangle (4.5,0.25) node[midway] {Dec};
+      \node[rotate=45] at (5,0) {\small pairing};
+      \draw[->, thick] (4.5,0) -- (5.5,0.3) node[right] {U-pipe};
+      \draw[->, thick] (4.5,-0.5) -- (5.5,-0.8) node[right] {V-pipe};
+    \end{tikzpicture}
+  \end{center}
 \end{frame}
 
 \begin{frame}{Misprediction Penalty in a Superscalar CPU}
-\begin{itemize}
-  \item Assume
   \begin{itemize}
-    \item 1 / 100 instruction is a mispredicted jump (MPI $=1\%$)
-    \item Flush penalty of 5 cycles
+    \item \textbf{Assume}
+    \begin{itemize}
+      \item 1/100 instruction is a mispredicted jump (MPI = 1\%)
+      \item Flush penalty of 5 cycles
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    
+    \item \textbf{For IPC = 2}
+    \begin{itemize}
+      \item Flush every 100/2 = 50 cycles
+      \item 5 cycles flush penalty every 50 cycles $\Rightarrow$ \alert{10\% performance hit}
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    
+    \item \textbf{For IPC = 1}
+    \begin{itemize}
+      \item Flush every 100/1 = 100 cycles
+      \item 5 cycles flush penalty per 100 cycles $\Rightarrow$ \alert{5\% performance hit}
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    
+    \item \alert{Flush penalty increases as the machine is deeper and wider}
   \end{itemize}
-  \item For IPC $=2$
-  \begin{itemize}
-    \item Flush every $100/2 = 50$ cycles
-    \item 5 cycles flush penalty every 50 cycles $\Rightarrow$ $10\%$ performance hit
-  \end{itemize}
-  \item For IPC $=1$
-  \begin{itemize}
-    \item Flush every $100/1 = 100$ cycles
-    \item 5 cycles flush penalty per 100 cycles $\Rightarrow$ $5\%$ performance hit
-  \end{itemize}
-  \item \textbf{Flush penalty increases as the machine is deeper and wider.}
-\end{itemize}
 \end{frame}
 
 \begin{frame}{Extract More ILP}
-\begin{itemize}
-  \item \textbf{ILP -- Instruction Level Parallelism}
   \begin{itemize}
-    \item A given program, executed on a given input data has a given parallelism
-    \item Can execute only independent instructions in parallel
-    \item If, for example, each instruction is dependent on the previous instruction, ILP $= 1$ (adding more HW will not change that)
+    \item \textbf{ILP -- Instruction Level Parallelism}
+    \begin{itemize}
+      \item A given program, executed on a given input data has a given parallelism
+      \item Can execute only independent instructions in parallel
+      \item If for example each instruction is dependent on the previous instruction, ILP = 1
+      \begin{itemize}
+        \item Adding more HW will not change that
+      \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Adjacent instructions are usually dependent}
+    \begin{itemize}
+      \item 2nd pipe utilization is lower than 1st pipe utilization, a 3rd pipe utilization further goes down
+    \end{itemize}
+    
+    \item \textbf{Cache misses stall execution} -- instructions dependent on a missed load stall
+    
+    \item \textbf{Compilers are limited to basic blocks}, and are not aware of cache misses
+    
+    \item \textbf{Solution: Out-Of-Order Execution}
+    \begin{itemize}
+      \item Look for independent instructions further ahead in the program
+      \item Execute instructions based on data readiness
+      \item Still need to keep the semantics of the original program
+    \end{itemize}
   \end{itemize}
-  \item Adjacent instructions are usually dependent
-  \begin{itemize}
-    \item 2\textsuperscript{nd} pipe utilization is lower than 1\textsuperscript{st}; a 3\textsuperscript{rd} pipe utilization further goes down
-  \end{itemize}
-  \item Cache misses stall execution -- instructions dependent on a missed load stall
-  \item Compilers are limited to basic blocks, and are not aware of cache misses
-  \item \textbf{Solution: Out-Of-Order Execution}
-  \begin{itemize}
-    \item Look for independent instructions further ahead in the program
-    \item Execute instructions based on data readiness
-    \item Still need to keep the semantics of the original program
-  \end{itemize}
-\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Data Flow Analysis --- Example}
-\textbf{Assume divide takes multiple cycles.}
-\vspace{0.5em}
-
-\begin{verbatim}
-(1) r1 <- r4 / r7
-(2) r8 <- r1 + r2
-(3) r5 <- r5 + 1
-(4) r6 <- r6 - r3
-(5) r4 <- r5 + r6
-(6) r7 <- r8 * r4
-\end{verbatim}
-
-\begin{itemize}
-  \item Out-of-order allows executing (3) and (4) while (1) divides.
-  \item Once (3) and (4) complete, (5) can proceed, then (6).
-\end{itemize}
+\begin{frame}{Data Flow Analysis}
+  \begin{columns}
+    \begin{column}{0.35\textwidth}
+      \textbf{Example:}
+      \begin{enumerate}
+        \item \texttt{\textcolor{r1color}{r1} $\leftarrow$ r4 / r7}
+        \item \texttt{\textcolor{r8color}{r8} $\leftarrow$ \textcolor{r1color}{r1} + r2}
+        \item \texttt{\textcolor{r5color}{r5} $\leftarrow$ r5 + 1}
+        \item \texttt{\textcolor{r6color}{r6} $\leftarrow$ r6 - r3}
+        \item \texttt{\textcolor{r4color}{r4} $\leftarrow$ \textcolor{r5color}{r5} + \textcolor{r6color}{r6}}
+        \item \texttt{r7 $\leftarrow$ \textcolor{r8color}{r8} * \textcolor{r4color}{r4}}
+      \end{enumerate}
+      
+      \vspace{0.3cm}
+      \small{Assume divide takes multiple cycles}
+    \end{column}
+    
+    \begin{column}{0.65\textwidth}
+      \begin{center}
+        \textbf{Data Flow Graph}\\
+        \vspace{0.3cm}
+        \begin{tikzpicture}[scale=0.8, 
+          node distance=1.2cm,
+          inst/.style={circle, draw, minimum size=0.8cm},
+          dep/.style={->, thick}]
+          
+          % Nodes
+          \node[inst] (i1) at (0,2.5) {1};
+          \node[inst] (i3) at (2,2.5) {3};
+          \node[inst] (i4) at (4,2.5) {4};
+          \node[inst] (i2) at (1,1) {2};
+          \node[inst] (i5) at (3,1) {5};
+          \node[inst] (i6) at (2,-0.5) {6};
+          
+          % Dependencies with colored labels
+          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\small r1}} (i2);
+          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\small r5}} (i5);
+          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\small r6}} (i5);
+          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\small r8}} (i6);
+          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\small r4}} (i6);
+        \end{tikzpicture}
+        
+        \vspace{0.5cm}
+        \small
+        \begin{tabular}{cc}
+          \textbf{In-order execution} & \textbf{Out-of-order execution} \\
+        \begin{tikzpicture}[scale=0.5]
+        % Box 1 (large, left side)
+        \draw[thick, fill=gray!20] (0,1) rectangle (2,1.5) node[midway, font=\tiny] {1};
+        
+        % Box 2 (top right)
+        \draw[thick, fill=white] (2.1,1) rectangle (3,1.5) node[midway, font=\tiny] {2};
+        
+        % Box 3 (middle right)
+        \draw[thick, fill=white] (2.1,0.5) rectangle (3,1) node[midway, font=\tiny] {3};
+        
+        % Box 4 (bottom middle)
+        \draw[thick, fill=white] (2.1,0) rectangle (3,0.5) node[midway, font=\tiny] {4};
+        
+        % Box 5 (right of box 3)
+        \draw[thick, fill=white] (3.1,0.5) rectangle (4,1) node[midway, font=\tiny] {5};
+        
+        % Box 6 (far right)
+        \draw[thick, fill=white] (4.1,0.5) rectangle (5,1) node[midway, font=\tiny] {6};
+        \end{tikzpicture}
+          &
+          \begin{tikzpicture}[scale=0.5]
+            \draw[fill=blue!30] (0,0) rectangle (3,0.5) node[midway] {\tiny 1};
+            \draw[fill=yellow!30] (1,0.6) rectangle (2,1.1) node[midway] {\tiny 3};
+            \draw[fill=orange!30] (1.5,1.2) rectangle (2.5,1.7) node[midway] {\tiny 4};
+            \draw[fill=purple!30] (2.6,0.6) rectangle (3.6,1.1) node[midway] {\tiny 5};
+            \draw[fill=green!30] (3.2,0) rectangle (4.2,0.5) node[midway] {\tiny 2};
+            \draw[fill=red!30] (4.4,0) rectangle (5.4,0.5) node[midway] {\tiny 6};
+          \end{tikzpicture}
+        \end{tabular}
+      \end{center}
+    \end{column}
+  \end{columns}
 \end{frame}
 
-\begin{frame}{OOOE --- General Scheme}
-\begin{itemize}
-  \item \textbf{Fetch \& decode} instructions in parallel but in-order
+\begin{frame}{OOOE -- General Scheme}
+  \begin{center}
+    \begin{tikzpicture}[scale=1.2,
+      block/.style={rectangle, draw, fill=yellow!30, minimum width=2.5cm, minimum height=1cm},
+      pool/.style={cylinder, draw, fill=green!30, minimum width=2cm, minimum height=1.5cm, shape border rotate=90, aspect=0.25},
+      exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=1cm}]
+      
+      % Blocks
+      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[pool] (pool) at (4,0) {Instruction pool};
+      \node[exe] (exec) at (4,-2.5) {Execute};
+      \node[block] (retire) at (8,0) {Retire (commit)};
+      
+      % Arrows with multiple lines
+      \foreach \y in {-0.2, 0, 0.2} {
+        \draw[->, thick] (fetch.east) -- ++(0.3,\y) -- (pool.west);
+        \draw[->, thick] (pool.east) -- ++(0.3,\y) -- (retire.west);
+      }
+      
+      % Bidirectional connection pool-execute
+      \draw[<->, thick, bend right=20] (pool.south) to (exec.north);
+      \draw[<->, thick, bend left=20] (pool.south) to (exec.north);
+      
+      % Labels
+      \node[above] at (fetch.north) {\textbf{In-order}};
+      \node[above] at (retire.north) {\textbf{In-order}};
+      \node[below] at (exec.south) {\textbf{Out-of-order}};
+    \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
   \begin{itemize}
-    \item Fill the \emph{Instruction Pool}
+    \item \textbf{Fetch \& decode instructions in parallel but in-order}
+    \begin{itemize}
+      \item Fill the Instruction Pool
+    \end{itemize}
+    
+    \item \textbf{Execute ready instructions from the instructions pool}
+    \begin{itemize}
+      \item All source data ready + needed execution resources available
+    \end{itemize}
+    
+    \item \textbf{Once an instruction is executed}
+    \begin{itemize}
+      \item Signal all dependent instructions that data is ready
+    \end{itemize}
+    
+    \item \textbf{Commit instructions in parallel but in-order}
+    \begin{itemize}
+      \item State change (memory, register) and fault/exception handling
+    \end{itemize}
   \end{itemize}
-  \item \textbf{Execute} ready instructions from the instruction pool
-  \begin{itemize}
-    \item All source data ready $+$ needed execution resources available
-  \end{itemize}
-  \item Once an instruction is executed, signal all dependent instructions that data is ready
-  \item \textbf{Commit} instructions in parallel but in-order
-  \begin{itemize}
-    \item State change (memory, register) and fault/exception handling
-  \end{itemize}
-\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Write-After-Write Dependency (1/2)}
-\begin{verbatim}
-(1) r1 <- r9 / 17
-(2) r2 <- r2 + r1
-(3) r1 <- 23
-(4) r3 <- r3 + r1
-(5) jcc L2
-(6) L2: r1 <- 35
-(7) r4 <- r3 + r1
-(8) r3 <- 2
-\end{verbatim}
-\end{frame}
-
-\begin{frame}{Write-After-Write Dependency (2/2)}
-\begin{itemize}
-  \item If instruction (3) is executed before instruction (1), \texttt{r1} ends up having a wrong value.
-  \item Called \textbf{write-after-write} false dependency: the order of two writes to the same register is flipped.
-\end{itemize}
+\begin{frame}{Write-After-Write Dependency}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Example Code:}
+      \begin{tabular}{ll}
+        (1) & \texttt{\textcolor{r1color}{r1} $\leftarrow$ r9/17} \\
+        (2) & \texttt{\textcolor{r2color}{r2} $\leftarrow$ \textcolor{r2color}{r2}+\textcolor{r1color}{r1}} \\
+        (3) & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
+        (4) & \texttt{\textcolor{r3color}{r3} $\leftarrow$ \textcolor{r3color}{r3}+\textcolor{orange}{r1}} \\
+        (5) & \texttt{jcc L2} \\
+        (6) & \texttt{L2: \textcolor{green}{r1} $\leftarrow$ 35} \\
+        (7) & \texttt{\textcolor{r4color}{r4} $\leftarrow$ \textcolor{r3color}{r3}+\textcolor{green}{r1}} \\
+        (8) & \texttt{\textcolor{blue}{r3} $\leftarrow$ 2} \\
+      \end{tabular}
+    \end{column}
+    
+    \begin{column}{0.5\textwidth}
+      \begin{block}{WAW Issue}
+        If inst (3) is executed before inst (1), r1 ends up having a wrong value.
+        
+        \vspace{0.3cm}
+        
+        Called \alert{write-after-write false dependency}:
+        
+        The order of two writes to the same register is flipped.
+      \end{block}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \end{document}
