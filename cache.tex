@@ -391,11 +391,47 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{Pseudo-LRU (PLRU) Idea}
+\begin{frame}{\color{blue}Pseudo LRU (PLRU)}
 \begin{itemize}
-  \item Use a binary-tree of $n-1$ bits for $n$ ways to track a \emph{partial} order.
-  \item Update bits to point toward the accessed leaf; choose victim by walking opposite.
-  \item Cheaper than true LRU; not always picks the true LRU way.
+  \item \textbf{PLRU records a partial order using a tree structure}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] The ways of a set are in the leaves; the PLRU bits are the internal nodes
+    \begin{itemize}
+      \item For $n$ leaves (ways) there are $n-1$ internal nodes (PLRU bits)
+    \end{itemize}
+  \end{itemize}
+  
+  \vspace{0.3cm}
+  
+  \item \textbf{Example: 4-ways, using 3 bits per-set:}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] Bit$_0$ specifies the access order between ways \{0,1\} and \{2,3\}
+    \item[\textcolor{green}{$\checkmark$}] Bit$_1$ specifies the access order between ways 0 and 1
+    \item[\textcolor{green}{$\checkmark$}] Bit$_2$ specifies the access order between ways 2 and 3
+  \end{itemize}
+  
+  \vspace{0.3cm}
+  
+  \item \textbf{When accessing a way update the PLRU bits to point to it (0-left, 1-right)}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] E.g., after accessing ways 0$\rightarrow$3$\rightarrow$2$\rightarrow$1 the tree looks as follows:
+    \begin{itemize}
+      \item bit$_0$=0 points to the pair with way 1 (the MRU way)
+      \item bit$_1$=1 points to way 1 (the MRU way)
+      \item bit$_2$=0 points to way 2, which was accessed after way 3
+    \end{itemize}
+    \item[\textcolor{green}{$\checkmark$}] The way access order information is partial
+    \begin{itemize}
+      \item Cannot say if way 0 was accessed before/after ways 2 and 3
+    \end{itemize}
+  \end{itemize}
+  
+  \vspace{0.3cm}
+  
+  \item \textbf{Victim selection: follow the opposite directions pointed by the PLRU bits (0-right, 1-left)}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] \textcolor{red}{Way 3 selected as victim, even though way 0 is the LRU way}
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
@@ -464,10 +500,28 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Cache Write Miss Policies}
+\begin{frame}{Cache Write Miss}
 \begin{itemize}
-  \item \textbf{Write-allocate}: fetch line on a store-miss (pairs with write-back).
-  \item \textbf{No-write-allocate}: write directly to memory (pairs with write-through).
+  \item \textbf{The processor is not waiting for data}
+  \begin{itemize}
+    \item[$\Rightarrow$] continues its work
+  \end{itemize}
+  
+  \vspace{0.5cm}
+  
+  \item \textbf{Option 1: Write-allocate: fetch the write miss line into the cache}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] Goes with \textit{write back} policy, assuming more writes are needed
+    \item[\textcolor{green}{$\checkmark$}] Hoping that subsequent writes to the line hit the cache
+  \end{itemize}
+  
+  \vspace{0.5cm}
+  
+  \item \textbf{Option 2: Write-no-allocate: do not fetch the write miss line into the cache}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] Goes with \textit{write through} policy
+    \item[\textcolor{green}{$\checkmark$}] Subsequent writes would update memory anyhow
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
@@ -500,14 +554,6 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Code Optimizations for Locality}
-\begin{itemize}
-  \item \textbf{Merging arrays}: AoS vs SoA trade-offs; reduce conflicts, improve spatial locality.
-  \item \textbf{Loop fusion}: combine loops with same traversal to increase reuse.
-  \item \textbf{Loop interchange}: access arrays in memory order to exploit spatial locality.
-\end{itemize}
-\end{frame}
-
 \begin{frame}{Prefetching (cont.)}
 \begin{itemize}
   \item \textbf{Prefetching relies on extra memory bandwidth}
@@ -533,6 +579,16 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
   \end{itemize}
 \end{itemize}
 \end{frame}
+
+\begin{frame}{Code Optimizations for Locality}
+\begin{itemize}
+  \item \textbf{Merging arrays}: AoS vs SoA trade-offs; reduce conflicts, improve spatial locality.
+  \item \textbf{Loop fusion}: combine loops with same traversal to increase reuse.
+  \item \textbf{Loop interchange}: access arrays in memory order to exploit spatial locality.
+\end{itemize}
+\end{frame}
+
+
 
 \begin{frame}[fragile]{Code Optimizations: Merging Arrays}
 \begin{itemize}
