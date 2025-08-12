@@ -315,12 +315,121 @@
 \end{columns}
 \end{frame}
 
-\begin{frame}{Cache Lookup (summary)}
+\begin{frame}{\color{blue}Cache Lookup}
+\begin{columns}[T]
+\begin{column}{0.6\textwidth}
 \begin{itemize}
-  \item \textbf{Hit}: return data using the block offset.
-  \item \textbf{Miss}: perform a \textbf{line fill} (may require several bus cycles).
-  \item May need to \textbf{evict} another block to make room.
+  \item \textbf{Cache hit}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] Block is mapped to the cache —
+    return data according to block's offset
+  \end{itemize}
+  
+  \vspace{0.4cm}
+  
+  \item \textbf{Cache miss}
+  \begin{itemize}
+    \item[\textcolor{green}{$\checkmark$}] Block is not mapped to the cache
+    \item[$\Rightarrow$] do a cache line fill
+    \begin{itemize}
+      \item[\textcolor{green}{$\bullet$}] Fetch block into fill buffer
+      \item[\textcolor{green}{$\bullet$}] may require few bus cycle
+      \item[\textcolor{green}{$\bullet$}] Write fill buffer into cache
+    \end{itemize}
+    \item[\textcolor{green}{$\checkmark$}] May need to evict another block
+    from the cache
+    \begin{itemize}
+      \item[\textcolor{green}{$\bullet$}] Make room for the new block
+    \end{itemize}
+  \end{itemize}
 \end{itemize}
+\end{column}
+
+\begin{column}{0.4\textwidth}
+\begin{tikzpicture}[scale=0.55]
+  % Define colors
+  \definecolor{lightblue}{RGB}{173,216,230}
+  \definecolor{lightgreen}{RGB}{144,238,144}
+  \definecolor{lightyellow}{RGB}{255,255,224}
+  \definecolor{lightpurple}{RGB}{221,160,221}
+  
+  % Memory column title
+  \node[anchor=south, font=\footnotesize\bfseries] at (1.2, 4.1) {memory};
+  \node[anchor=east, font=\tiny\bfseries] at (0.2, 3.9) {\underline{Block \#}};
+  
+  % Memory blocks with numbers
+  \node[anchor=east, font=\tiny] at (0.2, 3.4) {0};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem0) at (1.2, 3.4) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, 2.9) {1};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem1) at (1.2, 2.9) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, 2.4) {2};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightgreen] (mem2) at (1.2, 2.4) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, 1.9) {3};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem3) at (1.2, 1.9) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, 1.4) {4};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightblue] (mem4) at (1.2, 1.4) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, 0.9) {5};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem5) at (1.2, 0.9) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, 0.4) {6};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem6) at (1.2, 0.4) {};
+  
+  % Dots
+  \node[font=\tiny] at (0.2, 0.0) {.};
+  \node[font=\tiny] at (0.2, -0.2) {.};
+  \node[font=\tiny] at (1.2, -0.1) {$\sim$};
+  
+  % Bottom memory blocks
+  \node[anchor=east, font=\tiny] at (0.2, -0.8) {90};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightpurple] (mem90) at (1.2, -0.8) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, -1.3) {91};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem91) at (1.2, -1.3) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, -1.8) {92};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightyellow] (mem92) at (1.2, -1.8) {};
+  
+  \node[anchor=east, font=\tiny] at (0.2, -2.3) {93};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem93) at (1.2, -2.3) {};
+  
+  % More dots
+  \node[font=\tiny] at (0.2, -2.7) {.};
+  \node[font=\tiny] at (0.2, -2.9) {.};
+  \node[font=\tiny] at (1.2, -2.8) {$\sim$};
+  
+  % 64B width indicator
+  \node[anchor=center, font=\tiny] at (1.2, -3.3) {$\leftarrow$ 64B $\rightarrow$};
+  
+  % Cache column
+  \node[anchor=south, font=\footnotesize\bfseries] at (4.2, 2.5) {cache};
+  
+  % Cache lines with block numbers
+  \node[font=\tiny] at (3.6, 2.1) {90};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightpurple] (cache90) at (4.6, 2.1) {};
+  
+  \node[font=\tiny] at (3.6, 1.6) {2};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightgreen] (cache2) at (4.6, 1.6) {};
+  
+  \node[font=\tiny] at (3.6, 1.1) {4};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightblue] (cache4) at (4.6, 1.1) {};
+  
+  \node[font=\tiny] at (3.6, 0.6) {92};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightyellow] (cache92) at (4.6, 0.6) {};
+  
+  % Arrows from memory to cache
+  \draw[->, thick] (mem90.east) to[out=0, in=180] (cache90.west);
+  \draw[->, thick] (mem2.east) to[out=0, in=180] (cache2.west);
+  \draw[->, thick] (mem4.east) to[out=0, in=180] (cache4.west);
+  \draw[->, thick] (mem92.east) to[out=0, in=180] (cache92.west);
+  
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Fully Associative (FA) Cache}
