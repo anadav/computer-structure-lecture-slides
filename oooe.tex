@@ -1,0 +1,199 @@
+
+\documentclass[aspectratio=169]{beamer}
+\usepackage{tikz}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usetikzlibrary{automata,positioning,arrows.meta,backgrounds}
+\usetikzlibrary{arrows.meta,positioning,calc,matrix}
+
+% Define colors
+\definecolor{myblue}{RGB}{0,0,255}
+\definecolor{mypurple}{RGB}{128,0,128}
+\definecolor{mygreen}{RGB}{0,128,0}
+\definecolor{myorange}{RGB}{255,140,0}
+\definecolor{lightblue}{RGB}{173,216,230}
+\definecolor{peach}{RGB}{255,218,185}
+\definecolor{lightpurple}{RGB}{230,230,250}
+
+\usetheme{default}
+\setbeamertemplate{navigation symbols}{}
+
+\title{Computer Structure\\\large Out-Of-Order Execution}
+\author{Lihu Rappoport}
+\institute{Technion -- Computer Science}
+\date{}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{What's Next}
+\begin{itemize}
+  \item[$\diamond$] \textbf{Goal:} minimize CPU Time
+  \begin{equation*}
+    	ext{CPU Time} = \text{clock cycle} \times \text{CPI} \times \text{IC}
+  \end{equation*}
+  \item[$\diamond$] So far we have learned
+  \begin{itemize}
+    \item[$\triangleright$] Minimize clock cycle $\Rightarrow$ add more pipe stages
+    \item[$\triangleright$] Minimize CPI $\Rightarrow$ use pipeline
+    \item[$\triangleright$] Minimize IC $\Rightarrow$ architecture
+  \end{itemize}
+  \item[$\diamond$] In a pipelined CPU
+  \begin{itemize}
+    \item[$\triangleright$] CPI without hazards is 1
+    \item[$\triangleright$] CPI with hazards is $> 1$
+  \end{itemize}
+  \item[$\diamond$] Adding more pipe stages reduces clock cycle \emph{but} increases CPI
+  \begin{itemize}
+    \item[$\triangleright$] Higher penalty due to control hazards
+    \item[$\triangleright$] More data hazards
+  \end{itemize}
+  \item[$\diamond$] What can we do? \textbf{Further reduce the CPI!}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{A Superscalar CPU}
+\begin{itemize}
+  \item[$\diamond$] Duplicating hardware in one pipe stage won’t help
+  \begin{itemize}
+    \item[$\triangleright$] e.g., have 2 ALUs
+    \item[$\triangleright$] the bottleneck moves to other stages
+  \end{itemize}
+  \item[$\diamond$] Getting IPC $>1$ requires fetching, decoding, executing, and retiring $>1$ instruction per clock
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Pentium\textregistered{} Processor (1993)}
+\begin{itemize}
+  \item Fetch and decode 2 instructions per cycle
+  \item At decode stage decide on \emph{pairing}: can the two instructions be executed in parallel
+  \item Pairing decision is based on
+  \begin{itemize}
+    \item \textbf{Data dependencies:} 2\textsuperscript{nd} instruction must be independent of 1\textsuperscript{st}
+    \begin{itemize}
+      \item If the 1\textsuperscript{st} instruction produces data needed by the 2\textsuperscript{nd} instruction, the 2\textsuperscript{nd} instruction cannot be executed in parallel to the 1\textsuperscript{st}.
+    \end{itemize}
+    \item \textbf{Resources:} U-pipe and V-pipe are not symmetric (save HW)
+    \begin{itemize}
+      \item Common instructions can execute on either pipe
+      \item Some instructions can execute only on the U-pipe
+      \item V-pipe can run a subset of the instructions that can run on U-pipe
+      \item If the 2\textsuperscript{nd} instruction requires the U-pipe, it cannot pair
+      \item Some instructions use resources of both pipes (and therefore cannot pair)
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Misprediction Penalty in a Superscalar CPU}
+\begin{itemize}
+  \item Assume
+  \begin{itemize}
+    \item 1 / 100 instruction is a mispredicted jump (MPI $=1\%$)
+    \item Flush penalty of 5 cycles
+  \end{itemize}
+  \item For IPC $=2$
+  \begin{itemize}
+    \item Flush every $100/2 = 50$ cycles
+    \item 5 cycles flush penalty every 50 cycles $\Rightarrow$ $10\%$ performance hit
+  \end{itemize}
+  \item For IPC $=1$
+  \begin{itemize}
+    \item Flush every $100/1 = 100$ cycles
+    \item 5 cycles flush penalty per 100 cycles $\Rightarrow$ $5\%$ performance hit
+  \end{itemize}
+  \item \textbf{Flush penalty increases as the machine is deeper and wider.}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Extract More ILP}
+\begin{itemize}
+  \item \textbf{ILP -- Instruction Level Parallelism}
+  \begin{itemize}
+    \item A given program, executed on a given input data has a given parallelism
+    \item Can execute only independent instructions in parallel
+    \item If, for example, each instruction is dependent on the previous instruction, ILP $= 1$ (adding more HW will not change that)
+  \end{itemize}
+  \item Adjacent instructions are usually dependent
+  \begin{itemize}
+    \item 2\textsuperscript{nd} pipe utilization is lower than 1\textsuperscript{st}; a 3\textsuperscript{rd} pipe utilization further goes down
+  \end{itemize}
+  \item Cache misses stall execution -- instructions dependent on a missed load stall
+  \item Compilers are limited to basic blocks, and are not aware of cache misses
+  \item \textbf{Solution: Out-Of-Order Execution}
+  \begin{itemize}
+    \item Look for independent instructions further ahead in the program
+    \item Execute instructions based on data readiness
+    \item Still need to keep the semantics of the original program
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Data Flow Analysis --- Example}
+\textbf{Assume divide takes multiple cycles.}
+\vspace{0.5em}
+
+\begin{verbatim}
+(1) r1 <- r4 / r7
+(2) r8 <- r1 + r2
+(3) r5 <- r5 + 1
+(4) r6 <- r6 - r3
+(5) r4 <- r5 + r6
+(6) r7 <- r8 * r4
+\end{verbatim}
+
+\begin{itemize}
+  \item Out-of-order allows executing (3) and (4) while (1) divides.
+  \item Once (3) and (4) complete, (5) can proceed, then (6).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{OOOE --- General Scheme}
+\begin{itemize}
+  \item \textbf{Fetch \& decode} instructions in parallel but in-order
+  \begin{itemize}
+    \item Fill the \emph{Instruction Pool}
+  \end{itemize}
+  \item \textbf{Execute} ready instructions from the instruction pool
+  \begin{itemize}
+    \item All source data ready $+$ needed execution resources available
+  \end{itemize}
+  \item Once an instruction is executed, signal all dependent instructions that data is ready
+  \item \textbf{Commit} instructions in parallel but in-order
+  \begin{itemize}
+    \item State change (memory, register) and fault/exception handling
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Write-After-Write Dependency (1/2)}
+\begin{verbatim}
+(1) r1 <- r9 / 17
+(2) r2 <- r2 + r1
+(3) r1 <- 23
+(4) r3 <- r3 + r1
+(5) jcc L2
+(6) L2: r1 <- 35
+(7) r4 <- r3 + r1
+(8) r3 <- 2
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Write-After-Write Dependency (2/2)}
+\begin{itemize}
+  \item If instruction (3) is executed before instruction (1), \texttt{r1} ends up having a wrong value.
+  \item Called \textbf{write-after-write} false dependency: the order of two writes to the same register is flipped.
+\end{itemize}
+\end{frame}
+
+\end{document}
