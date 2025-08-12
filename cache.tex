@@ -1456,47 +1456,48 @@ Modified  & Yes & Yes  & No\\
 \end{frame}
 
 \begin{frame}{MESI Protocol: Actions}
-\begin{tikzpicture}[
-    state/.style={circle, draw, minimum size=2cm, thick},
+\centering
+\begin{tikzpicture}[scale=0.65, transform shape,
+    state/.style={circle, draw, minimum size=1.8cm, thick, font=\footnotesize},
     arrow/.style={->, >=Stealth, thick},
-    every edge/.style={arrow},
+    %every edge/.style={arrow},
     auto,
-    node distance=5cm
+    node distance=3.5cm
 ]
 
-% Define states
+% Define states - closer together
 \node[state] (invalid) at (0,0) {Invalid};
-\node[state] (shared) at (5,3) {Shared};
-\node[state] (exclusive) at (10,0) {Exclusive};
-\node[state] (modified) at (5,-3) {Modified};
+\node[state] (shared) at (3.5,2.5) {Shared};
+\node[state] (exclusive) at (7,0) {Exclusive};
+\node[state] (modified) at (3.5,-2.5) {Modified};
 
-% Self-loops
+% Self-loops with smaller text
 \path[arrow] 
-    (invalid) edge[loop left] node[text width=2cm, align=center] {any\\snoop} (invalid)
-    (shared) edge[loop above] node {snoop read} (shared)
-    (shared) edge[loop right] node {read hit} (shared)
-    (exclusive) edge[loop right] node {read hit} (exclusive)
-    (modified) edge[loop below] node[text width=2.5cm, align=center] {read/write\\hit} (modified);
+    (invalid) edge[loop left] node[font=\tiny, text width=1.5cm, align=center] {any\\snoop} (invalid)
+    (shared) edge[loop above] node[font=\tiny] {snoop read} (shared)
+    (shared) edge[loop right] node[font=\tiny] {read hit} (shared)
+    (exclusive) edge[loop right] node[font=\tiny] {read hit} (exclusive)
+    (modified) edge[loop below] node[font=\tiny, text width=1.8cm, align=center] {read/write\\hit} (modified);
 
-% Transitions between states
+% Transitions between states with smaller text
 \path[arrow]
     % From Invalid
-    (invalid) edge[bend left=20, cyan!70!black] node[above, sloped, text width=3cm, align=center] {read miss \&\\somewhere else} (shared)
-    (invalid) edge[bend right=20, blue!70!black] node[below, sloped, text width=2.5cm, align=center] {read miss,\\only here} (exclusive)
-    (invalid) edge[red!70!black] node[below] {write} (modified)
+    (invalid) edge[bend left=15, cyan] node[font=\tiny, above, sloped, text width=2.2cm, align=center] {read miss \&\\somewhere else} (shared)
+    (invalid) edge[bend right=15, blue] node[font=\tiny, below, sloped, text width=1.8cm, align=center] {read miss,\\only here} (exclusive)
+    (invalid) edge[red] node[font=\tiny, below] {write} (modified)
     
     % From Shared
-    (shared) edge[bend left=20, red!70!black] node[below, sloped] {snoop write} (invalid)
-    (shared) edge[blue!70!black] node[right] {write} (modified)
+    (shared) edge[bend left=15, red] node[font=\tiny, below, sloped] {snoop write} (invalid)
+    (shared) edge[blue] node[font=\tiny, right] {write} (modified)
     
     % From Exclusive
-    (exclusive) edge[bend left=20, cyan!70!black] node[above, sloped] {snoop read} (shared)
-    (exclusive) edge[black] node[right, text width=2.5cm, align=center] {write hit\\(write to\\memory)} (modified)
+    (exclusive) edge[bend left=15, cyan] node[font=\tiny, above, sloped] {snoop read} (shared)
+    (exclusive) edge[black] node[font=\tiny, right, text width=1.8cm, align=center] {write hit\\(write to\\memory)} (modified)
     
     % From Modified
-    (modified) edge[bend left=20, black] node[below, sloped, text width=3cm, align=center] {write hit\\(setup for late write)} (exclusive)
-    (modified) edge[red!70!black] node[left] {snoop write} (invalid)
-    (modified) edge[cyan!70!black] node[left] {snoop read} (shared);
+    (modified) edge[bend left=15, black] node[font=\tiny, below, sloped, text width=2.2cm, align=center] {write hit\\(setup for late write)} (exclusive)
+    (modified) edge[red] node[font=\tiny, left] {snoop write} (invalid)
+    (modified) edge[cyan] node[font=\tiny, left] {snoop read} (shared);
 
 \end{tikzpicture}
 
