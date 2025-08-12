@@ -38,8 +38,8 @@
 \begin{itemize}
   \item Large (dense) memories are \textbf{slow}
   \item Fast memories are \textbf{small}, expensive and consume high power
-  \item Goal: give the processor a feeling that it has a memory which is large (dense), fast, consumes low power, and cheap
-  \item Solution: a Hierarchy of memories
+  \item Goal: give the processor the feeling that it has a memory which is large (dense), fast, consumes low power, and cheap
+  \item Solution: a hierarchy of memories
 \end{itemize}
 
 \vspace{0.3cm}
@@ -116,18 +116,18 @@
 
 \begin{frame}{Memory Hierarchy: Terminology}
 \begin{itemize}
-  \item \textbf{For each memory level define the following}
+  \item \textbf{For each memory level, define the following:}
   \begin{itemize}
-    \item \textcolor{green!60!black}{\textbf{Hit:}} data of the requested address is available in the cache level
-    \item \textcolor{green!60!black}{\textbf{Miss:}} data of the requested address is not available in the cache level
+    \item \textcolor{green!60!black}{\textbf{Hit:}} data at the requested address is available in the cache level
+    \item \textcolor{green!60!black}{\textbf{Miss:}} data at the requested address is not available in the cache level
     \item \textcolor{green!60!black}{\textbf{Hit Rate:}} the fraction of accesses that hit in that cache level
     \begin{itemize}
       \item For L1 cache: \#L1 hits / \#data accesses in the program
       \item For L2 cache: \#L2 hits / \#L1 misses
     \end{itemize}
-    \item \textcolor{green!60!black}{\textbf{Hit Time:}} time from data request till data received when hitting in the cache level; includes the time to determine hit/miss
+    \item \textcolor{green!60!black}{\textbf{Hit Time:}} time from data request until data received when hitting in the cache level; includes the time to determine hit/miss
     \item \textcolor{green!60!black}{\textbf{Miss Rate}} = $1 - (\text{Hit Rate})$
-    \item \textcolor{green!60!black}{\textbf{Miss Penalty:}} Time to replace a block in the upper level + Time to deliver the block the processor
+    \item \textcolor{green!60!black}{\textbf{Miss Penalty:}} Time to replace a block in the upper level + Time to deliver the block to the processor
   \end{itemize}
   
   \vspace{0.3cm}
@@ -136,7 +136,7 @@
   \hspace{1cm} $t_{\text{effective}} = (\text{Hit time} \times \text{Hit Rate}) + (\text{Miss Time} \times \text{Miss rate})$\\
   \hspace{2.2cm} $= (\text{Hit time} \times \text{Hit Rate}) + (\text{Miss Time} \times (1-\text{Hit rate}))$
   \begin{itemize}
-    \item If hit rate is close to 1, $t_{\text{effective}}$ is close to Hit time
+    \item If hit rate is close to 1, $t_{\text{effective}}$ is close to hit time
   \end{itemize}
 \end{itemize}
 \end{frame}
@@ -173,7 +173,7 @@
 \end{center}
 
 \begin{itemize}
-  \item $t_{\text{mem}}/t_{\text{cache}}$ goes up $\Rightarrow$ more important that hit-rate closer to 1
+  \item $t_{\text{mem}}/t_{\text{cache}}$ ratio increases $\Rightarrow$ more important that hit-rate is closer to 1
 \end{itemize}
 \end{frame}
 
@@ -183,7 +183,7 @@
 \begin{itemize}
   \item \textcolor{blue}{\textbf{The cache holds a small part of the entire memory}}
   \begin{itemize}
-    \item Need to map parts of the memory into the cache
+    \item Need to map parts of memory into the cache
   \end{itemize}
   
   \item \textcolor{blue}{\textbf{Main memory is (logically) partitioned into blocks}}
@@ -192,11 +192,11 @@
     \item Blocks are aligned
   \end{itemize}
   
-  \item \textcolor{blue}{\textbf{The cache partitioned into cache lines}}
+  \item \textcolor{blue}{\textbf{The cache is partitioned into cache lines}}
   \begin{itemize}
     \item Each cache line holds a memory block
     \item Only a subset of the memory blocks are mapped to the cache at a given time
-    \item The cache views an address as
+    \item The cache views an address as:
   \end{itemize}
 \end{itemize}
 
@@ -326,8 +326,8 @@
 \begin{itemize}
   \item \textcolor{blue}{\textbf{2 ways}}
   \begin{itemize}
-    \item 1 bit per set to mark the latest way accessed in the set
-    \item Evict the way which is not pointed by the bit
+    \item 1 bit per set to mark the most recently accessed way in the set
+    \item Evict the way which is not pointed to by the bit
   \end{itemize}
   
   \item \textcolor{blue}{\textbf{k-way set associative LRU}}
@@ -339,7 +339,7 @@
       \item Many bits $\Rightarrow$ complicated update scheme
     \end{itemize}
     \item When way $i$ is accessed:
-    \item When replacement is needed: evict way with counter = 0
+    \item When replacement is needed: evict the way with counter = 0
   \end{itemize}
   
   \begin{block}{Pseudo-code (on access of way $i$)}
@@ -401,33 +401,33 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 
 \begin{frame}{Cache Line Size Trade-offs}
 \begin{itemize}
-  \item Larger lines exploit spatial locality but may fetch unused data $\rightarrow$ more evictions.
-  \item Larger lines increase \textbf{miss penalty}; ``critical word first'' helps.
-  \item $t_{\text{avg}} = t_{hit}\cdot(1-\text{MR}) + t_{miss}\cdot \text{MR}$.
+  \item Larger lines exploit spatial locality but may fetch unused data $\rightarrow$ more evictions
+  \item Larger lines increase \textbf{miss penalty}; ``critical word first'' helps
+  \item $t_{\text{avg}} = t_{hit}\cdot(1-\text{MR}) + t_{miss}\cdot \text{MR}$
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Performance Impact}
 \begin{itemize}
-  \item \textbf{MPI} (misses per instruction) = misses/access $\times$ accesses/instr.
-  \item Memory stall cycles $= \text{IC}\cdot \text{MPI}\cdot \text{miss penalty}$.
-  \item CPU time $= \text{IC}\cdot(\text{CPI}_{exec}+\text{MPI}\cdot \text{miss penalty})\cdot \text{cycle time}$.
+  \item \textbf{MPI} (misses per instruction) = misses/access $\times$ accesses/instruction
+  \item Memory stall cycles $= \text{IC}\cdot \text{MPI}\cdot \text{miss penalty}$
+  \item CPU time $= \text{IC}\cdot(\text{CPI}_{exec}+\text{MPI}\cdot \text{miss penalty})\cdot \text{cycle time}$
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Classifying Misses: The 3Cs}
 \begin{itemize}
-  \item \textbf{Compulsory}: first reference to a block $\Rightarrow$ prefetch to mitigate.
-  \item \textbf{Capacity}: working set $>$ cache size $\Rightarrow$ increase size / stream buffers.
-  \item \textbf{Conflict}: set mapping causes evictions $\Rightarrow$ higher associativity / victim cache.
+  \item \textbf{Compulsory}: first reference to a block $\Rightarrow$ use prefetch to mitigate
+  \item \textbf{Capacity}: working set $>$ cache size $\Rightarrow$ increase size / use stream buffers
+  \item \textbf{Conflict}: set mapping causes evictions $\Rightarrow$ use higher associativity / victim cache
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Line Fill and Fill Buffers}
 \begin{itemize}
-  \item Missed block arrives in chunks; critical-chunk-first to reduce latency.
-  \item Fill buffer accumulates full line, then writes to cache; also searched on access.
-  \item ``Streaming'' loads may bypass L1 fill to avoid pollution.
+  \item Missed block arrives in chunks; critical-chunk-first reduces latency
+  \item Fill buffer accumulates the full line, then writes to cache; also searched on access
+  \item ``Streaming'' loads may bypass L1 fill to avoid pollution
 \end{itemize}
 \end{frame}
 
@@ -487,10 +487,71 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{itemize}
 \end{frame}
 
+\begin{frame}{Prefetching (cont.)}
+\begin{itemize}
+  \item \textbf{Prefetching relies on extra memory bandwidth}
+  \begin{itemize}
+    \item Too aggressive / inaccurate prefetching slows down demand fetches and pollutes the cache
+    \begin{itemize}
+      \item Hurts performance
+    \end{itemize}
+  \end{itemize}
+  
+  \item \textbf{Software Prefetching}
+  \begin{itemize}
+    \item Special prefetching instructions that cannot cause faults
+  \end{itemize}
+  
+  \item \textbf{Instruction Prefetching}
+  \begin{itemize}
+    \item On a cache miss, prefetch sequential cache lines into stream buffers
+    \item Branch predictor directed prefetching
+    \begin{itemize}
+      \item Let branch predictor run ahead
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Code Optimizations: Merging Arrays}
+\begin{itemize}
+  \item \textbf{Merge 2 arrays into a single array of compound elements}
+\end{itemize}
+
+\begin{columns}
+\begin{column}{0.65\textwidth}
+\begin{block}{Before: two sequential arrays}
+\small
+\begin{lstlisting}[basicstyle=\ttfamily\small, commentstyle=\color{red}]
+int val[SIZE];
+int key[SIZE];
+\end{lstlisting}
+\end{block}
+
+\begin{block}{After: One array of structures}
+\small
+\begin{lstlisting}[basicstyle=\ttfamily\small, commentstyle=\color{green!60!black}]
+struct merge {
+    int val;
+    int key;
+} merged_array[SIZE];
+\end{lstlisting}
+\end{block}
+\end{column}
+
+\begin{column}{0.35\textwidth}
+\begin{itemize}
+  \item[$\diamond$] \textbf{Reduce conflicts between val and key}
+  \item[$\diamond$] \textbf{Improves spatial locality}
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
 \begin{frame}[fragile]{Code Optimizations: Loop Fusion}
 \begin{itemize}
   \item \textbf{Merge loops with shared data access}
-  \item Assume each element in \texttt{a} is 4 bytes, 32KB cache, 32 B / line
+  \item Assume each element in \texttt{a} is 4 bytes, 32KB cache, 32 B/line
 \end{itemize}
 
 \begin{columns}
@@ -516,34 +577,34 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \begin{column}{0.45\textwidth}
 %\textbf{Before Fusion:}
 \begin{itemize}
-  \item[\textcolor{green}{$\diamond$}] First loop: hit 7/8 of iterations
+  \item[\textcolor{green}{$\diamond$}] First loop: hit in 7/8 of iterations
   \item[\textcolor{green}{$\diamond$}] Second loop: $\text{array} > \text{cache}$ $\Rightarrow$ same hit rate as in 1\textsuperscript{st} loop
 \end{itemize}
 
 \vspace{1cm}
 %\textbf{After Fusion:}
 \begin{itemize}
-  \item[\textcolor{green}{$\diamond$}] First line: hit 7/8 of iterations
-  \item[\textcolor{green}{$\diamond$}] Second line: hit all
+  \item[\textcolor{green}{$\diamond$}] First line: hit in 7/8 of iterations
+  \item[\textcolor{green}{$\diamond$}] Second line: hit in all
 \end{itemize}
 
 \vspace{0.2cm}
 \footnotesize
-\textit{Note: Only load accesses are taken into account for hit rate calculation}
+\textit{Note: Only load accesses are considered for hit rate calculation}
 \end{column}
 \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{Code Optimizations: Loop Interchange}
 \begin{itemize}
-  \item \textbf{2-dimension array in memory:}
+  \item \textbf{2-dimensional array in memory:}
 \end{itemize}
 
 \small
 \texttt{x[0][0] x[0][1] ... x[0][99] x[1][0] x[1][1] ...}
 
 \vspace{0.3cm}
-\begin{block}{Original program: access are 100 bytes apart}
+\begin{block}{Original program: accesses are 100 bytes apart}
 \small
 \texttt{/* x[0][0] x[1][0] ... x[4999][0] x[0][1] x[1][1] ... */}\\
 \texttt{for (j = 0; j < 100; j++)}\\
@@ -552,7 +613,7 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{block}
 
 \vspace{0.2cm}
-\begin{block}{Reversing the loops order: access are adjacent}
+\begin{block}{Reversing the loop order: accesses are adjacent}
 \small
 \texttt{/* Improved spatial locality */}\\
 \begin{tikzpicture}[overlay, remember picture]
@@ -570,45 +631,45 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 
 \begin{frame}{Improving Cache Performance (summary)}
 \begin{itemize}
-  \item \textbf{Reduce miss rate}: bigger caches/lines, higher associativity, victim cache, stream buffers, prefetching, compiler transforms.
-  \item \textbf{Reduce miss penalty}: early restart/critical word first, non-blocking caches, L2/L3.
-  \item \textbf{Reduce hit time}: smaller, on-chip, direct-mapped L1.
+  \item \textbf{Reduce miss rate}: bigger caches/lines, higher associativity, victim cache, stream buffers, prefetching, compiler transforms
+  \item \textbf{Reduce miss penalty}: early restart/critical word first, non-blocking caches, L2/L3
+  \item \textbf{Reduce hit time}: smaller, on-chip, direct-mapped L1
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Split I-Cache / D-Cache}
 \begin{itemize}
-  \item Parallel fetch and data access in different pipe stages.
-  \item Different characteristics: I$:$ read-only; D$:$ reads and writes; different prefetching.
-  \item Self-modifying code: snoop I-cache tags and invalidate on matching store.
+  \item Parallel fetch and data access in different pipeline stages
+  \item Different characteristics: I$:$ read-only; D$:$ reads and writes; different prefetching
+  \item Self-modifying code: snoop I-cache tags and invalidate on matching store
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Non-Blocking Caches}
 \begin{itemize}
-  \item \textbf{Hit-under-miss}: allow hits to proceed while one miss outstanding.
-  \item \textbf{Miss-under-miss}: track multiple misses concurrently; requires MSHRs.
+  \item \textbf{Hit-under-miss}: allow hits to proceed while one miss is outstanding
+  \item \textbf{Miss-under-miss}: track multiple misses concurrently; requires MSHRs
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Multi-ported / Banked Caches}
 \begin{itemize}
-  \item True $n$-ported caches enable $n$ parallel accesses but nearly double area.
-  \item Alternative: \textbf{banked} caches to allow some parallel accesses with less cost.
+  \item True $n$-ported caches enable $n$ parallel accesses but nearly double the area
+  \item Alternative: \textbf{banked} caches to allow some parallel accesses with less cost
 \end{itemize}
 \end{frame}
 
 \begin{frame}{L2 Cache (and beyond)}
 \begin{itemize}
-  \item Larger but slower; reduces L1 miss penalty by filtering DRAM.
-  \item Often shared across cores; may be \textbf{inclusive} of all L1s.
-  \item Inclusive L2 must snoop/invalidate L1s on L2 evictions.
+  \item Larger but slower; reduces L1 miss penalty by filtering DRAM
+  \item Often shared across cores; may be \textbf{inclusive} of all L1s
+  \item Inclusive L2 must snoop/invalidate L1s on L2 evictions
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Coherence Basics}
 \begin{itemize}
-  \item Coherent if: (1) a later read returns the last written value; (2) all processors see stores to the same address in the same order.
+  \item Coherent if: (1) a later read returns the last written value; (2) all processors see stores to the same address in the same order
 \end{itemize}
 \end{frame}
 
@@ -632,33 +693,42 @@ Modified  & Yes & Yes  & No\\
 
 \begin{frame}{Global Observation (GO)}
 \begin{itemize}
-  \item A write is \textbf{globally observed} when any subsequent read by any processor returns its value.
-  \item Data for an RFO can be sent early, but GO cannot be granted until invalidations complete.
-  \item Prevents ordering violations where other cores still use stale values.
+  \item A write is \textbf{globally observed} when any subsequent read by any processor returns its value
+  \item Data for an RFO can be sent early, but GO cannot be granted until invalidations complete
+  \item Prevents ordering violations where other cores still use stale values
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Inclusion vs. Non-Inclusive Designs}
 \begin{itemize}
-  \item Inclusive L2 is simple but wastes space when L2 is not much larger than L1.
-  \item \textbf{Non-inclusive} design: a separate \textbf{snoop filter} (tags + per-core valid bits) tracks sharers.
-  \item L1 and L2 can be mutually exclusive; L2 acts as a victim cache for L1.
+  \item Inclusive L2 is simple but wastes space when L2 is not much larger than L1
+  \item \textbf{Non-inclusive} design: a separate \textbf{snoop filter} (tags + per-core valid bits) tracks sharers
+  \item L1 and L2 can be mutually exclusive; L2 acts as a victim cache for L1
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Optimization Summary (table)}
+\begin{frame}{Cache Optimization Summary}
 \begin{center}
+\footnotesize
 \begin{tabular}{lccc}
 \toprule
-Technique & Miss rate & Miss penalty & Hit time\\
+\textbf{Technique} & \textbf{Miss Rate} & \textbf{Miss Penalty} & \textbf{Hit Time}\\
 \midrule
-Larger block size & $\downarrow$ & $\uparrow$ & --\\
-Higher associativity & $\downarrow$ & $\uparrow$ & --\\
-Victim cache & $\downarrow$ & -- & --\\
-HW/SW prefetch & $\downarrow$ & -- & --\\
-Early restart \& critical word first & -- & $\downarrow$ & --\\
-Non-blocking caches & -- & $\downarrow$ & --\\
-Second-level caches & -- & $\downarrow$ & --\\
+\textbf{Miss Rate Reduction:} & & & \\
+\quad Larger Block Size & + & -- & \\
+\quad Higher Associativity & + & & -- \\
+\quad Victim Caches & + & & \\
+\quad Pseudo-Associative Caches & + & & \\
+\quad HW Prefetching of Instr/Data & + & & \\
+\quad Compiler Controlled Prefetching & + & & \\
+\quad Compiler Reduce Misses & + & & \\
+\midrule
+\textbf{Miss Penalty Reduction:} & & & \\
+\quad Priority to Read Misses & & + & \\
+\quad Sub-block Placement & & + & + \\
+\quad Early Restart \& Critical Word 1st & & + & \\
+\quad Non-Blocking Caches & & + & \\
+\quad Second Level Caches & & + & \\
 \bottomrule
 \end{tabular}
 \end{center}
