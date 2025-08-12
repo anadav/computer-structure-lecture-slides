@@ -836,33 +836,26 @@
 
 \begin{frame}{Register Renaming}
   \begin{itemize}
-    \item \textbf{Hold a pool of \emph{physical registers}}
-    \begin{itemize}
-      \item Maintain a mapping of architectural registers to physical registers
-    \end{itemize}
+    \item \textbf{Physical register pool:} Maps architectural registers to physical registers
     
-    \item \textbf{When an instruction is allocated into the instruction pool (in-order)}
+    \item \textbf{Allocation (in-order):}
     \begin{enumerate}
-      \item If the instruction writes to a destination register Rx, map Rx to a free physical register from a pool, PRi
-      \item Update the mapping of Rx to Pri: the latest value for Rx is stored in PRi
-      \item Rename the architectural source registers of the instruction with the currently mapped physical registers (or arch register if no physical register)
+      \item If instruction writes Rx $\rightarrow$ allocate free physical register PRi
+      \item Update mapping: Rx $\mapsto$ PRi
+      \item Rename sources to their mapped physical registers
     \end{enumerate}
     
-    \item \textbf{Send instruction to EXE (out-of-order)}
+    \item \textbf{Execution (out-of-order):}
     \begin{itemize}
-      \item When its physical sources are ready AND needed execution resources are available
-      \item The instruction uses the correct sources, regardless of the execution order
-      \item Instead of writing the result to Rx, the instruction writes the result to PRi
+      \item Execute when sources ready \& resources available
+      \item Write result to PRi (not Rx)
     \end{itemize}
     
-    \item \textbf{When an instruction commits (in-order)}
+    \item \textbf{Commit (in-order):}
     \begin{itemize}
-      \item Copy the value from its physical register to the architectural register: Rx $\leftarrow$ PRi
-      \item If the current mapping of Rx is still the physical PRi (so far, no subsequent instruction writes to Rx)
-      \begin{itemize}
-        \item Set Rx's mapping to be architectural (the most updated value of Rx is in Rx)
-      \end{itemize}
-      \item Return PRi to the free physical register pool
+      \item Copy PRi $\rightarrow$ Rx
+      \item If Rx still maps to PRi: set mapping to architectural
+      \item Return PRi to free pool
     \end{itemize}
   \end{itemize}
 \end{frame}
