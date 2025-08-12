@@ -305,7 +305,7 @@
       exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=1cm}]
       
       % Blocks
-      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[pool] (pool) at (4,0) {Instruction pool};
       \node[exe] (exec) at (4,-2.5) {Execute};
       \node[block] (retire) at (8,0) {Retire (commit)};
@@ -648,7 +648,7 @@
       exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=1cm}]
       
       % Blocks
-      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[pool] (pool) at (4,0) {Instruction pool};
       \node[exe] (exec) at (4,-2.5) {Execute};
       \node[block] (retire) at (8,0) {Retire (commit)};
@@ -1112,7 +1112,7 @@
       block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=0.8cm},
       rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm}]
       
-      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[rename] (rename) at (3,0) {rename};
       
       % Multiple arrows from fetch to rename
@@ -1140,7 +1140,7 @@
       rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm},
       pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=0.8cm}]
       
-      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[rename] (rename) at (2.5,0) {rename};
       \node[pool] (rob) at (5.5,0.8) {ROB};
       \node[pool] (rs) at (5.5,-0.8) {RS};
@@ -1170,7 +1170,7 @@
       pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=0.8cm},
       exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=0.8cm}]
       
-      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[rename] (rename) at (2.5,0) {rename};
       \node[pool] (rob) at (5.5,1) {ROB};
       \node[pool] (rs) at (5.5,-1) {RS};
@@ -1210,7 +1210,7 @@
       exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=0.8cm},
       retire/.style={rectangle, draw, fill=yellow!30, minimum width=1.5cm, minimum height=0.8cm}]
       
-      \node[block] (fetch) at (0,0) {Fetch \& Decode};
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[rename] (rename) at (2.5,0) {rename};
       \node[pool] (rob) at (5.5,0) {ROB};
       \node[pool] (rs) at (5.5,-1.5) {RS};
@@ -1242,4 +1242,267 @@
     \end{tikzpicture}
   \end{center}
 \end{frame}
+
+
+\begin{frame}{Large ROB and RS are Important}
+  \begin{itemize}
+    \item \textbf{A Large RS}
+    \begin{itemize}
+      \item Increase the window in which looking for independent instructions
+      \begin{itemize}
+        \item Exposes more parallelism potential
+      \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Large ROB}
+    \begin{itemize}
+      \item The ROB is a superset of the RS $\Rightarrow$ ROB size $\geq$ RS size
+      \item Allows for covering long latency operations (cache miss, divide)
+    \end{itemize}
+    
+    \item \textbf{Example}
+    \begin{itemize}
+      \item Assume there is a Load that misses the L1 cache and hits the L2 cache
+      \begin{itemize}
+        \item Data takes $\sim$10 cycles to return $\Rightarrow$ $\sim$30 new instrs get into pipeline
+      \end{itemize}
+      \item Instructions following the Load cannot commit $\Rightarrow$ pile up in the ROB
+      \item Instructions independent of the load are executed, and leave the RS
+      \begin{itemize}
+        \item As long as the ROB is not full, we can keep fetching, renaming, and executing instructions
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Out Of Order Execution Summary}
+  \begin{itemize}
+    \item \textbf{Look ahead in a window of instructions}
+    \begin{itemize}
+      \item Dispatch \emph{ready instructions} to execution
+      \begin{itemize}
+        \item Do not depend on data from previous instructions still not executed
+        \item Have the required execution resources available
+      \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Advantages}
+    \begin{itemize}
+      \item Exploit Instruction Level Parallelism beyond adjacent instructions
+      \item Help cover latencies (e.g., L1 data cache miss, divide)
+      \item Superior/complementary to compiler scheduler
+      \begin{itemize}
+        \item Can look for ILP beyond conditional branches
+        \item In a given control path instructions may be independent
+        \item Register Renaming: use more than the number architectural registers
+      \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Complex micro-architecture}
+    \begin{itemize}
+      \item Register renaming, complex scheduler, misprediction recovery
+      \item Memory ordering (coming next)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \vspace{3cm}
+    {\Huge \textbf{OOO Execution of Memory Operations}}
+  \end{center}
+\end{frame}
+
+\begin{frame}{OOO Execution of Memory Operations}
+  \begin{itemize}
+    \item \textbf{The RS dispatches instructions based on \textcolor{green}{register} dependencies}
+    \begin{itemize}
+      \item The RS cannot detect \textcolor{purple}{memory} dependencies
+      \begin{center}
+        \texttt{store Mem[r1+r3*2] $\leftarrow$ r9}\\
+        \texttt{load  r2 $\leftarrow$ Mem[r10+r7*2]}
+      \end{center}
+      \begin{itemize}
+        \item Does not know the load/store memory addresses
+      \end{itemize}
+      
+      \item The RS dispatches load/store instructions to the Address Generation Unit (AGU) when the sources for the address calculation are ready
+      
+      \item The AGU calculates the virtual memory address:
+      \begin{center}
+        \colorbox{gray!20}{Base Register + (Scale × Index Register) + Displacement}
+      \end{center}
+    \end{itemize}
+    
+    \item \textbf{The AGU sends the address to the Memory Order Buffer (MOB)}
+    \begin{itemize}
+      \item The MOB resolves memory dependencies and enforces memory ordering
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Load/Store Ordering}
+  \begin{itemize}
+    \item \textbf{Loads can be executed OOO with respect to other loads}
+    \begin{itemize}
+      \item Not allowing this would have a very big performance impact
+    \end{itemize}
+    
+    \item \textbf{Stores write value to the data-cache in-order, post retirement}
+    \begin{itemize}
+      \item Stores cannot write values to the data-cache speculatively
+      \begin{itemize}
+        \item There is no simple way to undo them
+      \end{itemize}
+      \item Stores to the data-cache are never re-ordered among themselves
+      \begin{itemize}
+        \item Must be seen in-order to other cores or agents
+      \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Loads need to maintain correct order with respect to stores}
+    \begin{itemize}
+      \item The RS dispatches instructions based on \textcolor{gray}{register dependencies}
+      \begin{itemize}
+        \item The RS cannot detect memory dependencies
+      \end{itemize}
+      \item The MOB tracks dependencies between loads and stores
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Load/Store Ordering}
+  \begin{itemize}
+    \item \textbf{The MOB tracks dependencies between loads and stores}
+    \begin{itemize}
+      \item An older Store has an unresolved address $\Rightarrow$ block load
+    \end{itemize}
+  \end{itemize}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \draw[thick] (0,0) rectangle (8,2);
+      \node[align=left] at (4,1.5) {\texttt{Store Mem[2000] $\leftarrow$ 7}};
+      \node[align=left, brown] at (4,1) {\texttt{Store Mem[r1+r3*2] $\leftarrow$ 8} \small // address not calculated since};
+      \node[align=left, brown] at (5.8,0.6) {\small // one of the source registers is};
+      \node[align=left, brown] at (5.3,0.3) {\small // not ready yet};
+      \node[red] at (1,0.5) {= ?};
+      \draw[red, ultra thick] (0.3,0.3) -- (0.7,0.7);
+      \draw[red, ultra thick] (0.3,0.7) -- (0.7,0.3);
+      \node[red, rotate=-10] at (0.5,-0.2) {\small STOP};
+      \node[align=left] at (4,-0.3) {\texttt{Load R1 $\leftarrow$ Mem[1000]}};
+    \end{tikzpicture}
+  \end{center}
+  
+  \begin{itemize}
+    \item An older Store to same address, but Store's data \underline{is not ready}\\
+    $\Rightarrow$ block load
+  \end{itemize}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \draw[thick] (0,0) rectangle (8,1.5);
+      \node[align=left] at (4,1.2) {\texttt{Store Mem[2000] $\leftarrow$ 7}};
+      \node[align=left, brown] at (4.3,0.7) {\texttt{Store Mem[1000] $\leftarrow$ r5} \small // data unknown since r5 is not ready};
+      \draw[red, ultra thick] (0.3,0.3) -- (0.7,0.7);
+      \draw[red, ultra thick] (0.3,0.7) -- (0.7,0.3);
+      \node[red, rotate=-10] at (0.5,-0.2) {\small STOP};
+      \node[align=left] at (4,0) {\texttt{Load R1 $\leftarrow$ Mem[1000]}};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Store Implemented as 2 $\mu$ops}
+  \begin{itemize}
+    \item \textbf{Stores are decoded into two independent $\mu$ops}
+    \begin{itemize}
+      \item STA (store-address): calculates the address of the store
+      \item STD (store-data): stores the data into the Store Data buffer
+      \begin{itemize}
+        \item This makes the data available to any Load that needs it
+        \item The actual write to memory is done when the store retires
+      \end{itemize}
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    
+    \item \textbf{Separating Store to STA \& STD improves performance}
+    \begin{itemize}
+      \item Allows STA to dispatch earlier, even before the data is known
+      \begin{itemize}
+        \item Address conflicts resolved earlier $\Rightarrow$\\
+        opens memory pipeline for other loads
+      \end{itemize}
+      
+      \item STA and STD can be issued to execution units in parallel
+      \begin{itemize}
+        \item STA dispatched to AGU when its sources (base + index) are ready
+        \item STD dispatched to SDB when its source operand is available
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Memory Order Buffer (MOB)}
+  \begin{columns}
+    \begin{column}{0.7\textwidth}
+      \begin{itemize}
+        \item \textbf{Store Coloring}
+        \begin{itemize}
+          \item Each Store is allocated in-order in the \emph{Store Buffer}, and gets a \textbf{SBID}
+          \item Each load is allocated in-order in the \emph{Load Buffer}, and gets LBID + current SBID
+        \end{itemize}
+        
+        \item \textbf{A Load is checked against all previous stores}
+        \begin{itemize}
+          \item Stores with SBID $\leq$ load's SBID
+        \end{itemize}
+        
+        \item \textbf{A Load blocked if}
+        \begin{itemize}
+          \item Unresolved address of a relevant STAs
+          \item STA to same address, but data not ready
+          \item Data Cache miss
+        \end{itemize}
+        
+        \item \textbf{The MOB writes the Load's blocking info into the load buffer}
+        \begin{itemize}
+          \item Re-dispatches load when wake-up signal received
+          \item The load may be blocked again on another condition
+        \end{itemize}
+        
+        \item \textbf{If Load is not blocked $\Rightarrow$ executed (bypassed)}
+      \end{itemize}
+    \end{column}
+    
+    \begin{column}{0.3\textwidth}
+      \begin{center}
+        \begin{tabular}{|c|c|c|}
+          \hline
+          & LBID & SBID \\
+          \hline
+          Store & - & 0 \\
+          \hline
+          Store & - & 1 \\
+          \hline
+          Load & 0 & 1 \\
+          \hline
+          Store & - & 2 \\
+          \hline
+          Load & 1 & 2 \\
+          \hline
+          Load & 2 & 2 \\
+          \hline
+          Load & 3 & 2 \\
+          \hline
+          Store & - & 3 \\
+          \hline
+          Load & 4 & 3 \\
+          \hline
+        \end{tabular}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 \end{document}
