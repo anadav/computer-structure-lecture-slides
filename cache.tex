@@ -1,0 +1,436 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usetheme{Madrid}
+\setbeamertemplate{navigation symbols}{}
+
+\title{Computer Structure -- Cache Memory}
+\author{Based on slides by Lihu Rappoport}
+\date{Technion CSL}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% --- Overview
+\begin{frame}{Processor--Memory Gap (summary)}
+\begin{itemize}
+  \item CPU performance has improved much faster than DRAM latency/bandwidth.
+  \item The performance gap has grown roughly $\sim 50\%$/year historically.
+  \item Motivation: hide long memory access times from the CPU.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Memory Trade-Offs}
+\begin{itemize}
+  \item Large (dense) memories are \textbf{slow}.
+  \item Fast memories are \textbf{small}, expensive, and power-hungry.
+  \item Goal: make memory \emph{appear} large, fast, cheap, and low-power.
+  \item Solution: a \textbf{hierarchy} (L1/L2/L3 caches $\rightarrow$ DRAM).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Why Hierarchy Works}
+\begin{itemize}
+  \item \textbf{Temporal locality}: recently used data/instructions will be used again soon.
+  \item \textbf{Spatial locality}: nearby data is likely to be used soon.
+  \item Smaller hardware can be faster; with locality and Amdahl's law $\Rightarrow$ hierarchy.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Memory Hierarchy: Terminology}
+\begin{itemize}
+  \item \textbf{Hit/Miss}: whether a requested block is in a cache level.
+  \item \textbf{Hit rate}: fraction of accesses that hit a given level.
+  \item \textbf{Hit time}: time to determine hit/miss and return data on a hit.
+  \item \textbf{Miss penalty}: time to fetch/replace a block from the next level and deliver it.
+  \item \textbf{Average access time}: $t_{\text{eff}}=(t_{hit} \cdot HR) + (t_{miss} \cdot (1-HR))$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Effective Memory Access Time: Example}
+Assume $t_{cache}=10$ns and $t_{mem}=100$ns:
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Hit Rate & $t_{\text{eff}}$ (ns) & Computation\\
+\midrule
+0.0   & 100.0 & $0\cdot 10 + 1\cdot 100$\\
+0.5   & 55.0  & $0.5\cdot 10 + 0.5\cdot 100$\\
+0.9   & 19.0  & $0.9\cdot 10 + 0.1\cdot 100$\\
+0.99  & 10.9  & $0.99\cdot 10 + 0.01\cdot 100$\\
+0.999 & 10.1  & $0.999\cdot 10 + 0.001\cdot 100$\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{Cache -- Main Idea}
+\begin{itemize}
+  \item Memory is partitioned into aligned \textbf{blocks} (e.g., 32/64B).
+  \item Cache holds a subset of memory as \textbf{lines}, each line $\leftrightarrow$ one block.
+  \item Address view = \texttt{[block\# | offset]}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cache Lookup (summary)}
+\begin{itemize}
+  \item \textbf{Hit}: return data using the block offset.
+  \item \textbf{Miss}: perform a \textbf{line fill} (may require several bus cycles).
+  \item May need to \textbf{evict} another block to make room.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Fully Associative (FA) Cache}
+\begin{itemize}
+  \item Any block can map to any line; tags of all lines are compared in parallel.
+  \item Pros: lowest conflict misses. Cons: many comparators (area/power).
+  \item On a tag match, return data using the offset.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Valid Bit}
+\begin{itemize}
+  \item Cache starts empty; each line needs a \textbf{valid} bit.
+  \item Valid set on fill; lines may be invalidated later.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Direct-Mapped (DM) Cache}
+\begin{itemize}
+  \item Block number $\rightarrow$ \textbf{set} (index) + \textbf{tag}.
+  \item Each block maps to exactly \emph{one} line: single comparator.
+  \item Pros: simple, low power, fast. Cons: more \textbf{conflict} misses.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{2-Way Set Associative (2W SA)}
+\begin{itemize}
+  \item Each set holds 2 lines (ways); a block can reside in either way of its set.
+  \item Requires two tag comparisons + way mux; fewer conflict misses than DM.
+  \item Cache size $=\#\text{ways}\times\#\text{sets}\times\text{block size}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Replacement Policies}
+\begin{itemize}
+  \item DM: victim is forced (the indexed line).
+  \item N-way SA: choose victim among the ways in the set.
+  \item Algorithms: \textbf{Optimal} (theoretical), \textbf{FIFO}, \textbf{Random}, \textbf{LRU}.
+  \item LRU tends to perform best, but often only slightly better than Random.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{LRU Implementation (sketch)}
+\begin{itemize}
+  \item 2-way: keep 1 bit per set indicating most recently used way.
+  \item $k$-way: maintain per-set way-order counters (costly to update).
+\end{itemize}
+\begin{block}{Pseudo-code (on access of way $i$)}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+X = Counter[i]
+Counter[i] = k-1          // way i becomes MRU
+for j in [0..k-1]:
+  if j != i and Counter[j] > X: Counter[j]--
+\end{lstlisting}
+Evict the way whose counter is 0.
+\end{block}
+\end{frame}
+
+\begin{frame}{Pseudo-LRU (PLRU) Idea}
+\begin{itemize}
+  \item Use a binary-tree of $n-1$ bits for $n$ ways to track a \emph{partial} order.
+  \item Update bits to point toward the accessed leaf; choose victim by walking opposite.
+  \item Cheaper than true LRU; not always picks the true LRU way.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cache Line Size Trade-offs}
+\begin{itemize}
+  \item Larger lines exploit spatial locality but may fetch unused data $\rightarrow$ more evictions.
+  \item Larger lines increase \textbf{miss penalty}; ``critical word first'' helps.
+  \item $t_{\text{avg}} = t_{hit}\cdot(1-\text{MR}) + t_{miss}\cdot \text{MR}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Performance Impact}
+\begin{itemize}
+  \item \textbf{MPI} (misses per instruction) = misses/access $\times$ accesses/instr.
+  \item Memory stall cycles $= \text{IC}\cdot \text{MPI}\cdot \text{miss penalty}$.
+  \item CPU time $= \text{IC}\cdot(\text{CPI}_{exec}+\text{MPI}\cdot \text{miss penalty})\cdot \text{cycle time}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Classifying Misses: The 3Cs}
+\begin{itemize}
+  \item \textbf{Compulsory}: first reference to a block $\Rightarrow$ prefetch to mitigate.
+  \item \textbf{Capacity}: working set $>$ cache size $\Rightarrow$ increase size / stream buffers.
+  \item \textbf{Conflict}: set mapping causes evictions $\Rightarrow$ higher associativity / victim cache.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Line Fill and Fill Buffers}
+\begin{itemize}
+  \item Missed block arrives in chunks; critical-chunk-first to reduce latency.
+  \item Fill buffer accumulates full line, then writes to cache; also searched on access.
+  \item ``Streaming'' loads may bypass L1 fill to avoid pollution.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Victim Cache}
+\begin{itemize}
+  \item Small FA cache that holds lines evicted from L1.
+  \item Checked in parallel with L1; on hit, swap victim back to L1.
+  \item Reduces conflict pressure, especially for direct-mapped L1.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Memory Updates on Writes}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Write-back}
+\begin{itemize}
+  \item Write hits update only cache; line marked \emph{dirty}.
+  \item Evict: write entire line to next level.
+\end{itemize}
+\column{0.5\textwidth}
+\textbf{Write-through}
+\begin{itemize}
+  \item Write hits update cache \emph{and} next level.
+  \item Needs a write buffer; evictions are clean.
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Write Buffer \& Write Combining}
+\begin{itemize}
+  \item Buffer decouples CPU stores from DRAM writes.
+  \item Combine multiple writes to same line into one buffer entry.
+  \item On a miss, also consult write buffer for the most up-to-date bytes.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cache Write Miss Policies}
+\begin{itemize}
+  \item \textbf{Write-allocate}: fetch line on a store-miss (pairs with write-back).
+  \item \textbf{No-write-allocate}: write directly to memory (pairs with write-through).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Prefetching}
+\begin{itemize}
+  \item \textbf{HW prefetch}: next-line/streaming, stride, and more general pattern detectors.
+  \item \textbf{SW prefetch}: explicit instructions (non-faulting hints).
+  \item Aggressiveness must be tuned; over-prefetching wastes bandwidth and pollutes caches.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Code Optimizations for Locality}
+\begin{itemize}
+  \item \textbf{Merging arrays}: AoS vs SoA trade-offs; reduce conflicts, improve spatial locality.
+  \item \textbf{Loop fusion}: combine loops with same traversal to increase reuse.
+  \item \textbf{Loop interchange}: access arrays in memory order to exploit spatial locality.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Improving Cache Performance (summary)}
+\begin{itemize}
+  \item \textbf{Reduce miss rate}: bigger caches/lines, higher associativity, victim cache, stream buffers, prefetching, compiler transforms.
+  \item \textbf{Reduce miss penalty}: early restart/critical word first, non-blocking caches, L2/L3.
+  \item \textbf{Reduce hit time}: smaller, on-chip, direct-mapped L1.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Split I-Cache / D-Cache}
+\begin{itemize}
+  \item Parallel fetch and data access in different pipe stages.
+  \item Different characteristics: I$:$ read-only; D$:$ reads and writes; different prefetching.
+  \item Self-modifying code: snoop I-cache tags and invalidate on matching store.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Non-Blocking Caches}
+\begin{itemize}
+  \item \textbf{Hit-under-miss}: allow hits to proceed while one miss outstanding.
+  \item \textbf{Miss-under-miss}: track multiple misses concurrently; requires MSHRs.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Multi-ported / Banked Caches}
+\begin{itemize}
+  \item True $n$-ported caches enable $n$ parallel accesses but nearly double area.
+  \item Alternative: \textbf{banked} caches to allow some parallel accesses with less cost.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{L2 Cache (and beyond)}
+\begin{itemize}
+  \item Larger but slower; reduces L1 miss penalty by filtering DRAM.
+  \item Often shared across cores; may be \textbf{inclusive} of all L1s.
+  \item Inclusive L2 must snoop/invalidate L1s on L2 evictions.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Coherence Basics}
+\begin{itemize}
+  \item Coherent if: (1) a later read returns the last written value; (2) all processors see stores to the same address in the same order.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{MESI Protocol: States}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+State & Valid & Modified & Copies elsewhere?\\
+\midrule
+Invalid   & No  & N/A  & possibly\\
+Shared    & Yes & No   & possibly\\
+Exclusive & Yes & No   & No\\
+Modified  & Yes & Yes  & No\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+  \item To modify, a core must first obtain \textbf{ownership} (no other sharers).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Global Observation (GO)}
+\begin{itemize}
+  \item A write is \textbf{globally observed} when any subsequent read by any processor returns its value.
+  \item Data for an RFO can be sent early, but GO cannot be granted until invalidations complete.
+  \item Prevents ordering violations where other cores still use stale values.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Inclusion vs. Non-Inclusive Designs}
+\begin{itemize}
+  \item Inclusive L2 is simple but wastes space when L2 is not much larger than L1.
+  \item \textbf{Non-inclusive} design: a separate \textbf{snoop filter} (tags + per-core valid bits) tracks sharers.
+  \item L1 and L2 can be mutually exclusive; L2 acts as a victim cache for L1.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Optimization Summary (table)}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Technique & Miss rate & Miss penalty & Hit time\\
+\midrule
+Larger block size & $\downarrow$ & $\uparrow$ & --\\
+Higher associativity & $\downarrow$ & $\uparrow$ & --\\
+Victim cache & $\downarrow$ & -- & --\\
+HW/SW prefetch & $\downarrow$ & -- & --\\
+Early restart \& critical word first & -- & $\downarrow$ & --\\
+Non-blocking caches & -- & $\downarrow$ & --\\
+Second-level caches & -- & $\downarrow$ & --\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{x86 Memory Ordering: Rules}
+\begin{enumerate}
+  \item Loads are not reordered with other loads.
+  \item Stores are not reordered with other stores.
+  \item Stores are not reordered with older loads.
+  \item Loads may reorder with older stores to \emph{different} locations, but not to the same location.
+  \item Causality respected; stores to the same location have a total order.
+  \item Locked instructions are totally ordered and not reordered with loads/stores.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{x86 Ordering: Examples (1)}
+\textbf{Loads and stores keep their own order}\\[3pt]
+Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed.
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Processor 0}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+Store [X] <- 1   // S1
+Store [Y] <- 1   // S2
+\end{lstlisting}
+\column{0.48\textwidth}
+\textbf{Processor 1}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+r1 <- Load [Y]   // L1
+r2 <- Load [X]   // L2
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{x86 Ordering: Examples (2)}
+\textbf{Stores are not reordered with older loads}\\[3pt]
+Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed.
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Processor 0}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+r1 <- Load [X]   // L1
+Store [Y] <- 1   // S1
+\end{lstlisting}
+\column{0.48\textwidth}
+\textbf{Processor 1}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+r2 <- Load [Y]   // L2
+Store [X] <- 1   // S2
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{x86 Ordering: Examples (3)}
+\textbf{Loads may reorder with older stores to different locations}\\[3pt]
+Initial: \texttt{x=y=0}. Outcome \texttt{r1=0, r2=0} is \textbf{allowed}.
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Processor 0}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+Store [X] <- 1   // S1
+r1 <- Load [Y]   // L1
+\end{lstlisting}
+\column{0.48\textwidth}
+\textbf{Processor 1}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+Store [Y] <- 1   // S2
+r2 <- Load [X]   // L2
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{x86 Ordering: Examples (4)}
+\textbf{Causality / transitive visibility}\\[3pt]
+Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allowed.
+\begin{columns}[T]
+\column{0.32\textwidth}
+\textbf{P0}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+Store [X] <- 1   // S1
+\end{lstlisting}
+\column{0.32\textwidth}
+\textbf{P1}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+r1 <- Load [X]   // L1
+Store [Y] <- 1   // S2
+r2 <- Load [Y]   // L2
+\end{lstlisting}
+\column{0.32\textwidth}
+\textbf{P2}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+r3 <- Load [X]   // L3
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Slides intentionally omitted}
+The original deck includes several figure-heavy slides (plots, bitfields, detailed
+coherence transactions, PLRU trees). Per instructions, these have been summarized
+or omitted here for Beamer. Consider adding vector (SVG/TikZ) figures later.
+\end{frame}
+
+\end{document}
