@@ -173,7 +173,7 @@
 \end{center}
 
 \begin{itemize}
-  \item $t_{\text{mem}}/t_{\text{cache}}$ ratio increases $\Rightarrow$ more important that hit-rate is closer to 1
+  \item $t_{\text{mem}}/t_{\text{cache}}$ ratio increases $\Rightarrow$ hit-rate is more important
 \end{itemize}
 \end{frame}
 
@@ -181,12 +181,12 @@
 \begin{columns}[T]
 \begin{column}{0.65\textwidth}
 \begin{itemize}
-  \item \textcolor{blue}{\textbf{The cache holds a small part of the entire memory}}
+  \item \textcolor{blue}{\textbf{The cache holds a small part of the memory}}
   \begin{itemize}
     \item Need to map parts of memory into the cache
   \end{itemize}
   
-  \item \textcolor{blue}{\textbf{Main memory is (logically) partitioned into blocks}}
+  \item \textcolor{blue}{\textbf{Memory is (logically) partitioned into blocks}}
   \begin{itemize}
     \item Typical block size is 32 or 64 bytes
     \item Blocks are aligned
@@ -200,110 +200,115 @@
   \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
 % Address format at the bottom of text
+\vspace{0.2cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-  \node[anchor=west, font=\scriptsize] at (0, 0.3) {N-1};
-  \node[anchor=center, font=\scriptsize] at (1.5, 0) {Block \#};
-  \node[anchor=center, font=\scriptsize] at (2.8, 0) {offset};
-  \node[anchor=west, font=\scriptsize] at (3.2, 0.3) {6 5};
-  \node[anchor=west, font=\scriptsize] at (3.8, 0.3) {0};
+\begin{tikzpicture}[scale=0.9]
+  % Top labels
+  \node[anchor=east, font=\scriptsize] at (0.3, 0.5) {N-1};
+  \node[anchor=west, font=\scriptsize] at (2.9, 0.5) {6 5};
+  \node[anchor=west, font=\scriptsize] at (3.9, 0.5) {0};
   
   % Address format boxes
-  \draw[thick] (0.2, 0.1) rectangle (3.0, -0.3);
-  \draw[thick] (3.0, 0.1) rectangle (4.0, -0.3);
+  \draw[thick] (0.4, 0.3) rectangle (2.8, -0.1);
+  \draw[thick] (2.8, 0.3) rectangle (4.0, -0.1);
+  
+  % Labels inside boxes
+  \node[anchor=center, font=\scriptsize] at (1.6, 0.1) {Block \#};
+  \node[anchor=center, font=\scriptsize] at (3.4, 0.1) {offset};
 \end{tikzpicture}
 \end{center}
 \end{column}
 
 \begin{column}{0.35\textwidth}
-\begin{tikzpicture}[scale=0.85]
+\begin{tikzpicture}[scale=0.55]
   % Define colors
   \definecolor{lightblue}{RGB}{173,216,230}
   \definecolor{lightgreen}{RGB}{144,238,144}
   \definecolor{lightyellow}{RGB}{255,255,224}
   \definecolor{lightpurple}{RGB}{221,160,221}
   
-  % Memory column title
-  \node[anchor=north, font=\bfseries\large] at (1.5, 5.2) {memory};
+  % Memory column title - directly above memory blocks
+  \node[anchor=south, font=\footnotesize\bfseries] at (1.2, 4.1) {memory};
   
-  % Memory blocks
-  \node[anchor=east, font=\small\bfseries] at (0.3, 4.5) {\underline{Block \#}};
-  \node[anchor=west, font=\small] at (1.8, 4.5) {$\leftarrow$ 64B $\rightarrow$};
+  % Memory blocks header
+  \node[anchor=east, font=\tiny\bfseries] at (0.0, 3.9) {\underline{Block \#}};
   
   % Memory blocks with numbers
-  \node[anchor=east, font=\small] at (0.5, 4.0) {0};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem0) at (1.5, 4.0) {};
+  \node[anchor=east, font=\tiny] at (0.2, 3.9) {0};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem0) at (1.2, 3.9) {};
   
-  \node[anchor=east, font=\small] at (0.5, 3.5) {1};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem1) at (1.5, 3.5) {};
+  \node[anchor=east, font=\tiny] at (0.2, 3.4) {1};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem1) at (1.2, 3.4) {};
   
-  \node[anchor=east, font=\small] at (0.5, 3.0) {2};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=lightgreen] (mem2) at (1.5, 3.0) {};
+  \node[anchor=east, font=\tiny] at (0.2, 2.9) {2};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightgreen] (mem2) at (1.2, 2.9) {};
   
-  \node[anchor=east, font=\small] at (0.5, 2.5) {3};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem3) at (1.5, 2.5) {};
+  \node[anchor=east, font=\tiny] at (0.2, 2.4) {3};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem3) at (1.2, 2.4) {};
   
-  \node[anchor=east, font=\small] at (0.5, 2.0) {4};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=lightblue] (mem4) at (1.5, 2.0) {};
+  \node[anchor=east, font=\tiny] at (0.2, 1.9) {4};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightblue] (mem4) at (1.2, 1.9) {};
   
-  \node[anchor=east, font=\small] at (0.5, 1.5) {5};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem5) at (1.5, 1.5) {};
+  \node[anchor=east, font=\tiny] at (0.2, 1.4) {5};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem5) at (1.2, 1.4) {};
   
-  \node[anchor=east, font=\small] at (0.5, 1.0) {6};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem6) at (1.5, 1.0) {};
+  \node[anchor=east, font=\tiny] at (0.2, 0.9) {6};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem6) at (1.2, 0.9) {};
   
   % Dots
-  \node[font=\small] at (0.5, 0.5) {.};
-  \node[font=\small] at (0.5, 0.3) {.};
-  \node[font=\small] at (0.5, 0.1) {.};
-  \node[font=\small] at (1.5, 0.3) {$\sim$};
+  \node[font=\tiny] at (0.2, 0.5) {.};
+  \node[font=\tiny] at (0.2, 0.3) {.};
+  \node[font=\tiny] at (0.2, 0.1) {.};
+  \node[font=\tiny] at (1.2, 0.3) {$\sim$};
   
   % Bottom memory blocks
-  \node[anchor=east, font=\small] at (0.5, -0.3) {90};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=lightpurple] (mem90) at (1.5, -0.3) {};
+  \node[anchor=east, font=\tiny] at (0.2, -0.3) {90};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightpurple] (mem90) at (1.2, -0.3) {};
   
-  \node[anchor=east, font=\small] at (0.5, -0.8) {91};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem91) at (1.5, -0.8) {};
+  \node[anchor=east, font=\tiny] at (0.2, -0.8) {91};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem91) at (1.2, -0.8) {};
   
-  \node[anchor=east, font=\small] at (0.5, -1.3) {92};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=lightyellow] (mem92) at (1.5, -1.3) {};
+  \node[anchor=east, font=\tiny] at (0.2, -1.3) {92};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightyellow] (mem92) at (1.2, -1.3) {};
   
-  \node[anchor=east, font=\small] at (0.5, -1.8) {93};
-  \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=white] (mem93) at (1.5, -1.8) {};
+  \node[anchor=east, font=\tiny] at (0.2, -1.8) {93};
+  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem93) at (1.2, -1.8) {};
   
   % More dots
-  \node[font=\small] at (0.5, -2.2) {.};
-  \node[font=\small] at (0.5, -2.4) {.};
-  \node[font=\small] at (0.5, -2.6) {.};
-  \node[font=\small] at (1.5, -2.4) {$\sim$};
+  \node[font=\tiny] at (0.2, -2.2) {.};
+  \node[font=\tiny] at (0.2, -2.4) {.};
+  \node[font=\tiny] at (0.2, -2.6) {.};
+  \node[font=\tiny] at (1.2, -2.4) {$\sim$};
   
-  % Cache column
-  \node[anchor=north, font=\bfseries\large] at (4.5, 5.2) {cache};
+  % 64B width indicator at bottom of memory
+  \node[anchor=center, font=\tiny] at (1.2, -3.0) {$\leftarrow$ 64B $\rightarrow$};
   
-  % Cache lines with block numbers
-  \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.4cm, fill=lightpurple] at (3.8, 3.5) {};
-  \node[font=\small] at (3.8, 3.5) {90};
-  \node[rectangle, draw, thick, minimum width=1.0cm, minimum height=0.4cm, fill=lightpurple] (cache90) at (4.8, 3.5) {};
+  % Cache column - positioned lower than memory
+  \node[anchor=south, font=\footnotesize\bfseries] at (4.2, 3.0) {cache};
   
-  \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.4cm, fill=lightgreen] at (3.8, 3.0) {};
-  \node[font=\small] at (3.8, 3.0) {2};
-  \node[rectangle, draw, thick, minimum width=1.0cm, minimum height=0.4cm, fill=lightgreen] (cache2) at (4.8, 3.0) {};
+  % Cache lines with block numbers (shifted down)
+  \node[rectangle, draw, minimum width=0.4cm, minimum height=0.35cm, fill=lightpurple] (cachetag90) at (3.7, 2.6) {};
+  \node[font=\tiny] at (3.7, 2.6) {90};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightpurple] (cache90) at (4.5, 2.6) {};
   
-  \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.4cm, fill=lightblue] at (3.8, 2.5) {};
-  \node[font=\small] at (3.8, 2.5) {4};
-  \node[rectangle, draw, thick, minimum width=1.0cm, minimum height=0.4cm, fill=lightblue] (cache4) at (4.8, 2.5) {};
+  \node[rectangle, draw, minimum width=0.4cm, minimum height=0.35cm, fill=lightgreen] (cachetag2) at (3.7, 2.1) {};
+  \node[font=\tiny] at (3.7, 2.1) {2};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightgreen] (cache2) at (4.5, 2.1) {};
   
-  \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.4cm, fill=lightyellow] at (3.8, 2.0) {};
-  \node[font=\small] at (3.8, 2.0) {92};
-  \node[rectangle, draw, thick, minimum width=1.0cm, minimum height=0.4cm, fill=lightyellow] (cache92) at (4.8, 2.0) {};
+  \node[rectangle, draw, minimum width=0.4cm, minimum height=0.35cm, fill=lightblue] (cachetag4) at (3.7, 1.6) {};
+  \node[font=\tiny] at (3.7, 1.6) {4};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightblue] (cache4) at (4.5, 1.6) {};
   
-  % Arrows from memory to cache
-  \draw[->, thick] (mem90.east) to[out=0, in=180] (cache90.west);
-  \draw[->, thick] (mem2.east) to[out=0, in=180] (cache2.west);
-  \draw[->, thick] (mem4.east) to[out=0, in=180] (cache4.west);
-  \draw[->, thick] (mem92.east) to[out=0, in=180] (cache92.west);
+  \node[rectangle, draw, minimum width=0.4cm, minimum height=0.35cm, fill=lightyellow] (cachetag92) at (3.7, 1.1) {};
+  \node[font=\tiny] at (3.7, 1.1) {92};
+  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightyellow] (cache92) at (4.5, 1.1) {};
+  
+  % Arrows from memory to cache (pointing to the left boxes)
+  \draw[->, thick] (mem90.east) to[out=0, in=180] (cachetag90.west);
+  \draw[->, thick] (mem2.east) to[out=0, in=180] (cachetag2.west);
+  \draw[->, thick] (mem4.east) to[out=0, in=180] (cachetag4.west);
+  \draw[->, thick] (mem92.east) to[out=0, in=180] (cachetag92.west);
   
 \end{tikzpicture}
 \end{column}
