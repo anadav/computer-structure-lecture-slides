@@ -771,29 +771,24 @@
         (2) & & \texttt{r2 $\leftarrow$ r2+\textcolor{blue}{r1}} \\
         (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{r1}} \\
         (5) & & \texttt{jcc L2} \\
-        \rowcolor{pink!30}
-        (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
-        \rowcolor{pink!30}
-        (7) & & \texttt{r4 $\leftarrow$ r3+\textcolor{green}{r1}} \\
-        \rowcolor{pink!30}
-        (8) & & \texttt{r3 $\leftarrow$ 2} \\
+        \rowcolor{pink!30} (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
+        \rowcolor{pink!30} (7) & & \texttt{r4 $\leftarrow$ r3+\textcolor{green}{r1}} \\
+        \rowcolor{pink!30} (8) & & \texttt{r3 $\leftarrow$ 2} \\
       \end{tabular}
     \end{column}
     
     \begin{column}{0.55\textwidth}
       \begin{block}{OOO Speculative Execution}
         \small
-        \textbf{1/5 instruction is a branch} $\Rightarrow$ we must continue fetching, decoding, and allocating instructions into the instruction pool according to the \textcolor{green}{predicted path}.
+        \textbf{Every 5th instruction is a branch} $\Rightarrow$ must continue fetching along \textcolor{green}{predicted path} to fill instruction pool.
         
-        Otherwise, we would limit ourselves to look ahead for independent instructions only until the next branch (this is also the compiler limitation)
+        Without speculation: limited to finding independent instructions only until next branch.
         
-        This is called \alert{"OOO Speculative Execution"}
+        \alert{Speculative Execution:} Execute instructions from predicted path before branch resolution.
         
-        Instructions from the predicted path can be executed before the jump itself is executed (before the prediction is verified to be correct)
+        Example: inst (6) can execute before inst (1).
         
-        E.g. inst (6) can be executed before inst (1)
-        
-        If eventually the jump prediction turns to be wrong, we need a way to undo the instructions which executed on the speculative path.
+        If mispredicted: must undo speculatively executed instructions.
       \end{block}
     \end{column}
   \end{columns}
@@ -1026,12 +1021,9 @@
         (3) & r1 $\leftarrow$ 23 & \\
         (4) & r3 $\leftarrow$ r3+r1 & \\
         (5) & jcc L2 & \\
-        \rowcolor{pink!30}
-        (6) L2: & r1 $\leftarrow$ 35 & \\
-        \rowcolor{pink!30}
-        (7) & r4 $\leftarrow$ r3+r1 & \\
-        \rowcolor{pink!30}
-        (8) & r3 $\leftarrow$ 2 & \\
+        \rowcolor{pink!30} (6) L2: & r1 $\leftarrow$ 35 & \\
+        \rowcolor{pink!30} (7) & r4 $\leftarrow$ r3+r1 & \\
+        \rowcolor{pink!30} (8) & r3 $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
     
@@ -1043,12 +1035,9 @@
         r1:pr3 & pr3 $\leftarrow$ 23 & \\
         r3:pr4 & pr4 $\leftarrow$ r3+pr3 & \\
         & & \\
-        \rowcolor{pink!30}
-        r1:pr5 & pr5 $\leftarrow$ 35 & \\
-        \rowcolor{pink!30}
-        r4:pr6 & pr6 $\leftarrow$ pr4+pr5 & \\
-        \rowcolor{pink!30}
-        r3:pr7 & pr7 $\leftarrow$ 2 & \\
+        \rowcolor{pink!30} r1:pr5 & pr5 $\leftarrow$ 35 & \\
+        \rowcolor{pink!30} r4:pr6 & pr6 $\leftarrow$ pr4+pr5 & \\
+        \rowcolor{pink!30} r3:pr7 & pr7 $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
   \end{columns}
@@ -1081,12 +1070,9 @@
         (3) & r1 $\leftarrow$ 23 & \\
         (4) & r3 $\leftarrow$ r3+r1 & \\
         (5) & jcc L2 & \\
-        \rowcolor{pink!30}
-        (6) L2: & r1 $\leftarrow$ 35 & \\
-        \rowcolor{pink!30}
-        (7) & r4 $\leftarrow$ r3+r1 & \\
-        \rowcolor{pink!30}
-        (8) & r3 $\leftarrow$ 2 & \\
+        \rowcolor{pink!30} (6) L2: & r1 $\leftarrow$ 35 & \\
+        \rowcolor{pink!30} (7) & r4 $\leftarrow$ r3+r1 & \\
+        \rowcolor{pink!30} (8) & r3 $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
     
@@ -1098,12 +1084,9 @@
         r1:pr3 & pr3 $\leftarrow$ 23 & \\
         r3:pr4 & pr4 $\leftarrow$ r3+pr3 & \\
         & & \\
-        \rowcolor{pink!30}
-        r1:pr5 & pr5 $\leftarrow$ 35 & \\
-        \rowcolor{pink!30}
-        r4:pr6 & pr6 $\leftarrow$ pr4+pr5 & \\
-        \rowcolor{pink!30}
-        r3:pr7 & pr7 $\leftarrow$ 2 & \\
+        \rowcolor{pink!30} r1:pr5 & pr5 $\leftarrow$ 35 & \\
+        \rowcolor{pink!30} r4:pr6 & pr6 $\leftarrow$ pr4+pr5 & \\
+        \rowcolor{pink!30} r3:pr7 & pr7 $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
   \end{columns}
