@@ -160,7 +160,7 @@
   \begin{itemize}
     \item \textbf{Assume}
     \begin{itemize}
-      \item 1/100 instruction is a mispredicted jump (MPI = 1\%)
+      \item $\frac{1}{100}$ instruction is a mispredicted jump (MPI = 1\%)
       \item Flush penalty of 5 cycles
     \end{itemize}
     
@@ -168,7 +168,7 @@
     
     \item \textbf{For IPC = 2}
     \begin{itemize}
-      \item Flush every 100/2 = 50 cycles
+      \item Flush every $\frac{100}{2} = 50$ cycles
       \item 5 cycles flush penalty every 50 cycles $\Rightarrow$ \alert{10\% performance hit}
     \end{itemize}
     
@@ -176,7 +176,7 @@
     
     \item \textbf{For IPC = 1}
     \begin{itemize}
-      \item Flush every 100/1 = 100 cycles
+      \item Flush every $\frac{100}{1} = 100$ cycles
       \item 5 cycles flush penalty per 100 cycles $\Rightarrow$ \alert{5\% performance hit}
     \end{itemize}
     
@@ -354,16 +354,16 @@
 \begin{frame}{Write-After-Write Dependency}
   \begin{columns}
     \begin{column}{0.5\textwidth}
-      \textbf{Example Code:}
-      \begin{tabular}{ll}
-        (1) & \texttt{\textcolor{r1color}{r1} $\leftarrow$ r9/17} \\
-        (2) & \texttt{\textcolor{r2color}{r2} $\leftarrow$ \textcolor{r2color}{r2}+\textcolor{r1color}{r1}} \\
-        (3) & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
-        (4) & \texttt{\textcolor{r3color}{r3} $\leftarrow$ \textcolor{r3color}{r3}+\textcolor{orange}{r1}} \\
-        (5) & \texttt{jcc L2} \\
-        (6) & \texttt{L2: \textcolor{green}{r1} $\leftarrow$ 35} \\
-        (7) & \texttt{\textcolor{r4color}{r4} $\leftarrow$ \textcolor{r3color}{r3}+\textcolor{green}{r1}} \\
-        (8) & \texttt{\textcolor{blue}{r3} $\leftarrow$ 2} \\
+      \textbf{Example Code:} \\
+      \begin{tabular}{lll}
+        (1) & & \texttt{\textcolor{r1color}{r1} $\leftarrow$ r9/17} \\
+        (2) & & \texttt{\textcolor{r2color}{r2} $\leftarrow$ \textcolor{r2color}{r2}+\textcolor{r1color}{r1}} \\
+        (3) & & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
+        (4) & & \texttt{\textcolor{r3color}{r3} $\leftarrow$ \textcolor{r3color}{r3}+\textcolor{orange}{r1}} \\
+        (5) & & \texttt{jcc L2} \\
+        (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
+        (7) & & \texttt{\textcolor{r4color}{r4} $\leftarrow$ \textcolor{r3color}{r3}+\textcolor{green}{r1}} \\
+        (8) & & \texttt{\textcolor{blue}{r3} $\leftarrow$ 2} \\
       \end{tabular}
     \end{column}
     

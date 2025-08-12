@@ -1455,6 +1455,27 @@ Modified  & Yes & Yes  & No\\
 \end{itemize}
 \end{frame}
 
+\begin{frame}{Multi-processor System: Inclusion}
+  \begin{itemize}
+    \item \textbf{L2 needs to keep track of the presence of each line in each of the processors}
+    \begin{itemize}
+      \item Determine if it needs to send a snoop to a processor
+      \item Determine in what state to provide a requested line (S,E)
+      \item[$\Rightarrow$] Need to guarantee that the L1 caches in each processor are inclusive of the L2 cache
+    \end{itemize}
+    \vspace{0.2cm}
+    \item \textbf{When L2 evicts a line}
+    \begin{itemize}
+      \item L2 sends a snoop invalidate to all processors that have it
+      \item If the line is modified in the L1 cache of one of the processors (in which case it exist only in that processor)
+      \begin{itemize}
+        \item The processor responds by sending the updated value to L2
+        \item When the line is evicted from L2, the updated value gets written to memory
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
 \begin{frame}{Global Observation (GO)}
 \begin{itemize}
   \item A write is \textbf{globally observed} when any subsequent read by any processor returns its value
