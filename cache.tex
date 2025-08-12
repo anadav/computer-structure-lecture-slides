@@ -320,20 +320,75 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{LRU Implementation (sketch)}
+\begin{frame}[fragile]{LRU Implementation}
+\begin{columns}[T]
+\begin{column}{0.70\textwidth}
 \begin{itemize}
-  \item 2-way: keep 1 bit per set indicating most recently used way.
-  \item $k$-way: maintain per-set way-order counters (costly to update).
-\end{itemize}
-\begin{block}{Pseudo-code (on access of way $i$)}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+  \item \textcolor{blue}{\textbf{2 ways}}
+  \begin{itemize}
+    \item 1 bit per set to mark the latest way accessed in the set
+    \item Evict the way which is not pointed by the bit
+  \end{itemize}
+  
+  \item \textcolor{blue}{\textbf{k-way set associative LRU}}
+  \begin{itemize}
+    \item For each set maintain the way access order \\
+    $\Rightarrow$ per set: log$_2$k bit counter per way
+    \begin{itemize}
+      \item 4 ways: 4$\times$2 bits per set; 8 ways: 8$\times$3 bits per set
+      \item Many bits $\Rightarrow$ complicated update scheme
+    \end{itemize}
+    \item When way $i$ is accessed:
+    \item When replacement is needed: evict way with counter = 0
+  \end{itemize}
+  
+  \begin{block}{Pseudo-code (on access of way $i$)}
+  \begin{lstlisting}[basicstyle=\ttfamily\small]
 X = Counter[i]
 Counter[i] = k-1          // way i becomes MRU
 for j in [0..k-1]:
   if j != i and Counter[j] > X: Counter[j]--
-\end{lstlisting}
-Evict the way whose counter is 0.
-\end{block}
+  \end{lstlisting}
+  \end{block}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.30\textwidth}
+\small
+\raggedright
+\textbf{Initial State}\\
+\vspace{0.1cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Way & 0 & 1 & 2 & 3 \\
+\hline
+Count & 0 & 1 & 2 & 3 \\
+\hline
+\end{tabular}
+
+\vspace{0.4cm}
+\textbf{$\Rightarrow$ Access way 2}\\
+\vspace{0.1cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Way & 0 & 1 & 2 & 3 \\
+\hline
+Count & 0 & 1 & \textcolor{red}{\textbf{3}} & 2 \\
+\hline
+\end{tabular}
+
+\vspace{0.4cm}
+\textbf{$\Rightarrow$ Access way 0}\\
+\vspace{0.1cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Way & 0 & 1 & 2 & 3 \\
+\hline
+Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
+\hline
+\end{tabular}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Pseudo-LRU (PLRU) Idea}
@@ -430,6 +485,87 @@ Evict the way whose counter is 0.
   \item \textbf{Loop fusion}: combine loops with same traversal to increase reuse.
   \item \textbf{Loop interchange}: access arrays in memory order to exploit spatial locality.
 \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Code Optimizations: Loop Fusion}
+\begin{itemize}
+  \item \textbf{Merge loops with shared data access}
+  \item Assume each element in \texttt{a} is 4 bytes, 32KB cache, 32 B / line
+\end{itemize}
+
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\begin{block}{Before Fusion}
+\small
+\texttt{for (i = 0; i < 10000; i++)}\\
+\texttt{~~a[i] = 1 / a[i];}\\
+\texttt{for (i = 0; i < 10000; i++)}\\
+\texttt{~~sum = sum + a[i];}
+\end{block}
+
+\vspace{0.2cm}
+\begin{block}{After Fusion}
+\small
+\texttt{for (i = 0; i < 10000; i++) \{}\\
+\texttt{~~a[i] = 1 / a[i];}\\
+\texttt{~~sum = sum + a[i];}\\
+\texttt{\}}
+\end{block}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+%\textbf{Before Fusion:}
+\begin{itemize}
+  \item[\textcolor{green}{$\diamond$}] First loop: hit 7/8 of iterations
+  \item[\textcolor{green}{$\diamond$}] Second loop: $\text{array} > \text{cache}$ $\Rightarrow$ same hit rate as in 1\textsuperscript{st} loop
+\end{itemize}
+
+\vspace{1cm}
+%\textbf{After Fusion:}
+\begin{itemize}
+  \item[\textcolor{green}{$\diamond$}] First line: hit 7/8 of iterations
+  \item[\textcolor{green}{$\diamond$}] Second line: hit all
+\end{itemize}
+
+\vspace{0.2cm}
+\footnotesize
+\textit{Note: Only load accesses are taken into account for hit rate calculation}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Code Optimizations: Loop Interchange}
+\begin{itemize}
+  \item \textbf{2-dimension array in memory:}
+\end{itemize}
+
+\small
+\texttt{x[0][0] x[0][1] ... x[0][99] x[1][0] x[1][1] ...}
+
+\vspace{0.3cm}
+\begin{block}{Original program: access are 100 bytes apart}
+\small
+\texttt{/* x[0][0] x[1][0] ... x[4999][0] x[0][1] x[1][1] ... */}\\
+\texttt{for (j = 0; j < 100; j++)}\\
+\texttt{~~for (i = 0; i < 5000; i++)}\\
+\texttt{~~~~x[i][j] = 2 * x[i][j];}
+\end{block}
+
+\vspace{0.2cm}
+\begin{block}{Reversing the loops order: access are adjacent}
+\small
+\texttt{/* Improved spatial locality */}\\
+\begin{tikzpicture}[overlay, remember picture]
+  \coordinate (top) at (7.5,0);
+  \coordinate (bottom) at (7.5,-0.4);
+  \draw[<->, thick, green!70!black, line width=1.5pt, bend right=60] 
+    (top) to (bottom);
+  \node[green!70!black, right, font=\scriptsize] at (8.0,-0.2) {swap};
+\end{tikzpicture}
+\texttt{for (i = 0; i < 5000; i++)}\\
+\texttt{~~for (j = 0; j < 100; j++)}\\
+\texttt{~~~~x[i][j] = 2 * x[i][j];}
+\end{block}
 \end{frame}
 
 \begin{frame}{Improving Cache Performance (summary)}
