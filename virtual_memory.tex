@@ -12,16 +12,6 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark}
 \usetheme{Madrid}
 
-\definecolor{addr}{HTML}{EAE6FF}   % address region
-\definecolor{ign}{HTML}{FFE9EA}    % ignored
-\definecolor{rsv}{HTML}{EFE4D3}    % reserved
-\definecolor{flag}{HTML}{E0F3E0}   % flags
-
-\newcommand{\addr}[1]{\colorbox{addr}{\strut\smash{#1}}}
-\newcommand{\ign}[1]{\colorbox{ign}{\strut\smash{#1}}}
-\newcommand{\rsv}[1]{\colorbox{rsv}{\strut\smash{#1}}}
-\newcommand{\flg}[1]{\colorbox{flag}{\strut\smash{#1}}}
-
 % Define colors for registers
 \definecolor{r1color}{RGB}{255,0,0}
 \definecolor{r2color}{RGB}{0,128,0}
@@ -31,6 +21,21 @@
 \definecolor{r6color}{RGB}{255,165,0}
 \definecolor{r7color}{RGB}{0,0,0}
 \definecolor{r8color}{RGB}{0,128,0}
+
+% Define hyphenation command
+\newcommand{\hyp}{\-}
+
+% Proportional widths for the table-only version
+\newlength\TotalW
+\setlength\TotalW{\textwidth}
+\newlength\Wone    \setlength\Wone   {0.015625\TotalW} % 1/64
+\newlength\Weleven \setlength\Weleven{0.171875\TotalW} % 11/64
+\newlength\Wforty  \setlength\Wforty {0.625000\TotalW} % 40/64
+\newlength\Wtwelve \setlength\Wtwelve{0.187500\TotalW} % 12/64
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\Centering\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.2}
+
 % Show slide number as "current/total" in the footer
 \setbeamertemplate{footline}{%
   \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
@@ -1067,6 +1072,455 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \item The entry remains in the TLB indefinitely
 \item Only INVLPG can invalidate a global page entry
 \end{itemize}
+\end{frame}
+
+\begin{frame}{PTE/PDE/PDP/PML4 Entry Format}
+\tiny
+\definecolor{addrcolor}{HTML}{E6E6FA}
+\definecolor{igncolor}{HTML}{FFE4E1}
+\definecolor{rsvcolor}{HTML}{F0F0F0}
+\definecolor{pagesizeyellow}{HTML}{FFFF00}
+
+\begin{tikzpicture}[scale=1, transform shape]
+
+% Bit numbers at top
+\node[anchor=east] at (0.1,7.6) {\tiny 63};
+\node[anchor=west] at (1.8,7.6) {\tiny 52 51};
+\node[anchor=center] at (6.0,7.6) {\tiny M M-1};
+\node[anchor=east] at (9.3,7.6) {\tiny 12 11};
+\node[anchor=east] at (10.5,7.6) {\tiny 9 8 7 6 5 4 3 2 1 0};
+
+% CR3 row
+\draw[thick] (0,7.2) rectangle (11.4,6.4);
+\fill[rsvcolor] (0,7.2) rectangle (2.1,6.4);
+\fill[addrcolor] (2.1,7.2) rectangle (9.4,6.4);
+\fill[igncolor] (9.4,7.2) rectangle (10.5,6.4);
+\node at (1.05,6.8) {\tiny Reserved};
+\node at (5.75,6.8) {\tiny Address of PML4 table};
+\node at (9.95,6.8) {\tiny Ignored};
+% Draw individual bit cells for flags
+\foreach \x in {10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},7.2) rectangle ({\x+0.15},6.4);
+}
+\node[anchor=west] at (11.6,6.8) {\textbf{CR3}};
+
+% PML4E row
+\draw[thick] (0,6.4) rectangle (11.4,5.6);
+\fill[igncolor] (0,6.4) rectangle (0.3,5.6);
+\fill[igncolor] (0.3,6.4) rectangle (2.1,5.6);
+\fill[rsvcolor] (2.1,6.4) rectangle (2.7,5.6);
+\fill[addrcolor] (2.7,6.4) rectangle (9.4,5.6);
+\fill[igncolor] (9.4,6.4) rectangle (9.9,5.6);
+\node[rotate=90,anchor=center] at (0.15,6.0) {\tiny XD};
+\node at (1.2,6.0) {\tiny Ignored};
+\node at (2.4,6.0) {\tiny Rsvd.};
+\node at (6.05,6.0) {\tiny Address of page-directory-pointer table};
+\node at (9.65,6.0) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},6.4) rectangle ({\x+0.15},5.6);
+}
+\node[rotate=90,anchor=center] at (10.125,6.0) {\tiny A};
+\node[rotate=90,anchor=center] at (10.575,6.0) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,6.0) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,6.0) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,6.0) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,6.0) {\tiny P};
+\node[anchor=west] at (11.6,6.2) {\textbf{PML4E:}};
+\node[anchor=west] at (11.6,5.8) {\textbf{present}};
+
+% PDPTE 1GB row
+\draw[thick] (0,5.6) rectangle (11.4,4.8);
+\fill[igncolor] (0,5.6) rectangle (0.3,4.8);
+\fill[igncolor] (0.3,5.6) rectangle (2.1,4.8);
+\fill[rsvcolor] (2.1,5.6) rectangle (2.7,4.8);
+\fill[addrcolor] (2.7,5.6) rectangle (5.8,4.8);
+\fill[rsvcolor] (5.8,5.6) rectangle (9.4,4.8);
+\fill[igncolor] (9.4,5.6) rectangle (9.75,4.8);
+\node[rotate=90,anchor=center] at (0.15,5.2) {\tiny XD};
+\node at (1.2,5.2) {\tiny Ignored};
+\node at (2.4,5.2) {\tiny Rsvd.};
+\node at (4.25,5.2) {\tiny\begin{tabular}{c}Address of\\1GB page frame\end{tabular}};
+\node at (7.6,5.2) {\tiny Reserved};
+\node at (9.575,5.2) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.75,9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},5.6) rectangle ({\x+0.15},4.8);
+}
+\fill[pagesizeyellow] (10.35,5.6) rectangle (10.5,4.8);
+\node[rotate=90,anchor=center] at (9.825,5.2) {\tiny G};
+\node[rotate=90,anchor=center] at (10.125,5.2) {\tiny DA};
+\node[rotate=90,anchor=center] at (10.275,5.2) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,5.2) {\tiny 1};
+\node[rotate=90,anchor=center] at (10.575,5.2) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,5.2) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,5.2) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,5.2) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,5.2) {\tiny P};
+\node[anchor=west] at (11.6,5.4) {\textbf{PDPTE:}};
+\node[anchor=west] at (11.6,5.2) {\textbf{1GB}};
+\node[anchor=west] at (11.6,5.0) {\textbf{page}};
+
+% PDPTE page directory row
+\draw[thick] (0,4.8) rectangle (11.4,4.0);
+\fill[igncolor] (0,4.8) rectangle (0.3,4.0);
+\fill[igncolor] (0.3,4.8) rectangle (2.1,4.0);
+\fill[rsvcolor] (2.1,4.8) rectangle (2.7,4.0);
+\fill[addrcolor] (2.7,4.8) rectangle (9.4,4.0);
+\fill[igncolor] (9.4,4.8) rectangle (9.9,4.0);
+\node[rotate=90,anchor=center] at (0.15,4.4) {\tiny XD};
+\node at (1.2,4.4) {\tiny Ignored};
+\node at (2.4,4.4) {\tiny Rsvd.};
+\node at (6.05,4.4) {\tiny Address of page directory};
+\node at (9.65,4.4) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},4.8) rectangle ({\x+0.15},4.0);
+}
+\fill[pagesizeyellow] (10.35,4.8) rectangle (10.5,4.0);
+\node[rotate=90,anchor=center] at (10.125,4.4) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,4.4) {\tiny 0};
+\node[rotate=90,anchor=center] at (10.575,4.4) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,4.4) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,4.4) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,4.4) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,4.4) {\tiny P};
+\node[anchor=west] at (11.6,4.6) {\textbf{PDPTE:}};
+\node[anchor=west] at (11.6,4.4) {\textbf{page}};
+\node[anchor=west] at (11.6,4.2) {\textbf{directory}};
+
+% PDE 2MB row
+\draw[thick] (0,4.0) rectangle (11.4,3.2);
+\fill[igncolor] (0,4.0) rectangle (0.3,3.2);
+\fill[igncolor] (0.3,4.0) rectangle (2.1,3.2);
+\fill[rsvcolor] (2.1,4.0) rectangle (2.7,3.2);
+\fill[addrcolor] (2.7,4.0) rectangle (5.8,3.2);
+\fill[rsvcolor] (5.8,4.0) rectangle (9.4,3.2);
+\fill[igncolor] (9.4,4.0) rectangle (9.75,3.2);
+\node[rotate=90,anchor=center] at (0.15,3.6) {\tiny XD};
+\node at (1.2,3.6) {\tiny Ignored};
+\node at (2.4,3.6) {\tiny Rsvd.};
+\node at (4.25,3.6) {\tiny\begin{tabular}{c}Address of\\2MB page frame\end{tabular}};
+\node at (7.6,3.6) {\tiny Reserved};
+\node at (9.575,3.6) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.75,9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},4.0) rectangle ({\x+0.15},3.2);
+}
+\fill[pagesizeyellow] (10.35,4.0) rectangle (10.5,3.2);
+\node[rotate=90,anchor=center] at (9.825,3.6) {\tiny G};
+\node[rotate=90,anchor=center] at (10.125,3.6) {\tiny DA};
+\node[rotate=90,anchor=center] at (10.275,3.6) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,3.6) {\tiny 1};
+\node[rotate=90,anchor=center] at (10.575,3.6) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,3.6) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,3.6) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,3.6) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,3.6) {\tiny P};
+\node[anchor=west] at (11.6,3.8) {\textbf{PDE:}};
+\node[anchor=west] at (11.6,3.6) {\textbf{2MB}};
+\node[anchor=west] at (11.6,3.4) {\textbf{page}};
+
+% PDE page table row
+\draw[thick] (0,3.2) rectangle (11.4,2.4);
+\fill[igncolor] (0,3.2) rectangle (0.3,2.4);
+\fill[igncolor] (0.3,3.2) rectangle (2.1,2.4);
+\fill[rsvcolor] (2.1,3.2) rectangle (2.7,2.4);
+\fill[addrcolor] (2.7,3.2) rectangle (9.4,2.4);
+\fill[igncolor] (9.4,3.2) rectangle (9.9,2.4);
+\node[rotate=90,anchor=center] at (0.15,2.8) {\tiny XD};
+\node at (1.2,2.8) {\tiny Ignored};
+\node at (2.4,2.8) {\tiny Rsvd.};
+\node at (6.05,2.8) {\tiny Address of page table};
+\node at (9.65,2.8) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},3.2) rectangle ({\x+0.15},2.4);
+}
+\fill[pagesizeyellow] (10.35,3.2) rectangle (10.5,2.4);
+\node[rotate=90,anchor=center] at (10.125,2.8) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,2.8) {\tiny 0};
+\node[rotate=90,anchor=center] at (10.575,2.8) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,2.8) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,2.8) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,2.8) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,2.8) {\tiny P};
+\node[anchor=west] at (11.6,3.0) {\textbf{PDE:}};
+\node[anchor=west] at (11.6,2.8) {\textbf{page}};
+\node[anchor=west] at (11.6,2.6) {\textbf{table}};
+
+% PTE row
+\draw[thick] (0,2.4) rectangle (11.4,1.6);
+\fill[igncolor] (0,2.4) rectangle (0.3,1.6);
+\fill[igncolor] (0.3,2.4) rectangle (2.1,1.6);
+\fill[rsvcolor] (2.1,2.4) rectangle (2.7,1.6);
+\fill[addrcolor] (2.7,2.4) rectangle (9.4,1.6);
+\fill[igncolor] (9.4,2.4) rectangle (9.75,1.6);
+\node[rotate=90,anchor=center] at (0.15,2.0) {\tiny XD};
+\node at (1.2,2.0) {\tiny Ignored};
+\node at (2.4,2.0) {\tiny Rsvd.};
+\node at (6.05,2.0) {\tiny Address of 4KB page frame};
+\node at (9.575,2.0) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.75,9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},2.4) rectangle ({\x+0.15},1.6);
+}
+\tiny
+\node[rotate=90,anchor=center] at (9.825,2.0) {\tiny G};
+\node[rotate=90,anchor=center] at (9.975,2.0) {\tiny PAT};
+\node[rotate=90,anchor=center] at (10.125,2.0) {\tiny DA};
+\node[rotate=90,anchor=center] at (10.275,2.0) {\tiny A};
+\node[rotate=90,anchor=center] at (10.575,2.0) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,2.0) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,2.0) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,2.0) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,2.0) {\tiny P};
+\node[anchor=west] at (11.6,2.2) {\textbf{PTE:}};
+\node[anchor=west] at (11.6,2.0) {\textbf{4KB}};
+\node[anchor=west] at (11.6,1.8) {\textbf{page}};
+
+\end{tikzpicture}
+\end{frame}
+
+
+\begin{frame}{PTE/PDE/PDP/PML4 Entry Format}
+
+\definecolor{addrcolor}{HTML}{E6E6FA}
+\definecolor{igncolor}{HTML}{FFE4E1}
+\definecolor{rsvcolor}{HTML}{F0F0F0}
+\definecolor{pagesizeyellow}{HTML}{FFFF00}
+
+\begin{columns}[T]
+\begin{column}{0.25\textwidth}
+\vspace{-0.5em}
+\tiny
+\begin{itemize}\setlength{\itemsep}{0.1em}
+\item \textbf{Physical frame address}
+\item \textbf{Virtual memory}
+  \item[] Present -- page is mapped to phys. mem
+  \item[] Accessed -- page data was accessed  
+  \item[] Dirty -- data in page was modified
+  \item[] Global -- remains in TLB on context sw.
+  \item[] Page size -- in hierarchies 2 and up
+\item \textbf{Protection}
+  \item[] R\#/W -- page is read only / writable
+  \item[] User / Supervisor\# -- page can be accessed by user+OS or by OS only
+  \item[] eXecute Disable -- page can be used only as data (fault if trying to execute)
+\item \textbf{Caching}
+  \item[] PWT -- Page Write Through
+  \item[] PCD -- Page Cache Disabled
+  \item[] PAT -- PT Attribute Index
+\item \textbf{Ignored} -- bits available for OS usage
+\end{itemize}
+\end{column}
+\begin{column}{0.75\textwidth}
+\vspace{-1em}
+\setlength{\tabcolsep}{0pt}
+\setlength{\fboxsep}{0pt}
+\renewcommand{\arraystretch}{1.3}
+
+% Create the main table
+\begin{tikzpicture}[scale=0.95, transform shape]
+
+% Bit numbers at top
+\node[anchor=east] at (0.1,7.6) {\tiny 63};
+\node[anchor=west] at (1.8,7.6) {\tiny 52 51};
+\node[anchor=center] at (6.0,7.6) {\tiny M M-1};
+\node[anchor=east] at (9.3,7.6) {\tiny 12 11};
+\node[anchor=east] at (10.5,7.6) {\tiny 9 8 7 6 5 4 3 2 1 0};
+
+% CR3 row
+\draw[thick] (0,7.2) rectangle (11.4,6.4);
+\fill[rsvcolor] (0,7.2) rectangle (2.1,6.4);
+\fill[addrcolor] (2.1,7.2) rectangle (9.4,6.4);
+\fill[igncolor] (9.4,7.2) rectangle (10.5,6.4);
+\node at (1.05,6.8) {\tiny Reserved};
+\node at (5.75,6.8) {\tiny Address of PML4 table};
+\node at (9.95,6.8) {\tiny Ignored};
+% Draw individual bit cells for flags
+\foreach \x in {10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},7.2) rectangle ({\x+0.15},6.4);
+}
+\node[anchor=west] at (11.6,6.8) {\textbf{CR3}};
+
+% PML4E row
+\draw[thick] (0,6.4) rectangle (11.4,5.6);
+\fill[igncolor] (0,6.4) rectangle (0.3,5.6);
+\fill[igncolor] (0.3,6.4) rectangle (2.1,5.6);
+\fill[rsvcolor] (2.1,6.4) rectangle (2.7,5.6);
+\fill[addrcolor] (2.7,6.4) rectangle (9.4,5.6);
+\fill[igncolor] (9.4,6.4) rectangle (9.9,5.6);
+\node[rotate=90,anchor=center] at (0.15,6.0) {\tiny XD};
+\node at (1.2,6.0) {\tiny Ignored};
+\node at (2.4,6.0) {\tiny Rsvd.};
+\node at (6.05,6.0) {\tiny Address of page-directory-pointer table};
+\node at (9.65,6.0) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},6.4) rectangle ({\x+0.15},5.6);
+}
+\tiny
+\node[rotate=90,anchor=center] at (10.125,6.0) {\tiny A};
+\node[rotate=90,anchor=center] at (10.575,6.0) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,6.0) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,6.0) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,6.0) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,6.0) {\tiny P};
+\node[anchor=west] at (11.6,6.2) {\tiny\textbf{PML4E:}};
+\node[anchor=west] at (11.6,5.8) {\tiny\textbf{present}};
+
+% PDPTE 1GB row
+\draw[thick] (0,5.6) rectangle (11.4,4.8);
+\fill[igncolor] (0,5.6) rectangle (0.3,4.8);
+\fill[igncolor] (0.3,5.6) rectangle (2.1,4.8);
+\fill[rsvcolor] (2.1,5.6) rectangle (2.7,4.8);
+\fill[addrcolor] (2.7,5.6) rectangle (5.8,4.8);
+\fill[rsvcolor] (5.8,5.6) rectangle (9.4,4.8);
+\fill[igncolor] (9.4,5.6) rectangle (9.75,4.8);
+\node[rotate=90,anchor=center] at (0.15,5.2) {\tiny XD};
+\node at (1.2,5.2) {\tiny Ignored};
+\node at (2.4,5.2) {\tiny Rsvd.};
+\node at (4.25,5.2) {\tiny\begin{tabular}{c}Address of\\1GB page frame\end{tabular}};
+\node at (7.6,5.2) {\tiny Reserved};
+\node at (9.575,5.2) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.75,9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},5.6) rectangle ({\x+0.15},4.8);
+}
+\fill[pagesizeyellow] (10.35,5.6) rectangle (10.5,4.8);
+\node[rotate=90,anchor=center] at (9.825,5.2) {\tiny G};
+\node[rotate=90,anchor=center] at (10.125,5.2) {\tiny DA};
+\node[rotate=90,anchor=center] at (10.275,5.2) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,5.2) {\tiny 1};
+\node[rotate=90,anchor=center] at (10.575,5.2) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,5.2) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,5.2) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,5.2) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,5.2) {\tiny P};
+\node[anchor=west] at (11.6,5.4) {\footnotesize\textbf{PDPTE:}};
+\node[anchor=west] at (11.6,5.2) {\footnotesize\textbf{1GB}};
+\node[anchor=west] at (11.6,5.0) {\footnotesize\textbf{page}};
+
+% PDPTE page directory row
+\draw[thick] (0,4.8) rectangle (11.4,4.0);
+\fill[igncolor] (0,4.8) rectangle (0.3,4.0);
+\fill[igncolor] (0.3,4.8) rectangle (2.1,4.0);
+\fill[rsvcolor] (2.1,4.8) rectangle (2.7,4.0);
+\fill[addrcolor] (2.7,4.8) rectangle (9.4,4.0);
+\fill[igncolor] (9.4,4.8) rectangle (9.9,4.0);
+\node[rotate=90,anchor=center] at (0.15,4.4) {\tiny XD};
+\node at (1.2,4.4) {\tiny Ignored};
+\node at (2.4,4.4) {\tiny Rsvd.};
+\node at (6.05,4.4) {\tiny Address of page directory};
+\node at (9.65,4.4) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},4.8) rectangle ({\x+0.15},4.0);
+}
+\fill[pagesizeyellow] (10.35,4.8) rectangle (10.5,4.0);
+\node[rotate=90,anchor=center] at (10.125,4.4) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,4.4) {\tiny 0};
+\node[rotate=90,anchor=center] at (10.575,4.4) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,4.4) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,4.4) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,4.4) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,4.4) {\tiny P};
+\node[anchor=west] at (11.6,4.6) {\footnotesize\textbf{PDPTE:}};
+\node[anchor=west] at (11.6,4.4) {\footnotesize\textbf{page}};
+\node[anchor=west] at (11.6,4.2) {\footnotesize\textbf{directory}};
+
+% PDE 2MB row
+\draw[thick] (0,4.0) rectangle (11.4,3.2);
+\fill[igncolor] (0,4.0) rectangle (0.3,3.2);
+\fill[igncolor] (0.3,4.0) rectangle (2.1,3.2);
+\fill[rsvcolor] (2.1,4.0) rectangle (2.7,3.2);
+\fill[addrcolor] (2.7,4.0) rectangle (5.8,3.2);
+\fill[rsvcolor] (5.8,4.0) rectangle (9.4,3.2);
+\fill[igncolor] (9.4,4.0) rectangle (9.75,3.2);
+\node[rotate=90,anchor=center] at (0.15,3.6) {\tiny XD};
+\node at (1.2,3.6) {\tiny Ignored};
+\node at (2.4,3.6) {\tiny Rsvd.};
+\node at (4.25,3.6) {\tiny\begin{tabular}{c}Address of\\2MB page frame\end{tabular}};
+\node at (7.6,3.6) {\tiny Reserved};
+\node at (9.575,3.6) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.75,9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},4.0) rectangle ({\x+0.15},3.2);
+}
+\fill[pagesizeyellow] (10.35,4.0) rectangle (10.5,3.2);
+\node[rotate=90,anchor=center] at (9.825,3.6) {\tiny G};
+\node[rotate=90,anchor=center] at (10.125,3.6) {\tiny DA};
+\node[rotate=90,anchor=center] at (10.275,3.6) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,3.6) {\tiny 1};
+\node[rotate=90,anchor=center] at (10.575,3.6) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,3.6) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,3.6) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,3.6) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,3.6) {\tiny P};
+\node[anchor=west] at (11.6,3.8) {\footnotesize\textbf{PDE:}};
+\node[anchor=west] at (11.6,3.6) {\footnotesize\textbf{2MB}};
+\node[anchor=west] at (11.6,3.4) {\footnotesize\textbf{page}};
+
+% PDE page table row
+\draw[thick] (0,3.2) rectangle (11.4,2.4);
+\fill[igncolor] (0,3.2) rectangle (0.3,2.4);
+\fill[igncolor] (0.3,3.2) rectangle (2.1,2.4);
+\fill[rsvcolor] (2.1,3.2) rectangle (2.7,2.4);
+\fill[addrcolor] (2.7,3.2) rectangle (9.4,2.4);
+\fill[igncolor] (9.4,3.2) rectangle (9.9,2.4);
+\node[rotate=90,anchor=center] at (0.15,2.8) {\tiny XD};
+\node at (1.2,2.8) {\tiny Ignored};
+\node at (2.4,2.8) {\tiny Rsvd.};
+\node at (6.05,2.8) {\tiny Address of page table};
+\node at (9.65,2.8) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},3.2) rectangle ({\x+0.15},2.4);
+}
+\fill[pagesizeyellow] (10.35,3.2) rectangle (10.5,2.4);
+\node[rotate=90,anchor=center] at (10.125,2.8) {\tiny A};
+\node[rotate=90,anchor=center] at (10.425,2.8) {\tiny 0};
+\node[rotate=90,anchor=center] at (10.575,2.8) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,2.8) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,2.8) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,2.8) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,2.8) {\tiny P};
+\node[anchor=west] at (11.6,3.0) {\footnotesize\textbf{PDE:}};
+\node[anchor=west] at (11.6,2.8) {\footnotesize\textbf{page}};
+\node[anchor=west] at (11.6,2.6) {\footnotesize\textbf{table}};
+
+% PTE row
+\draw[thick] (0,2.4) rectangle (11.4,1.6);
+\fill[igncolor] (0,2.4) rectangle (0.3,1.6);
+\fill[igncolor] (0.3,2.4) rectangle (2.1,1.6);
+\fill[rsvcolor] (2.1,2.4) rectangle (2.7,1.6);
+\fill[addrcolor] (2.7,2.4) rectangle (9.4,1.6);
+\fill[igncolor] (9.4,2.4) rectangle (9.75,1.6);
+\node[rotate=90,anchor=center] at (0.15,2.0) {\tiny XD};
+\node at (1.2,2.0) {\tiny Ignored};
+\node at (2.4,2.0) {\tiny Rsvd.};
+\node at (6.05,2.0) {\tiny Address of 4KB page frame};
+\node at (9.575,2.0) {\tiny Ign.};
+% Individual flag bits
+\foreach \x in {9.75,9.9,10.05,10.2,10.35,10.5,10.65,10.8,10.95,11.1,11.25} {
+    \draw ({\x},2.4) rectangle ({\x+0.15},1.6);
+}
+\node[rotate=90,anchor=center] at (9.825,2.0) {\tiny G};
+\node[rotate=90,anchor=center] at (9.975,2.0) {\tiny PAT};
+\node[rotate=90,anchor=center] at (10.125,2.0) {\tiny DA};
+\node[rotate=90,anchor=center] at (10.275,2.0) {\tiny A};
+\node[rotate=90,anchor=center] at (10.575,2.0) {\tiny PCD};
+\node[rotate=90,anchor=center] at (10.725,2.0) {\tiny PWT};
+\node[rotate=90,anchor=center] at (10.875,2.0) {\tiny US};
+\node[rotate=90,anchor=center] at (11.025,2.0) {\tiny RW};
+\node[rotate=90,anchor=center] at (11.175,2.0) {\tiny P};
+\node[anchor=west] at (11.6,2.2) {\footnotesize\textbf{PTE:}};
+\node[anchor=west] at (11.6,2.0) {\footnotesize\textbf{4KB}};
+\node[anchor=west] at (11.6,1.8) {\footnotesize\textbf{page}};
+
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 
