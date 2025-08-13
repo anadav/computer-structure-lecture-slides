@@ -286,41 +286,37 @@ Components:
     \end{itemize}
     
 \item \textbf{TLB Indexing}
-\end{itemize}
 
-\vspace{0.2cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
+\begin{tikzpicture}[scale=1]
     % Virtual address breakdown
-    \draw[thick] (0,0) rectangle (3.5,0.6);
-    \draw[thick] (2.5,0) -- (2.5,0.6);
+    \draw[thick] (0,0) rectangle (5.5,0.6);
+    \draw[thick] (4,0) -- (4,0.6);
     
     % Fill colors
-    \fill[blue!20] (0,0) rectangle (2.5,0.6);
-    \fill[orange!20] (2.5,0) rectangle (3.5,0.6);
+    \fill[blue!20] (0,0) rectangle (4,0.6);
+    \fill[orange!20] (4,0) rectangle (5.5,0.6);
     
     % Labels
-    \node at (1.25,0.3) {\small Virtual page number};
-    \node at (3,0.3) {\small Offset};
+    \node at (2,0.3) {\small Virtual page number};
+    \node at (4.75,0.3) {\small Offset};
     
     % Tag and Set subdivision
-    \draw[thick] (0,-0.8) rectangle (2.5,-0.2);
-    \draw[thick] (1.5,-0.8) -- (1.5,-0.2);
+    \draw[thick] (0,-0.8) rectangle (4,-0.2);
+    \draw[thick] (2.4,-0.8) -- (2.4,-0.2);
     
-    \fill[green!20] (0,-0.8) rectangle (1.5,-0.2);
-    \fill[yellow!20] (1.5,-0.8) rectangle (2.5,-0.2);
+    \fill[green!20] (0,-0.8) rectangle (2.4,-0.2);
+    \fill[yellow!20] (2.4,-0.8) rectangle (4,-0.2);
     
-    \node at (0.75,-0.5) {\small Tag};
-    \node at (2,-0.5) {\small Set};
+    \node at (1.2,-0.5) {\small Tag};
+    \node at (3.2,-0.5) {\small Set};
     
     % Dotted lines connecting
     \draw[dotted, thick] (0,0) -- (0,-0.2);
-    \draw[dotted, thick] (2.5,0) -- (2.5,-0.2);
+    \draw[dotted, thick] (4,0) -- (4,-0.2);
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
-\begin{itemize}
 \item \textbf{On A TLB miss}
     \begin{itemize}
     \item Page Miss Handler (HW PMH) injects a load to address PTBR+VPN$\times$PTE\_size to get the PTE from memory
@@ -507,7 +503,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \textbf{Assume}
 \begin{itemize}
 \item A virtual address space of size $2^{48}$ bytes
-\item A page size of 4KB = $2^{12}$B $\rightarrow$ $2^{48}$B / $2^{12}$B = $2^{36}$ entries in the page table
+\item A page size of 4KB = $2^{12}\text{B} \rightarrow \frac{2^{48}\text{B}}{2^{12}\text{B}} = 2^{36}$ entries in the page table
 \item A PTE size of 8 bytes $\rightarrow$ page table size is $2^{36} \times 8$B = $2^{39}$B
 \item 128 process running in the system, each with it own page table $\rightarrow$ $2^{39}$B $\times$ 128 = $2^{46}$B
 \item Page tables alone requires a huge physical memory
@@ -530,7 +526,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \begin{itemize}
 \item The size of each page table is 4KB (in each hierarchy)
 \item Each page table entry has 8 bytes
-\item Each page table has 4KB/8B = 512 entries
+\item Each page table has $\frac{4\text{KB}}{8\text{B}} = 512$ entries
 \item The page table entry of level N provides the base of the page table in level N-1
     \begin{itemize}
     \item Provides M-12 bits, bit[11:0] are zeros (aligned to the 4KB table size)
