@@ -7,6 +7,7 @@
 \usepackage{listings}
 \usepackage{makecell}
 \usepackage{ragged2e}
+\usepackage{bytefield}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark}
 \usetheme{Madrid}
@@ -574,7 +575,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \begin{tikzpicture}[scale=0.72,
     table/.style={rectangle, draw, thick, minimum width=0.9cm, fill=blue!15},
     entry/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=0.3cm, fill=blue!30},
-    data/.style={rectangle, draw, thick, minimum width=1.1cm, minimum height=1.8cm, fill=white},
+    data/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=1.6cm, fill=white},
     arrow/.style={->, thick},
     dashedarrow/.style={->, thick, dashed}]
     
@@ -611,95 +612,95 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \node[font=\tiny] at (6.9,7.9) {TABLE};
     \node[font=\tiny] at (9.3,7.9) {OFFSET};
     
-    % Page table hierarchy - staggered heights
-    % PML4 Table
-    \node[table, minimum height=1.6cm] (pml4) at (2,5.2) {};
-    \node[font=\tiny] at (2,5.4) {PML4};
-    \node[font=\tiny] at (2,5.1) {Table};
-    \node[entry] (pml4en) at (2,4.5) {};
+    % Page table hierarchy - ascending from left to right with bigger vertical gaps
+    % PML4 Table (lowest)
+    \node[table, minimum height=1.6cm] (pml4) at (2,3.2) {};
+    \node[font=\tiny] at (2,3.4) {PML4};
+    \node[font=\tiny] at (2,3.1) {Table};
+    \node[entry] (pml4en) at (2,2.5) {};
     \node[font=\tiny] at (pml4en) {PML4 en};
     
-    % PDP Table
-    \node[table, minimum height=1.6cm] (pdp) at (4,4.7) {};
-    \node[font=\tiny] at (4,5) {Page};
-    \node[font=\tiny] at (4,4.7) {Directory};
-    \node[font=\tiny] at (4,4.4) {Pointer};
-    \node[entry] (pdpen) at (4,3.8) {};
+    % PDP Table (higher)
+    \node[table, minimum height=1.6cm] (pdp) at (4,3.9) {};
+    \node[font=\tiny] at (4,4.2) {Page};
+    \node[font=\tiny] at (4,3.9) {Directory};
+    \node[font=\tiny] at (4,3.6) {Pointer};
+    \node[entry] (pdpen) at (4,3.0) {};
     \node[font=\tiny] at (pdpen) {PDP en};
     
-    % Page Directory
-    \node[table, minimum height=1.6cm] (dir) at (6,4.2) {};
-    \node[font=\tiny] at (6,4.5) {Page};
-    \node[font=\tiny] at (6,4.2) {Directory};
-    \node[entry] (pde) at (6,3.4) {};
+    % Page Directory (higher)
+    \node[table, minimum height=1.6cm] (dir) at (6,4.6) {};
+    \node[font=\tiny] at (6,4.9) {Page};
+    \node[font=\tiny] at (6,4.6) {Directory};
+    \node[entry] (pde) at (6,3.8) {};
     \node[font=\tiny] at (pde) {PDE};
     
-    % Page Table - with text on two lines
-    \node[table, minimum height=1.6cm] (pt) at (8,3.7) {};
-    \node[font=\tiny] at (8,4) {Page};
-    \node[font=\tiny] at (8,3.7) {Table};
-    \node[entry] (pte) at (8,3) {};
+    % Page Table (even higher)
+    \node[table, minimum height=1.6cm] (pt) at (8,5.3) {};
+    \node[font=\tiny] at (8,5.6) {Page};
+    \node[font=\tiny] at (8,5.3) {Table};
+    \node[entry] (pte) at (8,4.6) {};
     \node[font=\tiny] at (pte) {PTE};
     
-    % Data Page with data in rectangle
-    \node[data] (datapage) at (10.2,3.5) {};
-    \node[font=\tiny] at (10.2,4) {4KByte};
-    \node[font=\tiny] at (10.2,3.6) {Page};
-    % Draw rectangle around "data"
-    \draw[thick] (9.8,3.1) rectangle (10.6,2.7);
-    \node[font=\tiny] at (10.2,2.9) {data};
+    % Data Page (highest) with data rectangle full width
+    \node[data, minimum height=1.6cm] (datapage) at (10.2,6) {};
+    \node[font=\tiny] at (10.2,6.5) {4KB};
+    \node[font=\tiny] at (10.2,6.1) {Page};
+    % Draw rectangle around "data" - full width of the page
+    \node[entry] (databox) at (10.2,5.5) {};
+    \node[font=\tiny] at (databox) {data};
     
     % CR3
-    \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm] (cr3) at (0.5,2) {\tiny CR3 (PDPTR)};
+    \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm] (cr3) at (0.5,1.2) {\tiny CR3 (PDPTR)};
     
     % Arrows from address fields to table entries (to west side) with "/" on line
     % PML4 arrow with "9" near origin and "/" on line
-    \draw[arrow] (2.7,7.5) -- (2.7,6.5) -- (0.8,6.5) -- (0.8,4.5) -- (pml4en.west);
+    \draw[arrow] (2.7,7.5) -- (2.7,6.5) -- (0.8,6.5) -- (0.8,2.5) -- (pml4en.west);
     \node[font=\tiny] at (3,7.3) {9};
     \draw[thick] (2.65,7.2) -- (2.75,7.15);
     
     % PDP arrow with "9" near origin and "/" on line
-    \draw[arrow] (4.1,7.5) -- (4.1,6) -- (2.8,6) -- (2.8,3.8) -- (pdpen.west);
+    \draw[arrow] (4.1,7.5) -- (4.1,6.2) -- (2.8,6.2) -- (2.8,3.0) -- (pdpen.west);
     \node[font=\tiny] at (4.4,7.3) {9};
     \draw[thick] (4.05,7.2) -- (4.15,7.15);
     
     % DIR arrow with "9" near origin and "/" on line
-    \draw[arrow] (5.5,7.5) -- (5.5,5.5) -- (4.8,5.5) -- (4.8,3.4) -- (pde.west);
+    \draw[arrow] (5.5,7.5) -- (5.5,5.9) -- (4.8,5.9) -- (4.8,3.8) -- (pde.west);
     \node[font=\tiny] at (5.8,7.3) {9};
     \draw[thick] (5.45,7.2) -- (5.55,7.15);
     
     % TABLE arrow with "9" near origin and "/" on line
-    \draw[arrow] (6.9,7.5) -- (6.9,5) -- (6.8,5) -- (6.8,3) -- (pte.west);
+    \draw[arrow] (6.9,7.5) -- (6.9,5.6) -- (6.8,5.6) -- (6.8,4.6) -- (pte.west);
     \node[font=\tiny] at (7.2,7.3) {9};
     \draw[thick] (6.85,7.2) -- (6.95,7.15);
     
-    % OFFSET arrow to data with "12" near origin and "/" on line
-    \draw[arrow] (9.3,7.5) -- (9.3,6.5) -- (10.2,6.5) -- (10.2,4.5);
+    % OFFSET arrow to data box with "12" near origin and "/" on line
+    \draw[arrow] (9.3,7.5) |- (databox.west);
     \node[font=\tiny] at (9.6,7.3) {12};
     \draw[thick] (9.25,7.2) -- (9.35,7.15);
     
     % Arrows connecting the hierarchy with bus width notation
     % CR3 to PML4 Table south (not PML4 en) - dashed
-    \draw[dashedarrow] (cr3.east) -- ($(cr3.east) + (0.3,0)$) -- ($(cr3.east) + (0.3,2.2)$) -- ($(pml4.south) + (0,-0.2)$) -- (pml4.south);
+    \draw[dashedarrow] (cr3.east) -| (pml4.south);
     \node[font=\tiny] at ($(cr3.east) + (0.7,0.3)$) {M-12 (4KB aligned)};
     
     % PML4 en to PDP Table south - dashed with proper right angles
-    \draw[dashedarrow] (pml4en.east) -- ($(pml4en.east) + (0.3,0)$) -- ($(pml4en.east) + (0.3,-1.2)$) |- ($(pdp.south) + (0,-1.2)$) -| (pdp.south);
+    \draw[dashedarrow] (pml4en.east) -| (pdp.south);
     \draw[thick] ($(pml4en.east) + (0.25,0.05)$) -- ($(pml4en.east) + (0.35,-0.05)$);
     \node[font=\tiny] at ($(pml4en.east) + (0.5,-0.2)$) {M-12};
     
     % PDP en to Page Directory south - dashed with proper right angles
-    \draw[dashedarrow] (pdpen.east) -- ($(pdpen.east) + (0.3,0)$) -- ($(pdpen.east) + (0.3,-1)$) |- ($(dir.south) + (0,-1)$) -| (dir.south);
+    \draw[dashedarrow] (pdpen.east) -| (dir.south);
     \draw[thick] ($(pdpen.east) + (0.25,0.05)$) -- ($(pdpen.east) + (0.35,-0.05)$);
     \node[font=\tiny] at ($(pdpen.east) + (0.5,-0.2)$) {M-12};
     
     % PDE to Page Table south - dashed with proper right angles
-    \draw[dashedarrow] (pde.east) -- ($(pde.east) + (0.3,0)$) -- ($(pde.east) + (0.3,-0.8)$) |- ($(pt.south) + (0,-0.8)$) -| (pt.south);
+    \draw[dashedarrow] (pde.east) -| (pt.south);
     \draw[thick] ($(pde.east) + (0.25,0.05)$) -- ($(pde.east) + (0.35,-0.05)$);
     \node[font=\tiny] at ($(pde.east) + (0.5,-0.2)$) {M-12};
     
-    % PTE to data - dashed with proper right angles
-    \draw[dashedarrow] (pte.east) -- ($(pte.east) + (0.6,0)$) -- ($(pte.east) + (0.6,0.5)$) -- ($(datapage.west) + (-0.3,0.5)$) -- ($(datapage.west) + (-0.3,-0.5)$) -- ($(datapage.west) + (0,-0.5)$);
+    % PTE to 4KByte Page (datapage) bottom - dashed with proper right angles
+    \draw[dashedarrow] (pte.east) -| (datapage.south);
     \draw[thick] ($(pte.east) + (0.55,0.05)$) -- ($(pte.east) + (0.65,-0.05)$);
     \node[font=\tiny] at ($(pte.east) + (0.8,0.2)$) {M-12};
     
@@ -709,66 +710,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \end{columns}
 \end{frame}
 
-\begin{frame}{2MB Page Mapping in 64-bit Mode}
-\textbf{A page directory entry (an entry for the 2nd level tables) has a "page size" bit}
-\begin{itemize}
-\item \textbf{If page size = 1}
-    \begin{itemize}
-    \item The entry points to a 2M page
-    \item Address bits[20:0] are used as an offset within the 2MB page
-    \end{itemize}
-\item \textbf{If page size = 0}
-    \begin{itemize}
-    \item The entry points to the base of a page table (1st level table)
-    \item That page table maps 512 pages of size 4KB, for a total size of 512$\times$4KB = 2MB
-    \item Address bits[20:12] select an entry within 1st level table
-    \item Address bits[11:0] are used as an offset within the selected 4KB page
-    \end{itemize}
-\end{itemize}
-\end{frame}
 
-\begin{frame}{1GB Page Mapping in 64-bit Mode}
-\textbf{A PDP entry (an entry for the 3rd-level tables) has a "page size" bit}
-\begin{itemize}
-\item \textbf{If page size = 1}
-    \begin{itemize}
-    \item The entry points to a 1GB page
-    \item Address bits[29:0] are used as an offset within the 1GB page
-    \end{itemize}
-\item \textbf{If page size = 0}
-    \begin{itemize}
-    \item The entry points to the base of a page directory table (2nd-level table)
-    \item That page directory table maps a total of 1GB
-    \end{itemize}
-\end{itemize}
-\end{frame}
 
-\begin{frame}{PTE/PDE/PDP/PML4 Entry Format}
-\begin{itemize}
-\item \textbf{Physical frame address}
-\item \textbf{Virtual memory}
-    \begin{itemize}
-    \item Present – page is mapped to phys. mem
-    \item Accessed – page data was accessed
-    \item Dirty – data in page was modified
-    \item Global – remains in TLB on context sw.
-    \item Page size – in hierarchies 2 and up
-    \end{itemize}
-\item \textbf{Protection}
-    \begin{itemize}
-    \item R\#/W – page is read only / writable
-    \item User / Supervisor\# – page can be accessed by user+OS or by OS only
-    \item eXecute Disable – page can be used only as data (fault if trying to execute)
-    \end{itemize}
-\item \textbf{Caching}
-    \begin{itemize}
-    \item PWT – Page Write Through
-    \item PCD – Page Cache Disabled
-    \item PAT – PT Attribute Index
-    \end{itemize}
-\item \textbf{Ignored} – bits available for OS usage
-\end{itemize}
-\end{frame}
 
 \begin{frame}{TLBs}
 \textbf{The most recently used PDEs and PTEs are cached in TLBs}
@@ -1122,5 +1065,6 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \item Only INVLPG can invalidate a global page entry
 \end{itemize}
 \end{frame}
+
 
 \end{document}
