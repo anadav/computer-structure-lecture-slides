@@ -58,7 +58,10 @@
 \begin{tikzpicture}[scale=0.9]
     % Define colors
     \definecolor{kernelcolor}{RGB}{200,200,255}
-    \definecolor{usercolor}{RGB}{255,255,200}
+    \definecolor{usercolor1}{RGB}{255,255,200}
+    \definecolor{usercolor2}{RGB}{200,255,200}
+    \definecolor{usercolor3}{RGB}{255,200,200}
+    \definecolor{usercolor4}{RGB}{255,220,255}
     \definecolor{bordercolor}{RGB}{100,100,100}
     
     % Define dimensions
@@ -78,12 +81,13 @@
             \fill[kernelcolor] (0,\procheight-\kernelheight) rectangle (\procwidth,\procheight);
             \draw[thick, bordercolor] (0,\procheight-\kernelheight) -- (\procwidth,\procheight-\kernelheight);
             
-            % User space (bottom)
-            \fill[usercolor] (0,0) rectangle (\procwidth,\procheight-\kernelheight);
+            % User space (bottom) - different color for each process
+            \pgfmathtruncatemacro{\colornum}{\i+1}
+            \fill[usercolor\colornum] (0,0) rectangle (\procwidth,\procheight-\kernelheight);
             
-            % Labels
-            \node at (\procwidth/2, \kernelcenter) {\small Kernel Space};
-            \node at (\procwidth/2, \usercenter) {\small User Space};
+            % Labels with two lines
+            \node[align=center] at (\procwidth/2, \kernelcenter) {\small Kernel\\Space};
+            \node[align=center] at (\procwidth/2, \usercenter) {\small User\\Space};
             
             % Address labels
             \node[left] at (0, \procheight) {\small M};
@@ -106,12 +110,12 @@
         \fill[kernelcolor] (0,\procheight-\kernelheight) rectangle (\procwidth,\procheight);
         \draw[thick, bordercolor] (0,\procheight-\kernelheight) -- (\procwidth,\procheight-\kernelheight);
         
-        % User space (bottom)
-        \fill[usercolor] (0,0) rectangle (\procwidth,\procheight-\kernelheight);
+        % User space (bottom) - use color 4 for process n
+        \fill[usercolor4] (0,0) rectangle (\procwidth,\procheight-\kernelheight);
         
-        % Labels
-        \node at (\procwidth/2, \kernelcenter) {\small Kernel Space};
-        \node at (\procwidth/2, \usercenter) {\small User Space};
+        % Labels with two lines
+        \node[align=center] at (\procwidth/2, \kernelcenter) {\small Kernel\\Space};
+        \node[align=center] at (\procwidth/2, \usercenter) {\small User\\Space};
         
         % Address labels
         \node[left] at (0, \procheight) {\small M};
