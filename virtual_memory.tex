@@ -556,18 +556,19 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \begin{columns}[T]
 \begin{column}{0.44\textwidth}
 \begin{itemize}
-\item \textbf{Hierarchical mapping}
-\item The size of each page table is 4KB (in each hierarchy)
-\item Page table entry has 8 bytes
-\item Page table has $\frac{4\text{KB}}{8\text{B}}=512$ entries
-\item The page table entry of level N provides the base of the page table in level N-1
+\item \textbf{4-level hierarchical paging}
+\item Each page table: 4KB in size
+\item Each page table entry (PTE): 8B
+\item Entries per table: $\frac{4\text{KB}}{8\text{B}} = 512 = 2^9$
+\item Level $n$ entry points to level $n-1$ table base
     \begin{itemize}
-    \item[$\triangleright$] Provides M-12 bits, bit[11:0] are zeros (aligned to the 4KB table size)
-    \item[$\triangleright$] M is log$_2$ of physical memory size
-    \item[$\triangleright$] CR3 points to PML4 table base
+    \item[$\triangleright$] Provides $(M-12)$ address bits
+    \item[$\triangleright$] Bits [11:0] = 0 (4KB-aligned)
+    \item[$\triangleright$] $M = \log_2(\text{physical mem size})$
+    \item[$\triangleright$] CR3 register $\rightarrow$ PML4 base
     \end{itemize}
-\item 9 bits from the VA provide the index for the specific entry in the page table
-\item \textbf{Lowest 12 Linear Addr. bits provide offset within the selected 4KB page} Point to the data bytes
+\item 9 VA bits $\rightarrow$ index in each table
+\item VA[11:0] byte offset in 4KB page
 \end{itemize}
 \end{column}
 
