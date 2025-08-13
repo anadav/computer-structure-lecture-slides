@@ -1443,35 +1443,38 @@
   \end{itemize}
 \end{frame}
 
+
 \begin{frame}{Memory Order Buffer (MOB)}
   \begin{columns}
     \begin{column}{0.7\textwidth}
       \begin{itemize}
         \item \textbf{Store Coloring}
         \begin{itemize}
-          \item Each Store is allocated in-order in the \emph{Store Buffer}, and gets a \textbf{SBID}
-          \item Each load is allocated in-order in the \emph{Load Buffer}, and gets LBID + current SBID
+          \item Stores: track in \emph{Store Buffer} $\rightarrow$ alloc \textbf{SBID}
+          \item Loads: track in \emph{Load Buffer} $\rightarrow$ alloc \textbf{LBID}, save \textbf{SBID}
+          \item In-order allocation
         \end{itemize}
         
-        \item \textbf{A Load is checked against all previous stores}
+        \item \textbf{Loads check against prior stores}
         \begin{itemize}
-          \item Stores with SBID $\leq$ load's SBID
+          \item Those with SBID $\leq$ load's SBID
         \end{itemize}
         
-        \item \textbf{A Load blocked if}
+        \item \textbf{Load blocks when:}
         \begin{itemize}
-          \item Unresolved address of a relevant STAs
-          \item STA to same address, but data not ready
-          \item Data Cache miss
+          \item Relevant STA has unresolved address
+          \item STA to same address awaits data
+          \item Data cache misses
         \end{itemize}
         
-        \item \textbf{The MOB writes the Load's blocking info into the load buffer}
+        \item \textbf{MOB handles blocked loads:}
         \begin{itemize}
-          \item Re-dispatches load when wake-up signal received
-          \item The load may be blocked again on another condition
+          \item Records blocking info in Load Buffer
+          \item Re-dispatches on wake-up signal
+          \item May block again on new condition
         \end{itemize}
         
-        \item \textbf{If Load is not blocked $\Rightarrow$ executed (bypassed)}
+        \item \textbf{Unblocked loads → execute (bypass)}
       \end{itemize}
     \end{column}
     
@@ -1479,30 +1482,29 @@
       \begin{center}
         \begin{tabular}{|c|c|c|}
           \hline
-          & LBID & SBID \\
+          & \textbf{LBID} & \textbf{SBID} \\
           \hline
-          Store & - & 0 \\
+          \rowcolor{blue!15} Store & - & 0 \\
           \hline
-          Store & - & 1 \\
+          \rowcolor{green!15} Store & - & 1 \\
           \hline
-          Load & 0 & 1 \\
+          \rowcolor{green!15} Load & 0 & 1 \\
           \hline
-          Store & - & 2 \\
+          \rowcolor{orange!15} Store & - & 2 \\
           \hline
-          Load & 1 & 2 \\
+          \rowcolor{orange!15} Load & 1 & 2 \\
           \hline
-          Load & 2 & 2 \\
+          \rowcolor{orange!15} Load & 2 & 2 \\
           \hline
-          Load & 3 & 2 \\
+          \rowcolor{orange!15} Load & 3 & 2 \\
           \hline
-          Store & - & 3 \\
+          \rowcolor{red!15} Store & - & 3 \\
           \hline
-          Load & 4 & 3 \\
+          \rowcolor{red!15} Load & 4 & 3 \\
           \hline
         \end{tabular}
       \end{center}
     \end{column}
   \end{columns}
 \end{frame}
-
 \end{document}
