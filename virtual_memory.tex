@@ -275,6 +275,95 @@ Components:
 \end{center}
 \end{frame}
 
+
+\begin{frame}{Translation Look aside Buffer (TLB)}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{itemize}
+\item \textbf{The TLB caches recently used PTEs}
+    \begin{itemize}
+    \item Typically, 128 to 256 entries, 4 to 8 way associative
+    \end{itemize}
+    
+\item \textbf{TLB Indexing}
+\end{itemize}
+
+\vspace{0.2cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Virtual address breakdown
+    \draw[thick] (0,0) rectangle (3.5,0.6);
+    \draw[thick] (2.5,0) -- (2.5,0.6);
+    
+    % Fill colors
+    \fill[blue!20] (0,0) rectangle (2.5,0.6);
+    \fill[orange!20] (2.5,0) rectangle (3.5,0.6);
+    
+    % Labels
+    \node at (1.25,0.3) {\small Virtual page number};
+    \node at (3,0.3) {\small Offset};
+    
+    % Tag and Set subdivision
+    \draw[thick] (0,-0.8) rectangle (2.5,-0.2);
+    \draw[thick] (1.5,-0.8) -- (1.5,-0.2);
+    
+    \fill[green!20] (0,-0.8) rectangle (1.5,-0.2);
+    \fill[yellow!20] (1.5,-0.8) rectangle (2.5,-0.2);
+    
+    \node at (0.75,-0.5) {\small Tag};
+    \node at (2,-0.5) {\small Set};
+    
+    % Dotted lines connecting
+    \draw[dotted, thick] (0,0) -- (0,-0.2);
+    \draw[dotted, thick] (2.5,0) -- (2.5,-0.2);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+\begin{itemize}
+\item \textbf{On A TLB miss}
+    \begin{itemize}
+    \item Page Miss Handler (HW PMH) injects a load to address PTBR+VPN$\times$PTE\_size to get the PTE from memory
+    \item PMH may contain a 2\textsuperscript{nd} level TLB
+    \end{itemize}
+    
+\item \textbf{OS is responsible to maintain coherency between page table and TLB}
+    \begin{itemize}
+    \item Each time OS writes to a PTE it must invalidate the PTE from the TLB (if exists)
+    \end{itemize}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.75,
+    box/.style={rectangle, draw, thick, minimum width=2.5cm, minimum height=0.7cm, text centered},
+    decision/.style={diamond, draw, thick, minimum width=1.8cm, minimum height=1.2cm, text centered},
+    oval/.style={ellipse, draw, thick, minimum width=2.2cm, minimum height=0.8cm, text centered},
+    arrow/.style={->, thick}]
+    
+    % Nodes
+    \node[oval, align=center] (va) at (0,6) {\small Virtual\\[-2pt] Address};
+    \node[box, align=center] (tlb) at (0,4.5) {\small TLB\\[-2pt] Access};
+    \node[decision] (hit) at (0,2.8) {\small TLB Hit ?};
+    \node[box, fill=yellow!10, align=center] (pmh) at (-2.5,0.8) {\small PMH gets PTE\\[-2pt] from Page Table\\[-2pt] In memory};
+    \node[box, align=center] (insert) at (0,-0.8) {\small Insert PTE into\\[-2pt] TLB (may need\\[-2pt] a victim)};
+    \node[oval, align=center] (pa) at (2.5,0.8) {\small Physical\\[-2pt] Addresses};
+    
+    % Arrows
+    \draw[arrow] (va) -- (tlb);
+    \draw[arrow] (tlb) -- (hit);
+    \draw[arrow] (hit) -- node[left] {\small No} (pmh);
+    \draw[arrow] (hit) -- node[above] {\small Yes} (pa);
+    \draw[arrow] (pmh) -- (insert);
+    \draw[arrow] (insert) -| (pa);
+    
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
 \begin{frame}{Translation Look aside Buffer (TLB) - Details}
 \begin{itemize}
 \item The TLB caches recently used PTEs
