@@ -54,9 +54,77 @@
 \end{frame}
 
 \begin{frame}{Virtual Address Spaces}
-% TODO: Add diagram showing Process 1, 2, 3, ..., n with Kernel Space and User Space
 \begin{center}
-[Diagram: Multiple processes each with their own virtual address space (0 to M), divided into Kernel Space and User Space]
+\begin{tikzpicture}[scale=0.9]
+    % Define colors
+    \definecolor{kernelcolor}{RGB}{200,200,255}
+    \definecolor{usercolor}{RGB}{255,255,200}
+    \definecolor{bordercolor}{RGB}{100,100,100}
+    
+    % Define dimensions
+    \def\procwidth{2.2}
+    \def\procheight{4}
+    \def\kernelheight{1.2}
+    \def\spacing{0.8}
+    \pgfmathsetmacro{\kernelcenter}{\procheight-\kernelheight/2}
+    \pgfmathsetmacro{\usercenter}{(\procheight-\kernelheight)/2}
+    
+    % Draw processes using foreach loop
+    \foreach \i in {0, 1, 2} {
+        \begin{scope}[shift={({\i*(\procwidth+\spacing)},0)}]
+            \draw[thick, bordercolor] (0,0) rectangle (\procwidth,\procheight);
+            
+            % Kernel space (top)
+            \fill[kernelcolor] (0,\procheight-\kernelheight) rectangle (\procwidth,\procheight);
+            \draw[thick, bordercolor] (0,\procheight-\kernelheight) -- (\procwidth,\procheight-\kernelheight);
+            
+            % User space (bottom)
+            \fill[usercolor] (0,0) rectangle (\procwidth,\procheight-\kernelheight);
+            
+            % Labels
+            \node at (\procwidth/2, \kernelcenter) {\small Kernel Space};
+            \node at (\procwidth/2, \usercenter) {\small User Space};
+            
+            % Address labels
+            \node[left] at (0, \procheight) {\small M};
+            \node[left] at (0, 0) {\small 0};
+            
+            % Process label
+            \pgfmathtruncatemacro{\procnum}{\i+1}
+            \node[below] at (\procwidth/2, -0.3) {Process \procnum};
+        \end{scope}
+    }
+    
+    % Dots indicating more processes
+    \node at ({{3*(\procwidth+\spacing) + \spacing/2}}, \procheight/2) {\Large \ldots};
+    
+    % Process n
+    \begin{scope}[shift={({3.5*(\procwidth+\spacing)},0)}]
+        \draw[thick, bordercolor] (0,0) rectangle (\procwidth,\procheight);
+        
+        % Kernel space (top)
+        \fill[kernelcolor] (0,\procheight-\kernelheight) rectangle (\procwidth,\procheight);
+        \draw[thick, bordercolor] (0,\procheight-\kernelheight) -- (\procwidth,\procheight-\kernelheight);
+        
+        % User space (bottom)
+        \fill[usercolor] (0,0) rectangle (\procwidth,\procheight-\kernelheight);
+        
+        % Labels
+        \node at (\procwidth/2, \kernelcenter) {\small Kernel Space};
+        \node at (\procwidth/2, \usercenter) {\small User Space};
+        
+        % Address labels
+        \node[left] at (0, \procheight) {\small M};
+        \node[left] at (0, 0) {\small 0};
+        
+        % Process label
+        \node[below] at (\procwidth/2, -0.3) {Process n};
+    \end{scope}
+    
+    % Title/description
+    \node[above, font=\normalsize] at ({2.5*\procwidth + 2*\spacing}, \procheight + 0.5) {Each process has its own virtual address space};
+    
+\end{tikzpicture}
 \end{center}
 \end{frame}
 
@@ -462,6 +530,7 @@ This example shows how the OS dynamically allocates page tables in the page tabl
 \end{itemize}
 
 \begin{center}
+\footnotesize
 \begin{tabular}{|l|c|c|c|}
 \hline
  & \textbf{4KB pages} & \textbf{2MB/4MB Pages} & \textbf{1GB Pages} \\
@@ -495,6 +564,7 @@ Data TLBs & 64 entries, 4 ways & 32 entries, 4 ways & 4 entries, 4 ways \\
 \end{itemize}
 
 \begin{center}
+\footnotesize
 \begin{tabular}{|l|l|l|l|}
 \hline
 \textbf{cache} & \textbf{Accessed with VA bits} & \textbf{If hits, returns} & \textbf{saves accesses to tables} \\
