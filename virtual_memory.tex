@@ -5,9 +5,22 @@
 \usepackage{colortbl}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{makecell}
+\usepackage{ragged2e}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark}
 \usetheme{Madrid}
+
+\definecolor{addr}{HTML}{EAE6FF}   % address region
+\definecolor{ign}{HTML}{FFE9EA}    % ignored
+\definecolor{rsv}{HTML}{EFE4D3}    % reserved
+\definecolor{flag}{HTML}{E0F3E0}   % flags
+
+\newcommand{\addr}[1]{\colorbox{addr}{\strut\smash{#1}}}
+\newcommand{\ign}[1]{\colorbox{ign}{\strut\smash{#1}}}
+\newcommand{\rsv}[1]{\colorbox{rsv}{\strut\smash{#1}}}
+\newcommand{\flg}[1]{\colorbox{flag}{\strut\smash{#1}}}
+
 % Define colors for registers
 \definecolor{r1color}{RGB}{255,0,0}
 \definecolor{r2color}{RGB}{0,128,0}
@@ -278,12 +291,10 @@ Components:
 
 \begin{frame}{Translation Look aside Buffer (TLB)}
 \begin{columns}[T]
-\begin{column}{0.55\textwidth}
+\begin{column}{0.57\textwidth}
 \begin{itemize}
 \item \textbf{The TLB caches recently used PTEs}
-    \begin{itemize}
-    \item Typically, 128 to 256 entries, 4 to 8 way associative
-    \end{itemize}
+\item[] Typically, 128--256 entries, 4--8 ways
     
 \item \textbf{TLB Indexing}
 
@@ -319,18 +330,16 @@ Components:
 
 \item \textbf{On A TLB miss}
     \begin{itemize}
-    \item Page Miss Handler (HW PMH) injects a load to address PTBR+VPN$\times$PTE\_size to get the PTE from memory
+    \item Page Miss Handler (PMH) loads address PTBR+VPN$\times$PTE\_size to read PTE
     \item PMH may contain a 2\textsuperscript{nd} level TLB
     \end{itemize}
     
-\item \textbf{OS is responsible to maintain coherency between page table and TLB}
-    \begin{itemize}
-    \item Each time OS writes to a PTE it must invalidate the PTE from the TLB (if exists)
-    \end{itemize}
+\item \textbf{OS maintains TLB coherency}
+\item[] OS updates PTE $\rightarrow$ OS must invalidate PTE in TLB
 \end{itemize}
 \end{column}
 
-\begin{column}{0.45\textwidth}
+\begin{column}{0.43\textwidth}
 \begin{center}
 \begin{tikzpicture}[scale=0.75,
     box/.style={rectangle, draw, thick, minimum width=2.5cm, minimum height=0.7cm, text centered},
@@ -342,7 +351,7 @@ Components:
     \node[oval, align=center] (va) at (0,6) {Virtual\\[-2pt] Address};
     \node[box, align=center] (tlb) at (0,4.5) {\tiny TLB\\[-2pt] Access};
     \node[decision] (hit) at (0,2.8) {\tiny TLB Hit ?};
-    \node[box, fill=yellow!10, align=center] (pmh) at (-2.5,0.8) {\tiny PMH gets PTE\\[-2pt] from Page Table\\[-2pt] In memory};
+    \node[box, fill=yellow!10, align=center] (pmh) at (-2.5,0.8) {\tiny PMH gets PTE\\[-2pt] from Page Table\\[-2pt] in memory};
     \node[box, align=center] (insert) at (0,-0.8) {\tiny Insert PTE into\\[-2pt] TLB (may need\\[-2pt] a victim)};
     \node[oval, align=center] (pa) at (2.5,0.8) {\tiny Physical\\[-2pt] Addresses};
     
@@ -358,25 +367,6 @@ Components:
 \end{center}
 \end{column}
 \end{columns}
-\end{frame}
-
-\begin{frame}{Translation Look aside Buffer (TLB) - Details}
-\begin{itemize}
-\item The TLB caches recently used PTEs
-    \begin{itemize}
-    \item Typically, 128 to 256 entries, 4 to 8 way associative
-    \end{itemize}
-\item \textbf{TLB Indexing}
-\item \textbf{On A TLB miss}
-    \begin{itemize}
-    \item Page Miss Handler (HW PMH) injects a load to address PTBR+VPN$\times$PTE\_size to get the PTE from memory
-    \item PMH may contain a 2nd level TLB
-    \end{itemize}
-\item OS is responsible to maintain coherency between page table and TLB
-    \begin{itemize}
-    \item Each time OS writes to a PTE it must invalidate the PTE from the TLB (if exists)
-    \end{itemize}
-\end{itemize}
 \end{frame}
 
 \begin{frame}{Processor Caches and TLBs}
@@ -471,26 +461,65 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \end{itemize}
 \end{frame}
 
+
 \begin{frame}{Virtually-Addressed Cache}
 \begin{itemize}
-\item Cache uses virtual addresses (tags are virtual)
-\item Address translation only done on a cache miss
+\item \textbf{Cache uses virtual addresses (tags are virtual)}
+\item \textbf{Address translation only done on a cache miss}
     \begin{itemize}
     \item TLB is not in the path to cache hit
     \end{itemize}
-\item Two virtual pages mapped to the same physical page
+\end{itemize}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}[scale=1.1,
+    box/.style={rectangle, draw, thick, minimum width=2cm, minimum height=1.2cm, text centered},
+    arrow/.style={->, thick},
+    doublearrow/.style={<->, thick}]
+    
+    % Define colors
+    \definecolor{cpucolor}{RGB}{255,230,200}
+    \definecolor{cachecolor}{RGB}{220,255,220}
+    \definecolor{tlbcolor}{RGB}{230,220,255}
+    \definecolor{memcolor}{RGB}{240,240,240}
+    
+    % Nodes
+    \node[box, fill=cpucolor] (cpu) at (0,0) {CPU};
+    \node[box, fill=cachecolor] (cache) at (3.5,0) {Cache};
+    \node[box, fill=memcolor, align=center] (memory) at (7,0) {Main\\Memory};
+    \node[box, fill=tlbcolor] (tlb) at (3.5,-2.5) {TLB};
+    
+    % Arrows with labels
+    % CPU to Cache - bidirectional with VA going right, data going left
+    \draw[arrow] (cpu.east) -- node[above] {\small VA} (cache.west);
+    \draw[arrow] (cache.west) -- +(-0.7,0) -- +(-0.7,0.3) -- ($(cpu.east) + (0,0.3)$) -- node[above, pos=0.7] {\small data} (cpu.east |- {$(cpu.east) + (0,0.3)$});
+    
+    % Cache to Memory - bidirectional data
+    \draw[doublearrow] (cache.east) -- node[above] {\small data} (memory.west);
+    
+    % Cache to TLB - VA down
+    \draw[arrow] (cache.south) -- (tlb.north);
+    
+    % TLB to Memory - PA
+    \draw[arrow] (tlb.east) -- node[above] {\small PA} (tlb.east -| memory.south) -- (memory.south);
+    
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+\begin{itemize}
+\item \textbf{Two virtual pages mapped to the same physical page}
     \begin{itemize}
     \item Must not reside in the cache together
     \item On a cache miss, use a reverse TLB to verify that no other cache line already in the cache mapped to the missed physical address
     \end{itemize}
-\item Flush cache on context switch
+    
+\item \textbf{Flush cache on context switch}
     \begin{itemize}
     \item Alternatively: add process ID as part of the tag
     \end{itemize}
 \end{itemize}
-\begin{center}
-[Diagram: CPU $\rightarrow$ VA $\rightarrow$ Cache $\rightarrow$ TLB $\rightarrow$ PA $\rightarrow$ Main Memory]
-\end{center}
 \end{frame}
 
 \begin{frame}{Paging in x86}
@@ -522,30 +551,162 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \end{frame}
 
 \begin{frame}{4KB Page Mapping in 64-bit Mode}
-\textbf{Hierarchical mapping}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
 \begin{itemize}
+\item \textbf{Hierarchical mapping}
 \item The size of each page table is 4KB (in each hierarchy)
-\item Each page table entry has 8 bytes
-\item Each page table has $\frac{4\text{KB}}{8\text{B}} = 512$ entries
+\item Page table entry has 8 bytes
+\item Page table has $\frac{4\text{KB}}{8\text{B}}=512$ entries
 \item The page table entry of level N provides the base of the page table in level N-1
     \begin{itemize}
-    \item Provides M-12 bits, bit[11:0] are zeros (aligned to the 4KB table size)
-    \item M is log2 of physical memory size
-    \item CR3 points to PML4 table base
+    \item[$\triangleright$] Provides M-12 bits, bit[11:0] are zeros (aligned to the 4KB table size)
+    \item[$\triangleright$] M is log$_2$ of physical memory size
+    \item[$\triangleright$] CR3 points to PML4 table base
     \end{itemize}
 \item 9 bits from the VA provide the index for the specific entry in the page table
+\item \textbf{Lowest 12 Linear Addr. bits provide offset within the selected 4KB page} Point to the data bytes
 \end{itemize}
-\textbf{Lowest 12 Linear Addr. bits provide offset within the selected 4KB page}
-\begin{itemize}
-\item Point to the data bytes
-\end{itemize}
-\end{frame}
+\end{column}
 
-\begin{frame}{Example: Page Table Hierarchy}
+\begin{column}{0.56\textwidth}
 \begin{center}
-[Complex diagram showing page table hierarchy with PML4, PDP, DIR, TABLE levels and address mappings]
+\begin{tikzpicture}[scale=0.72,
+    table/.style={rectangle, draw, thick, minimum width=0.9cm, fill=blue!15},
+    entry/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=0.3cm, fill=blue!30},
+    data/.style={rectangle, draw, thick, minimum width=1.1cm, minimum height=1.8cm, fill=white},
+    arrow/.style={->, thick},
+    dashedarrow/.style={->, thick, dashed}]
+    
+    % Virtual Address breakdown at the top
+    \draw[thick] (0,7.5) rectangle (11,8.3);
+    
+    % Address fields with colors
+    \fill[green!20] (0,7.5) rectangle (2,8.3);
+    \fill[blue!20] (2,7.5) rectangle (3.4,8.3);
+    \fill[blue!20] (3.4,7.5) rectangle (4.8,8.3);
+    \fill[blue!20] (4.8,7.5) rectangle (6.2,8.3);
+    \fill[blue!20] (6.2,7.5) rectangle (7.6,8.3);
+    \fill[gray!20] (7.6,7.5) rectangle (11,8.3);
+    
+    % Field separators
+    \draw[thick] (2,7.5) -- (2,8.3);
+    \draw[thick] (3.4,7.5) -- (3.4,8.3);
+    \draw[thick] (4.8,7.5) -- (4.8,8.3);
+    \draw[thick] (6.2,7.5) -- (6.2,8.3);
+    \draw[thick] (7.6,7.5) -- (7.6,8.3);
+    
+    % Field labels above
+    \node[above, font=\tiny] at (0.5,8.3) {63};
+    \node[above, font=\tiny] at (1.6,8.3) {47 39 38};
+    \node[above, font=\tiny] at (4.1,8.3) {30 29};
+    \node[above, font=\tiny] at (5.5,8.3) {21 20};
+    \node[above, font=\tiny] at (6.9,8.3) {12 11};
+    \node[above, font=\tiny] at (10.5,8.3) {0};
+    
+    \node[font=\tiny] at (1,7.9) {sign ext.};
+    \node[font=\tiny] at (2.7,7.9) {PML4};
+    \node[font=\tiny] at (4.1,7.9) {PDP};
+    \node[font=\tiny] at (5.5,7.9) {DIR};
+    \node[font=\tiny] at (6.9,7.9) {TABLE};
+    \node[font=\tiny] at (9.3,7.9) {OFFSET};
+    
+    % Page table hierarchy - staggered heights
+    % PML4 Table
+    \node[table, minimum height=1.6cm] (pml4) at (2,5.2) {};
+    \node[font=\tiny] at (2,5.4) {PML4};
+    \node[font=\tiny] at (2,5.1) {Table};
+    \node[entry] (pml4en) at (2,4.5) {};
+    \node[font=\tiny] at (pml4en) {PML4 en};
+    
+    % PDP Table
+    \node[table, minimum height=1.6cm] (pdp) at (4,4.7) {};
+    \node[font=\tiny] at (4,5) {Page};
+    \node[font=\tiny] at (4,4.7) {Directory};
+    \node[font=\tiny] at (4,4.4) {Pointer};
+    \node[entry] (pdpen) at (4,3.8) {};
+    \node[font=\tiny] at (pdpen) {PDP en};
+    
+    % Page Directory
+    \node[table, minimum height=1.6cm] (dir) at (6,4.2) {};
+    \node[font=\tiny] at (6,4.5) {Page};
+    \node[font=\tiny] at (6,4.2) {Directory};
+    \node[entry] (pde) at (6,3.4) {};
+    \node[font=\tiny] at (pde) {PDE};
+    
+    % Page Table - with text on two lines
+    \node[table, minimum height=1.6cm] (pt) at (8,3.7) {};
+    \node[font=\tiny] at (8,4) {Page};
+    \node[font=\tiny] at (8,3.7) {Table};
+    \node[entry] (pte) at (8,3) {};
+    \node[font=\tiny] at (pte) {PTE};
+    
+    % Data Page with data in rectangle
+    \node[data] (datapage) at (10.2,3.5) {};
+    \node[font=\tiny] at (10.2,4) {4KByte};
+    \node[font=\tiny] at (10.2,3.6) {Page};
+    % Draw rectangle around "data"
+    \draw[thick] (9.8,3.1) rectangle (10.6,2.7);
+    \node[font=\tiny] at (10.2,2.9) {data};
+    
+    % CR3
+    \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm] (cr3) at (0.5,2) {\tiny CR3 (PDPTR)};
+    
+    % Arrows from address fields to table entries (to west side) with "/" on line
+    % PML4 arrow with "9" near origin and "/" on line
+    \draw[arrow] (2.7,7.5) -- (2.7,6.5) -- (0.8,6.5) -- (0.8,4.5) -- (pml4en.west);
+    \node[font=\tiny] at (3,7.3) {9};
+    \draw[thick] (2.65,7.2) -- (2.75,7.15);
+    
+    % PDP arrow with "9" near origin and "/" on line
+    \draw[arrow] (4.1,7.5) -- (4.1,6) -- (2.8,6) -- (2.8,3.8) -- (pdpen.west);
+    \node[font=\tiny] at (4.4,7.3) {9};
+    \draw[thick] (4.05,7.2) -- (4.15,7.15);
+    
+    % DIR arrow with "9" near origin and "/" on line
+    \draw[arrow] (5.5,7.5) -- (5.5,5.5) -- (4.8,5.5) -- (4.8,3.4) -- (pde.west);
+    \node[font=\tiny] at (5.8,7.3) {9};
+    \draw[thick] (5.45,7.2) -- (5.55,7.15);
+    
+    % TABLE arrow with "9" near origin and "/" on line
+    \draw[arrow] (6.9,7.5) -- (6.9,5) -- (6.8,5) -- (6.8,3) -- (pte.west);
+    \node[font=\tiny] at (7.2,7.3) {9};
+    \draw[thick] (6.85,7.2) -- (6.95,7.15);
+    
+    % OFFSET arrow to data with "12" near origin and "/" on line
+    \draw[arrow] (9.3,7.5) -- (9.3,6.5) -- (10.2,6.5) -- (10.2,4.5);
+    \node[font=\tiny] at (9.6,7.3) {12};
+    \draw[thick] (9.25,7.2) -- (9.35,7.15);
+    
+    % Arrows connecting the hierarchy with bus width notation
+    % CR3 to PML4 Table south (not PML4 en) - dashed
+    \draw[dashedarrow] (cr3.east) -- ($(cr3.east) + (0.3,0)$) -- ($(cr3.east) + (0.3,2.2)$) -- ($(pml4.south) + (0,-0.2)$) -- (pml4.south);
+    \node[font=\tiny] at ($(cr3.east) + (0.7,0.3)$) {M-12 (4KB aligned)};
+    
+    % PML4 en to PDP Table south - dashed with proper right angles
+    \draw[dashedarrow] (pml4en.east) -- ($(pml4en.east) + (0.3,0)$) -- ($(pml4en.east) + (0.3,-1.2)$) |- ($(pdp.south) + (0,-1.2)$) -| (pdp.south);
+    \draw[thick] ($(pml4en.east) + (0.25,0.05)$) -- ($(pml4en.east) + (0.35,-0.05)$);
+    \node[font=\tiny] at ($(pml4en.east) + (0.5,-0.2)$) {M-12};
+    
+    % PDP en to Page Directory south - dashed with proper right angles
+    \draw[dashedarrow] (pdpen.east) -- ($(pdpen.east) + (0.3,0)$) -- ($(pdpen.east) + (0.3,-1)$) |- ($(dir.south) + (0,-1)$) -| (dir.south);
+    \draw[thick] ($(pdpen.east) + (0.25,0.05)$) -- ($(pdpen.east) + (0.35,-0.05)$);
+    \node[font=\tiny] at ($(pdpen.east) + (0.5,-0.2)$) {M-12};
+    
+    % PDE to Page Table south - dashed with proper right angles
+    \draw[dashedarrow] (pde.east) -- ($(pde.east) + (0.3,0)$) -- ($(pde.east) + (0.3,-0.8)$) |- ($(pt.south) + (0,-0.8)$) -| (pt.south);
+    \draw[thick] ($(pde.east) + (0.25,0.05)$) -- ($(pde.east) + (0.35,-0.05)$);
+    \node[font=\tiny] at ($(pde.east) + (0.5,-0.2)$) {M-12};
+    
+    % PTE to data - dashed with proper right angles
+    \draw[dashedarrow] (pte.east) -- ($(pte.east) + (0.6,0)$) -- ($(pte.east) + (0.6,0.5)$) -- ($(datapage.west) + (-0.3,0.5)$) -- ($(datapage.west) + (-0.3,-0.5)$) -- ($(datapage.west) + (0,-0.5)$);
+    \draw[thick] ($(pte.east) + (0.55,0.05)$) -- ($(pte.east) + (0.65,-0.05)$);
+    \node[font=\tiny] at ($(pte.east) + (0.8,0.2)$) {M-12};
+    
+\end{tikzpicture}
 \end{center}
-This example shows how the OS dynamically allocates page tables in the page table hierarchy, as more addresses are requested by a process
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{2MB Page Mapping in 64-bit Mode}
@@ -656,10 +817,12 @@ Data TLBs & 64 entries, 4 ways & 32 entries, 4 ways & 4 entries, 4 ways \\
 \footnotesize
 \begin{tabular}{|l|l|l|l|}
 \hline
-\textbf{cache} & \textbf{Accessed with VA bits} & \textbf{If hits, returns} & \textbf{saves accesses to tables} \\
+\thead{cache} & \thead{Accessed with \\ VA bits} & \thead{If hits, \\ returns} & \thead{Saves accesses \\ to tables} \\
 \hline
 PDE cache & [47:21] & PDE & PTE \\
+\hline
 PDP cache & [47:30] & PDP entry & PDE and PTE \\
+\hline
 PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \hline
 \end{tabular}
