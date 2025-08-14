@@ -408,7 +408,8 @@ SW   d,Rd
             trapezium stretches=true, minimum height=0.3cm, minimum width=1cm, 
             draw, thick, fill=green!20},
         stage/.style={font=\bfseries},
-        label/.style={font=\tiny}
+        label/.style={font=\tiny},
+        port/.style={font=\tiny, inner sep=1pt}
     ]
         % Stage labels
         \node[stage] at (1.5,6) {Fetch};
@@ -428,17 +429,17 @@ SW   d,Rd
         \node[latch] (L4) at (12,2) {};
         
         % Fetch Stage
-        % MUX before PC
-        \node[mux, rotate=90] (pcmux) at (-0.2,4) {};
+        % MUX before PC (blue for PC-related components) - moved up and right
+        \node[mux, rotate=90, fill=blue!20] (pcmux) at (0.2,4.5) {};
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
-        \node[component, fill=purple!20, minimum width=0.6cm, minimum height=2cm] (ICache) at (2,2) {
+        \node[component, fill=purple!20, minimum width=0.5cm, minimum height=2cm] (ICache) at (2,2) {
             \begin{tabular}{c}
                 \footnotesize inst.\\[-2pt]\footnotesize cache
             \end{tabular}
         };
         
-        % PC adder (centered around 0)
-        \begin{scope}[shift={(0,3.5)}, scale=0.8]
+        % PC adder - moved right
+        \begin{scope}[shift={(0.3,3.5)}, scale=0.8]
             \coordinate (adder) at (0,0);
             % Trapezoid coordinates
             \coordinate (toptopleft) at (0, 0.8);
@@ -456,39 +457,30 @@ SW   d,Rd
             % Add + text
             \node at (0.15, 0.4) {\tiny +};
         \end{scope}
-        \node[left, font=\tiny] (four) at (-0.1,3.5) {4};
+        \node[left, font=\tiny] (four) at (0.2,3.5) {4};
         
         % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=2.2cm] (RF) at (4.5,2.3) {};
+        \node[component, fill=pink!30, minimum width=1.4cm, minimum height=2.2cm] (RF) at (4.5,2.3) {};
         \node[align=center] at (4.5,3) {\footnotesize register\\[-2pt]\footnotesize file};
-        % Register file labels - positioned closer to edges
-        \node[font=\tiny, anchor=east] at ([xshift=-2mm]RF.west) {
-            \begin{tabular}{r}
-                src1\\[-1pt]
-                src2\\[2pt]
-                dst
-            \end{tabular}
-        };
-        \node[font=\tiny, anchor=west] at ([xshift=2mm]RF.east) {
-            \begin{tabular}{l}
-                src1\\[-1pt]
-                data\\[-1pt]
-                src2\\[-1pt]
-                data
-            \end{tabular}
-        };
         
-        % Sign extension
-        \node[component, fill=green!20, ellipse, minimum width=0.8cm, minimum height=0.6cm, align=center] (SignExt) at (4.5,0) {
-            \tiny sign\\[-3pt]\tiny ext.
+        % Register file input ports (left side, inside the box)
+        \node[port] (rf_src1) at ([xshift=-5mm, yshift=2mm]RF.center) {~src1};
+        \node[port] (rf_src2) at ([xshift=-5mm, yshift=-5mm]RF.center) {~src2};
+        \node[port] (rf_dst) at ([xshift=-4mm, yshift=-10mm]RF.center) {dst};
+        
+        % Register file output ports (right side, aligned to right edge)
+        \node[port, anchor=east] (rf_src1_data) at ([xshift=7mm, yshift=2mm]RF.center) {src1};
+        \node[port, anchor=east] (rf_data1) at ([xshift=7mm, yshift=-1mm]RF.center) {data};
+        \node[port, anchor=east] (rf_src2_data) at ([xshift=7mm, yshift=-5mm]RF.center) {src2};
+        \node[port, anchor=east] (rf_data2) at ([xshift=7mm, yshift=-8mm]RF.center) {data};
+        
+        % Sign extension - moved slightly right
+        \node[component, fill=green!20, ellipse, minimum width=0.7cm, minimum height=0.6cm, align=center] (SignExt) at (4.9,0) {
+            \footnotesize sign\\[-3pt]\footnotesize ext.
         };
         
         % Instruction label (rotated)
         \node[font=\tiny, rotate=90] at (3.15,2) {instruction};
-        
-        % Control signals label (no decode oval)
-        \node[font=\tiny] at (4.5,4.3) {control signals};
-        \draw[orange, dashed, ->] (4.5,4.1) -- ++(2.5,0);
         
         % Execute Stage
         % Execute adder
@@ -534,27 +526,30 @@ SW   d,Rd
         \end{scope}
         
         % Memory Stage
-        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm, align=center] (DCache) at (11,2) {
-            \footnotesize data\\[-2pt]
-            \footnotesize cache\\[3pt]
-            \tiny address\\[8pt]
-            \tiny data
-        };
+        \node[component, fill=brown!20, minimum width=1.4cm, minimum height=2cm] (DCache) at (11,2) {};
+        \node[align=center] at (11,2.5) {\footnotesize data\\[-2pt]\footnotesize cache};
+        
+        % Data Cache ports (aligned to left side of box)
+        \node[port, anchor=west] (dc_addr) at ([xshift=-7mm, yshift=0mm]DCache.center) {address};
+        \node[port, anchor=west] (dc_data) at ([xshift=-7mm, yshift=-7mm]DCache.center) {data};
         
         % Write Back Stage
         \node[mux, rotate=270] (wbmux) at (13.5,2) {};
         
         % Main data path connections
         \draw[->] (four) -- (adder);
-        \draw[->] (pcmux) -- ++(-0.6,0) |- (PC);
+        \draw[->] (pcmux) -- ++(-0.4,0) |- (PC.west);
         \draw[->] (PC) -- (ICache);
         \draw[->] (ICache) -- (L1);
-        \draw[->] (L1) -- ++(0.3,0) |- (RF.180);
-        \draw[->] (L1) -- ++(0.3,0) |- (SignExt.west);
         
-        % From RF to L2
-        \draw[->] (RF.0) -- ++(0.2,0) |- ([yshift=5mm]L2.west);
-        \draw[->] (RF.0) -- ++(0.2,0) |- ([yshift=-5mm]L2.west);
+        % From L1 to Register File inputs
+        \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src1.west);
+        \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src2.west);
+        \draw[->] (L1.east) -- ++(0.3,0) |- (SignExt.west);
+        
+        % From Register File outputs to L2
+        \draw[->] (rf_src1_data.east) -- ([xshift=0mm, yshift=5mm]L2.west);
+        \draw[->] (rf_data2.east) -- ([xshift=0mm, yshift=-5mm]L2.west);
         \draw[->] (SignExt.east) -| ([yshift=-10mm]L2.west);
         
         % From L2 to Execute components
@@ -571,25 +566,26 @@ SW   d,Rd
         \draw[->] (8.48,1.5) -- (L3);
         \draw[->] (7.24,3) -| ([yshift=10mm]L3.west);
         
-        % L3 to Memory
-        \draw[->] (L3) -- (DCache);
+        % L3 to Memory (address)
+        \draw[->] (L3.east) -- ++(0.2,0) |- (dc_addr.west);
         
-        % Memory to L4
-        \draw[->] (DCache) -- (L4);
+        % L3 to Memory (data)
+        \draw[->] ([yshift=-7mm]L3.east) -- (dc_data.west);
         
         % L4 to WB mux
         \draw[->] (L4) -- (wbmux);
         
         % Write back path
-        \draw[red, ->] (wbmux.east) -- ++(0.3,0) -- ++(0,-2.5) -| ([yshift=-6mm]RF.180);
+        \draw[green, ->] (wbmux) -- ++(0.3,0) -- ++(0,-2.9) -| ([xshift=-2mm]rf_dst.south);
+        \draw[black, ->] ([yshift=-28mm]L4) -| ++(0.3,0) -- ++(0,-0) -| (rf_dst.south);
         
         % Branch paths
         \draw[orange!70, thick, ->] ([yshift=10mm]L3.north) -- ++(0,1) -| (pcmux.north);
         \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| ([xshift=-2mm]pcmux.north);
         
         % PC increment feedback
-        %\draw[->, blue] (PC.west) -- ++(0,0.5) -| (-0.15,3.5);
-        % \draw[->, blue] (0.24,3.5) -- ++(0.5,0) -- ++(0,-1.8) -| (pcmux.south);
+        \draw[->, blue] (PC.north) -- ++(0,1.5) -| (0.15,3.5);
+        \draw[->, blue] (0.54,3.5) -- ++(0.3,0) -- ++(0,-1.3) -| (pcmux.south);
         
         % Code on the left
         \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
@@ -632,14 +628,14 @@ SW   d,Rd
         \item Execute instructions from the fall-through (not-taken) path
         \begin{itemize}
             \item As if there is no branch
-            \item If the branch is not-taken (~50\%), no penalty is paid
+            \item If the branch is not-taken ($\sim50\%$), no penalty is paid
         \end{itemize}
         \item If branch actually taken
         \begin{itemize}
             \item Flush the fall-through path instructions before they change the machine state (memory / registers)
             \item Fetch the instructions from the correct (taken) path
         \end{itemize}
-        \item Assuming 20\% of instructions are branches and ~50\% branches not taken on average
+        \item Assuming 20\% of instructions are branches and $\sim50\%$ branches not taken on average
         \begin{itemize}
             \item CPI\textsubscript{new} = 1 + (0.2 × 0.5) × 3 = 1.3
         \end{itemize}
@@ -741,44 +737,55 @@ SW   d,Rd
 %% Slide: Using The BTB
 \begin{frame}{Using The BTB}
     \centering
-    \begin{tikzpicture}[scale=0.8, node distance=1.5cm]
+    \tiny
+    \begin{tikzpicture}[scale=0.8, node distance=0.5cm]
         % Flowchart for BTB usage
         \node[draw, rectangle] (pc) {PC moves to next instruction};
         \node[draw, rectangle, below left=of pc, align=center] (imem) {Inst Mem gets PC\\and fetches new inst};
         \node[draw, rectangle, below right=of pc, align=center] (btb) {BTB gets PC\\and looks it up};
         \node[draw, diamond, below=of btb] (hit) {BTB Hit?};
         \node[draw, diamond, below left=of hit] (taken) {Br taken?};
-        \node[draw, rectangle, below=of taken] (pred) {PC $\leftarrow$ pred addr};
-        \node[draw, rectangle, below right=of hit] (inc) {PC $\leftarrow$ PC + 4};
+        \node[draw, rectangle, below left=of taken] (pred) {PC $\leftarrow$ pred addr};
+        \node[draw, rectangle, below right=of taken] (inc) {PC $\leftarrow$ PC + 4};
+        \node[draw, rectangle, below=of pred, align=center] (predinst) {IF/ID latch loaded\\with pred inst};
+        \node[draw, rectangle, below=of inc, align=center] (seqinst) {IF/ID latch loaded\\with seq. inst};
+        \node[draw, rectangle, left=of pred, align=center] (new) {IF/ID latch loaded\\with new inst};
+        \node[draw, diamond, below=of new, align=center] (branch) {Branch?};
         
         \draw[->] (pc) -- (imem);
         \draw[->] (pc) -- (btb);
         \draw[->] (btb) -- (hit);
-        \draw[->] (hit) -- node[left] {yes} (taken);
-        \draw[->] (hit) -- node[right] {no} (inc);
-        \draw[->] (taken) -- node[left] {yes} (pred);
-        \draw[->] (taken) -- node[right] {no} (inc);
+        \draw[->] (hit) -| node[left] {yes} (taken);
+        \draw[->] (hit) -| node[right] {no} ([xshift=65mm]inc);
+        \draw[->] (taken.west) -| node[left] {yes} (pred);
+        \draw[->] (taken) -| node[right] {no} (inc);
+        \draw[->] (pred) -- (predinst);
+        \draw[->] (inc) -- (seqinst);
+        \draw[->] (imem) -- (new);
+        \draw[->] (new) -- (branch);
     \end{tikzpicture}
 \end{frame}
 
 %% Slide: Using The BTB (cont.)
 \begin{frame}{Using The BTB (cont.)}
     \centering
-    \begin{tikzpicture}[scale=0.8, node distance=1.5cm]
+    \tiny
+    \begin{tikzpicture}[scale=0.8, node distance=0.5cm]
         % Continuation of BTB flowchart
         \node[draw, diamond] (branch) {Branch?};
         \node[draw, rectangle, below left=of branch, align=center] (calc) {Calculate br\\cond \& trgt};
+        \node[draw, rectangle, below right=of branch] (continue1) {continue};
         \node[draw, rectangle, below=of calc] (update) {Update BTB};
         \node[draw, diamond, below=of update, align=center] (correct) {Correct\\pred?};
-        \node[draw, rectangle, below left=of correct, align=center] (flush) {Flush pipe \&\\update PC};
-        \node[draw, rectangle, below right=of correct] (continue) {continue};
+        \node[draw, rectangle, below right=of correct, align=center] (flush) {Flush pipe \&\\update PC};
+        \node[draw, rectangle, below left=of correct] (continue2) {continue};
         
-        \draw[->] (branch) -- node[left] {yes} (calc);
-        \draw[->] (branch) -- node[right] {no} (continue);
+        \draw[->] (branch) -| node[left] {yes} (calc);
+        \draw[->] (branch) -| node[right] {no} (continue1);
         \draw[->] (calc) -- (update);
         \draw[->] (update) -- (correct);
-        \draw[->] (correct) -- node[left] {no} (flush);
-        \draw[->] (correct) -- node[right] {yes} (continue);
+        \draw[->] (correct) -| node[right] {no} (flush);
+        \draw[->] (correct) -| node[left] {yes} (continue2);
     \end{tikzpicture}
 \end{frame}
 
