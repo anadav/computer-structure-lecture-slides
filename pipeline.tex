@@ -429,11 +429,12 @@ SW   d,Rd
         \node[latch] (L4) at (12,2) {};
         
         % Fetch Stage
-        % MUX before PC (blue for PC-related components) - moved up and right
+        % PC MUX with proper input/output nodes (rotate=90: output west/narrow, inputs east/wide)
         \node[mux, rotate=90, fill=blue!20] (pcmux) at (0.3,4.5) {};
-        \coordinate (pcmux_input1) at (0.4,4.8);
-        \coordinate (pcmux_input2) at (0.4,4.2);
-        \coordinate (pcmux_output) at (0.2,4.5);
+        \node[circle, fill=black, inner sep=0.5pt] (pcmux_in1) at ([yshift=2mm]pcmux.east) {};
+        \node[circle, fill=black, inner sep=0.5pt] (pcmux_in2) at (pcmux.east) {};
+        \node[circle, fill=black, inner sep=0.5pt] (pcmux_in3) at ([yshift=-2mm]pcmux.east) {};
+        \node[circle, fill=black, inner sep=0.5pt] (pcmux_out) at (pcmux.west) {};
 
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
 
@@ -466,7 +467,7 @@ SW   d,Rd
             \coordinate (fe_adder_input2) at (0, -0.3);
             \coordinate (fe_adder_output) at (0.3, 0);
         \end{scope}
-        \node[left, font=\tiny] (four) at (0.2,3.5) {4};
+        \node[left, font=\tiny] (four) at (1.1,4.04) {4};
         
         % Decode Stage
         \node[component, fill=pink!30, minimum width=1.4cm, minimum height=2.2cm] (RF) at (4.5,2.3) {};
@@ -513,10 +514,14 @@ SW   d,Rd
             \coordinate (ex_adder_output) at (0.3, 0);
         \end{scope}
         
-        \node[mux, rotate=270] (mux2) at (7,1.5) {};
+        % Execute stage ALU source MUX (rotate=270: output east/narrow, inputs west/wide)
+        \node[mux, rotate=270] (exemux) at (7,1.5) {};
+        \node[circle, fill=black, inner sep=0.5pt] (exemux_in1) at ([yshift=2mm]exemux.west) {};
+        \node[circle, fill=black, inner sep=0.5pt] (exemux_in2) at ([yshift=-2mm]exemux.west) {};
+        \node[circle, fill=black, inner sep=0.5pt] (exemux_out) at (exemux.east) {};
         
-        % ALU - with rotated text
-        \begin{scope}[shift={(8,1.5)}, scale=0.8]
+        % ALU - positioned to align output with data cache address
+        \begin{scope}[shift={(8,2)}, scale=0.8]
             \coordinate (ALU) at (0,0);
             % Trapezoid coordinates
             \coordinate (toptopleft) at (0, 0.8);
@@ -550,12 +555,15 @@ SW   d,Rd
         % DCache output port
         \node[port, anchor=east] (dc_data_out) at ([xshift=6.5mm, yshift=0mm]DCache.center){};
         
-        % Write Back Stage
+        % Write Back Stage MUX (rotate=270: output east/narrow, inputs west/wide)
         \node[mux, rotate=270] (wbmux) at (13.5,2) {};
+        \node[circle, fill=black, inner sep=0.5pt] (wbmux_in1) at ([yshift=2mm]wbmux.west) {};
+        \node[circle, fill=black, inner sep=0.5pt] (wbmux_in2) at ([yshift=-2mm]wbmux.west) {};
+        \node[circle, fill=black, inner sep=0.5pt] (wbmux_out) at (wbmux.east) {};
         
         % Main data path connections
         \draw[->] (four) -- (fe_adder_input1);
-        \draw[->] (pcmux_output) -- ++(-0.4,0) |- (PC.west);
+        \draw[->] (pcmux_out) -- ++(-0.1,0) -- ++(0,-2.5) -- (PC.north);
         \draw[->] (PC.east) -- (ICache);
         \draw[->] (PC.east) -- ++(0.1,0) |- (fe_adder_input2);
         \draw[->] (ICache) -- (L1);
@@ -574,44 +582,39 @@ SW   d,Rd
 
 
         % From Register File outputs to L2
-        \draw[->] (rf_src1_data.east) -- (rf_src1_data -| L2.west);
-        \draw[->] (rf_data2.east) -- (rf_data2 -| L2.west);
-        \draw[->] (SignExt.east) -- (SignExt -| L2.west);
+        \draw[->] (rf_src1_data.east) -- (rf_src1_data.east -| L2.west);
+        \draw[->] (rf_data2.east) -- (rf_data2.east -| L2.west);
+        \draw[->] (SignExt.east) -- (SignExt.east -| L2.west);
         
         % From L2 to Execute components
-        \draw[->] ([yshift=5mm]L2.east) -- ++(0.2,0) |- (alu_input1);
-        \draw[->] ([yshift=-5mm]L2.east) -| (mux2.south);
-        \draw[->] ([yshift=-10mm]L2.east) -| (mux2.north);
-        %\draw[->] ([yshift=-10mm]L2.east) -- ++(0.3,0) |- (7,3);
+        \draw[->] (rf_src1_data.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
+        \draw[->] (rf_data2.east -| L2.east) -- (exemux_in1);
+        \draw[->] (SignExt.east -| L2.east) -- (exemux_in2);
         \draw[->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (ex_adder_input2);
         
         % MUX to ALU
-        \draw[->] (mux2) -- ++(0.3,0) |- (alu_input2);
+        \draw[->] (exemux_out) -- ++(0.3,0) |- (alu_input2);
         
         % ALU and adder to L3
         \draw[->] (alu_output) -- (L3.west |- alu_output);
         \draw[->] (ex_adder_output) -- (L3.west |- ex_adder_output);
         
         % L3 to Memory and from
-        \draw[->] (L3.east |- dc_addr) -- (dc_addr.west);
-        \draw[->] (L3.east |- dc_data) -- (dc_data.west);
-        \draw[->] (dc_data_out) -- (L4.west |- dc_data_out);
+        \draw[->] (alu_output -| L3.east) -- (dc_addr.west);
+        \draw[->] (rf_data2.east -| L3.east) -- (dc_data.west);
+        \draw[->] (dc_data_out) -- (dc_data_out -| L4.west);
         
-        % L4 to WB mux - two inputs (ALU result and memory data)
-        \draw[->] ([yshift=2mm]L4.east) -| (wbmux.north);
-        \draw[->] ([yshift=-2mm]L4.east) -| (wbmux.south);
+        % L4 to WB mux - ALU result and memory data
+        \draw[->] (alu_output -| L4.east) -- (wbmux_in1);
+        \draw[->] (dc_data_out -| L4.east) -- (wbmux_in2);
         
-        % Write back path - single output from mux
-        \draw[green, ->] (wbmux) -- ++(0.3,0) -- ++(0,-2.9) -| ([xshift=-2mm]rf_dst.south);
-        \draw[black, ->] ([yshift=-28mm]L4) -| ++(0.3,0) -- ++(0,-0) -| (rf_dst.south);
+        % Write back path from mux output
+        \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.9) -| (rf_dst.south);
         
-        % Branch paths - two inputs to PC mux
-        \draw[orange!70, thick, ->] ([yshift=10mm]L3.north) -- ++(0,1) -| ([xshift=1mm]pcmux.north);
-        \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| ([xshift=-1mm]pcmux.north);
-        
-        % PC increment feedback - third input (making it clear there are inputs)
-        %\draw[->, blue] (PC.north) -- ++(0,1.5) -| (0.15,3.5);
-        \draw[->, blue] (0.54,3.5) -- ++(0.3,0) -- ++(0,-1.3) -| (pcmux.south);
+        % PC MUX inputs: branch target from L3, branch from L2, and PC+4
+        \draw[orange!70, thick, ->] (ex_adder_output -| L3.east) -- ++(0.2,0) -- ++(0,1.7) -| (pcmux_in1);
+        \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| (pcmux_in2);
+        \draw[blue, thick, ->] (fe_adder_output) -- (fe_adder_output |- pcmux_in3) -- (pcmux_in3);
         
         % Code on the left
         \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
