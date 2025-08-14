@@ -484,12 +484,9 @@ SW   d,Rd
         \node[port, anchor=east] (rf_data2) at ([xshift=7mm, yshift=-8mm]RF.center) {data};
         
         % Sign extension - moved slightly right
-        \node[component, fill=green!20, ellipse, minimum width=0.7cm, minimum height=0.6cm, align=center] (SignExt) at (4.9,0) {
-            \scriptsize sign\\[-3pt]\scriptsize ext.
+        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (4.9,0.4) {
+            \scriptsize sign\\[-7pt]\scriptsize ext.
         };
-        
-        % Instruction label (rotated)
-%        \node[font=\tiny, rotate=90] at (3.15,2) {instruction};
         
         % Execute Stage
         % Execute adder
@@ -545,7 +542,7 @@ SW   d,Rd
         % Memory Stage
         \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at (10.8,2) {};
         \node[align=center] at (10.8,2.6) {\footnotesize data\\[-4pt]\footnotesize cache};
-        
+
         % Data Cache ports (aligned to left side of box)
         \node[port, anchor=west] (dc_addr) at ([xshift=-6.6mm, yshift=0mm]DCache.center) {address};
         \node[port, anchor=west] (dc_data) at ([xshift=-6.6mm, yshift=-7mm]DCache.center) {data};
@@ -562,6 +559,9 @@ SW   d,Rd
         \draw[->] (PC.east) -- (ICache);
         \draw[->] (PC.east) -- ++(0.1,0) |- (fe_adder_input2);
         \draw[->] (ICache) -- (L1);
+
+        \draw[->] (fe_adder_output) -- (fe_adder_output -| L1.west);
+        \draw[->] (fe_adder_output -| L1.east) -- (fe_adder_output -| L2.west);
         
         % From L1 to Register File inputs
         \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src1.west);
@@ -571,10 +571,11 @@ SW   d,Rd
         % From L1 for "instruction" title
         \draw[->] (ICache -| L1.east) -- ++(0.3,0) node[yshift=5.5mm,rotate=90,above] {\tiny{}instruction}; 
 
+
         % From Register File outputs to L2
         \draw[->] (rf_src1_data.east) -- (rf_src1_data -| L2.west);
         \draw[->] (rf_data2.east) -- (rf_data2 -| L2.west);
-        \draw[->] (SignExt.east) -| ([yshift=-10mm]L2.west);
+        \draw[->] (SignExt.east) -- (SignExt -| L2.west);
         
         % From L2 to Execute components
         \draw[->] ([yshift=5mm]L2.east) -- ++(0.2,0) |- (alu_input1);
