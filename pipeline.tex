@@ -429,12 +429,12 @@ SW   d,Rd
         \node[latch] (L4) at (12,2) {};
         
         % Fetch Stage
-        % PC MUX with proper input/output nodes (rotate=90: output west/narrow, inputs east/wide)
+        % PC MUX (rotate=90: narrow side is west, wide side is east)
         \node[mux, rotate=90, fill=blue!20] (pcmux) at (0.3,4.5) {};
-        \node[circle, fill=black, inner sep=0.5pt] (pcmux_in1) at ([yshift=2mm]pcmux.east) {};
-        \node[circle, fill=black, inner sep=0.5pt] (pcmux_in2) at (pcmux.east) {};
-        \node[circle, fill=black, inner sep=0.5pt] (pcmux_in3) at ([yshift=-2mm]pcmux.east) {};
-        \node[circle, fill=black, inner sep=0.5pt] (pcmux_out) at (pcmux.west) {};
+        \coordinate (pcmux_in1) at ([xshift=-2mm]pcmux.north);
+        \coordinate (pcmux_in2) at ([xshift=2mm]pcmux.north);
+        \coordinate (pcmux_in3) at (pcmux.south);
+        \coordinate (pcmux_out) at (pcmux.west);
 
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
 
@@ -490,8 +490,8 @@ SW   d,Rd
         };
         
         % Execute Stage
-        % Execute adder
-        \begin{scope}[shift={(7,3)}, scale=0.8]
+        % Execute adder - positioned so input aligns with incoming connection
+        \begin{scope}[shift={(7,3.8)}, scale=0.8]
             \coordinate (ex_adder) at (0,0);
             % Trapezoid coordinates
             \coordinate (toptopleft) at (0, 0.4);
@@ -514,11 +514,11 @@ SW   d,Rd
             \coordinate (ex_adder_output) at (0.3, 0);
         \end{scope}
         
-        % Execute stage ALU source MUX (rotate=270: output east/narrow, inputs west/wide)
+        % Execute stage ALU source MUX (rotate=270: narrow side is east, wide side is west)
         \node[mux, rotate=270] (exemux) at (7,1.5) {};
-        \node[circle, fill=black, inner sep=0.5pt] (exemux_in1) at ([yshift=2mm]exemux.west) {};
-        \node[circle, fill=black, inner sep=0.5pt] (exemux_in2) at ([yshift=-2mm]exemux.west) {};
-        \node[circle, fill=black, inner sep=0.5pt] (exemux_out) at (exemux.east) {};
+        \coordinate (exemux_in1) at ([yshift=4]exemux.south);
+        \coordinate (exemux_in2) at ([yshift=-4]exemux.south);
+        \coordinate (exemux_out) at (exemux.north);
         
         % ALU - positioned to align output with data cache address
         \begin{scope}[shift={(8,2)}, scale=0.8]
@@ -555,11 +555,11 @@ SW   d,Rd
         % DCache output port
         \node[port, anchor=east] (dc_data_out) at ([xshift=6.5mm, yshift=0mm]DCache.center){};
         
-        % Write Back Stage MUX (rotate=270: output east/narrow, inputs west/wide)
+        % Write Back Stage MUX (rotate=270: narrow side is east, wide side is west)
         \node[mux, rotate=270] (wbmux) at (13.5,2) {};
-        \node[circle, fill=black, inner sep=0.5pt] (wbmux_in1) at ([yshift=2mm]wbmux.west) {};
-        \node[circle, fill=black, inner sep=0.5pt] (wbmux_in2) at ([yshift=-2mm]wbmux.west) {};
-        \node[circle, fill=black, inner sep=0.5pt] (wbmux_out) at (wbmux.east) {};
+        \coordinate (wbmux_in1) at (wbmux.north);
+        \coordinate (wbmux_in2) at (wbmux.south);
+        \coordinate (wbmux_out) at (wbmux.east);
         
         % Main data path connections
         \draw[->] (four) -- (fe_adder_input1);
