@@ -440,7 +440,7 @@ SW   d,Rd
         
         % PC adder - moved right
         \begin{scope}[shift={(1.1,3.8)}, scale=0.8]
-            \coordinate (adder) at (0,0);
+            \coordinate (fe_adder) at (0,0);
             % Trapezoid coordinates
             \coordinate (toptopleft) at (0, 0.4);
             \coordinate (topbottomleft) at (0, 0.15);
@@ -456,6 +456,10 @@ SW   d,Rd
             
             % Add + text
             \node at (0.16, 0) {\tiny +};
+
+            \coordinate (fe_adder_input1) at (0, 0.3);
+            \coordinate (fe_adder_input2) at (0, -0.3);
+            \coordinate (fe_adder_output) at (0.3, 0);
         \end{scope}
         \node[left, font=\tiny] (four) at (0.2,3.5) {4};
         
@@ -545,9 +549,10 @@ SW   d,Rd
         \node[mux, rotate=270] (wbmux) at (13.5,2) {};
         
         % Main data path connections
-        \draw[->] (four) -- (adder);
+        \draw[->] (four) -- (fe_adder_input1);
         \draw[->] (pcmux) -- ++(-0.4,0) |- (PC.west);
         \draw[->] (PC) -- (ICache);
+        \draw[->] (PC) -- ++(0.1,0) |- (fe_adder_input2);
         \draw[->] (ICache) -- (L1);
         
         % From L1 to Register File inputs
