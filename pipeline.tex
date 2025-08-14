@@ -430,32 +430,32 @@ SW   d,Rd
         
         % Fetch Stage
         % MUX before PC (blue for PC-related components) - moved up and right
-        \node[mux, rotate=90, fill=blue!20] (pcmux) at (0.2,4.5) {};
+        \node[mux, rotate=90, fill=blue!20] (pcmux) at (0.3,4.5) {};
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
-        \node[component, fill=purple!20, minimum width=0.5cm, minimum height=2cm] (ICache) at (2,2) {
-            \begin{tabular}{c}
-                \footnotesize inst.\\[-2pt]\footnotesize cache
-            \end{tabular}
-        };
+
+        % ICache
+        \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at (2,2) {};
+        \node[align=center] at (2,2.6) {\footnotesize inst.\\[-4pt]\footnotesize cache};
+ 
         
         % PC adder - moved right
-        \begin{scope}[shift={(0.3,3.5)}, scale=0.8]
+        \begin{scope}[shift={(1.1,3.8)}, scale=0.8]
             \coordinate (adder) at (0,0);
             % Trapezoid coordinates
-            \coordinate (toptopleft) at (0, 0.8);
-            \coordinate (topbottomleft) at (0, 0.55);
-            \coordinate (left) at (0.1, 0.4);
-            \coordinate (bottomtopleft) at (0, 0.25);
-            \coordinate (bottombottomleft) at (0, 0);
-            \coordinate (topright) at (0.3, 0.6);
-            \coordinate (bottomright) at (0.3, 0.2);
+            \coordinate (toptopleft) at (0, 0.4);
+            \coordinate (topbottomleft) at (0, 0.15);
+            \coordinate (left) at (0.1, 0);
+            \coordinate (bottomtopleft) at (0, -0.15);
+            \coordinate (bottombottomleft) at (0, -0.4);
+            \coordinate (topright) at (0.3, 0.2);
+            \coordinate (bottomright) at (0.3, -0.2);
             
             % Draw the trapezoid
             \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
             \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
             
             % Add + text
-            \node at (0.15, 0.4) {\tiny +};
+            \node at (0.16, 0) {\tiny +};
         \end{scope}
         \node[left, font=\tiny] (four) at (0.2,3.5) {4};
         
@@ -476,7 +476,7 @@ SW   d,Rd
         
         % Sign extension - moved slightly right
         \node[component, fill=green!20, ellipse, minimum width=0.7cm, minimum height=0.6cm, align=center] (SignExt) at (4.9,0) {
-            \footnotesize sign\\[-3pt]\footnotesize ext.
+            \scriptsize sign\\[-3pt]\scriptsize ext.
         };
         
         % Instruction label (rotated)
@@ -485,22 +485,26 @@ SW   d,Rd
         % Execute Stage
         % Execute adder
         \begin{scope}[shift={(7,3)}, scale=0.8]
-            \coordinate (adder2) at (0,0);
+            \coordinate (ex_adder) at (0,0);
             % Trapezoid coordinates
-            \coordinate (toptopleft) at (0, 0.8);
-            \coordinate (topbottomleft) at (0, 0.55);
-            \coordinate (left) at (0.1, 0.4);
-            \coordinate (bottomtopleft) at (0, 0.25);
-            \coordinate (bottombottomleft) at (0, 0);
-            \coordinate (topright) at (0.3, 0.6);
-            \coordinate (bottomright) at (0.3, 0.2);
+            \coordinate (toptopleft) at (0, 0.4);
+            \coordinate (topbottomleft) at (0, 0.15);
+            \coordinate (left) at (0.1, 0);
+            \coordinate (bottomtopleft) at (0, -0.15);
+            \coordinate (bottombottomleft) at (0, -0.4);
+            \coordinate (topright) at (0.3, 0.2);
+            \coordinate (bottomright) at (0.3, -0.2);
             
             % Draw the trapezoid
             \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
             \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
             
             % Add + text
-            \node at (0.15, 0.4) {\tiny +};
+            \node at (0.16, 0) {\tiny +};
+
+            \coordinate (ex_adder_input1) at (0, 0.3);
+            \coordinate (ex_adder_input2) at (0, -0.3);
+            \coordinate (ex_adder_output) at (0.3, 0);
         \end{scope}
         
         \node[mux, rotate=270] (mux2) at (7,1.5) {};
@@ -509,29 +513,33 @@ SW   d,Rd
         \begin{scope}[shift={(8,1.5)}, scale=0.8]
             \coordinate (ALU) at (0,0);
             % Trapezoid coordinates
-            \coordinate (toptopleft) at (0, 1.6);
-            \coordinate (topbottomleft) at (0, 1.1);
-            \coordinate (left) at (0.2, 0.8);
-            \coordinate (bottomtopleft) at (0, 0.5);
-            \coordinate (bottombottomleft) at (0, 0);
-            \coordinate (topright) at (0.6, 1.2);
-            \coordinate (bottomright) at (0.6, 0.4);
+            \coordinate (toptopleft) at (0, 0.8);
+            \coordinate (topbottomleft) at (0, 0.3);
+            \coordinate (left) at (0.2, 0);
+            \coordinate (bottomtopleft) at (0, -0.3);
+            \coordinate (bottombottomleft) at (0, -0.8);
+            \coordinate (topright) at (0.6, 0.4);
+            \coordinate (bottomright) at (0.6, -0.4);
             
             % Draw the trapezoid
             \fill[green!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
             \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
             
             % Add ALU text (rotated and smaller)
-            \node[rotate=90, font=\tiny] at (0.3, 0.8) {ALU};
+            \node[rotate=90, font=\tiny] at (0.31, 0) {ALU};
+
+            \coordinate (alu_input1) at (0, 0.4);
+            \coordinate (alu_input2) at (0, -0.4);
+            \coordinate (alu_output) at (0.6, 0);
         \end{scope}
         
         % Memory Stage
-        \node[component, fill=brown!20, minimum width=1.4cm, minimum height=2cm] (DCache) at (11,2) {};
-        \node[align=center] at (11,2.5) {\footnotesize data\\[-2pt]\footnotesize cache};
+        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at (10.8,2) {};
+        \node[align=center] at (10.8,2.6) {\footnotesize data\\[-4pt]\footnotesize cache};
         
         % Data Cache ports (aligned to left side of box)
-        \node[port, anchor=west] (dc_addr) at ([xshift=-7mm, yshift=0mm]DCache.center) {address};
-        \node[port, anchor=west] (dc_data) at ([xshift=-7mm, yshift=-7mm]DCache.center) {data};
+        \node[port, anchor=west] (dc_addr) at ([xshift=-6.6mm, yshift=0mm]DCache.center) {address};
+        \node[port, anchor=west] (dc_data) at ([xshift=-6.6mm, yshift=-7mm]DCache.center) {data};
         
         % Write Back Stage
         \node[mux, rotate=270] (wbmux) at (13.5,2) {};
@@ -548,23 +556,23 @@ SW   d,Rd
         \draw[->] (L1.east) -- ++(0.3,0) |- (SignExt.west);
         
         % From Register File outputs to L2
-        \draw[->] (rf_src1_data.east) -- ([xshift=0mm, yshift=5mm]L2.west);
-        \draw[->] (rf_data2.east) -- ([xshift=0mm, yshift=-5mm]L2.west);
+        \draw[->] (rf_src1_data.east) -- (rf_src1_data -| L2.west);
+        \draw[->] (rf_data2.east) -- (rf_data2 -| L2.west);
         \draw[->] (SignExt.east) -| ([yshift=-10mm]L2.west);
         
         % From L2 to Execute components
-        \draw[->] ([yshift=5mm]L2.east) -- ++(0.2,0) |- (8,2.1);
+        \draw[->] ([yshift=5mm]L2.east) -- ++(0.2,0) |- (alu_input1);
         \draw[->] ([yshift=-5mm]L2.east) -| (mux2.south);
         \draw[->] ([yshift=-10mm]L2.east) -| (mux2.north);
-        \draw[->] ([yshift=-10mm]L2.east) -- ++(0.3,0) |- (7,3);
-        \draw[->] ([yshift=5mm]L2.east) -- ++(0.3,0) |- (7,3.4);
+        %\draw[->] ([yshift=-10mm]L2.east) -- ++(0.3,0) |- (7,3);
+        \draw[->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (ex_adder_input2);
         
         % MUX to ALU
-        \draw[->] (mux2) -- ++(0.3,0) |- (8,0.9);
+        \draw[->] (mux2) -- ++(0.3,0) |- (alu_input2);
         
         % ALU and adder to L3
-        \draw[->] (8.48,1.5) -- (L3);
-        \draw[->] (7.24,3) -| ([yshift=10mm]L3.west);
+        \draw[->] (alu_output) -- (L3.west |- alu_output);
+        \draw[->] (ex_adder_output) -- (L3.west |- ex_adder_output);
         
         % L3 to Memory (address)
         \draw[->] (L3.east) -- ++(0.2,0) |- (dc_addr.west);
@@ -645,29 +653,74 @@ SW   d,Rd
 %% Slide: Dynamic Branch Prediction
 \begin{frame}{Dynamic Branch Prediction}
     \begin{itemize}
-        \item Add a \textbf{Branch Target Buffer (BTB)} that predicts (at fetch)
+        \item \textbf{Branch Target Buffer} (BTB) that predicts (at fetch)
         \begin{itemize}
-            \item Instruction is a branch
-            \item Branch taken / not-taken
-            \item Taken branch target
+            \item[$\diamond$] Instruction is a branch
+            \item[$\diamond$] Branch taken / not-taken
+            \item[$\diamond$] Taken branch target
         \end{itemize}
-        \item BTB allocated at execute – after all branch info is known
-        \item BTB is looked up at instruction fetch
     \end{itemize}
     
-    \centering
-    \begin{tabular}{|c|c|c|}
-        \hline
-        Branch IP & Target IP & History\\
-        \hline
-        & & \\
-        & & \\
-        \hline
-    \end{tabular}
+    \vspace{0.3cm}
     
-    \vspace{0.5cm}
-    BTB Structure
+    \begin{tikzpicture}[scale=1]
+        % Draw the BTB table with light blue fill for data area
+        \fill[blue!15] (0,0) rectangle (7.5,2.5);
+        
+        % Draw outer border
+        \draw[thick] (0,0) rectangle (7.5,3);
+        
+        % Column dividers
+        \draw[thick] (2.5,0) -- (2.5,3);
+        \draw[thick] (5,0) -- (5,3);
+        
+        % Header row separator
+        \draw[thick] (0,2.5) -- (7.5,2.5);
+        
+        % Data row lines (4 rows shown)
+        \draw (0,2) -- (7.5,2);
+        \draw (0,1.5) -- (7.5,1.5);
+        \draw (0,1) -- (7.5,1);
+        \draw (0,0.5) -- (7.5,0.5);
+        
+        % Header text
+        \node at (1.25,2.75) {Branch IP};
+        \node at (3.75,2.75) {Target IP};
+        \node at (6.25,2.75) {History};
+        
+        % Arrow from "IP of inst in fetch" to comparison circle
+        \draw[->,thick] (-2.5,1.25) -- (-0.3,1.25);
+        \node[left] (ip) at (-2.5,1.25) {\small IP of inst in fetch};
+        
+        % Comparison circle positioned between arrow and Branch IP column
+        \draw[thick,fill=white] (1.25,-1.25) circle (0.25);
+        \node (qmark) at (1.25,-1.25) {\small ?=};
+        \draw[thick] (ip.east) -- (qmark.west);
+        
+        % Connect comparison to Branch IP column (horizontal then down)
+        \draw[thick] (0.25,1.25) -- (1.25,1.25);
+        \draw[->,thick] (1.25,1.25) -- (1.25,0) -- (1.25,-0.8);
+        
+        % Arrow from Target IP column straight down
+        \draw[->,thick] (3.75,0) -- (3.75,-0.8);
+        
+        % Arrow from History column straight down
+        \draw[->,thick] (6.25,0) -- (6.25,-0.8);
+        
+        % Output labels
+        \node[below,align=center] at (1.25,-1) {\small Inst predicted\\to be branch};
+        \node[below,align=center] at (3.75,-1) {\small Predicted\\Target};
+        \node[below,align=center] at (6.25,-1) {\small Branch predicted\\taken or not taken};
+    \end{tikzpicture}
+    
+    \vspace{0.4cm}
+    
+    \begin{itemize}
+        \item BTB allocated at execute -- after all branch info is known
+        \item BTB is looked up at instruction fetch
+    \end{itemize}
 \end{frame}
+
 
 %% Slide: BTB
 \begin{frame}{BTB}
