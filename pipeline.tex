@@ -50,6 +50,33 @@
     };
 }
 
+% Define macro for placing adders in pipeline with configurable location and optional rotation
+% Usage: \placeAdder{prefix}{x,y}[rotation angle]
+\newcommand{\placeAdder}[3][0]{%
+    \begin{scope}[shift={(#2)}, scale=0.8, rotate=#1]
+        \coordinate (#3_adder) at (0,0);
+        % Trapezoid coordinates
+        \coordinate (toptopleft) at (0, 0.4);
+        \coordinate (topbottomleft) at (0, 0.15);
+        \coordinate (left) at (0.1, 0);
+        \coordinate (bottomtopleft) at (0, -0.15);
+        \coordinate (bottombottomleft) at (0, -0.4);
+        \coordinate (topright) at (0.3, 0.2);
+        \coordinate (bottomright) at (0.3, -0.2);
+        
+        % Draw the trapezoid
+        \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+        \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+        
+        % Add + text
+        \node at (0.16, 0) {\tiny +};
+
+        \coordinate (#3_adder_input1) at (0, 0.3);
+        \coordinate (#3_adder_input2) at (0, -0.3);
+        \coordinate (#3_adder_output) at (0.3, 0);
+    \end{scope}
+}
+
 \title{Computer Structure}
 \subtitle{Pipeline}
 \author{Lihu Rappoport}
@@ -445,28 +472,7 @@ SW   d,Rd
  
         
         % PC adder - moved right
-        \begin{scope}[shift={(1.2,3.8)}, scale=0.8]
-            \coordinate (fe_adder) at (0,0);
-            % Trapezoid coordinates
-            \coordinate (toptopleft) at (0, 0.4);
-            \coordinate (topbottomleft) at (0, 0.15);
-            \coordinate (left) at (0.1, 0);
-            \coordinate (bottomtopleft) at (0, -0.15);
-            \coordinate (bottombottomleft) at (0, -0.4);
-            \coordinate (topright) at (0.3, 0.2);
-            \coordinate (bottomright) at (0.3, -0.2);
-            
-            % Draw the trapezoid
-            \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-            
-            % Add + text
-            \node at (0.16, 0) {\tiny +};
-
-            \coordinate (fe_adder_input1) at (0, 0.3);
-            \coordinate (fe_adder_input2) at (0, -0.3);
-            \coordinate (fe_adder_output) at (0.3, 0);
-        \end{scope}
+        \placeAdder{1.2,3.8}{fe}
         \node[left, font=\tiny] (four) at (1.1,4.04) {4};
         
         % Decode Stage
@@ -491,28 +497,7 @@ SW   d,Rd
         
         % Execute Stage
         % Execute adder - positioned so input aligns with incoming connection
-        \begin{scope}[shift={(7,3.8)}, scale=0.8]
-            \coordinate (ex_adder) at (0,0);
-            % Trapezoid coordinates
-            \coordinate (toptopleft) at (0, 0.4);
-            \coordinate (topbottomleft) at (0, 0.15);
-            \coordinate (left) at (0.1, 0);
-            \coordinate (bottomtopleft) at (0, -0.15);
-            \coordinate (bottombottomleft) at (0, -0.4);
-            \coordinate (topright) at (0.3, 0.2);
-            \coordinate (bottomright) at (0.3, -0.2);
-            
-            % Draw the trapezoid
-            \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-            
-            % Add + text
-            \node at (0.16, 0) {\tiny +};
-
-            \coordinate (ex_adder_input1) at (0, 0.3);
-            \coordinate (ex_adder_input2) at (0, -0.3);
-            \coordinate (ex_adder_output) at (0.3, 0);
-        \end{scope}
+        \placeAdder{7,3.8}{ex}
         
         % Execute stage ALU source MUX (rotate=270: narrow side is east, wide side is west)
         \node[mux, rotate=270] (exemux) at (7,1.5) {};
@@ -601,7 +586,7 @@ SW   d,Rd
         
         % L3 to Memory and from
         \draw[->] (alu_output -| L3.east) -- (dc_addr.west);
-        \draw[->] (rf_data2.east -| L3.east) -- (dc_data.west);
+        \draw[->] (dc_data.east -| L3.east) -- (dc_data.west);
         \draw[->] (dc_data_out) -- (dc_data_out -| L4.west);
         
         % L4 to WB mux - ALU result and memory data
