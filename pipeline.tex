@@ -11,6 +11,45 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
 \usetheme{Madrid}
 
+% Define custom ALU shape command
+\newcommand{\drawALU}[1]{
+    \node[inner sep=0] (ALU) at #1 {
+        \begin{tikzpicture}[scale=0.5]
+            % Trapezoid shape for ALU
+            \coordinate (tl) at (-0.2, 0.8);
+            \coordinate (tr) at (0.2, 0.8);
+            \coordinate (ml) at (-0.3, 0);
+            \coordinate (mr) at (0.3, 0);
+            \coordinate (bl) at (-0.2, -0.8);
+            \coordinate (br) at (0.2, -0.8);
+            
+            \fill[green!20] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
+            \draw[thick] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
+            
+            \node[font=\tiny] at (0, 0) {ALU};
+        \end{tikzpicture}
+    };
+}
+
+% Define custom Adder shape command (similar to ALU but with +)
+\newcommand{\drawAdder}[1]{
+    \node[inner sep=0] (adder) at #1 {
+        \begin{tikzpicture}[scale=0.4]
+            \coordinate (tl) at (-0.2, 0.6);
+            \coordinate (tr) at (0.2, 0.6);
+            \coordinate (ml) at (-0.25, 0);
+            \coordinate (mr) at (0.25, 0);
+            \coordinate (bl) at (-0.2, -0.6);
+            \coordinate (br) at (0.2, -0.6);
+            
+            \fill[blue!15] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
+            \draw[thick] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
+            
+            \node[font=\scriptsize] at (0, 0) {+};
+        \end{tikzpicture}
+    };
+}
+
 \title{Computer Structure}
 \subtitle{Pipeline}
 \author{Lihu Rappoport}
@@ -20,135 +59,7 @@
 
 \frame{\titlepage}
 
-\begin{frame}[t]{Five‑stage Pipeline}
-\centering
-\begin{tikzpicture}[
-    x=0.5cm, y=0.5cm,
-    >=Latex,
-    font=\small,
-    rounded corners,
-    thick,
-    % Blocks
-    block/.style={draw, rounded corners, align=center, thick},
-    pc/.style    ={block, fill=blue!20, minimum width=1.6cm, minimum height=2.2cm},
-    icache/.style={block, fill=blue!20, minimum width=4.5cm, minimum height=6.8cm},
-    regfile/.style={block, fill=red!20,  minimum width=5.0cm, minimum height=7.2cm},
-    dcache/.style={block, fill=brown!25, minimum width=5.0cm, minimum height=6.8cm},
-    alu/.style   ={draw, diamond, aspect=2, minimum size=1.8cm, fill=green!15, thick},
-    sign/.style  ={draw, ellipse, fill=green!10, minimum width=1.6cm, minimum height=1.1cm},
-    mux/.style   ={draw, isosceles triangle, isosceles triangle stretches,
-                   shape border rotate=90, minimum height=1.5cm, minimum width=1.2cm, fill=green!10},
-    add/.style   ={draw, isosceles triangle, isosceles triangle stretches,
-                   shape border rotate=90, minimum height=1.5cm, minimum width=1.2cm, fill=blue!10},
-    % Pipes and wires
-    pipe/.style  ={draw=black!30, line width=6pt},
-    wireI/.style ={very thick, draw=blue!70,  ->},
-    wireD/.style ={very thick, draw=green!60!black, ->},
-    wirePC/.style={very thick, draw=orange!80!black, ->}
-]
 
-% Convenient x-positions for the pipeline registers
-\def\pA{6.5}   % between Fetch and Decode
-\def\pB{14}    % between Decode and Execute
-\def\pC{19}    % between Execute and Memory
-\def\pD{25}    % between Memory and WB
-
-% Pipeline registers (vertical beige bars)
-\draw[pipe] (\pA,-8.5) -- (\pA,4.5);
-\draw[pipe] (\pB,-8.5) -- (\pB,4.5);
-\draw[pipe] (\pC,-8.5) -- (\pC,4.5);
-\draw[pipe] (\pD,-8.5) -- (\pD,4.5);
-
-% Stage titles
-\node[font=\bfseries] at ( 3.2,5.2) {Fetch};
-\node[font=\bfseries] at (10.2,5.2) {Decode};
-\node[font=\bfseries] at (16.5,5.2) {Execute};
-\node[font=\bfseries] at (22.2,5.2) {Memory};
-\node[font=\bfseries] at (27.8,5.2) {WB};
-
-% --------------------------- Fetch -----------------------------------
-\node[pc]    (pc) at (0.8,-1.5) {PC};
-\node[icache, align=center](ic) at (3.6,-1.5) {Inst.\\ Cache};
-
-% PC+4 and next-PC mux
-\node[add] (add4)  at (2.1,2.3) {};
-\node       at (add4) {\Large $+$};
-\node[anchor=west] at ($(add4)+(-1.2,0.15)$) {4};
-\node[mux] (pcsel) at (0.2,2.3) {};
-
-% -------------------------- Decode -----------------------------------
-\node[regfile, align=center, anchor=west] (rf) at (\pA+1.2,-1.3) {%
-\textbf{Register}\\ \textbf{File}\\[6pt]
-\begin{tabular}{@{}l@{}}
-src1\\
-src2\\
-dst
-\end{tabular}\hspace{1.1cm}
-\begin{tabular}{@{}l@{}}
-data\\
-data\\
-\end{tabular}
-};
-\node[sign, align=center] (sext) at (10.5,-6.5) {Sign\\ Ext.};
-
-% -------------------------- Execute ----------------------------------
-\node[add,anchor=west] (badd) at (\pB+1.0,2.3) {};
-\node at (badd) {\Large $+$};
-\node[mux,anchor=west] (amux) at (\pB+0.6,-0.3) {};
-\node[alu,anchor=west] (alu) at (\pB+3.3,-0.9) {ALU};
-
-% --------------------------- Memory ----------------------------------
-\node[dcache, align=center, anchor=west] (dc) at (\pC+1.0,-1.3) {%
-\textbf{Data}\\ \textbf{Cache}\\[4pt]
-\begin{tabular}{@{}l@{}}
-address\\[2pt]
-data
-\end{tabular}
-};
-
-% --------------------------- Writeback -------------------------------
-\node[mux,anchor=west] (wbmux) at (\pD+1.2,-0.6) {};
-
-% Label on first pipe
-\node[rotate=90,anchor=south] at (\pA+0.4,2.8) {Instruction};
-
-% ======================== Wiring =====================================
-
-% Blue: instruction path
-\draw[wireI] (pc.east) -- (ic.west);
-\draw[wireI] (ic.east) -- (\pA,0.0) -- (\pB,0.0) -- (\pC,0.0);
-\draw[wireI] (pc.north) |- (add4.west);
-\draw[wireI] (add4.east) -| (\pB,2.3);
-\draw[wireI] (\pB,2.3) -- (badd.west);
-
-% Orange: long next‑PC/bypass control (for illustration)
-\draw[wirePC] (\pC,3.8) -- (\pD,3.8) -- ++(3.0,0) |- (pcsel.west);
-
-% Close the PC update loop
-\draw[wireI] (badd.east) -- ++(2.0,0) -| (pcsel.south);
-\draw[wirePC] (pcsel.east) -- ++(0.8,0) |- (pc.west);
-
-% Green: data path
-\coordinate (rfout1) at ($(rf.east)+(0,1.1)$);
-\coordinate (rfout2) at ($(rf.east)+(0,0.0)$);
-
-\draw[wireD] (rfout1) -- (\pB,1.1) -- (amux.west);      % src1 -> mux
-\draw[wireD] (rfout2) -- (\pB,0.0) -- (alu.west);        % src2 -> ALU
-\draw[wireD] (amux.east) -- (alu.west |- amux.east);     % mux -> ALU
-
-\draw[wireD] (sext.north) |- (\pB,2.3);                  % sign-ext to branch adder
-
-\draw[wireD] (alu.east) -- (\pC,-0.3) |- (dc.west);      % ALU addr -> D$ 
-\draw[wireD] (dc.east) -- (\pD,-2.2);                    % D$ data -> WB pipe
-\draw[wireD] (\pC,-0.3) -- (\pD,-0.3) -- (wbmux.west);   % ALU result -> WB mux
-\draw[wireD] (wbmux.east) -- ++(1.2,0) |- ($(rf.west)+(-0.8,-2.0)$); % write-back to RF
-
-% Small legend text from the original picture (optional)
-\node[anchor=west,font=\ttfamily\scriptsize] at (0,-9.2) {0 or};
-\node[anchor=west,font=\ttfamily\scriptsize] at (0,-10.1) {4\quad jcc\; 50H};
-
-\end{tikzpicture}
-\end{frame}
 
 
 %% Slide: A Basic Processor
@@ -487,21 +398,17 @@ SW   d,Rd
     \textit{Instruction order can be changed as long as the correctness is kept}
 \end{frame}
 
-%% Section: Control Hazards
-\begin{frame}
-    \begin{center}
-        \Huge Control Hazards
-    \end{center}
-\end{frame}
-
 \begin{frame}{Control Hazard on Branches}
     \centering
     \scalebox{0.85}{%
     \begin{tikzpicture}[
         component/.style={draw, thick, minimum height=0.8cm},
         latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
-        mux/.style={trapezium, trapezium angle=70, draw, thick, minimum height=0.8cm, minimum width=0.3cm},
-        stage/.style={font=\bfseries}
+        mux/.style={trapezium, trapezium left angle=70, trapezium right angle=70, 
+            trapezium stretches=true, minimum height=0.3cm, minimum width=1cm, 
+            draw, thick, fill=green!20},
+        stage/.style={font=\bfseries},
+        label/.style={font=\tiny}
     ]
         % Stage labels
         \node[stage] at (1.5,6) {Fetch};
@@ -521,91 +428,171 @@ SW   d,Rd
         \node[latch] (L4) at (12,2) {};
         
         % Fetch Stage
+        % MUX before PC
+        \node[mux, rotate=90] (pcmux) at (-0.2,4) {};
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
-        \node[component, fill=purple!20, minimum width=1.5cm, minimum height=2cm] (ICache) at (2,2) {
+        \node[component, fill=purple!20, minimum width=0.6cm, minimum height=2cm] (ICache) at (2,2) {
             \begin{tabular}{c}
-                Inst.\\Cache
+                \footnotesize inst.\\[-2pt]\footnotesize cache
             \end{tabular}
         };
         
-        % PC adder
-        \node[circle, draw, inner sep=2pt, fill=white] (adder) at (0.5,3.5) {\small +};
-        \node[above, font=\tiny] at (adder.north) {4};
-        \draw[->, blue] (PC.north) -- ++(0,0.5) -| (adder.west);
-        \draw[->, blue] (adder.east) -- ++(0.8,0) -- ++(0,-1) -- ++(0.2,0);
+        % PC adder (centered around 0)
+        \begin{scope}[shift={(0,3.5)}, scale=0.8]
+            \coordinate (adder) at (0,0);
+            % Trapezoid coordinates
+            \coordinate (toptopleft) at (0, 0.8);
+            \coordinate (topbottomleft) at (0, 0.55);
+            \coordinate (left) at (0.1, 0.4);
+            \coordinate (bottomtopleft) at (0, 0.25);
+            \coordinate (bottombottomleft) at (0, 0);
+            \coordinate (topright) at (0.3, 0.6);
+            \coordinate (bottomright) at (0.3, 0.2);
+            
+            % Draw the trapezoid
+            \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            
+            % Add + text
+            \node at (0.15, 0.4) {\tiny +};
+        \end{scope}
+        \node[left, font=\tiny] (four) at (-0.1,3.5) {4};
         
         % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.8cm, minimum height=2.2cm] (RF) at (4.5,2.3) {
-            \begin{tabular}{c}
-                Register\\File
-            \end{tabular}
-        };
-        
-        % Register file ports
-        \node[font=\tiny, anchor=east] at (RF.west) {
+        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=2.2cm] (RF) at (4.5,2.3) {};
+        \node[align=center] at (4.5,3) {\footnotesize register\\[-2pt]\footnotesize file};
+        % Register file labels - positioned closer to edges
+        \node[font=\tiny, anchor=east] at ([xshift=-2mm]RF.west) {
             \begin{tabular}{r}
-                src1\\src2\\[3pt]dst
+                src1\\[-1pt]
+                src2\\[2pt]
+                dst
             \end{tabular}
         };
-        \node[font=\tiny, anchor=west] at (RF.east) {
+        \node[font=\tiny, anchor=west] at ([xshift=2mm]RF.east) {
             \begin{tabular}{l}
-                src1\\data\\src2\\data
+                src1\\[-1pt]
+                data\\[-1pt]
+                src2\\[-1pt]
+                data
             \end{tabular}
         };
         
         % Sign extension
         \node[component, fill=green!20, ellipse, minimum width=0.8cm, minimum height=0.6cm, align=center] (SignExt) at (4.5,0) {
-            \tiny Sign\\[-3pt]\tiny Ext.
+            \tiny sign\\[-3pt]\tiny ext.
         };
         
-        % Decode control
-        \node[font=\tiny] at (3.5,4.5) {Instruction};
-        \node[component, fill=orange!20, ellipse, minimum size=0.8cm] (decode) at (4.5,4) {\tiny decode};
+        % Instruction label (rotated)
+        \node[font=\tiny, rotate=90] at (3.15,2) {instruction};
         
-        % Execute Stage  
-        \node[mux, fill=green!20, rotate=270] (mux1) at (7,2.5) {};
-        \node[mux, fill=green!20, rotate=270] (mux2) at (7,1.5) {};
-        \node[component, fill=green!30, minimum width=1.5cm, minimum height=2cm] (ALU) at (8,2) {ALU};
+        % Control signals label (no decode oval)
+        \node[font=\tiny] at (4.5,4.3) {control signals};
+        \draw[orange, dashed, ->] (4.5,4.1) -- ++(2.5,0);
+        
+        % Execute Stage
+        % Execute adder
+        \begin{scope}[shift={(7,3)}, scale=0.8]
+            \coordinate (adder2) at (0,0);
+            % Trapezoid coordinates
+            \coordinate (toptopleft) at (0, 0.8);
+            \coordinate (topbottomleft) at (0, 0.55);
+            \coordinate (left) at (0.1, 0.4);
+            \coordinate (bottomtopleft) at (0, 0.25);
+            \coordinate (bottombottomleft) at (0, 0);
+            \coordinate (topright) at (0.3, 0.6);
+            \coordinate (bottomright) at (0.3, 0.2);
+            
+            % Draw the trapezoid
+            \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            
+            % Add + text
+            \node at (0.15, 0.4) {\tiny +};
+        \end{scope}
+        
+        \node[mux, rotate=270] (mux2) at (7,1.5) {};
+        
+        % ALU - with rotated text
+        \begin{scope}[shift={(8,1.5)}, scale=0.8]
+            \coordinate (ALU) at (0,0);
+            % Trapezoid coordinates
+            \coordinate (toptopleft) at (0, 1.6);
+            \coordinate (topbottomleft) at (0, 1.1);
+            \coordinate (left) at (0.2, 0.8);
+            \coordinate (bottomtopleft) at (0, 0.5);
+            \coordinate (bottombottomleft) at (0, 0);
+            \coordinate (topright) at (0.6, 1.2);
+            \coordinate (bottomright) at (0.6, 0.4);
+            
+            % Draw the trapezoid
+            \fill[green!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            
+            % Add ALU text (rotated and smaller)
+            \node[rotate=90, font=\tiny] at (0.3, 0.8) {ALU};
+        \end{scope}
         
         % Memory Stage
-        \node[component, fill=brown!20, minimum width=1.8cm, minimum height=2cm] (DCache) at (11,2) {
-            \begin{tabular}{c}
-                Data\\Cache
-            \end{tabular}
+        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm, align=center] (DCache) at (11,2) {
+            \footnotesize data\\[-2pt]
+            \footnotesize cache\\[3pt]
+            \tiny address\\[8pt]
+            \tiny data
         };
-        \node[font=\tiny, above] at (DCache.north) {address};
-        \node[font=\tiny, below] at (DCache.south) {data};
         
         % Write Back Stage
-        \node[mux, fill=green!20, rotate=270] (wbmux) at (13.5,2) {};
+        \node[mux, rotate=270] (wbmux) at (13.5,2) {};
         
         % Main data path connections
+        \draw[->] (four) -- (adder);
+        \draw[->] (pcmux) -- ++(-0.6,0) |- (PC);
         \draw[->] (PC) -- (ICache);
         \draw[->] (ICache) -- (L1);
         \draw[->] (L1) -- ++(0.3,0) |- (RF.180);
         \draw[->] (L1) -- ++(0.3,0) |- (SignExt.west);
-        \draw[->] (L1.north) -- ++(0.3,0) |- (decode);
         
-        \draw[->] (RF.0) -- ++(0.2,0) |- (mux1.south);
-        \draw[->] (RF.0) -- ++(0.2,0) |- (mux2.south);
-        \draw[->] (SignExt.east) -| (mux2.north);
+        % From RF to L2
+        \draw[->] (RF.0) -- ++(0.2,0) |- ([yshift=5mm]L2.west);
+        \draw[->] (RF.0) -- ++(0.2,0) |- ([yshift=-5mm]L2.west);
+        \draw[->] (SignExt.east) -| ([yshift=-10mm]L2.west);
         
-        \draw[->] (mux1) -- ++(0.3,0) |- (ALU.160);
-        \draw[->] (mux2) -- ++(0.3,0) |- (ALU.200);
-        \draw[->] (ALU) -- (L3);
+        % From L2 to Execute components
+        \draw[->] ([yshift=5mm]L2.east) -- ++(0.2,0) |- (8,2.1);
+        \draw[->] ([yshift=-5mm]L2.east) -| (mux2.south);
+        \draw[->] ([yshift=-10mm]L2.east) -| (mux2.north);
+        \draw[->] ([yshift=-10mm]L2.east) -- ++(0.3,0) |- (7,3);
+        \draw[->] ([yshift=5mm]L2.east) -- ++(0.3,0) |- (7,3.4);
+        
+        % MUX to ALU
+        \draw[->] (mux2) -- ++(0.3,0) |- (8,0.9);
+        
+        % ALU and adder to L3
+        \draw[->] (8.48,1.5) -- (L3);
+        \draw[->] (7.24,3) -| ([yshift=10mm]L3.west);
+        
+        % L3 to Memory
         \draw[->] (L3) -- (DCache);
+        
+        % Memory to L4
         \draw[->] (DCache) -- (L4);
+        
+        % L4 to WB mux
         \draw[->] (L4) -- (wbmux);
         
-        % Control signals
-        \draw[orange, ->] (decode) -- ++(1.5,0) node[font=\tiny, above] {Control signals};
+        % Write back path
+        \draw[red, ->] (wbmux.east) -- ++(0.3,0) -- ++(0,-2.5) -| ([yshift=-6mm]RF.180);
         
         % Branch paths
-        \draw[orange!70, thick, ->] (L3.north) -- ++(0,2) -| node[near start, above, font=\tiny] {} (PC.north);
-        \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| (PC.north);
+        \draw[orange!70, thick, ->] ([yshift=10mm]L3.north) -- ++(0,1) -| (pcmux.north);
+        \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| ([xshift=-2mm]pcmux.north);
+        
+        % PC increment feedback
+        %\draw[->, blue] (PC.west) -- ++(0,0.5) -| (-0.15,3.5);
+        % \draw[->, blue] (0.24,3.5) -- ++(0.5,0) -- ++(0,-1.8) -| (pcmux.south);
         
         % Code on the left
-        \node[anchor=east, font=\footnotesize\ttfamily] at (-1,1.5) {
+        \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
             \begin{tabular}{rl}
                 0 & or\\
                 4 & jcc 50H\\
@@ -616,36 +603,6 @@ SW   d,Rd
         };
     \end{tikzpicture}
     }
-\end{frame}
-
-%% Slide: Control Hazard on Branches
-\begin{frame}[fragile]{Control Hazard on Branches}
-    \texttt{jcc target; if cond then PC $\leftarrow$ target}
-    
-    \begin{itemize}
-        \item The target is saved in the instruction relative to the address of the fall-through instruction
-        \item Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
-        \item The 3 instructions following the branch get into the pipe even if the branch is taken
-    \end{itemize}
-    
-    \begin{columns}
-        \column{0.4\textwidth}
-        \begin{verbatim}
-0  or
-4  jcc 50H
-8  and
-12 sw
-16 sub
-        \end{verbatim}
-        
-        \column{0.6\textwidth}
-        \centering
-        \begin{tikzpicture}[scale=0.6]
-            \node[draw, dashed, minimum width=6cm, minimum height=3cm] {
-                Branch Pipeline Diagram
-            };
-        \end{tikzpicture}
-    \end{columns}
 \end{frame}
 
 %% Slide: Control Hazard: Stall
