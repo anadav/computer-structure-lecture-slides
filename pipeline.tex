@@ -77,6 +77,63 @@
     \end{scope}
 }
 
+% Define macro for placing MUX with configurable location, rotation, and fill color
+% Usage: \placeMux[rotation]{x,y}{prefix}{fill color}[selector up/down offsets]
+% rotation: angle in degrees (default 0)
+% x,y: position
+% prefix: name prefix for coordinates
+% fill color: color for the mux (e.g., blue!20)
+% Special handling: if prefix is "wb", use different port configuration for 270 rotation
+\newcommand{\placeMux}[5][0]{%
+    \node[trapezium, trapezium left angle=70, trapezium right angle=70,
+          trapezium stretches=true, minimum height=0.3cm, minimum width=1cm,
+          draw, thick, fill=#4, rotate=#1] (#3mux) at (#2) {};
+    
+    % Define input/output coordinates based on rotation
+    \ifnum#1=90
+        % Rotation 90: narrow side (west) is output, wide side (north) has inputs
+        \coordinate (#3mux_in1) at ([xshift=-2mm]#3mux.north);
+        \coordinate (#3mux_in2) at ([xshift=2mm]#3mux.north);
+        \coordinate (#3mux_in3) at (#3mux.south);
+        \coordinate (#3mux_out) at (#3mux.west);
+        % Default selector positions
+        \coordinate (#3mux_selectorup) at (#3mux.east);
+        \coordinate (#3mux_selectordown) at (#3mux.south);
+    \else\ifnum#1=270
+        % Rotation 270: different configs for different muxes
+        \def\tmppref{#3}%
+        \def\tmpwb{wb}%
+        \ifx\tmppref\tmpwb
+            % WB mux: inputs on north/south, output on east
+            \coordinate (#3mux_in1) at (#3mux.north);
+            \coordinate (#3mux_in2) at (#3mux.south);
+            \coordinate (#3mux_out) at (#3mux.east);
+        \else
+            % EXE mux: inputs on south (wide side), output on north
+            \coordinate (#3mux_in1) at ([yshift=4]#3mux.south);
+            \coordinate (#3mux_in2) at ([yshift=-4]#3mux.south);
+            \coordinate (#3mux_out) at (#3mux.north);
+        \fi
+        % Default selector positions
+        \coordinate (#3mux_selectorup) at (#3mux.west);
+        \coordinate (#3mux_selectordown) at (#3mux.east);
+    \else
+        % Default (0 degrees): narrow side is on left (output), wide side on right (inputs)
+        \coordinate (#3mux_in1) at ([yshift=2mm]#3mux.east);
+        \coordinate (#3mux_in2) at ([yshift=-2mm]#3mux.east);
+        \coordinate (#3mux_out) at (#3mux.west);
+        % Default selector positions
+        \coordinate (#3mux_selectorup) at (#3mux.north);
+        \coordinate (#3mux_selectordown) at (#3mux.south);
+    \fi\fi
+    
+    % Apply custom selector offsets if provided
+    \ifx\relax#5\relax\else
+        \coordinate (#3mux_selectorup) at ([xshift=#5{1},yshift=#5{2}]#3mux.center);
+        \coordinate (#3mux_selectordown) at ([xshift=#5{3},yshift=#5{4}]#3mux.center);
+    \fi
+}
+
 \title{Computer Structure}
 \subtitle{Pipeline}
 \author{Lihu Rappoport}
@@ -431,9 +488,6 @@ SW   d,Rd
     \begin{tikzpicture}[
         component/.style={draw, thick, minimum height=0.8cm},
         latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
-        mux/.style={trapezium, trapezium left angle=70, trapezium right angle=70, 
-            trapezium stretches=true, minimum height=0.3cm, minimum width=1cm, 
-            draw, thick, fill=green!20},
         stage/.style={font=\bfseries},
         label/.style={font=\tiny},
         port/.style={font=\tiny, inner sep=1pt}
@@ -457,11 +511,7 @@ SW   d,Rd
         
         % Fetch Stage
         % PC MUX (rotate=90: narrow side is west, wide side is east)
-        \node[mux, rotate=90, fill=blue!20] (pcmux) at (0.3,4.5) {};
-        \coordinate (pcmux_in1) at ([xshift=-2mm]pcmux.north);
-        \coordinate (pcmux_in2) at ([xshift=2mm]pcmux.north);
-        \coordinate (pcmux_in3) at (pcmux.south);
-        \coordinate (pcmux_out) at (pcmux.west);
+        \placeMux[90]{0.3,4.5}{pc}{blue!20}{}
 
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
 
@@ -484,6 +534,9 @@ SW   d,Rd
         \node[port] (rf_src2) at ([xshift=-5mm, yshift=-5mm]RF.center) {~src2};
         \node[port] (rf_dst) at ([xshift=-4mm, yshift=-10mm]RF.center) {dst};
         
+        % Register file selector coordinate (slightly left of dst)
+        \coordinate (rf_selector) at ([xshift=-8mm, yshift=-10mm]RF.center);
+        
         % Register file output ports (right side, aligned to right edge)
         \node[port, anchor=east] (rf_src1_data) at ([xshift=7mm, yshift=2mm]RF.center) {src1};
         \node[port, anchor=east] (rf_data1) at ([xshift=7mm, yshift=-1mm]RF.center) {data};
@@ -500,10 +553,7 @@ SW   d,Rd
         \placeAdder{7,3.8}{ex}
         
         % Execute stage ALU source MUX (rotate=270: narrow side is east, wide side is west)
-        \node[mux, rotate=270] (exemux) at (7,1.5) {};
-        \coordinate (exemux_in1) at ([yshift=4]exemux.south);
-        \coordinate (exemux_in2) at ([yshift=-4]exemux.south);
-        \coordinate (exemux_out) at (exemux.north);
+        \placeMux[270]{7,1.5}{exe}{green!20}{}
         
         % ALU - positioned to align output with data cache address
         \begin{scope}[shift={(8,2)}, scale=0.8]
@@ -541,10 +591,7 @@ SW   d,Rd
         \node[port, anchor=east] (dc_data_out) at ([xshift=6.5mm, yshift=0mm]DCache.center){};
         
         % Write Back Stage MUX (rotate=270: narrow side is east, wide side is west)
-        \node[mux, rotate=270] (wbmux) at (13.5,2) {};
-        \coordinate (wbmux_in1) at (wbmux.north);
-        \coordinate (wbmux_in2) at (wbmux.south);
-        \coordinate (wbmux_out) at (wbmux.east);
+        \placeMux[270]{13.5,2}{wb}{green!20}{}
         
         % Main data path connections
         \draw[->] (four) -- (fe_adder_input1);
