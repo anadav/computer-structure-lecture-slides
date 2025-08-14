@@ -526,25 +526,25 @@ SW   d,Rd
         \node[left, font=\tiny] (four) at (1.1,4.04) {4};
         
         % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.4cm, minimum height=2.2cm] (RF) at (4.5,2.3) {};
-        \node[align=center] at (4.5,3) {\footnotesize register\\[-2pt]\footnotesize file};
+        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.3) {};
+        \node[align=center] at (4.5,2.8) {\footnotesize register\\[-3pt]\footnotesize file};
         
         % Register file input ports (left side, inside the box)
-        \node[port] (rf_src1) at ([xshift=-5mm, yshift=2mm]RF.center) {~src1};
-        \node[port] (rf_src2) at ([xshift=-5mm, yshift=-5mm]RF.center) {~src2};
-        \node[port] (rf_dst) at ([xshift=-4mm, yshift=-10mm]RF.center) {dst};
+        \node[port] (rf_src1) at ([xshift=-4mm, yshift=1mm]RF.center) {~src1};
+        \node[port] (rf_src2) at ([xshift=-4mm, yshift=-3mm]RF.center) {~src2};
+        \node[port] (rf_dst) at ([xshift=-3.5mm, yshift=-7mm]RF.center) {dst};
         
         % Register file selector coordinate (slightly left of dst)
-        \coordinate (rf_selector) at ([xshift=-8mm, yshift=-10mm]RF.center);
+        \coordinate (rf_selector) at ([xshift=-7mm, yshift=-7mm]RF.center);
         
         % Register file output ports (right side, aligned to right edge)
-        \node[port, anchor=east] (rf_src1_data) at ([xshift=7mm, yshift=2mm]RF.center) {src1};
-        \node[port, anchor=east] (rf_data1) at ([xshift=7mm, yshift=-1mm]RF.center) {data};
-        \node[port, anchor=east] (rf_src2_data) at ([xshift=7mm, yshift=-5mm]RF.center) {src2};
-        \node[port, anchor=east] (rf_data2) at ([xshift=7mm, yshift=-8mm]RF.center) {data};
+        \node[port, anchor=east] (rf_src1_data) at ([xshift=6mm, yshift=0.9mm]RF.center) {src1};
+        \node[port, anchor=east] (rf_data1) at ([xshift=6mm, yshift=-0.6mm]RF.center) {data};
+        \node[port, anchor=east] (rf_src2_data) at ([xshift=6mm, yshift=-3mm]RF.center) {src2};
+        \node[port, anchor=east] (rf_data2) at ([xshift=6mm, yshift=-4.5mm]RF.center) {data};
         
         % Sign extension - moved slightly right
-        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (4.9,0.4) {
+        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.7) {
             \scriptsize sign\\[-7pt]\scriptsize ext.
         };
         
@@ -584,8 +584,8 @@ SW   d,Rd
         \node[align=center] at (10.8,2.6) {\footnotesize data\\[-4pt]\footnotesize cache};
 
         % Data Cache ports (aligned to left side of box)
-        \node[port, anchor=west] (dc_addr) at ([xshift=-6.6mm, yshift=0mm]DCache.center) {address};
-        \node[port, anchor=west] (dc_data) at ([xshift=-6.6mm, yshift=-7mm]DCache.center) {data};
+        \node[port, anchor=west] (dc_addr) at ([xshift=-6.2mm, yshift=0mm]DCache.center) {address};
+        \node[port, anchor=west] (dc_data) at ([xshift=-6.2mm, yshift=-7mm]DCache.center) {data};
 
         % DCache output port
         \node[port, anchor=east] (dc_data_out) at ([xshift=6.5mm, yshift=0mm]DCache.center){};
@@ -595,7 +595,7 @@ SW   d,Rd
         
         % Main data path connections
         \draw[->] (four) -- (fe_adder_input1);
-        \draw[->] (pcmux_out) -- ++(-0.1,0) -- ++(0,-2.5) -- (PC.north);
+        \draw[->] (pcmux_out) -- ++(-0.4,0) |- (PC.west);
         \draw[->] (PC.east) -- (ICache);
         \draw[->] (PC.east) -- ++(0.1,0) |- (fe_adder_input2);
         \draw[->] (ICache) -- (L1);
