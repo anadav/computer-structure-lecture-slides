@@ -562,6 +562,7 @@ SW   d,Rd
 
         \draw[->] (fe_adder_output) -- (fe_adder_output -| L1.west);
         \draw[->] (fe_adder_output -| L1.east) -- (fe_adder_output -| L2.west);
+        \draw[->] (fe_adder_output -| L2.east) -- ++(0.3,0) |- (ex_adder_input1);
         
         % From L1 to Register File inputs
         \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src1.west);
@@ -596,18 +597,19 @@ SW   d,Rd
         \draw[->] (L3.east |- dc_data) -- (dc_data.west);
         \draw[->] (dc_data_out) -- (L4.west |- dc_data_out);
         
-        % L4 to WB mux
-        \draw[->] (L4) -- (wbmux);
+        % L4 to WB mux - two inputs (ALU result and memory data)
+        \draw[->] ([yshift=2mm]L4.east) -| (wbmux.north);
+        \draw[->] ([yshift=-2mm]L4.east) -| (wbmux.south);
         
-        % Write back path
+        % Write back path - single output from mux
         \draw[green, ->] (wbmux) -- ++(0.3,0) -- ++(0,-2.9) -| ([xshift=-2mm]rf_dst.south);
         \draw[black, ->] ([yshift=-28mm]L4) -| ++(0.3,0) -- ++(0,-0) -| (rf_dst.south);
         
-        % Branch paths
-        \draw[orange!70, thick, ->] ([yshift=10mm]L3.north) -- ++(0,1) -| (pcmux.north);
-        \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| ([xshift=-2mm]pcmux.north);
+        % Branch paths - two inputs to PC mux
+        \draw[orange!70, thick, ->] ([yshift=10mm]L3.north) -- ++(0,1) -| ([xshift=1mm]pcmux.north);
+        \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| ([xshift=-1mm]pcmux.north);
         
-        % PC increment feedback
+        % PC increment feedback - third input (making it clear there are inputs)
         %\draw[->, blue] (PC.north) -- ++(0,1.5) -| (0.15,3.5);
         \draw[->, blue] (0.54,3.5) -- ++(0.3,0) -- ++(0,-1.3) -| (pcmux.south);
         
