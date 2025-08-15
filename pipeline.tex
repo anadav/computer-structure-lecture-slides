@@ -98,8 +98,8 @@
         \coordinate (#3mux_in2) at ([yshift=2mm]#3mux.south);
         \coordinate (#3mux_out) at (#3mux.north);
         % Selector positions
-        \coordinate (#3mux_selectorup) at (#3mux.west);
-        \coordinate (#3mux_selectordown) at (#3mux.east);
+        \coordinate (#3mux_selectorup) at (#3mux.east);
+        \coordinate (#3mux_selectordown) at (#3mux.west);
     \else\ifnum#1=180
         % Rotation 180: narrow side moves to right, wide side to left
         % So output on east (narrow), inputs on west (wide)
@@ -496,8 +496,8 @@ SW   d,Rd
         \node[stage] at (13.5,6) {WB};
         
         % Main frame
-        \draw[blue!50, very thick, rounded corners] (-0.5,-1) rectangle (14,5);
-        \draw[orange!50, very thick, rounded corners] (-0.7,3.5) rectangle (13.8,5.2);
+        % Removed blue rounded rectangle
+        % \draw[orange!50, very thick, rounded corners] (-0.7,3.5) rectangle (13.8,5.2);
         
         % Pipeline latches
         \node[latch] (L1) at (3,2) {};
@@ -534,8 +534,8 @@ SW   d,Rd
         \coordinate (rf_selector) at ([xshift=-7mm, yshift=-7mm]RF.center);
         
         % Register file output ports (right side, aligned to right edge)
-        \node[port, anchor=east] (rf_src1_data) at ([xshift=6mm, yshift=0.9mm]RF.center) {src1};
-        \node[port, anchor=east] (rf_data1) at ([xshift=6mm, yshift=-0.6mm]RF.center) {data};
+        \node[port, anchor=east] (rf_src1_data) at ([xshift=6mm, yshift=0.7mm]RF.center) {src1};
+        \node[port, anchor=east] (rf_data1) at ([xshift=6mm, yshift=-0.8mm]RF.center) {data};
         \node[port, anchor=east] (rf_src2_data) at ([xshift=6mm, yshift=-3mm]RF.center) {src2};
         \node[port, anchor=east] (rf_data2) at ([xshift=6mm, yshift=-4.5mm]RF.center) {data};
         
@@ -546,10 +546,10 @@ SW   d,Rd
         
         % Execute Stage
         % Execute adder - positioned so input aligns with incoming connection
-        \placeAdder{7,3.8}{ex}
+        \placeAdder{7,3.56}{ex}
         
         % Execute stage ALU source MUX (rotate=270: output on north, inputs on south)
-        \placeMux[270]{7,1.5}{exe}{green!20}
+        \placeMux[270]{7,1.68}{exe}{green!20}
         
         % ALU - positioned to align output with data cache address
         \begin{scope}[shift={(8,2)}, scale=0.8]
@@ -610,12 +610,12 @@ SW   d,Rd
 
 
         % From Register File outputs to L2
-        \draw[->] (rf_src1_data.east) -- (rf_src1_data.east -| L2.west);
+        \draw[->] ([yshift=-0.1mm]rf_data1.east) -- ([yshift=-0.1]rf_data1.east -| L2.west);
         \draw[->] (rf_data2.east) -- (rf_data2.east -| L2.west);
         \draw[->] (SignExt.east) -- (SignExt.east -| L2.west);
         
         % From L2 to Execute components
-        \draw[->] (rf_src1_data.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
+        \draw[->] ([yshift=-0.1mm]rf_data1.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
         \draw[->] (rf_data2.east -| L2.east) -- (exemux_in1);
         \draw[->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (exemux_in2);
         \draw[->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (ex_adder_input2);
@@ -640,9 +640,9 @@ SW   d,Rd
         \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.9) -| (rf_dst.south);
         
         % PC MUX inputs: branch target from L3, branch from L2, and PC+4
-        \draw[orange!70, thick, ->] (ex_adder_output -| L3.east) -- ++(0.2,0) -- ++(0,1.7) -| (pcmux_in1);
+        \draw[blue, thick, ->] (ex_adder_output -| L3.east) -- ++(0.2,0) -- ++(0,1.7) -| (pcmux_in2);
         \draw[blue!70, thick, ->] (L2.north) -- ++(0,1.5) -| (pcmux_in2);
-        \draw[blue, thick, ->] (fe_adder_output) -- (fe_adder_output |- pcmux_in2) -- (pcmux_in2);
+        \draw[orange!70, thick, ->] (alu_output -| L3.east) -- ++(0.2,0) -- ++(0,3.3) -| (pcmux_selectorup);
         
         % Code on the left
         \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
