@@ -32,6 +32,7 @@
 
 \begin{frame}{Basic DRAM chip}
 \textbf{DRAM:} 2D array of memory cells
+\vspace{-0.2cm}
 
 \begin{center}
 \begin{tikzpicture}[scale=0.8, transform shape,
@@ -41,70 +42,75 @@
     label/.style={font=\small\bfseries}
 ]
 
-% Row Address Latch
-\node[block, text width=1.5cm, fill=purple!20] (rowlatch) at (0,0) {row address latch};
+% Origin point - move this to shift entire diagram
+\coordinate (origin) at (0,25);
 
-% Column Address Latch
-\node[block, text width=1.5cm, fill=olive!20] (collatch) at (0,-2.5) {column address latch};
+% Row Address Latch - positioned relative to origin
+\node[block, text width=1.5cm, fill=purple!20] (rowlatch) at (origin) {row address latch};
 
-% Row Address decoder
-\node[decoder, text width=1.5cm, fill=purple!20] (rowdecoder) at (3.5,0) {row address decoder};
+% Column Address Latch - positioned relative to row latch
+\node[block, text width=1.5cm, fill=olive!20] (collatch) at ([yshift=-2.5cm]rowlatch) {column address latch};
 
-% Column decoder
-\node[block, text width=1.5cm, fill=olive!20] (coldecoder) at (8.5,-2.5) {column decoder};
+% Row Address decoder - positioned relative to row latch
+\node[decoder, text width=1.5cm, fill=purple!20] (rowdecoder) at ([xshift=3.5cm]rowlatch) {row address decoder};
 
-% Memory array - draw as grid
-\draw[thick] (5.5,1.2) rectangle (9.5,-1.5);
-\foreach \x in {5.8,6.1,6.4,6.7,7,7.3,7.6,7.9,8.2,8.5,8.8,9.2} {
-    \draw (\x,1.2) -- (\x,-1.5);
+% Column decoder - positioned relative to column latch
+\node[block, text width=1.5cm, fill=olive!20] (coldecoder) at ([xshift=8.5cm]collatch) {column decoder};
+
+% Memory array - positioned relative to decoders
+\coordinate (array_corner) at ([xshift=2cm, yshift=1.2cm]rowdecoder.east);
+\draw[thick] (array_corner) rectangle ([xshift=4cm, yshift=-2.7cm]array_corner);
+\foreach \x in {0.3,0.6,0.9,1.2,1.5,1.8,2.1,2.4,2.7,3,3.3,3.7} {
+    \draw ([xshift=\x cm]array_corner) -- ([xshift=\x cm, yshift=-2.7cm]array_corner);
 }
-\foreach \y in {0.9,0.6,0.3,0,-0.3,-0.6,-0.9,-1.2} {
-    \draw (5.5,\y) -- (9.5,\y);
+\foreach \y in {-0.3,-0.6,-0.9,-1.2,-1.5,-1.8,-2.1,-2.4} {
+    \draw ([yshift=\y cm]array_corner) -- ([xshift=4cm, yshift=\y cm]array_corner);
 }
-\node[align=center, fill=white, inner sep=2pt] at (7.5,-0.15) {memory\\array};
 
-% Input signals
-\node[label, purple] (ras) at (-3,0.3) {RAS$\#$};
+% Input signals - positioned relative to latches
+\node[label, purple] (ras) at ([xshift=-3cm, yshift=0.3cm]rowlatch.west) {RAS$\#$};
 \draw[signal, purple] (ras) -- (ras -| rowlatch.west);
 
-\node[label, olive] (cas) at (-3,-2.8) {CAS$\#$};
+\node[label, olive] (cas) at ([xshift=-3cm, yshift=-0.3cm]collatch.west) {CAS$\#$};
 \draw[signal, olive] (cas) -- (cas -| collatch.west);
 
-\coordinate (addr_split) at (-1.8,-1.25);
+% Address in the middle between the two latches
+\node[label] (addr) at ($(rowlatch.west)!0.5!(collatch.west) + (-3,0)$) {addr};
+\coordinate (addr_split) at ($(rowlatch.west)!0.5!(collatch.west) + (-1.8,0)$);
 
-\node[label] (addr) at (-3,-1.25) {addr};
 \draw[signal, line width=2pt] (addr.east) -- (addr_split);
 % Branch to row and column latches
-\draw[signal, purple, line width=2pt] (addr_split) -- (-1.8,0) -- (rowlatch.west);
-\draw[signal, olive, line width=2pt] (addr_split) -- (-1.8,-2.5) -- (collatch.west);
+\draw[signal, purple, line width=2pt] (addr_split) -- (addr_split |- rowlatch.west) -- (rowlatch.west);
+\draw[signal, olive, line width=2pt] (addr_split) -- (addr_split |- collatch.west) -- (collatch.west);
 
-% Clock symbols next to latches
-\drawclock{-2.2,-2}
+% Clock symbol relative to addr_split
+\drawclock{$(addr_split) + (-0.4,-0.75)$}
 
 % Connections between blocks
 \draw[signal, purple, line width=1.5pt] (rowlatch.east) -- node[above, font=\small\bfseries, purple] {row} (rowdecoder.west);
 \draw[signal, olive, line width=1.5pt] (collatch.east) -- node[above, font=\small\bfseries, olive] {column} (coldecoder.west);
 
 % Row decoder to memory array with highlighted row
-\draw[signal, purple] (rowdecoder.east) -- (5.5,0);
+\draw[signal, purple] (rowdecoder.east) -- (rowdecoder.east -| array_corner);
 % Draw wordlines and highlight one
-\foreach \y in {0.9,0.6,0.3,0,-0.3,-0.6,-0.9,-1.2} {
-    \draw[purple, thick] (5.5,\y) -- (5.6,\y);
+\foreach \y in {-0.3,-0.6,-0.9,-1.2,-1.5,-1.8,-2.1,-2.4} {
+    \draw[purple, thick] ([yshift=\y cm]array_corner) -- ++(0.1,0);
 }
 % Highlight one row
-\draw[purple, line width=2.5pt, opacity=0.5] (5.5,0.3) -- (9.5,0.3);
+\draw[purple, line width=2.5pt, opacity=0.5] ([yshift=-0.9cm]array_corner) -- ([xshift=4cm, yshift=-0.9cm]array_corner);
 
 % Column decoder to memory array with highlighted column
-\draw[signal, olive] (coldecoder.north) -- (8.5,-1.5);
+\coordinate (array_bottom) at ([yshift=-2.7cm]array_corner);
+\draw[signal, olive] (coldecoder.north) -- (coldecoder.north |- array_bottom);
 % Draw bitlines and highlight one
-\foreach \x in {6.1,6.7,7.3,7.9,8.5,9.2} {
-    \draw[olive, thick] (\x,-1.5) -- (\x,-1.4);
+\foreach \x in {0.6,1.2,1.8,2.4,3,3.6} {
+    \draw[olive, thick] ([xshift=\x cm, yshift=-2.7cm]array_corner) -- ++(0,0.1);
 }
 % Highlight one column
-\draw[olive, line width=2.5pt, opacity=0.5] (7.6,1.2) -- (7.6,-1.5);
+\draw[olive, line width=2.5pt, opacity=0.5] ([xshift=2.1cm]array_corner) -- ([xshift=2.1cm, yshift=-2.7cm]array_corner);
 
 % Mark intersection
-\fill[red] (7.6,0.3) circle (0.06);
+\fill[red] ([xshift=2.1cm, yshift=-0.9cm]array_corner) circle (0.06);
 
 % Data I/O - horizontal arrow
 \draw[signal, blue, line width=2pt, <->] 
@@ -112,13 +118,21 @@
     -- node[midway, above, blue]{data} 
   ++(1,0);
 
-% Clock symbol near data
-\drawclock{10,-2.8}
+% Clock symbol near data - relative to coldecoder
+\drawclock{$(coldecoder.east) + (0.5,-0.3)$}
+
+\node[
+  align=center, 
+  fill=white, 
+  fill opacity=0.9,   % background 50% transparent
+  text opacity=1,     % text fully visible
+  inner sep=2pt
+] at ([xshift=2cm, yshift=-1.35cm]array_corner) {memory\\[-2]array};
 
 \end{tikzpicture}
 \end{center}
 
-\vspace{-0.5cm}
+\vspace{-0.2cm}
 \textbf{DRAM access sequence:}
 \begin{enumerate}
 \item Row address on bus → Assert RAS$\#$ to latch row
