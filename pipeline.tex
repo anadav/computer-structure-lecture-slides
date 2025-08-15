@@ -327,14 +327,16 @@
 
 % Time axis for first diagram with ticks above
 \node[anchor=east] at (0.5, 1.5) {\footnotesize Time};
-\draw[->] (1, 1.5) -- (11, 1.5);
+\coordinate (timeline_start) at (1, 1.5);
+\coordinate (timeline_end) at (11, 1.5);
+\draw[->] (timeline_start) -- (timeline_end);
 \foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14, 9/16, 10/18} {
     \draw (\x, 1.5) -- (\x, 1.6);  % tick marks
-    \node[above] at (\x, 1.6) {\tiny \t};
+    \node[above] (t1-\t) at (\x, 1.6) {\tiny \t};
 }
 
 % First instruction row
-\node[fetch, anchor=west] (f1) at (1, 0.8) {Inst\\Fetch};
+\node[fetch, anchor=north west] (f1) at ([yshift=-1]timeline_start) {Inst\\Fetch};
 \node[anchor=east] (f1ins) at ([xshift=-4mm]f1.west) {\footnotesize lw R1, 100(R0)};
 \node[reg, anchor=west] (r1a) at (f1.east) {Reg};
 \node[alu, anchor=west] (a1) at (r1a.east) {ALU};
@@ -362,20 +364,28 @@
 \draw[<->] ([yshift=-2mm]f3.south west) -- node[below] {\footnotesize 8 ns} ++(3.5, 0);
 
 % Vertical arrow for execution order - relative to instructions
-\draw[->] ([xshift=-3mm]f1ins.north west) -- node[left, rotate=90, anchor=center] {\tiny program execution order} ([xshift=-3mm]f3ins.south west);
+\draw[->] 
+  ([xshift=-3mm]f1ins.north west)
+    -- node[rotate=90, anchor=south]{\tiny program execution order}
+  ([xshift=-3mm]f3ins.south west);
+
 
 % Second pipeline diagram (pipelined) - moved higher
 
 % Time axis for second diagram
-\node[anchor=east] at (0.5, -2.3) {\footnotesize Time};
-\draw[->] (1, -2.3) -- (11, -2.3);
+\coordinate (ptimeline_start) at (1, -2.3);
+\coordinate (ptimeline_end) at (11, -2.3);
+
+\node[anchor=east] at (0.5, -1.5) {\footnotesize Time};
+
+\draw[->] (ptimeline_start) -- (ptimeline_end);
 \foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14, 9/16, 10/18} {
     \draw (\x, -2.3) -- (\x, -2.2);  % tick marks
-    \node[above] at (\x, -2.2) {\tiny \t};
+    \node[above] (t2-\t) at (\x, -2.2) {\tiny \t};
 }
 
 % First instruction (pipelined)
-\node[fetch, anchor=west] (pf1) at (1, -3.1) {Inst\\Fetch};
+\node[fetch, anchor=north west] (pf1) at ([yshift=-1]ptimeline_start) {Inst\\Fetch};
 \node[anchor=east] (pf1ins) at ([xshift=-4mm]pf1.west) {\footnotesize lw R1, 100(R0)};
 \node[reg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {Reg};
 \node[alu, anchor=west] (pa1) at (pr1a.east) {ALU};
@@ -414,7 +424,10 @@
 \draw[<->] ([yshift=-1mm]pr3b.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pr3b.south east);
 
 % Vertical arrow for execution order - relative to instructions
-\draw[->] ([xshift=-3mm]pf1ins.north west) -- node[left, rotate=90, anchor=center] {\tiny program execution order} ([xshift=-3mm]pf3ins.south west);
+\draw[->] 
+  ([xshift=-3mm]pf1ins.north west)
+    -- node[rotate=90, anchor=south]{\tiny program execution order}
+  ([xshift=-3mm]pf3ins.south west);
 
 \end{tikzpicture}
 
