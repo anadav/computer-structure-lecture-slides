@@ -58,45 +58,49 @@
 }
 
 % Define macro for pipeline diagram
-% Usage: \drawPipelineDiagram
-\newcommand{\drawPipelineDiagram}{%
+% Usage: \drawPipelineDiagram[x,y] - optional position, defaults to (0,0)
+\newcommand{\drawPipelineDiagram}[1][0,0]{%
     \scalebox{0.85}{%
-    \begin{tikzpicture}[
+    \begin{tikzpicture}[shift={(#1)},
         component/.style={draw, thick, minimum height=0.8cm},
         latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
         stage/.style={font=\bfseries},
         label/.style={font=\tiny},
         port/.style={font=\tiny, inner sep=0.035cm}
     ]
-        % Stage labels
-        \node[stage] at (1.5,6) {Fetch};
-        \node[stage] at (4.5,6) {Decode};
-        \node[stage] at (8,6) {Execute};
-        \node[stage] at (11,6) {Memory};
-        \node[stage] at (13.5,6) {WB};
+        % Define origin node for relative positioning
+        \coordinate (origin) at (0,0);
         
-        % Pipeline latches
-        \node[latch] (L1) at (3,2) {};
-        \node[latch] (L2) at (6,2) {};
-        \node[latch] (L3) at (9.5,2) {};
-        \node[latch] (L4) at (12,2) {};
+        % Pipeline latches - positioned relative to origin
+        \node[latch] (L1) at ([shift={(3,2)}]origin) {};
+        \node[latch] (L2) at ([shift={(3,0)}]L1) {};
+        \node[latch] (L3) at ([shift={(3.5,0)}]L2) {};
+        \node[latch] (L4) at ([shift={(2.5,0)}]L3) {};
+        
+        % Stage labels - positioned relative to latches
+        \node[stage] at ([yshift=4cm]origin |- L1.north) {Fetch};
+        \node[stage] at ([yshift=4cm]L1.north) {Decode};
+        \node[stage] at ([yshift=4cm, xshift=1cm]L2.north) {Execute};
+        \node[stage] at ([yshift=4cm, xshift=0.5cm]L3.north) {Memory};
+        \node[stage] at ([yshift=4cm, xshift=0.5cm]L4.north) {WB};
         
         % Fetch Stage
-        % PC MUX (rotate=90: output on west)
-        \placeMux[90]{0.3,4.5}{pc}{blue!20}
+        % PC MUX (rotate=90: output on west) - positioned relative to PC
+        \placeMux[90]{$(origin) + (0.3,4.5)$}{pc}{blue!20}
 
-        \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
+        % PC - positioned relative to L1
+        \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at ([xshift=-2.5cm, yshift=0]L1.center) {\small PC};
 
-        % ICache
-        \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at (2,2) {};
-        \node[align=center] at (2,2.6) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
+        % ICache - positioned relative to L1
+        \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at ([xshift=-1cm, yshift=0]L1.center) {};
+        \node[align=center] at ([yshift=0.6cm]ICache.center) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
  
-        % PC adder - moved right
-        \placeAdder{1.2,3.8}{fe}
-        \node[left, font=\tiny] (four) at (0.9,4.04) {4};
+        % PC adder - positioned relative to PC
+        \placeAdder{$(PC.center) + (0.7,1.8)$}{fe}
+        \node[left, font=\tiny] (four) at ([xshift=-0.3cm]fe_adder_input1) {4};
         
-        % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.41) {};
+        % Decode Stage - positioned between L1 and L2, with vertical offset
+        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at ($(L1.east)!0.5!(L2.west) + (0,0.41)$) {};
         \node[align=center] at ([yshift=-0.35cm]RF.north) {\footnotesize register\\[-0.11cm]\footnotesize file};
         
         % Register file input ports (left side, inside the box)
@@ -113,20 +117,20 @@
         \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6cm, yshift=-0.37cm]RF.center) {src2};
         \node[port, anchor=east] (rf_data2) at ([yshift=-0.15cm]rf_src2_data.east) {data};
         
-        % Sign extension - moved slightly right
-        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.9) {
+        % Sign extension - positioned relative to register file  
+        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at ([xshift=0.6cm, yshift=-1.5cm]RF.center) {
             \scriptsize sign\\[-0.25cm]\scriptsize ext.
         };
         
         % Execute Stage
-        % Execute adder - positioned so input aligns with incoming connection
-        \placeAdder{7,3.56}{ex}
+        % Execute adder - positioned relative to L2
+        \placeAdder{$(L2.east)!0.5!(L3.west) + (0,1.56)$}{ex}
         
-        % Execute stage ALU source MUX (rotate=270: output on north, inputs on south)
-        \placeMux[270]{7,1.68}{exe}{green!20}
+        % Execute stage ALU source MUX (rotate=270: output on north, inputs on south) - relative to L2/L3
+        \placeMux[270]{$(L2.east)!0.5!(L3.west) + (0,-0.32)$}{exe}{green!20}
         
-        % ALU - positioned to align output with data cache address
-        \begin{scope}[shift={(8,2)}, scale=0.8]
+        % ALU - positioned between L2 and L3, aligned with register file outputs
+        \begin{scope}[shift={($(L2.east)!0.65!(L3.west) + (0,0)$)}, scale=0.8]
             \coordinate (ALU) at (0,0);
             % Trapezoid coordinates
             \coordinate (toptopleft) at (0, 0.8);
@@ -149,9 +153,9 @@
             \coordinate (alu_output) at (0.6, 0);
         \end{scope}
         
-        % Memory Stage
-        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at (10.8,2) {};
-        \node[align=center] at (10.8,2.6) {\footnotesize data\\[-0.14cm]\footnotesize cache};
+        % Memory Stage - positioned relative to L4
+        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at ([xshift=-1.2cm, yshift=0]L4.center) {};
+        \node[align=center] at ([yshift=0.6cm]DCache.center) {\footnotesize data\\[-0.14cm]\footnotesize cache};
 
         % Data Cache ports (aligned to left side of box)
         \node[port, anchor=west] (dc_addr) at ([xshift=-0.62cm, yshift=0cm]DCache.center) {address};
@@ -160,8 +164,8 @@
         % DCache output port
         \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
         
-        % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south)
-        \placeMux[270]{13.5,1.79}{wb}{green!20}
+        % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south) - relative to L4
+        \placeMux[270]{$(L4.east) + (0.8,-0.21)$}{wb}{green!20}
         
         % Main data path connections
         \draw[blue, thick, ->] (four) -- (fe_adder_input1);
@@ -223,7 +227,7 @@
         % PC MUX inputs: branch target from L3, branch from L2, and PC+4
         \draw[orange!70, thick, ->] (alu_output -| L3.east) -- ++(0.35,0) -- ++(0,3.3) -| (pcmux_selectorup);
         
-        % Code on the left
+        % Code on the left (temporary - should be moved outside for flexibility)
         \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
             \begin{tabular}{rl}
                 0 & or\\
@@ -233,6 +237,7 @@
                 16 & sub
             \end{tabular}
         };
+        
     \end{tikzpicture}
     }%
 }
@@ -967,7 +972,7 @@ SW   d,Rd
 
 \begin{frame}[label=control-hazard]{Control Hazard on Branches}
     \centering
-    \drawPipelineDiagram
+    \drawPipelineDiagram[0,0.5]
     
     \vspace{0.5cm}
     \begin{center}
@@ -985,7 +990,7 @@ SW   d,Rd
 %% Slide: Control Hazard on Branches - With Annotations
 \begin{frame}[label=control-hazard-annotated]{Control Hazard on Branches}
     \centering
-    \drawPipelineDiagram
+    \drawPipelineDiagram[0,0.5]
     
     % Add annotations specific to this slide
     \begin{tikzpicture}[remember picture, overlay]
