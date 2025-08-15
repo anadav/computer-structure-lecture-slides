@@ -336,7 +336,7 @@
 
 % First instruction row
 \node[fetch] (f1) at (1.5, 0.8) {Inst\\Fetch};
-\node[anchor=east] (f1ins) at (f1.west |- f1) {\footnotesize lw R1, 100(R0)};
+\node[anchor=east] (f1ins) at ([xshift=-4mm]f1.west) {\footnotesize lw R1, 100(R0)};
 \node[reg, anchor=west] (r1a) at (f1.east) {Reg};
 \node[alu, anchor=west] (a1) at (r1a.east) {ALU};
 \node[mem, anchor=west] (m1) at (a1.east) {Data\\Access};
@@ -352,86 +352,71 @@
 
 % Third instruction row
 \node[fetch, anchor=north west] (f3) at (r2b.south east) {Inst\\Fetch};
-\node at (f2ins |- f3) {\footnotesize lw R3, 300(R0)};
+\node (f3ins) at (f1ins |- f3) {\footnotesize lw R3, 300(R0)};
 \draw[dotted, ->] (f3.east) -- ++(2, 0);
 
-% Timing annotations
-\draw[<->] 
-  ([yshift=-2mm]f1.south west) 
-  -- node[below]{\scriptsize 8 ns} 
-  ([yshift=-2mm]r1b.south east);
+% Timing annotations using relative positioning
+\draw[<->] ([yshift=-2mm]f1.south west) -- node[below] {\footnotesize 8 ns} ([yshift=-2mm]r1b.south east);
 
-\draw[<->] 
-  ([yshift=-2mm]f2.south west) 
-  -- node[below]{\scriptsize 8 ns} 
-  ([yshift=-2mm]r2b.south east);
+\draw[<->] ([yshift=-2mm]f2.south west) -- node[below] {\footnotesize 8 ns} ([yshift=-2mm]r2b.south east);
 
+\draw[<->] ([yshift=-2mm]f3.south west) -- node[below] {\footnotesize 8 ns} ++(3.5, 0);
 
-\draw[<->] ([yshift=-2mm]f3.south west) -- ++(3.5, 0);
-\node[below] at (9.5, -1.3) {\footnotesize 8 ns};
+% Vertical arrow for execution order - relative to instructions
+\draw[->] ([xshift=-3mm]f1ins.north west) -- ([xshift=-3mm]f3ins.south west);
 
-% Vertical arrow for execution order
-\draw[->] (-0.8, 0.6) -- (-0.8, -0.6);
-
-% Second pipeline diagram (pipelined)
-\node[anchor=east] at (-1, -2.5) {\footnotesize \makecell[l]{Program\\execution\\order}};
+% Second pipeline diagram (pipelined) - moved higher
+\node[anchor=east] at (-1, -1.8) {\footnotesize \makecell[l]{Program\\execution\\order}};
 
 % Time axis for second diagram
-\node[anchor=east] at (0.5, -3) {\footnotesize Time};
-\draw[->] (1, -3) -- (9, -3);
+\node[anchor=east] at (0.5, -2.3) {\footnotesize Time};
+\draw[->] (1, -2.3) -- (9, -2.3);
 \foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14} {
-    \draw (\x, -3) -- (\x, -2.9);  % tick marks
-    \node[above] at (\x, -2.9) {\tiny \t};
+    \draw (\x, -2.3) -- (\x, -2.2);  % tick marks
+    \node[above] at (\x, -2.2) {\tiny \t};
 }
 
 % First instruction (pipelined)
-\node[fetch] (pf1) at (1.5, -3.8) {Inst\\Fetch};
-\node[anchor=east] at (pf1.west |- pf1) {\footnotesize lw R1, 100(R0)};
+\node[fetch] (pf1) at (1.5, -3.1) {Inst\\Fetch};
+\node[anchor=east] (pf1ins) at ([xshift=-4mm]pf1.west) {\footnotesize lw R1, 100(R0)};
 \node[reg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {Reg};
 \node[alu, anchor=west] (pa1) at (pr1a.east) {ALU};
 \node[mem, anchor=west] (pm1) at (pa1.east) {Data\\Access};
 \node[reg, anchor=west] (pr1b) at (pm1.east) {Reg};
 
-% Second instruction (pipelined - starts after first Inst Fetch, with vertical spacing)
+% Second instruction (pipelined - starts after first Inst Fetch)
 \node[fetch, anchor=north west] (pf2) at (pr1a.south east) {Inst\\Fetch};
-\node[anchor=east] at (pf2.west |- pf2) {\footnotesize lw R2, 200(R0)};
+\node (pf2ins) at (f1ins |- pf2) {\footnotesize lw R2, 200(R0)};
 \node[reg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {Reg};
 \node[alu, anchor=west] (pa2) at (pr2a.east) {ALU};
 \node[mem, anchor=west] (pm2) at (pa2.east) {Data\\Access};
 \node[reg, anchor=west] (pr2b) at (pm2.east) {Reg};
 
-% Third instruction (pipelined - starts after second Inst Fetch, with vertical spacing)
+% Third instruction (pipelined - starts after second Inst Fetch)
 \node[fetch, anchor=north west] (pf3) at (pr2a.south east) {Inst\\Fetch};
-\node[anchor=east] at (pf3.west |- pf3) {\footnotesize lw R3, 300(R0)};
+\node (pf3ins) at (f1ins |- pf3) {\footnotesize lw R3, 300(R0)};
 \node[reg, anchor=west] (pr3a) at ([xshift=5mm]pf3.east) {Reg};
 \node[alu, anchor=west] (pa3) at (pr3a.east) {ALU};
 \node[mem, anchor=west] (pm3) at (pa3.east) {Data\\Access};
 \node[reg, anchor=west] (pr3b) at (pm3.east) {Reg};
 
 % Timing annotations for pipeline stages
-\draw[<->] ([yshift=-1mm]pf1.south west) -- ([yshift=-1mm]pf1.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pf1.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pf1.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pf1.south east);
 
-\draw[<->] ([yshift=-1mm]pf2.south west) -- ([yshift=-1mm]pf2.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pf2.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pf2.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pf2.south east);
 
-\draw[<->] ([yshift=-1mm]pf3.south west) -- ([yshift=-1mm]pf3.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pf3.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pf3.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pf3.south east);
 
-\draw[<->] ([yshift=-1mm]pr3a.south west) -- ([yshift=-1mm]pr3a.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pr3a.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pr3a.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pr3a.south east);
 
-\draw[<->] ([yshift=-1mm]pa3.south west) -- ([yshift=-1mm]pa3.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pa3.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pa3.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pa3.south east);
 
-\draw[<->] ([yshift=-1mm]pm3.south west) -- ([yshift=-1mm]pm3.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pm3.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pm3.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pm3.south east);
 
-\draw[<->] ([yshift=-1mm]pr3b.south west) -- ([yshift=-1mm]pr3b.south east);
-\node[below, font=\tiny] at ([yshift=-1mm]pr3b.south) {2 ns};
+\draw[<->] ([yshift=-1mm]pr3b.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pr3b.south east);
 
-% Vertical arrow for execution order
-\draw[->] (-0.8, -4) -- (-0.8, -5.5);
+% Vertical arrow for execution order - relative to instructions
+\draw[->] ([xshift=-3mm]pf1ins.north west) -- ([xshift=-3mm]pf3ins.south west);
 
 \end{tikzpicture}
 
@@ -440,29 +425,6 @@
 \large Ideal speedup is number of stages in the pipeline. Do we achieve this?
 \end{frame}
 
-%% Slide: Pipelining
-\begin{frame}{Pipelining}
-    \begin{itemize}
-        \item Pipelining does not reduce the \textcolor{red}{latency} of single task, it increases the \textcolor{green}{throughput} of entire workload
-        \item Potential speedup = Number of pipe stages
-        \begin{itemize}
-            \item Pipeline rate is limited by the slowest pipeline stage
-            \item[$\Rightarrow$] Partition the pipe to many pipe stages
-            \item[$\Rightarrow$] Make the longest pipe stage to be as short as possible
-            \item[$\Rightarrow$] Balance the work in the pipe stages
-        \end{itemize}
-        \item Pipeline adds overhead (e.g., latches)
-        \begin{itemize}
-            \item Time to "fill" pipeline and time to "drain" it reduces speedup
-            \item Stall for dependencies
-            \item[$\Rightarrow$] Too many pipe-stages start to lose performance
-        \end{itemize}
-        \item IPC of an ideal pipelined machine is 1
-        \begin{itemize}
-            \item Every clock one instruction finishes
-        \end{itemize}
-    \end{itemize}
-\end{frame}
 
 %% Slide: Pipelined CPU
 \begin{frame}{Pipelined CPU}
