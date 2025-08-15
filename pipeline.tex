@@ -315,41 +315,6 @@
 \end{frame}
 
 %% Slide: Pipelined Car Assembly
-\begin{frame}{Pipelined Car Assembly}
-    \centering
-    \begin{tikzpicture}[scale=0.9]
-        \node[draw, fill=orange!30, minimum width=2cm, minimum height=1cm] (chassis) {chassis};
-        \node[draw, fill=green!30, minimum width=3cm, minimum height=1cm, right=0.5cm of chassis] (engine) {engine};
-        \node[draw, fill=blue!30, minimum width=2cm, minimum height=1cm, right=0.5cm of engine] (finish) {finish};
-        
-        \node[above=0.1cm of chassis] {1 hour};
-        \node[above=0.1cm of engine] {2 hours};
-        \node[above=0.1cm of finish] {1 hour};
-        
-        \node[below=0.5cm of chassis] {Car 1};
-    \end{tikzpicture}
-    
-    \vspace{1cm}
-    Time: 00:00
-\end{frame}
-
-%% Slide: Pipelined Car Assembly - Multiple Cars
-\begin{frame}{Pipelined Car Assembly}
-    \begin{itemize}
-        \item Car 2 waited an hour after finishing station 1 for Car 1 to finish station 2
-        \item Pipeline latency is 5 hours
-        \item Pipeline throughput is one car every 2 hours
-    \end{itemize}
-    
-    \centering
-    \begin{tikzpicture}[scale=0.8]
-        % Simplified pipeline representation
-        \node[draw, dashed, minimum width=10cm, minimum height=2cm] {
-            Pipeline stages with multiple cars
-        };
-    \end{tikzpicture}
-\end{frame}
-
 \begin{frame}{Pipelining Instructions}
 \begin{tikzpicture}[scale=0.9, transform shape,
     stage/.style={draw, minimum height=6mm, minimum width=8mm, font=\tiny, align=center, inner sep=1pt},
@@ -391,11 +356,16 @@
 \draw[dotted, ->] (f3.east) -- ++(2, 0);
 
 % Timing annotations
-\draw[<->] ([yshift=-2mm]f1.south west) -- ([yshift=-2mm]r1b.south east);
-\node[below] at (3, 0.3) {\footnotesize 8 ns};
+\draw[<->] 
+  ([yshift=-2mm]f1.south west) 
+  -- node[below]{\scriptsize 8 ns} 
+  ([yshift=-2mm]r1b.south east);
 
-\draw[<->] ([yshift=-2mm]f2.south west) -- ([yshift=-2mm]r2b.south east);
-\node[below] at (6.5, -0.5) {\footnotesize 8 ns};
+\draw[<->] 
+  ([yshift=-2mm]f2.south west) 
+  -- node[below]{\scriptsize 8 ns} 
+  ([yshift=-2mm]r2b.south east);
+
 
 \draw[<->] ([yshift=-2mm]f3.south west) -- ++(3.5, 0);
 \node[below] at (9.5, -1.3) {\footnotesize 8 ns};
@@ -403,7 +373,7 @@
 % Vertical arrow for execution order
 \draw[->] (-0.8, 0.6) -- (-0.8, -0.6);
 
-% Second pipeline diagram (pipelined) - moved higher
+% Second pipeline diagram (pipelined)
 \node[anchor=east] at (-1, -2.5) {\footnotesize \makecell[l]{Program\\execution\\order}};
 
 % Time axis for second diagram
@@ -417,23 +387,23 @@
 % First instruction (pipelined)
 \node[fetch] (pf1) at (1.5, -3.8) {Inst\\Fetch};
 \node[anchor=east] at (pf1.west |- pf1) {\footnotesize lw R1, 100(R0)};
-\node[reg, anchor=west] (pr1a) at (pf1.east) {Reg};
+\node[reg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {Reg};
 \node[alu, anchor=west] (pa1) at (pr1a.east) {ALU};
 \node[mem, anchor=west] (pm1) at (pa1.east) {Data\\Access};
 \node[reg, anchor=west] (pr1b) at (pm1.east) {Reg};
 
-% Second instruction (pipelined - starts at southeast of first reg)
-\node[fetch, anchor=north west] (pf2) at ([yshift=-2mm]pr1a.south east) {Inst\\Fetch};
+% Second instruction (pipelined - starts after first Inst Fetch, with vertical spacing)
+\node[fetch, anchor=north west] (pf2) at (pr1a.south east) {Inst\\Fetch};
 \node[anchor=east] at (pf2.west |- pf2) {\footnotesize lw R2, 200(R0)};
-\node[reg, anchor=west] (pr2a) at (pf2.east) {Reg};
+\node[reg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {Reg};
 \node[alu, anchor=west] (pa2) at (pr2a.east) {ALU};
 \node[mem, anchor=west] (pm2) at (pa2.east) {Data\\Access};
 \node[reg, anchor=west] (pr2b) at (pm2.east) {Reg};
 
-% Third instruction (pipelined - starts at southeast of second reg)
-\node[fetch, anchor=north west] (pf3) at ([yshift=-2mm]pr2a.south east) {Inst\\Fetch};
+% Third instruction (pipelined - starts after second Inst Fetch, with vertical spacing)
+\node[fetch, anchor=north west] (pf3) at (pr2a.south east) {Inst\\Fetch};
 \node[anchor=east] at (pf3.west |- pf3) {\footnotesize lw R3, 300(R0)};
-\node[reg, anchor=west] (pr3a) at (pf3.east) {Reg};
+\node[reg, anchor=west] (pr3a) at ([xshift=5mm]pf3.east) {Reg};
 \node[alu, anchor=west] (pa3) at (pr3a.east) {ALU};
 \node[mem, anchor=west] (pm3) at (pa3.east) {Data\\Access};
 \node[reg, anchor=west] (pr3b) at (pm3.east) {Reg};
@@ -468,36 +438,6 @@
 \vspace{0.2cm}
 \centering
 \large Ideal speedup is number of stages in the pipeline. Do we achieve this?
-\end{frame}
-
-%% Slide: Pipelining Instructions
-\begin{frame}{Pipelining Instructions}
-    \begin{columns}
-        \column{0.5\textwidth}
-        \textbf{Sequential Execution:}
-        \begin{itemize}
-            \item 8 ns per instruction
-            \item Total: 24 ns for 3 instructions
-        \end{itemize}
-        
-        \column{0.5\textwidth}
-        \textbf{Pipelined Execution:}
-        \begin{itemize}
-            \item 2 ns per stage
-            \item Total: 14 ns for 3 instructions
-        \end{itemize}
-    \end{columns}
-    
-    \vspace{0.5cm}
-    \centering
-    Program execution order:
-    \begin{enumerate}
-        \item \texttt{lw R1, 100(R0)}
-        \item \texttt{lw R2, 200(R0)}
-        \item \texttt{lw R3, 300(R0)}
-    \end{enumerate}
-    
-    \textbf{Ideal speedup = Number of pipeline stages}
 \end{frame}
 
 %% Slide: Pipelining
