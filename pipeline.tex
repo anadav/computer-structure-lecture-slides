@@ -468,117 +468,98 @@
 
 \begin{frame}{Pipeline Architecture}
 \begin{center}
-\begin{tikzpicture}[scale=0.8, transform shape]
+\begin{tikzpicture}[scale=1.2, transform shape]
     % Define styles
-    \tikzstyle{block} = [rectangle, draw, minimum width=0.8cm, minimum height=0.8cm, inner sep=0pt]
-    \tikzstyle{highlighted} = [rectangle, draw, minimum width=0.8cm, minimum height=0.8cm, inner sep=0pt, fill=orange!40, draw=orange!80]
-    \tikzstyle{buffer} = [regular polygon, regular polygon sides=3, draw, minimum width=0.8cm, minimum height=0.8cm, shape border rotate=0]
-    \tikzstyle{line} = [draw, -]
+    \tikzstyle{block} = [rectangle, draw, thick, minimum width=1cm, minimum height=1cm, inner sep=2pt]
+    \tikzstyle{latch} = [rectangle, draw, thick, minimum width=0.15cm, minimum height=1.8cm, fill=gray!20]
+    \tikzstyle{line} = [draw, thick]
     
-    % Row 1
-    \node[block] (IM1) at (0,0) {IM};
-    \node[block] (Reg11) at (1.5,0) {Reg};
-    \node[buffer] (Buf1) at (2.8,0) {};
-    \node[block] (DM1) at (4.1,0) {DM};
-    \node[highlighted] (Reg12) at (5.6,0) {Reg};
+    % Single pipeline row components
+    \node[block, fill=white] (IM) at (0,0) {IM};
     
-    % Connecting lines for Row 1
-    \draw[line] (IM1.east) -- (Reg11.west);
-    \draw[line] (Reg11.east) -- (Buf1.west);
-    \draw[line] (Buf1.east) -- (DM1.west);
-    \draw[line] (DM1.east) -- (Reg12.west);
-    \draw[line] (-0.7,0) -- (IM1.west);
-    \draw[line] (Reg12.east) -- (6.3,0);
+    % Shade right half of IM (background)
+    \fill[gray!30] (IM.north) -- (IM.north east) -- (IM.south east) -- (IM.south) -- cycle;
+    % Redraw IM border and text on top
+    \node[block, fill=none] at (0,0) {IM};
     
-    % Vertical bars for Row 1
-    \draw[thick] (0.75,-0.5) -- (0.75,0.5);
-    \draw[thick] (2.15,-0.5) -- (2.15,0.5);
-    \draw[thick] (3.45,-0.5) -- (3.45,0.5);
-    \draw[thick] (4.85,-0.5) -- (4.85,0.5);
+    % Latch after IM
+    \node[latch] (L1) at (1.2,0) {};
     
-    % Row 2
-    \node[block] (IM2) at (0,-1.5) {IM};
-    \node[block] (Reg21) at (1.5,-1.5) {Reg};
-    \node[buffer] (Buf2) at (2.8,-1.5) {};
-    \node[block] (DM2) at (4.1,-1.5) {DM};
-    \node[block] (Reg22) at (5.6,-1.5) {Reg};
+    \node[block, fill=white] (Reg1) at (2.4,0) {Reg};
     
-    % Connecting lines for Row 2
-    \draw[line] (IM2.east) -- (Reg21.west);
-    \draw[line] (Reg21.east) -- (Buf2.west);
-    \draw[line] (Buf2.east) -- (DM2.west);
-    \draw[line] (DM2.east) -- (Reg22.west);
-    \draw[line] (-0.7,-1.5) -- (IM2.west);
-    \draw[line] (Reg22.east) -- (6.3,-1.5);
+    % Shade right half of first Reg (background)
+    \fill[gray!30] (Reg1.north) -- (Reg1.north east) -- (Reg1.south east) -- (Reg1.south) -- cycle;
+    % Redraw Reg1 border and text on top
+    \node[block, fill=none] at (2.4,0) {Reg};
     
-    % Vertical bars for Row 2
-    \draw[thick] (0.75,-2) -- (0.75,-1);
-    \draw[thick] (2.15,-2) -- (2.15,-1);
-    \draw[thick] (3.45,-2) -- (3.45,-1);
-    \draw[thick] (4.85,-2) -- (4.85,-1);
+    % Latch after Reg1
+    \node[latch] (L2) at (3.6,0) {};
     
-    % Row 3
-    \node[block, fill=gray!20] (IM3) at (0,-3) {IM};
-    \node[block, fill=gray!20] (Reg31) at (1.5,-3) {Reg};
-    \node[buffer, fill=gray!20] (Buf3) at (2.8,-3) {};
-    \node[block, fill=gray!20] (DM3) at (4.1,-3) {DM};
-    \node[block, fill=gray!20] (Reg32) at (5.6,-3) {Reg};
+    % ALU using the custom shape (with gray shading)
+    \begin{scope}[shift={(4.8,0)}, scale=1.2]
+        % Trapezoid coordinates
+        \coordinate (toptopleft) at (0, 0.8);
+        \coordinate (topbottomleft) at (0, 0.3);
+        \coordinate (left) at (0.2, 0);
+        \coordinate (bottomtopleft) at (0, -0.3);
+        \coordinate (bottombottomleft) at (0, -0.8);
+        \coordinate (topright) at (0.6, 0.4);
+        \coordinate (bottomright) at (0.6, -0.4);
+        
+        % Draw the trapezoid with gray fill
+        \fill[gray!30] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+        \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+        
+        % ALU connection points
+        \coordinate (alu_input1) at (0, 0.5);
+        \coordinate (alu_input2) at (0, -0.5);
+        \coordinate (alu_output) at (0.6, 0);
+    \end{scope}
     
-    % Connecting lines for Row 3
-    \draw[line] (IM3.east) -- (Reg31.west);
-    \draw[line] (Reg31.east) -- (Buf3.west);
-    \draw[line] (Buf3.east) -- (DM3.west);
-    \draw[line] (DM3.east) -- (Reg32.west);
-    \draw[line] (-0.7,-3) -- (IM3.west);
-    \draw[line] (Reg32.east) -- (6.3,-3);
+    % Latch after ALU
+    \node[latch] (L3) at (6.2,0) {};
     
-    % Vertical bars for Row 3
-    \draw[thick] (0.75,-3.5) -- (0.75,-2.5);
-    \draw[thick] (2.15,-3.5) -- (2.15,-2.5);
-    \draw[thick] (3.45,-3.5) -- (3.45,-2.5);
-    \draw[thick] (4.85,-3.5) -- (4.85,-2.5);
+    \node[block] (DM) at (7.4,0) {DM};
     
-    % Row 4
-    \node[block] (IM4) at (0,-4.5) {IM};
-    \node[highlighted] (Reg41) at (1.5,-4.5) {Reg};
-    \node[buffer] (Buf4) at (2.8,-4.5) {};
-    \node[block] (DM4) at (4.1,-4.5) {DM};
-    \node[block] (Reg42) at (5.6,-4.5) {Reg};
+    % Latch after DM
+    \node[latch] (L4) at (8.6,0) {};
     
-    % Connecting lines for Row 4
-    \draw[line] (IM4.east) -- (Reg41.west);
-    \draw[line] (Reg41.east) -- (Buf4.west);
-    \draw[line] (Buf4.east) -- (DM4.west);
-    \draw[line] (DM4.east) -- (Reg42.west);
-    \draw[line] (-0.7,-4.5) -- (IM4.west);
-    \draw[line] (Reg42.east) -- (6.3,-4.5);
+    \node[block, fill=white] (Reg2) at (9.8,0) {Reg};
     
-    % Vertical bars for Row 4
-    \draw[thick] (0.75,-5) -- (0.75,-4);
-    \draw[thick] (2.15,-5) -- (2.15,-4);
-    \draw[thick] (3.45,-5) -- (3.45,-4);
-    \draw[thick] (4.85,-5) -- (4.85,-4);
+    % Shade left half of last Reg (background)
+    \fill[gray!30] (Reg2.north west) -- (Reg2.north) -- (Reg2.south) -- (Reg2.south west) -- cycle;
+    % Redraw Reg2 border and text on top
+    \node[block, fill=none] at (9.8,0) {Reg};
     
-    % Row 5
-    \node[block, fill=gray!20] (IM5) at (0,-6) {IM};
-    \node[block, fill=gray!20] (Reg51) at (1.5,-6) {Reg};
-    \node[buffer, fill=gray!20] (Buf5) at (2.8,-6) {};
-    \node[block, fill=gray!20] (DM5) at (4.1,-6) {DM};
-    \node[block, fill=gray!20] (Reg52) at (5.6,-6) {Reg};
+    % Main horizontal connections
+    \draw[line] (-0.8,0) -- (IM.west);
+    \draw[line] (IM.east) -- (L1.west);
     
-    % Connecting lines for Row 5
-    \draw[line] (IM5.east) -- (Reg51.west);
-    \draw[line] (Reg51.east) -- (Buf5.west);
-    \draw[line] (Buf5.east) -- (DM5.west);
-    \draw[line] (DM5.east) -- (Reg52.west);
-    \draw[line] (-0.7,-6) -- (IM5.west);
-    \draw[line] (Reg52.east) -- (6.3,-6);
+    % Two inputs to first Reg (from different sources)
+    \draw[line] ([yshift=3pt]L1.east) -- ([yshift=3pt]Reg1.west);
+    \draw[line] (L1.east) -- (Reg1.west);
     
-    % Vertical bars for Row 5
-    \draw[thick] (0.75,-6.5) -- (0.75,-5.5);
-    \draw[thick] (2.15,-6.5) -- (2.15,-5.5);
-    \draw[thick] (3.45,-6.5) -- (3.45,-5.5);
-    \draw[thick] (4.85,-6.5) -- (4.85,-5.5);
+    \draw[line] (Reg1.east) -- (L2.west);
+    
+    % Two inputs to ALU
+    \draw[line] ([yshift=3pt]L2.east) -- ++(0.3,0) |- (alu_input1);
+    \draw[line] ([yshift=-3pt]L2.east) -- ++(0.3,0) |- (alu_input2);
+    
+    % ALU output to next latch
+    \draw[line] (alu_output) -- (L3.west);
+    
+    % DM connections
+    \draw[line] (L3.east) -- (DM.west);
+    \draw[line] (DM.east) -- (L4.west);
+    
+    % Bypass around DM (using relative positioning)
+    \draw[line] (L3.east) -- ($(L3.east)!0.5!(DM.west)$) -- ++(0, -0.7) -|
+                ($(L4.west)!0.5!(DM.east)$) -- (L4.west);
+    
+    % Single connection to final Reg
+    \draw[line] (L4.east) -- (Reg2.west);
+    
+    \draw[line] (Reg2.east) -- ++(0.6,0);
     
 \end{tikzpicture}
 \end{center}
