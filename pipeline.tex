@@ -522,7 +522,7 @@ SW   d,Rd
         \node[left, font=\tiny] (four) at (1.1,4.04) {4};
         
         % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.6) {};
+        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.41) {};
         \node[align=center] at ([yshift=-0.35cm]RF.north) {\footnotesize register\\[-0.11cm]\footnotesize file};
         %        \node[align=center] at (4.5,2.8) {\footnotesize register\\[-3pt]\footnotesize file};
         
@@ -532,16 +532,16 @@ SW   d,Rd
         \node[port] (rf_dst) at ([xshift=-0.35cm, yshift=-0.7cm]RF.center) {dst};
         
         % Register file selector coordinate (slightly left of dst)
-        \coordinate (rf_selector) at ([xshift=-0.7cm, yshift=-0.7cm]RF.center);
+        \coordinate (rf_selector) at ([xshift=-0.1cm]rf_dst.south);
         
         % Register file output ports (right side, aligned to right edge)
         \node[port, anchor=east] (rf_src1_data) at ([xshift=0.6cm, yshift=0.07cm]RF.center) {src1};
-        \node[port, anchor=east] (rf_data1) at ([xshift=0.6cm, yshift=-0.08cm]RF.center) {data};
-        \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6cm, yshift=-0.3cm]RF.center) {src2};
-        \node[port, anchor=east] (rf_data2) at ([xshift=0.6cm, yshift=-0.45cm]RF.center) {data};
+        \node[port, anchor=east] (rf_data1) at ([yshift=-0.15cm]rf_src1_data.east) {data};
+        \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6cm, yshift=-0.37cm]RF.center) {src2};
+        \node[port, anchor=east] (rf_data2) at ([yshift=-0.15cm]rf_src2_data.east) {data};
         
         % Sign extension - moved slightly right
-        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.7) {
+        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.9) {
             \scriptsize sign\\[-0.25cm]\scriptsize ext.
         };
         
@@ -588,7 +588,7 @@ SW   d,Rd
         \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
         
         % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south)
-        \placeMux[270]{13.5,2}{wb}{green!20}
+        \placeMux[270]{13.5,1.79}{wb}{green!20}
         
         % Main data path connections
         \draw[->] (four) -- (fe_adder_input1);
@@ -605,6 +605,11 @@ SW   d,Rd
         \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src1.west);
         \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src2.west);
         \draw[->] (L1.east) -- ++(0.3,0) |- (SignExt.west);
+
+        \draw[->] (L1.east) -- ++(0.3,0) |- ([yshift=-0.8cm]SignExt -| L2.west);
+        \draw[->] ([yshift=-0.8cm]SignExt -| L2.east) -- ([yshift=-0.8cm]SignExt -| L3.west);
+        \draw[->] ([yshift=-0.8cm]SignExt -| L3.east) -- ([yshift=-0.8cm]SignExt -| L4.west);
+        \draw[->] ([yshift=-0.8cm]SignExt -| L4.east) -- ++(0.3, 0) -- ++(0, -0.2) -| (rf_dst.south);
 
         % From L1 for "instruction" title
         \draw[->] (ICache -| L1.east) -- ++(0.3,0) node[yshift=0.55cm,rotate=90,above] {\tiny{}instruction}; 
@@ -638,7 +643,7 @@ SW   d,Rd
         \draw[->] (dc_data_out -| L4.east) -- (wbmux_in2);
         
         % Write back path from mux output
-        \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.9) -| (rf_dst.south);
+        \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.6) -| (rf_selector);
         
         % PC MUX inputs: branch target from L3, branch from L2, and PC+4
         \draw[blue, thick, ->] (ex_adder_output -| L3.east) -- ++(0.2,0) -- ++(0,1.7) -| (pcmux_in2);
