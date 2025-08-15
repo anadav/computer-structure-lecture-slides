@@ -85,7 +85,7 @@
 % fill color: color for the mux (e.g., blue!20)
 \newcommand{\placeMux}[4][0]{%
     \node[trapezium, trapezium left angle=70, trapezium right angle=70,
-          trapezium stretches=true, minimum height=0.3cm, minimum width=1cm,
+          trapezium stretches=true, minimum height=0.3, minimum width=1,
           draw, thick, fill=#4, rotate=#1] (#3mux) at (#2) {};
     
     % Define input/output coordinates based on rotation only
@@ -94,8 +94,8 @@
     \ifnum#1=90
         % Rotation 90: narrow side moves to bottom, wide side to top
         % So output should be on south (narrow), inputs on north (wide)
-        \coordinate (#3mux_in1) at ([yshift=-0.2cm]#3mux.south);
-        \coordinate (#3mux_in2) at ([yshift=0.2cm]#3mux.south);
+        \coordinate (#3mux_in1) at ([yshift=-0.2]#3mux.south);
+        \coordinate (#3mux_in2) at ([yshift=0.2]#3mux.south);
         \coordinate (#3mux_out) at (#3mux.north);
         % Selector positions
         \coordinate (#3mux_selectorup) at (#3mux.east);
@@ -103,8 +103,8 @@
     \else\ifnum#1=180
         % Rotation 180: narrow side moves to right, wide side to left
         % So output on east (narrow), inputs on west (wide)
-        \coordinate (#3mux_in1) at ([yshift=0.2cm]#3mux.west);
-        \coordinate (#3mux_in2) at ([yshift=-0.2cm]#3mux.west);
+        \coordinate (#3mux_in1) at ([yshift=0.2]#3mux.west);
+        \coordinate (#3mux_in2) at ([yshift=-0.2]#3mux.west);
         \coordinate (#3mux_out) at (#3mux.east);
         % Selector positions
         \coordinate (#3mux_selectorup) at (#3mux.south);
@@ -112,8 +112,8 @@
    \else\ifnum#1=270
         % Rotation 270: narrow side moves to top, wide side to bottom
         % So output on north (narrow), inputs on south (wide)
-        \coordinate (#3mux_in1) at ([yshift=0.2cm]#3mux.south);
-        \coordinate (#3mux_in2) at ([yshift=-0.2cm]#3mux.south);
+        \coordinate (#3mux_in1) at ([yshift=0.2]#3mux.south);
+        \coordinate (#3mux_in2) at ([yshift=-0.2]#3mux.south);
         \coordinate (#3mux_out) at (#3mux.north);
         % Selector positions
         \coordinate (#3mux_selectorup) at (#3mux.west);
@@ -121,8 +121,8 @@
     \else
         % Default (0 degrees): narrow left, wide right
         % Output on west (narrow), inputs on east (wide)
-        \coordinate (#3mux_in1) at ([yshift=0.2cm]#3mux.east);
-        \coordinate (#3mux_in2) at ([yshift=-0.2cm]#3mux.east);
+        \coordinate (#3mux_in1) at ([yshift=0.2]#3mux.east);
+        \coordinate (#3mux_in2) at ([yshift=-0.2]#3mux.east);
         \coordinate (#3mux_out) at (#3mux.west);
         % Selector positions
         \coordinate (#3mux_selectorup) at (#3mux.north);
@@ -147,7 +147,7 @@
     \centering
     \begin{tikzpicture}[scale=0.8]
         % Placeholder for processor diagram
-        \node[draw, rectangle, minimum width=12cm, minimum height=6cm, dashed, align=center] {
+        \node[draw, rectangle, minimum width=12, minimum height=6, dashed, align=center] {
             \Large Processor Pipeline Diagram\\
             \normalsize (Fetch $\rightarrow$ Decode $\rightarrow$ Execute $\rightarrow$ Memory $\rightarrow$ Write Back)
         };
@@ -158,15 +158,15 @@
 \begin{frame}{Pipelined Car Assembly}
     \centering
     \begin{tikzpicture}[scale=0.9]
-        \node[draw, fill=orange!30, minimum width=2cm, minimum height=1cm] (chassis) {chassis};
-        \node[draw, fill=green!30, minimum width=3cm, minimum height=1cm, right=0.5cm of chassis] (engine) {engine};
-        \node[draw, fill=blue!30, minimum width=2cm, minimum height=1cm, right=0.5cm of engine] (finish) {finish};
+        \node[draw, fill=orange!30, minimum width=2, minimum height=1] (chassis) {chassis};
+        \node[draw, fill=green!30, minimum width=3, minimum height=1, right=0.5 of chassis] (engine) {engine};
+        \node[draw, fill=blue!30, minimum width=2, minimum height=1, right=0.5 of engine] (finish) {finish};
         
-        \node[above=0.1cm of chassis] {1 hour};
-        \node[above=0.1cm of engine] {2 hours};
-        \node[above=0.1cm of finish] {1 hour};
+        \node[above=0.1 of chassis] {1 hour};
+        \node[above=0.1 of engine] {2 hours};
+        \node[above=0.1 of finish] {1 hour};
         
-        \node[below=0.5cm of chassis] {Car 1};
+        \node[below=0.5 of chassis] {Car 1};
     \end{tikzpicture}
     
     \vspace{1cm}
@@ -184,7 +184,7 @@
     \centering
     \begin{tikzpicture}[scale=0.8]
         % Simplified pipeline representation
-        \node[draw, dashed, minimum width=10cm, minimum height=2cm] {
+        \node[draw, dashed, minimum width=10, minimum height=2] {
             Pipeline stages with multiple cars
         };
     \end{tikzpicture}
@@ -249,7 +249,7 @@
     \centering
     \begin{tikzpicture}[scale=0.7]
         % Placeholder for pipelined CPU diagram
-        \node[draw, rectangle, minimum width=14cm, minimum height=7cm, dashed, align=center] {
+        \node[draw, rectangle, minimum width=14, minimum height=7, dashed, align=center] {
             \Large Pipelined CPU Architecture\\
             \normalsize (Fetch $\rightarrow$ Decode $\rightarrow$ Execute $\rightarrow$ Memory $\rightarrow$ WB)\\
             \small with pipeline latches between stages
@@ -301,7 +301,7 @@
         \vspace{0.5cm}
         
         \begin{tikzpicture}[scale=0.6]
-            \node[draw, dashed, minimum width=8cm, minimum height=3cm, align=center] {
+            \node[draw, dashed, minimum width=8, minimum height=3, align=center] {
                 Pipeline State Diagram\\
                 (Cycle 1)
             };
@@ -326,7 +326,7 @@
         \centering
         \begin{tikzpicture}[scale=0.5]
             % Pipeline stages showing dependency
-            \node[draw, fill=red!30, minimum width=6cm, minimum height=3cm] {
+            \node[draw, fill=red!30, minimum width=6, minimum height=3] {
                 RAW Hazard Area
             };
         \end{tikzpicture}
@@ -347,7 +347,7 @@
     
     \centering
     \begin{tikzpicture}[scale=0.7]
-        \node[draw, dashed, minimum width=10cm, minimum height=4cm] {
+        \node[draw, dashed, minimum width=10, minimum height=4] {
             Bypass/Forwarding Hardware Diagram
         };
     \end{tikzpicture}
@@ -431,7 +431,7 @@ then stall
     
     \centering
     \begin{tikzpicture}[scale=0.6]
-        \node[draw, fill=gray!30, minimum width=2cm, minimum height=1cm] {bubble};
+        \node[draw, fill=gray!30, minimum width=2, minimum height=1] {bubble};
     \end{tikzpicture}
 \end{frame}
 
@@ -482,11 +482,11 @@ SW   d,Rd
     \centering
     \scalebox{0.85}{%
     \begin{tikzpicture}[
-        component/.style={draw, thick, minimum height=0.8cm},
-        latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
+        component/.style={draw, thick, minimum height=0.8},
+        latch/.style={draw, thick, fill=yellow!20, minimum width=0.2, minimum height=4},
         stage/.style={font=\bfseries},
         label/.style={font=\tiny},
-        port/.style={font=\tiny, inner sep=0.035cm}
+        port/.style={font=\tiny, inner sep=0.035}
     ]
         % Stage labels
         \node[stage] at (1.5,6) {Fetch};
@@ -509,12 +509,12 @@ SW   d,Rd
         % PC MUX (rotate=90: output on west)
         \placeMux[90]{0.3,4.5}{pc}{blue!20}
 
-        \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
+        \node[component, fill=blue!20, minimum width=0.6, minimum height=0.6] (PC) at (0.5,2) {\small PC};
 
 
         % ICache
-        \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at (2,2) {};
-        \node[align=center] at (2,2.6) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
+        \node[component, fill=purple!20, minimum width=1.2, minimum height=2] (ICache) at (2,2) {};
+        \node[align=center] at (2,2.6) {\footnotesize inst.\\[-0.14]\footnotesize cache};
  
         
         % PC adder - moved right
@@ -522,27 +522,27 @@ SW   d,Rd
         \node[left, font=\tiny] (four) at (1.1,4.04) {4};
         
         % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.6) {};
-        \node[align=center] at ([yshift=-0.35cm]RF.north) {\footnotesize register\\[-0.11cm]\footnotesize file};
+        \node[component, fill=pink!30, minimum width=1.2, minimum height=1.8] (RF) at (4.5,2.6) {};
+        \node[align=center] at ([yshift=-0.35]RF.north) {\footnotesize register\\[-0.11]\footnotesize file};
         %        \node[align=center] at (4.5,2.8) {\footnotesize register\\[-3pt]\footnotesize file};
         
         % Register file input ports (left side, inside the box)
-        \node[port] (rf_src1) at ([xshift=-0.4cm, yshift=0.1cm]RF.center) {~src1};
-        \node[port] (rf_src2) at ([xshift=-0.4cm, yshift=-0.3cm]RF.center) {~src2};
-        \node[port] (rf_dst) at ([xshift=-0.35cm, yshift=-0.7cm]RF.center) {dst};
+        \node[port] (rf_src1) at ([xshift=-0.4, yshift=0.1]RF.center) {~src1};
+        \node[port] (rf_src2) at ([xshift=-0.4, yshift=-0.3]RF.center) {~src2};
+        \node[port] (rf_dst) at ([xshift=-0.35, yshift=-0.7]RF.center) {dst};
         
         % Register file selector coordinate (slightly left of dst)
-        \coordinate (rf_selector) at ([xshift=-0.7cm, yshift=-0.7cm]RF.center);
+        \coordinate (rf_selector) at ([xshift=-0.7, yshift=-0.7]RF.center);
         
         % Register file output ports (right side, aligned to right edge)
-        \node[port, anchor=east] (rf_src1_data) at ([xshift=0.6cm, yshift=0.07cm]RF.center) {src1};
-        \node[port, anchor=east] (rf_data1) at ([xshift=0.6cm, yshift=-0.08cm]RF.center) {data};
-        \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6cm, yshift=-0.3cm]RF.center) {src2};
-        \node[port, anchor=east] (rf_data2) at ([xshift=0.6cm, yshift=-0.45cm]RF.center) {data};
+        \node[port, anchor=east] (rf_src1_data) at ([xshift=0.6, yshift=0.07]RF.center) {src1};
+        \node[port, anchor=east] (rf_data1) at ([xshift=0.6, yshift=-0.08]RF.center) {data};
+        \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6, yshift=-0.3]RF.center) {src2};
+        \node[port, anchor=east] (rf_data2) at ([xshift=0.6, yshift=-0.45]RF.center) {data};
         
         % Sign extension - moved slightly right
-        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.7) {
-            \scriptsize sign\\[-0.25cm]\scriptsize ext.
+        \node[component, fill=green!20, ellipse, minimum width=0.4, minimum height=0.3, align=center] (SignExt) at (5.1,0.7) {
+            \scriptsize sign\\[-0.25]\scriptsize ext.
         };
         
         % Execute Stage
@@ -577,15 +577,15 @@ SW   d,Rd
         \end{scope}
         
         % Memory Stage
-        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at (10.8,2) {};
-        \node[align=center] at (10.8,2.6) {\footnotesize data\\[-0.14cm]\footnotesize cache};
+        \node[component, fill=brown!20, minimum width=1.2, minimum height=2] (DCache) at (10.8,2) {};
+        \node[align=center] at (10.8,2.6) {\footnotesize data\\[-0.14]\footnotesize cache};
 
         % Data Cache ports (aligned to left side of box)
-        \node[port, anchor=west] (dc_addr) at ([xshift=-0.62cm, yshift=0cm]DCache.center) {address};
-        \node[port, anchor=west] (dc_data) at ([xshift=-0.62cm, yshift=-0.7cm]DCache.center) {data};
+        \node[port, anchor=west] (dc_addr) at ([xshift=-0.62, yshift=0]DCache.center) {address};
+        \node[port, anchor=west] (dc_data) at ([xshift=-0.62, yshift=-0.7]DCache.center) {data};
 
         % DCache output port
-        \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
+        \node[port, anchor=east] (dc_data_out) at ([xshift=0.65, yshift=0]DCache.center){};
         
         % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south)
         \placeMux[270]{13.5,2}{wb}{green!20}
@@ -607,16 +607,16 @@ SW   d,Rd
         \draw[->] (L1.east) -- ++(0.3,0) |- (SignExt.west);
 
         % From L1 for "instruction" title
-        \draw[->] (ICache -| L1.east) -- ++(0.3,0) node[yshift=0.55cm,rotate=90,above] {\tiny{}instruction}; 
+        \draw[->] (ICache -| L1.east) -- ++(0.3,0) node[yshift=0.55,rotate=90,above] {\tiny{}instruction}; 
 
 
         % From Register File outputs to L2
-        \draw[->] ([yshift=-0.01cm]rf_data1.east) -- ([yshift=-0.01cm]rf_data1.east -| L2.west);
+        \draw[->] ([yshift=-0.01]rf_data1.east) -- ([yshift=-0.01]rf_data1.east -| L2.west);
         \draw[->] (rf_data2.east) -- (rf_data2.east -| L2.west);
         \draw[->] (SignExt.east) -- (SignExt.east -| L2.west);
         
         % From L2 to Execute components
-        \draw[->] ([yshift=-0.01cm]rf_data1.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
+        \draw[->] ([yshift=-0.01]rf_data1.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
         \draw[->] (rf_data2.east -| L2.east) -- (exemux_in1);
         \draw[->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (exemux_in2);
         \draw[->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (ex_adder_input2);
@@ -829,7 +829,7 @@ SW   d,Rd
     \centering
     \begin{tikzpicture}[scale=0.7]
         % Placeholder for BTB pipeline integration diagram
-        \node[draw, rectangle, minimum width=14cm, minimum height=7cm, dashed, align=center] {
+        \node[draw, rectangle, minimum width=14, minimum height=7, dashed, align=center] {
             \Large BTB Integration with Pipeline\\
             \normalsize BTB lookup parallel with I-cache lookup\\
             \small Predicted target and direction available at Fetch
@@ -841,7 +841,7 @@ SW   d,Rd
 \begin{frame}{Using The BTB}
     \centering
     \tiny
-    \begin{tikzpicture}[scale=0.8, node distance=0.5cm]
+    \begin{tikzpicture}[scale=0.8, node distance=0.5]
         % Flowchart for BTB usage
         \node[draw, rectangle] (pc) {PC moves to next instruction};
         \node[draw, rectangle, below left=of pc, align=center] (imem) {Inst Mem gets PC\\and fetches new inst};
@@ -859,7 +859,7 @@ SW   d,Rd
         \draw[->] (pc) -- (btb);
         \draw[->] (btb) -- (hit);
         \draw[->] (hit) -| node[left] {yes} (taken);
-        \draw[->] (hit) -| node[right] {no} ([xshift=6.5cm]inc);
+        \draw[->] (hit) -| node[right] {no} ([xshift=6.5]inc);
         \draw[->] (taken.west) -| node[left] {yes} (pred);
         \draw[->] (taken) -| node[right] {no} (inc);
         \draw[->] (pred) -- (predinst);
@@ -873,7 +873,7 @@ SW   d,Rd
 \begin{frame}{Using The BTB (cont.)}
     \centering
     \tiny
-    \begin{tikzpicture}[scale=0.8, node distance=0.5cm]
+    \begin{tikzpicture}[scale=0.8, node distance=0.5]
         % Continuation of BTB flowchart
         \node[draw, diamond] (branch) {Branch?};
         \node[draw, rectangle, below left=of branch, align=center] (calc) {Calculate br\\cond \& trgt};
