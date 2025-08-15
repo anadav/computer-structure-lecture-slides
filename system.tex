@@ -31,23 +31,23 @@
 
 \begin{center}
 \begin{tikzpicture}[scale=0.8, transform shape,
-    block/.style={draw, fill=gray!20, minimum width=1.8cm, minimum height=1cm, align=center},
-    decoder/.style={draw, fill=purple!20, minimum width=1.8cm, minimum height=1.2cm, align=center},
+    block/.style={draw, minimum width=1.8cm, minimum height=1cm, align=center},
+    decoder/.style={draw, minimum width=1.8cm, minimum height=1.2cm, align=center},
     signal/.style={->, >=stealth, thick},
     label/.style={font=\small\bfseries}
 ]
 
 % Row Address Latch
-\node[block, text width=1.5cm] (rowlatch) at (0,0) {Row Address Latch};
+\node[block, text width=1.5cm, fill=purple!20] (rowlatch) at (0,0) {row address latch};
 
 % Column Address Latch
-\node[block, text width=1.5cm] (collatch) at (0,-2.5) {Column Address Latch};
+\node[block, text width=1.5cm, fill=olive!20] (collatch) at (0,-2.5) {column address latch};
 
 % Row Address decoder
-\node[decoder, text width=1.5cm] (rowdecoder) at (3.5,0) {Row Address decoder};
+\node[decoder, text width=1.5cm, fill=purple!20] (rowdecoder) at (3.5,0) {row address decoder};
 
 % Column decoder
-\node[block, text width=1.5cm] (coldecoder) at (7,-2.5) {Column addr decoder};
+\node[block, text width=1.5cm, fill=olive!20] (coldecoder) at (8.5,-2.5) {column decoder};
 
 % Memory array - draw as grid
 \draw[thick] (5.5,1.5) rectangle (9.5,-1.5);
@@ -57,62 +57,74 @@
 \foreach \y in {1,0.5,0,-0.5,-1} {
     \draw (5.5,\y) -- (9.5,\y);
 }
-\node[align=center] at (7.5,0) {Memory\\array};
+\node[align=center, fill=white, inner sep=2pt] at (7.5,0) {memory\\array};
 
 % Input signals
-\node[label, purple] (ras) at (-3,0.5) {RAS$\#$};
-\draw[signal, purple] (ras) -- (rowlatch.west|-ras);
+\node[label, purple] (ras) at (-3,0.3) {RAS$\#$};
+\draw[signal, purple] (ras) -- (ras -| rowlatch.west);
 
-\node[label, olive] (cas) at (-3,-3) {CAS$\#$};
-\draw[signal, olive] (cas) -- (collatch.west|-cas);
+\node[label, olive] (cas) at (-3,-2.8) {CAS$\#$};
+\draw[signal, olive] (cas) -- (cas -| collatch.west);
 
-\node[label, olive, align=center] (addr) at (-3,-1.5) {Column\\Addr};
-\draw[signal, olive, line width=2pt] (addr) -- (-1.5,-1.5);
+\node[label] (addr) at (-3,-1.25) {addr};
+\draw[signal, line width=2pt] (addr.east) -- (-1.8,-1.25);
+% Branch to row and column latches
+\draw[signal, purple, line width=2pt] (-1.8,-1.25) -- (-1.8,0) -- (rowlatch.west);
+%\node[font=\small\bfseries, purple] at (-1.8,-0.6) {row};
+\draw[signal, olive, line width=2pt] (-1.8,-1.25) -- (-1.8,-2.5) -- (collatch.west);
+%\node[font=\small\bfseries, olive] at (-1.8,-1.9) {column};
 
-% Multiplexer symbol
-\draw[thick] (-1.5,-0.5) -- (-1.5,-2) -- (-1,-1.25) -- cycle;
-\draw[signal, olive, line width=2pt] (-1,-1.25) -- (collatch.west);
-\draw[signal, olive, line width=2pt] (-1.5,-0.8) -- (-0.8,-0.8) -- (-0.8,0) -- (rowlatch.west);
+% Clock symbols next to latches
+\draw[thick] (-0.4,0.3) circle (0.12);
+\draw[thick] (-0.4,0.3) -- (-0.4,0.38);
+\draw[thick] (-0.4,0.3) -- (-0.35,0.27);
 
 % Connections between blocks
-\draw[signal, purple, line width=1.5pt] (rowlatch.east) -- node[above, font=\small\bfseries, purple] {Row} (rowdecoder.west);
-\draw[signal, olive, line width=1.5pt] (collatch.east) -- ++(0.5,0) -- ++(0,0.5) -- (4.5,-2) -- (4.5,-2.5) -- node[above, font=\small\bfseries, olive] {Column} (coldecoder.west);
+\draw[signal, purple, line width=1.5pt] (rowlatch.east) -- node[above, font=\small\bfseries, purple] {row} (rowdecoder.west);
+\draw[signal, olive, line width=1.5pt] (collatch.east) -- node[above, font=\small\bfseries, olive] {column} (coldecoder.west);
 
-% Row decoder to memory array
+% Row decoder to memory array with highlighted row
 \draw[signal, purple] (rowdecoder.east) -- (5.5,0);
-% Draw wordlines
+% Draw wordlines and highlight one
 \foreach \y in {1,0.5,0,-0.5,-1} {
     \draw[purple, thick] (5.5,\y) -- (5.7,\y);
 }
+% Highlight one row
+\draw[purple, line width=3pt, opacity=0.5] (5.5,0.5) -- (9.5,0.5);
 
-% Column decoder to memory array
-\draw[signal, olive] (coldecoder.north) -- (7,-1.5);
-% Draw bitlines
+% Column decoder to memory array with highlighted column
+\draw[signal, olive] (coldecoder.north) -- (8.5,-1.5);
+% Draw bitlines and highlight one
 \foreach \x in {6.5,7,7.5,8,8.5} {
     \draw[olive, thick] (\x,-1.5) -- (\x,-1.3);
 }
+% Highlight one column
+\draw[olive, line width=3pt, opacity=0.5] (7.5,1.5) -- (7.5,-1.5);
 
-% Data I/O
-\node[label, red] (data) at (7,-4) {Data};
-\draw[signal, red, line width=2pt, <->] (data) -- (coldecoder.south);
+% Mark intersection
+\fill[red] (7.5,0.5) circle (0.08);
 
-% Clock symbols
-\draw (0.3,-0.7) circle (0.15);
-\draw (0.3,-3.2) circle (0.15);
+% Data I/O - horizontal arrow
+\draw[signal, blue, line width=2pt, <->] 
+  (coldecoder.east) 
+    -- node[midway, above, blue]{data} 
+  ++(1,0);
+
+% Clock symbol near data
+\draw[thick] (10,-2.8) circle (0.12);
+\draw[thick] (10,-2.8) -- (10,-2.72);
+\draw[thick] (10,-2.8) -- (10.05,-2.83);
 
 \end{tikzpicture}
 \end{center}
 
-\begin{itemize}
-\item DRAM access sequence
-\begin{itemize}
-\item Put Row address on the address bus
-\item Assert RAS$\#$ (Row Address Strobe) to latch the selected Row
-\item Put Column address on the address bus
-\item Wait RAS$\#$ to CAS$\#$ delay and assert CAS$\#$ (Column Address Strobe) to latch the Column
-\item Get data on address bus after CL (CAS latency)
-\end{itemize}
-\end{itemize}
+\vspace{-0.5cm}
+\textbf{DRAM access sequence:}
+\begin{enumerate}
+\item Row address on bus → Assert RAS$\#$ to latch row
+\item Column address on bus → Assert CAS$\#$ to latch column (after t$_{RCD}$ delay)
+\item Data available after CAS latency (CL)
+\end{enumerate}
 
 \end{frame}
 \end{document}
