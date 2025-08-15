@@ -335,7 +335,7 @@
 }
 
 % First instruction row
-\node[fetch] (f1) at (1.5, 0.8) {Inst\\Fetch};
+\node[fetch, anchor=west] (f1) at (1, 0.8) {Inst\\Fetch};
 \node[anchor=east] (f1ins) at ([xshift=-4mm]f1.west) {\footnotesize lw R1, 100(R0)};
 \node[reg, anchor=west] (r1a) at (f1.east) {Reg};
 \node[alu, anchor=west] (a1) at (r1a.east) {ALU};
@@ -377,7 +377,7 @@
 }
 
 % First instruction (pipelined)
-\node[fetch] (pf1) at (1.5, -3.1) {Inst\\Fetch};
+\node[fetch, anchor=west] (pf1) at (1, -3.1) {Inst\\Fetch};
 \node[anchor=east] (pf1ins) at ([xshift=-4mm]pf1.west) {\footnotesize lw R1, 100(R0)};
 \node[reg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {Reg};
 \node[alu, anchor=west] (pa1) at (pr1a.east) {ALU};
@@ -386,7 +386,8 @@
 
 % Second instruction (pipelined - starts after first Inst Fetch)
 \node[fetch, anchor=north west] (pf2) at (pr1a.south east) {Inst\\Fetch};
-\node (pf2ins) at (f1ins |- pf2) {\footnotesize lw R2, 200(R0)};
+\node[fetch, anchor=west] (pf1) at (1, -3.1) {Inst\\Fetch};
+\node (pf2ins) at (pf1ins |- pf2) {\footnotesize lw R2, 200(R0)};
 \node[reg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {Reg};
 \node[alu, anchor=west] (pa2) at (pr2a.east) {ALU};
 \node[mem, anchor=west] (pm2) at (pa2.east) {Data\\Access};
@@ -394,7 +395,7 @@
 
 % Third instruction (pipelined - starts after second Inst Fetch)
 \node[fetch, anchor=north west] (pf3) at (pr2a.south east) {Inst\\Fetch};
-\node (pf3ins) at (f1ins |- pf3) {\footnotesize lw R3, 300(R0)};
+\node (pf3ins) at (pf1ins |- pf3) {\footnotesize lw R3, 300(R0)};
 \node[reg, anchor=west] (pr3a) at ([xshift=5mm]pf3.east) {Reg};
 \node[alu, anchor=west] (pa3) at (pr3a.east) {ALU};
 \node[mem, anchor=west] (pm3) at (pa3.east) {Data\\Access};
