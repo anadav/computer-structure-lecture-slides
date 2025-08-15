@@ -321,38 +321,45 @@
     fetch/.style={stage, fill=orange!60},
     reg/.style={stage, fill=cyan!30},
     alu/.style={stage, fill=green!40},
-    mem/.style={stage, fill=gray!30}]
+    mem/.style={stage, fill=gray!30},
+    pfetch/.style={stage, fill=orange!60, minimum width=10mm},
+    preg/.style={stage, fill=cyan!30, minimum width=5mm},
+    palu/.style={stage, fill=green!40, minimum width=10mm},
+    pmem/.style={stage, fill=gray!30, minimum width=10mm}]
+
 
 % First pipeline diagram (non-pipelined)
 
 % Time axis for first diagram with ticks above
-\node[anchor=east] at (0.5, 1.5) {\footnotesize Time};
 \coordinate (timeline_start) at (1, 1.5);
 \coordinate (timeline_end) at (11, 1.5);
 \draw[->] (timeline_start) -- (timeline_end);
+\draw[->] (timeline_start) -- (timeline_end)
+  node[pos=1, right]{\footnotesize time};
+
 \foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14, 9/16, 10/18} {
     \draw (\x, 1.5) -- (\x, 1.6);  % tick marks
     \node[above] (t1-\t) at (\x, 1.6) {\tiny \t};
 }
 
 % First instruction row
-\node[fetch, anchor=north west] (f1) at ([yshift=-1]timeline_start) {Inst\\Fetch};
+\node[fetch, anchor=north west] (f1) at ([yshift=-1]timeline_start) {IF};
 \node[anchor=east] (f1ins) at ([xshift=-4mm]f1.west) {\footnotesize lw R1, 100(R0)};
-\node[reg, anchor=west] (r1a) at (f1.east) {Reg};
-\node[alu, anchor=west] (a1) at (r1a.east) {ALU};
-\node[mem, anchor=west] (m1) at (a1.east) {Data\\Access};
-\node[reg, anchor=west] (r1b) at (m1.east) {Reg};
+\node[reg, anchor=west] (r1a) at (f1.east) {ID};
+\node[alu, anchor=west] (a1) at (r1a.east) {EXE};
+\node[mem, anchor=west] (m1) at (a1.east) {MEM};
+\node[reg, anchor=west] (r1b) at (m1.east) {WB};
 
 % Second instruction row  
-\node[fetch, anchor=north west] (f2) at (r1b.south east) {Inst\\Fetch};
+\node[fetch, anchor=north west] (f2) at (r1b.south east) {IF};
 \node (f2ins) at (f1ins |- f2) {\footnotesize lw R2, 200(R0)};
-\node[reg, anchor=west] (r2a) at (f2.east) {Reg};
-\node[alu, anchor=west] (a2) at (r2a.east) {ALU};
-\node[mem, anchor=west] (m2) at (a2.east) {Data\\Access};
-\node[reg, anchor=west] (r2b) at (m2.east) {Reg};
+\node[reg, anchor=west] (r2a) at (f2.east) {ID};
+\node[alu, anchor=west] (a2) at (r2a.east) {EXE};
+\node[mem, anchor=west] (m2) at (a2.east) {MEM};
+\node[reg, anchor=west] (r2b) at (m2.east) {WB};
 
 % Third instruction row
-\node[fetch, anchor=north west] (f3) at (r2b.south east) {Inst\\Fetch};
+\node[fetch, anchor=north west] (f3) at (r2b.south east) {IF};
 \node (f3ins) at (f1ins |- f3) {\footnotesize lw R3, 300(R0)};
 \draw[dotted, ->] (f3.east) -- ++(2, 0);
 
@@ -376,37 +383,36 @@
 \coordinate (ptimeline_start) at (1, -2.3);
 \coordinate (ptimeline_end) at (11, -2.3);
 
-\node[anchor=east] at (0.5, -1.5) {\footnotesize Time};
-
-\draw[->] (ptimeline_start) -- (ptimeline_end);
+\draw[->] (ptimeline_start) -- (ptimeline_end)
+  node[pos=1, right]{\footnotesize time};
 \foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14, 9/16, 10/18} {
     \draw (\x, -2.3) -- (\x, -2.2);  % tick marks
     \node[above] (t2-\t) at (\x, -2.2) {\tiny \t};
 }
 
 % First instruction (pipelined)
-\node[fetch, anchor=north west] (pf1) at ([yshift=-1]ptimeline_start) {Inst\\Fetch};
+\node[pfetch, anchor=north west] (pf1) at ([yshift=-1]ptimeline_start) {IF};
 \node[anchor=east] (pf1ins) at ([xshift=-4mm]pf1.west) {\footnotesize lw R1, 100(R0)};
-\node[reg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {Reg};
-\node[alu, anchor=west] (pa1) at (pr1a.east) {ALU};
-\node[mem, anchor=west] (pm1) at (pa1.east) {Data\\Access};
-\node[reg, anchor=west] (pr1b) at (pm1.east) {Reg};
+\node[preg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {ID};
+\node[palu, anchor=west] (pa1) at (pr1a.east) {EXE};
+\node[pmem, anchor=west] (pm1) at (pa1.east) {MEM};
+\node[preg, anchor=west] (pr1b) at (pm1.east) {WB};
 
 % Second instruction (pipelined - starts after first Inst Fetch)
-\node[fetch, anchor=north west] (pf2) at (pr1a.south east) {Inst\\Fetch};
+\node[pfetch, anchor=north west] (pf2) at (pr1a.south east) {IF};
 \node (pf2ins) at (pf1ins |- pf2) {\footnotesize lw R2, 200(R0)};
-\node[reg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {Reg};
-\node[alu, anchor=west] (pa2) at (pr2a.east) {ALU};
-\node[mem, anchor=west] (pm2) at (pa2.east) {Data\\Access};
-\node[reg, anchor=west] (pr2b) at (pm2.east) {Reg};
+\node[preg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {ID};
+\node[palu, anchor=west] (pa2) at (pr2a.east) {EXE};
+\node[pmem, anchor=west] (pm2) at (pa2.east) {MEM};
+\node[preg, anchor=west] (pr2b) at (pm2.east) {WB};
 
 % Third instruction (pipelined - starts after second Inst Fetch)
-\node[fetch, anchor=north west] (pf3) at (pr2a.south east) {Inst\\Fetch};
+\node[pfetch, anchor=north west] (pf3) at (pr2a.south east) {IF};
 \node (pf3ins) at (pf1ins |- pf3) {\footnotesize lw R3, 300(R0)};
-\node[reg, anchor=west] (pr3a) at ([xshift=5mm]pf3.east) {Reg};
-\node[alu, anchor=west] (pa3) at (pr3a.east) {ALU};
-\node[mem, anchor=west] (pm3) at (pa3.east) {Data\\Access};
-\node[reg, anchor=west] (pr3b) at (pm3.east) {Reg};
+\node[preg, anchor=west] (pr3a) at ([xshift=5mm]pf3.east) {ID};
+\node[palu, anchor=west] (pa3) at (pr3a.east) {EXE};
+\node[pmem, anchor=west] (pm3) at (pa3.east) {MEM};
+\node[preg, anchor=west] (pr3b) at (pm3.east) {WB};
 
 % Timing annotations for pipeline stages
 \draw[<->] ([yshift=-1mm]pf1.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pf1.south east);
@@ -452,29 +458,204 @@
 
 %% Slide: Structural Hazard
 \begin{frame}{Structural Hazard}
-    \begin{itemize}
-        \item Different instructions using the same resource at the same time
-        \item \textbf{Register File:}
+    \textbf{Structural Hazard:} Different instructions using the same resource at the same time
+    \vspace{1cm}
+    
+    \begin{columns}
+        \column{0.45\textwidth}
+        \textbf{Register File Contention:}
         \begin{itemize}
-            \item Accessed in 2 stages:
-            \begin{itemize}
-                \item Read during stage 2 (ID)
-                \item Write during stage 5 (WB)
-            \end{itemize}
+            \item Read during ID (stage 2)
+            \item Write during WB (stage 5)
             \item Solution: 2 read ports, 1 write port
         \end{itemize}
-        \item \textbf{Memory:}
+        
+        \vspace{0.3cm}
+        \centering
+        \begin{tikzpicture}[scale=0.5, transform shape]
+            % Define styles
+            \tikzstyle{block} = [rectangle, draw, thick, minimum width=0.8cm, minimum height=0.8cm, inner sep=2pt]
+            \tikzstyle{latch} = [rectangle, draw, thick, minimum width=0.12cm, minimum height=1.4cm, fill=gray!20]
+            \tikzstyle{line} = [draw, thick]
+            
+            % Stage labels
+            \node[above] at (0,0.8) {\tiny IF};
+            \node[above] at (2.4,0.8) {\tiny ID};
+            \node[above] at (4.8,0.8) {\tiny EXE};
+            \node[above] at (7.4,0.8) {\tiny MEM};
+            \node[above] at (9.8,0.8) {\tiny WB};
+            
+            % Single pipeline row components
+            \node[block, fill=white] (IM) at (0,0) {IM};
+            \fill[gray!30] (IM.north) -- (IM.north east) -- (IM.south east) -- (IM.south) -- cycle;
+            \node[block, fill=none] at (0,0) {IM};
+            
+            \node[latch] (L1) at (1.2,0) {};
+            
+            % Highlight Reg for READ (left half)
+            \node[block, fill=white] (Reg1) at (2.4,0) {Reg};
+            \fill[red!40] (Reg1.north west) -- (Reg1.north) -- (Reg1.south) -- (Reg1.south west) -- cycle;
+            \fill[gray!30] (Reg1.north) -- (Reg1.north east) -- (Reg1.south east) -- (Reg1.south) -- cycle;
+            \node[block, fill=none] at (2.4,0) {Reg};
+            
+            \node[latch] (L2) at (3.6,0) {};
+            
+            % ALU
+            \begin{scope}[shift={(4.8,0)}, scale=1.2]
+                \coordinate (toptopleft) at (0, 0.6);
+                \coordinate (topbottomleft) at (0, 0.24);
+                \coordinate (left) at (0.16, 0);
+                \coordinate (bottomtopleft) at (0, -0.24);
+                \coordinate (bottombottomleft) at (0, -0.6);
+                \coordinate (topright) at (0.48, 0.3);
+                \coordinate (bottomright) at (0.48, -0.3);
+                \fill[gray!30] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+                \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+                \coordinate (alu_input1) at (0, 0.4);
+                \coordinate (alu_input2) at (0, -0.4);
+                \coordinate (alu_output) at (0.48, 0);
+            \end{scope}
+            
+            \node[latch] (L3) at (6.2,0) {};
+            
+            \node[block, fill=white] (DM) at (7.4,0) {DM};
+            \fill[gray!30] (DM.north west) -- (DM.north) -- (DM.south) -- (DM.south west) -- cycle;
+            \node[block, fill=none] at (7.4,0) {DM};
+            
+            \node[latch] (L4) at (8.6,0) {};
+            
+            % Highlight Reg for WRITE (right half)
+            \node[block, fill=white] (Reg2) at (9.8,0) {Reg};
+            \fill[gray!30] (Reg2.north west) -- (Reg2.north) -- (Reg2.south) -- (Reg2.south west) -- cycle;
+            \fill[red!40] (Reg2.north) -- (Reg2.north east) -- (Reg2.south east) -- (Reg2.south) -- cycle;
+            \node[block, fill=none] at (9.8,0) {Reg};
+            
+            % Connections
+            \draw[line] (-0.8,0) -- (IM.west);
+            \draw[line] (IM.east) -- (L1.west);
+            
+            % Two inputs to first Reg (from different sources)
+            \draw[line] ([yshift=2.4pt]L1.east) -- ([yshift=2.4pt]Reg1.west);
+            \draw[line] (L1.east) -- (Reg1.west);
+            
+            \draw[line] (Reg1.east) -- (L2.west);
+            
+            % Two inputs to ALU
+            \draw[line] ([yshift=2.4pt]L2.east) -- ++(0.24,0) |- (alu_input1);
+            \draw[line] ([yshift=-2.4pt]L2.east) -- ++(0.24,0) |- (alu_input2);
+            
+            % ALU output to next latch
+            \draw[line] (alu_output) -- (L3.west);
+            
+            % DM connections
+            \draw[line] (L3.east) -- (DM.west);
+            \draw[line] (DM.east) -- (L4.west);
+            
+            % Bypass around DM
+            \draw[line] (L3.east) -- ($(L3.east)!0.5!(DM.west)$) -- ++(0, -0.56) -|
+                        ($(L4.west)!0.5!(DM.east)$) -- (L4.west);
+            
+            \draw[line] (L4.east) -- (Reg2.west);
+            \draw[line] (Reg2.east) -- ++(0.6,0);
+        \end{tikzpicture}
+        
+        \column{0.45\textwidth}
+        \textbf{Memory Contention:}
         \begin{itemize}
-            \item Accessed in 2 stages:
-            \begin{itemize}
-                \item Instruction Fetch during stage 1 (IF)
-                \item Data read/write during stage 4 (MEM)
-            \end{itemize}
-            \item Solution: separate instruction cache and data cache
+            \item Inst Fetch during IF (stage 1)
+            \item Data access during MEM (stage 4)
+            \item Solution: separate I\$ and D\$
         \end{itemize}
-        \item Each functional unit can only be used \textcolor{green}{once} per instruction
-        \item Each functional unit must be used at the \textcolor{green}{same} stage for all instructions
-    \end{itemize}
+        
+        \vspace{0.3cm}
+        \centering
+        \begin{tikzpicture}[scale=0.5, transform shape]
+            % Define styles
+            \tikzstyle{block} = [rectangle, draw, thick, minimum width=0.8cm, minimum height=0.8cm, inner sep=2pt]
+            \tikzstyle{latch} = [rectangle, draw, thick, minimum width=0.12cm, minimum height=1.4cm, fill=gray!20]
+            \tikzstyle{line} = [draw, thick]
+            
+            % Stage labels
+            \node[above] at (0,0.8) {\tiny IF};
+            \node[above] at (2.4,0.8) {\tiny ID};
+            \node[above] at (4.8,0.8) {\tiny EXE};
+            \node[above] at (7.4,0.8) {\tiny MEM};
+            \node[above] at (9.8,0.8) {\tiny WB};
+            
+            % Single pipeline row components
+            % Highlight IM for instruction fetch (READ - left side)
+            \node[block, fill=white] (IM) at (0,0) {IM};
+            \fill[blue!40] (IM.north west) -- (IM.north) -- (IM.south) -- (IM.south west) -- cycle;
+            \fill[gray!30] (IM.north) -- (IM.north east) -- (IM.south east) -- (IM.south) -- cycle;
+            \node[block, fill=none] at (0,0) {IM};
+            
+            \node[latch] (L1) at (1.2,0) {};
+            
+            \node[block, fill=white] (Reg1) at (2.4,0) {Reg};
+            \fill[gray!30] (Reg1.north) -- (Reg1.north east) -- (Reg1.south east) -- (Reg1.south) -- cycle;
+            \node[block, fill=none] at (2.4,0) {Reg};
+            
+            \node[latch] (L2) at (3.6,0) {};
+            
+            % ALU
+            \begin{scope}[shift={(4.8,0)}, scale=1.2]
+                \coordinate (toptopleft) at (0, 0.6);
+                \coordinate (topbottomleft) at (0, 0.24);
+                \coordinate (left) at (0.16, 0);
+                \coordinate (bottomtopleft) at (0, -0.24);
+                \coordinate (bottombottomleft) at (0, -0.6);
+                \coordinate (topright) at (0.48, 0.3);
+                \coordinate (bottomright) at (0.48, -0.3);
+                \fill[gray!30] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+                \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+                \coordinate (alu_input1) at (0, 0.4);
+                \coordinate (alu_input2) at (0, -0.4);
+                \coordinate (alu_output) at (0.48, 0);
+            \end{scope}
+            
+            \node[latch] (L3) at (6.2,0) {};
+            
+            % Highlight DM for data access (READ/WRITE - right side)
+            \node[block, fill=white] (DM) at (7.4,0) {DM};
+            \fill[gray!30] (DM.north west) -- (DM.north) -- (DM.south) -- (DM.south west) -- cycle;
+            \fill[blue!40] (DM.north) -- (DM.north east) -- (DM.south east) -- (DM.south) -- cycle;
+            \node[block, fill=none] at (7.4,0) {DM};
+            
+            \node[latch] (L4) at (8.6,0) {};
+            
+            \node[block, fill=white] (Reg2) at (9.8,0) {Reg};
+            \fill[gray!30] (Reg2.north west) -- (Reg2.north) -- (Reg2.south) -- (Reg2.south west) -- cycle;
+            \node[block, fill=none] at (9.8,0) {Reg};
+            
+            % Connections
+            \draw[line] (-0.8,0) -- (IM.west);
+            \draw[line] (IM.east) -- (L1.west);
+            
+            % Two inputs to first Reg (from different sources)
+            \draw[line] ([yshift=2.4pt]L1.east) -- ([yshift=2.4pt]Reg1.west);
+            \draw[line] (L1.east) -- (Reg1.west);
+            
+            \draw[line] (Reg1.east) -- (L2.west);
+            
+            % Two inputs to ALU
+            \draw[line] ([yshift=2.4pt]L2.east) -- ++(0.24,0) |- (alu_input1);
+            \draw[line] ([yshift=-2.4pt]L2.east) -- ++(0.24,0) |- (alu_input2);
+            
+            % ALU output to next latch
+            \draw[line] (alu_output) -- (L3.west);
+            
+            % DM connections
+            \draw[line] (L3.east) -- (DM.west);
+            \draw[line] (DM.east) -- (L4.west);
+            
+            % Bypass around DM
+            \draw[line] (L3.east) -- ($(L3.east)!0.5!(DM.west)$) -- ++(0, -0.56) -|
+                        ($(L4.west)!0.5!(DM.east)$) -- (L4.west);
+            
+            \draw[line] (L4.east) -- (Reg2.west);
+            \draw[line] (Reg2.east) -- ++(0.6,0);
+        \end{tikzpicture}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Pipeline Architecture}
@@ -484,6 +665,13 @@
     \tikzstyle{block} = [rectangle, draw, thick, minimum width=1cm, minimum height=1cm, inner sep=2pt]
     \tikzstyle{latch} = [rectangle, draw, thick, minimum width=0.15cm, minimum height=1.8cm, fill=gray!20]
     \tikzstyle{line} = [draw, thick]
+    
+    % Stage labels
+    \node[above, font=\footnotesize] at (0,1) {IF};
+    \node[above, font=\footnotesize] at (2.4,1) {ID};
+    \node[above, font=\footnotesize] at (4.8,1) {EXE};
+    \node[above, font=\footnotesize] at (7.4,1) {MEM};
+    \node[above, font=\footnotesize] at (9.8,1) {WB};
     
     % Single pipeline row components
     \node[block, fill=white] (IM) at (0,0) {IM};
@@ -530,7 +718,12 @@
     % Latch after ALU
     \node[latch] (L3) at (6.2,0) {};
     
-    \node[block] (DM) at (7.4,0) {DM};
+    \node[block, fill=white] (DM) at (7.4,0) {DM};
+    
+    % Shade left half of DM for read, right half for write
+    \fill[gray!30] (DM.north west) -- (DM.north) -- (DM.south) -- (DM.south west) -- cycle;
+    % Redraw DM border and text on top
+    \node[block, fill=none] at (7.4,0) {DM};
     
     % Latch after DM
     \node[latch] (L4) at (8.6,0) {};
@@ -548,7 +741,7 @@
     
     % Two inputs to first Reg (from different sources)
     \draw[line] ([yshift=3pt]L1.east) -- ([yshift=3pt]Reg1.west);
-    \draw[line] (L1.east) -- (Reg1.west);
+    \draw[line] ([yshift=-3pt]L1.east) -- ([yshift=-3pt]Reg1.west);
     
     \draw[line] (Reg1.east) -- (L2.west);
     
