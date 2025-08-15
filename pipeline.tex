@@ -77,6 +77,186 @@
     \end{scope}
 }
 
+% Define macro for pipeline diagram
+% Usage: \drawPipelineDiagram
+\newcommand{\drawPipelineDiagram}{%
+    \scalebox{0.85}{%
+    \begin{tikzpicture}[
+        component/.style={draw, thick, minimum height=0.8cm},
+        latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
+        stage/.style={font=\bfseries},
+        label/.style={font=\tiny},
+        port/.style={font=\tiny, inner sep=0.035cm}
+    ]
+        % Stage labels
+        \node[stage] at (1.5,6) {Fetch};
+        \node[stage] at (4.5,6) {Decode};
+        \node[stage] at (8,6) {Execute};
+        \node[stage] at (11,6) {Memory};
+        \node[stage] at (13.5,6) {WB};
+        
+        % Pipeline latches
+        \node[latch] (L1) at (3,2) {};
+        \node[latch] (L2) at (6,2) {};
+        \node[latch] (L3) at (9.5,2) {};
+        \node[latch] (L4) at (12,2) {};
+        
+        % Fetch Stage
+        % PC MUX (rotate=90: output on west)
+        \placeMux[90]{0.3,4.5}{pc}{blue!20}
+
+        \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
+
+        % ICache
+        \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at (2,2) {};
+        \node[align=center] at (2,2.6) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
+ 
+        % PC adder - moved right
+        \placeAdder{1.2,3.8}{fe}
+        \node[left, font=\tiny] (four) at (0.9,4.04) {4};
+        
+        % Decode Stage
+        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.41) {};
+        \node[align=center] at ([yshift=-0.35cm]RF.north) {\footnotesize register\\[-0.11cm]\footnotesize file};
+        
+        % Register file input ports (left side, inside the box)
+        \node[port] (rf_src1) at ([xshift=-0.4cm, yshift=0.1cm]RF.center) {~src1};
+        \node[port] (rf_src2) at ([xshift=-0.4cm, yshift=-0.3cm]RF.center) {~src2};
+        \node[port] (rf_dst) at ([xshift=-0.35cm, yshift=-0.7cm]RF.center) {dst};
+        
+        % Register file selector coordinate (slightly left of dst)
+        \coordinate (rf_selector) at ([xshift=-0.1cm]rf_dst.south);
+        
+        % Register file output ports (right side, aligned to right edge)
+        \node[port, anchor=east] (rf_src1_data) at ([xshift=0.6cm, yshift=0.07cm]RF.center) {src1};
+        \node[port, anchor=east] (rf_data1) at ([yshift=-0.15cm]rf_src1_data.east) {data};
+        \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6cm, yshift=-0.37cm]RF.center) {src2};
+        \node[port, anchor=east] (rf_data2) at ([yshift=-0.15cm]rf_src2_data.east) {data};
+        
+        % Sign extension - moved slightly right
+        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.9) {
+            \scriptsize sign\\[-0.25cm]\scriptsize ext.
+        };
+        
+        % Execute Stage
+        % Execute adder - positioned so input aligns with incoming connection
+        \placeAdder{7,3.56}{ex}
+        
+        % Execute stage ALU source MUX (rotate=270: output on north, inputs on south)
+        \placeMux[270]{7,1.68}{exe}{green!20}
+        
+        % ALU - positioned to align output with data cache address
+        \begin{scope}[shift={(8,2)}, scale=0.8]
+            \coordinate (ALU) at (0,0);
+            % Trapezoid coordinates
+            \coordinate (toptopleft) at (0, 0.8);
+            \coordinate (topbottomleft) at (0, 0.3);
+            \coordinate (left) at (0.2, 0);
+            \coordinate (bottomtopleft) at (0, -0.3);
+            \coordinate (bottombottomleft) at (0, -0.8);
+            \coordinate (topright) at (0.6, 0.4);
+            \coordinate (bottomright) at (0.6, -0.4);
+            
+            % Draw the trapezoid
+            \fill[green!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
+            
+            % Add ALU text (rotated and smaller)
+            \node[rotate=90, font=\tiny] at (0.31, 0) {ALU};
+
+            \coordinate (alu_input1) at (0, 0.4);
+            \coordinate (alu_input2) at (0, -0.4);
+            \coordinate (alu_output) at (0.6, 0);
+        \end{scope}
+        
+        % Memory Stage
+        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at (10.8,2) {};
+        \node[align=center] at (10.8,2.6) {\footnotesize data\\[-0.14cm]\footnotesize cache};
+
+        % Data Cache ports (aligned to left side of box)
+        \node[port, anchor=west] (dc_addr) at ([xshift=-0.62cm, yshift=0cm]DCache.center) {address};
+        \node[port, anchor=west] (dc_data) at ([xshift=-0.62cm, yshift=-0.7cm]DCache.center) {data};
+
+        % DCache output port
+        \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
+        
+        % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south)
+        \placeMux[270]{13.5,1.79}{wb}{green!20}
+        
+        % Main data path connections
+        \draw[blue, thick, ->] (four) -- (fe_adder_input1);
+        \draw[blue, thick, ->] (pcmux_out) -- ++(-0.4,0) |- (PC.west);
+        \draw[blue, thick, ->] (PC.east) -- (ICache);
+        \draw[blue, thick, ->] (PC.east) -- ++(0.1,0) |- (fe_adder_input2);
+        \draw[->] (ICache) -- (L1);
+
+        \draw[blue, thick, ->] (fe_adder_output) -- (fe_adder_output -| L1.west);
+        \draw[blue, thick, ->] (fe_adder_output) -- ++(0.3,0) |- (pcmux_in1);
+        \draw[blue, thick, ->] (fe_adder_output -| L1.east) -- (fe_adder_output -| L2.west);
+        \draw[blue, thick, ->] (fe_adder_output -| L2.east) -- ++(0.3,0) |- (ex_adder_input1);
+        
+        % From L1 to Register File inputs
+        \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src1.west);
+        \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src2.west);
+        \draw[->] (L1.east) -- ++(0.3,0) |- (SignExt.west);
+
+        \draw[->] (L1.east) -- ++(0.3,0) |- ([yshift=-0.8cm]SignExt -| L2.west);
+        \draw[->] ([yshift=-0.8cm]SignExt -| L2.east) -- ([yshift=-0.8cm]SignExt -| L3.west);
+        \draw[->] ([yshift=-0.8cm]SignExt -| L3.east) -- ([yshift=-0.8cm]SignExt -| L4.west);
+        \draw[->] ([yshift=-0.8cm]SignExt -| L4.east) -- ++(0.3, 0) -- ++(0, -0.2) -| (rf_dst.south);
+
+        % From L1 for "instruction" title
+        \draw[->] (ICache -| L1.east) -- ++(0.3,0) node[yshift=0.55cm,rotate=90,above] {\tiny{}instruction}; 
+
+        % From Register File outputs to L2
+        \draw[green, thick, ->] ([yshift=-0.01cm]rf_data1.east) -- ([yshift=-0.01cm]rf_data1.east -| L2.west);
+        \draw[green, thick, ->] (rf_data2.east) -- (rf_data2.east -| L2.west);
+        \draw[green, thick, ->] (SignExt.east) -- (SignExt.east -| L2.west);
+        
+        % From L2 to Execute components
+        \draw[green, thick, ->] ([yshift=-0.01cm]rf_data1.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
+        \draw[green, thick, ->] (rf_data2.east -| L2.east) -- (exemux_in1);
+        \draw[green, thick, ->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (exemux_in2);
+        \draw[green, thick, ->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (ex_adder_input2);
+        
+        % MUX to ALU
+        \draw[green, thick, ->] (exemux_out) -- ++(0.3,0) |- (alu_input2);
+        
+        % ALU and adder to L3
+        \draw[green, thick, ->] (alu_output) -- (L3.west |- alu_output);
+        \draw[blue, thick, ->] (ex_adder_output) -- (L3.west |- ex_adder_output);
+        \draw[blue, thick, ->] (L3.east |- ex_adder_output) -- ++(0.25,0) |- (pcmux_in2);
+        
+        % L3 to Memory and from
+        \draw[green, thick, ->] (alu_output -| L3.east) -- (dc_addr.west);
+        \draw[green, thick, ->] (dc_data.east -| L3.east) -- (dc_data.west);
+        \draw[green, thick, ->] (dc_data.east -| L3.east) -- ++(0.3,0) |- ([yshift=-1.3cm]L4.west);
+        \draw[green, thick, ->] (dc_data_out) -- (dc_data_out -| L4.west);
+        
+        % L4 to WB mux - ALU result and memory data
+        \draw[green, thick, ->] (alu_output -| L4.east) -- (wbmux_in1);
+        \draw[green, thick, ->] ([yshift=-1.3cm]L4.east) -- ++(0.3,0) |- (wbmux_in2);
+        
+        % Write back path from mux output
+        \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.2) -| (rf_selector);
+        
+        % PC MUX inputs: branch target from L3, branch from L2, and PC+4
+        \draw[orange!70, thick, ->] (alu_output -| L3.east) -- ++(0.35,0) -- ++(0,3.3) -| (pcmux_selectorup);
+        
+        % Code on the left
+        \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
+            \begin{tabular}{rl}
+                0 & or\\
+                4 & jcc 50H\\
+                8 & and\\
+                12 & sw\\
+                16 & sub
+            \end{tabular}
+        };
+    \end{tikzpicture}
+    }%
+}
+
 % Define macro for placing MUX with configurable location, rotation, and fill color
 % Usage: \placeMux[rotation]{x,y}{prefix}{fill color}
 % rotation: angle in degrees (default 0)
@@ -478,193 +658,69 @@ SW   d,Rd
     \textit{Instruction order can be changed as long as the correctness is kept}
 \end{frame}
 
-\begin{frame}{Control Hazard on Branches}
+\begin{frame}[label=control-hazard]{Control Hazard on Branches}
     \centering
-    \scalebox{0.85}{%
-    \begin{tikzpicture}[
-        component/.style={draw, thick, minimum height=0.8cm},
-        latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
-        stage/.style={font=\bfseries},
-        label/.style={font=\tiny},
-        port/.style={font=\tiny, inner sep=0.035cm}
-    ]
-        % Stage labels
-        \node[stage] at (1.5,6) {Fetch};
-        \node[stage] at (4.5,6) {Decode};
-        \node[stage] at (8,6) {Execute};
-        \node[stage] at (11,6) {Memory};
-        \node[stage] at (13.5,6) {WB};
-        
-        % Main frame
-        % Removed blue rounded rectangle
-        % \draw[orange!50, very thick, rounded corners] (-0.7,3.5) rectangle (13.8,5.2);
-        
-        % Pipeline latches
-        \node[latch] (L1) at (3,2) {};
-        \node[latch] (L2) at (6,2) {};
-        \node[latch] (L3) at (9.5,2) {};
-        \node[latch] (L4) at (12,2) {};
-        
-        % Fetch Stage
-        % PC MUX (rotate=90: output on west)
-        \placeMux[90]{0.3,4.5}{pc}{blue!20}
+    \drawPipelineDiagram
+\end{frame}
 
-        \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at (0.5,2) {\small PC};
-
-
-        % ICache
-        \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at (2,2) {};
-        \node[align=center] at (2,2.6) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
- 
+%% Slide: Control Hazard on Branches - With Annotations
+\begin{frame}[label=control-hazard-annotated]{Control Hazard on Branches}
+    \centering
+    \drawPipelineDiagram
+    
+    % Add annotations specific to this slide
+    \begin{tikzpicture}[remember picture, overlay]
+        % Add blue numbers for PC values
+        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (-6.4,-1.2)$) {8};
+        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (-3.7,1.4)$) {12};
+        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (-1.4,1.4)$) {8};
+        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (1.1,1.4)$) {4};
         
-        % PC adder - moved right
-        \placeAdder{1.2,3.8}{fe}
-        \node[left, font=\tiny] (four) at (0.9,4.04) {4};
+        % Add instruction labels in latches
+        \node[font=\footnotesize\bfseries] at ($(current page.center) + (-3.05,-0.3)$) {jcc};
+        \node[font=\footnotesize\bfseries] at ($(current page.center) + (-0.7,-0.3)$) {or};
         
-        % Decode Stage
-        \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at (4.5,2.41) {};
-        \node[align=center] at ([yshift=-0.35cm]RF.north) {\footnotesize register\\[-0.11cm]\footnotesize file};
-        %        \node[align=center] at (4.5,2.8) {\footnotesize register\\[-3pt]\footnotesize file};
+        % Add orange highlight around certain paths
+        \draw[orange!50, very thick, rounded corners] ($(current page.center) + (-7.0,0.9)$) rectangle ($(current page.center) + (6.4,3.1)$);
         
-        % Register file input ports (left side, inside the box)
-        \node[port] (rf_src1) at ([xshift=-0.4cm, yshift=0.1cm]RF.center) {~src1};
-        \node[port] (rf_src2) at ([xshift=-0.4cm, yshift=-0.3cm]RF.center) {~src2};
-        \node[port] (rf_dst) at ([xshift=-0.35cm, yshift=-0.7cm]RF.center) {dst};
+        % Add green highlight for decode stage
+        \draw[green!50, very thick, rounded corners] ($(current page.center) + (-3.7,-1.5)$) rectangle ($(current page.center) + (-1.8,1.3)$);
         
-        % Register file selector coordinate (slightly left of dst)
-        \coordinate (rf_selector) at ([xshift=-0.1cm]rf_dst.south);
-        
-        % Register file output ports (right side, aligned to right edge)
-        \node[port, anchor=east] (rf_src1_data) at ([xshift=0.6cm, yshift=0.07cm]RF.center) {src1};
-        \node[port, anchor=east] (rf_data1) at ([yshift=-0.15cm]rf_src1_data.east) {data};
-        \node[port, anchor=east] (rf_src2_data) at ([xshift=0.6cm, yshift=-0.37cm]RF.center) {src2};
-        \node[port, anchor=east] (rf_data2) at ([yshift=-0.15cm]rf_src2_data.east) {data};
-        
-        % Sign extension - moved slightly right
-        \node[component, fill=green!20, ellipse, minimum width=0.4cm, minimum height=0.3cm, align=center] (SignExt) at (5.1,0.9) {
-            \scriptsize sign\\[-0.25cm]\scriptsize ext.
+        % Add text annotations at bottom
+        \node[font=\footnotesize, align=left] at ($(current page.center) + (0,-3.0)$) {
+            \texttt{jcc target; if cond then PC $\leftarrow$ target}
         };
-        
-        % Execute Stage
-        % Execute adder - positioned so input aligns with incoming connection
-        \placeAdder{7,3.56}{ex}
-        
-        % Execute stage ALU source MUX (rotate=270: output on north, inputs on south)
-        \placeMux[270]{7,1.68}{exe}{green!20}
-        
-        % ALU - positioned to align output with data cache address
-        \begin{scope}[shift={(8,2)}, scale=0.8]
-            \coordinate (ALU) at (0,0);
-            % Trapezoid coordinates
-            \coordinate (toptopleft) at (0, 0.8);
-            \coordinate (topbottomleft) at (0, 0.3);
-            \coordinate (left) at (0.2, 0);
-            \coordinate (bottomtopleft) at (0, -0.3);
-            \coordinate (bottombottomleft) at (0, -0.8);
-            \coordinate (topright) at (0.6, 0.4);
-            \coordinate (bottomright) at (0.6, -0.4);
-            
-            % Draw the trapezoid
-            \fill[green!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-            \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-            
-            % Add ALU text (rotated and smaller)
-            \node[rotate=90, font=\tiny] at (0.31, 0) {ALU};
-
-            \coordinate (alu_input1) at (0, 0.4);
-            \coordinate (alu_input2) at (0, -0.4);
-            \coordinate (alu_output) at (0.6, 0);
-        \end{scope}
-        
-        % Memory Stage
-        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at (10.8,2) {};
-        \node[align=center] at (10.8,2.6) {\footnotesize data\\[-0.14cm]\footnotesize cache};
-
-        % Data Cache ports (aligned to left side of box)
-        \node[port, anchor=west] (dc_addr) at ([xshift=-0.62cm, yshift=0cm]DCache.center) {address};
-        \node[port, anchor=west] (dc_data) at ([xshift=-0.62cm, yshift=-0.7cm]DCache.center) {data};
-
-        % DCache output port
-        \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
-        
-        % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south)
-        \placeMux[270]{13.5,1.79}{wb}{green!20}
-        
-        % Main data path connections
-        \draw[blue, thick, ->] (four) -- (fe_adder_input1);
-        \draw[blue, thick, ->] (pcmux_out) -- ++(-0.4,0) |- (PC.west);
-        \draw[blue, thick, ->] (PC.east) -- (ICache);
-        \draw[blue, thick, ->] (PC.east) -- ++(0.1,0) |- (fe_adder_input2);
-        \draw[->] (ICache) -- (L1);
-
-        \draw[blue, thick, ->] (fe_adder_output) -- (fe_adder_output -| L1.west);
-        \draw[blue, thick, ->] (fe_adder_output) -- ++(0.3,0) |- (pcmux_in1);
-        \draw[blue, thick, ->] (fe_adder_output -| L1.east) -- (fe_adder_output -| L2.west);
-        \draw[blue, thick, ->] (fe_adder_output -| L2.east) -- ++(0.3,0) |- (ex_adder_input1);
-        
-        % From L1 to Register File inputs
-        \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src1.west);
-        \draw[->] (L1.east) -- ++(0.3,0) |- (rf_src2.west);
-        \draw[->] (L1.east) -- ++(0.3,0) |- (SignExt.west);
-
-        \draw[->] (L1.east) -- ++(0.3,0) |- ([yshift=-0.8cm]SignExt -| L2.west);
-        \draw[->] ([yshift=-0.8cm]SignExt -| L2.east) -- ([yshift=-0.8cm]SignExt -| L3.west);
-        \draw[->] ([yshift=-0.8cm]SignExt -| L3.east) -- ([yshift=-0.8cm]SignExt -| L4.west);
-        \draw[->] ([yshift=-0.8cm]SignExt -| L4.east) -- ++(0.3, 0) -- ++(0, -0.2) -| (rf_dst.south);
-
-        % From L1 for "instruction" title
-        \draw[->] (ICache -| L1.east) -- ++(0.3,0) node[yshift=0.55cm,rotate=90,above] {\tiny{}instruction}; 
-
-        % From Register File outputs to L2
-        \draw[green, thick, ->] ([yshift=-0.01cm]rf_data1.east) -- ([yshift=-0.01cm]rf_data1.east -| L2.west);
-        \draw[green, thick, ->] (rf_data2.east) -- (rf_data2.east -| L2.west);
-        \draw[green, thick, ->] (SignExt.east) -- (SignExt.east -| L2.west);
-        
-        % From L2 to Execute components
-        \draw[green, thick, ->] ([yshift=-0.01cm]rf_data1.east -| L2.east) -- ++(0.2,0) |- (alu_input1);
-        \draw[green, thick, ->] (rf_data2.east -| L2.east) -- (exemux_in1);
-        \draw[green, thick, ->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (exemux_in2);
-        \draw[green, thick, ->] (SignExt.east -| L2.east) -- ++(0.3,0) |- (ex_adder_input2);
-        
-        % MUX to ALU
-        \draw[green, thick, ->] (exemux_out) -- ++(0.3,0) |- (alu_input2);
-        
-        % ALU and adder to L3
-        \draw[green, thick, ->] (alu_output) -- (L3.west |- alu_output);
-        \draw[blue, thick, ->] (ex_adder_output) -- (L3.west |- ex_adder_output);
-        \draw[blue, thick, ->] (L3.east |- ex_adder_output) -- ++(0.25,0) |- (pcmux_in2);
-        
-        % L3 to Memory and from
-        \draw[green, thick, ->] (alu_output -| L3.east) -- (dc_addr.west);
-        \draw[green, thick, ->] (dc_data.east -| L3.east) -- (dc_data.west);
-        \draw[green, thick, ->] (dc_data.east -| L3.east) -- ++(0.3,0) |- ([yshift=-1.3cm]L4.west);
-        \draw[green, thick, ->] (dc_data_out) -- (dc_data_out -| L4.west);
-        
-        % L4 to WB mux - ALU result and memory data
-        \draw[green, thick, ->] (alu_output -| L4.east) -- (wbmux_in1);
-        \draw[green, thick, ->] ([yshift=-1.3cm]L4.east) -- ++(0.3,0) |- (wbmux_in2);
-        
-        % Write back path from mux output
-        \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.2) -| (rf_selector);
-        
-        % PC MUX inputs: branch target from L3, branch from L2, and PC+4
-        \draw[orange!70, thick, ->] (alu_output -| L3.east) -- ++(0.35,0) -- ++(0,3.3) -| (pcmux_selectorup);
-        
-        % Code on the left
-        \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
-            \begin{tabular}{rl}
-                0 & or\\
-                4 & jcc 50H\\
-                8 & and\\
-                12 & sw\\
-                16 & sub
-            \end{tabular}
+        \node[font=\footnotesize, align=left, text=green!70!black] at ($(current page.center) + (0,-3.5)$) {
+            $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction
+        };
+        \node[font=\footnotesize, align=left, text=green!70!black] at ($(current page.center) + (0,-4.0)$) {
+            $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
         };
     \end{tikzpicture}
-    }
 \end{frame}
 
 %% Slide: Control Hazard: Stall
+\begin{frame}{Control Hazard: Stall}
+    \begin{itemize}
+        \item Stall pipe when branch is encountered until resolved
+        \item Stall impact: assumptions
+        \begin{itemize}
+            \item CPI = 1
+            \item 20\% of instructions are branches
+            \item Stall 3 cycles on every branch
+            \item[$\Rightarrow$] CPI\textsubscript{new} = 1 + 0.2 × 3 = 1.6
+        \end{itemize}
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    \centering
+    (CPI\textsubscript{new} = CPI\textsubscript{Ideal} + avg. stall cycles / instr.)
+    
+    \vspace{0.5cm}
+    \textbf{We lose 60\% of the performance}
+\end{frame}
+
+%% Slide: Control Hazard: Stall  
 \begin{frame}{Control Hazard: Stall}
     \begin{itemize}
         \item Stall pipe when branch is encountered until resolved
