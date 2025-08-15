@@ -322,10 +322,12 @@
     reg/.style={stage, fill=cyan!30},
     alu/.style={stage, fill=green!40},
     mem/.style={stage, fill=gray!30},
+    wb/.style={stage, fill=purple!30},
     pfetch/.style={stage, fill=orange!60, minimum width=10mm},
     preg/.style={stage, fill=cyan!30, minimum width=5mm},
     palu/.style={stage, fill=green!40, minimum width=10mm},
-    pmem/.style={stage, fill=gray!30, minimum width=10mm}]
+    pmem/.style={stage, fill=gray!30, minimum width=10mm},
+    pwb/.style={stage, fill=purple!30, minimum width=10mm},]
 
 
 % First pipeline diagram (non-pipelined)
@@ -348,7 +350,7 @@
 \node[reg, anchor=west] (r1a) at (f1.east) {ID};
 \node[alu, anchor=west] (a1) at (r1a.east) {EXE};
 \node[mem, anchor=west] (m1) at (a1.east) {MEM};
-\node[reg, anchor=west] (r1b) at (m1.east) {WB};
+\node[wb, anchor=west] (r1b) at (m1.east) {WB};
 
 % Second instruction row  
 \node[fetch, anchor=north west] (f2) at (r1b.south east) {IF};
@@ -356,7 +358,7 @@
 \node[reg, anchor=west] (r2a) at (f2.east) {ID};
 \node[alu, anchor=west] (a2) at (r2a.east) {EXE};
 \node[mem, anchor=west] (m2) at (a2.east) {MEM};
-\node[reg, anchor=west] (r2b) at (m2.east) {WB};
+\node[wb, anchor=west] (r2b) at (m2.east) {WB};
 
 % Third instruction row
 \node[fetch, anchor=north west] (f3) at (r2b.south east) {IF};
@@ -396,23 +398,23 @@
 \node[preg, anchor=west] (pr1a) at ([xshift=5mm]pf1.east) {ID};
 \node[palu, anchor=west] (pa1) at (pr1a.east) {EXE};
 \node[pmem, anchor=west] (pm1) at (pa1.east) {MEM};
-\node[preg, anchor=west] (pr1b) at (pm1.east) {WB};
+\node[pwb, anchor=west] (pr1b) at (pm1.east) {WB};
 
 % Second instruction (pipelined - starts after first Inst Fetch)
-\node[pfetch, anchor=north west] (pf2) at (pr1a.south east) {IF};
+\node[pfetch, anchor=north west] (pf2) at (pf1.south east) {IF};
 \node (pf2ins) at (pf1ins |- pf2) {\footnotesize lw R2, 200(R0)};
 \node[preg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {ID};
 \node[palu, anchor=west] (pa2) at (pr2a.east) {EXE};
 \node[pmem, anchor=west] (pm2) at (pa2.east) {MEM};
-\node[preg, anchor=west] (pr2b) at (pm2.east) {WB};
+\node[pwb, anchor=west] (pr2b) at (pm2.east) {WB};
 
 % Third instruction (pipelined - starts after second Inst Fetch)
-\node[pfetch, anchor=north west] (pf3) at (pr2a.south east) {IF};
+\node[pfetch, anchor=north west] (pf3) at (pf2.south east) {IF};
 \node (pf3ins) at (pf1ins |- pf3) {\footnotesize lw R3, 300(R0)};
 \node[preg, anchor=west] (pr3a) at ([xshift=5mm]pf3.east) {ID};
 \node[palu, anchor=west] (pa3) at (pr3a.east) {EXE};
 \node[pmem, anchor=west] (pm3) at (pa3.east) {MEM};
-\node[preg, anchor=west] (pr3b) at (pm3.east) {WB};
+\node[pwb, anchor=west] (pr3b) at (pm3.east) {WB};
 
 % Timing annotations for pipeline stages
 \draw[<->] ([yshift=-1mm]pf1.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pf1.south east);
@@ -421,7 +423,7 @@
 
 \draw[<->] ([yshift=-1mm]pf3.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pf3.south east);
 
-\draw[<->] ([yshift=-1mm]pr3a.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pr3a.south east);
+\draw[<->] ([yshift=-1mm]pf3.south east) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pa3.south west);
 
 \draw[<->] ([yshift=-1mm]pa3.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pa3.south east);
 
