@@ -324,7 +324,6 @@
     mem/.style={stage, fill=gray!30}]
 
 % First pipeline diagram (non-pipelined)
-\node[anchor=east] at (-1, 2) {\footnotesize \makecell[l]{Program\\execution\\order}};
 
 % Time axis for first diagram with ticks above
 \node[anchor=east] at (0.5, 1.5) {\footnotesize Time};
@@ -363,15 +362,14 @@
 \draw[<->] ([yshift=-2mm]f3.south west) -- node[below] {\footnotesize 8 ns} ++(3.5, 0);
 
 % Vertical arrow for execution order - relative to instructions
-\draw[->] ([xshift=-3mm]f1ins.north west) -- ([xshift=-3mm]f3ins.south west);
+\draw[->] ([xshift=-3mm]f1ins.north west) -- node[left, rotate=90, anchor=center] {\tiny program execution order} ([xshift=-3mm]f3ins.south west);
 
 % Second pipeline diagram (pipelined) - moved higher
-\node[anchor=east] at (-1, -1.8) {\footnotesize \makecell[l]{Program\\execution\\order}};
 
 % Time axis for second diagram
 \node[anchor=east] at (0.5, -2.3) {\footnotesize Time};
-\draw[->] (1, -2.3) -- (9, -2.3);
-\foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14} {
+\draw[->] (1, -2.3) -- (11, -2.3);
+\foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14, 9/16, 10/18} {
     \draw (\x, -2.3) -- (\x, -2.2);  % tick marks
     \node[above] at (\x, -2.2) {\tiny \t};
 }
@@ -386,7 +384,6 @@
 
 % Second instruction (pipelined - starts after first Inst Fetch)
 \node[fetch, anchor=north west] (pf2) at (pr1a.south east) {Inst\\Fetch};
-\node[fetch, anchor=west] (pf1) at (1, -3.1) {Inst\\Fetch};
 \node (pf2ins) at (pf1ins |- pf2) {\footnotesize lw R2, 200(R0)};
 \node[reg, anchor=west] (pr2a) at ([xshift=5mm]pf2.east) {Reg};
 \node[alu, anchor=west] (pa2) at (pr2a.east) {ALU};
@@ -417,7 +414,7 @@
 \draw[<->] ([yshift=-1mm]pr3b.south west) -- node[below, font=\tiny] {2 ns} ([yshift=-1mm]pr3b.south east);
 
 % Vertical arrow for execution order - relative to instructions
-\draw[->] ([xshift=-3mm]pf1ins.north west) -- ([xshift=-3mm]pf3ins.south west);
+\draw[->] ([xshift=-3mm]pf1ins.north west) -- node[left, rotate=90, anchor=center] {\tiny program execution order} ([xshift=-3mm]pf3ins.south west);
 
 \end{tikzpicture}
 
