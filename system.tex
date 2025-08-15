@@ -16,6 +16,15 @@
 \author{Lihu Rappoport}
 \date{}
 
+% Clock macro - draws a clock at given location
+\newcommand{\drawclock}[1]{
+    \begin{scope}[shift={(#1)}]
+        \draw[thick] (0,0) circle (0.12);
+        \draw[thick] (0,0) -- (0,0.08);
+        \draw[thick] (0,0) -- (0.05,-0.03);
+    \end{scope}
+}
+
 \begin{document}
 
 \frame{\titlepage}
@@ -66,18 +75,16 @@
 \node[label, olive] (cas) at (-3,-2.8) {CAS$\#$};
 \draw[signal, olive] (cas) -- (cas -| collatch.west);
 
+\coordinate (addr_split) at (-1.8,-1.25);
+
 \node[label] (addr) at (-3,-1.25) {addr};
-\draw[signal, line width=2pt] (addr.east) -- (-1.8,-1.25);
+\draw[signal, line width=2pt] (addr.east) -- (addr_split);
 % Branch to row and column latches
-\draw[signal, purple, line width=2pt] (-1.8,-1.25) -- (-1.8,0) -- (rowlatch.west);
-%\node[font=\small\bfseries, purple] at (-1.8,-0.6) {row};
-\draw[signal, olive, line width=2pt] (-1.8,-1.25) -- (-1.8,-2.5) -- (collatch.west);
-%\node[font=\small\bfseries, olive] at (-1.8,-1.9) {column};
+\draw[signal, purple, line width=2pt] (addr_split) -- (-1.8,0) -- (rowlatch.west);
+\draw[signal, olive, line width=2pt] (addr_split) -- (-1.8,-2.5) -- (collatch.west);
 
 % Clock symbols next to latches
-\draw[thick] (-0.4,0.3) circle (0.12);
-\draw[thick] (-0.4,0.3) -- (-0.4,0.38);
-\draw[thick] (-0.4,0.3) -- (-0.35,0.27);
+\drawclock{-2.2,-2}
 
 % Connections between blocks
 \draw[signal, purple, line width=1.5pt] (rowlatch.east) -- node[above, font=\small\bfseries, purple] {row} (rowdecoder.west);
@@ -111,9 +118,7 @@
   ++(1,0);
 
 % Clock symbol near data
-\draw[thick] (10,-2.8) circle (0.12);
-\draw[thick] (10,-2.8) -- (10,-2.72);
-\draw[thick] (10,-2.8) -- (10.05,-2.83);
+\drawclock{10,-2.8}
 
 \end{tikzpicture}
 \end{center}
