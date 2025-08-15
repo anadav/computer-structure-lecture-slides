@@ -227,17 +227,6 @@
         % PC MUX inputs: branch target from L3, branch from L2, and PC+4
         \draw[orange!70, thick, ->] (alu_output -| L3.east) -- ++(0.35,0) -- ++(0,3.3) -| (pcmux_selectorup);
         
-        % Code on the left (temporary - should be moved outside for flexibility)
-        \node[anchor=east, font=\footnotesize\ttfamily] at (-1.5,1.5) {
-            \begin{tabular}{rl}
-                0 & or\\
-                4 & jcc 50H\\
-                8 & and\\
-                12 & sw\\
-                16 & sub
-            \end{tabular}
-        };
-        
     \end{tikzpicture}
     }%
 }
@@ -990,7 +979,19 @@ SW   d,Rd
 %% Slide: Control Hazard on Branches - With Annotations
 \begin{frame}[label=control-hazard-annotated]{Control Hazard on Branches}
     \centering
-    \drawPipelineDiagram[0,0.5]
+    \begin{columns}[c]
+        \column{0.1\textwidth}
+        \begin{tabular}{rl}
+            \footnotesize 0 & \footnotesize\ttfamily or\\
+            \footnotesize 4 & \footnotesize\ttfamily jcc 50H\\
+            \footnotesize 8 & \footnotesize\ttfamily and\\
+            \footnotesize 12 & \footnotesize\ttfamily sw\\
+            \footnotesize 16 & \footnotesize\ttfamily sub
+        \end{tabular}
+        
+        \column{0.9\textwidth}
+        \drawPipelineDiagram[0,0.5]
+    \end{columns}
     
     % Add annotations specific to this slide
     \begin{tikzpicture}[remember picture, overlay]
