@@ -71,18 +71,18 @@
         % Define origin node for relative positioning
         \coordinate (origin) at (0,0);
         
-        % Pipeline latches - positioned relative to origin
+        % Pipeline latches - positioned relative to origin with equal spacing
         \node[latch] (L1) at ([shift={(3,2)}]origin) {};
         \node[latch] (L2) at ([shift={(3,0)}]L1) {};
-        \node[latch] (L3) at ([shift={(3.5,0)}]L2) {};
-        \node[latch] (L4) at ([shift={(2.5,0)}]L3) {};
+        \node[latch] (L3) at ([shift={(3,0)}]L2) {};
+        \node[latch] (L4) at ([shift={(3,0)}]L3) {};
         
-        % Stage labels - positioned relative to latches
-        \node[stage] at ([yshift=4cm]origin |- L1.north) {Fetch};
-        \node[stage] at ([yshift=4cm]L1.north) {Decode};
-        \node[stage] at ([yshift=4cm, xshift=1cm]L2.north) {Execute};
-        \node[stage] at ([yshift=4cm, xshift=0.5cm]L3.north) {Memory};
-        \node[stage] at ([yshift=4cm, xshift=0.5cm]L4.north) {WB};
+        % Stage labels - positioned at midpoints between latches
+        \node[stage] at ([yshift=4cm]$(origin)!0.5!(L1)$) {Fetch};
+        \node[stage] at ([yshift=4cm]$(L1)!0.5!(L2)$) {Decode};
+        \node[stage] at ([yshift=4cm]$(L2)!0.5!(L3)$) {Execute};
+        \node[stage] at ([yshift=4cm]$(L3)!0.5!(L4)$) {Memory};
+        \node[stage] at ([yshift=4cm]$(L4.east) + (1.5,0)$) {WB};
         
         % Fetch Stage
         % PC MUX (rotate=90: output on west) - positioned relative to PC
@@ -154,7 +154,7 @@
         \end{scope}
         
         % Memory Stage - positioned relative to L4
-        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at ([xshift=-1.2cm, yshift=0]L4.center) {};
+        \node[component, fill=brown!20, minimum width=1.2cm, minimum height=2cm] (DCache) at ([xshift=-1.5cm, yshift=0]L4.center) {};
         \node[align=center] at ([yshift=0.6cm]DCache.center) {\footnotesize data\\[-0.14cm]\footnotesize cache};
 
         % Data Cache ports (aligned to left side of box)
