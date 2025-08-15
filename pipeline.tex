@@ -12,26 +12,6 @@
 \usetheme{Madrid}
 
 % Define custom ALU shape command
-\newcommand{\drawALU}[1]{
-    \node[inner sep=0] (ALU) at #1 {
-        \begin{tikzpicture}[scale=0.5]
-            % Trapezoid shape for ALU
-            \coordinate (tl) at (-0.2, 0.8);
-            \coordinate (tr) at (0.2, 0.8);
-            \coordinate (ml) at (-0.3, 0);
-            \coordinate (mr) at (0.3, 0);
-            \coordinate (bl) at (-0.2, -0.8);
-            \coordinate (br) at (0.2, -0.8);
-            
-            \fill[green!20] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
-            \draw[thick] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
-            
-            \node[font=\tiny] at (0, 0) {ALU};
-        \end{tikzpicture}
-    };
-}
-
-% Define custom Adder shape command (similar to ALU but with +)
 \newcommand{\drawAdder}[1]{
     \node[inner sep=0] (adder) at #1 {
         \begin{tikzpicture}[scale=0.4]
@@ -370,6 +350,126 @@
     \end{tikzpicture}
 \end{frame}
 
+\begin{frame}{Pipelining Instructions}
+\begin{tikzpicture}[scale=0.9, transform shape,
+    stage/.style={draw, minimum height=6mm, minimum width=8mm, font=\tiny, align=center, inner sep=1pt},
+    fetch/.style={stage, fill=orange!60},
+    reg/.style={stage, fill=cyan!30},
+    alu/.style={stage, fill=green!40},
+    mem/.style={stage, fill=gray!30}]
+
+% First pipeline diagram (non-pipelined)
+\node[anchor=east] at (-1, 2) {\footnotesize \makecell[l]{Program\\execution\\order}};
+
+% Time axis for first diagram with ticks above
+\node[anchor=east] at (0.5, 1.5) {\footnotesize Time};
+\draw[->] (1, 1.5) -- (11, 1.5);
+\foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14, 9/16, 10/18} {
+    \draw (\x, 1.5) -- (\x, 1.6);  % tick marks
+    \node[above] at (\x, 1.6) {\tiny \t};
+}
+
+% First instruction row
+\node[fetch] (f1) at (1.5, 0.8) {Inst\\Fetch};
+\node[anchor=east] (f1ins) at (f1.west |- f1) {\footnotesize lw R1, 100(R0)};
+\node[reg, anchor=west] (r1a) at (f1.east) {Reg};
+\node[alu, anchor=west] (a1) at (r1a.east) {ALU};
+\node[mem, anchor=west] (m1) at (a1.east) {Data\\Access};
+\node[reg, anchor=west] (r1b) at (m1.east) {Reg};
+
+% Second instruction row  
+\node[fetch, anchor=north west] (f2) at (r1b.south east) {Inst\\Fetch};
+\node (f2ins) at (f1ins |- f2) {\footnotesize lw R2, 200(R0)};
+\node[reg, anchor=west] (r2a) at (f2.east) {Reg};
+\node[alu, anchor=west] (a2) at (r2a.east) {ALU};
+\node[mem, anchor=west] (m2) at (a2.east) {Data\\Access};
+\node[reg, anchor=west] (r2b) at (m2.east) {Reg};
+
+% Third instruction row
+\node[fetch, anchor=north west] (f3) at (r2b.south east) {Inst\\Fetch};
+\node at (f2ins |- f3) {\footnotesize lw R3, 300(R0)};
+\draw[dotted, ->] (f3.east) -- ++(2, 0);
+
+% Timing annotations
+\draw[<->] ([yshift=-2mm]f1.south west) -- ([yshift=-2mm]r1b.south east);
+\node[below] at (3, 0.3) {\footnotesize 8 ns};
+
+\draw[<->] ([yshift=-2mm]f2.south west) -- ([yshift=-2mm]r2b.south east);
+\node[below] at (6.5, -0.5) {\footnotesize 8 ns};
+
+\draw[<->] ([yshift=-2mm]f3.south west) -- ++(3.5, 0);
+\node[below] at (9.5, -1.3) {\footnotesize 8 ns};
+
+% Vertical arrow for execution order
+\draw[->] (-0.8, 0.6) -- (-0.8, -0.6);
+
+% Second pipeline diagram (pipelined) - moved higher
+\node[anchor=east] at (-1, -2.5) {\footnotesize \makecell[l]{Program\\execution\\order}};
+
+% Time axis for second diagram
+\node[anchor=east] at (0.5, -3) {\footnotesize Time};
+\draw[->] (1, -3) -- (9, -3);
+\foreach \x/\t in {1/0, 2/2, 3/4, 4/6, 5/8, 6/10, 7/12, 8/14} {
+    \draw (\x, -3) -- (\x, -2.9);  % tick marks
+    \node[above] at (\x, -2.9) {\tiny \t};
+}
+
+% First instruction (pipelined)
+\node[fetch] (pf1) at (1.5, -3.8) {Inst\\Fetch};
+\node[anchor=east] at (pf1.west |- pf1) {\footnotesize lw R1, 100(R0)};
+\node[reg, anchor=west] (pr1a) at (pf1.east) {Reg};
+\node[alu, anchor=west] (pa1) at (pr1a.east) {ALU};
+\node[mem, anchor=west] (pm1) at (pa1.east) {Data\\Access};
+\node[reg, anchor=west] (pr1b) at (pm1.east) {Reg};
+
+% Second instruction (pipelined - starts at southeast of first reg)
+\node[fetch, anchor=north west] (pf2) at ([yshift=-2mm]pr1a.south east) {Inst\\Fetch};
+\node[anchor=east] at (pf2.west |- pf2) {\footnotesize lw R2, 200(R0)};
+\node[reg, anchor=west] (pr2a) at (pf2.east) {Reg};
+\node[alu, anchor=west] (pa2) at (pr2a.east) {ALU};
+\node[mem, anchor=west] (pm2) at (pa2.east) {Data\\Access};
+\node[reg, anchor=west] (pr2b) at (pm2.east) {Reg};
+
+% Third instruction (pipelined - starts at southeast of second reg)
+\node[fetch, anchor=north west] (pf3) at ([yshift=-2mm]pr2a.south east) {Inst\\Fetch};
+\node[anchor=east] at (pf3.west |- pf3) {\footnotesize lw R3, 300(R0)};
+\node[reg, anchor=west] (pr3a) at (pf3.east) {Reg};
+\node[alu, anchor=west] (pa3) at (pr3a.east) {ALU};
+\node[mem, anchor=west] (pm3) at (pa3.east) {Data\\Access};
+\node[reg, anchor=west] (pr3b) at (pm3.east) {Reg};
+
+% Timing annotations for pipeline stages
+\draw[<->] ([yshift=-1mm]pf1.south west) -- ([yshift=-1mm]pf1.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pf1.south) {2 ns};
+
+\draw[<->] ([yshift=-1mm]pf2.south west) -- ([yshift=-1mm]pf2.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pf2.south) {2 ns};
+
+\draw[<->] ([yshift=-1mm]pf3.south west) -- ([yshift=-1mm]pf3.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pf3.south) {2 ns};
+
+\draw[<->] ([yshift=-1mm]pr3a.south west) -- ([yshift=-1mm]pr3a.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pr3a.south) {2 ns};
+
+\draw[<->] ([yshift=-1mm]pa3.south west) -- ([yshift=-1mm]pa3.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pa3.south) {2 ns};
+
+\draw[<->] ([yshift=-1mm]pm3.south west) -- ([yshift=-1mm]pm3.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pm3.south) {2 ns};
+
+\draw[<->] ([yshift=-1mm]pr3b.south west) -- ([yshift=-1mm]pr3b.south east);
+\node[below, font=\tiny] at ([yshift=-1mm]pr3b.south) {2 ns};
+
+% Vertical arrow for execution order
+\draw[->] (-0.8, -4) -- (-0.8, -5.5);
+
+\end{tikzpicture}
+
+\vspace{0.2cm}
+\centering
+\large Ideal speedup is number of stages in the pipeline. Do we achieve this?
+\end{frame}
+
 %% Slide: Pipelining Instructions
 \begin{frame}{Pipelining Instructions}
     \begin{columns}
@@ -462,6 +562,124 @@
         \item Each functional unit can only be used \textcolor{green}{once} per instruction
         \item Each functional unit must be used at the \textcolor{green}{same} stage for all instructions
     \end{itemize}
+\end{frame}
+
+\begin{frame}{Pipeline Architecture}
+\begin{center}
+\begin{tikzpicture}[scale=0.8, transform shape]
+    % Define styles
+    \tikzstyle{block} = [rectangle, draw, minimum width=0.8cm, minimum height=0.8cm, inner sep=0pt]
+    \tikzstyle{highlighted} = [rectangle, draw, minimum width=0.8cm, minimum height=0.8cm, inner sep=0pt, fill=orange!40, draw=orange!80]
+    \tikzstyle{buffer} = [regular polygon, regular polygon sides=3, draw, minimum width=0.8cm, minimum height=0.8cm, shape border rotate=0]
+    \tikzstyle{line} = [draw, -]
+    
+    % Row 1
+    \node[block] (IM1) at (0,0) {IM};
+    \node[block] (Reg11) at (1.5,0) {Reg};
+    \node[buffer] (Buf1) at (2.8,0) {};
+    \node[block] (DM1) at (4.1,0) {DM};
+    \node[highlighted] (Reg12) at (5.6,0) {Reg};
+    
+    % Connecting lines for Row 1
+    \draw[line] (IM1.east) -- (Reg11.west);
+    \draw[line] (Reg11.east) -- (Buf1.west);
+    \draw[line] (Buf1.east) -- (DM1.west);
+    \draw[line] (DM1.east) -- (Reg12.west);
+    \draw[line] (-0.7,0) -- (IM1.west);
+    \draw[line] (Reg12.east) -- (6.3,0);
+    
+    % Vertical bars for Row 1
+    \draw[thick] (0.75,-0.5) -- (0.75,0.5);
+    \draw[thick] (2.15,-0.5) -- (2.15,0.5);
+    \draw[thick] (3.45,-0.5) -- (3.45,0.5);
+    \draw[thick] (4.85,-0.5) -- (4.85,0.5);
+    
+    % Row 2
+    \node[block] (IM2) at (0,-1.5) {IM};
+    \node[block] (Reg21) at (1.5,-1.5) {Reg};
+    \node[buffer] (Buf2) at (2.8,-1.5) {};
+    \node[block] (DM2) at (4.1,-1.5) {DM};
+    \node[block] (Reg22) at (5.6,-1.5) {Reg};
+    
+    % Connecting lines for Row 2
+    \draw[line] (IM2.east) -- (Reg21.west);
+    \draw[line] (Reg21.east) -- (Buf2.west);
+    \draw[line] (Buf2.east) -- (DM2.west);
+    \draw[line] (DM2.east) -- (Reg22.west);
+    \draw[line] (-0.7,-1.5) -- (IM2.west);
+    \draw[line] (Reg22.east) -- (6.3,-1.5);
+    
+    % Vertical bars for Row 2
+    \draw[thick] (0.75,-2) -- (0.75,-1);
+    \draw[thick] (2.15,-2) -- (2.15,-1);
+    \draw[thick] (3.45,-2) -- (3.45,-1);
+    \draw[thick] (4.85,-2) -- (4.85,-1);
+    
+    % Row 3
+    \node[block, fill=gray!20] (IM3) at (0,-3) {IM};
+    \node[block, fill=gray!20] (Reg31) at (1.5,-3) {Reg};
+    \node[buffer, fill=gray!20] (Buf3) at (2.8,-3) {};
+    \node[block, fill=gray!20] (DM3) at (4.1,-3) {DM};
+    \node[block, fill=gray!20] (Reg32) at (5.6,-3) {Reg};
+    
+    % Connecting lines for Row 3
+    \draw[line] (IM3.east) -- (Reg31.west);
+    \draw[line] (Reg31.east) -- (Buf3.west);
+    \draw[line] (Buf3.east) -- (DM3.west);
+    \draw[line] (DM3.east) -- (Reg32.west);
+    \draw[line] (-0.7,-3) -- (IM3.west);
+    \draw[line] (Reg32.east) -- (6.3,-3);
+    
+    % Vertical bars for Row 3
+    \draw[thick] (0.75,-3.5) -- (0.75,-2.5);
+    \draw[thick] (2.15,-3.5) -- (2.15,-2.5);
+    \draw[thick] (3.45,-3.5) -- (3.45,-2.5);
+    \draw[thick] (4.85,-3.5) -- (4.85,-2.5);
+    
+    % Row 4
+    \node[block] (IM4) at (0,-4.5) {IM};
+    \node[highlighted] (Reg41) at (1.5,-4.5) {Reg};
+    \node[buffer] (Buf4) at (2.8,-4.5) {};
+    \node[block] (DM4) at (4.1,-4.5) {DM};
+    \node[block] (Reg42) at (5.6,-4.5) {Reg};
+    
+    % Connecting lines for Row 4
+    \draw[line] (IM4.east) -- (Reg41.west);
+    \draw[line] (Reg41.east) -- (Buf4.west);
+    \draw[line] (Buf4.east) -- (DM4.west);
+    \draw[line] (DM4.east) -- (Reg42.west);
+    \draw[line] (-0.7,-4.5) -- (IM4.west);
+    \draw[line] (Reg42.east) -- (6.3,-4.5);
+    
+    % Vertical bars for Row 4
+    \draw[thick] (0.75,-5) -- (0.75,-4);
+    \draw[thick] (2.15,-5) -- (2.15,-4);
+    \draw[thick] (3.45,-5) -- (3.45,-4);
+    \draw[thick] (4.85,-5) -- (4.85,-4);
+    
+    % Row 5
+    \node[block, fill=gray!20] (IM5) at (0,-6) {IM};
+    \node[block, fill=gray!20] (Reg51) at (1.5,-6) {Reg};
+    \node[buffer, fill=gray!20] (Buf5) at (2.8,-6) {};
+    \node[block, fill=gray!20] (DM5) at (4.1,-6) {DM};
+    \node[block, fill=gray!20] (Reg52) at (5.6,-6) {Reg};
+    
+    % Connecting lines for Row 5
+    \draw[line] (IM5.east) -- (Reg51.west);
+    \draw[line] (Reg51.east) -- (Buf5.west);
+    \draw[line] (Buf5.east) -- (DM5.west);
+    \draw[line] (DM5.east) -- (Reg52.west);
+    \draw[line] (-0.7,-6) -- (IM5.west);
+    \draw[line] (Reg52.east) -- (6.3,-6);
+    
+    % Vertical bars for Row 5
+    \draw[thick] (0.75,-6.5) -- (0.75,-5.5);
+    \draw[thick] (2.15,-6.5) -- (2.15,-5.5);
+    \draw[thick] (3.45,-6.5) -- (3.45,-5.5);
+    \draw[thick] (4.85,-6.5) -- (4.85,-5.5);
+    
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 %% Slide: Pipeline Example
