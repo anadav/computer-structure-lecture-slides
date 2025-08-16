@@ -1652,39 +1652,57 @@ Modified  & Yes & Yes  & No\\
 
 % Macro for the multi-processor example frames
 \newcommand{\mpexample}[8]{% {p1-cache}{p1-state}{p2-cache}{p2-state}{l2-content}{l2-bits}{memory}{description}
-  \begin{tikzpicture}[scale=0.6, every node/.style={font=\tiny}]
+  \centering
+  \begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
+    % L2 Cache - split into two lines
+    \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=1cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)\\[2pt]#5};
+ 
     % Processor 1 - direct code instead of macro
-    \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=2cm, align=center] (p1) at (0,0) {};
+    \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.8cm, align=center, anchor=south west] (p1) at ([yshift=20]l2.north west) {};
     \node[above] at (p1.north) {\textbf{Processor 1}};
     
     % Processor 2 - direct code instead of macro
-    \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=2cm, align=center] (p2) at (3.5,0) {};
+    \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.8cm, align=center, anchor=south east] (p2) at ([yshift=20]l2.north east) {};
     \node[above] at (p2.north) {\textbf{Processor 2}};
     
-    % L1 Caches with content
-    \node[draw, thick, fill=white, minimum width=1.8cm, minimum height=1cm, align=center] (l1p1) at (p1.center) {L1 cache: #1};
-    \node[draw, thick, fill=white, minimum width=1.8cm, minimum height=1cm, align=center] (l1p2) at (p2.center) {L1 cache: #3};
+    % L1 Caches with content - split into two lines
+    \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p1) at (p1.center) {L1 cache\\[2pt]#1};
+    \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p2) at (p2.center) {L1 cache\\[2pt]#3};
     
-    % State indicators
+    % State indicators - use actual colors not variable names
     \ifx&#2&\else
-      \node[circle, draw, thick, fill=#2, minimum size=0.4cm] at ($(l1p1.south east)+(-0.3,0.3)$) {\textbf{#2}};
+      \ifnum\pdfstrcmp{#2}{modifiedcolor}=0
+        \node[circle, draw, thick, fill=orange!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{M}};
+      \else\ifnum\pdfstrcmp{#2}{exclusivecolor}=0
+        \node[circle, draw, thick, fill=yellow!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{E}};
+      \else\ifnum\pdfstrcmp{#2}{sharedcolor}=0
+        \node[circle, draw, thick, fill=cyan!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{S}};
+      \else\ifnum\pdfstrcmp{#2}{invalidcolor}=0
+        \node[circle, draw, thick, fill=red!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{I}};
+      \fi\fi\fi\fi
     \fi
     \ifx&#4&\else
-      \node[circle, draw, thick, fill=#4, minimum size=0.4cm] at ($(l1p2.south east)+(-0.3,0.3)$) {\textbf{#4}};
+      \ifnum\pdfstrcmp{#4}{modifiedcolor}=0
+        \node[circle, draw, thick, fill=orange!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{M}};
+      \else\ifnum\pdfstrcmp{#4}{exclusivecolor}=0
+        \node[circle, draw, thick, fill=yellow!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{E}};
+      \else\ifnum\pdfstrcmp{#4}{sharedcolor}=0
+        \node[circle, draw, thick, fill=cyan!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{S}};
+      \else\ifnum\pdfstrcmp{#4}{invalidcolor}=0
+        \node[circle, draw, thick, fill=red!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{I}};
+      \fi\fi\fi\fi
     \fi
     
-    % L2 Cache
-    \node[draw, thick, fill=l2color, minimum width=4cm, minimum height=1cm, align=center] (l2) at (1.75,-2.2) {L2 cache (shared): #5};
-    
+   
     % Core valid bits
-    \node[draw, thick, minimum width=1.2cm, align=center] at ($(l2.east)+(1,0)$) {\tiny P1 P2: #6};
+    \node[draw, thick, minimum width=1cm, minimum height=0.6cm, align=center] at ($(l2.east)+(0.9,0)$) {\tiny P1 P2\\[-1pt]#6};
     
-    % Memory
-    \node[draw, thick, fill=memcolor, minimum width=3.5cm, minimum height=0.8cm, align=center] (mem) at (1.75,-3.8) {Memory: #7};
+    % Memory - split into two lines
+    \node[draw, thick, fill=blue!20, minimum width=3.8cm, minimum height=0.9cm, align=center, anchor=north] (mem) at ([yshift=-20]l2.south) {Memory\\[2pt]#7};
     
-    % Arrows
-    \draw[<->, thick] (l1p1.south) -- (l2.north west);
-    \draw[<->, thick] (l1p2.south) -- (l2.north east);
+    % Arrows with straight lines using |- syntax
+    \draw[<->, thick] (p1.south) -- (p1 |- l2.north);
+    \draw[<->, thick] (p2.south) -- (p2 |- l2.north);
     \draw[<->, thick] (l2.south) -- (mem.north);
   \end{tikzpicture}
 }
@@ -1694,7 +1712,7 @@ Modified  & Yes & Yes  & No\\
   \textbf{P1 reads address 1000}
   
   \begin{columns}
-    \column{0.4\textwidth}
+    \column{0.45\textwidth}
     \begin{itemize}
       \item P1 has a cache miss
       \item Data loaded from memory to L2
@@ -1702,7 +1720,7 @@ Modified  & Yes & Yes  & No\\
       \item Line marked as Exclusive (E) in P1
     \end{itemize}
     
-    \column{0.6\textwidth}
+    \column{0.55\textwidth}
     \mpexample{[1000]: 5}{exclusivecolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{}
   \end{columns}
 \end{frame}
@@ -1711,7 +1729,7 @@ Modified  & Yes & Yes  & No\\
   \textbf{P1 writes address 1000}
   
   \begin{columns}
-    \column{0.4\textwidth}
+    \column{0.45\textwidth}
     \begin{itemize}
       \item P1 modifies the value: 5 → 6
       \item Line transitions from E → M (Modified)
@@ -1719,7 +1737,7 @@ Modified  & Yes & Yes  & No\\
       \item Memory still has old value (5)
     \end{itemize}
     
-    \column{0.6\textwidth}
+    \column{0.55\textwidth}
     \centering
     \mpexample{[1000]: 6}{modifiedcolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{}
   \end{columns}
@@ -1729,7 +1747,7 @@ Modified  & Yes & Yes  & No\\
   \textbf{P2 reads address 1000}
   
   \begin{columns}
-    \column{0.4\textwidth}
+    \column{0.45\textwidth}
     \begin{itemize}
       \item P2 has a cache miss
       \item L2 snoops address 1000 from P1
@@ -1738,7 +1756,7 @@ Modified  & Yes & Yes  & No\\
       \item L2 updated with new value (6)
     \end{itemize}
     
-    \column{0.6\textwidth}
+    \column{0.55\textwidth}
     \mpexample{[1000]: 6}{sharedcolor}{[1000]: 6}{sharedcolor}{[1000]: 6\\M}{11}{[1000]: 5}{}
   \end{columns}
 \end{frame}
@@ -1747,7 +1765,7 @@ Modified  & Yes & Yes  & No\\
   \textbf{P2 requests ownership with write intent for address 1000}
   
   \begin{columns}
-    \column{0.4\textwidth}
+    \column{0.45\textwidth}
     \begin{itemize}
       \item P2 wants to write to address 1000
       \item L2 sends snoop invalidate to P1
@@ -1756,7 +1774,7 @@ Modified  & Yes & Yes  & No\\
       \item Core valid bits updated: P1=0, P2=1
     \end{itemize}
     
-    \column{0.6\textwidth}
+    \column{0.55\textwidth}
     \mpexample{[1000]: 6}{invalidcolor}{[1000]: 6}{exclusivecolor}{[1000]: 6\\M}{01}{[1000]: 5}{}
   \end{columns}
 \end{frame}
@@ -1764,7 +1782,7 @@ Modified  & Yes & Yes  & No\\
 \begin{frame}{Multi-processor Example: Step 5}
   \textbf{P2 writes address 1000}
   \begin{columns}
-    \column{0.4\textwidth}
+    \column{0.45\textwidth}
     \begin{itemize}
       \item P2 modifies the value: 6 → 7
       \item Line transitions from E → M (Modified) in P2
@@ -1772,7 +1790,7 @@ Modified  & Yes & Yes  & No\\
       \item L2 and Memory still have old values
     \end{itemize}
     
-    \column{0.6\textwidth}
+    \column{0.55\textwidth}
     \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{modifiedcolor}{[1000]: 6\\M}{01}{[1000]: 5}{}
   \end{columns}
 \end{frame}
@@ -1781,7 +1799,7 @@ Modified  & Yes & Yes  & No\\
   \textbf{L2 evicts address 1000}
   
   \begin{columns}
-    \column{0.4\textwidth}
+    \column{0.45\textwidth}
     \begin{itemize}
       \item L2 needs to evict line 1000 (e.g., for capacity)
       \item L2 sends snoop invalidate to P2
@@ -1790,7 +1808,7 @@ Modified  & Yes & Yes  & No\\
       \item All caches now invalid for address 1000
     \end{itemize}
     
-    \column{0.6\textwidth}
+    \column{0.55\textwidth}
     \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{invalidcolor}{[1000]: 7\\I}{00}{[1000]: 7}{}
   \end{columns}
 \end{frame}
