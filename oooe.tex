@@ -1497,20 +1497,25 @@
 \end{frame}
 
 
-% Updated macro with more flexibility
-\newcommand{\drawpipelineCustom}[5]{%
+% Updated macro with more flexibility and queue colors
+\newcommand{\drawpipelineCustomExt}[9]{%
     % Parameters: 
     % #1: Predict/Fetch color (0=normal, 1=highlight, 2=gray)
     % #2: Decode color
     % #3: Alloc color  
     % #4: Schedule/EX color
     % #5: Retire color
+    % #6: IQ queue color (0=green, 1=gray, 2=half gray/half green)
+    % #7: uopq queue color (0=green, 1=gray, 2=half gray/half green)
+    % #8: RS queue color (0=green, 1=gray, 2=half gray/half green)
+    % #9: ROB queue color (0=green, 1=gray, 2=half gray/half green)
     \begin{tikzpicture}[
         remember picture,
         stage/.style={rectangle, draw=black, thick, minimum width=2.2cm, minimum height=0.9cm, font=\footnotesize, fill=orange!40},
         stageHighlight/.style={stage, fill=yellow!60},
         stageGray/.style={stage, fill=gray!30},
         queue/.style={rectangle, draw=black, fill=green!60, minimum width=0.15cm, minimum height=0.7cm},
+        queueGray/.style={rectangle, draw=black, fill=gray!30, minimum width=0.15cm, minimum height=0.7cm},
         scale=0.75, transform shape
     ]
         
@@ -1526,10 +1531,24 @@
         \fi
         
         % IQ queue
-        \node[queue, right=0.1cm of fetch] (iq1) {};
-        \node[queue, right=0 of iq1] (iq2) {};
-        \node[queue, right=0 of iq2] (iq3) {};
-        \node[queue, right=0 of iq3] (iq4) {};
+        \ifnum#6=1
+            \node[queueGray, right=0.1cm of fetch] (iq1) {};
+            \node[queueGray, right=0 of iq1] (iq2) {};
+            \node[queueGray, right=0 of iq2] (iq3) {};
+            \node[queueGray, right=0 of iq3] (iq4) {};
+        \else
+            \ifnum#6=2
+                \node[queueGray, right=0.1cm of fetch] (iq1) {};
+                \node[queueGray, right=0 of iq1] (iq2) {};
+                \node[queue, right=0 of iq2] (iq3) {};
+                \node[queue, right=0 of iq3] (iq4) {};
+            \else
+                \node[queue, right=0.1cm of fetch] (iq1) {};
+                \node[queue, right=0 of iq1] (iq2) {};
+                \node[queue, right=0 of iq2] (iq3) {};
+                \node[queue, right=0 of iq3] (iq4) {};
+            \fi
+        \fi
         
         % Decode
         \ifnum#2=1
@@ -1543,10 +1562,24 @@
         \fi
         
         % uopq queue
-        \node[queue, right=0.1cm of decode] (uopq1) {};
-        \node[queue, right=0 of uopq1] (uopq2) {};
-        \node[queue, right=0 of uopq2] (uopq3) {};
-        \node[queue, right=0 of uopq3] (uopq4) {};
+        \ifnum#7=1
+            \node[queueGray, right=0.1cm of decode] (uopq1) {};
+            \node[queueGray, right=0 of uopq1] (uopq2) {};
+            \node[queueGray, right=0 of uopq2] (uopq3) {};
+            \node[queueGray, right=0 of uopq3] (uopq4) {};
+        \else
+            \ifnum#7=2
+                \node[queueGray, right=0.1cm of decode] (uopq1) {};
+                \node[queueGray, right=0 of uopq1] (uopq2) {};
+                \node[queue, right=0 of uopq2] (uopq3) {};
+                \node[queue, right=0 of uopq3] (uopq4) {};
+            \else
+                \node[queue, right=0.1cm of decode] (uopq1) {};
+                \node[queue, right=0 of uopq1] (uopq2) {};
+                \node[queue, right=0 of uopq2] (uopq3) {};
+                \node[queue, right=0 of uopq3] (uopq4) {};
+            \fi
+        \fi
         
         % Alloc
         \ifnum#3=1
@@ -1560,10 +1593,24 @@
         \fi
         
         % RS queue
-        \node[queue, right=0.1cm of alloc] (rs1) {};
-        \node[queue, right=0 of rs1] (rs2) {};
-        \node[queue, right=0 of rs2] (rs3) {};
-        \node[queue, right=0 of rs3] (rs4) {};
+        \ifnum#8=1
+            \node[queueGray, right=0.1cm of alloc] (rs1) {};
+            \node[queueGray, right=0 of rs1] (rs2) {};
+            \node[queueGray, right=0 of rs2] (rs3) {};
+            \node[queueGray, right=0 of rs3] (rs4) {};
+        \else
+            \ifnum#8=2
+                \node[queueGray, right=0.1cm of alloc] (rs1) {};
+                \node[queueGray, right=0 of rs1] (rs2) {};
+                \node[queue, right=0 of rs2] (rs3) {};
+                \node[queue, right=0 of rs3] (rs4) {};
+            \else
+                \node[queue, right=0.1cm of alloc] (rs1) {};
+                \node[queue, right=0 of rs1] (rs2) {};
+                \node[queue, right=0 of rs2] (rs3) {};
+                \node[queue, right=0 of rs3] (rs4) {};
+            \fi
+        \fi
         
         % Schedule/EX
         \ifnum#4=1
@@ -1579,21 +1626,34 @@
             \fi
         \fi
         
-        % ROB queue
-        \node[queue, right=0.1cm of ex] (rob1) {};
-        \node[queue, right=0 of rob1] (rob2) {};
-        \node[queue, right=0 of rob2] (rob3) {};
-        \node[queue, right=0 of rob3] (rob4) {};
-        \node[queue, right=0 of rob4] (rob5) {};
+        % ROB queue (shortened to 4 entries)
+        \ifnum#9=1
+            \node[queueGray, right=0.1cm of ex] (rob1) {};
+            \node[queueGray, right=0 of rob1] (rob2) {};
+            \node[queueGray, right=0 of rob2] (rob3) {};
+            \node[queueGray, right=0 of rob3] (rob4) {};
+        \else
+            \ifnum#9=2
+                \node[queueGray, right=0.1cm of ex] (rob1) {};
+                \node[queueGray, right=0 of rob1] (rob2) {};
+                \node[queue, right=0 of rob2] (rob3) {};
+                \node[queue, right=0 of rob3] (rob4) {};
+            \else
+                \node[queue, right=0.1cm of ex] (rob1) {};
+                \node[queue, right=0 of rob1] (rob2) {};
+                \node[queue, right=0 of rob2] (rob3) {};
+                \node[queue, right=0 of rob3] (rob4) {};
+            \fi
+        \fi
         
         % Retire
         \ifnum#5=1
-            \node[stageHighlight, right=0.1cm of rob5] (retire) {Retire};
+            \node[stageHighlight, right=0.1cm of rob4] (retire) {Retire};
         \else
             \ifnum#5=2
-                \node[stageGray, right=0.1cm of rob5] (retire) {Retire};
+                \node[stageGray, right=0.1cm of rob4] (retire) {Retire};
             \else
-                \node[stage, right=0.1cm of rob5] (retire) {Retire};
+                \node[stage, right=0.1cm of rob4] (retire) {Retire};
             \fi
         \fi
         
@@ -1601,8 +1661,13 @@
         \node[font=\scriptsize] at ($(iq1.south)!0.5!(iq4.south)+(0,-0.15)$) {IQ};
         \node[font=\scriptsize] at ($(uopq1.south)!0.5!(uopq4.south)+(0,-0.15)$) {$\mu$opq};
         \node[font=\scriptsize] at ($(rs1.south)!0.5!(rs4.south)+(0,-0.15)$) {RS};
-        \node[font=\scriptsize] at ($(rob1.south)!0.5!(rob5.south)+(0,-0.15)$) {ROB};
+        \node[font=\scriptsize] at ($(rob1.south)!0.5!(rob4.south)+(0,-0.15)$) {ROB};
     \end{tikzpicture}
+}
+
+% Original macro for backward compatibility - just calls extended version with all queues green
+\newcommand{\drawpipelineCustom}[5]{%
+    \drawpipelineCustomExt{#1}{#2}{#3}{#4}{#5}{0}{0}{0}{0}%
 }
 
 % Simplified version for basic highlighting
@@ -2069,7 +2134,7 @@
 \begin{frame}{Checkpoints: Renamer Recovery}
     \vspace{1cm}
     \centering
-    \drawpipelineCustom{2}{2}{2}{0}{0}
+    \drawpipelineCustomExt{2}{2}{2}{0}{0}{1}{1}{2}{2}
 
     \begin{tikzpicture}[overlay, remember picture]
         \draw[red, ultra thick] ([yshift=-1mm]alloc.south west) -- ([yshift=1mm]alloc.north west);
