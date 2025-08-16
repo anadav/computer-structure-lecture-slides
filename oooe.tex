@@ -1902,39 +1902,31 @@
 
 % Slide 10: Jump Misprediction - Flush at Execute
 \begin{frame}{Jump Misprediction -- Flush at Execute}
-    \centering
-    
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \textbf{When a jump misprediction is detected (at jump execution)}
-            \begin{itemize}
-                \item Flush the in-order front-end
-                \item Instructions already in the OOO part continue to execute
-                \begin{itemize}
-                    \item Including wrong-path instructions (waste of execution resource and power)
-                \end{itemize}
-                \item Start fetching and decoding instruction from the correct path
-                \begin{itemize}
-                    \item Note that the ``correct'' path may still be wrong ...
-                    \item An older instruction may cause an exception when it retires
-                    \item A older jump executed out-of-order can also mispredict
-                \end{itemize}
-                \item Block younger jumps (executed OOO) from clearing
-                \item The correct instruction stream is stalled at the Renamer
-                \begin{itemize}
-                    \item The RAT was wrongly updated also by wrong path instruction
-                \end{itemize}
-            \end{itemize}
-            
-            \textbf{When the mispredicted jump retires}
-            \begin{itemize}
-                \item All instructions in the RS/ROB are from the wrong path \\
-                $\Rightarrow$ Flush all instructions from the RS/ROB
-                \item Reset the Renamer to point only to architectural registers
-                \item Un-stall Rename, and allow instructions from correct path to rename/alloc
-            \end{itemize}
-        \end{column}
-    \end{columns}
+    \begin{itemize}
+        \item[] \textbf{When a jump misprediction is detected (at jump execution)}
+        \item Flush the in-order front-end
+        \item Instructions already in the OOO part continue to execute
+        \begin{itemize}
+            \item Including wrong-path instructions (waste of execution resources and power)
+        \end{itemize}
+        \item Start fetching and decoding instructions from the correct path
+        \begin{itemize}
+            \item Note that the ``correct'' path may still be wrong...
+            \item An older instruction may cause an exception when it retires
+            \item An older jump executed out-of-order can also mispredict
+        \end{itemize}
+        \item Block younger jumps (executed OOO) from clearing
+        \item The correct instruction stream is stalled at the Renamer
+        \begin{itemize}
+            \item The RAT (Register Alias Table) was wrongly updated by wrong-path instructions
+        \end{itemize}
+        \vspace{0.5cm}
+        \item[] \textbf{When the mispredicted jump retires}
+        \item All instructions in the RS/ROB are from the wrong path \\
+        $\Rightarrow$ Flush all instructions from the RS/ROB
+        \item Reset the Renamer to point only to architectural registers
+        \item Un-stall Renamer and allow instructions from correct path to rename/allocate
+    \end{itemize}
 \end{frame}
 
 % Slide 11: Flush at EXE: Jump Gets to EXE (first)
