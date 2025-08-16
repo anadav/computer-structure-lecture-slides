@@ -1635,41 +1635,48 @@
 % Slide 1: OOO Machine Pipeline
 \begin{frame}{OOO Machine Pipeline}
     \centering
-    \drawpipeline{0}
     
-    \vspace{0.3cm}
-    
-    % Frontend/Backend labels
+    % Background areas for Frontend/Backend
     \begin{tikzpicture}[overlay, remember picture]
-        \node[above=2.8cm of current page.center, xshift=-3.5cm, 
-              rectangle, draw=blue!50, fill=blue!10, rounded corners, 
-              minimum width=5cm, minimum height=0.5cm, font=\small] {Frontend};
-        \node[above=2.8cm of current page.center, xshift=3.5cm, 
-              rectangle, draw=blue!50, fill=blue!10, rounded corners, 
-              minimum width=5cm, minimum height=0.5cm, font=\small] {Backend};
+        % Define coordinates for the rectangles
+        \coordinate (frontend-tl) at ($(current page.center)+(-7.5,3)$);
+        \coordinate (frontend-br) at ($(current page.center)+(-0.5,1)$);
+        \coordinate (backend-tl) at ($(current page.center)+(-0.5,3)$);
+        \coordinate (backend-br) at ($(current page.center)+(7.5,1)$);
+        
+        % Frontend background (left side)
+        \fill[cyan!10, rounded corners=5pt] 
+            (frontend-tl) rectangle (frontend-br);
+        % Backend background (right side)
+        \fill[orange!10, rounded corners=5pt] 
+            (backend-tl) rectangle (backend-br);
+        
+        % Category labels positioned relative to rectangle bottoms
+        \node[font=\footnotesize\sffamily\itshape, text=cyan!60!black] 
+            at ($(frontend-tl)!0.5!(frontend-br)+(0,-0.3)$) {Frontend};
+        \node[font=\footnotesize\sffamily\itshape, text=orange!60!black] 
+            at ($(backend-tl)!0.5!(backend-br)+(0,-0.3)$) {Backend};
     \end{tikzpicture}
     
-    \vspace{0.8cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \textbf{IQ -- Instruction Queue}
-            \begin{itemize}
-                \item Used mostly in variable length instructions architectures
-                \item Smooth the variable number of instruction from a given fetch line
-            \end{itemize}
-            
-            \textbf{$\mu$opq}
-            \begin{itemize}
-                \item Buffer between the fronted and the backend of the machine
-                \item Frontend oversupply periods may cover for frontend undersupply periods
-            \end{itemize}
-            
-            \textbf{Buffers may be bypassed -- depending on implementation}
-            \begin{itemize}
-                \item If bypassed, don't cost a cycle when the buffer is empty, e.g., after pipeline flush due to jump misprediction, or following a period of undersupply
-            \end{itemize}
-        \end{column}
-    \end{columns}
+    \drawpipeline{0}
+    \begin{itemize}
+    \item \textbf{IQ -- Instruction Queue}
+    \begin{itemize}
+        \item Used mostly in variable length instructions architectures
+        \item Smooth the variable number of instruction from a given fetch line
+    \end{itemize}
+    
+    \item \textbf{$\mu$opq}
+    \begin{itemize}
+        \item Buffer between the fronted and the backend of the machine
+        \item Frontend oversupply periods may cover for frontend undersupply periods
+    \end{itemize}
+    
+    \item \textbf{Buffers may be bypassed -- depending on implementation}
+    \begin{itemize}
+        \item If bypassed, don't cost a cycle when the buffer is empty, e.g., after pipeline flush due to jump misprediction, or following a period of undersupply
+    \end{itemize}
+  \end{itemize}
 \end{frame}
 
 % Slide 2: Pipeline: Predict/Fetch (already provided by user)
