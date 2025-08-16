@@ -1495,4 +1495,102 @@
     \end{column}
   \end{columns}
 \end{frame}
+
+% Add this macro definition in your preamble (after \begin{document} or before if you prefer)
+\newcommand{\drawpipeline}[1]{%
+    % Parameter #1: stage to highlight (1=Predict/Fetch, 2=Decode, 3=Alloc, 4=Schedule/EX, 5=Retire)
+    \begin{tikzpicture}[
+        stage/.style={rectangle, draw=black, thick, minimum width=2.2cm, minimum height=0.9cm, font=\footnotesize},
+        queue/.style={rectangle, draw=black, fill=green!60, minimum width=0.15cm, minimum height=0.7cm},
+        highlight/.style={fill=yellow!60},
+        scale=0.75, transform shape
+    ]
+        
+        % Stages and queues
+        \ifnum#1=1
+            \node[stage, highlight] (fetch) {Predict/Fetch};
+        \else
+            \node[stage] (fetch) {Predict/Fetch};
+        \fi
+        
+        % IQ queue (4 slots)
+        \node[queue, right=0.1cm of fetch] (iq1) {};
+        \node[queue, right=0 of iq1] (iq2) {};
+        \node[queue, right=0 of iq2] (iq3) {};
+        \node[queue, right=0 of iq3] (iq4) {};
+        
+        \ifnum#1=2
+            \node[stage, highlight, right=0.1cm of iq4] (decode) {Decode};
+        \else
+            \node[stage, right=0.1cm of iq4] (decode) {Decode};
+        \fi
+        
+        % uopq queue (4 slots)
+        \node[queue, right=0.1cm of decode] (uopq1) {};
+        \node[queue, right=0 of uopq1] (uopq2) {};
+        \node[queue, right=0 of uopq2] (uopq3) {};
+        \node[queue, right=0 of uopq3] (uopq4) {};
+        
+        \ifnum#1=3
+            \node[stage, highlight, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
+        \else
+            \node[stage, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
+        \fi
+        
+        % RS queue (4 slots)
+        \node[queue, right=0.1cm of alloc] (rs1) {};
+        \node[queue, right=0 of rs1] (rs2) {};
+        \node[queue, right=0 of rs2] (rs3) {};
+        \node[queue, right=0 of rs3] (rs4) {};
+        
+        % Schedule and EX as two connected boxes
+        \ifnum#1=4
+            \node[stage, highlight, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+            \node[stage, highlight, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+        \else
+            \node[stage, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+            \node[stage, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+        \fi
+        
+        % ROB queue (5 slots)
+        \node[queue, right=0.1cm of ex] (rob1) {};
+        \node[queue, right=0 of rob1] (rob2) {};
+        \node[queue, right=0 of rob2] (rob3) {};
+        \node[queue, right=0 of rob3] (rob4) {};
+        \node[queue, right=0 of rob4] (rob5) {};
+        
+        \ifnum#1=5
+            \node[stage, highlight, right=0.1cm of rob5] (retire) {Retire};
+        \else
+            \node[stage, right=0.1cm of rob5] (retire) {Retire};
+        \fi
+        
+        % Labels for queues
+        \node[font=\scriptsize] at ($(iq1.south)!0.5!(iq4.south)+(0,-0.15)$) {IQ};
+        \node[font=\scriptsize] at ($(uopq1.south)!0.5!(uopq4.south)+(0,-0.15)$) {$\mu$opq};
+        \node[font=\scriptsize] at ($(rs1.south)!0.5!(rs4.south)+(0,-0.15)$) {RS};
+        \node[font=\scriptsize] at ($(rob1.south)!0.5!(rob5.south)+(0,-0.15)$) {ROB};
+    \end{tikzpicture}
+}
+
+% The actual slide
+\begin{frame}{Pipeline: Predict/Fetch}
+    \centering
+    \drawpipeline{1} % Highlight stage 1 (Predict/Fetch)
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item Predict the next fetch line
+                \item Fetch multiple instruction bytes from the I\$
+                \item In case of a variable instruction length architecture (like x86)
+                \begin{itemize}
+                    \item Length-decode instructions within the fetched instruction bytes
+                    \item Write the instructions into an Instruction Queue
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
 \end{document}
