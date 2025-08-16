@@ -30,6 +30,405 @@
 
 \frame{\titlepage}
 
+% Slide 1: Core vs Uncore
+\begin{frame}{CPU Architecture: Core vs Uncore}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Core (Execution Core):}
+\begin{itemize}
+\item The actual processing unit
+\item Contains:
+  \begin{itemize}
+  \item ALUs, FPU
+  \item Registers
+  \item L1 cache (I\$ + D\$)
+  \item Usually L2 cache (private)
+  \item Branch predictor
+  \item Decode/dispatch units
+  \end{itemize}
+\item Each core can run 1-2 threads (with SMT/HT)
+\item The part that executes instructions
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Uncore (System Agent):}
+\begin{itemize}
+\item Everything else on the chip
+\item Contains:
+  \begin{itemize}
+  \item Memory controllers
+  \item Last Level Cache (LLC/L3)
+  \item PCIe controllers
+  \item Interconnect (ring/mesh)
+  \item Power management
+  \item Integrated GPU (if present)
+  \end{itemize}
+\item Shared by all cores
+\item Runs at different frequency (often lower)
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+\draw[thick, dashed] (0,0) rectangle (7,3);
+\node at (3.5,2.7) {\textbf{CPU Die}};
+
+% Cores
+\foreach \x in {0.5,1.5,2.5} {
+    \draw[fill=blue!30] (\x,1.5) rectangle (\x+0.8,2.3);
+    \node at (\x+0.4,1.9) {\tiny Core};
+}
+
+% Uncore components
+\draw[fill=green!30] (4,1.5) rectangle (6.5,2.3);
+\node at (5.25,1.9) {\small Uncore};
+\draw[fill=gray!30] (0.5,0.5) rectangle (3.3,1.2);
+\node at (1.9,0.85) {\small L3 Cache};
+\draw[fill=orange!30] (4,0.5) rectangle (5,1.2);
+\node at (4.5,0.85) {\tiny MC};
+\draw[fill=purple!30] (5.2,0.5) rectangle (6.5,1.2);
+\node at (5.85,0.85) {\tiny PCIe/IO};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+% Slide 2: Tile Architecture
+\begin{frame}{Tile Architecture}
+\textbf{Tile}: A modular, repeatable unit in modern CPUs
+
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{What's in a Tile:}
+\begin{itemize}
+\item One or two cores
+\item Private L2 cache
+\item Slice of shared L3 cache
+\item Portion of the interconnect
+\item Local routing/control logic
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Why Tiles?}
+\begin{itemize}
+\item Modular design (copy-paste)
+\item Easier to scale (add more tiles)
+\item Better yield (disable bad tiles)
+\item Consistent layout for manufacturing
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+% Single tile detail
+\draw[ultra thick] (0,0) rectangle (2,2.5);
+\node at (1,2.2) {\textbf{Tile}};
+\draw[fill=blue!30] (0.2,1.5) rectangle (0.9,2);
+\node at (0.55,1.75) {\tiny Core};
+\draw[fill=blue!30] (1.1,1.5) rectangle (1.8,2);
+\node at (1.45,1.75) {\tiny Core};
+\draw[fill=yellow!30] (0.2,0.9) rectangle (1.8,1.3);
+\node at (1,1.1) {\tiny L2 Cache};
+\draw[fill=green!30] (0.2,0.3) rectangle (1.8,0.7);
+\node at (1,0.5) {\tiny L3 Slice};
+\draw[fill=red!20] (0.2,0.05) rectangle (1.8,0.25);
+\node at (1,0.15) {\tiny Ring Stop};
+
+\node at (1,-0.5) {\small Single Tile};
+
+% Multiple tiles
+\begin{scope}[shift={(3,0)}]
+\foreach \x in {0,1.5} {
+    \foreach \y in {0,1.3} {
+        \draw[thick] (\x,\y) rectangle (\x+1.3,\y+1);
+        \draw[fill=blue!20] (\x+0.1,\y+0.6) rectangle (\x+0.6,\y+0.9);
+        \draw[fill=green!20] (\x+0.1,\y+0.1) rectangle (\x+1.2,\y+0.4);
+    }
+}
+\draw[red, thick] (0.65,0) -- (0.65,2.3);
+\draw[red, thick] (1.5+0.65,0) -- (1.5+0.65,2.3);
+\draw[red, thick] (0,0.5) -- (2.8,0.5);
+\draw[red, thick] (0,1.8) -- (2.8,1.8);
+\node at (1.4,-0.5) {\small 4-Tile Mesh};
+\end{scope}
+\end{tikzpicture}
+\end{center}
+
+\textbf{Examples:}
+\begin{itemize}
+\item Intel Skylake-SP: Tiles in mesh
+\item Intel Lakefield: Big + small tiles
+\item Modern server CPUs: 10-40 tiles
+\end{itemize}
+\end{columns}
+\end{frame}
+
+% Slide 3: Die and Multi-Die Designs
+\begin{frame}{Die and Multi-Die Designs}
+\begin{columns}[T]
+\column{0.45\textwidth}
+\textbf{Die (Silicon Die):}
+\begin{itemize}
+\item Single piece of silicon
+\item Cut from a wafer
+\item Contains transistors/circuits
+\item Traditional: 1 die = 1 CPU
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Monolithic Die:}
+\begin{itemize}
+\item Everything on one die
+\item Simpler, lower latency
+\item More expensive (yield)
+\item Size limited by manufacturing
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Multi-Die (Chiplet):}
+\begin{itemize}
+\item Multiple smaller dies
+\item Connected in package
+\item Better yield, mix-and-match
+\item Higher latency between dies
+\end{itemize}
+
+\column{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+% Monolithic
+\draw[thick] (0,0) rectangle (3,2.5);
+\node at (1.5,2.2) {\textbf{Monolithic}};
+\foreach \x in {0.3,0.9,1.5,2.1} {
+    \draw[fill=blue!30] (\x,1.5) rectangle (\x+0.4,1.9);
+}
+\draw[fill=green!30] (0.3,0.8) rectangle (2.7,1.2);
+\node at (1.5,1) {\tiny L3 Cache};
+\draw[fill=orange!30] (0.3,0.3) rectangle (1.4,0.6);
+\node at (0.85,0.45) {\tiny MC};
+\draw[fill=purple!30] (1.6,0.3) rectangle (2.7,0.6);
+\node at (2.15,0.45) {\tiny I/O};
+\node at (1.5,-0.3) {\small Intel Core i7};
+
+% Chiplet design
+\begin{scope}[shift={(4.5,0)}]
+% CCD 1
+\draw[thick, fill=blue!10] (0,1.3) rectangle (1.3,2.5);
+\node at (0.65,2.2) {\tiny CCD};
+\foreach \x in {0.1,0.7} {
+    \foreach \y in {1.4,1.8} {
+        \draw[fill=blue!30] (\x,\y) rectangle (\x+0.4,\y+0.3);
+    }
+}
+
+% CCD 2
+\draw[thick, fill=blue!10] (1.5,1.3) rectangle (2.8,2.5);
+\node at (2.15,2.2) {\tiny CCD};
+\foreach \x in {1.6,2.2} {
+    \foreach \y in {1.4,1.8} {
+        \draw[fill=blue!30] (\x,\y) rectangle (\x+0.4,\y+0.3);
+    }
+}
+
+% IOD
+\draw[thick, fill=orange!10] (0,0) rectangle (2.8,1.1);
+\node at (1.4,0.8) {\small I/O Die};
+\draw[fill=orange!30] (0.2,0.3) rectangle (1.2,0.6);
+\node at (0.7,0.45) {\tiny MC};
+\draw[fill=purple!30] (1.6,0.3) rectangle (2.6,0.6);
+\node at (2.1,0.45) {\tiny PCIe};
+
+% Connections
+\draw[<->, red, thick] (0.65,1.3) -- (0.65,1.1);
+\draw[<->, red, thick] (2.15,1.3) -- (2.15,1.1);
+
+\node at (1.4,-0.3) {\small AMD Ryzen};
+\end{scope}
+\end{tikzpicture}
+\end{center}
+
+\textbf{Advantages of Chiplets:}
+\begin{itemize}
+\item Mix different process nodes (7nm compute, 14nm I/O)
+\item Reuse dies across products
+\item Better yields (smaller dies)
+\end{itemize}
+\end{columns}
+\end{frame}
+
+% Slide 4: Package and Socket
+\begin{frame}{Package and Socket}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Package:}
+\begin{itemize}
+\item Physical chip you can hold
+\item Contains:
+  \begin{itemize}
+  \item One or more dies
+  \item Substrate (PCB)
+  \item Heat spreader (IHS)
+  \item Pins/pads for connection
+  \end{itemize}
+\item Protects silicon
+\item Provides electrical connections
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Socket:}
+\begin{itemize}
+\item Receptacle on motherboard
+\item Holds the package
+\item Examples: LGA1700, AM5, SP3
+\item Defines:
+  \begin{itemize}
+  \item Pin count and layout
+  \item Power delivery
+  \item Memory channels
+  \end{itemize}
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+% Cross-section view
+\node at (0,3.5) {\textbf{Package Cross-Section}};
+
+% IHS
+\draw[fill=gray!50] (-2,2) rectangle (2,2.5);
+\node at (0,2.25) {\small IHS (Heat Spreader)};
+
+% Die
+\draw[fill=blue!30] (-1,1.3) rectangle (1,1.8);
+\node at (0,1.55) {\small Die};
+
+% Substrate
+\draw[fill=green!30] (-2.5,0.5) rectangle (2.5,1.2);
+\node at (0,0.85) {\small Substrate};
+
+% Pins
+\foreach \x in {-2,-1.5,-1,-0.5,0,0.5,1,1.5,2} {
+    \draw[thick] (\x,0.5) -- (\x,0.2);
+}
+\node at (0,0) {\small Pins/Pads};
+
+% Socket representation
+\draw[ultra thick] (-3,-0.5) rectangle (3,-0.2);
+\node at (0,-0.7) {\small Socket};
+
+% Motherboard
+\draw[fill=green!60] (-3.5,-1.5) rectangle (3.5,-0.9);
+\node at (0,-1.2) {\small Motherboard};
+
+\draw[<->, thick] (2.7,2.25) -- (2.7,-0.35) node[midway, right] {\small Package};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Multi-Socket Systems:}
+\begin{itemize}
+\item 2S, 4S, 8S (S = Socket)
+\item Each socket = independent CPU
+\item Connected via UPI/IF
+\item Creates NUMA topology
+\end{itemize}
+\end{columns}
+\end{frame}
+
+% Slide 5: Putting It All Together
+\begin{frame}{Hierarchy: From Transistor to System}
+\begin{center}
+\begin{tikzpicture}[scale=0.75,
+    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.8cm}
+]
+
+% Hierarchy levels
+\node[level, fill=red!20] (trans) at (0,0) {Transistors};
+\node[level, fill=orange!20] (core) at (0,1.2) {Core};
+\node[level, fill=yellow!20] (tile) at (0,2.4) {Tile};
+\node[level, fill=green!20] (die) at (0,3.6) {Die};
+\node[level, fill=blue!20] (package) at (0,4.8) {Package};
+\node[level, fill=purple!20] (system) at (0,6) {System};
+
+% Descriptions
+\node[text width=4cm, right] at (3,0) {\small Billions of switches\\ (5-10nm process)};
+\node[text width=4cm, right] at (3,1.2) {\small Execution unit + L1/L2\\ (1-2 threads)};
+\node[text width=4cm, right] at (3,2.4) {\small Core(s) + L3 slice + interconnect\\ (modular unit)};
+\node[text width=4cm, right] at (3,3.6) {\small Complete silicon chip\\ (monolithic or chiplet)};
+\node[text width=4cm, right] at (3,4.8) {\small Die(s) + substrate + pins\\ (what goes in socket)};
+\node[text width=4cm, right] at (3,6) {\small Multiple sockets + memory + I/O\\ (complete computer)};
+
+% Examples on left
+\node[text width=3cm, left] at (-3,0) {\small \textit{7nm = 10M+/mm²}};
+\node[text width=3cm, left] at (-3,1.2) {\small \textit{Golden Cove, Zen 4}};
+\node[text width=3cm, left] at (-3,2.4) {\small \textit{2-core tile}};
+\node[text width=3cm, left] at (-3,3.6) {\small \textit{CCD, Alder Lake die}};
+\node[text width=3cm, left] at (-3,4.8) {\small \textit{Xeon, EPYC, Core i9}};
+\node[text width=3cm, left] at (-3,6) {\small \textit{2S server, workstation}};
+
+% Arrows
+\foreach \i in {0,1,2,3,4} {
+    \draw[->, thick] (0,\i*1.2+0.4) -- (0,\i*1.2+0.8);
+}
+
+\end{tikzpicture}
+\end{center}
+
+\textbf{Key Insight:} Each level has its own interconnect needs:
+\begin{itemize}
+\item Within core: Register bypass networks
+\item Within tile: L2-L3 connections
+\item Within die: Ring/mesh/crossbar
+\item Within package: Die-to-die (chiplets)
+\item Between packages: UPI/IF (NUMA)
+\end{itemize}
+\end{frame}
+
+% Slide 6: Modern Examples
+\begin{frame}{Modern CPU Examples}
+\begin{center}
+\small
+\begin{tabular}{l|c|c|c|c}
+\toprule
+\textbf{CPU} & \textbf{Cores/Die} & \textbf{Dies/Pkg} & \textbf{Interconnect} & \textbf{Notes} \\
+\midrule
+Intel Core i9-13900K & 24 (8P+16E) & 1 & Ring + Fabric & Monolithic \\
+Intel Xeon Platinum & up to 40 & 1 & Mesh & Monolithic, tiles \\
+\midrule
+AMD Ryzen 9 7950X & 16 & 2 CCD + 1 IOD & IF (intra \& inter) & Chiplet \\
+AMD EPYC 9654 & 96 & 12 CCD + 1 IOD & IF & Massive chiplet \\
+\midrule
+Apple M2 Ultra & 24 & 2 & UltraFusion & Die-to-die bridge \\
+\midrule
+Intel Sapphire Rapids & up to 60 & 4 & EMIB bridges & Multi-tile \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Monolithic Advantages:}
+\begin{itemize}
+\item Lower latency
+\item Simpler software model
+\item No die-to-die overhead
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Multi-Die Advantages:}
+\begin{itemize}
+\item Higher core counts
+\item Better yields
+\item Mix-and-match configs
+\item Reusable components
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\textbf{Software must adapt to these different architectures for optimal performance!}
+\end{frame}
+
+
 % Slide 1: Modern CPU Architecture Overview
 \begin{frame}{Modern Multi-Core CPU Architecture}
 \begin{columns}[T]
