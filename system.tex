@@ -106,19 +106,19 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \node at (0, 1.5) {\footnotesize (Intel Core, Xeon E5)};
 % Draw ring
 \draw[thick, blue] (0,0) circle (1cm);
-% Add components
-\node[core] (c0) at (0,1) {\tiny C0};
-\node[core] (c1) at (1,0) {\tiny C1};
-\node[core] (c2) at (0,-1) {\tiny C2};
-\node[core] (c3) at (-1,0) {\tiny C3};
-\node[cache] at (0,-1.8) {\tiny L3 Slice};
-\node[mc] at (0,-2.3) {\tiny MC};
+% Add components with L3 slices
+\foreach \i/\angle in {0/90, 1/0, 2/270, 3/180} {
+    \node[core] (c\i) at (\angle:1) {\tiny C\i};
+    \node[cache, minimum width=0.3cm] at (\angle:0.65) {\tiny L3};
+}
+\node[mc] (ring_mc) at (0,-2) {\tiny MC};
+\draw[<->, thick] (c2) -- (ring_mc.north);
 
 % Annotations
 \node[text width=5cm, align=left] at (0,-4.2) {
 \footnotesize
 • Bidirectional ring\\
-• Each stop: core + L3 slice\\
+• Each core has L3 slice\\
 • Low latency (5-12 hops)\\
 • Limited to ~10 cores
 };
@@ -128,10 +128,11 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \begin{scope}[shift={(2.5,0)}]
 \node at (0, 2) {\textbf{Mesh}};
 \node at (0, 1.5) {\footnotesize (Intel Xeon SP)};
-% Draw mesh
+% Draw mesh with integrated L3
 \foreach \x in {-1,0,1} {
     \foreach \y in {-1,0,1} {
-        \node[core] at (\x*0.7,\y*0.7) {\tiny};
+        \node[core] (m\x\y) at (\x*0.7,\y*0.7) {\tiny};
+        \node[cache, minimum width=0.25cm, minimum height=0.15cm] at (\x*0.7+0.15,\y*0.7-0.15) {\tiny};
     }
 }
 % Draw connections
@@ -141,47 +142,61 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \foreach \y in {-1,0,1} {
     \draw[blue, thick] (-1*0.7,\y*0.7) -- (1*0.7,\y*0.7);
 }
-\node[cache] at (0,-1.8) {\tiny L3 Distributed};
-\node[mc] at (0,-2.3) {\tiny MC};
+\node[mc] (mesh_mc1) at (-0.7,-2) {\tiny MC};
+\node[mc] (mesh_mc2) at (0.7,-2) {\tiny MC};
+\draw[<->, thick] (m-1-1) -- (mesh_mc1.north);
+\draw[<->, thick] (m1-1) -- (mesh_mc2.north);
 
 % Annotations
 \node[text width=5cm, align=left] at (0,-4.2) {
 \footnotesize
 • 2D grid topology\\
-• Scalable to many cores\\
-• Variable latency\\
-• Better bandwidth
+• Each tile: core + L3 slice\\
+• Multiple MCs at edges\\
+• Better bandwidth \& scaling
 };
 \end{scope}
 
 % Crossbar/IF
 \begin{scope}[shift={(10,0)}]
 \node at (0, 2) {\textbf{Infinity Fabric}};
-\node at (0, 1.5) {\footnotesize (AMD Zen CCX)};
-% CCX box
-\draw[dashed, thick] (-1.2,-1.2) rectangle (1.2,1.2);
-% Cores in CCX
+\node at (0, 1.5) {\footnotesize (AMD Zen)};
+
+% CCX 0
+\begin{scope}[shift={(-1.2,0)}]
+\draw[dashed, thick] (-0.8,-0.8) rectangle (0.8,0.8);
 \foreach \i in {0,1,2,3} {
-    \node[core] (z\i) at ({45+\i*90}:0.7) {\tiny};
+    \node[core] (z0\i) at ({45+\i*90}:0.45) {\tiny};
 }
-% Full crossbar
+\node[cache, minimum width=0.8cm, minimum height=0.2cm] at (0,-0.5) {\tiny L3};
+\node at (0,0) {\tiny CCX0};
+\end{scope}
+
+% CCX 1
+\begin{scope}[shift={(1.2,0)}]
+\draw[dashed, thick] (-0.8,-0.8) rectangle (0.8,0.8);
 \foreach \i in {0,1,2,3} {
-    \foreach \j in {0,1,2,3} {
-        \ifnum\i<\j
-            \draw[gray!40] (z\i) -- (z\j);
-        \fi
-    }
+    \node[core] (z1\i) at ({45+\i*90}:0.45) {\tiny};
 }
-\node[cache] at (0,-1.8) {\tiny L3 Shared};
-\node at (0,0) {\tiny CCX};
+\node[cache, minimum width=0.8cm, minimum height=0.2cm] at (0,-0.5) {\tiny L3};
+\node at (0,0) {\tiny CCX1};
+\end{scope}
+
+% Infinity Fabric interconnect
+\draw[<->, ultra thick, red] (-0.4,0) -- node[above, font=\tiny] {IF} (0.4,0);
+
+% Memory controller
+\node[mc] (ifmc) at (0,-2) {\tiny MC};
+\draw[<->, thick] (-1.2,-0.8) |- (ifmc.west);
+\draw[<->, thick] (1.2,-0.8) |- (ifmc.east);
 
 % Annotations
 \node[text width=5cm, align=left] at (0,-4.2) {
 \footnotesize
-• Full crossbar in CCX\\
-• 4 cores per CCX\\
-• Multiple CCX per die\\
-• Lowest latency
+• 4 cores + L3 per CCX\\
+• IF connects CCXs\\
+• Shared MC\\
+• Low latency within CCX
 };
 \end{scope}
 
