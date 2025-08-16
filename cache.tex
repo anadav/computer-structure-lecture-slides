@@ -1512,17 +1512,6 @@ Modified  & Yes & Yes  & No\\
 \definecolor{memcolor}{RGB}{180, 200, 255}
 \definecolor{l2color}{RGB}{255, 220, 180}
 
-% Macro for cache box
-\newcommand{\cachebox}[4]{% {name}{content}{color}{position}
-  \node[draw, thick, fill=#3!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (#1) at #4 {#2};
-}
-
-% Macro for processor box
-\newcommand{\processor}[3]{% {name}{label}{position}
-  \node[draw, thick, fill=green!20, minimum width=3cm, minimum height=4cm, align=center] (#1) at #3 {};
-  \node[above] at (#1.north) {\textbf{#2}};
-}
-
 % Macro for MESI state badge
 \newcommand{\mesistate}[2]{% {state}{color}
   \tikz[baseline=(char.base)] \node[circle, draw, thick, fill=#2, minimum size=0.5cm, inner sep=1pt] (char) {\textbf{#1}};
@@ -1548,21 +1537,24 @@ Modified  & Yes & Yes  & No\\
     
     \column{0.5\textwidth}
     \begin{tikzpicture}[scale=0.8, every node/.style={font=\small}]
-      % Processors
-      \processor{p1}{Core 1}{(0,0)}
-      \processor{p2}{Core 2}{(4,0)}
+      % Processors - direct code instead of processor macro
+      \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=2cm, align=center] (p1) at (0,0) {};
+      \node[above] at (p1.north) {\textbf{Core 1}};
       
-      % L1 Caches
-      \cachebox{l1inst1}{L1 inst\\Cache}{white}{($(p1.center)+(0,0.5)$)}
-      \cachebox{l1data1}{L1 data\\Cache}{white}{($(p1.center)+(0,-0.5)$)}
-      \cachebox{l1inst2}{L1 inst\\Cache}{white}{($(p2.center)+(0,0.5)$)}
-      \cachebox{l1data2}{L1 data\\Cache}{white}{($(p2.center)+(0,-0.5)$)}
+      \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=2cm, align=center] (p2) at (4,0) {};
+      \node[above] at (p2.north) {\textbf{Core 2}};
       
-      % L2 Cache
-      \cachebox{l2}{L2 cache\\(shared)}{l2color}{(2,-3)}
+      % L1 Caches - direct code instead of cachebox macro
+      \node[draw, thick, fill=white!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (l1inst1) at ($(p1.center)+(0,0.5)$) {L1 inst\\Cache};
+      \node[draw, thick, fill=white!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (l1data1) at ($(p1.center)+(0,-0.5)$) {L1 data\\Cache};
+      \node[draw, thick, fill=white!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (l1inst2) at ($(p2.center)+(0,0.5)$) {L1 inst\\Cache};
+      \node[draw, thick, fill=white!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (l1data2) at ($(p2.center)+(0,-0.5)$) {L1 data\\Cache};
       
-      % Memory
-      \cachebox{mem}{Memory}{memcolor}{(2,-5.5)}
+      % L2 Cache - direct code instead of cachebox macro
+      \node[draw, thick, fill=l2color!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (l2) at (2,-3) {L2 cache\\(shared)};
+      
+      % Memory - direct code instead of cachebox macro
+      \node[draw, thick, fill=memcolor!30, minimum width=2.5cm, minimum height=1.5cm, align=center] (mem) at (2,-5.5) {Memory};
       
       % Arrows
       \draw[->, thick] (p1.south) -- (l2.north west);
@@ -1660,14 +1652,18 @@ Modified  & Yes & Yes  & No\\
 
 % Macro for the multi-processor example frames
 \newcommand{\mpexample}[8]{% {p1-cache}{p1-state}{p2-cache}{p2-state}{l2-content}{l2-bits}{memory}{description}
-  \begin{tikzpicture}[scale=0.9, every node/.style={font=\footnotesize}]
-    % Processors
-    \processor{p1}{Processor 1}{(0,0)}
-    \processor{p2}{Processor 2}{(4.5,0)}
+  \begin{tikzpicture}[scale=0.6, every node/.style={font=\tiny}]
+    % Processor 1 - direct code instead of macro
+    \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=2cm, align=center] (p1) at (0,0) {};
+    \node[above] at (p1.north) {\textbf{Processor 1}};
+    
+    % Processor 2 - direct code instead of macro
+    \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=2cm, align=center] (p2) at (3.5,0) {};
+    \node[above] at (p2.north) {\textbf{Processor 2}};
     
     % L1 Caches with content
-    \node[draw, thick, fill=white, minimum width=2.2cm, minimum height=1.2cm, align=center] (l1p1) at ($(p1.center)$) {L1 cache\\#1};
-    \node[draw, thick, fill=white, minimum width=2.2cm, minimum height=1.2cm, align=center] (l1p2) at ($(p2.center)$) {L1 cache\\#3};
+    \node[draw, thick, fill=white, minimum width=1.8cm, minimum height=1cm, align=center] (l1p1) at (p1.center) {L1 cache: #1};
+    \node[draw, thick, fill=white, minimum width=1.8cm, minimum height=1cm, align=center] (l1p2) at (p2.center) {L1 cache: #3};
     
     % State indicators
     \ifx&#2&\else
@@ -1678,110 +1674,125 @@ Modified  & Yes & Yes  & No\\
     \fi
     
     % L2 Cache
-    \node[draw, thick, fill=l2color, minimum width=5cm, minimum height=1.2cm, align=center] (l2) at (2.25,-2.5) {L2 cache (shared)\\#5};
+    \node[draw, thick, fill=l2color, minimum width=4cm, minimum height=1cm, align=center] (l2) at (1.75,-2.2) {L2 cache (shared): #5};
     
     % Core valid bits
-    \node[draw, thick, minimum width=1.5cm, align=center] at ($(l2.east)+(1.3,0)$) {\tiny P1 P2\\#6};
+    \node[draw, thick, minimum width=1.2cm, align=center] at ($(l2.east)+(1,0)$) {\tiny P1 P2: #6};
     
     % Memory
-    \node[draw, thick, fill=memcolor, minimum width=4cm, minimum height=1cm, align=center] (mem) at (2.25,-4.5) {Memory\\#7};
+    \node[draw, thick, fill=memcolor, minimum width=3.5cm, minimum height=0.8cm, align=center] (mem) at (1.75,-3.8) {Memory: #7};
     
     % Arrows
     \draw[<->, thick] (l1p1.south) -- (l2.north west);
     \draw[<->, thick] (l1p2.south) -- (l2.north east);
     \draw[<->, thick] (l2.south) -- (mem.north);
-    
-    % Description
-    \node[text width=7cm, align=left] at (2.25,-6) {\small #8};
   \end{tikzpicture}
 }
 
 % Frames 5-12: Multi-processor Example
 \begin{frame}{Multi-processor Example: Step 1}
-  \centering
   \textbf{P1 reads address 1000}
   
-  \vspace{0.3cm}
-  
-  \mpexample{[1000]: 5}{exclusivecolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{
-    \textbullet~P1 has a cache miss\\
-    \textbullet~Data loaded from memory to L2\\
-    \textbullet~L2 forwards to P1's L1\\
-    \textbullet~Line marked as Exclusive (E) in P1
-  }
+  \begin{columns}
+    \column{0.4\textwidth}
+    \begin{itemize}
+      \item P1 has a cache miss
+      \item Data loaded from memory to L2
+      \item L2 forwards to P1's L1
+      \item Line marked as Exclusive (E) in P1
+    \end{itemize}
+    
+    \column{0.6\textwidth}
+    \mpexample{[1000]: 5}{exclusivecolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{}
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 2}
-  \centering
   \textbf{P1 writes address 1000}
   
-  \vspace{0.3cm}
-  
-  \mpexample{[1000]: 6}{modifiedcolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{
-    \textbullet~P1 modifies the value: 5 → 6\\
-    \textbullet~Line transitions from E → M (Modified)\\
-    \textbullet~L2 still has old value (5)\\
-    \textbullet~Memory still has old value (5)
-  }
+  \begin{columns}
+    \column{0.4\textwidth}
+    \begin{itemize}
+      \item P1 modifies the value: 5 → 6
+      \item Line transitions from E → M (Modified)
+      \item L2 still has old value (5)
+      \item Memory still has old value (5)
+    \end{itemize}
+    
+    \column{0.6\textwidth}
+    \centering
+    \mpexample{[1000]: 6}{modifiedcolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{}
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 3}
-  \centering
   \textbf{P2 reads address 1000}
   
-  \vspace{0.3cm}
-  
-  \mpexample{[1000]: 6}{sharedcolor}{[1000]: 6}{sharedcolor}{[1000]: 6\\M}{11}{[1000]: 5}{
-    \textbullet~P2 has a cache miss\\
-    \textbullet~L2 snoops address 1000 from P1\\
-    \textbullet~P1 writes back modified data (6) to L2\\
-    \textbullet~Both P1 and P2 now have line in Shared (S) state\\
-    \textbullet~L2 updated with new value (6)
-  }
+  \begin{columns}
+    \column{0.4\textwidth}
+    \begin{itemize}
+      \item P2 has a cache miss
+      \item L2 snoops address 1000 from P1
+      \item P1 writes back modified data (6) to L2
+      \item Both P1 and P2 now have line in Shared (S) state
+      \item L2 updated with new value (6)
+    \end{itemize}
+    
+    \column{0.6\textwidth}
+    \mpexample{[1000]: 6}{sharedcolor}{[1000]: 6}{sharedcolor}{[1000]: 6\\M}{11}{[1000]: 5}{}
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 4}
-  \centering
   \textbf{P2 requests ownership with write intent for address 1000}
   
-  \vspace{0.3cm}
-  
-  \mpexample{[1000]: 6}{invalidcolor}{[1000]: 6}{exclusivecolor}{[1000]: 6\\M}{01}{[1000]: 5}{
-    \textbullet~P2 wants to write to address 1000\\
-    \textbullet~L2 sends snoop invalidate to P1\\
-    \textbullet~P1 invalidates its copy (S → I)\\
-    \textbullet~L2 grants exclusive ownership to P2 (S → E)\\
-    \textbullet~Core valid bits updated: P1=0, P2=1
-  }
+  \begin{columns}
+    \column{0.4\textwidth}
+    \begin{itemize}
+      \item P2 wants to write to address 1000
+      \item L2 sends snoop invalidate to P1
+      \item P1 invalidates its copy (S → I)
+      \item L2 grants exclusive ownership to P2 (S → E)
+      \item Core valid bits updated: P1=0, P2=1
+    \end{itemize}
+    
+    \column{0.6\textwidth}
+    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 6}{exclusivecolor}{[1000]: 6\\M}{01}{[1000]: 5}{}
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 5}
-  \centering
   \textbf{P2 writes address 1000}
-  
-  \vspace{0.3cm}
-  
-  \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{modifiedcolor}{[1000]: 6\\M}{01}{[1000]: 5}{
-    \textbullet~P2 modifies the value: 6 → 7\\
-    \textbullet~Line transitions from E → M (Modified) in P2\\
-    \textbullet~P1's copy remains invalid\\
-    \textbullet~L2 and Memory still have old values
-  }
+  \begin{columns}
+    \column{0.4\textwidth}
+    \begin{itemize}
+      \item P2 modifies the value: 6 → 7
+      \item Line transitions from E → M (Modified) in P2
+      \item P1's copy remains invalid
+      \item L2 and Memory still have old values
+    \end{itemize}
+    
+    \column{0.6\textwidth}
+    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{modifiedcolor}{[1000]: 6\\M}{01}{[1000]: 5}{}
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 6}
-  \centering
   \textbf{L2 evicts address 1000}
   
-  \vspace{0.3cm}
-  
-  \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{invalidcolor}{[1000]: 7\\I}{00}{[1000]: 7}{
-    \textbullet~L2 needs to evict line 1000 (e.g., for capacity)\\
-    \textbullet~L2 sends snoop invalidate to P2\\
-    \textbullet~P2 responds with modified data (7)\\
-    \textbullet~L2 writes back to memory: 5 → 7\\
-    \textbullet~All caches now invalid for address 1000
-  }
+  \begin{columns}
+    \column{0.4\textwidth}
+    \begin{itemize}
+      \item L2 needs to evict line 1000 (e.g., for capacity)
+      \item L2 sends snoop invalidate to P2
+      \item P2 responds with modified data (7)
+      \item L2 writes back to memory: 5 → 7
+      \item All caches now invalid for address 1000
+    \end{itemize}
+    
+    \column{0.6\textwidth}
+    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{invalidcolor}{[1000]: 7\\I}{00}{[1000]: 7}{}
+  \end{columns}
 \end{frame}
 
 % Summary frame
