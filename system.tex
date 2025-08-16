@@ -9,6 +9,7 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usepackage{tcolorbox}
 \usetheme{Madrid}
 
 \title{Computer Structure}
@@ -706,7 +707,8 @@ False sharing across sockets = 10x slower
 \begin{columns}[T]
 \column{0.5\textwidth}
 \textbf{NUMA-Unaware Code:}
-{\small
+\begin{tcolorbox}[colback=red!5!white, colframe=red!50!black, boxrule=0.5pt, left=1pt, right=1pt, top=1pt, bottom=1pt]
+{\scriptsize
 \begin{verbatim}
 // Thread 0 allocates all data
 float* data = malloc(N * sizeof(float));
@@ -724,17 +726,19 @@ float* data = malloc(N * sizeof(float));
 }
 \end{verbatim}
 }
+\end{tcolorbox}
 
 \column{0.5\textwidth}
 \textbf{NUMA-Aware Code:}
-{\small
+\begin{tcolorbox}[colback=green!5!white, colframe=green!50!black, boxrule=0.5pt, left=1pt, right=1pt, top=1pt, bottom=1pt]
+{\scriptsize
 \begin{verbatim}
 #pragma omp parallel
 {
   int tid = omp_get_thread_num();
   int chunk = N / num_threads;
   
-  // Each thread allocates its portion
+  // Each thread allocates locally
   float* local_data = 
     numa_alloc_local(chunk * sizeof(float));
   
@@ -742,11 +746,12 @@ float* data = malloc(N * sizeof(float));
   for(int i = 0; i < chunk; i++)
     local_data[i] = compute(tid*chunk + i);
     
-  // Copy to global array if needed
+  // Copy to global if needed
   memcpy(&data[tid*chunk], local_data, ...);
 }
 \end{verbatim}
 }
+\end{tcolorbox}
 \end{columns}
 
 \vspace{0.3cm}
