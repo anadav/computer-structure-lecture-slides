@@ -5,7 +5,7 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 
 \usetheme{Madrid}
 % Show slide number as "current/total" in the footer
@@ -179,7 +179,7 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Cache -- Main Idea}
+\begin{frame}{Cache: Main Idea}
 \begin{columns}[T]
 \begin{column}{0.65\textwidth}
 \begin{itemize}
@@ -203,114 +203,105 @@
 \end{itemize}
 
 % Address format at the bottom of text
-\vspace{0.2cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
-  % Top labels
-  \node[anchor=east, font=\scriptsize] at (0.8, 0.5) {N-1};
-  \node[anchor=west, font=\scriptsize] at (2.4, 0.5) {6 5};
-  \node[anchor=west, font=\scriptsize] at (3.8, 0.5) {0};
-  
-  % Address format boxes
-  \draw[thick] (0.4, 0.3) rectangle (2.8, -0.1);
-  \draw[thick] (2.8, 0.3) rectangle (4.0, -0.1);
-  
-  % Labels inside boxes
-  \node[anchor=center, font=\scriptsize] at (1.6, 0.1) {Block \#};
-  \node[anchor=center, font=\scriptsize] at (3.4, 0.1) {offset};
+\begin{tikzpicture}[
+    scale=1,
+    box/.style={font=\scriptsize, minimum height=0.5cm, draw, thick, align=center, inner sep=2pt}
+]
+
+  % Bottom row (actual fields, in boxes)
+  \node[box, minimum width=2.0cm] (block) {Block \#};
+  \node[box, minimum width=1.2cm, right=0cm of block] (offset) {offset};
+
+  % Numbers above (plain text only, no boxes)
+  \node[font=\scriptsize, above=0.03cm of block.north west, anchor=south] {N-1};
+  \node[font=\scriptsize, above=0.03cm of block.north east, anchor=south] {6 5};
+  \node[font=\scriptsize, above=0.03cm of offset.north east, anchor=south] {0};
+
 \end{tikzpicture}
 \end{center}
 \end{column}
 
 \begin{column}{0.35\textwidth}
-\begin{tikzpicture}[scale=0.55]
+\centering
+\begin{tikzpicture}[scale=0.6]
   % Define colors
   \definecolor{lightblue}{RGB}{173,216,230}
   \definecolor{lightgreen}{RGB}{144,238,144}
   \definecolor{lightyellow}{RGB}{255,255,224}
   \definecolor{lightpurple}{RGB}{221,160,221}
   
-  % Memory column title - directly above memory blocks
-  \node[anchor=south, font=\footnotesize\bfseries] at (1.2, 4.1) {memory};
+  % Memory blocks (with data)
+  \foreach \i/\y/\color/\data in {
+    0/4/white/-, 
+    1/3.5/white/-, 
+    2/3/lightgreen/abc, 
+    3/2.5/white/-, 
+    4/2/lightblue/xyz, 
+    5/1.5/white/-, 
+    6/1/white/-
+  } {
+    \node[anchor=east, font=\tiny] at (0.3, \y) {\i};
+    \node[font=\tiny, inner sep=0.1pt, rectangle, draw, minimum width=1.2cm, minimum height=0.35cm, fill=\color] (mem\i) at (1.2, \y) {\data};
+  }
   
-  % Memory blocks header
-  %\node[anchor=east, font=\tiny\bfseries] at (0.2, 3.9) {\underline{Block \#}};
+  % Memory title (positioned above the memory blocks)
+  \node[font=\footnotesize\bfseries, anchor=south] at (1.2, 4.2) {memory};
   
-  % Memory blocks with numbers
-  \node[anchor=east, font=\tiny] at (0.2, 3.9) {0};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem0) at (1.2, 3.9) {};
+  % Dots to indicate gap
+  \node at (1.2, 0.5) {$\vdots$};
   
-  \node[anchor=east, font=\tiny] at (0.2, 3.4) {1};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem1) at (1.2, 3.4) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 2.9) {2};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightgreen] (mem2) at (1.2, 2.9) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 2.4) {3};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem3) at (1.2, 2.4) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 1.9) {4};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightblue] (mem4) at (1.2, 1.9) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 1.4) {5};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem5) at (1.2, 1.4) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 0.9) {6};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem6) at (1.2, 0.9) {};
-  
-  % Dots
-  \node[font=\tiny] at (0.2, 0.5) {.};
-  \node[font=\tiny] at (0.2, 0.3) {.};
-  \node[font=\tiny] at (0.2, 0.1) {.};
-  \node[font=\tiny] at (1.2, 0.3) {$\sim$};
-  
-  % Bottom memory blocks
-  \node[anchor=east, font=\tiny] at (0.2, -0.3) {90};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightpurple] (mem90) at (1.2, -0.3) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, -0.8) {91};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem91) at (1.2, -0.8) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, -1.3) {92};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightyellow] (mem92) at (1.2, -1.3) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, -1.8) {93};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem93) at (1.2, -1.8) {};
+  % Bottom memory blocks (with data)
+  \foreach \i/\y/\color/\data in {
+    90/-0.5/lightpurple/foo, 
+    91/-1/white/-, 
+    92/-1.5/lightyellow/bar, 
+    93/-2/white/-
+  } {
+    \node[anchor=east, font=\tiny] at (0.3, \y) {\i};
+    \node[font=\tiny, inner sep=0.1pt, rectangle, draw, minimum width=1.2cm, minimum height=0.35cm, fill=\color] (mem\i) at (1.2, \y) {\data};
+  }
   
   % More dots
-  \node[font=\tiny] at (0.2, -2.2) {.};
-  \node[font=\tiny] at (0.2, -2.4) {.};
-  \node[font=\tiny] at (0.2, -2.6) {.};
-  \node[font=\tiny] at (1.2, -2.4) {$\sim$};
+  \node[anchor=north] at (mem93) (dots) {$\vdots$};
   
   % 64B width indicator at bottom of memory
-  \node[anchor=center, font=\tiny] at (1.2, -3.0) {$\leftarrow$ 64B $\rightarrow$};
+  \node[gray, font=\tiny,anchor=north] at (dots.south) {$\leftarrow$ 64B $\rightarrow$};
+ 
+  % Cache entries (tag + data boxes)
+  % Each cache line has a tag box (block number) and a data box positioned relative to tag
+\foreach \block/\y/\color/\data in {
+    90/3.5/lightpurple/foo',
+    2/3/lightgreen/abc',
+    4/2.5/lightblue/xyz',
+    92/2/lightyellow/bar'
+  } {
+    % Tag box
+    \node[font=\tiny, rectangle, draw, minimum width=0.5cm, minimum height=0.35cm,
+          fill=\color, anchor=north west, inner sep=0.1pt] (tag\block) at (3.5,\y) {\block};
+
+    % Data box (aligned exactly with tag box)
+    \node[font=\tiny, rectangle, draw, minimum width=1.2cm, minimum height=0.35cm,
+          fill=\color, anchor=north west, inner sep=0.1pt] (data\block) at (tag\block.north east) {\data};
+  }
   
-  % Cache column - positioned lower than memory
-  \node[anchor=south, font=\footnotesize\bfseries] at (4.2, 3.0) {cache};
+  % Cache title (calculated as middle between tag90.west and data90.east)
+  \node[font=\footnotesize\bfseries, anchor=south] at ($(tag90.north west)!0.5!(data90.north east)$) {cache};
   
-  % Cache lines with block numbers (shifted down)
-  \node[rectangle, draw, minimum width=0.5cm, minimum height=0.35cm, fill=lightpurple] (cachetag90) at (3.7, 2.6) {};
-  \node[font=\tiny] at (3.6, 2.6) {90};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightpurple] (cache90) at (4.6, 2.6) {};
+  % Labels for cache structure at the bottom
+  \node[font=\tiny, gray, anchor=north,
+        text height=0.25ex, text depth=0.25ex] 
+        at (tag92.south) (tag_label) {tag};
+
+  \node[font=\tiny, gray,
+        text height=0.25ex, text depth=0.25ex] 
+        at (data92 |- tag_label) {data};
   
-  \node[rectangle, draw, minimum width=0.5cm, minimum height=0.35cm, fill=lightgreen] (cachetag2) at (3.7, 2.1) {};
-  \node[font=\tiny] at (3.6, 2.1) {2};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightgreen] (cache2) at (4.6, 2.1) {};
-  
-  \node[rectangle, draw, minimum width=0.5cm, minimum height=0.35cm, fill=lightblue] (cachetag4) at (3.7, 1.6) {};
-  \node[font=\tiny] at (3.6, 1.6) {4};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightblue] (cache4) at (4.6, 1.6) {};
-  
-  \node[rectangle, draw, minimum width=0.5cm, minimum height=0.35cm, fill=lightyellow] (cachetag92) at (3.7, 1.1) {};
-  \node[font=\tiny] at (3.6, 1.1) {92};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightyellow] (cache92) at (4.6, 1.1) {};
-  
-  % Arrows from memory to cache (pointing to the left boxes)
-  \draw[->, thick] (mem90.east) to[out=0, in=180] (cachetag90.west);
-  \draw[->, thick] (mem2.east) to[out=0, in=180] (cachetag2.west);
-  \draw[->, thick] (mem4.east) to[out=0, in=180] (cachetag4.west);
-  \draw[->, thick] (mem92.east) to[out=0, in=180] (cachetag92.west);
+  % Arrows from memory to cache (pointing to tag boxes)
+  \draw[->, thick] (mem2.east) -- (tag2.west);
+  \draw[->, thick] (mem4.east) -- (tag4.west);
+  \draw[->, thick] (mem90.east) to[out=0, in=180] (tag90.west);
+  \draw[->, thick] (mem92.east) to[out=0, in=180] (tag92.west);
   
 \end{tikzpicture}
 \end{column}
