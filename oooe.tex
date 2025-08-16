@@ -2092,24 +2092,6 @@
   \end{columns}
 \end{frame}
 
-% Slide 15: Checkpoints: Jump Gets to EXE (first)
-\begin{frame}{Checkpoints: Jump Gets to EXE}
-    \centering
-    \drawpipelineCustomExt{0}{0}{0}{1}{0}{1}{1}{2}{2}
-    
-    \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] (ex.north) -- ++(0,0.8) -| 
-          node[red, font=\bfseries\small, below, near start] {Clear} (fetch.north)
-          node[black, font=\scriptsize, near end, left, align=right] {update BPU};
-    \end{tikzpicture}
- 
-    \vspace{0.5cm}
-    \begin{itemize}
-        \item \textbf{Clear raised on mispredicted jump}
-    \end{itemize}
-\end{frame}
-
-% Slide 16: Checkpoints: Jump Gets to EXE (detailed)
 \begin{frame}{Checkpoints: Jump Gets to EXE}
     \centering
     \drawpipelineCustomExt{0}{0}{0}{1}{0}{1}{1}{2}{2}
@@ -2122,20 +2104,19 @@
     \end{tikzpicture}
     
     \vspace{0.5cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \textbf{Clear raised on mispredicted jump}
+    \begin{itemize}
+        \item[] \textbf{Clear raised on mispredicted jump}
+        \pause
+        \begin{itemize}
+            \item Flush frontend and re-steer it to the correct path
+            \item \textcolor{orange}{Flush all younger instructions in OOO}
             \begin{itemize}
-                \item Flush frontend and re-steer it to the correct path
-                \item \textcolor{orange}{Flush all younger instructions in OOO}
-                \begin{itemize}
-                    \item Based on age (ROBid) comparison
-                \end{itemize}
-                \item Update BPU
-                \item Block further allocation until the Renamer mapping is recovered
+                \item Based on age (ROBid) comparison
             \end{itemize}
-        \end{column}
-    \end{columns}
+            \item Update BPU
+            \item Block further allocation until the Renamer mapping is recovered
+        \end{itemize}
+    \end{itemize}
 \end{frame}
 
 % Slide 17: Checkpoints: Renamer Recovery (first)
