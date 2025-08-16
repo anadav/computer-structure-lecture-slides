@@ -1905,7 +1905,7 @@
     \begin{itemize}
         \item[] \textbf{When a jump misprediction is detected (at jump execution)}
         \item Flush the in-order front-end
-        \item Instructions already in the OOO part continue to execute
+        \item Continue executing instructions already in the OOO part
         \begin{itemize}
             \item Including wrong-path instructions (waste of execution resources and power)
         \end{itemize}
@@ -1916,16 +1916,18 @@
             \item An older jump executed out-of-order can also mispredict
         \end{itemize}
         \item Block younger jumps (executed OOO) from clearing
-        \item The correct instruction stream is stalled at the Renamer
+        \item Stall the correct instruction stream at the Renamer
         \begin{itemize}
             \item The RAT (Register Alias Table) was wrongly updated by wrong-path instructions
         \end{itemize}
         \vspace{0.5cm}
         \item[] \textbf{When the mispredicted jump retires}
-        \item All instructions in the RS/ROB are from the wrong path \\
-        $\Rightarrow$ Flush all instructions from the RS/ROB
+        \item Flush all instructions from the RS/ROB
+        \begin{itemize}
+            \item All are from the wrong path at this point
+        \end{itemize}
         \item Reset the Renamer to point only to architectural registers
-        \item Un-stall Renamer and allow instructions from correct path to rename/allocate
+        \item Un-stall the Renamer and allow instructions from correct path to rename/allocate
     \end{itemize}
 \end{frame}
 
