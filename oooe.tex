@@ -1496,73 +1496,104 @@
   \end{columns}
 \end{frame}
 
-% Add this macro definition in your preamble (after \begin{document} or before if you prefer)
-\newcommand{\drawpipeline}[1]{%
-    % Parameter #1: stage to highlight (1=Predict/Fetch, 2=Decode, 3=Alloc, 4=Schedule/EX, 5=Retire)
+
+% Updated macro with more flexibility
+\newcommand{\drawpipelineCustom}[5]{%
+    % Parameters: 
+    % #1: Predict/Fetch color (0=normal, 1=highlight, 2=gray)
+    % #2: Decode color
+    % #3: Alloc color  
+    % #4: Schedule/EX color
+    % #5: Retire color
     \begin{tikzpicture}[
-        stage/.style={rectangle, draw=black, thick, minimum width=2.2cm, minimum height=0.9cm, font=\footnotesize},
+        stage/.style={rectangle, draw=black, thick, minimum width=2.2cm, minimum height=0.9cm, font=\footnotesize, fill=orange!40},
+        stageHighlight/.style={stage, fill=yellow!60},
+        stageGray/.style={stage, fill=gray!30},
         queue/.style={rectangle, draw=black, fill=green!60, minimum width=0.15cm, minimum height=0.7cm},
-        highlight/.style={fill=yellow!60},
         scale=0.75, transform shape
     ]
         
-        % Stages and queues
+        % Predict/Fetch
         \ifnum#1=1
-            \node[stage, highlight] (fetch) {Predict/Fetch};
+            \node[stageHighlight] (fetch) {Predict/Fetch};
         \else
-            \node[stage] (fetch) {Predict/Fetch};
+            \ifnum#1=2
+                \node[stageGray] (fetch) {Predict/Fetch};
+            \else
+                \node[stage] (fetch) {Predict/Fetch};
+            \fi
         \fi
         
-        % IQ queue (4 slots)
+        % IQ queue
         \node[queue, right=0.1cm of fetch] (iq1) {};
         \node[queue, right=0 of iq1] (iq2) {};
         \node[queue, right=0 of iq2] (iq3) {};
         \node[queue, right=0 of iq3] (iq4) {};
         
-        \ifnum#1=2
-            \node[stage, highlight, right=0.1cm of iq4] (decode) {Decode};
+        % Decode
+        \ifnum#2=1
+            \node[stageHighlight, right=0.1cm of iq4] (decode) {Decode};
         \else
-            \node[stage, right=0.1cm of iq4] (decode) {Decode};
+            \ifnum#2=2
+                \node[stageGray, right=0.1cm of iq4] (decode) {Decode};
+            \else
+                \node[stage, right=0.1cm of iq4] (decode) {Decode};
+            \fi
         \fi
         
-        % uopq queue (4 slots)
+        % uopq queue
         \node[queue, right=0.1cm of decode] (uopq1) {};
         \node[queue, right=0 of uopq1] (uopq2) {};
         \node[queue, right=0 of uopq2] (uopq3) {};
         \node[queue, right=0 of uopq3] (uopq4) {};
         
-        \ifnum#1=3
-            \node[stage, highlight, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
+        % Alloc
+        \ifnum#3=1
+            \node[stageHighlight, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
         \else
-            \node[stage, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
+            \ifnum#3=2
+                \node[stageGray, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
+            \else
+                \node[stage, right=0.1cm of uopq4, minimum width=1.5cm] (alloc) {Alloc};
+            \fi
         \fi
         
-        % RS queue (4 slots)
+        % RS queue
         \node[queue, right=0.1cm of alloc] (rs1) {};
         \node[queue, right=0 of rs1] (rs2) {};
         \node[queue, right=0 of rs2] (rs3) {};
         \node[queue, right=0 of rs3] (rs4) {};
         
-        % Schedule and EX as two connected boxes
-        \ifnum#1=4
-            \node[stage, highlight, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
-            \node[stage, highlight, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+        % Schedule/EX
+        \ifnum#4=1
+            \node[stageHighlight, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+            \node[stageHighlight, right=0 of schedule, minimum width=0.8cm] (ex) {JEU};
         \else
-            \node[stage, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
-            \node[stage, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+            \ifnum#4=2
+                \node[stageGray, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+                \node[stageGray, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+            \else
+                \node[stage, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+                \node[stage, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+            \fi
         \fi
         
-        % ROB queue (5 slots)
+        % ROB queue
         \node[queue, right=0.1cm of ex] (rob1) {};
         \node[queue, right=0 of rob1] (rob2) {};
         \node[queue, right=0 of rob2] (rob3) {};
         \node[queue, right=0 of rob3] (rob4) {};
         \node[queue, right=0 of rob4] (rob5) {};
         
-        \ifnum#1=5
-            \node[stage, highlight, right=0.1cm of rob5] (retire) {Retire};
+        % Retire
+        \ifnum#5=1
+            \node[stageHighlight, right=0.1cm of rob5] (retire) {Retire};
         \else
-            \node[stage, right=0.1cm of rob5] (retire) {Retire};
+            \ifnum#5=2
+                \node[stageGray, right=0.1cm of rob5] (retire) {Retire};
+            \else
+                \node[stage, right=0.1cm of rob5] (retire) {Retire};
+            \fi
         \fi
         
         % Labels for queues
@@ -1573,10 +1604,78 @@
     \end{tikzpicture}
 }
 
-% The actual slide
+% Simplified version for basic highlighting
+\newcommand{\drawpipeline}[1]{%
+    \ifnum#1=0
+        \drawpipelineCustom{0}{0}{0}{0}{0}
+    \else
+        \ifnum#1=1
+            \drawpipelineCustom{1}{0}{0}{0}{0}
+        \else
+            \ifnum#1=2
+                \drawpipelineCustom{0}{1}{0}{0}{0}
+            \else
+                \ifnum#1=3
+                    \drawpipelineCustom{0}{0}{1}{0}{0}
+                \else
+                    \ifnum#1=4
+                        \drawpipelineCustom{0}{0}{0}{1}{0}
+                    \else
+                        \ifnum#1=5
+                            \drawpipelineCustom{0}{0}{0}{0}{1}
+                        \fi
+                    \fi
+                \fi
+            \fi
+        \fi
+    \fi
+}
+
+
+% Slide 1: OOO Machine Pipeline
+\begin{frame}{OOO Machine Pipeline}
+    \centering
+    \drawpipeline{0}
+    
+    \vspace{0.3cm}
+    
+    % Frontend/Backend labels
+    \begin{tikzpicture}[overlay, remember picture]
+        \node[above=2.8cm of current page.center, xshift=-3.5cm, 
+              rectangle, draw=blue!50, fill=blue!10, rounded corners, 
+              minimum width=5cm, minimum height=0.5cm, font=\small] {Frontend};
+        \node[above=2.8cm of current page.center, xshift=3.5cm, 
+              rectangle, draw=blue!50, fill=blue!10, rounded corners, 
+              minimum width=5cm, minimum height=0.5cm, font=\small] {Backend};
+    \end{tikzpicture}
+    
+    \vspace{0.8cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{IQ -- Instruction Queue}
+            \begin{itemize}
+                \item Used mostly in variable length instructions architectures
+                \item Smooth the variable number of instruction from a given fetch line
+            \end{itemize}
+            
+            \textbf{$\mu$opq}
+            \begin{itemize}
+                \item Buffer between the fronted and the backend of the machine
+                \item Frontend oversupply periods may cover for frontend undersupply periods
+            \end{itemize}
+            
+            \textbf{Buffers may be bypassed -- depending on implementation}
+            \begin{itemize}
+                \item If bypassed, don't cost a cycle when the buffer is empty, e.g., after pipeline flush due to jump misprediction, or following a period of undersupply
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 2: Pipeline: Predict/Fetch (already provided by user)
 \begin{frame}{Pipeline: Predict/Fetch}
     \centering
-    \drawpipeline{1} % Highlight stage 1 (Predict/Fetch)
+    \drawpipeline{1}
     
     \vspace{0.5cm}
     \begin{columns}[T]
@@ -1588,6 +1687,419 @@
                 \begin{itemize}
                     \item Length-decode instructions within the fetched instruction bytes
                     \item Write the instructions into an Instruction Queue
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 3: Pipeline: Decode
+\begin{frame}{Pipeline: Decode}
+    \centering
+    \drawpipeline{2}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item Read multiple instructions from the IQ
+                \item Decode the instructions
+                \begin{itemize}
+                    \item For x86 processors, each instruction is decoded into $\geq$1 $\mu$ops
+                    \item $\mu$ops are RISC-like instructions
+                \end{itemize}
+                \item Write the resulting $\mu$ops into the Instruction Decoder Queue ($\mu$opq)
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 4: Pipeline: Allocate/Rename
+\begin{frame}{Pipeline: Allocate/Rename}
+    \centering
+    \drawpipeline{3}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item Rename multiple $\mu$ops
+                \item Perform port-binding per $\mu$op
+                \begin{itemize}
+                    \item Select the execution port to which the $\mu$op is dispatched when ready
+                \end{itemize}
+                \item Allocate ROB/RS entry per $\mu$op
+                \begin{itemize}
+                    \item If source data is available from ROB or ARF, write data to RS
+                    \item Otherwise, mark data not ready in RS
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 5: Pipeline: EXE
+\begin{frame}{Pipeline: EXE}
+    \centering
+    \drawpipeline{4}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{Ready/Schedule}
+            \begin{itemize}
+                \item Check for data-ready $\mu$ops if the needed port / functional unit are available
+                \item Select and dispatch multiple ready $\mu$ops/clock to EXE
+            \end{itemize}
+            
+            \textbf{Write back results into RS/ROB}
+            \begin{itemize}
+                \item Wake-up $\mu$ops in the RS that are waiting for the results as sources
+                \begin{itemize}
+                    \item Update data-ready status of these $\mu$ops in the RS
+                \end{itemize}
+                \item Write back results into the Physical Registers
+                \item Reclaim RS entries
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 6: Pipeline: Retire
+\begin{frame}{Pipeline: Retire}
+    \centering
+    \drawpipeline{5}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{Retire oldest $\mu$ops in the ROB}
+            \begin{itemize}
+                \item A $\mu$op may retire if
+                \begin{itemize}
+                    \item Its ``executed'' bit is set
+                    \item It is not marked with an exception / fault
+                    \item All preceding $\mu$ops are eligible for retirement
+                \end{itemize}
+                \item Commit results from the Physical Register to the Arch Register
+                \item Reclaim the ROB entry
+            \end{itemize}
+            
+            \textbf{In case of exception / fault}
+            \begin{itemize}
+                \item Flush the pipeline and handle the exception / fault
+                \item Restart the program
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 7: Jump Misprediction - Flush at Retire
+\begin{frame}{Jump Misprediction -- Flush at Retire}
+    \centering
+    
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{When a mispredicted jump retires}
+            \begin{itemize}
+                \item Flush the pipeline
+                \begin{itemize}
+                    \item When the jump commits, all the instructions remaining in the pipe are younger than the jump $\Rightarrow$ from the wrong path
+                \end{itemize}
+                \item Reset the renaming map
+                \begin{itemize}
+                    \item So all the registers are mapped to the architectural registers
+                    \item This is ok since there are no consumers of physical registers (pipe is flushed)
+                \end{itemize}
+                \item Start fetching instructions from the correct path
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Disadvantage}
+            \begin{itemize}
+                \item Very high misprediction penalty
+                \item Misprediction is already known after the jump was executed
+                \item We will see ways to recover a misprediction at execution
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 8: Flush at Retire: Misp. Jump at EXE
+\begin{frame}{Flush at Retire: Misp. Jump at EXE}
+    \centering
+    \drawpipelineCustom{0}{0}{0}{1}{0}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item \textbf{Misprediction detected when jump is executed}
+                \begin{itemize}
+                    \item Mark the jump as mispredicted in ROB
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 9: Flush at Retire: Misp. Jump Retires
+\begin{frame}{Flush at Retire: Misp. Jump Retires}
+    \centering
+    \drawpipelineCustom{2}{2}{2}{2}{2}
+    
+    % Add Clear arrow
+    \begin{tikzpicture}[overlay, remember picture]
+        \draw[->, red, ultra thick] ($(current page.north)+(0,-1.5)$) -- ($(current page.north)+(0,-2.8)$);
+        \node[red, font=\small\bfseries] at ($(current page.north)+(0,-1.3)$) {Flush at Retire};
+        \node[red, font=\small] at ($(current page.north)+(-4,-1.8)$) {Redirect Fetch};
+        \node[red, font=\small] at ($(current page.north)+(-4,-2.1)$) {+ update BPU};
+        \draw[->, red, thick] ($(current page.north)+(-3.5,-2.3)$) -- ($(current page.north)+(-5.5,-2.8)$);
+        \node[red, font=\large\bfseries] at ($(current page.north)+(4,-2)$) {Clear};
+    \end{tikzpicture}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{When the mispredicted jump retires}
+            \begin{itemize}
+                \item All instructions in the pipe are younger than the jump \\
+                $\Rightarrow$ all are from the wrong path $\Rightarrow$ flush the entire pipeline
+                \item Reset the renaming map
+                \begin{itemize}
+                    \item Map all the registers to the architectural registers
+                    \item This is ok since there are no consumers of physical registers (pipe is flushed)
+                \end{itemize}
+                \item Start fetching instructions from the correct path
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 10: Jump Misprediction - Flush at Execute
+\begin{frame}{Jump Misprediction -- Flush at Execute}
+    \centering
+    
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{When a jump misprediction is detected (at jump execution)}
+            \begin{itemize}
+                \item Flush the in-order front-end
+                \item Instructions already in the OOO part continue to execute
+                \begin{itemize}
+                    \item Including wrong-path instructions (waste of execution resource and power)
+                \end{itemize}
+                \item Start fetching and decoding instruction from the correct path
+                \begin{itemize}
+                    \item Note that the ``correct'' path may still be wrong ...
+                    \item An older instruction may cause an exception when it retires
+                    \item A older jump executed out-of-order can also mispredict
+                \end{itemize}
+                \item Block younger jumps (executed OOO) from clearing
+                \item The correct instruction stream is stalled at the Renamer
+                \begin{itemize}
+                    \item The RAT was wrongly updated also by wrong path instruction
+                \end{itemize}
+            \end{itemize}
+            
+            \textbf{When the mispredicted jump retires}
+            \begin{itemize}
+                \item All instructions in the RS/ROB are from the wrong path \\
+                $\Rightarrow$ Flush all instructions from the RS/ROB
+                \item Reset the Renamer to point only to architectural registers
+                \item Un-stall Rename, and allow instructions from correct path to rename/alloc
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 11: Flush at EXE: Jump Gets to EXE (first)
+\begin{frame}{Flush at EXE: Jump Gets to EXE}
+    \centering
+    \drawpipelineCustom{0}{0}{0}{1}{0}
+    
+    \vspace{4cm} % Space for potential diagram
+\end{frame}
+
+% Slide 12: Flush at EXE: Jump Gets to EXE (detailed)
+\begin{frame}{Flush at EXE : Jump Gets to EXE}
+    \centering
+    \drawpipelineCustom{2}{2}{0}{1}{0}
+    
+    % Add Flush arrow and labels
+    \begin{tikzpicture}[overlay, remember picture]
+        \draw[->, red, ultra thick] ($(current page.north)+(-1,-1.5)$) -- ($(current page.north)+(-1,-2.8)$);
+        \node[red, font=\small] at ($(current page.north)+(-4,-1.8)$) {Redirect Fetch};
+        \node[red, font=\small] at ($(current page.north)+(-4,-2.1)$) {+ update BPU};
+        \draw[->, red, thick] ($(current page.north)+(-3.5,-2.3)$) -- ($(current page.north)+(-5.5,-2.8)$);
+        \node[red, font=\large\bfseries] at ($(current page.north)+(0,-2)$) {Flush};
+    \end{tikzpicture}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item Flush the front-end and re-steer it to correct path
+                \item Renamer state updated by wrong path $\Rightarrow$ Block further allocation
+                \item Update BPU
+                \item OOO not flushed
+                \begin{itemize}
+                    \item Contains both instruction older and younger than the mispredicted jump
+                    \item Instructions already in the OOO part continue to execute
+                    \begin{itemize}
+                        \item Including wrong-path instructions (waste of execution resource and power)
+                    \end{itemize}
+                \end{itemize}
+                \item Block younger jumps from clearing
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 13: Flush at EXE: Misp. Jump Retires
+\begin{frame}{Flush at EXE : Misp. Jump Retires}
+    \centering
+    \drawpipelineCustom{0}{0}{2}{2}{2}
+    
+    % Add Clear arrow
+    \begin{tikzpicture}[overlay, remember picture]
+        \draw[->, red, ultra thick] ($(current page.north)+(0,-1.5)$) -- ($(current page.north)+(0,-2.8)$);
+        \node[red, font=\large\bfseries] at ($(current page.north)+(4,-2)$) {Clear};
+    \end{tikzpicture}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{When the mispredicted jump retires}
+            \begin{itemize}
+                \item Flush OOO
+                \begin{itemize}
+                    \item Only instruction following the jump are left in the machine \\
+                    $\Rightarrow$ they must all be flushed
+                    \item Resets all state in the OOO (Renamer, RS, ROB, MOB, etc.)
+                    \item Reset the Renamer to point only to architectural registers, and unblock rename
+                \end{itemize}
+                \item Allow allocation of instructions from correct path
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 14: Periodic Checkpoints
+\begin{frame}{Periodic Checkpoints}
+    \centering
+    
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{Allow allocation and execution of instructions from the correct path before the mispredicted jump retires}
+            
+            \vspace{0.3cm}
+            \textbf{Every few instructions take a checkpoint of the Renamer}
+            \begin{itemize}
+                \item A snapshot of the current renaming map
+                \item Taking a snapshot on every jump is expensive
+            \end{itemize}
+            
+            \textbf{In case of misprediction}
+            \begin{itemize}
+                \item Flush the frontend and start fetching instructions from the correct path
+                \item Selectively flush younger instructions from the ROB/RS
+                \item Recover Renamer to latest checkpoint taken prior to the mispredicted jump
+                \item Recover Renamer to its state at the jump
+                \begin{itemize}
+                    \item Rename instructions from the checkpoint and until the jump
+                \end{itemize}
+                \item Allow instructions from the correct path to allocate
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            % Placeholder for the checkpoint illustration
+            \textit{[Checkpoint illustration would go here]}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 15: Checkpoints: Jump Gets to EXE (first)
+\begin{frame}{Checkpoints: Jump Gets to EXE}
+    \centering
+    \drawpipelineCustom{0}{0}{0}{1}{0}
+    
+    % Add BPU Update and Clear labels
+    \begin{tikzpicture}[overlay, remember picture]
+        \node[yellow!80!black, fill=yellow!20, font=\small] at ($(current page.north)+(-4,-1.5)$) {BPU Update};
+        \draw[->, red, ultra thick] ($(current page.north)+(2,-1.5)$) -- ($(current page.north)+(2,-2.8)$);
+        \node[red, font=\large\bfseries] at ($(current page.north)+(3.5,-2)$) {Clear};
+    \end{tikzpicture}
+    
+    \vspace{1cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item \textbf{Clear raised on mispredicted jump}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 16: Checkpoints: Jump Gets to EXE (detailed)
+\begin{frame}{Checkpoints: Jump Gets to EXE}
+    \centering
+    \drawpipelineCustom{2}{2}{0}{0}{0}
+    
+    % Add BPU Update and Clear labels
+    \begin{tikzpicture}[overlay, remember picture]
+        \node[yellow!80!black, fill=yellow!20, font=\small] at ($(current page.north)+(-4,-1.5)$) {BPU Update};
+        \draw[->, red, thick] ($(current page.north)+(-4,-1.8)$) -- ($(current page.north)+(-5.5,-2.8)$);
+        \draw[->, red, ultra thick] ($(current page.north)+(0,-1.5)$) -- ($(current page.north)+(0,-2.8)$);
+        \node[red, font=\large\bfseries] at ($(current page.north)+(1.5,-2)$) {Clear};
+    \end{tikzpicture}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \textbf{Clear raised on mispredicted jump}
+            \begin{itemize}
+                \item Flush frontend and re-steer it to the correct path
+                \item \textcolor{orange}{Flush all younger instructions in OOO}
+                \begin{itemize}
+                    \item Based on age (ROBid) comparison
+                \end{itemize}
+                \item Update BPU
+                \item Block further allocation until the Renamer mapping is recovered
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 17: Checkpoints: Renamer Recovery (first)
+\begin{frame}{Checkpoints: Renamer Recovery}
+    \centering
+    \drawpipelineCustom{2}{2}{2}{0}{0}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item Restore Renamer from latest check-point before the jump
+                \item Recover Renamer to its states just after the jump
+                \item Meanwhile front-end starts fetching and decoding instructions from the correct path
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Slide 18: Checkpoints: Renamer Recovery (second)
+\begin{frame}{Checkpoints: Renamer Recovery}
+    \centering
+    \drawpipelineCustom{0}{0}{1}{0}{0}
+    
+    \vspace{0.5cm}
+    \begin{columns}[T]
+        \begin{column}{0.9\textwidth}
+            \begin{itemize}
+                \item \textbf{Once done restoring the Renamer}
+                \begin{itemize}
+                    \item allow allocation of instructions from correct path
                 \end{itemize}
             \end{itemize}
         \end{column}
