@@ -1870,19 +1870,9 @@
     
     % Add flush arrow and text using node positions from the macro
     \begin{tikzpicture}[overlay, remember picture]
-        % Define coordinates based on the nodes from drawpipelineCustom
-        \coordinate (flush-start) at ($(retire.north)$);
-        \coordinate (flush-corner) at ($(fetch.north)+(0,0.8)$);
-        
-        % Draw the flush arrow from retire to fetch
-        \draw[->, red, ultra thick] (retire.north) -- ++(0,0.8) -| (fetch.north);
-        
-        % Add text along the path
-        \node[font=\scriptsize] (redirect_fetch) at ($(fetch.north)+(-1.3,0.7)$) {Redirect Fetch};
-        \node[font=\scriptsize] at ([yshift=-0.4cm]redirect_fetch) {+ update BPU};
-        
-        % Clear label for the backend
-        \node[red, font=\bfseries] at ($(schedule.north)+(0,0.5)$) {Clear};
+        \draw[->, red, ultra thick] (retire.north) -- ++(0,0.8) -| 
+          node[red, font=\bfseries\small, below, near start] {Clear} (fetch.north)
+          node[black, font=\scriptsize, near end, left, align=right] {Redirect Fetch\\+ update BPU};
     \end{tikzpicture}
     
     %\vspace{0.5cm}
@@ -1941,100 +1931,90 @@
 
 % Slide 12: Flush at EXE: Jump Gets to EXE (detailed)
 \begin{frame}{Flush at EXE : Jump Gets to EXE}
+    \vspace{1cm}
     \centering
     \drawpipelineCustom{2}{2}{0}{1}{0}
     
     % Add Flush arrow and labels
     \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] ($(current page.north)+(-1,-1.5)$) -- ($(current page.north)+(-1,-2.8)$);
-        \node[red, font=\small] at ($(current page.north)+(-4,-1.8)$) {Redirect Fetch};
-        \node[red, font=\small] at ($(current page.north)+(-4,-2.1)$) {+ update BPU};
-        \draw[->, red, thick] ($(current page.north)+(-3.5,-2.3)$) -- ($(current page.north)+(-5.5,-2.8)$);
-        \node[red, font=\large\bfseries] at ($(current page.north)+(0,-2)$) {Flush};
+        \draw[->, red, ultra thick] (ex.north) -- ++(0,0.8) -| 
+          node[red, font=\bfseries\small, below, near start] {Flush} (fetch.north)
+          node[black, font=\scriptsize, near end, left, align=right] {Redirect Fetch\\+ update BPU};
+        % draw red line left of alloc
+        \draw[red, ultra thick] ([yshift=-1mm]alloc.south west) -- ([yshift=1mm]alloc.north west);
     \end{tikzpicture}
     
     \vspace{0.5cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
+    \begin{itemize}
+        \item Flush the front-end and re-steer it to correct path
+        \item Renamer state updated by wrong path $\Rightarrow$ Block further allocation
+        \item Update BPU
+        \item OOO not flushed
+        \begin{itemize}
+            \item Contains both instruction older and younger than the mispredicted jump
+            \item Instructions already in the OOO part continue to execute
             \begin{itemize}
-                \item Flush the front-end and re-steer it to correct path
-                \item Renamer state updated by wrong path $\Rightarrow$ Block further allocation
-                \item Update BPU
-                \item OOO not flushed
-                \begin{itemize}
-                    \item Contains both instruction older and younger than the mispredicted jump
-                    \item Instructions already in the OOO part continue to execute
-                    \begin{itemize}
-                        \item Including wrong-path instructions (waste of execution resource and power)
-                    \end{itemize}
-                \end{itemize}
-                \item Block younger jumps from clearing
+                \item Including wrong-path instructions (waste of execution resource and power)
             \end{itemize}
-        \end{column}
-    \end{columns}
+        \end{itemize}
+        \item Block younger jumps from clearing
+    \end{itemize}
 \end{frame}
 
 % Slide 13: Flush at EXE: Misp. Jump Retires
 \begin{frame}{Flush at EXE : Misp. Jump Retires}
     \centering
+    \vspace{1cm}
     \drawpipelineCustom{0}{0}{2}{2}{2}
-    
-    % Add Clear arrow
+
+    % Clear arrow
     \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] ($(current page.north)+(0,-1.5)$) -- ($(current page.north)+(0,-2.8)$);
-        \node[red, font=\large\bfseries] at ($(current page.north)+(4,-2)$) {Clear};
+        \draw[->, red, ultra thick] 
+          (retire.north) -- ++(0,0.8) -| node[red, font=\bfseries\small, below, near start] {Clear} (alloc.north);
     \end{tikzpicture}
     
     \vspace{0.5cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \textbf{When the mispredicted jump retires}
-            \begin{itemize}
-                \item Flush OOO
-                \begin{itemize}
-                    \item Only instruction following the jump are left in the machine \\
-                    $\Rightarrow$ they must all be flushed
-                    \item Resets all state in the OOO (Renamer, RS, ROB, MOB, etc.)
-                    \item Reset the Renamer to point only to architectural registers, and unblock rename
-                \end{itemize}
-                \item Allow allocation of instructions from correct path
-            \end{itemize}
-        \end{column}
-    \end{columns}
+    \begin{itemize}
+        \item[] \textbf{When the mispredicted jump retires}
+        \item Flush OOO
+        \begin{itemize}
+            \item Only instruction following the jump are left in the machine \\
+            $\Rightarrow$ they must all be flushed
+            \item Resets all state in the OOO (Renamer, RS, ROB, MOB, etc.)
+            \item Reset the Renamer to point only to architectural registers, and unblock rename
+        \end{itemize}
+        \item Allow allocation of instructions from correct path
+    \end{itemize}
 \end{frame}
 
 % Slide 14: Periodic Checkpoints
 \begin{frame}{Periodic Checkpoints}
     \centering
     
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \textbf{Allow allocation and execution of instructions from the correct path before the mispredicted jump retires}
-            
-            \vspace{0.3cm}
-            \textbf{Every few instructions take a checkpoint of the Renamer}
-            \begin{itemize}
-                \item A snapshot of the current renaming map
-                \item Taking a snapshot on every jump is expensive
-            \end{itemize}
-            
-            \textbf{In case of misprediction}
-            \begin{itemize}
-                \item Flush the frontend and start fetching instructions from the correct path
-                \item Selectively flush younger instructions from the ROB/RS
-                \item Recover Renamer to latest checkpoint taken prior to the mispredicted jump
-                \item Recover Renamer to its state at the jump
-                \begin{itemize}
-                    \item Rename instructions from the checkpoint and until the jump
-                \end{itemize}
-                \item Allow instructions from the correct path to allocate
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            % Placeholder for the checkpoint illustration
-            \textit{[Checkpoint illustration would go here]}
-        \end{column}
-    \end{columns}
+    \textbf{Allow allocation and execution of instructions from the correct path before the mispredicted jump retires}
+    
+    \vspace{0.3cm}
+    \textbf{Every few instructions take a checkpoint of the Renamer}
+    \begin{itemize}
+        \item A snapshot of the current renaming map
+        \item Taking a snapshot on every jump is expensive
+    \end{itemize}
+    
+    \textbf{In case of misprediction}
+    \begin{itemize}
+        \item Flush the frontend and start fetching instructions from the correct path
+        \item Selectively flush younger instructions from the ROB/RS
+        \item Recover Renamer to latest checkpoint taken prior to the mispredicted jump
+        \item Recover Renamer to its state at the jump
+        \begin{itemize}
+            \item Rename instructions from the checkpoint and until the jump
+        \end{itemize}
+        \item Allow instructions from the correct path to allocate
+    \end{itemize}
+    
+    \vspace{0.3cm}
+    % Placeholder for the checkpoint illustration
+    \textit{[Checkpoint illustration would go here]}
 \end{frame}
 
 % Slide 15: Checkpoints: Jump Gets to EXE (first)
@@ -2050,13 +2030,9 @@
     \end{tikzpicture}
     
     \vspace{1cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \begin{itemize}
-                \item \textbf{Clear raised on mispredicted jump}
-            \end{itemize}
-        \end{column}
-    \end{columns}
+    \begin{itemize}
+        \item \textbf{Clear raised on mispredicted jump}
+    \end{itemize}
 \end{frame}
 
 % Slide 16: Checkpoints: Jump Gets to EXE (detailed)
