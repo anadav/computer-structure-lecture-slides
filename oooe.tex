@@ -1613,17 +1613,21 @@
         \fi
         
         % Schedule/EX
-        \ifnum#4=1
+        \ifnum#4=0
+            \node[stage, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+            \node[stage, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+        \fi
+         \ifnum#4=1
+            \node[stageHighlight, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+            \node[stageHighlight, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+        \fi
+        \ifnum#4=2
+            \node[stageGray, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
+            \node[stageGray, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
+        \fi
+        \ifnum#4=3
             \node[stage, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
             \node[stageHighlight, right=0 of schedule, minimum width=0.8cm] (ex) {JEU};
-        \else
-            \ifnum#4=2
-                \node[stageGray, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
-                \node[stageGray, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
-            \else
-                \node[stage, right=0.1cm of rs4, minimum width=1.8cm] (schedule) {Schedule};
-                \node[stage, right=0 of schedule, minimum width=0.8cm] (ex) {EX};
-            \fi
         \fi
         
         % ROB queue (shortened to 4 entries)
@@ -1989,7 +1993,7 @@
 % Slide 11: Flush at EXE: Jump Gets to EXE (first)
 \begin{frame}{Flush at EXE: Jump Gets to EXE}
     \centering
-    \drawpipelineCustom{0}{0}{0}{1}{0}
+    \drawpipelineCustom{0}{0}{0}{3}{0}
     
     \vspace{4cm} % Space for potential diagram
 \end{frame}
@@ -1998,7 +2002,7 @@
 \begin{frame}{Flush at EXE: Jump Gets to EXE}
     \vspace{1cm}
     \centering
-    \drawpipelineCustomExt{2}{2}{0}{1}{0}{1}{1}{0}{0}
+    \drawpipelineCustomExt{2}{2}{0}{3}{0}{1}{1}{0}{0}
     
     % Add Flush arrow and labels
     \begin{tikzpicture}[overlay, remember picture]
@@ -2094,7 +2098,7 @@
 
 \begin{frame}{Checkpoints: Jump Gets to EXE}
     \centering
-    \drawpipelineCustomExt{0}{0}{0}{1}{0}{1}{1}{2}{2}
+    \drawpipelineCustomExt{0}{0}{0}{3}{0}{1}{1}{2}{2}
     
     % Add BPU Update and Clear labels
     \begin{tikzpicture}[overlay, remember picture]
