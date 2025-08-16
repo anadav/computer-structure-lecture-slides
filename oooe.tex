@@ -2030,7 +2030,7 @@
 \begin{frame}{Flush at EXE : Misp. Jump Retires}
     \centering
     \vspace{1cm}
-    \drawpipelineCustom{0}{0}{2}{2}{2}
+    \drawpipelineCustomExt{0}{0}{2}{2}{2}{1}{0}{0}{0}
 
     % Clear arrow
     \begin{tikzpicture}[overlay, remember picture]
@@ -2054,32 +2054,42 @@
 
 % Slide 14: Periodic Checkpoints
 \begin{frame}{Periodic Checkpoints}
-    \centering
-    
-    \textbf{Allow allocation and execution of instructions from the correct path before the mispredicted jump retires}
-    
-    \vspace{0.3cm}
-    \textbf{Every few instructions take a checkpoint of the Renamer}
-    \begin{itemize}
-        \item A snapshot of the current renaming map
-        \item Taking a snapshot on every jump is expensive
-    \end{itemize}
-    
-    \textbf{In case of misprediction}
-    \begin{itemize}
-        \item Flush the frontend and start fetching instructions from the correct path
-        \item Selectively flush younger instructions from the ROB/RS
-        \item Recover Renamer to latest checkpoint taken prior to the mispredicted jump
-        \item Recover Renamer to its state at the jump
+  \begin{columns}[T] % [T] aligns columns at the top
+    % --- Left column: text (0.8\textwidth) ---
+    \begin{column}{0.8\textwidth}
+      \begin{itemize}
+        \item \textbf{Allow allocation and execution of instructions from the correct path before the mispredicted jump retires}
+        
+        \vspace{0.3cm}
+        \item \textbf{Every few instructions take a checkpoint of the Renamer}
         \begin{itemize}
-            \item Rename instructions from the checkpoint and until the jump
+          \item A snapshot of the current renaming map
+          \item Taking a snapshot on every jump is expensive
         \end{itemize}
-        \item Allow instructions from the correct path to allocate
-    \end{itemize}
-    
-    \vspace{0.3cm}
-    % Placeholder for the checkpoint illustration
-    \textit{[Checkpoint illustration would go here]}
+        
+        \vspace{0.3cm}
+        \item \textbf{In case of misprediction}
+        \begin{itemize}
+          \item Flush the frontend and start fetching instructions from the correct path
+          \item Selectively flush younger instructions from the ROB/RS
+          \item Recover Renamer to latest checkpoint taken prior to the mispredicted jump
+          \item Recover Renamer to its state at the jump
+          \begin{itemize}
+            \item Rename instructions from the checkpoint and until the jump
+          \end{itemize}
+          \item Allow instructions from the correct path to allocate
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+
+    % --- Right column: illustration (0.2\textwidth) ---
+    \begin{column}{0.2\textwidth}
+      \centering
+      \textit{[Checkpoint illustration goes here]}
+      % Example if you later add a figure:
+      % \includegraphics[width=\linewidth]{checkpoint.pdf}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % Slide 15: Checkpoints: Jump Gets to EXE (first)
@@ -2151,15 +2161,11 @@
     \drawpipelineCustomExt{0}{0}{1}{0}{0}{0}{0}{2}{2}
     
     \vspace{0.5cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \begin{itemize}
-                \item \textbf{Once done restoring the Renamer}
-                \begin{itemize}
-                    \item allow allocation of instructions from correct path
-                \end{itemize}
-            \end{itemize}
-        \end{column}
-    \end{columns}
+    \begin{itemize}
+        \item \textbf{Once done restoring the Renamer}
+        \begin{itemize}
+            \item allow allocation of instructions from correct path
+        \end{itemize}
+    \end{itemize}
 \end{frame}
 \end{document}
