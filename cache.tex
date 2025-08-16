@@ -56,37 +56,45 @@
   
   % Memory hierarchy boxes
   \node[rectangle, draw, fill=cpucolor, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (cpu) at (0,0) {CPU};
-  \node[rectangle, draw, fill=l1color, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (l1) at (2.5,0) {L1\\Cache};
-  \node[rectangle, draw, fill=l2color, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (l2) at (5,0) {L2\\Cache};
-  \node[rectangle, draw, fill=l3color, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (l3) at (7.5,0) {L3\\Cache};
-  \node[rectangle, draw, fill=memcolor, minimum width=1.2cm, minimum height=1cm, align=center, font=\bfseries] (mem) at (10,0) {Memory\\(DRAM)};
+  \node[rectangle, draw, fill=l1color, minimum width=1.2cm, minimum height=1cm, align=center, right=1.25cm of cpu, font=\bfseries] (l1) {L1\\Cache};
+  \node[rectangle, draw, fill=l2color, minimum width=1.2cm, minimum height=1cm, align=center, right=1.25cm of l1, font=\bfseries] (l2) {L2\\Cache};
+  \node[rectangle, draw, fill=l3color, minimum width=1.2cm, minimum height=1cm, align=center, right=1.25cm of l2, font=\bfseries] (l3) {L3\\Cache};
+  \node[rectangle, draw, fill=memcolor, minimum width=1.2cm, minimum height=1cm, align=center, right=1.25cm of l3, font=\bfseries] (mem) {Memory\\(DRAM)};
   
   % Arrows between boxes
   \draw[->, thick] (cpu.east) -- (l1.west);
   \draw[->, thick] (l1.east) -- (l2.west);
   \draw[->, thick] (l2.east) -- (l3.west);
   \draw[->, thick] (l3.east) -- (mem.west);
-  
-  % Characteristics table below
-  \node[anchor=west, font=\bfseries] at (-0.5,-2.5) {Speed:};
-  \node[anchor=west] at (1.5,-2.5) {Fastest};
-  \draw[->, thick] (4.5,-2.5) -- (8.5,-2.5);
-  \node[anchor=east] at (10.5,-2.5) {Slowest};
-  
-  \node[anchor=west, font=\bfseries] at (-0.5,-3) {Size:};
-  \node[anchor=west] at (1.5,-3) {Smallest};
-  \draw[->, thick] (4.5,-3) -- (8.5,-3);
-  \node[anchor=east] at (10.5,-3) {Biggest};
-  
-  \node[anchor=west, font=\bfseries] at (-0.5,-3.5) {Cost:};
-  \node[anchor=west] at (1.5,-3.5) {Highest};
-  \draw[->, thick] (4.5,-3.5) -- (8.5,-3.5);
-  \node[anchor=east] at (10.5,-3.5) {Lowest};
-  
-  \node[anchor=west, font=\bfseries] at (-0.5,-4) {Power:};
-  \node[anchor=west] at (1.5,-4) {Highest};
-  \draw[->, thick] (4.5,-4) -- (8.5,-4);
-  \node[anchor=east] at (10.5,-4) {Lowest};
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\begin{tikzpicture}
+  \node[anchor=west, font=\bfseries, text height=0.25ex, text depth=0.25ex] (speed_text) at (-0.5,-2.5) {Speed:};
+  \node[right=0.3cm of speed_text, text height=0.25ex, text depth=0.25ex] (fastest_txt) {Fastest};
+  \node[right=5cm of fastest_txt.west, text height=0.25ex, text depth=0.25ex, anchor=west] (slowest_txt) {Slowest};
+  \draw[->, thick] (fastest_txt.east) -- (slowest_txt.west);
+
+  \node[anchor=north east,
+    font=\bfseries, text height=0.25ex, text depth=0.25ex] 
+    (size_text) at ([yshift=-0.1cm]speed_text.south east) {Size:};
+  \node[right=0.3cm of size_text, text height=0.25ex, text depth=0.25ex] (smallest_txt) {Smallest};
+  \node[right=5cm of smallest_txt.west, text height=0.25ex, text depth=0.25ex, anchor=west] (biggest_txt) {Biggest};
+  \draw[->, thick] (smallest_txt.east) -- (biggest_txt.west);
+
+  \node[anchor=north east,
+    font=\bfseries, text height=0.25ex, text depth=0.25ex] 
+    (cost_text) at ([yshift=-0.1cm]size_text.south east) {Cost:};
+  \node[right=0.3cm of cost_text, text height=0.25ex, text depth=0.25ex] (highest_cost_txt) {Highest};
+  \node[right=5cm of highest_cost_txt.west, text height=0.25ex, text depth=0.25ex, anchor=west] (lowest_cost_txt) {Lowest};
+  \draw[->, thick] (highest_cost_txt.east) -- (lowest_cost_txt.west);
+
+  \node[anchor=north east,
+    font=\bfseries, text height=0.25ex, text depth=0.25ex] 
+    (power_text) at ([yshift=-0.1cm]cost_text.south east) {Power:};
+  \node[right=0.3cm of power_text, text height=0.25ex, text depth=0.25ex] (highest_power_txt) {Highest};
+  \node[right=5cm of highest_power_txt.west, text height=0.25ex, text depth=0.25ex,anchor=west] (lowest_power_txt) {Lowest};
+  \draw[->, thick] (highest_power_txt.east) -- (lowest_power_txt.west);
 \end{tikzpicture}
 \end{center}
 \end{frame}
