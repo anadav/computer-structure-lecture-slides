@@ -293,21 +293,23 @@ What happens when we need to write to data not in cache?
 
 \begin{frame}{Example 1: Trace Table (Part 1)}
 \begin{center}
-\small
-\begin{tabular}{|c|c|c|c|c|l|}
+\footnotesize
+\begin{tabular}{|c|c|c|c|c|c|l|}
 \hline
-\textbf{Addr} & \textbf{Tag} & \textbf{Set} & \textbf{Hit/Miss} & \textbf{Way/LRU} & \textbf{Explanation} \\
+\textbf{Addr} & \textbf{Binary (Tag|Set|Off)} & \textbf{Tag} & \textbf{Set} & \textbf{H/M} & \textbf{Way} & \textbf{Explanation} \\
 \hline
-5 & 0 & 1 & M & 0/1 & First access to set 1 \\
-7 & 0 & 1 & H & 0/1 & Same block as addr 5 \\
-1 & 0 & 0 & M & 0/1 & First access to set 0 \\
-4 & 0 & 1 & H & 0/1 & Already loaded with addr 5 \\
-36 & 1 & 1 & M & 1/0 & Different tag, use way 1 \\
-8 & 0 & 2 & M & 0/1 & First access to set 2 \\
-100 & 3 & 1 & M & 0/1 & Evict way 0 (LRU) \\
+5 & \textcolor{blue}{0000000}\textcolor{red}{01}\textcolor{green}{01} & 0 & 1 & M & 0/1 & First access to set 1 \\
+7 & \textcolor{blue}{0000000}\textcolor{red}{01}\textcolor{green}{11} & 0 & 1 & H & 0/1 & Same block as addr 5 \\
+1 & \textcolor{blue}{0000000}\textcolor{red}{00}\textcolor{green}{01} & 0 & 0 & M & 0/1 & First access to set 0 \\
+4 & \textcolor{blue}{0000000}\textcolor{red}{01}\textcolor{green}{00} & 0 & 1 & H & 0/1 & Already loaded with addr 5 \\
+36 & \textcolor{blue}{0000001}\textcolor{red}{01}\textcolor{green}{00} & 1 & 1 & M & 1/0 & Different tag, use way 1 \\
+8 & \textcolor{blue}{0000000}\textcolor{red}{10}\textcolor{green}{00} & 0 & 2 & M & 0/1 & First access to set 2 \\
+100 & \textcolor{blue}{0000011}\textcolor{red}{01}\textcolor{green}{00} & 3 & 1 & M & 0/1 & Evict way 0 (LRU) \\
 \hline
 \end{tabular}
 \end{center}
+\vspace{0.2cm}
+\textbf{Color Key:} \textcolor{blue}{Tag bits (29-5)} | \textcolor{red}{Set bits (4-2)} | \textcolor{green}{Offset bits (1-0)}
 \end{frame}
 
 \begin{frame}{Example 1: Final Results}
@@ -649,7 +651,7 @@ Eviction & $\rightarrow$ & No memory update needed
 \end{enumerate}
 
 \begin{center}
-\begin{tcolorbox}[colback=yellow!10, width=0.7\textwidth]
+\begin{tcolorbox}[colback=yellow!10, width=0.9\textwidth]
 Write request, miss $\rightarrow$ Evict if needed $\rightarrow$ Fetch block $\rightarrow$ Write to cache
 \end{tcolorbox}
 \end{center}
