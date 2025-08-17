@@ -182,16 +182,18 @@ loop2:
     BLT R1,4,loop1
 \end{lstlisting}
 
+\column{0.6\textwidth}
 \textbf{Given:}
 \begin{itemize}
     \item 5-stage pipeline (IF, ID, EX, MEM, WB)
     \item BTB with 2-bit predictor
     \item Initial state: 01
 \end{itemize}
+\end{columns}
 
-\column{0.6\textwidth}
 \textbf{Question:} What will be the prediction each time BNEQ is executed? How many mispredictions?
 
+\centering
 \begin{tikzpicture}[scale=0.7, node distance=2.5cm, auto]
     \node[state, fill=red!20] (00) {00};
     \node[state, fill=orange!20, draw=blue, thick, right of=00] (01) {01};
@@ -199,16 +201,15 @@ loop2:
     \node[state, fill=green!20, right of=10] (11) {11};
     
     \path[->] 
-    (00) edge[loop below] node{\tiny NT} (00)
-    (00) edge[above] node{\tiny T} (01)
+    (00) edge[loop left] node{\tiny NT} (00)
+    (00) edge[above, bend left] node{\tiny T} (01)
     (01) edge[below, bend left] node{\tiny NT} (00)
-    (01) edge[above] node{\tiny T} (10)
-    (10) edge[below] node{\tiny NT} (01)
-    (10) edge[above] node{\tiny T} (11)
-    (11) edge[below] node{\tiny NT} (10)
-    (11) edge[loop below] node{\tiny T} (11);
+    (01) edge[above, bend left] node{\tiny T} (10)
+    (10) edge[below, bend left] node{\tiny NT} (01)
+    (10) edge[above, bend left] node{\tiny T} (11)
+    (11) edge[below, bend left] node{\tiny NT} (10)
+    (11) edge[loop right] node{\tiny T} (11);
 \end{tikzpicture}
-\end{columns}
 \end{frame}
 
 \begin{frame}{Example Solution: Prediction Table}
@@ -397,13 +398,13 @@ Since each iteration has 2 branch instructions:
 $$2 \times \text{\#iterations} \geq \text{\#mispredictions}$$
 
 \textbf{Solution:} \#iterations = 3, \#mispredictions = 4
-
 $\Rightarrow$ LD executed \textbf{3 times}
 \end{frame}
 
 \begin{frame}{State Machine Configuration}
 \textbf{\ding{194}} Design a state machine that produces 4 mispredictions in 6 branch executions (3 iterations)
 
+\pause
 \begin{center}
 \begin{tikzpicture}[scale=0.8, node distance=2.5cm]
     % State machine for demonstration
@@ -417,14 +418,16 @@ $\Rightarrow$ LD executed \textbf{3 times}
     (t) edge[loop right] node{T} (t);
     
     % Initial states on the left
-    \node[align=left] at (-2.5, 0) {\textbf{Initial states:}\\BEQ: T\\BNEQ: NT};
+    \node[align=left] at (-5.5, 0) {\textbf{Initial states:}\\BEQ: T\\BNEQ: NT};
 \end{tikzpicture}
 \end{center}
-
+\begin{columns}
+\column{0.2\textwidth}
 \textbf{Execution Trace:}
+\column{0.8\textwidth}
 \begin{table}
 \centering
-\small
+\scriptsize
 \begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Iteration} & \textbf{Instruction} & \textbf{Prediction} & \textbf{Actual} \\
@@ -438,6 +441,7 @@ $\Rightarrow$ LD executed \textbf{3 times}
 \hline
 \end{tabular}
 \end{table}
+\end{columns}
 
 Result: 4 mispredictions, 2 correct predictions
 \end{frame}
