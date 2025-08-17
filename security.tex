@@ -23,6 +23,589 @@
     \tableofcontents
 \end{frame}
 
+% Additional slides to be inserted into the main presentation
+
+% Section: Threat Model and Defense Strategy
+\section{Threat Model and Defense Strategy}
+
+\begin{frame}{Understanding Threat Models}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{What is a Threat Model?}
+            \begin{itemize}
+                \item Systematic analysis of:
+                \begin{itemize}
+                    \item What are we protecting?
+                    \item Who are the attackers?
+                    \item What capabilities do they have?
+                    \item What are acceptable risks?
+                \end{itemize}
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Attacker Capabilities:}
+            \begin{itemize}
+                \item \textcolor{green!60!black}{User-level code execution}
+                \item \textcolor{orange}{Memory corruption bugs}
+                \item \textcolor{red}{Kernel vulnerabilities}
+                \item \textcolor{red!80!black}{Physical access}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Threat levels pyramid
+                \draw[fill=red!40] (0,0) -- (4,0) -- (3,1) -- (1,1) -- cycle;
+                \node at (2,0.5) {\small Physical};
+                
+                \draw[fill=orange!40] (1,1) -- (3,1) -- (2.5,2) -- (1.5,2) -- cycle;
+                \node at (2,1.5) {\small Kernel};
+                
+                \draw[fill=yellow!40] (1.5,2) -- (2.5,2) -- (2.2,3) -- (1.8,3) -- cycle;
+                \node at (2,2.5) {\small Local};
+                
+                \draw[fill=green!40] (1.8,3) -- (2.2,3) -- (2,4) -- cycle;
+                \node at (2,3.4) {\small Remote};
+                
+                % Labels
+                \node[right] at (4.5,0.5) {Hardware attacks};
+                \node[right] at (4.5,1.5) {Privilege escalation};
+                \node[right] at (4.5,2.5) {Code execution};
+                \node[right] at (4.5,3.5) {Network exploits};
+                
+                \node at (2,-0.7) {\textbf{Attack Surface}};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.5cm}
+    \begin{tcolorbox}[colback=blue!10]
+        \textbf{Modern CPU Security Mechanisms Target:}
+        \begin{itemize}
+            \item Memory corruption exploitation (buffer overflows, use-after-free)
+            \item Control flow hijacking (ROP, JOP, code injection)
+            \item Privilege escalation (kernel exploitation)
+            \item Side-channel attacks (Spectre, Meltdown)
+        \end{itemize}
+    \end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Defense in Depth}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.9]
+            % Castle defense layers
+            \draw[fill=red!20] (0,0) rectangle (10,1);
+            \node at (5,0.5) {\textbf{Layer 1: Prevent Exploitation}};
+            \node[right] at (10.2,0.5) {\small ASLR, Stack Canaries};
+            
+            \draw[fill=orange!20] (0,1.2) rectangle (10,2.2);
+            \node at (5,1.7) {\textbf{Layer 2: Prevent Code Execution}};
+            \node[right] at (10.2,1.7) {\small XD/NX, W$\oplus$X};
+            
+            \draw[fill=yellow!20] (0,2.4) rectangle (10,3.4);
+            \node at (5,2.9) {\textbf{Layer 3: Prevent Control Flow Hijack}};
+            \node[right] at (10.2,2.9) {\small CFI, CET, PAC};
+            
+            \draw[fill=green!20] (0,3.6) rectangle (10,4.6);
+            \node at (5,4.1) {\textbf{Layer 4: Prevent Privilege Escalation}};
+            \node[right] at (10.2,4.1) {\small SMEP, SMAP, KPTI};
+            
+            \draw[fill=blue!20] (0,4.8) rectangle (10,5.8);
+            \node at (5,5.3) {\textbf{Layer 5: Contain Damage}};
+            \node[right] at (10.2,5.3) {\small Sandboxing, TEE};
+            
+            % Attack progression arrow
+            \draw[->,ultra thick,red] (-1.5,0.5) -- (-0.2,0.5) -- (-0.2,5.3) node[midway,left,rotate=90] {Attack Progression};
+            
+            % Defense layers
+            \draw[<-,ultra thick,green!60!black] (0,0.5) -- (-0.5,0.5);
+            \draw[<-,ultra thick,green!60!black] (0,1.7) -- (-0.5,1.7);
+            \draw[<-,ultra thick,green!60!black] (0,2.9) -- (-0.5,2.9);
+            \draw[<-,ultra thick,green!60!black] (0,4.1) -- (-0.5,4.1);
+            \draw[<-,ultra thick,green!60!black] (0,5.3) -- (-0.5,5.3);
+        \end{tikzpicture}
+    \end{center}
+    
+    \vspace{0.3cm}
+    \begin{tcolorbox}[colback=yellow!20]
+        \centering
+        \textbf{Principle:} No single defense is perfect - multiple independent layers increase attack complexity exponentially
+    \end{tcolorbox}
+\end{frame}
+
+% Section: ROP Protection Evolution
+\section{ROP Protection Evolution}
+
+\begin{frame}{Execute Disable (XD/NX) Bit - The First Line}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{XD/NX Bit Basics:}
+            \begin{itemize}
+                \item Intel: XD (eXecute Disable)
+                \item AMD: NX (No eXecute)
+                \item ARM: XN (eXecute Never)
+                \item Page table bit 63
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{How it Works:}
+            \begin{itemize}
+                \item Marks memory pages non-executable
+                \item CPU raises \#PF on exec attempt
+                \item Enforces W$\oplus$X policy
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Memory layout
+                \draw[fill=blue!30] (0,0) rectangle (4,1.5);
+                \node at (2,0.75) {Code Section};
+                \node at (5,0.75) {X=1, W=0};
+                
+                \draw[fill=green!30] (0,2) rectangle (4,3.5);
+                \node at (2,2.75) {Data Section};
+                \node at (5,2.75) {X=0, W=1};
+                
+                \draw[fill=yellow!30] (0,4) rectangle (4,5.5);
+                \node at (2,4.75) {Stack};
+                \node at (5,4.75) {X=0, W=1};
+                
+                \draw[fill=orange!30] (0,6) rectangle (4,7.5);
+                \node at (2,6.75) {Heap};
+                \node at (5,6.75) {X=0, W=1};
+                
+                % Attack blocked
+                \draw[->,thick,red] (7,4.75) -- (4.2,4.75);
+                \node[red] at (8.5,4.75) {Shellcode};
+                \draw[red,thick] (6.5,4.25) -- (7.5,5.25);
+                \draw[red,thick] (6.5,5.25) -- (7.5,4.25);
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \textbf{What XD Prevents:}
+            \begin{itemize}
+                \item Classic buffer overflow + shellcode
+                \item Direct code injection attacks
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Why XD/NX is Not Enough - Enter ROP}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The Problem:}
+            \begin{itemize}
+                \item Attackers don't need new code!
+                \item Existing code has everything needed
+                \item Chain existing code snippets
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Return-Oriented Programming:}
+            \begin{itemize}
+                \item Uses "gadgets" ending in RET
+                \item Gadget = useful instruction(s) + RET
+                \item Chain gadgets via stack control
+                \item Turing complete!
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{ROP Attack Example:}
+                \begin{verbatim}
+; Gadget 1: pop rdi; ret
+; Gadget 2: pop rsi; ret  
+; Gadget 3: mov rax, 59; ret
+; Gadget 4: syscall
+
+Stack Layout:
+[addr_gadget1]
+["/bin/sh"]
+[addr_gadget2]
+[0]
+[addr_gadget3]
+[addr_gadget4]
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tikzpicture}[scale=0.6]
+                \node[draw,fill=red!30] at (0,0) {XD/NX Active};
+                \draw[->,thick] (0,-0.5) -- (0,-1.5);
+                \node[draw,fill=orange!30] at (0,-2) {Code Reuse};
+                \node at (3,-2) {Still Works!};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{ROP Attack Visualization}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.8]
+            % Code section
+            \draw[fill=blue!20] (0,0) rectangle (10,3);
+            \node at (5,2.7) {\textbf{Existing Code (libc, program, etc.)}};
+            
+            % Gadgets
+            \draw[fill=yellow!40] (0.5,0.5) rectangle (2,1.5);
+            \node at (1.25,1) {\small Gadget 1};
+            \node at (1.25,0.7) {\tiny pop rdi};
+            
+            \draw[fill=yellow!40] (3,1) rectangle (4.5,2);
+            \node at (3.75,1.5) {\small Gadget 2};
+            \node at (3.75,1.2) {\tiny pop rsi};
+            
+            \draw[fill=yellow!40] (5.5,0.3) rectangle (7,1.3);
+            \node at (6.25,0.8) {\small Gadget 3};
+            \node at (6.25,0.5) {\tiny mov rax,59};
+            
+            \draw[fill=yellow!40] (8,1.2) rectangle (9.5,2.2);
+            \node at (8.75,1.7) {\small Gadget 4};
+            \node at (8.75,1.4) {\tiny syscall};
+            
+            % Stack
+            \draw[fill=green!20] (11,0) rectangle (13,3);
+            \node at (12,2.7) {\textbf{Stack}};
+            
+            % ROP chain on stack
+            \draw (11,2.3) -- (13,2.3);
+            \node at (12,2.5) {\tiny addr\_g1};
+            \draw (11,1.9) -- (13,1.9);
+            \node at (12,2.1) {\tiny "/bin/sh"};
+            \draw (11,1.5) -- (13,1.5);
+            \node at (12,1.7) {\tiny addr\_g2};
+            \draw (11,1.1) -- (13,1.1);
+            \node at (12,1.3) {\tiny addr\_g3};
+            \draw (11,0.7) -- (13,0.7);
+            \node at (12,0.9) {\tiny addr\_g4};
+            
+            % Execution flow
+            \draw[->,thick,red] (12,2.5) to[out=180,in=90] (1.25,1.5);
+            \draw[->,thick,red] (1.25,0.5) to[out=-90,in=180] (12,1.7);
+            \draw[->,thick,red] (12,1.7) to[out=180,in=90] (3.75,2);
+            \draw[->,thick,red] (3.75,1) to[out=-90,in=180] (12,1.3);
+            \draw[->,thick,red] (12,1.3) to[out=180,in=90] (6.25,1.3);
+            \draw[->,thick,red] (6.25,0.3) to[out=-90,in=180] (12,0.9);
+            \draw[->,thick,red] (12,0.9) to[out=180,in=90] (8.75,2.2);
+            
+            \node[red] at (5,-0.5) {\textbf{Control Flow Hijacked via RET Chain}};
+        \end{tikzpicture}
+    \end{center}
+    
+    \begin{tcolorbox}[colback=red!10]
+        \textbf{Key Insight:} ROP bypasses XD/NX by reusing existing executable code - no code injection needed!
+    \end{tcolorbox}
+\end{frame}
+
+% Section: SMEP and SMAP
+\section{Kernel Protection: SMEP and SMAP}
+
+\begin{frame}{SMEP - Supervisor Mode Execution Prevention}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The Problem:}
+            \begin{itemize}
+                \item Kernel exploits redirect to user code
+                \item User controls memory at known addresses
+                \item ret2user attacks bypass KASLR
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{SMEP Solution:}
+            \begin{itemize}
+                \item CR4.SMEP bit (bit 20)
+                \item Prevents kernel executing user pages
+                \item \#PF if CPL=0 tries to execute U=1 page
+                \item Intel: Ivy Bridge (2012)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Memory layout
+                \draw[fill=blue!30] (0,4) rectangle (4,7);
+                \node at (2,6.5) {\textbf{Kernel Space}};
+                \node at (2,6) {CPL = 0};
+                \node at (2,5.5) {U = 0};
+                
+                \draw[fill=green!30] (0,0) rectangle (4,3.5);
+                \node at (2,3) {\textbf{User Space}};
+                \node at (2,2.5) {CPL = 3};
+                \node at (2,2) {U = 1};
+                \node at (2,1) {Shellcode};
+                
+                % Attack attempt
+                \draw[->,thick,red] (2,4.5) -- (2,3.5);
+                \node[red] at (2,4) {ret2user};
+                
+                % SMEP blocks
+                \draw[thick,red] (1,3.7) -- (3,3.7);
+                \draw[thick,red] (1.2,3.9) -- (2.8,3.9);
+                \node[red] at (5.5,3.8) {SMEP Blocks!};
+                
+                % Without SMEP
+                \node at (7,5) {\textbf{Without SMEP:}};
+                \node at (7,4.5) {Kernel jumps to};
+                \node at (7,4) {user shellcode};
+                \node[red] at (7,3.5) {= root shell};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.3cm}
+    \begin{tcolorbox}[colback=yellow!20]
+        \textbf{Bypass Methods:} ROP in kernel code, physmap spraying, page table manipulation
+    \end{tcolorbox}
+\end{frame}
+
+\begin{frame}[fragile]{SMAP - Supervisor Mode Access Prevention}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The Problem After SMEP:}
+            \begin{itemize}
+                \item Can't execute user pages
+                \item But can still READ/WRITE them!
+                \item Kernel ROP can use user data
+                \item Arbitrary write to user buffers
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{SMAP Solution:}
+            \begin{itemize}
+                \item CR4.SMAP bit (bit 21)
+                \item Blocks kernel access to user pages
+                \item STAC/CLAC instructions for legitimate access
+                \item Intel: Broadwell (2014)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{Kernel Code Pattern:}
+                \begin{verbatim}
+copy_from_user:
+    STAC        ; Enable access
+    mov (%rdi), %rax
+    CLAC        ; Disable access
+    ret
+    
+; Vulnerability example:
+some_ioctl:
+    ; Missing STAC/CLAC!
+    mov %rsi, (%rdi)  ; Oops!
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \textbf{EFLAGS.AC bit:}
+            \begin{itemize}
+                \item AC=0: SMAP active (default)
+                \item AC=1: Temporary user access
+                \item Only changeable in Ring 0
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{SMEP + SMAP Combined Protection}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.9]
+            % Kernel space
+            \draw[fill=blue!20] (0,3) rectangle (8,6);
+            \node at (4,5.5) {\textbf{Kernel Space (Ring 0)}};
+            
+            % User space
+            \draw[fill=green!20] (0,0) rectangle (8,2.5);
+            \node at (4,2) {\textbf{User Space (Ring 3)}};
+            
+            % Protection barriers
+            \draw[ultra thick, red] (0,2.7) -- (8,2.7);
+            \node[red] at (9,2.7) {SMEP/SMAP};
+            
+            % Attack scenarios
+            % 1. Code execution attempt
+            \draw[->,thick,orange] (1,3.5) -- (1,2.5);
+            \node[orange] at (1,3.8) {\small Execute};
+            \draw[thick,red] (0.5,2.6) -- (1.5,2.6);
+            \draw[thick,red] (0.5,2.8) -- (1.5,2.8);
+            \node[red] at (1,2.3) {\tiny SMEP};
+            
+            % 2. Data read attempt
+            \draw[->,thick,orange] (3,3.5) -- (3,2.5);
+            \node[orange] at (3,3.8) {\small Read};
+            \draw[thick,red] (2.5,2.6) -- (3.5,2.6);
+            \draw[thick,red] (2.5,2.8) -- (3.5,2.8);
+            \node[red] at (3,2.3) {\tiny SMAP};
+            
+            % 3. Data write attempt
+            \draw[->,thick,orange] (5,3.5) -- (5,2.5);
+            \node[orange] at (5,3.8) {\small Write};
+            \draw[thick,red] (4.5,2.6) -- (5.5,2.6);
+            \draw[thick,red] (4.5,2.8) -- (5.5,2.8);
+            \node[red] at (5,2.3) {\tiny SMAP};
+            
+            % 4. Legitimate access
+            \draw[->,thick,green!60!black] (7,3.5) -- (7,2.5);
+            \node[green!60!black] at (7,3.8) {\small STAC};
+            \node[green!60!black] at (7,2.3) {\tiny OK};
+            
+            % User data/code
+            \draw[fill=yellow!30] (0.5,0.5) rectangle (2.5,1.5);
+            \node at (1.5,1) {\small User Code};
+            
+            \draw[fill=orange!30] (3,0.5) rectangle (5,1.5);
+            \node at (4,1) {\small User Data};
+            
+            \draw[fill=red!30] (5.5,0.5) rectangle (7.5,1.5);
+            \node at (6.5,1) {\small ROP Chain};
+        \end{tikzpicture}
+    \end{center}
+    
+    \vspace{0.3cm}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Protection Matrix:}
+            \begin{tabular}{|l|c|c|}
+                \hline
+                From Kernel & Execute & Access \\
+                \hline
+                No Protection & \checkmark & \checkmark \\
+                SMEP only & $\times$ & \checkmark \\
+                SMAP only & \checkmark & $\times$ \\
+                SMEP+SMAP & $\times$ & $\times$* \\
+                \hline
+            \end{tabular}
+            
+            \small *Except with STAC/CLAC
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Remaining Attack Surface:}
+            \begin{itemize}
+                \item Kernel ROP/JOP only
+                \item Kernel heap/stack spraying
+                \item Race conditions in STAC/CLAC windows
+                \item Hardware vulnerabilities (Spectre/Meltdown)
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Modern ROP Mitigations Summary}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.8]
+            % Timeline of defenses
+            \node[draw,fill=blue!30] (nx) at (0,0) {XD/NX};
+            \node[below] at (0,-0.5) {\tiny 2004};
+            
+            \node[draw,fill=green!30] (aslr) at (3,0) {ASLR};
+            \node[below] at (3,-0.5) {\tiny 2005};
+            
+            \node[draw,fill=yellow!30] (smep) at (6,0) {SMEP};
+            \node[below] at (6,-0.5) {\tiny 2012};
+            
+            \node[draw,fill=orange!30] (smap) at (9,0) {SMAP};
+            \node[below] at (9,-0.5) {\tiny 2014};
+            
+            \node[draw,fill=red!30] (cet) at (12,0) {CET};
+            \node[below] at (12,-0.5) {\tiny 2020};
+            
+            % Attack techniques
+            \node[draw,fill=gray!20] (inject) at (0,2) {Code Injection};
+            \draw[->,thick,red] (inject) -- (nx);
+            \draw[thick,red] (-0.3,-0.3) -- (0.3,0.3);
+            
+            \node[draw,fill=gray!20] (rop) at (3,2) {Basic ROP};
+            \draw[->,thick,orange] (rop) -- (aslr);
+            
+            \node[draw,fill=gray!20] (ret2user) at (6,2) {ret2user};
+            \draw[->,thick,red] (ret2user) -- (smep);
+            \draw[thick,red] (5.7,-0.3) -- (6.3,0.3);
+            
+            \node[draw,fill=gray!20] (pivot) at (9,2) {Stack Pivot};
+            \draw[->,thick,red] (pivot) -- (smap);
+            \draw[thick,red] (8.7,-0.3) -- (9.3,0.3);
+            
+            \node[draw,fill=gray!20] (advanced) at (12,2) {Advanced ROP};
+            \draw[->,thick,red] (advanced) -- (cet);
+            \draw[thick,red] (11.7,-0.3) -- (12.3,0.3);
+        \end{tikzpicture}
+    \end{center}
+    
+    \vspace{0.5cm}
+    \begin{columns}
+        \begin{column}{0.33\textwidth}
+            \textbf{User Space:}
+            \begin{itemize}
+                \item XD/NX bit
+                \item ASLR
+                \item Stack Canaries
+                \item CFI/CET
+                \item Shadow Stack
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \textbf{Kernel Space:}
+            \begin{itemize}
+                \item SMEP
+                \item SMAP
+                \item KASLR
+                \item KPTI
+                \item FineIBT
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \textbf{Hardware:}
+            \begin{itemize}
+                \item Intel CET
+                \item ARM PAC/BTI
+                \item ARM MTE
+                \item Control-flow integrity
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Performance Impact of Security Features}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.8]
+            % Bar chart of performance overhead
+            \draw[->] (0,0) -- (0,5) node[above] {Overhead (\%)};
+            \draw[->] (0,0) -- (10,0) node[right] {Security Feature};
+            
+            % Y-axis labels
+            \foreach \y in {1,2,3,4} {
+                \draw (0,\y) -- (-0.1,\y) node[left] {\y 0};
+            }
+            
+            % Bars
+            \draw[fill=green!50] (0.5,0) rectangle (1.5,0.1) node[above] {0.1\%};
+            \node[below,rotate=45,anchor=east] at (1,0) {\tiny XD/NX};
+            
+            \draw[fill=green!50] (2,0) rectangle (3,0.2) node[above] {2\%};
+            \node[below,rotate=45,anchor=east] at (2.5,0) {\tiny SMEP};
+            
+            \draw[fill=yellow!50] (3.5,0) rectangle (4.5,0.3) node[above] {3\%};
+            \node[below,rotate=45,anchor=east] at (4,0) {\tiny SMAP};
+            
+            \draw[fill=yellow!50] (5,0) rectangle (6,0.5) node[above] {5\%};
+            \node[below,rotate=45,anchor=east] at (5.5,0) {\tiny CET};
+            
+            \draw[fill=orange!50] (6.5,0) rectangle (7.5,1.5) node[above] {15\%};
+            \node[below,rotate=45,anchor=east] at (7,0) {\tiny KPTI};
+            
+            \draw[fill=red!50] (8,0) rectangle (9,3) node[above] {30\%};
+            \node[below,rotate=45,anchor=east] at (8.5,0) {\tiny Full CFI};
+        \end{tikzpicture}
+    \end{center}
+    
+    \begin{tcolorbox}[colback=blue!10]
+        \textbf{Trade-offs:} Security vs Performance vs Compatibility
+        \begin{itemize}
+            \item Hardware features (XD, SMEP) = minimal overhead
+            \item Software mitigations (KPTI, CFI) = significant overhead
+            \item Choose based on threat model and performance requirements
+        \end{itemize}
+    \end{tcolorbox}
+\end{frame}
+
 % Section 1: Memory Protection
 \section{Memory Protection Mechanisms}
 
@@ -407,12 +990,12 @@ func:
     \end{columns}
 \end{frame}
 
-\begin{frame}{Security Architecture - ARM TrustZone}
+\begin{frame}{ARM TrustZone - Trusted Execution Environment (TEE)}
     \begin{center}
         \begin{tikzpicture}[scale=0.9]
             % Secure World
             \draw[fill=green!30,rounded corners] (-4,0) rectangle (-0.5,4);
-            \node at (-2.25,3.7) {\textbf{Secure World}};
+            \node at (-2.25,3.7) {\textbf{Secure World (TEE)}};
             
             % Secure levels
             \draw[fill=green!50] (-3.5,2.8) rectangle (-1,3.5);
@@ -422,21 +1005,21 @@ func:
             \node at (-2.25,2.25) {\small S-EL2: S-Hypervisor};
             
             \draw[fill=green!35] (-3.5,1) rectangle (-1,1.7);
-            \node at (-2.25,1.35) {\small S-EL1: S-Kernel};
+            \node at (-2.25,1.35) {\small S-EL1: Trusted OS};
             
             \draw[fill=green!25] (-3.5,0.2) rectangle (-1,0.8);
-            \node at (-2.25,0.5) {\small S-EL0: S-Apps};
+            \node at (-2.25,0.5) {\small S-EL0: Trusted Apps};
             
             % Normal World
             \draw[fill=blue!30,rounded corners] (0.5,0) rectangle (4,4);
-            \node at (2.25,3.7) {\textbf{Normal World}};
+            \node at (2.25,3.7) {\textbf{Normal World (REE)}};
             
             % Normal levels
             \draw[fill=blue!40] (1,1.9) rectangle (3.5,2.6);
             \node at (2.25,2.25) {\small EL2: Hypervisor};
             
             \draw[fill=blue!35] (1,1) rectangle (3.5,1.7);
-            \node at (2.25,1.35) {\small EL1: OS Kernel};
+            \node at (2.25,1.35) {\small EL1: Rich OS};
             
             \draw[fill=blue!25] (1,0.2) rectangle (3.5,0.8);
             \node at (2.25,0.5) {\small EL0: Applications};
@@ -447,10 +1030,26 @@ func:
         \end{tikzpicture}
     \end{center}
     
-    \begin{tcolorbox}[colback=orange!20]
-        \centering
-        \textbf{Key Feature:} Hardware-enforced isolation between Secure and Normal worlds
-    \end{tcolorbox}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{TEE Use Cases:}
+            \begin{itemize}
+                \item DRM content protection
+                \item Mobile payments
+                \item Biometric authentication
+                \item Key management
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{TEE = Trusted Execution Environment}
+            \begin{itemize}
+                \item Isolated from Rich OS (REE)
+                \item Secure boot chain
+                \item Cryptographic operations
+                \item Hardware root of trust
+            \end{itemize}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Virtualization Security}
@@ -565,12 +1164,13 @@ func:
 \begin{frame}{Intel SGX Enclaves}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \textbf{Enclave Properties:}
+            \textbf{SGX - Another TEE Implementation:}
             \begin{itemize}
-                \item Isolated execution environment
+                \item Isolated execution environment (TEE)
                 \item Encrypted memory (MEE)
                 \item Remote attestation
                 \item Sealed storage
+                \item x86-specific (vs ARM TrustZone)
             \end{itemize}
             
             \vspace{0.3cm}
@@ -720,6 +1320,73 @@ func:
     \end{columns}
 \end{frame}
 
+\begin{frame}{Chain of Trust and UEFI Vulnerabilities}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Chain of Trust Concept:}
+            \begin{itemize}
+                \item Each component verifies the next
+                \item Trust anchored in hardware
+                \item Weakest link breaks entire chain
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{UEFI as Attack Surface:}
+            \begin{itemize}
+                \item \textcolor{red}{Complex codebase (millions of LOC)}
+                \item \textcolor{red}{Third-party drivers/modules}
+                \item \textcolor{red}{Network stack in firmware}
+                \item \textcolor{red}{Persistent across OS reinstalls}
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Known UEFI Attacks:}
+            \begin{itemize}
+                \item BootHole (CVE-2020-10713)
+                \item LogoFAIL (2023)
+                \item BlackLotus bootkit
+                \item ThinkPwn vulnerabilities
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Chain links
+                \node[draw,fill=green!30] (hw) at (0,0) {Hardware Root};
+                \node[draw,fill=yellow!30] (uefi) at (0,-1.5) {UEFI Firmware};
+                \node[draw,fill=orange!30] (boot) at (0,-3) {Bootloader};
+                \node[draw,fill=blue!30] (os) at (0,-4.5) {OS Kernel};
+                \node[draw,fill=gray!30] (app) at (0,-6) {Applications};
+                
+                % Trust flow
+                \draw[->,thick,green] (hw) -- (uefi);
+                \draw[->,thick,yellow] (uefi) -- (boot);
+                \draw[->,thick,orange] (boot) -- (os);
+                \draw[->,thick,blue] (os) -- (app);
+                
+                % Attack point
+                \node[red,thick] at (2.5,-1.5) {\Large \textbf{X}};
+                \draw[->,red,thick] (2.5,-1.5) -- (0.5,-1.5);
+                \node[red] at (4,-1.5) {\small Attack Point};
+                
+                % Broken chain
+                \draw[red,thick,dashed] (0,-2) -- (0,-2.5);
+                \node[red] at (2,-3.5) {\small Trust Broken};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=red!10]
+                \textbf{Critical Issue:}
+                UEFI compromise gives attacker:
+                \begin{itemize}
+                    \item Ring -2 privileges
+                    \item Persistence below OS
+                    \item Bypass of all OS security
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Measured Boot \& TPM}
     \begin{columns}
         \begin{column}{0.5\textwidth}
@@ -847,10 +1514,10 @@ func:
 
 \begin{frame}
     \begin{center}
-    \Huge Questions?
+    {\Huge Questions?}
     
     \vspace{1cm}
-    \Large Thank You!
+    {\Large Thank You!}
     \end{center}
 \end{frame}
 
