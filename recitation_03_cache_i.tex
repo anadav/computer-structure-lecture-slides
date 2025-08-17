@@ -366,7 +366,7 @@ for (int i=0; i<1024; i++)
 \begin{itemize}
     \item Cache size: 1KB = 1024 bytes
     \item Block size: 16 bytes $\rightarrow$ 4 offset bits
-    \item Number of blocks: 1024/16 = 64 blocks
+    \item Number of blocks: $\frac{1024}{16} = 64$ blocks
     \item 4-way associative $\rightarrow$ 16 sets $\rightarrow$ 4 set bits
     \item Tag bits: 32 - 4 (offset) - 4 (set) = 24 bits
     \item Per line: 24 (tag) + 1 (valid) = 25 bits
@@ -381,9 +381,9 @@ for (int i=0; i<1024; i++)
 
 \textbf{Solution:}
 \begin{itemize}
-    \item Array size: 1024 ints × 4 bytes = 4096 bytes
+    \item Array size: $1024 \text{ints} \times 4 \text{bytes} = 4096 \text{bytes}$
     \item Block size: 16 bytes (4 ints per block)
-    \item Total blocks needed: 4096/16 = 256 blocks
+    \item Total blocks needed: $\frac{4096}{16} = 256$ blocks
     \item Each block loaded once (compulsory miss)
     \item 4 ints per block $\rightarrow$ 3 hits after each miss
 \end{itemize}
@@ -391,7 +391,7 @@ for (int i=0; i<1024; i++)
 \textbf{Result:} 
 \begin{itemize}
     \item 256 misses total
-    \item Miss rate = 256/1024 = 0.25 = 25\%
+    \item Miss rate = $\frac{256}{1024} = 0.25 = 25\%$
     \item All are compulsory misses
 \end{itemize}
 \end{frame}
@@ -435,8 +435,16 @@ Given: Variable i at address 0x00000100
 \textbf{Result:} Only 1 block transferred to cache
 \end{frame}
 
+```latex
 \begin{frame}{Example 2: Locality Principles}
-\textbf{Question:} Which locality principle is demonstrated?
+\textbf{Question:} Which locality principle is demonstrated in this code?
+\pause
+\textbf{Reminder - Two Types of Locality:}
+\begin{itemize}
+    \item \textbf{Temporal:} If we access an object, we're likely to access it again soon
+    \item \textbf{Spatial:} If we access an object, we're likely to access nearby objects
+\end{itemize}
+
 
 \textbf{Answer:} \textbf{Spatial Locality}
 \begin{itemize}
@@ -453,6 +461,7 @@ Given: Variable i at address 0x00000100
     \item But variable i shows temporal locality (accessed 1024 times)
 \end{itemize}
 \end{frame}
+```
 
 \section{Advanced Topics}
 \begin{frame}{LRU Implementation for 4-Way Cache}
@@ -591,7 +600,7 @@ for (int i=0; i<1024; i++)
     \item \textbf{Full ordering (8 bits per set)}
     \begin{itemize}
         \item Maintain complete order of all 4 ways
-        \item 2 bits per way × 4 ways = 8 bits
+        \item 2 bits per way $\times$ 4 ways = 8 bits
     \end{itemize}
     
     \item \textbf{Partial ordering (6 bits per set)}
@@ -667,239 +676,13 @@ Write request, miss $\rightarrow$ Write directly to memory\\
 Commonly used with \textbf{write-through} policy
 \end{frame}
 
-\section{Types of Misses}
-\begin{frame}{Three Types of Cache Misses - Detailed}
-\begin{enumerate}
-    \item \textbf{Compulsory (Cold) Misses}
-    \begin{itemize}
-        \item Block has never been in cache before
-        \item Unavoidable on first access
-        \item Cannot be reduced by cache design
-    \end{itemize}
-    
-    \item \textbf{Conflict Misses}
-    \begin{itemize}
-        \item Block was in cache but evicted due to mapping conflicts
-        \item Another block mapped to same set took its place
-        \item Can be reduced by: increasing associativity, better mapping
-    \end{itemize}
-    
-    \item \textbf{Capacity Misses}
-    \begin{itemize}
-        \item Block was evicted because cache is full
-        \item More blocks accessed than cache can hold
-        \item Would occur even in fully associative cache
-        \item Can only be reduced by: increasing cache size
-    \end{itemize}
-\end{enumerate}
-\end{frame}
-
-\section{Detailed Examples}
-\begin{frame}{Example 1: Cache Access Trace}
-\textbf{Given:}
-\begin{itemize}
-    \item 2-way set associative cache, LRU replacement
-    \item 4 bytes per block (line)
-    \item Address format: [Tag(29-5) | Set(4-2) | Offset(1-0)]
-    \item Sequence: 5, 7, 1, 4, 36, 8, 100, 6, 4, 12, 36, 12, 68, 5, 7
-\end{itemize}
-
-\textbf{Calculate:} Number of misses and final cache state
-\end{frame}
-
-\begin{frame}{Example 1: Solution Setup}
-\textbf{Address Analysis:}
-\begin{itemize}
-    \item Block size = 4 bytes $\rightarrow$ 2 offset bits
-    \item Addresses 0-3 $\rightarrow$ block 0, 4-7 $\rightarrow$ block 1, etc.
-    \item Set = $\lfloor$Address / 4$\rfloor$ mod 4
-\end{itemize}
-
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Address} & \textbf{Block\#} & \textbf{Tag} & \textbf{Set} \\
-\hline
-5 & 1 & 0 & 1 \\
-7 & 1 & 0 & 1 \\
-1 & 0 & 0 & 0 \\
-4 & 1 & 0 & 1 \\
-36 & 9 & 1 & 1 \\
-\hline
-\end{tabular}
-\end{center}
-\end{frame}
-
-\begin{frame}{Example 1: Trace Table (Part 1)}
-\begin{center}
-\small
-\begin{tabular}{|c|c|c|c|c|l|}
-\hline
-\textbf{Addr} & \textbf{Tag} & \textbf{Set} & \textbf{Hit/Miss} & \textbf{Way/LRU} & \textbf{Explanation} \\
-\hline
-5 & 0 & 1 & M & 0/1 & First access to set 1 \\
-7 & 0 & 1 & H & 0/1 & Same block as addr 5 \\
-1 & 0 & 0 & M & 0/1 & First access to set 0 \\
-4 & 0 & 1 & H & 0/1 & Already loaded with addr 5 \\
-36 & 1 & 1 & M & 1/0 & Different tag, use way 1 \\
-8 & 0 & 2 & M & 0/1 & First access to set 2 \\
-100 & 3 & 1 & M & 0/1 & Evict way 0 (LRU) \\
-\hline
-\end{tabular}
-\end{center}
-\end{frame}
-
-\begin{frame}{Example 1: Final Results}
-\textbf{Total Misses:} 11 out of 15 accesses
-
-\textbf{Final Cache State:}
-\begin{center}
-\begin{tabular}{|c|c|c|}
-\hline
-\textbf{Set} & \textbf{Way 0} & \textbf{Way 1} \\
-\hline
-0 & Block 0 (tag 0) & Empty \\
-1 & Block 1 (tag 0) & Block 17 (tag 2) \\
-2 & Block 2 (tag 0) & Empty \\
-3 & Block 3 (tag 0) & Empty \\
-\hline
-\end{tabular}
-\end{center}
-
-\textbf{Miss Types:} All are compulsory misses (each block accessed only once)
-\end{frame}
-
-\begin{frame}[fragile]{Example 2: Array Initialization}
-\begin{columns}
-\column{0.5\textwidth}
-\begin{verbatim}
-int array[1024];
-for (int i=0; i<1024; i++)
-    array[i] = 0;
-\end{verbatim}
-
-\textbf{Assumptions:}
-\begin{itemize}
-    \item i and array pointer in registers
-    \item int = 4 bytes, aligned
-    \item Array aligned to cache line
-\end{itemize}
-
-\column{0.5\textwidth}
-\textbf{Cache specs:}
-\begin{itemize}
-    \item 1KB data cache
-    \item 4-way set associative
-    \item 16-byte blocks
-    \item Write through
-    \item Write allocate
-    \item Random replacement
-\end{itemize}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Example 2: Cache Directory Size}
-\textbf{Question:} How many bits in the cache directory?
-
-\textbf{Solution:}
-\begin{itemize}
-    \item Cache size: 1KB = 1024 bytes
-    \item Block size: 16 bytes $\rightarrow$ 4 offset bits
-    \item Number of blocks: 1024/16 = 64 blocks
-    \item 4-way associative $\rightarrow$ 16 sets $\rightarrow$ 4 set bits
-    \item Tag bits: 32 - 4 (offset) - 4 (set) = 24 bits
-    \item Per line: 24 (tag) + 1 (valid) = 25 bits
-    \item No dirty bit (write-through), No LRU bits (random)
-\end{itemize}
-
-\textbf{Total:} $25 \times 4 \times 16 = 1600$ bits
-\end{frame}
-
-\begin{frame}{Example 2: Number of Misses}
-\textbf{Question:} Maximum number of misses during execution?
-
-\textbf{Solution:}
-\begin{itemize}
-    \item Array size: 1024 ints × 4 bytes = 4096 bytes
-    \item Block size: 16 bytes (4 ints per block)
-    \item Total blocks needed: 4096/16 = 256 blocks
-    \item Each block loaded once (compulsory miss)
-    \item 4 ints per block $\rightarrow$ 3 hits after each miss
-\end{itemize}
-
-\textbf{Result:} 
-\begin{itemize}
-    \item 256 misses total
-    \item Miss rate = 256/1024 = 0.25 = 25\%
-    \item All are compulsory misses
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Example 2: Effect of Alignment}
-\textbf{Question:} What if array is not aligned?
-
-\textbf{Answer:}
-\begin{itemize}
-    \item If array starts at non-aligned address
-    \item Array might span 257 blocks instead of 256
-    \item First block: partial use
-    \item Last block: partial use
-    \item Maximum misses: 257 (one extra)
-\end{itemize}
-
-\begin{center}
-\begin{tcolorbox}[colback=red!10, width=0.8\textwidth]
-Alignment matters for cache performance!
-\end{tcolorbox}
-\end{center}
-\end{frame}
-
-\begin{frame}{Example 2: No Write Allocate}
-\textbf{Question:} How many blocks transferred if using no-write-allocate?
-
-Given: Variable i at address 0x00000100
-
-\textbf{Solution:}
-\begin{itemize}
-    \item In the loop: only writing to array elements
-    \item Only reading: variable i (for loop condition)
-    \item With no-write-allocate:
-    \begin{itemize}
-        \item Writes go directly to memory
-        \item Only i's block fetched to cache
-    \end{itemize}
-    \item Address 0x00000100 is aligned
-\end{itemize}
-
-\textbf{Result:} Only 1 block transferred to cache
-\end{frame}
-
-\begin{frame}{Example 2: Locality Principles}
-\textbf{Question:} Which locality principle is demonstrated?
-
-\textbf{Answer:} \textbf{Spatial Locality}
-\begin{itemize}
-    \item Array stored contiguously in memory
-    \item When we miss on one element, we fetch entire block
-    \item Next 3 elements are hits (same block)
-    \item Spatial locality saves 3 misses per block
-\end{itemize}
-
-\textbf{NOT Temporal Locality:}
-\begin{itemize}
-    \item Each array element accessed only once
-    \item No reuse of data
-    \item But variable i shows temporal locality (accessed 1024 times)
-\end{itemize}
-\end{frame}
-
 \section{Advanced Topics}
 \begin{frame}{LRU Implementation for 4-Way Cache}
 \textbf{Method 1: Full List (8 bits per set)}
 \begin{itemize}
     \item Maintain linked list of 4 nodes (one per way)
     \item Store order of usage
-    \item 2 bits per way × 4 ways = 8 bits
+    \item 2 bits per way $\times$ 4 ways = 8 bits
     \item Update list on every access
 \end{itemize}
 
@@ -1040,45 +823,5 @@ Small blocks & Less wasted transfer & Poor spatial locality \\
     \end{itemize}
 \end{enumerate}
 \end{frame}
-
-
-\section{Summary}
-\begin{frame}{Cache Design Trade-offs}
-\begin{table}
-\centering
-\begin{tabular}{lcc}
-\toprule
-\textbf{Design Choice} & \textbf{Advantage} & \textbf{Disadvantage} \\
-\midrule
-Fully Associative & High hit rate & Expensive hardware \\
-Direct Mapped & Simple, cheap & Higher miss rate \\
-Set Associative & Good compromise & Moderate complexity \\
-\midrule
-Write Back & Less memory traffic & Needs dirty bit \\
-Write Through & Simple, consistent & More memory traffic \\
-\midrule
-Large blocks & Better spatial locality & More transfer time \\
-Small blocks & Less wasted transfer & Poor spatial locality \\
-\bottomrule
-\end{tabular}
-\end{table}
-\end{frame}
-
-\begin{frame}{Key Takeaways}
-\begin{itemize}
-    \item Cache exploits temporal and spatial locality
-    \item Set associativity provides good performance/cost trade-off
-    \item Write policies affect memory traffic and complexity
-    \item Different miss types require different optimizations:
-    \begin{itemize}
-        \item Compulsory: Prefetching
-        \item Conflict: Increase associativity
-        \item Capacity: Increase cache size
-    \end{itemize}
-    \item Real systems use multi-level cache hierarchies (L1, L2, L3)
-\end{itemize}
-\end{frame}
-
-
 
 \end{document}
