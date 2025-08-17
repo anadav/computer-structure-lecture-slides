@@ -435,16 +435,16 @@ Given: Variable i at address 0x00000100
 \textbf{Result:} Only 1 block transferred to cache
 \end{frame}
 
-```latex
 \begin{frame}{Example 2: Locality Principles}
 \textbf{Question:} Which locality principle is demonstrated in this code?
 \pause
+
 \textbf{Reminder - Two Types of Locality:}
 \begin{itemize}
     \item \textbf{Temporal:} If we access an object, we're likely to access it again soon
     \item \textbf{Spatial:} If we access an object, we're likely to access nearby objects
 \end{itemize}
-
+\pause
 
 \textbf{Answer:} \textbf{Spatial Locality}
 \begin{itemize}
@@ -453,6 +453,7 @@ Given: Variable i at address 0x00000100
     \item Next 3 elements are hits (same block)
     \item Spatial locality saves 3 misses per block
 \end{itemize}
+\pause
 
 \textbf{NOT Temporal Locality:}
 \begin{itemize}
@@ -461,7 +462,6 @@ Given: Variable i at address 0x00000100
     \item But variable i shows temporal locality (accessed 1024 times)
 \end{itemize}
 \end{frame}
-```
 
 \section{Advanced Topics}
 \begin{frame}{LRU Implementation for 4-Way Cache}
@@ -751,6 +751,132 @@ Modified: [Tag with segment bit | Modified Set | Offset]
     \item \textbf{Set Calculation:}
     $$Set = \lfloor Address / Block\_Size \rfloor \mod \#Sets$$
 \end{itemize}
+\end{frame}
+
+\begin{frame}{Advanced Example: Segment-Based Cache Design}
+\textbf{Problem Setup:}
+\begin{itemize}
+    \item 2-way set associative cache deployed in a system
+    \item Physical memory divided into 4 equal segments (256MB each):
+    \begin{itemize}
+        \item A0, B0, A1, B1 (in this order)
+    \end{itemize}
+    \item \textbf{Design Requirement:} No more than 50\% of cache should contain addresses from A segments OR B segments
+    \item Must maintain 2-way associativity
+\end{itemize}
+
+\textbf{Question:} Propose a simple and efficient method to implement this requirement and explain its operation.
+\end{frame}
+
+\begin{frame}{Segment-Based Cache: Analysis}
+\textbf{Step 1: Understanding Memory Segments}
+\begin{itemize}
+    \item Each segment is 256MB = $2^{28}$ bytes
+    \item Total memory: 1GB = 4 segments
+    \item Need 30 bits to address 1GB (ignoring upper 2 bits)
+\end{itemize}
+\pause
+
+\textbf{Step 2: Segment Encoding in Address Bits}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Segment} & \textbf{Bits [29:28]} & \textbf{Address Range} \\
+\hline
+A0 & 00 & 0x00000000 - 0x0FFFFFFF \\
+B0 & 01 & 0x10000000 - 0x1FFFFFFF \\
+A1 & 10 & 0x20000000 - 0x2FFFFFFF \\
+B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
+\hline
+\end{tabular}
+\end{center}
+\pause
+
+\textbf{Key Observation:}
+\begin{itemize}
+    \item Bit 28: distinguishes A (0) from B (1) segments
+    \item This single bit can control cache partitioning!
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Segment-Based Cache: Solution}
+\textbf{Design Goal:} Ensure max 50\% cache for A segments, 50\% for B segments
+
+\pause
+\textbf{Original Cache Mapping (8 sets example):}
+\begin{itemize}
+    \item Address format: [Tag | Set(4-2) | Offset(1-0)]
+    \item Any address can map to any set (0-7)
+    \item Problem: A segments could occupy 100\% of cache!
+\end{itemize}
+
+\pause
+\textbf{Solution: Modified Set Mapping}
+\begin{itemize}
+    \item Include segment bit (bit 28) in set calculation
+    \item New set field: concatenate bit 28 with original set bits
+    \item Result: Sets 0-3 for A segments, Sets 4-7 for B segments
+\end{itemize}
+
+\pause
+\begin{center}
+\begin{tcolorbox}[colback=yellow!10, width=0.9\textwidth]
+\textbf{Implementation:}\\
+Original Set = bits[4:2]\\
+Modified Set = \{bit[28], bits[4:2]\}\\
+\vspace{0.2cm}
+Example: Address from A0 (bit 28=0) with set bits 101:\\
+Modified set = 0101 = Set 5 (but limited to 0-3 for A)
+\end{tcolorbox}
+\end{center}
+\end{frame}
+
+\begin{frame}{Segment-Based Cache: Concrete Example}
+\textbf{Example Addresses and Their Mapping:}
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Address} & \textbf{Segment} & \textbf{Bit 28} & \textbf{Maps to Set} \\
+\hline
+0x05000010 & A0 & 0 & 0-3 (A sets) \\
+0x12345678 & B0 & 0 & 4-7 (B sets) \\
+0x25000000 & A1 & 1 & 0-3 (A sets) \\
+0x3ABCDEF0 & B1 & 1 & 4-7 (B sets) \\
+\hline
+\end{tabular}
+\end{center}
+
+\pause
+\vspace{0.5cm}
+\textbf{Cache Organization Result:}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{center}
+\textbf{Sets 0-3: A segments only}
+\begin{itemize}
+    \item Can cache data from A0 and A1
+    \item Maximum 50\% of total cache
+    \item 2-way associative within group
+\end{itemize}
+\end{center}
+
+\column{0.5\textwidth}
+\begin{center}
+\textbf{Sets 4-7: B segments only}
+\begin{itemize}
+    \item Can cache data from B0 and B1
+    \item Maximum 50\% of total cache
+    \item 2-way associative within group
+\end{itemize}
+\end{center}
+\end{columns}
+
+\pause
+\vspace{0.3cm}
+\begin{tcolorbox}[colback=green!10]
+\textbf{Advantages:} Simple hardware, guaranteed 50/50 split, maintains associativity
+\end{tcolorbox}
 \end{frame}
 
 \section{Summary}
