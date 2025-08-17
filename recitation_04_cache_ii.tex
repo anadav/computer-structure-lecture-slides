@@ -48,7 +48,7 @@
 \node[below=0cm of snoopx1.south, text=red, anchor=north] (ldotsx1) {\textbf\vdots};
 
 % L2 Section  
-\node[bluebox, right=3cm of l1] (l2) {L2};
+\node[bluebox, right=5cm of l1] (l2) {L2};
 \node[bluebox, below=0.3cm of l2] (l2read) {M: read miss};
 
 \node[whitebox, below=of l2read] (snoopp2) {Snoop P};
@@ -60,24 +60,25 @@
 \node[reddecision, below=of victimx] (dirtyx) {dirty?};
 
 % L3 Section
-\node[bluebox, right=3cm of l2] (l3) {L3};
+\node[bluebox, right=5cm of l2] (l3) {L3};
 \node[bluebox, below=0.3cm of l3] (l3read) {M: read miss};
 
 \node[whitebox, below=of l3read] (select3) {Select victim: P};
-\node[decision, below=of select3] (dirty3) {P dirty?};
+\node[decision] at (select3 |- dirty2) (dirty3) {P dirty?};
 \node[whitebox, below=of dirty3] (inv3) {Invalidate P};
 \node[whitebox, right=of inv3] (update) {Update P};
 
-\node[bluered, right=of victimx] (updatelru) {Update LRU};
-\node[bluered, above=of updatelru] (fillm3) {Fill M in P};
+\node[bluered, below=1.5cm of inv3] (fillm3) {Fill M in P};
+\node[bluered, below=of fillm3] (updatelru) {Update LRU};
 \node[bluered, below=of dirtyx] (fillm2) {Fill M \& Update LRU};
-\node[bluered, below=1.3cm of inv3] (fillm1) {Fill M \& Update LRU};
+\node[bluered, below=1.3cm of snoopx1] (fillm1) {Fill M \& Update LRU};
 
 \begin{scope}[on background layer]
-\node[yellowbg, fit=(snoopp1)(dirty1)(inv1)] (bg1) {};
-\node[yellowbg, fit=(snoopx1)(ldotsx1)] (bg1) {};
-\node[yellowbg, fit=(snoopp2)(dirty2)(inv2)] (bg1) {};
+\node[yellowbg, fit=(snoopp1)(dirty1)(inv1)] {};
+\node[yellowbg, fit=(snoopx1)(ldotsx1)] {};
+\node[yellowbg, fit=(snoopp2)(dirty2)(inv2)] {};
 \node[yellowbg, fit=(dirty3)(inv3)] {};
+\node[yellowbg, fit=(free)(victimx)(dirtyx)] {};
 \end{scope}
 
 % Arrows with labels
@@ -102,22 +103,24 @@
 
 \draw[->] (dirty2) -- node[left] {\small no} (inv2);
 
-\draw[->, rounded corners]
-  (dirty2.east)
-  -| ($(dirty2)!0.5!(dirty3)$)                                  % over to midpoint x
-  node[right] {\small Yes: Wr Req}  
-  |- ($ (dirty3.north) + (0,0.5) $)          % up to 0.5 above snoopp1.north
-  -- (dirty3.north);                         % straight down
-
-
+\draw[->](dirty2) node[below, align=center] {\small Yes: Wr Req} -- (dirty3.west);
 
 \draw[->] (inv2) -- (free);
-\draw[->] (free) -- node[above] {\small yes} ++(1,0);
+\draw[->, red] (free) -| node[above] {\small yes} ++(2.5,0) |- (fillm2);
 \draw[->] (free) -- node[left] {\small no} (victimx);
 \draw[->] (victimx) -- (dirtyx);
 
 \draw[->] (l3read) -- (select3);
-\draw[->] (select3) edge[bend left=30, blue] node[above] {\small Snoop Request} (snoopp2.north);
+
+\draw[->, rounded corners]
+  (select3.south)
+  -- ++(0,-0.2)                               % down 0.5
+  -| ($(snoopp2)!0.5!(select3)$)                                  % over to midpoint x
+  node[midway, below, near end, align=center] {\small Snoop Request}
+  |- ($ (snoopp2.north) + (0,0.3) $)          % up to 0.5 above snoopp1.north
+  -- (snoopp2.north);                         % straight down
+
+
 \draw[->] (select3) -- (dirty3);
 \draw[->] (dirty3) -- node[left] {\small no} (inv3);
 \draw[->] (dirty3) -| node[above,midway] {\small Yes: Wr Req} (update);
@@ -133,12 +136,12 @@
 \draw[->, red] (fillm3) -- (updatelru);
 \draw[->, red, rounded corners]
   (updatelru.south)
-  -- ++(0,-0.5)                               % down 0.5
-  -| ($(updatelru)!0.5!(free)$)                                  % over to midpoint x
-  |- ($ (free.north) + (0,0.5) $)          % up to 0.5 above snoopp1.north
+  -- ++(0,-0.2)                               % down 0.5
+  -| ($(updatelru)!0.3!(free)$)                                  % over to midpoint x
+  |- ($ (free.north) + (0,0.2) $)          % up to 0.5 above snoopp1.north
   -- (free.north);                         % straight down                    % straight down
 
-\draw[->, red] (fillm2) -- (fillm1);
+\draw[->, red] (fillm2) -| (fillm1);
 
 \end{tikzpicture}
 \end{frame}
