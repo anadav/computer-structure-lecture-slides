@@ -94,20 +94,22 @@ Note: Events are described in order: first L1, then L2, finally L3.
 \begin{frame}{Question 1: Analysis}
 \begin{table}
 \centering
-\begin{tabular}{|c|c|c|l|}
+\small
+\begin{tabular}{|c|c|c|c|l<{\onslide<2->}|}
 \hline
-L1 & L2 & L3 & Possible? Reasoning \\ \hline
-H & H & H & No - After hit at a level, we don't access lower levels \\ \hline
-H & & & Yes - Data found in first level \\ \hline
-H & M & & No - After hit at a level, we don't access lower levels \\ \hline
-& H & M & No - Must go through levels in order, through L1 \\ \hline
-M & H & & Yes - Data found in second level \\ \hline
-M & M & M & Yes - Data found only in main memory \\ \hline
-M & H & M & No - After hit, don't access lower levels \\ \hline
-M & H & H & No - After hit, don't access lower levels \\ \hline
-M & M & H & Yes - Data found in third level \\ \hline
-M & M & & No - Missing access to L3 after misses in L1 and L2 \\ \hline
-M & & H & No - Must go through levels in order \\ \hline
+\rowcolor{gray!20}
+\textbf{L1} & \textbf{L2} & \textbf{L3} & \textbf{Possible?} & \textbf{Reasoning} \\ \hline
+H & H & H & \textcolor{red}{\textbf{No}} & After hit at a level, we don't access lower levels \\ \hline
+H & & & \textcolor{green!50!black}{\textbf{Yes}} & Data found in first level \\ \hline
+H & M & & \textcolor{red}{\textbf{No}} & After hit at a level, we don't access lower levels \\ \hline
+& H & M & \textcolor{red}{\textbf{No}} & Must go through levels in order, through L1 \\ \hline
+M & H & & \textcolor{green!50!black}{\textbf{Yes}} & Data found in second level \\ \hline
+M & M & M & \textcolor{green!50!black}{\textbf{Yes}} & Data found only in main memory \\ \hline
+M & H & M & \textcolor{red}{\textbf{No}} & After hit, don't access lower levels \\ \hline
+M & H & H & \textcolor{red}{\textbf{No}} & After hit, don't access lower levels \\ \hline
+M & M & H & \textcolor{green!50!black}{\textbf{Yes}} & Data found in third level \\ \hline
+M & M & & \textcolor{red}{\textbf{No}} & Missing access to L3 after misses in L1 and L2 \\ \hline
+M & & H & \textcolor{red}{\textbf{No}} & Must go through levels in order \\ \hline
 \end{tabular}
 \end{table}
 \end{frame}
@@ -300,7 +302,35 @@ Given a processor with two cache levels:
 \begin{frame}[fragile]{Question 4: Program}
 Consider the following program:
 
-\begin{lstlisting}[language=C]
+\begin{tcolorbox}[
+    colback=blue!5,
+    colframe=blue!40!black,
+    boxrule=0.8pt,
+    arc=3mm,
+    left=3mm,
+    right=3mm,
+    top=2mm,
+    bottom=2mm,
+    fontupper=\footnotesize
+]
+\begin{lstlisting}[
+    language=C,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue!70!black}\bfseries,
+    commentstyle=\color{green!50!black}\itshape,
+    stringstyle=\color{orange},
+    identifierstyle=\color{black},
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny\color{gray!70},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{white},
+    breaklines=false,
+    captionpos=b,
+    keepspaces=true,
+    morekeywords={int}
+]
 int arr[512];
 int S = 0;
 for (int i = 0; i < 2; i++) {
@@ -309,9 +339,12 @@ for (int i = 0; i < 2; i++) {
     }
 }
 \end{lstlisting}
+\end{tcolorbox}
 
-Assumptions:
+\vspace{0.3cm}
+\textbf{Assumptions:}
 \begin{itemize}
+    \small
     \item Variables \texttt{i}, \texttt{j}, \texttt{S} and pointer \texttt{arr} are stored in registers
     \item Integer size is 4 bytes
     \item Cache is empty at program start
