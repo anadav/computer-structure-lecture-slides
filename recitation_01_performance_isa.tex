@@ -620,29 +620,46 @@ $$\text{Speedup} = \frac{1}{(1 - 0.4) + \frac{0.4}{2}} = \frac{1}{0.8} = 1.25$$
     \item Computer A's clock rate $\geq$ Computer B's clock rate
     \item Computer B's cycle time $\geq$ Computer A's cycle time
     \item None of the above can be determined with certainty
-\end{enumerate}
-
-\pause
-\textbf{Answer:} 2 - Computer A has MFLOPS $\geq$ Computer B's MFLOPS
-\end{frame}
+\end{enumerate}\end{frame}
 
 %======================================
 \begin{frame}{Practice Questions - Part 1: Explanation}
-\textbf{Why each option is true/false:}
+\small
+\textbf{Given:} High-level program with 20 FP ops, runs faster on Computer A than B
 
 \begin{enumerate}
-    \item \textbf{MIPS $\geq$}: \textcolor{red}{FALSE} - MIPS depends on instruction count and CPI, not directly on execution time
-    \item \textbf{MFLOPS $\geq$}: \textcolor{green}{TRUE} - Same FP operations, faster time $\Rightarrow$ higher MFLOPS
-    \item \textbf{CPI $\geq$}: \textcolor{red}{FALSE} - Could have lower CPI but slower clock
-    \item \textbf{CPI $\leq$}: \textcolor{red}{FALSE} - Could have higher CPI but faster clock
-    \item \textbf{Clock rate $\geq$}: \textcolor{red}{FALSE} - Could have slower clock but better CPI
-    \item \textbf{Cycle time B $\geq$ A}: \textcolor{red}{FALSE} - Depends on clock rate, not execution time
-    \item \textbf{None certain}: \textcolor{red}{FALSE} - Option 2 is necessarily true
+    \item Computer A has MIPS $\geq$ Computer B's MIPS
+    \pause \textcolor{red}{\textbf{FALSE}} - Different compilers may generate different IC
+    \pause
+    
+    \item Computer A has MFLOPS $\geq$ Computer B's MFLOPS
+    \pause \textcolor{green}{\textbf{TRUE}} - MFLOPS = FP ops / Time, same FP ops + less time = higher MFLOPS
+    \pause
+    
+    \item Computer A's CPI $\geq$ Computer B's CPI
+    \pause \textcolor{red}{\textbf{FALSE}} - Could have lower CPI but slower clock
+    \pause
+    
+    \item Computer A's CPI $\leq$ Computer B's CPI  
+    \pause \textcolor{red}{\textbf{FALSE}} - Could have higher CPI but faster clock
+    \pause
+    
+    \item Computer A's clock rate $\geq$ Computer B's clock rate
+    \pause \textcolor{red}{\textbf{FALSE}} - Could have slower clock but better CPI/IC
+    \pause
+    
+    \item Computer B's cycle time $\geq$ Computer A's cycle time
+    \pause \textcolor{red}{\textbf{FALSE}} - Cycle time = 1/Clock rate, unrelated to execution time
+    \pause
+    
+    \item None of the above can be determined with certainty
+    \pause \textcolor{red}{\textbf{FALSE}} - Option 2 is provably true
 \end{enumerate}
 
-\begin{block}{Key Insight}
-MFLOPS = FP operations / Time. With same FP ops and less time, MFLOPS must be higher!
-\end{block}
+\pause
+\begin{alertblock}{Answer: 2}
+Only MFLOPS can be determined with certainty
+\end{alertblock}
 \end{frame}
 
 %======================================
@@ -657,30 +674,46 @@ MFLOPS = FP operations / Time. With same FP ops and less time, MFLOPS must be hi
     \item Computer A's clock rate $\geq$ Computer B's clock rate
     \item Computer B's cycle time $\geq$ Computer A's cycle time
     \item None of the above can be determined with certainty
-\end{enumerate}
-
-\pause
-\textbf{Answer:} 1 and 2 - Computer A has MIPS $\geq$ Computer B's MIPS and MFLOPS $\geq$ Computer B's MFLOPS
-\end{frame}
+\end{enumerate}\end{frame}
 
 %======================================
 \begin{frame}{Practice Questions - Part 2: Explanation}
-\textbf{Why each option is true/false (same assembly program):}
+\small
+\textbf{Given:} Same assembly program on both computers, A runs faster than B
 
 \begin{enumerate}
-    \item \textbf{MIPS $\geq$}: \textcolor{green}{TRUE} - Same IC, faster time $\Rightarrow$ higher MIPS
-    \item \textbf{MFLOPS $\geq$}: \textcolor{green}{TRUE} - Same FP ops, faster time $\Rightarrow$ higher MFLOPS
-    \item \textbf{CPI $\geq$}: \textcolor{red}{FALSE} - Could have lower CPI with slower clock
-    \item \textbf{CPI $\leq$}: \textcolor{red}{FALSE} - Could have higher CPI with faster clock
-    \item \textbf{Clock rate $\geq$}: \textcolor{red}{FALSE} - Could have slower clock but lower CPI
-    \item \textbf{Cycle time B $\geq$ A}: \textcolor{red}{FALSE} - Not necessarily related to execution time
-    \item \textbf{None certain}: \textcolor{red}{FALSE} - Options 1 and 2 are necessarily true
+    \item Computer A has MIPS $\geq$ Computer B's MIPS
+    \pause \textcolor{green}{\textbf{TRUE}} - MIPS = IC/(Time$\times 10^6$), same IC + less time = higher MIPS
+    \pause
+    
+    \item Computer A has MFLOPS $\geq$ Computer B's MFLOPS
+    \pause \textcolor{green}{\textbf{TRUE}} - Same FP operations + less time = higher MFLOPS
+    \pause
+    
+    \item Computer A's CPI $\geq$ Computer B's CPI
+    \pause \textcolor{red}{\textbf{FALSE}} - Time = IC $\times$ CPI $\times$ CC; A could have lower CPI, slower clock
+    \pause
+    
+    \item Computer A's CPI $\leq$ Computer B's CPI  
+    \pause \textcolor{red}{\textbf{FALSE}} - A could have higher CPI, faster clock
+    \pause
+    
+    \item Computer A's clock rate $\geq$ Computer B's clock rate
+    \pause \textcolor{red}{\textbf{FALSE}} - A could have slower clock, lower CPI
+    \pause
+    
+    \item Computer B's cycle time $\geq$ Computer A's cycle time
+    \pause \textcolor{red}{\textbf{FALSE}} - Cycle time depends on clock rate, not execution time
+    \pause
+    
+    \item None of the above can be determined with certainty
+    \pause \textcolor{red}{\textbf{FALSE}} - Options 1 and 2 are provably true
 \end{enumerate}
 
-\begin{block}{Key Formula}
-With same IC: MIPS = IC / (Time $\times 10^6$) \\
-Faster execution $\Rightarrow$ Higher MIPS and MFLOPS
-\end{block}
+\pause
+\begin{alertblock}{Answer: 1 and 2}
+With same IC, both MIPS and MFLOPS must be higher for faster execution
+\end{alertblock}
 \end{frame}
 
 %======================================
@@ -718,7 +751,7 @@ Everything else is just an approximation!
     \item \textbf{MIPS can be misleading}
     \begin{itemize}
         \item NMFP had 50 MIPS vs MFP's 27.78 MIPS
-        \item But MFP was 5.1× faster!
+        \item But MFP was $5.1\times$ faster!
     \end{itemize}
     
     \item \textbf{Adding instructions can hurt performance}
