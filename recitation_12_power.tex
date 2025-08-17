@@ -209,18 +209,19 @@ $$N_1 = 1 + \frac{Q}{M \cdot CPI_i}$$
 \textbf{Improvement Proposal:} Add L1 cache with 0 cycles access time
 
 \begin{block}{Modified IPC with Cache}
-$IPC = \frac{N}{CPI_i + k \cdot \frac{Q}{M}}$
-where $k$ = miss rate (k = 1 $\rightarrow$ 100\% miss rate)
+$$IPC = \frac{N}{CPI_i + k \cdot \frac{Q}{M}} \quad \text{where } k = \text{miss rate (k = 1} \rightarrow \text{100\% miss rate)}$$
 \end{block}
 
 \textbf{Question:} What cache hit rate provides maximum performance with $N_1/2$ threads?
-
 \begin{align*}
-IPC_{Max} &= IPC_{ideal} \\
-N_1 &= 1 + \frac{Q}{M \cdot CPI_i} \quad \Rightarrow \quad \frac{N_1}{2} = \frac{1 + \frac{Q}{M \cdot CPI_i}}{2}
+IPC_{Max} &= IPC_{ideal} & \Rightarrow N_1 = 1 + \frac{Q}{M \cdot CPI_i} \quad \Rightarrow \quad \frac{N_1}{2} = \frac{1 + \frac{Q}{M \cdot CPI_i}}{2}
 \end{align*}
 
-Solve: $IPC\Big|_{N=\frac{N_1}{2}} = CPI_i^{-1} + k \cdot \frac{Q}{M} \cdot \frac{1}{2} \cdot CPI_i^{-1} = CPI_i^{-1}$
+Solve: $IPC\Big|_{N=\frac{N_1}{2}} = \left(CPI_i + k \cdot \frac{Q}{M}\right)^{-1} \cdot \frac{1}{2} \cdot CPI_i^{-1} = CPI_i^{-1}$
+
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+$$CPI\left(\frac{N_1}{2}\right) = \left(CPI_i + Q \cdot \frac{k}{M}\right) \cdot \frac{2 \cdot M \cdot CPI_i}{M \cdot CPI_i + Q} = CPI_i$$
+\end{tcolorbox}
 
 \alert{Result: $k = 0.5$ (50\% miss rate) $\Rightarrow$ 50\% hit rate required}
 \end{frame}
@@ -229,13 +230,13 @@ Solve: $IPC\Big|_{N=\frac{N_1}{2}} = CPI_i^{-1} + k \cdot \frac{Q}{M} \cdot \fra
 \textbf{How will cache addition affect the CPU?}
 
 \begin{columns}
-\column{0.33\textwidth}
+\column{0.30\textwidth}
 \begin{block}{Area}
 \textcolor{red}{Increase} \\
 Cache requires silicon area
 \end{block}
 
-\column{0.33\textwidth}
+\column{0.30\textwidth}
 \begin{block}{Power}
 \textcolor{green}{Decrease} \\
 (with sufficient hit rate)
