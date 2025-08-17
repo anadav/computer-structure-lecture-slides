@@ -189,24 +189,25 @@ To ensure the inclusion principle is maintained, every eviction of a cache line 
 \end{frame}
 
 \begin{frame}{Question 2: Cache Hierarchy Usefulness}
-Given a system with L2 cache where the inclusion principle is maintained.
+\textbf{Given:} A system with L2 cache where the inclusion principle is maintained.
 
-For each of the following cases, indicate whether L2 is useful or not:
+\textbf{Question:} For each case below, is L2 useful?
 
-\vspace{0.3cm}
+\vspace{0.4cm}
 \begin{columns}[T]
 \begin{column}{0.35\textwidth}
-\textbf{Case 1:} Both cache levels are the same size
+\textbf{(1)} Both cache levels are the same size
 \begin{itemize}
     \small
     \item L1: direct mapped
     \item L2: fully associative
 \end{itemize}
 
-\vspace{0.5cm}
-\onslide<2->{\textcolor{green!50!black}{\textbf{Useful}}
+\vspace{0.4cm}
+\onslide<2->{
+\textbf{Answer:} \textcolor{green!60!black}{\textbf{USEFUL}}
 
-\small L2's higher associativity allows it to hold conflicting lines that L1 cannot.}
+\small\textit{Reason:} L2's higher associativity prevents conflict misses.}
 \end{column}
 
 \begin{column}{0.65\textwidth}
@@ -269,18 +270,26 @@ For each of the following cases, indicate whether L2 is useful or not:
 \end{frame}
 
 \begin{frame}{Question 2: Continued}
-\begin{enumerate}
-    \setcounter{enumi}{1}
-    \item Access time for both cache levels is identical. L2 is larger than L1.
-    \begin{itemize}
-        \item<2-> \textbf{Answer:} Useful. There is benefit in L2. Since access time is identical and it is larger, we prefer to read directly from L2, so L1 is not useful for system performance.
-    \end{itemize}
-    
-    \item<3-> Access time to L2 and main memory is identical.
-    \begin{itemize}
-        \item<4-> \textbf{Answer:} Not useful. L2 is redundant because we can access main memory at the same speed without risk of miss.
-    \end{itemize}
-\end{enumerate}
+\textbf{(2)} Access time for both cache levels is identical. L2 is larger than L1.
+
+\vspace{0.3cm}
+\onslide<2->{
+\textbf{Answer:} \textcolor{green!60!black}{\textbf{USEFUL}}
+
+\textit{Reason:} L2 provides more capacity. However, L1 becomes less beneficial since both have the same access time.
+}
+
+\vspace{0.5cm}
+\onslide<3->{
+\textbf{(3)} Access time to L2 and main memory is identical.
+
+\vspace{0.3cm}
+}
+\onslide<4->{
+\textbf{Answer:} \textcolor{red!70!black}{\textbf{NOT USEFUL}}
+
+\textit{Reason:} L2 offers no speed advantage over main memory, making it redundant.
+}
 \end{frame}
 
 \begin{frame}{Inclusion Principle - Snooping}
@@ -340,18 +349,25 @@ Process from discovering need for line replacement in L3 until stabilization:
 \end{center}
 \end{frame}
 
-\begin{frame}{Question 3: Write Policies}
-Given a cache with 3 levels maintaining the inclusion principle.
+\begin{frame}{Question 3: Write Miss Policy Deduction}
+\textbf{Given:}
+\begin{itemize}
+    \item 3-level cache hierarchy with inclusion principle
+    \item L2 and L3: \textbf{no write allocate} policy
+    \item CPU writes to address \texttt{n} (causes L1 miss)
+    \item This write causes an eviction from L3
+\end{itemize}
 
-L2 and L3 caches operate with \textbf{no write allocate} policy on write miss.
+\vspace{0.4cm}
+\textbf{Question:} What is L1's write miss policy?
 
-At some point, the processor performed a write to address \texttt{n}. This request triggered a chain of events in the memory hierarchy.
+\vspace{0.4cm}
+\onslide<2->{
+\textbf{Answer:} \textcolor{blue!70!black}{\textbf{Write Allocate}}
 
-During this chain (which started with write miss in L1 cache), a line was evicted from L3 cache.
-
-\textbf{Question:} What is the write miss policy of L1 cache?
-
-\textbf{Answer:} The write miss policy of L1 is \textbf{write allocate}, otherwise there would be no need to read lines to cache and evict a line from L3.
+\vspace{0.2cm}
+\textit{Reasoning:} The L3 eviction proves that data was fetched into the cache hierarchy. With no-write-allocate at L2/L3, only L1's write-allocate policy could trigger this fetch.
+}
 \end{frame}
 
 \begin{frame}{Question 4: Cache Configuration}
