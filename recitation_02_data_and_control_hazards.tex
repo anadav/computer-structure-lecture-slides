@@ -11,6 +11,7 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata}
 \usepackage{tcolorbox}
 \usepackage{listings}
+\usepackage{pifont}
 \usetheme{Madrid}
 
 \lstset{
@@ -47,33 +48,32 @@
 \textbf{Branch Target Buffer (BTB) Prediction Mechanism}
 
 \begin{columns}
-\column{0.6\textwidth}
+\column{0.5\textwidth}
 \textbf{Direction Prediction (Taken/Not Taken):}
 \begin{itemize}
-    \item Prediction mechanism "remembers" branch behavior from recent executions
-    \item If branch was taken recently, predict it will be taken again
-    \item History memory implemented using state machines
+    \item Remembers branch behavior from recent executions
+    \item If taken recently, predict taken again
+    \item Uses state machines for history
 \end{itemize}
 
-\textbf{Target Address:}
-\begin{itemize}
-    \item Prediction mechanism also "remembers" the jump target address
-\end{itemize}
-
-\column{0.4\textwidth}
+\column{0.5\textwidth}
 \begin{tikzpicture}[scale=0.8, node distance=2.5cm]
-    \node[state, fill=blue!20] (nt) {Not Taken};
-    \node[state, fill=green!20, right of=nt] (t) {Taken};
+    \node[state, fill=red!20, minimum size=1.8cm, align=center] (nt) {Not\\Taken};
+    \node[state, fill=green!20, minimum size=1.8cm, align=center, right of=nt] (t) {Taken};
     
     \path[->] 
     (nt) edge[bend left, above] node{taken} (t)
     (t) edge[bend left, below] node{not taken} (nt)
-    (nt) edge[loop left] node{not taken} (nt)
-    (t) edge[loop right] node{taken} (t);
+    (nt) edge[loop left] node[below, align=center, near start] {not\\taken} (nt)
+    (t) edge[loop right] node[above, align=center, near start]{taken} (t);
 \end{tikzpicture}
 \end{columns}
+\vspace{0.5cm}
+\textbf{Target Address:}
+\begin{itemize}
+    \item Also remembers the jump target address
+\end{itemize}
 
-\vspace{0.3cm}
 \begin{tcolorbox}[colback=yellow!10]
 \small
 Note: Initial state is "not taken" because on first encounter with a branch instruction, the target address is unknown. Only after the branch jumps for the first time can we store its target address.
@@ -85,30 +85,30 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 
 \begin{center}
 \begin{tikzpicture}[scale=1, node distance=3cm, auto]
-    % Define states
-    \node[state, fill=red!20, align=center] (00) {00\\Not\\Taken};
-    \node[state, fill=orange!20, right of=00, align=center] (01) {01\\Not\\Taken};
-    \node[state, fill=yellow!20, right of=01, align=center] (10) {10\\Taken};
-    \node[state, fill=green!20, right of=10, align=center] (11) {11\\Taken};
+    % Define states with minimum size
+    \node[state, fill=red!20, align=center, minimum size=1.5cm] (00) {00\\Not\\Taken};
+    \node[state, fill=orange!20, right of=00, align=center, minimum size=1.5cm] (01) {01\\Not\\Taken};
+    \node[state, fill=yellow!20, right of=01, align=center, minimum size=1.5cm] (10) {10\\Taken};
+    \node[state, fill=green!20, right of=10, align=center, minimum size=1.5cm] (11) {11\\Taken};
     
-    % Add transitions
+    % Add transitions with loops on left and right
     \path[->] 
     % From 00
-    (00) edge[loop below] node{NT} (00)
-    (00) edge[above] node{T} (01)
+    (00) edge[loop left] node{NT} (00)
+    (00) edge[below, bend right=20] node{T} (01)
     % From 01
-    (01) edge[below, bend left] node{NT} (00)
-    (01) edge[above] node{T} (10)
+    (01) edge[above, bend right=20] node{NT} (00)
+    (01) edge[below, bend right=20] node{T} (10)
     % From 10
-    (10) edge[below] node{NT} (01)
-    (10) edge[above] node{T} (11)
+    (10) edge[above, bend right=20] node{NT} (01)
+    (10) edge[below, bend right=20] node{T} (11)
     % From 11
-    (11) edge[below] node{NT} (10)
-    (11) edge[loop below] node{T} (11);
+    (11) edge[above, bend right=20] node{NT} (10)
+    (11) edge[loop right] node{T} (11);
     
     % Add direction arrows
-    \draw[thick, ->, blue] (0, -1.5) -- (12, -1.5) node[right] {Taken};
-    \draw[thick, ->, red] (0, -2) -- (12, -2) node[right] {Not Taken};
+    \draw[thick, ->, blue] (0, -1.5) -- (12, -1.5) node[right, align=center] {Taken};
+    \draw[thick, ->, red] (0, -2) -- (12, -2) node[right, align=center] {Not\\Taken};
 \end{tikzpicture}
 \end{center}
 
@@ -380,7 +380,7 @@ place1:
 \end{frame}
 
 \begin{frame}{Complex Example: Analysis}
-\textbf{Part 2:} If the entire code takes 33 cycles, how many times was LD executed?
+\textbf{\ding{193}} If the entire code takes 33 cycles, how many times was LD executed?
 
 \textbf{Analysis:}
 \begin{itemize}
@@ -402,7 +402,7 @@ $\Rightarrow$ LD executed \textbf{3 times}
 \end{frame}
 
 \begin{frame}{State Machine Configuration}
-\textbf{Part 3:} Design a state machine that produces 4 mispredictions in 6 branch executions (3 iterations)
+\textbf{\ding{194}} Design a state machine that produces 4 mispredictions in 6 branch executions (3 iterations)
 
 \begin{center}
 \begin{tikzpicture}[scale=0.8, node distance=2.5cm]
@@ -416,10 +416,8 @@ $\Rightarrow$ LD executed \textbf{3 times}
     (nt) edge[loop left] node{NT} (nt)
     (t) edge[loop right] node{T} (t);
     
-    % Execution trace
-    \node at (0, -2) {Initial states:};
-    \node at (0, -2.5) {BEQ: T};
-    \node at (0, -3) {BNEQ: NT};
+    % Initial states on the left
+    \node[align=left] at (-2.5, 0) {\textbf{Initial states:}\\BEQ: T\\BNEQ: NT};
 \end{tikzpicture}
 \end{center}
 
