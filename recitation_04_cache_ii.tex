@@ -188,10 +188,10 @@ To ensure the inclusion principle is maintained, every eviction of a cache line 
 \end{center}
 \end{frame}
 
-\begin{frame}{Question 2: Pentium System}
-Given a Pentium system with L2 cache such that the inclusion principle is maintained.
+\begin{frame}{Question 2: Cache Hierarchy Usefulness}
+Given a system with L2 cache where the inclusion principle is maintained.
 
-For each of the following cases, indicate whether L2 is useful or not, and explain:
+For each of the following cases, indicate whether L2 is useful or not:
 
 \begin{enumerate}
     \item Both cache levels are the same size
@@ -200,6 +200,33 @@ For each of the following cases, indicate whether L2 is useful or not, and expla
         \item L2: fully associative
     \end{itemize}
 \end{enumerate}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.7, node distance=0.8cm]
+    % L1 cache - left side
+    \node[draw, rectangle, fill=cyan!20, minimum width=0.8cm, minimum height=3cm, label=above:{\small L1: direct mapped}] (l1left) {};
+    \node[fill=yellow!40, minimum width=0.7cm, minimum height=0.5cm] at (l1left.center) {A};
+    
+    % L2 cache - left side (positioned below L1)
+    \node[draw, rectangle, fill=cyan!30, minimum width=4cm, minimum height=0.8cm, below=1.5cm of l1left, label=left:{\small L2: fully associative}] (l2left) {};
+    \node[fill=red!40, minimum width=0.7cm, minimum height=0.6cm] at ([xshift=-1cm]l2left.center) {A};
+    
+    % Arrow
+    \draw[->, thick, blue!70, line width=2pt] ([xshift=0.8cm]l1left.east) -- ++(2,0);
+    
+    % L1 cache - right side
+    \node[draw, rectangle, fill=cyan!20, minimum width=0.8cm, minimum height=3cm, right=4cm of l1left, label=above:{\small L1}] (l1right) {};
+    \node[fill=yellow!40, minimum width=0.7cm, minimum height=0.5cm] at (l1right.center) {B};
+    
+    % L2 cache - right side (positioned below L1 right)
+    \node[draw, rectangle, fill=cyan!30, minimum width=4cm, minimum height=0.8cm, below=1.5cm of l1right, label=left:{\small L2}] (l2right) {};
+    \node[fill=red!40, minimum width=0.7cm, minimum height=0.6cm] at ([xshift=-0.8cm]l2right.center) {A};
+    \node[fill=yellow!40, minimum width=0.7cm, minimum height=0.6cm] at ([xshift=0.8cm]l2right.center) {B};
+\end{tikzpicture}
+\end{center}
+
+\onslide<2->{\textbf{Answer:} Useful! L2 can hold conflicting lines that L1 cannot due to higher associativity.}
 \end{frame}
 
 \begin{frame}{Question 2: Continued}
@@ -207,12 +234,12 @@ For each of the following cases, indicate whether L2 is useful or not, and expla
     \setcounter{enumi}{1}
     \item Access time for both cache levels is identical. L2 is larger than L1.
     \begin{itemize}
-        \item \textbf{Answer:} Useful. There is benefit in L2. Since access time is identical and it is larger, we prefer to read directly from L2, so L1 is not useful for system performance.
+        \item<2-> \textbf{Answer:} Useful. There is benefit in L2. Since access time is identical and it is larger, we prefer to read directly from L2, so L1 is not useful for system performance.
     \end{itemize}
     
-    \item Access time to L2 and main memory is identical.
+    \item<3-> Access time to L2 and main memory is identical.
     \begin{itemize}
-        \item \textbf{Answer:} Not useful. L2 is redundant because we can access main memory at the same speed without risk of miss.
+        \item<4-> \textbf{Answer:} Not useful. L2 is redundant because we can access main memory at the same speed without risk of miss.
     \end{itemize}
 \end{enumerate}
 \end{frame}
