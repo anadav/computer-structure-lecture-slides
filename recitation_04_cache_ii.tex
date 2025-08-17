@@ -29,6 +29,8 @@
     bluebox/.style={box, fill=blue!20},
     yellowbox/.style={box, fill=yellow},
     whitebox/.style={box, fill=white},
+    redbox/.style={box, fill=white, draw=red, text=red},
+    yellowbg/.style={fill=yellow!30, draw=black, rounded corners, inner sep=5pt},
     every edge/.style={draw, ->, >=stealth},
     node distance=0.8cm and 1.5cm
 ]
@@ -40,10 +42,14 @@
 \node[whitebox, below=of l1read] (snoopp1) {Snoop P};
 \node[decision, below=of snoopp1] (dirty1) {P dirty?};
 \node[bluebox, below=of dirty1] (inv1) {Invalidate P};
+\node[redbox, below=1.5cm of inv1] (snoopx1) {Snoop X};
+\node[below=0cm of snoopx1.south, text=red, anchor=north] (ldotsx1) {\textbf\vdots};
+
 \begin{scope}[on background layer]
 \node[fit=(snoopp1)(dirty1)(inv1), fill=yellow!30, draw=black, rounded corners, inner sep=5pt] (bg1) {};
+\node[yellowbg, fit=(snoopx1)(ldotsx1)] (bg1) {};
 \end{scope}
-\node[yellowbox, below=1.5cm of inv1] (snoopx1) {Snoop X};
+
 
 % L2 Section  
 \node[bluebox, right=3cm of l1] (l2) {L2};
@@ -51,8 +57,10 @@
 
 \node[whitebox, below=of l2read] (snoopp2) {Snoop P};
 \node[decision, below=of snoopp2] (dirty2) {P dirty?};
-\draw[->] (snoopp2) -- node[right] {\small HIT};
 \node[bluebox, below=0.8cm of dirty2] (inv2) {Invalidate P};
+\begin{scope}[on background layer]
+\node[fit=(snoopp2)(dirty2)(inv2), fill=yellow!30, draw=black, rounded corners, inner sep=5pt] (bg1) {};
+\end{scope}
 
 \node[decision, below=0.5cm of inv2] (free) {Free entry?};
 \node[yellowbox, below left=0.5cm and 0.3cm of free] (victimx) {victim: X};
@@ -62,9 +70,9 @@
 \node[bluebox, right=3cm of l2] (l3) {L3};
 \node[bluebox, below=0.3cm of l3] (l3read) {M: read miss};
 
-\node[bluebox, below=0.5cm of l3read] (select) {Select victim: P};
-\node[yellowbox, below=0.5cm of select] (snoopp3) {Snoop P};
-\node[decision, below=0.5cm of snoopp3] (dirty3) {P dirty?};
+\node[whitebox, below=of l3read] (select3) {Select victim: P};
+%\node[yellowbox, below=0.5cm of select] (snoopp3) {Snoop P};
+\node[decision, below=of select3] (dirty3) {P dirty?};
 \node[bluebox, left=0.8cm of dirty3] (wrreq) {Yes: Wr Req};
 \node[bluebox, below=0.8cm of dirty3] (inv3) {Invalidate P};
 \node[bluebox, below=0.3cm of inv3] (update) {Update P};
@@ -80,6 +88,13 @@
 \draw[->] (snoopp1) -- (dirty1) node[midway, right] {\small HIT};
 
 \draw[->] (snoopp2) -- (dirty2);
+
+\draw[->, rounded corners]
+  (snoopp2.south)
+  -- ($(snoopp2.south)+(0,-1cm)$) % down 1cm
+  -- ($ ($(snoopp2.south)+(0,-1cm)$) -| ($(snoopp1)!0.5!(snoopp2)$) $) % go to midway x at same y
+  |- ($(snoopp1.north)+(0,1cm)$)  % up to 1cm above snoopp1
+  -- (snoopp1.north);             % straight down into snoopp1.north
 \draw[->] (dirty2) -- node[left] {\small no} (inv2);
 \draw[->] (dirty2) -- node[above] {\small Yes: Wr Req} ++(1,0);
 
@@ -88,8 +103,8 @@
 \draw[->] (free) -- node[left] {\small no} (victimx);
 \draw[->] (victimx) -- (dirtyx);
 
-\draw[->] (select) edge[bend left=30, blue] node[above] {\small Snoop Request} (snoopp2.north);
-\draw[->] (snoopp3) -- (dirty3);
+\draw[->] (select3) edge[bend left=30, blue] node[above] {\small Snoop Request} (snoopp2.north);
+%\draw[->] (snoopp3) -- (dirty3);
 \draw[->] (dirty3) -- node[left] {\small no} (inv3);
 \draw[->] (dirty3) -- (wrreq);
 \draw[->] (wrreq) -- node[above] {\small Yes: Wr Req} ++(-1,0);
