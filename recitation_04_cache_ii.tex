@@ -45,7 +45,7 @@
 \node[decision, below=of snoopp1] (dirty1) {P dirty?};
 \node[whitebox, below=of dirty1] (inv1) {Invalidate P};
 \node[redbox, below=1cm of inv1] (snoopx1) {Snoop X};
-\node[below=0cm of snoopx1.south, text=red, anchor=north] (ldotsx1) {\textbf\vdots};
+\node[below=0cm of snoopx1.south, text=red, anchor=north] (vdotsx1) {\textbf\vdots};
 
 % L2 Section  
 \node[bluebox, right=5cm of l1] (l2) {L2};
@@ -53,11 +53,12 @@
 
 \node[whitebox, below=of l2read] (snoopp2) {Snoop P};
 \node[decision, below=of snoopp2] (dirty2) {P dirty?};
-\node[whitebox, below=0.8cm of dirty2] (inv2) {Invalidate P};
+\node[whitebox, below=of dirty2] (inv2) {Invalidate P};
 
 \node[reddecision, below=0.6cm of inv2] (free) {Free entry?};
 \node[redbox, below=of free] (victimx) {victim: X};
 \node[reddecision, below=of victimx] (dirtyx) {dirty?};
+\node[below=0cm of dirtyx.south, text=red, anchor=north] (ldots2) {\textbf\ldots};
 
 % L3 Section
 \node[bluebox, right=5cm of l2] (l3) {L3};
@@ -70,15 +71,15 @@
 
 \node[bluered, below=1.5cm of inv3] (fillm3) {Fill M in P};
 \node[bluered, below=of fillm3] (updatelru) {Update LRU};
-\node[bluered, below=of dirtyx] (fillm2) {Fill M \& Update LRU};
+\node[bluered, below=of ldots2] (fillm2) {Fill M \& Update LRU};
 \node[bluered, below=1.3cm of snoopx1] (fillm1) {Fill M \& Update LRU};
 
 \begin{scope}[on background layer]
 \node[yellowbg, fit=(snoopp1)(dirty1)(inv1)] {};
-\node[yellowbg, fit=(snoopx1)(ldotsx1)] {};
+\node[yellowbg, fit=(snoopx1)(vdotsx1)] {};
 \node[yellowbg, fit=(snoopp2)(dirty2)(inv2)] {};
 \node[yellowbg, fit=(dirty3)(inv3)] {};
-\node[yellowbg, fit=(free)(victimx)(dirtyx)] {};
+\node[yellowbg, fit=(free)(victimx)(dirtyx)(ldots2)] {};
 \end{scope}
 
 % Arrows with labels
