@@ -1,0 +1,464 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{bytefield}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usepackage{tcolorbox}
+\usetheme{Madrid}
+\title{Multithreading}
+\subtitle{Computer Architecture}
+\author{Course 234267}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Introduction to Execution Models}
+
+\begin{frame}{Scalar Execution}
+\begin{itemize}
+    \item Sequential execution of instructions
+    \item One instruction at a time
+    \item Dependencies reduce throughput/utilization
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \node at (0,0.5) {Time $\rightarrow$};
+    \foreach \x in {0,0.8,1.6,2.4,3.2,4.0,4.8,5.6,6.4} {
+        \pgfmathparse{int(mod(\x/0.8,2))}
+        \ifnum\pgfmathresult=0
+            \fill[red!70] (\x,0) rectangle (\x+0.7,-0.5);
+        \else
+            \draw (\x,0) rectangle (\x+0.7,-0.5);
+        \fi
+    }
+\end{tikzpicture}
+\end{center}
+
+\begin{alertblock}{Key Issue}
+Dependencies reduce throughput/utilization
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Superscalar Execution}
+\begin{itemize}
+    \item Multiple instructions per cycle
+    \item Out-of-order execution capabilities
+    \item Still limited by:
+    \begin{itemize}
+        \item Dependencies
+        \item Cache misses
+        \item Branch mispredictions
+    \end{itemize}
+\end{itemize}
+
+\begin{block}{Impact}
+These factors reduce throughput/utilization even in superscalar processors
+\end{block}
+\end{frame}
+
+\section{Multithreading Approaches}
+
+\begin{frame}{Blocked Multithreading}
+\framesubtitle{Switch on Event}
+
+\begin{itemize}
+    \item Switch threads when current thread encounters low utilization event
+    \item Examples of switching events:
+    \begin{itemize}
+        \item L2 cache miss
+        \item Long latency operations
+    \end{itemize}
+    \item May increase utilization and throughput
+\end{itemize}
+
+\begin{block}{Benefit}
+Hides long latency events by switching to another thread
+\end{block}
+\end{frame}
+
+\begin{frame}{Fine Grained Multithreading}
+\begin{itemize}
+    \item Switch threads frequently (e.g., every cycle)
+    \item Reduces impact of dependencies
+    \item Better latency hiding than blocked multithreading
+\end{itemize}
+
+\begin{block}{Key Advantage}
+Increases utilization/throughput by reducing impact of dependencies
+\end{block}
+\end{frame}
+
+\begin{frame}{Simultaneous Multithreading (SMT)}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{itemize}
+    \item Multiple threads execute simultaneously
+    \item Shares execution resources
+    \item Best utilization of resources
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{block}{Benefits}
+\begin{itemize}
+    \item Reduces impact of dependencies
+    \item Hides cache misses
+    \item Masks branch mispredictions
+\end{itemize}
+\end{block}
+\end{columns}
+
+\vspace{0.5cm}
+\begin{center}
+\textbf{Pipeline:} In-order fetch/decode/rename $\rightarrow$ Out-Of-Order Execution $\rightarrow$ In-order Retire
+\end{center}
+\end{frame}
+
+\section{Performance Analysis}
+
+\begin{frame}{Switch-on-Event Analysis}
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Given Parameters:}
+\begin{itemize}
+    \item M instructions execute with cache access
+    \item Cache miss takes Q cycles
+    \item Thread switch on cache miss (event)
+    \item $CPI_{ideal}$ when Thread 0 runs
+    \item N threads available
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Analysis:}
+\begin{itemize}
+    \item Each memory access: Q cycles
+    \item Memory access every M instructions
+    \item Context switch overhead considered
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{IPC Equation Development}
+\textbf{Question:} Develop an equation for IPC as a function of running threads (N)
+
+\begin{block}{CPI per Thread}
+$$CPI_{Thread} = CPI_i + \frac{Q}{M}$$
+\end{block}
+
+Where:
+\begin{itemize}
+    \item $CPI_i$ = ideal CPI
+    \item Q = memory access cycles
+    \item M = instructions between memory accesses
+\end{itemize}
+
+\begin{alertblock}{IPC Formula}
+$$IPC = \frac{N}{CPI_i + \frac{Q}{M}}$$
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Performance Optimization}
+\textbf{Best Achievable Performance:}
+\begin{itemize}
+    \item Maximum IPC when memory latencies are fully hidden
+    \item Achieved when: No memory accesses OR all latencies masked by other threads
+\end{itemize}
+
+$$IPC_{max} = CPI_{ideal}^{-1}$$
+
+\textbf{Minimum Threads for Maximum Performance:}
+$$N_1 = 1 + \frac{Q}{M \cdot CPI_i}$$
+\end{frame}
+
+\begin{frame}{IPC vs Number of Threads}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \draw[->] (0,0) -- (8,0) node[right] {N = Threads};
+    \draw[->] (0,0) -- (0,4.5) node[above] {IPC};
+    
+    % Draw roofline (not curve)
+    \draw[thick, blue] (0,0) -- (3,3.5);
+    \draw[thick, blue] (3,3.5) -- (7.5,3.5);
+    
+    % Mark key points
+    \draw[dashed] (3,0) -- (3,3.5) node[pos=0, below] {$N_1$};
+    \draw[dashed] (0,3.5) -- (3,3.5) node[pos=0, left] {$IPC_{Max}$};
+    
+    % Equation annotation
+    \node at (5.5,2) {$IPC = \frac{N}{CPI_i + \frac{Q}{M}}$};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\section{Cache Impact}
+
+\begin{frame}{L1 Cache Addition}
+\textbf{Improvement Proposal:} Add L1 cache with 0 cycles access time
+
+\begin{block}{Modified IPC with Cache}
+$IPC = \frac{N}{CPI_i + k \cdot \frac{Q}{M}}$
+where $k$ = miss rate (k = 1 $\rightarrow$ 100\% miss rate)
+\end{block}
+
+\textbf{Question:} What cache hit rate provides maximum performance with $N_1/2$ threads?
+
+\begin{align*}
+IPC_{Max} &= IPC_{ideal} \\
+N_1 &= 1 + \frac{Q}{M \cdot CPI_i} \quad \Rightarrow \quad \frac{N_1}{2} = \frac{1 + \frac{Q}{M \cdot CPI_i}}{2}
+\end{align*}
+
+Solve: $IPC\Big|_{N=\frac{N_1}{2}} = CPI_i^{-1} + k \cdot \frac{Q}{M} \cdot \frac{1}{2} \cdot CPI_i^{-1} = CPI_i^{-1}$
+
+\alert{Result: $k = 0.5$ (50\% miss rate) $\Rightarrow$ 50\% hit rate required}
+\end{frame}
+
+\begin{frame}{Cache Design Impact}
+\textbf{How will cache addition affect the CPU?}
+
+\begin{columns}
+\column{0.33\textwidth}
+\begin{block}{Area}
+\textcolor{red}{Increase} \\
+Cache requires silicon area
+\end{block}
+
+\column{0.33\textwidth}
+\begin{block}{Power}
+\textcolor{green}{Decrease} \\
+(with sufficient hit rate)
+\end{block}
+
+\column{0.33\textwidth}
+\begin{block}{Complexity}
+\textcolor{red}{Increase} \\
+Cache control logic needed
+\end{block}
+\end{columns}
+
+\vspace{0.5cm}
+\begin{itemize}
+    \item Might allow CPU redesign with fewer threads if hit rate is high enough
+\end{itemize}
+\end{frame}
+
+
+\section{Power/Performance Trade-offs}
+
+\begin{frame}{Power/Performance Analysis}
+\textbf{Two Processor Options:}
+
+\begin{table}
+\centering
+\begin{tabular}{lcc}
+\toprule
+Parameter & Large Core & Small Core \\
+\midrule
+Area & 4 mm² & 2 mm² \\
+Width & 4-wide & 2-wide \\
+IPC & 2 & 1 \\
+Leakage Power & \multicolumn{2}{c}{0.5W} \\
+Dynamic Capacitance & 1500 pF & 500 pF \\
+Threads & 1 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{Key Assumption}
+Leakage is approximately proportional to area
+\end{block}
+\end{frame}
+
+\begin{frame}{Voltage-Frequency Operating Points}
+\begin{table}
+\centering
+\small
+\begin{tabular}{ccc}
+\toprule
+Voltage (V) & Large Core Freq (GHz) & Small Core Freq (GHz) \\
+\midrule
+0.6 & 0.7 & 1.0 \\
+0.65 & 1.0 & 1.25 \\
+0.7 & 1.35 & 1.5 \\
+0.75 & 1.75 & 1.75 \\
+0.8 & 2.25 & 2.0 \\
+0.85 & 2.5 & 2.25 \\
+0.9 & 3.0 & 2.5 \\
+0.95 & 3.5 & 2.75 \\
+1.0 & 4.0 & 3.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Single Thread Performance (4W Budget)}
+\textbf{Question:} Which processor for best single-thread performance at 4W?
+
+\begin{block}{Power Equation}
+$$Power = Leakage + CV^2f$$
+\end{block}
+
+\textbf{Analysis:}
+\begin{itemize}
+    \item Small core: Can run at 3 GHz within 4W
+    \item Large core: Can run at 2.5 GHz within 4W
+\end{itemize}
+
+\textbf{Performance (approx. $\propto$ F × IPC):}
+\begin{itemize}
+    \item Small: $1 \times 3 = 3$ G inst/sec
+    \item Large: $2 \times 2.5 = 5$ G inst/sec
+\end{itemize}
+
+\alert{Result: Large core provides better performance}
+\end{frame}
+
+\begin{frame}{Multi-Thread Performance (2W per Core)}
+\textbf{Question:} Two large cores or two small cores for best 2-way MT performance?
+
+\textbf{Power constraint:} 2W per core
+
+\textbf{Operating Points:}
+\begin{itemize}
+    \item Small cores: 3 GHz each
+    \item Large cores: 1.35 GHz each
+\end{itemize}
+
+\textbf{Performance (approx. $\propto$ N × F × IPC):}
+\begin{itemize}
+    \item 2 Small: $2 \times 3 \times 1 = 6$ G inst/sec
+    \item 2 Large: $2 \times 1.35 \times 2 = 5.4$ G inst/sec
+\end{itemize}
+
+\alert{Result: Two small cores provide better performance}
+\end{frame}
+
+\begin{frame}{Question 2}
+\textbf{Question:} For a system with two large cores or two small cores, which configuration provides best 2-way Multi-Thread performance?
+\begin{columns}
+\column{0.65\textwidth}
+\scriptsize
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=north west] at (0,0) {
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\makecell{$P_{tot}$ \\ Large \\ Core \\ (W)} & 
+\makecell{$P_{tot}$ \\ Small \\ Core \\ (W)} & 
+\makecell{$P_{act}$ \\ Large \\ Core \\ (W)} & 
+\makecell{$P_{act}$ \\ Small \\ Core \\ (W)} & 
+\makecell{Freq \\ Large \\ Core \\ (GHz)} & 
+\makecell{Freq \\ Small \\ Core \\ (GHz)} & 
+\makecell{Voltage \\ (V)} \\
+\hline
+1.38 & 0.68 & 0.38 & 0.18 & 0.7 & 1 & 0.6 \\
+1.63 & 0.76 & 0.63 & 0.26 & 1 & 1.25 & 0.65 \\
+\tikzmark{lg1}1.99\tikzmark{lg2} & 0.87 & 0.99 & 0.37 & \tikzmark{lgf1}1.35\tikzmark{lgf2} & 1.5 & 0.7 \\
+2.48 & 0.99 & 1.48 & 0.49 & 1.75 & 1.75 & 0.75 \\
+3.16 & 1.14 & 2.16 & 0.64 & 2.25 & 2 & 0.8 \\
+3.71 & 1.31 & 2.71 & 0.81 & 2.5 & 2.25 & 0.85 \\
+4.65 & 1.51 & 3.65 & 1.01 & 3 & 2.5 & 0.9 \\
+5.74 & 1.74 & 4.74 & 1.24 & 3.5 & 2.75 & 0.95 \\
+7.00 & \tikzmark{sm1}2.00\tikzmark{sm2} & 6.00 & 1.50 & 4 & \tikzmark{smf1}3\tikzmark{smf2} & 1 \\
+\hline
+\end{tabular}
+};
+
+% Circle for large core power
+\draw[red, thick] ([xshift=-1mm]pic cs:lg1) ellipse (3mm and 3mm);
+% Circle for large core frequency  
+\draw[red, thick] ([xshift=-1mm]pic cs:lgf1) ellipse (3mm and 3mm);
+% Arrow connecting them
+\draw[red, thick, <-] ([xshift=-1mm]pic cs:lg2) -- ([xshift=-2mm]pic cs:lgf1);
+
+% Circle for small core power
+\draw[red, thick] ([xshift=-1mm]pic cs:sm1) ellipse (3mm and 3mm);
+% Circle for small core frequency
+\draw[red, thick] ([xshift=-1mm]pic cs:smf1) ellipse (3mm and 3mm);
+% Arrow connecting them
+\draw[red, thick, <-] ([xshift=-1mm]pic cs:sm2) -- ([xshift=-2mm]pic cs:smf1);
+\end{tikzpicture}
+
+\column{0.35\textwidth}
+\textbf{Power constraint:}
+\begin{itemize}
+    \item Per core: $\leq$ 2W
+\end{itemize}
+
+\textbf{Small cores:}
+\begin{itemize}
+    \item Run at 3 GHz
+\end{itemize}
+
+\textbf{Large cores:}
+\begin{itemize}
+    \item Run at 1.35 GHz
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Power Curve Characteristics}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{tikzpicture}[scale=0.7]
+    \draw[->] (0,0) -- (6,0) node[right] {Frequency};
+    \draw[->] (0,0) -- (0,4) node[above] {Power};
+    
+    % Draw power curve
+    \draw[thick, blue] (0.5,0.3) .. controls (2,0.8) and (3,1.5) .. (5,3.5);
+    
+    % Mark points
+    \node[circle,fill=red,inner sep=2pt] at (1,0.4) {};
+    \node[below] at (1,0) {$V_{min}$};
+    \node[right] at (1,0.4) {$P_0$};
+    
+    \node[circle,fill=red,inner sep=2pt] at (2.5,1.2) {};
+    \node[right] at (2.5,1.2) {$P_1$};
+    
+    \node[circle,fill=red,inner sep=2pt] at (4.5,3) {};
+    \node[right] at (4.5,3) {$P_n$};
+\end{tikzpicture}
+
+\column{0.5\textwidth}
+\textbf{Key Regions:}
+\begin{itemize}
+    \item Below $V_{min}$: $P \sim K \cdot F$
+    \item Above $V_{min}$: $P \sim F^3$
+    \item Energy: $E \sim F^2$
+\end{itemize}
+
+\textbf{Optimal Points:}
+\begin{itemize}
+    \item Energy efficiency: $P_n$
+    \item Performance/Power > 1:3 region preferred
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Summary}
+\begin{itemize}
+    \item \textbf{Multithreading} improves processor utilization
+    \item \textbf{SMT} provides best resource utilization
+    \item \textbf{IPC} increases with thread count up to saturation
+    \item \textbf{Cache} can reduce required thread count
+    \item \textbf{Power/Performance} trade-offs depend on workload:
+    \begin{itemize}
+        \item Single-thread: Large cores often better
+        \item Multi-thread: Small cores can be more efficient
+    \end{itemize}
+    \item \textbf{Energy efficiency} achieved at moderate frequencies
+\end{itemize}
+\end{frame}
+
+\end{document}
