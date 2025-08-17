@@ -35,6 +35,14 @@
     escapeinside={(*@}{@*)},
 }
 
+\newcommand{\xmark}{\ding{55}} % Cross mark
+
+% Define colors for pipeline diagrams
+\definecolor{normalexec}{RGB}{46, 125, 50}
+\definecolor{stallcolor}{RGB}{255, 193, 7}
+\definecolor{flushcolor}{RGB}{211, 47, 47}
+\definecolor{emptycolor}{RGB}{238, 238, 238}
+
 \title{Control Hazards - Solutions (4)}
 \subtitle{Branch Prediction and BTB}
 \author{Computer Architecture}
@@ -44,12 +52,10 @@
 
 \frame{\titlepage}
 
-\begin{frame}{Control Hazards Solutions - Using BTB}
-\textbf{Branch Target Buffer (BTB) Prediction Mechanism}
-
+\begin{frame}{Control Hazards Solutions - Branch Target Buffer (BTB)}
+\textbf{Direction Prediction (Taken/Not Taken):}
 \begin{columns}
 \column{0.5\textwidth}
-\textbf{Direction Prediction (Taken/Not Taken):}
 \begin{itemize}
     \item Remembers branch behavior from recent executions
     \item If taken recently, predict taken again
@@ -69,7 +75,7 @@
 \end{tikzpicture}
 \end{columns}
 \vspace{0.5cm}
-\textbf{Target Address:}
+\textbf{Target Address Prediction:}
 \begin{itemize}
     \item Also remembers the jump target address
 \end{itemize}
@@ -281,37 +287,147 @@ BNEQ & 3 & 0 & 11 & taken & not taken & 10 & \checkmark \\
 \textbf{Question:} How many clock cycles are wasted for correct prediction vs. misprediction?
 \end{frame}
 
-\begin{frame}[fragile]{Pipeline Timing Analysis}
-\textbf{Case 1: Correct Prediction - Taken}
-\begin{verbatim}
-beq:   IF  ID  EX  MEM  WB
-dest:  Stall  IF  ID  EX  MEM  WB
-\end{verbatim}
-One cycle bubble while waiting for target address from EX stage.
+\begin{frame}{Pipeline Timing Analysis - Correct Predictions}
+%\textbf{Branch Prediction: When We Get It Right}
+\scriptsize
+\vspace{0.3cm}
 
-\textbf{Case 2: Correct Prediction - Not Taken}
-\begin{verbatim}
-beq:   IF  ID  EX  MEM  WB
-next:  IF  ID  EX  MEM  WB
-\end{verbatim}
-No stall - same as original MIPS pipeline.
+% Case 1: Correct Prediction - Not Taken (BEST CASE)
+\begin{center}
+\colorbox{green!10}{
+\begin{minipage}{0.95\textwidth}
+\textbf{Case 1: Correct Prediction - Not Taken} \hfill \textcolor{green!70!black}{\textbf{0 cycle penalty} $\checkmark$}
+\vspace{0.1cm}
 
-\textbf{Case 3: Misprediction - Predicted Taken, Actually Not Taken}
-\begin{verbatim}
-beq:   IF  ID  EX  MEM  WB
-wrong: Stall  IF  ID  --  --  --
-next:  IF  ID  EX  MEM  WB
-\end{verbatim}
-Two cycles wasted (one stall + one flush).
+\begin{tabular}{l|c|c|c|c|c|c}
+\textbf{Instruction} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} & \textbf{C5} & \textbf{C6} \\
+\hline
+beq & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB & \\
+next & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB \\
+\end{tabular}
 
-\textbf{Case 4: Misprediction - Predicted Not Taken, Actually Taken}
-\begin{verbatim}
-beq:   IF  ID  EX  MEM  WB
-wrong1: IF  ID  --  --  --
-wrong2: IF  --  --  --  --
-dest:  IF  ID  EX  MEM  WB
-\end{verbatim}
-Two cycles wasted (two flushes).
+\vspace{0.05cm}
+\footnotesize \textbf{Optimal:} No stall - same as original MIPS pipeline
+\end{minipage}
+}
+\end{center}
+
+\vspace{0.4cm}
+
+% Case 2: Correct Prediction - Taken
+\begin{center}
+\colorbox{green!10}{
+\begin{minipage}{0.95\textwidth}
+\textbf{Case 2: Correct Prediction - Taken} \hfill \textcolor{orange!70!black}{\textbf{1 cycle penalty}}
+\vspace{0.1cm}
+
+\begin{tabular}{l|c|c|c|c|c|c|c}
+\textbf{Instruction} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} & \textbf{C5} & \textbf{C6} & \textbf{C7} \\
+\hline
+beq & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB & & \\
+\textit{bubble} & & \cellcolor{stallcolor!40}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \\
+target & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB \\
+\end{tabular}
+
+\vspace{0.05cm}
+\footnotesize \textbf{Good:} One bubble while waiting for target address from EX stage
+\end{minipage}
+}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, inner sep=8pt] at (current page.south east) {
+        \begin{tabular}{ll}
+        \footnotesize
+        \cellcolor{normalexec!40} & Normal execution \\
+        \cellcolor{stallcolor!40} & Stall/Bubble \\
+        \cellcolor{emptycolor}--- & Empty stage \\
+        \end{tabular}
+    };
+\end{tikzpicture}
+
+\begin{center}
+\large
+\textcolor{green!70!black}{\textbf{When prediction is correct, penalty is minimal (0-1 cycles)}}
+\end{center}
+
+\end{frame}
+
+% Second frame for mispredictions
+\begin{frame}{Pipeline Timing Analysis - Mispredictions}
+%\textbf{Branch Prediction: When We Get It Wrong}
+\scriptsize
+\vspace{0.3cm}
+
+% Case 3: Misprediction - Predicted Not Taken, Actually Taken
+\begin{center}
+\colorbox{red!10}{
+\begin{minipage}{0.95\textwidth}
+\textbf{Case 3: Misprediction - Predicted Not Taken $\rightarrow$ Actually Taken} \hfill \textcolor{red!70!black}{\textbf{2 cycle penalty} \xmark}
+\vspace{0.1cm}
+
+\begin{tabular}{l|c|c|c|c|c|c|c|c}
+\textbf{Instruction} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} & \textbf{C5} & \textbf{C6} & \textbf{C7} & \textbf{C8} \\
+\hline
+beq & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB & & & \\
+\textcolor{red}{next (wrong)} & & \cellcolor{normalexec!40}IF & \cellcolor{flushcolor!40}ID & \cellcolor{flushcolor!40}\textsf{X} & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \\
+\textcolor{red}{next+1 (wrong)} & & & \cellcolor{flushcolor!40}IF & \cellcolor{flushcolor!40}\textsf{X} & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \\
+target (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB \\
+\end{tabular}
+
+\vspace{0.05cm}
+\footnotesize \textbf{Bad:} 2 instructions fetched incorrectly and must be flushed
+\end{minipage}
+}
+\end{center}
+
+\vspace{0.4cm}
+
+% Case 4: Misprediction - Predicted Taken, Actually Not Taken
+\begin{center}
+\colorbox{red!10}{
+\begin{minipage}{0.95\textwidth}
+\textbf{Case 4: Misprediction - Predicted Taken $\rightarrow$ Actually Not Taken} \hfill \textcolor{red!70!black}{\textbf{2 cycle penalty} \xmark}
+\vspace{0.1cm}
+
+\begin{tabular}{l|c|c|c|c|c|c|c|c}
+\textbf{Instruction} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} & \textbf{C5} & \textbf{C6} & \textbf{C7} & \textbf{C8} \\
+\hline
+beq & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB & & & \\
+\textit{bubble} & & \cellcolor{stallcolor!40}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & & \\
+\textcolor{red}{target (wrong)} & & & \cellcolor{normalexec!40}IF & \cellcolor{flushcolor!40}ID & \cellcolor{flushcolor!40}\textsf{X} & \cellcolor{emptycolor}--- & \cellcolor{emptycolor}--- & \\
+next (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellcolor{normalexec!40}EX & \cellcolor{normalexec!40}MEM & \cellcolor{normalexec!40}WB \\
+\end{tabular}
+
+\vspace{0.05cm}
+\footnotesize \textbf{Bad:} 1 stall cycle + 1 incorrectly fetched instruction flushed
+\end{minipage}
+}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, inner sep=8pt] at (current page.south east) {
+        \begin{tabular}{ll}
+        \footnotesize
+        \cellcolor{normalexec!40} & Normal execution \\
+        \cellcolor{stallcolor!40} & Stall/Bubble \\
+        \cellcolor{flushcolor!40}\textsf{X} & Flushed \\
+        \cellcolor{emptycolor}--- & Empty stage \\
+        \end{tabular}
+    };
+\end{tikzpicture}
+
+\vspace{-0.3cm}
+
+\begin{center}
+\large
+\textcolor{red!70!black}{\textbf{Mispredictions are costly - always 2+ cycle penalty}}
+\end{center}
+
 \end{frame}
 
 \begin{frame}{Optimization: Avoiding Stalls on Correct Prediction}
