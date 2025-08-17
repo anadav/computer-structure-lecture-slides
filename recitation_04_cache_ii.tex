@@ -160,7 +160,7 @@ M & & H & \onslide<12->{\textcolor{red}{\textbf{No}}} & \onslide<12->{Must go th
 
 \begin{frame}{The Inclusion Principle}
 \begin{itemize}
-    \item In a hierarchical cache working according to the inclusion principle, each level contains all the lines (not necessarily the most updated data - remember: WB/WT) that are in the level above it
+    \item In a hierarchical cache working according to the inclusion principle, each level contains all the lines (not necessarily the most updated data - remember: WB/WT) that are in higher-level caches (closer to CPU)
     \item This is designed to simplify the communication protocols between levels
     \item The principle is not implemented in all processors
 \end{itemize}
@@ -176,7 +176,7 @@ M & & H & \onslide<12->{\textcolor{red}{\textbf{No}}} & \onslide<12->{Must go th
 \end{frame}
 
 \begin{frame}{Inclusion Principle - Eviction}
-To ensure the inclusion principle is maintained, every eviction of a cache line from a lower level (L2 or L3) will trigger eviction of the same line from higher levels as well.
+To ensure the inclusion principle is maintained, every eviction of a cache line from a lower-level cache (L2 or L3) will trigger eviction of the same line from higher-level caches (closer to CPU).
 
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
@@ -196,12 +196,14 @@ To ensure the inclusion principle is maintained, every eviction of a cache line 
 \vspace{0.4cm}
 \begin{columns}[T]
 \begin{column}{0.35\textwidth}
-\textbf{(1)} Both cache levels are the same size
+\begin{enumerate}
+\item Both cache levels are the same size
 \begin{itemize}
     \small
     \item L1: direct mapped
     \item L2: fully associative
 \end{itemize}
+\end{enumerate}
 
 \vspace{0.4cm}
 \onslide<2->{
@@ -270,7 +272,9 @@ To ensure the inclusion principle is maintained, every eviction of a cache line 
 \end{frame}
 
 \begin{frame}{Question 2: Continued}
-\textbf{(2)} Access time for both cache levels is identical. L2 is larger than L1.
+\begin{enumerate}
+\setcounter{enumi}{1}
+\item Access time for both cache levels is identical. L2 is larger than L1.
 
 \vspace{0.3cm}
 \onslide<2->{
@@ -280,23 +284,22 @@ To ensure the inclusion principle is maintained, every eviction of a cache line 
 }
 
 \vspace{0.5cm}
-\onslide<3->{
-\textbf{(3)} Access time to L2 and main memory is identical.
+\item<3-> Access time to L2 and main memory is identical.
 
 \vspace{0.3cm}
-}
 \onslide<4->{
 \textbf{Answer:} \textcolor{red!70!black}{\textbf{NOT USEFUL}}
 
 \textit{Reason:} L2 offers no speed advantage over main memory, making it redundant.
 }
+\end{enumerate}
 \end{frame}
 
 \begin{frame}{Inclusion Principle - Snooping}
-\textbf{Snoop:} Snoop the caches above when an entry is victimized to keep inclusion
+\textbf{Snoop:} Check higher-level caches when an entry is victimized to maintain inclusion
 
 \begin{itemize}
-    \item When a cache level wants to delete certain data, it "looks" at the level above to check if the data is also there
+    \item When a cache level wants to delete certain data, it checks higher-level caches (closer to CPU) to see if the data is also there
     \item If yes, it must be deleted first to maintain the inclusion principle
 \end{itemize}
 
@@ -469,16 +472,19 @@ For the second iteration:
 \begin{frame}{Question 4c: Adding L3 Cache}
 Adding an L3 cache of 8MB size. L3 access time is about half of memory access time.
 
-\textbf{How will adding L3 affect program performance (assuming it starts empty)?}
+\textbf{Question:} How will adding L3 affect program performance (assuming it starts empty)?
 
+\vspace{0.5cm}
+\onslide<2->{
 \textbf{Answer:}
 \begin{itemize}
     \item The only misses in L2 are compulsory misses
     \item In L3, we'll still only have compulsory misses
     \item Therefore, no performance improvement
     \item However, misses in L2 are now more expensive (need additional L3 access before memory)
-    \item Overall, performance will degrade
+    \item Overall, performance will \textcolor{red!70!black}{\textbf{degrade}}
 \end{itemize}
+}
 \end{frame}
 
 \begin{frame}[fragile]{Question 5: Prefetching}
