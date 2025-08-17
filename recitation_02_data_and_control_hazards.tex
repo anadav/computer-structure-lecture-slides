@@ -1,0 +1,473 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{bytefield}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usetheme{Madrid}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    tabsize=2,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={(*@}{@*)},
+}
+
+\title{Control Hazards - Solutions (4)}
+\subtitle{Branch Prediction and BTB}
+\author{Computer Architecture}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Control Hazards Solutions - Using BTB}
+\textbf{Branch Target Buffer (BTB) Prediction Mechanism}
+
+\begin{columns}
+\column{0.6\textwidth}
+\textbf{Direction Prediction (Taken/Not Taken):}
+\begin{itemize}
+    \item Prediction mechanism "remembers" branch behavior from recent executions
+    \item If branch was taken recently, predict it will be taken again
+    \item History memory implemented using state machines
+\end{itemize}
+
+\textbf{Target Address:}
+\begin{itemize}
+    \item Prediction mechanism also "remembers" the jump target address
+\end{itemize}
+
+\column{0.4\textwidth}
+\begin{tikzpicture}[scale=0.8, node distance=2.5cm]
+    \node[state, fill=blue!20] (nt) {Not Taken};
+    \node[state, fill=green!20, right of=nt] (t) {Taken};
+    
+    \path[->] 
+    (nt) edge[bend left, above] node{taken} (t)
+    (t) edge[bend left, below] node{not taken} (nt)
+    (nt) edge[loop left] node{not taken} (nt)
+    (t) edge[loop right] node{taken} (t);
+\end{tikzpicture}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{tcolorbox}[colback=yellow!10]
+\small
+Note: Initial state is "not taken" because on first encounter with a branch instruction, the target address is unknown. Only after the branch jumps for the first time can we store its target address.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Enhanced Prediction with 2-bit State Machine}
+\textbf{More reliable prediction using 4-state machine:}
+
+\begin{center}
+\begin{tikzpicture}[scale=1, node distance=3cm, auto]
+    % Define states
+    \node[state, fill=red!20, align=center] (00) {00\\Not\\Taken};
+    \node[state, fill=orange!20, right of=00, align=center] (01) {01\\Not\\Taken};
+    \node[state, fill=yellow!20, right of=01, align=center] (10) {10\\Taken};
+    \node[state, fill=green!20, right of=10, align=center] (11) {11\\Taken};
+    
+    % Add transitions
+    \path[->] 
+    % From 00
+    (00) edge[loop below] node{NT} (00)
+    (00) edge[above] node{T} (01)
+    % From 01
+    (01) edge[below, bend left] node{NT} (00)
+    (01) edge[above] node{T} (10)
+    % From 10
+    (10) edge[below] node{NT} (01)
+    (10) edge[above] node{T} (11)
+    % From 11
+    (11) edge[below] node{NT} (10)
+    (11) edge[loop below] node{T} (11);
+    
+    % Add direction arrows
+    \draw[thick, ->, blue] (0, -1.5) -- (12, -1.5) node[right] {Taken};
+    \draw[thick, ->, red] (0, -2) -- (12, -2) node[right] {Not Taken};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Key advantages:}
+\begin{itemize}
+    \item States 00 and 11 are stable states
+    \item Transition to opposite prediction only after TWO consecutive mispredictions
+    \item Reduces impact of irregular jumps/exceptions
+    \item Initial state set to 01 (not taken, unstable)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{BTB Structure}
+\begin{center}
+\begin{tikzpicture}[scale=1]
+    % PC input
+    \node[draw, rectangle] (pc) at (0, 5) {PC of instruction to fetch};
+    
+    % BTB table
+    \draw[thick] (0, 4.5) -- (0, 0);
+    \draw[thick] (6, 4.5) -- (6, 0);
+    
+    % Table headers
+    \node at (1.5, 4.2) {Look up};
+    \node at (4.5, 4.2) {Predicted PC};
+    
+    % Table rows
+    \foreach \y in {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5} {
+        \draw (0, \y) -- (6, \y);
+        \draw (3, \y) -- (3, \y+0.5);
+    }
+    
+    % BTB label
+    \node[rotate=90] at (-0.7, 2) {Number of entries in BTB};
+    
+    % Comparator
+    \node[circle, draw, inner sep=2pt] (comp) at (1.5, -0.5) {=};
+    
+    % Arrows
+    \draw[->] (pc) -- (1.5, 4.5);
+    \draw[->] (1.5, 0) -- (comp);
+    
+    % Output logic
+    \draw[->] (comp) -- ++(0, -0.5) -- ++(1, 0) node[right, text width=4cm] {No: instruction is not predicted to be branch. Proceed normally.};
+    \draw[->] (comp) -- ++(-1, 0) -- ++(0, -0.5) node[below, text width=4cm] {Yes: instruction is branch and predicted PC should be used as next PC.};
+    
+    % Prediction output
+    \draw[->] (4.5, 0) -- (4.5, -1) node[below, align=center] {Branch prediction\\Taken or not taken};
+\end{tikzpicture}
+\end{center}
+
+\textbf{BTB Components:}
+\begin{itemize}
+    \item Left field: Branch instruction address (often uses hash table)
+    \item Middle field: Target address (added after branch executes at least once)
+    \item Right field: Prediction state (2-bit state machine)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Example: Branch Prediction}
+\begin{columns}
+\column{0.4\textwidth}
+\begin{lstlisting}[language={[x86masm]Assembler}]
+    MOVI R1,2
+loop1: 
+    MOV R2,R1
+loop2: 
+    Dec R2
+    BNEQ R2,R0,loop2
+    INC R1
+    BLT R1,4,loop1
+\end{lstlisting}
+
+\textbf{Given:}
+\begin{itemize}
+    \item 5-stage pipeline (IF, ID, EX, MEM, WB)
+    \item BTB with 2-bit predictor
+    \item Initial state: 01
+\end{itemize}
+
+\column{0.6\textwidth}
+\textbf{Question:} What will be the prediction each time BNEQ is executed? How many mispredictions?
+
+\begin{tikzpicture}[scale=0.7, node distance=2.5cm, auto]
+    \node[state, fill=red!20] (00) {00};
+    \node[state, fill=orange!20, draw=blue, thick, right of=00] (01) {01};
+    \node[state, fill=yellow!20, right of=01] (10) {10};
+    \node[state, fill=green!20, right of=10] (11) {11};
+    
+    \path[->] 
+    (00) edge[loop below] node{\tiny NT} (00)
+    (00) edge[above] node{\tiny T} (01)
+    (01) edge[below, bend left] node{\tiny NT} (00)
+    (01) edge[above] node{\tiny T} (10)
+    (10) edge[below] node{\tiny NT} (01)
+    (10) edge[above] node{\tiny T} (11)
+    (11) edge[below] node{\tiny NT} (10)
+    (11) edge[loop below] node{\tiny T} (11);
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Example Solution: Prediction Table}
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Cycle} & \textbf{R1} & \textbf{R2} & \textbf{Current} & \textbf{Prediction} & \textbf{Actual} & \textbf{Next} & \textbf{Error?} \\
+ & & & \textbf{State} & & & \textbf{State} & \\
+\hline
+Loop1 & 2 & 2 & & & & & \\
+\hline
+BNEQ & 2 & 1 & 01 & not taken & taken & 10 & \checkmark \\
+\hline
+BNEQ & 2 & 0 & 10 & taken & not taken & 01 & \checkmark \\
+\hline
+Loop1 & 3 & 3 & & & & & \\
+\hline
+BNEQ & 3 & 2 & 01 & not taken & taken & 10 & \checkmark \\
+\hline
+BNEQ & 3 & 1 & 10 & taken & taken & 11 & \\
+\hline
+BNEQ & 3 & 0 & 11 & taken & not taken & 10 & \checkmark \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Summary:}
+\begin{itemize}
+    \item Total executions: 5 (2 in first loop, 3 in second loop)
+    \item Total mispredictions: 4
+    \item The 2-bit predictor adapts over time but still has initial learning phase
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Pipeline Integration with BTB}
+\textbf{Assumptions:}
+\begin{itemize}
+    \item BTB lookup performed in ID stage
+    \item Branch resolution in EX stage
+    \item On BTB hit with "Taken" prediction, target instruction fetched in next cycle
+    \item Pipeline flush on misprediction
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Pipeline stages
+    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=blue!20, align=center] (if) at (0, 0) {IF\\[5pt]Instruction\\Memory};
+    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=green!20, align=center] (id) at (2, 0) {ID\\[5pt]BTB\\Read\\[5pt]Register\\File};
+    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=yellow!20, align=center] (ex) at (4, 0) {EX\\[5pt]ALU};
+    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=orange!20, align=center] (mem) at (6, 0) {MEM\\[5pt]Data\\Memory};
+    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=red!20, align=center] (wb) at (8, 0) {WB};
+    
+    % BTB
+    \node[draw, rectangle, fill=cyan!20] (btb) at (2, -2.5) {BTB};
+    
+    % Connections
+    \draw[->] (if) -- (id);
+    \draw[->] (id) -- (ex);
+    \draw[->] (ex) -- (mem);
+    \draw[->] (mem) -- (wb);
+    \draw[<->, dashed] (id) -- (btb);
+    
+    % Feedback path
+    \draw[->, thick, red] (ex.south) -- ++(0, -1) -- ++(-4, 0) -- ++(0, 1.5) node[above] {Flush} -- (if.south);
+\end{tikzpicture}
+\end{center}
+
+\textbf{Question:} How many clock cycles are wasted for correct prediction vs. misprediction?
+\end{frame}
+
+\begin{frame}[fragile]{Pipeline Timing Analysis}
+\textbf{Case 1: Correct Prediction - Taken}
+\begin{verbatim}
+beq:   IF  ID  EX  MEM  WB
+dest:  Stall  IF  ID  EX  MEM  WB
+\end{verbatim}
+One cycle bubble while waiting for target address from EX stage.
+
+\textbf{Case 2: Correct Prediction - Not Taken}
+\begin{verbatim}
+beq:   IF  ID  EX  MEM  WB
+next:  IF  ID  EX  MEM  WB
+\end{verbatim}
+No stall - same as original MIPS pipeline.
+
+\textbf{Case 3: Misprediction - Predicted Taken, Actually Not Taken}
+\begin{verbatim}
+beq:   IF  ID  EX  MEM  WB
+wrong: Stall  IF  ID  --  --  --
+next:  IF  ID  EX  MEM  WB
+\end{verbatim}
+Two cycles wasted (one stall + one flush).
+
+\textbf{Case 4: Misprediction - Predicted Not Taken, Actually Taken}
+\begin{verbatim}
+beq:   IF  ID  EX  MEM  WB
+wrong1: IF  ID  --  --  --
+wrong2: IF  --  --  --  --
+dest:  IF  ID  EX  MEM  WB
+\end{verbatim}
+Two cycles wasted (two flushes).
+\end{frame}
+
+\begin{frame}{Optimization: Avoiding Stalls on Correct Prediction}
+\textbf{Problem:} One cycle stall even on correct "Taken" prediction
+
+\textbf{Solution 1: Store Previous Instruction Address}
+\begin{itemize}
+    \item Store address of instruction BEFORE the branch in BTB
+    \item When that instruction reaches ID, start BTB lookup
+    \item Branch instruction will be in IF stage
+    \item Achieves optimal timing (no stall on correct prediction)
+\end{itemize}
+
+\textbf{Challenge:} Programs may reach branch from different locations
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+    \node[draw, rectangle] (j1) at (0, 2) {200: Jump 100};
+    \node[draw, rectangle] (j2) at (0, 1) {2000: Jump 100};
+    \node[draw, rectangle] (j3) at (0, 0) {300: Jump 100};
+    \node[draw, rectangle, fill=blue!20] (target) at (4, 1) {100: Jump 1000};
+    \node[draw, rectangle, fill=green!20] (dest) at (8, 1) {1000: ...};
+    
+    \draw[->] (j1) -- (target);
+    \draw[->] (j2) -- (target);
+    \draw[->] (j3) -- (target);
+    \draw[->] (target) -- (dest);
+\end{tikzpicture}
+\end{center}
+
+\textbf{Solution 2:} Store target instruction itself in BTB (saves IF stage)
+
+\textbf{Solution 3:} Move BTB lookup to IF stage with specialized hardware
+\end{frame}
+
+\begin{frame}[fragile]{Complex Example: Exam Question}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{lstlisting}[language={[x86masm]Assembler}]
+place2: 
+    ADDI R4,R4,#2
+    ADDI R4,R4,#2
+    LD R10,R4(128)
+    ADDI R9,R9,#0
+    BEQ R10,R1,place1
+    ADDI R7,R7,#1
+place1: 
+    BNEQ R10,R1,place2
+    ADDI R8,R8,#1
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{Given:}
+\begin{itemize}
+    \item MIPS-like processor
+    \item Branch decision in EX stage
+    \item BTB lookup in IF stage
+    \item BTB contains both branch instructions
+    \item Predictions are correct
+    \item BNEQ is taken
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\textbf{Question:} How many cycles for first iteration starting from place2?
+
+\textbf{Answer:} 7 cycles (7 instructions in the iteration)
+\end{frame}
+
+\begin{frame}{Complex Example: Analysis}
+\textbf{Part 2:} If the entire code takes 33 cycles, how many times was LD executed?
+
+\textbf{Analysis:}
+\begin{itemize}
+    \item Last iteration: BNEQ not taken $\Rightarrow$ BEQ taken
+    \item Each iteration has 7 instructions
+    \item Each misprediction costs 2 cycles
+    \item Pipeline fill needs 4 cycles
+\end{itemize}
+
+\textbf{Formula:}
+$$7 \times \text{\#iterations} + 2 \times \text{\#mispredictions} + 4 = 33$$
+
+Since each iteration has 2 branch instructions:
+$$2 \times \text{\#iterations} \geq \text{\#mispredictions}$$
+
+\textbf{Solution:} \#iterations = 3, \#mispredictions = 4
+
+$\Rightarrow$ LD executed \textbf{3 times}
+\end{frame}
+
+\begin{frame}{State Machine Configuration}
+\textbf{Part 3:} Design a state machine that produces 4 mispredictions in 6 branch executions (3 iterations)
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8, node distance=2.5cm]
+    % State machine for demonstration
+    \node[state, fill=red!20] (nt) at (0, 0) {NT};
+    \node[state, fill=green!20] (t) at (3, 0) {T};
+    
+    \path[->] 
+    (nt) edge[bend left, above] node{T} (t)
+    (t) edge[bend left, below] node{NT} (nt)
+    (nt) edge[loop left] node{NT} (nt)
+    (t) edge[loop right] node{T} (t);
+    
+    % Execution trace
+    \node at (0, -2) {Initial states:};
+    \node at (0, -2.5) {BEQ: T};
+    \node at (0, -3) {BNEQ: NT};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Execution Trace:}
+\begin{table}
+\centering
+\small
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Iteration} & \textbf{Instruction} & \textbf{Prediction} & \textbf{Actual} \\
+\hline
+1 & BEQ & T & NT \\
+1 & BNEQ & NT & T \\
+2 & BEQ & NT & NT \\
+2 & BNEQ & T & T \\
+3 & BEQ & NT & T \\
+3 & BNEQ & T & NT \\
+\hline
+\end{tabular}
+\end{table}
+
+Result: 4 mispredictions, 2 correct predictions
+\end{frame}
+
+\begin{frame}{Summary}
+\textbf{Key Concepts:}
+\begin{itemize}
+    \item \textbf{BTB (Branch Target Buffer)} stores:
+    \begin{itemize}
+        \item Branch instruction addresses
+        \item Target addresses
+        \item Prediction state (1-bit or 2-bit)
+    \end{itemize}
+    \item \textbf{2-bit predictors} provide better accuracy by requiring two consecutive mispredictions to change stable state
+    \item \textbf{Pipeline integration} affects performance:
+    \begin{itemize}
+        \item BTB lookup stage determines stall cycles
+        \item Branch resolution stage determines misprediction penalty
+    \end{itemize}
+    \item \textbf{Optimizations} can eliminate stalls on correct predictions
+\end{itemize}
+
+\textbf{Performance Impact:}
+\begin{itemize}
+    \item Correct prediction (Taken): 0-1 cycle penalty
+    \item Correct prediction (Not Taken): 0 cycle penalty
+    \item Misprediction: 2+ cycle penalty (depends on pipeline depth)
+\end{itemize}
+\end{frame}
+
+\end{document}
