@@ -43,6 +43,14 @@
             \end{itemize}
             
             \vspace{0.3cm}
+            \textbf{Named Threat Models:}
+            \begin{itemize}
+                \item \textbf{Evil Maid:} Physical access when unattended
+                \item \textbf{Honest but Curious:} Cloud provider with data access
+                \item \textbf{Supply Chain:} Compromised hardware/firmware
+            \end{itemize}
+            
+            \vspace{0.3cm}
             \textbf{Attacker Capabilities:}
             \begin{itemize}
                 \item \textcolor{green!60!black}{User-level code execution}
@@ -490,42 +498,48 @@ some_ioctl:
 
 \begin{frame}{Modern ROP Mitigations Summary}
     \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-            % Timeline of defenses
-            \node[draw,fill=blue!30] (nx) at (0,0) {XD/NX};
-            \node[below] at (0,-0.5) {\tiny 2004};
+        \begin{tikzpicture}[scale=0.8,
+            defense/.style={draw,minimum width=1.5cm,minimum height=0.6cm},
+            attack/.style={draw,fill=gray!20,minimum width=1.8cm}]
             
-            \node[draw,fill=green!30] (aslr) at (3,0) {ASLR};
-            \node[below] at (3,-0.5) {\tiny 2005};
+            % Timeline arrow
+            \draw[thick,->] (-0.5,-1) -- (12.5,-1) node[right] {Time};
             
-            \node[draw,fill=yellow!30] (smep) at (6,0) {SMEP};
-            \node[below] at (6,-0.5) {\tiny 2012};
+            % Defense nodes with relative positioning
+            \node[defense,fill=blue!30] (nx) at (0,0) {XD/NX};
+            \node[below] at (nx.south) {\tiny 2004};
             
-            \node[draw,fill=orange!30] (smap) at (9,0) {SMAP};
-            \node[below] at (9,-0.5) {\tiny 2014};
+            \node[defense,fill=green!30,right=0.8cm of nx] (aslr) {ASLR};
+            \node[below] at (aslr.south) {\tiny 2005};
             
-            \node[draw,fill=red!30] (cet) at (12,0) {CET};
-            \node[below] at (12,-0.5) {\tiny 2020};
+            \node[defense,fill=yellow!30,right=1.5cm of aslr] (smep) {SMEP};
+            \node[below] at (smep.south) {\tiny 2012};
             
-            % Attack techniques
-            \node[draw,fill=gray!20] (inject) at (0,2) {Code Injection};
+            \node[defense,fill=orange!30,right=0.5cm of smep] (smap) {SMAP};
+            \node[below] at (smap.south) {\tiny 2014};
+            
+            \node[defense,fill=red!30,right=1.5cm of smap] (cet) {CET};
+            \node[below] at (cet.south) {\tiny 2020};
+            
+            % Attack techniques above defenses
+            \node[attack,above=1.5cm of nx] (inject) {Code Injection};
             \draw[->,thick,red] (inject) -- (nx);
-            \draw[thick,red] (-0.3,-0.3) -- (0.3,0.3);
+            \draw[thick,red] ([shift={(-0.2,-0.2)}]nx.center) -- ([shift={(0.2,0.2)}]nx.center);
             
-            \node[draw,fill=gray!20] (rop) at (3,2) {Basic ROP};
+            \node[attack,above=1.5cm of aslr] (rop) {Basic ROP};
             \draw[->,thick,orange] (rop) -- (aslr);
             
-            \node[draw,fill=gray!20] (ret2user) at (6,2) {ret2user};
+            \node[attack,above=1.5cm of smep] (ret2user) {ret2user};
             \draw[->,thick,red] (ret2user) -- (smep);
-            \draw[thick,red] (5.7,-0.3) -- (6.3,0.3);
+            \draw[thick,red] ([shift={(-0.2,-0.2)}]smep.center) -- ([shift={(0.2,0.2)}]smep.center);
             
-            \node[draw,fill=gray!20] (pivot) at (9,2) {Stack Pivot};
+            \node[attack,above=1.5cm of smap] (pivot) {Stack Pivot};
             \draw[->,thick,red] (pivot) -- (smap);
-            \draw[thick,red] (8.7,-0.3) -- (9.3,0.3);
+            \draw[thick,red] ([shift={(-0.2,-0.2)}]smap.center) -- ([shift={(0.2,0.2)}]smap.center);
             
-            \node[draw,fill=gray!20] (advanced) at (12,2) {Advanced ROP};
+            \node[attack,above=1.5cm of cet] (advanced) {Advanced ROP};
             \draw[->,thick,red] (advanced) -- (cet);
-            \draw[thick,red] (11.7,-0.3) -- (12.3,0.3);
+            \draw[thick,red] ([shift={(-0.2,-0.2)}]cet.center) -- ([shift={(0.2,0.2)}]cet.center);
         \end{tikzpicture}
     \end{center}
     
@@ -544,11 +558,11 @@ some_ioctl:
         \begin{column}{0.33\textwidth}
             \textbf{Kernel Space:}
             \begin{itemize}
-                \item SMEP
-                \item SMAP
-                \item KASLR
-                \item KPTI
-                \item FineIBT
+                \item SMEP (HW)
+                \item SMAP (HW)
+                \item KASLR (SW)
+                \item KPTI* (SW)
+                \item FineIBT (HW+SW)
             \end{itemize}
         \end{column}
         \begin{column}{0.33\textwidth}
@@ -561,49 +575,64 @@ some_ioctl:
             \end{itemize}
         \end{column}
     \end{columns}
+    
+    \vspace{0.2cm}
+    \small *KPTI: Kernel Page Table Isolation - software mitigation for Meltdown
 \end{frame}
 
 \begin{frame}{Performance Impact of Security Features}
     \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-            % Bar chart of performance overhead
-            \draw[->] (0,0) -- (0,5) node[above] {Overhead (\%)};
-            \draw[->] (0,0) -- (10,0) node[right] {Security Feature};
-            
-            % Y-axis labels
-            \foreach \y in {1,2,3,4} {
-                \draw (0,\y) -- (-0.1,\y) node[left] {\y 0};
-            }
-            
-            % Bars
-            \draw[fill=green!50] (0.5,0) rectangle (1.5,0.1) node[above] {0.1\%};
-            \node[below,rotate=45,anchor=east] at (1,0) {\tiny XD/NX};
-            
-            \draw[fill=green!50] (2,0) rectangle (3,0.2) node[above] {2\%};
-            \node[below,rotate=45,anchor=east] at (2.5,0) {\tiny SMEP};
-            
-            \draw[fill=yellow!50] (3.5,0) rectangle (4.5,0.3) node[above] {3\%};
-            \node[below,rotate=45,anchor=east] at (4,0) {\tiny SMAP};
-            
-            \draw[fill=yellow!50] (5,0) rectangle (6,0.5) node[above] {5\%};
-            \node[below,rotate=45,anchor=east] at (5.5,0) {\tiny CET};
-            
-            \draw[fill=orange!50] (6.5,0) rectangle (7.5,1.5) node[above] {15\%};
-            \node[below,rotate=45,anchor=east] at (7,0) {\tiny KPTI};
-            
-            \draw[fill=red!50] (8,0) rectangle (9,3) node[above] {30\%};
-            \node[below,rotate=45,anchor=east] at (8.5,0) {\tiny Full CFI};
-        \end{tikzpicture}
+        \begin{tabular}{|l|c|c|l|}
+            \hline
+            \textbf{Feature} & \textbf{Type} & \textbf{Impact} & \textbf{Overhead} \\
+            \hline
+            \hline
+            XD/NX Bit & HW & \cellcolor{green!30}Low & Page table bit check \\
+            \hline
+            SMEP & HW & \cellcolor{green!30}Low & Permission check \\
+            \hline
+            SMAP & HW & \cellcolor{green!30}Low & AC flag check \\
+            \hline
+            Stack Canaries & SW & \cellcolor{green!30}Low & Function epilogue check \\
+            \hline
+            ASLR & SW & \cellcolor{green!30}Low & One-time randomization \\
+            \hline
+            CET (Shadow Stack) & HW & \cellcolor{yellow!30}Medium & Parallel stack ops \\
+            \hline
+            PAC (ARM) & HW & \cellcolor{yellow!30}Medium & Crypto ops per call \\
+            \hline
+            BTI (ARM) & HW & \cellcolor{yellow!30}Medium & Branch checks \\
+            \hline
+            KASLR & SW & \cellcolor{yellow!30}Medium & Kernel relocation \\
+            \hline
+            KPTI* & SW & \cellcolor{orange!30}High & Page table switches \\
+            \hline
+            Full CFI** & SW & \cellcolor{orange!30}High & Type checks everywhere \\
+            \hline
+            FineIBT & HW+SW & \cellcolor{yellow!30}Medium & Hash + branch checks \\
+            \hline
+        \end{tabular}
     \end{center}
     
-    \begin{tcolorbox}[colback=blue!10]
-        \textbf{Trade-offs:} Security vs Performance vs Compatibility
-        \begin{itemize}
-            \item Hardware features (XD, SMEP) = minimal overhead
-            \item Software mitigations (KPTI, CFI) = significant overhead
-            \item Choose based on threat model and performance requirements
-        \end{itemize}
-    \end{tcolorbox}
+    \vspace{0.3cm}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \small
+            *Software mitigation for Meltdown\\
+            **Software-only implementation
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Impact Categories:}
+                \begin{itemize}
+                    \item \textcolor{green!70!black}{Low}: $<$5\%
+                    \item \textcolor{yellow!70!black}{Medium}: 5-15\%
+                    \item \textcolor{orange!70!black}{High}: $>$15\%
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 % Section 1: Memory Protection
@@ -770,9 +799,14 @@ RET        ; Return if valid
             \vspace{0.3cm}
             \textbf{ARM BTI (Branch Target Identification):}
             \begin{itemize}
-                \item \texttt{BTI} instructions at valid targets
-                \item Different variants: BTI c/j/jc
-                \item PSTATE.BTYPE tracks branch type
+                \item \texttt{BTI} instructions mark valid targets
+                \item Variants match branch types:
+                \begin{itemize}
+                    \item \texttt{BTI c}: Call target (BLR)
+                    \item \texttt{BTI j}: Jump target (BR)
+                    \item \texttt{BTI jc}: Both call \& jump
+                \end{itemize}
+                \item CPU faults on mismatch
             \end{itemize}
             
             \vspace{0.3cm}
@@ -810,31 +844,91 @@ invalid_target:  ; No endbranch
     \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]{ARM BTI Explained}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{BTI Instruction Variants:}
+            \begin{itemize}
+                \item \textbf{BTI c}: Target of calls (BLR/BLRA)
+                \item \textbf{BTI j}: Target of jumps (BR/BRA)
+                \item \textbf{BTI jc}: Target of both
+                \item \textbf{BTI}: Same as BTI jc (alias)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{How It Works:}
+            \begin{enumerate}
+                \item Indirect branch sets PSTATE.BTYPE
+                \item Target instruction checked
+                \item Must be correct BTI variant
+                \item Otherwise: exception generated
+            \end{enumerate}
+            
+            \vspace{0.3cm}
+            \textbf{Use Cases:}
+            \begin{itemize}
+                \item Function entry points: BTI c
+                \item Switch jump tables: BTI j
+                \item PLT stubs: BTI jc
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{BTI Usage Example:}
+                \begin{verbatim}
+; Function called via pointer
+func_ptr:
+    BTI c      ; Mark as call target
+    stp x29, x30, [sp, #-16]!
+    ; Function body
+    ldp x29, x30, [sp], #16
+    ret
+
+; Jump table target
+case_handler:
+    BTI j      ; Mark as jump target
+    ; Handle case
+    ret
+
+; PLT stub (can be called or jumped to)
+plt_stub:
+    BTI jc     ; Both call and jump
+    adrp x16, GOT_ENTRY
+    ldr x17, [x16, #:lo12:GOT_ENTRY]
+    br x17
+                \end{verbatim}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Backward-Edge CFI Mechanisms}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \textbf{Shadow Stack (Hardware):}
+            \textbf{Stack Canaries (Software, 1998):}
+            \begin{itemize}
+                \item Random value before return address
+                \item Check before function return
+                \item Limited protection (info leak bypass)
+                \item Compiler support (GCC -fstack-protector)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Pointer Authentication (PAC, 2018):}
+            \begin{itemize}
+                \item Cryptographic signing of return address
+                \item ARM-specific hardware feature
+                \item Key-based authentication
+                \item Related to canaries but much stronger
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Shadow Stack (Hardware, 2020):}
             \begin{itemize}
                 \item Parallel stack for return addresses
                 \item Intel CET-SS, ARM GCS
                 \item Automatic push/pop on CALL/RET
-                \item Compare on return
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Pointer Authentication (PAC):}
-            \begin{itemize}
-                \item Cryptographic signing of return address
-                \item ARM-specific implementation
-                \item Key-based authentication
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Stack Canaries (Software):}
-            \begin{itemize}
-                \item Random value before return address
-                \item Check before function return
-                \item Limited protection scope
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -873,6 +967,68 @@ invalid_target:  ; No endbranch
                     \item PAC: Strong, ARM-only
                     \item Canaries: Weakest, portable
                 \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{The Type Confusion Problem}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{What is Type Confusion?}
+            \begin{itemize}
+                \item Object interpreted as wrong type
+                \item Common in C++ with inheritance
+                \item Enables control flow hijacking
+                \item Bypass basic CFI checks
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Attack Scenario:}
+            \begin{itemize}
+                \item Attacker controls object allocation
+                \item Forces type confusion via UAF/overflow
+                \item Calls virtual function on wrong type
+                \item Jumps to attacker-controlled vtable
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Why Basic CFI Fails:}
+            \begin{itemize}
+                \item All virtual calls are "valid" targets
+                \item Cannot distinguish object types
+                \item Need type-aware CFI (FineIBT)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{Type Confusion Example:}
+                \begin{verbatim}
+class Animal {
+  virtual void speak() = 0;
+};
+
+class Dog : public Animal {
+  void speak() { bark(); }
+};
+
+class Cat : public Animal {
+  void speak() { meow(); }
+  void admin() { system("/bin/sh"); }
+};
+
+// Vulnerability:
+Animal* ptr = getDog();
+// Type confusion happens here!
+Cat* evil = (Cat*)ptr;
+evil->admin(); // Calls wrong vtable!
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=red!10]
+                \small
+                \textbf{Impact:} Attacker calls admin() on Dog object, leading to arbitrary code execution
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -938,53 +1094,102 @@ func:
 % Section 3: Privilege Levels
 \section{Privilege Levels and Virtualization}
 
+\begin{frame}{x86 Segmentation - The Original Security Model}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Segmentation (Historical):}
+            \begin{itemize}
+                \item Original x86 protection mechanism
+                \item Segment descriptors with privilege levels
+                \item Gates for controlled transitions
+                \item Complex and rarely used today
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Privilege Checking:}
+            \begin{tcolorbox}[colback=yellow!20]
+                MAX(CPL, RPL) $\leq$ DPL
+            \end{tcolorbox}
+            \begin{itemize}
+                \item \textbf{CPL}: Current Privilege Level
+                \item \textbf{RPL}: Requested Privilege Level
+                \item \textbf{DPL}: Descriptor Privilege Level
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Gates (Obsolete):}
+            \begin{itemize}
+                \item Call Gates: Ring transitions
+                \item Interrupt Gates: Hardware interrupts
+                \item Trap Gates: Software interrupts
+                \item Task Gates: Task switching
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=red!10]
+                \textbf{Reality Today:}
+                \begin{itemize}
+                    \item \textbf{Paging is the only protection}
+                    \item Flat memory model (CS=DS=ES=SS)
+                    \item Segments set to base=0, limit=4GB
+                    \item Only Ring 0 and Ring 3 used
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Security Rings - x86 Architecture}
     \begin{center}
         \begin{tikzpicture}[scale=0.8]
-            % Draw rings
+            % Draw visible rings first
             \draw[fill=red!40] (0,0) circle (4cm);
             \draw[fill=orange!40] (0,0) circle (3.2cm);
             \draw[fill=yellow!40] (0,0) circle (2.4cm);
-            \draw[fill=green!40] (0,0) circle (1.6cm);
-            \draw[fill=blue!40] (0,0) circle (0.8cm);
             
-            % Labels
-            \node at (0,0) {\small \textbf{Ring -2}};
-            \node at (0,-0.3) {\tiny SMM};
-            
-            \node at (0,1.2) {\small \textbf{Ring -1}};
-            \node at (0,0.9) {\tiny Hypervisor};
-            
+            % Standard rings labels
             \node at (0,2) {\small \textbf{Ring 0}};
             \node at (0,1.7) {\tiny Kernel};
             
             \node at (0,2.8) {\small \textbf{Ring 1-2}};
-            \node at (0,2.5) {\tiny Drivers};
+            \node at (0,2.5) {\tiny Drivers (unused)};
             
             \node at (0,3.6) {\small \textbf{Ring 3}};
             \node at (0,3.3) {\tiny User Apps};
             
-            % SMM indicator
-            \draw[thick,<-] (0.5,-0.2) -- (2,-1) node[right] {System Management Mode};
-            \draw[thick,<-] (0.5,1) -- (2,0.5) node[right] {VMX Root Mode};
+            % Hidden rings revealed on pause
+            \onslide<2->{
+                \draw[fill=green!40] (0,0) circle (1.6cm);
+                \node at (0,1.2) {\small \textbf{Ring -1}};
+                \node at (0,0.9) {\tiny Hypervisor};
+                \draw[thick,<-] (0.5,1) -- (2,0.5) node[right] {VMX Root Mode};
+            }
+            
+            \onslide<3->{
+                \draw[fill=blue!40] (0,0) circle (0.8cm);
+                \node at (0,0) {\small \textbf{Ring -2}};
+                \node at (0,-0.3) {\tiny SMM};
+                \draw[thick,<-] (0.5,-0.2) -- (2,-1) node[right] {System Management Mode};
+            }
         \end{tikzpicture}
     \end{center}
     
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \centering
-            \textbf{Privilege Levels:}
+            \textbf{Modern Usage:}
             \begin{itemize}
-                \item CPL: Current Privilege Level
-                \item DPL: Descriptor Privilege Level
-                \item RPL: Requested Privilege Level
+                \item Only Ring 0 (Kernel) and Ring 3 (User)
+                \item Ring 1-2 unused in practice
+                \item Ring -1: Hypervisor (VMX root)
+                \item Ring -2: SMM firmware
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
             \centering
-            \textbf{Access Rule:}
+            \textbf{Protection Method:}
             \begin{tcolorbox}[colback=yellow!20]
-                MAX(CPL, RPL) $\leq$ DPL
+                Paging-based protection with NX/XD bit
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -993,40 +1198,47 @@ func:
 \begin{frame}{ARM TrustZone - Trusted Execution Environment (TEE)}
     \begin{center}
         \begin{tikzpicture}[scale=0.9]
-            % Secure World
-            \draw[fill=green!30,rounded corners] (-4,0) rectangle (-0.5,4);
+            % Secure World - Green gradient with special border
+            \draw[fill=green!20,rounded corners,line width=2pt,draw=green!70!black] (-4,0) rectangle (-0.5,4);
             \node at (-2.25,3.7) {\textbf{Secure World (TEE)}};
             
-            % Secure levels
-            \draw[fill=green!50] (-3.5,2.8) rectangle (-1,3.5);
+            % Secure levels - gradient from most to least privileged
+            \draw[fill=blue!40,draw=green!70!black,line width=1pt] (-3.5,2.8) rectangle (-1,3.5);
             \node at (-2.25,3.15) {\small S-EL3: Monitor};
             
-            \draw[fill=green!40] (-3.5,1.9) rectangle (-1,2.6);
+            \draw[fill=green!50] (-3.5,1.9) rectangle (-1,2.6);
             \node at (-2.25,2.25) {\small S-EL2: S-Hypervisor};
             
-            \draw[fill=green!35] (-3.5,1) rectangle (-1,1.7);
+            \draw[fill=yellow!40] (-3.5,1) rectangle (-1,1.7);
             \node at (-2.25,1.35) {\small S-EL1: Trusted OS};
             
-            \draw[fill=green!25] (-3.5,0.2) rectangle (-1,0.8);
+            \draw[fill=red!30,draw=green!70!black,line width=1pt] (-3.5,0.2) rectangle (-1,0.8);
             \node at (-2.25,0.5) {\small S-EL0: Trusted Apps};
             
-            % Normal World
-            \draw[fill=blue!30,rounded corners] (0.5,0) rectangle (4,4);
+            % Normal World - Red gradient (untrusted)
+            \draw[fill=red!10,rounded corners,line width=2pt,draw=red!70!black,dashed] (0.5,0) rectangle (4,4);
             \node at (2.25,3.7) {\textbf{Normal World (REE)}};
             
-            % Normal levels
-            \draw[fill=blue!40] (1,1.9) rectangle (3.5,2.6);
+            % Normal levels - gradient from kernel to user  
+            \draw[fill=green!30] (1,1.9) rectangle (3.5,2.6);
             \node at (2.25,2.25) {\small EL2: Hypervisor};
             
-            \draw[fill=blue!35] (1,1) rectangle (3.5,1.7);
+            \draw[fill=yellow!40] (1,1) rectangle (3.5,1.7);
             \node at (2.25,1.35) {\small EL1: Rich OS};
             
-            \draw[fill=blue!25] (1,0.2) rectangle (3.5,0.8);
+            \draw[fill=red!50] (1,0.2) rectangle (3.5,0.8);
             \node at (2.25,0.5) {\small EL0: Applications};
             
-            % SMC arrow
-            \draw[<->,thick,red] (-0.5,2) -- (0.5,2);
-            \node[red] at (0,2.3) {\tiny SMC};
+            % Trust direction arrow
+            \draw[->,ultra thick,green!60!black] (-2.25,-0.5) -- (2.25,-0.5);
+            \node at (0,-0.9) {\small \textbf{More Trusted} $\rightarrow$ \textbf{Less Trusted}};
+            
+            % SMC transition
+            \draw[<->,thick,blue] (-0.5,2) -- (0.5,2);
+            \node[blue] at (0,2.3) {\small SMC};
+            
+            % Legend
+            \node at (0,-1.5) {\tiny Solid border = Secure | Dashed border = Normal};
         \end{tikzpicture}
     \end{center}
     
@@ -1102,61 +1314,312 @@ func:
     \end{columns}
 \end{frame}
 
+% Management Engines and IOMMU
+\begin{frame}{Intel Management Engine (ME)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{What is Intel ME?}
+            \begin{itemize}
+                \item Separate processor on Intel chipsets
+                \item Runs even when main CPU is off
+                \item Has full memory/network access
+                \item Runs at Ring -3 privilege
+                \item Cannot be disabled on modern systems
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Legitimate Uses:}
+            \begin{itemize}
+                \item Remote management (AMT)
+                \item DRM enforcement
+                \item Boot verification
+                \item Anti-theft features
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Security Concerns:}
+            \begin{itemize}
+                \item Closed source firmware
+                \item History of vulnerabilities
+                \item Potential backdoor vector
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.8]
+                % Main CPU
+                \draw[fill=blue!20] (0,4) rectangle (4,6);
+                \node at (2,5) {Main CPU};
+                \node at (2,4.3) {\small Ring 0-3};
+                
+                % ME
+                \draw[fill=red!30,thick,dashed] (-1,0) rectangle (5,3.5);
+                \node at (2,2.8) {\textbf{Intel ME}};
+                \node at (2,2.3) {\small Ring -3};
+                
+                % Resources
+                \draw[fill=green!20] (6,5) rectangle (8,6);
+                \node at (7,5.5) {\small RAM};
+                
+                \draw[fill=yellow!20] (6,3.5) rectangle (8,4.5);
+                \node at (7,4) {\small Network};
+                
+                \draw[fill=orange!20] (6,2) rectangle (8,3);
+                \node at (7,2.5) {\small Storage};
+                
+                % ME access arrows
+                \draw[->,thick,red] (5,2.5) -- (6,5.5);
+                \draw[->,thick,red] (5,2.5) -- (6,4);
+                \draw[->,thick,red] (5,2.5) -- (6,2.5);
+                
+                % ME controls CPU
+                \draw[->,ultra thick,red] (2,3.5) -- (2,4);
+                \node[red] at (3.2,3.7) {\small Controls};
+                
+                % Power state
+                \draw[fill=gray!20] (6,0.5) rectangle (8,1.5);
+                \node at (7,1) {\small Power};
+                \draw[->,thick] (6,1) -- (2,1.5);
+                \node at (4,0.7) {\small Always On};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=yellow!20]
+                \small
+                \textbf{Similar Systems:}
+                \begin{itemize}
+                    \item AMD PSP (Platform Security Processor)
+                    \item ARM TrustZone
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{IOMMU - Input/Output Memory Management Unit}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{What is IOMMU?}
+            \begin{itemize}
+                \item Hardware unit controlling device DMA
+                \item Maps device addresses to physical memory
+                \item Similar to MMU but for devices
+                \item Intel: VT-d, AMD: AMD-Vi
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Key Features:}
+            \begin{itemize}
+                \item \textbf{PASID:} Process Address Space ID
+                \begin{itemize}
+                    \item Like ASID but for devices
+                    \item Allows device access to specific process memory
+                \end{itemize}
+                \item \textbf{Protection Granularity:} Page-level (4KB)
+                \item \textbf{Interrupt Remapping:} Prevents interrupt injection
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Attacks Prevented:}
+            \begin{itemize}
+                \item \textcolor{red}{DMA attacks} (BadUSB, Thunderstrike)
+                \item \textcolor{red}{Malicious devices} reading memory
+                \item \textcolor{red}{Driver bugs} corrupting memory
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % CPU and Memory
+                \draw[fill=blue!20] (0,5) rectangle (2,6.5);
+                \node at (1,5.75) {CPU};
+                
+                \draw[fill=green!20] (4,5) rectangle (7,6.5);
+                \node at (5.5,5.75) {Physical Memory};
+                
+                % IOMMU
+                \draw[fill=yellow!30,thick] (2,2) rectangle (5,4);
+                \node at (3.5,3.3) {\textbf{IOMMU}};
+                \node at (3.5,2.5) {\small Page Tables};
+                
+                % Devices
+                \draw[fill=red!20] (-1,0) rectangle (1,1.5);
+                \node at (0,0.75) {\small USB};
+                
+                \draw[fill=red!20] (2,0) rectangle (4,1.5);
+                \node at (3,0.75) {\small NIC};
+                
+                \draw[fill=red!20] (5,0) rectangle (7,1.5);
+                \node at (6,0.75) {\small GPU};
+                
+                % Device attempts
+                \draw[->,thick,red] (0,1.5) -- (0,2.8);
+                \draw[->,thick,red] (3,1.5) -- (3,2);
+                \draw[->,thick,red] (6,1.5) -- (5,2.8);
+                
+                % IOMMU filtering
+                \draw[->,thick,green] (3.5,4) -- (5.5,5);
+                \node[green] at (4.5,4.5) {\small Allowed};
+                
+                % Blocked access
+                \draw[red,ultra thick] (7.5,3) -- (8.5,4);
+                \draw[red,ultra thick] (7.5,4) -- (8.5,3);
+                \node[red] at (9.5,3.5) {\small Blocked};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=orange!20]
+                \small
+                \textbf{Rubber Ducky Example:}
+                Malicious USB device attempts to read kernel memory via DMA - blocked by IOMMU
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Challenge:} Buffer sharing requires careful management when protection is page-granular
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{IOMMU Protection Scenarios}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{CPU-Initiated Attacks:}
+            \begin{itemize}
+                \item Compromised driver attempts DMA
+                \item Kernel bug triggers bad DMA request
+                \item IOMMU validates all translations
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Device-Initiated Attacks:}
+            \begin{itemize}
+                \item Malicious firmware in peripherals
+                \item Compromised network cards
+                \item Rogue Thunderbolt devices
+                \item USB devices with DMA capability
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Shared Buffer Problem:}
+            \begin{tcolorbox}[colback=yellow!20]
+                \small
+                When data structures share a page:
+                \begin{itemize}
+                    \item Device needs access to buffer A
+                    \item Buffer B is on same 4KB page
+                    \item Device can access both!
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.8]
+                % Memory page
+                \draw[fill=gray!10] (0,4) rectangle (6,6);
+                \node at (3,5.7) {\textbf{4KB Page}};
+                
+                % Buffer A
+                \draw[fill=green!30] (0.5,4.3) rectangle (2.5,5.3);
+                \node at (1.5,4.8) {\small Buffer A};
+                \node at (1.5,4.4) {\tiny (Intended)};
+                
+                % Buffer B
+                \draw[fill=red!30] (3,4.3) rectangle (5.5,5.3);
+                \node at (4.25,4.8) {\small Buffer B};
+                \node at (4.25,4.4) {\tiny (Sensitive)};
+                
+                % Device
+                \draw[fill=orange!30] (2,1) rectangle (4,2.5);
+                \node at (3,1.75) {Device};
+                
+                % Access arrows
+                \draw[->,thick,green] (3,2.5) -- (1.5,4.3);
+                \draw[->,thick,red,dashed] (3,2.5) -- (4.25,4.3);
+                
+                \node[red] at (7,4) {\small Unintended};
+                \node[red] at (7,3.5) {\small Access!};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=blue!20]
+                \small
+                \textbf{Solutions:}
+                \begin{itemize}
+                    \item Align DMA buffers to page boundaries
+                    \item Use bounce buffers
+                    \item Sub-page protection (future)
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 % Section 4: Trusted Execution
 \section{Trusted Execution Environments}
 
 \begin{frame}{Intel TDX (Trust Domain Extensions)}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \textbf{Architecture:}
+            \textbf{Who Protects Whom:}
             \begin{itemize}
-                \item Confidential VMs (Trust Domains)
+                \item \textcolor{green!70!black}{\textbf{Protected:}} Guest VMs
+                \item \textcolor{red}{\textbf{Threat:}} Cloud Provider
+                \item \textcolor{blue}{\textbf{Enforcer:}} CPU Hardware
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Protection Guarantees:}
+            \begin{itemize}
+                \item Confidentiality from hypervisor
+                \item Memory encryption per VM
                 \item CPU-attested execution
-                \item Memory encryption per-TD
                 \item Secure EPT (S-EPT)
             \end{itemize}
             
             \vspace{0.3cm}
-            \textbf{TDX Module:}
-            \begin{itemize}
-                \item SEAM mode operation
-                \item TD lifecycle management
-                \item Memory encryption keys
-                \item Remote attestation
-            \end{itemize}
+            \textbf{Use Case:}
+            \begin{tcolorbox}[colback=green!10]
+                \small
+                Run sensitive workloads on untrusted cloud infrastructure
+            \end{tcolorbox}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.6]
-                % Cloud Provider Layer
-                \draw[fill=red!20] (0,0) rectangle (8,2);
-                \node at (4,1.5) {\textbf{Untrusted Host/VMM}};
-                \node at (4,0.5) {\small Cloud Provider Control};
+            \begin{tikzpicture}[scale=0.7]
+                % Threat Actor
+                \node[draw,fill=red!30,minimum width=3cm] (provider) at (0,0) {\textbf{Cloud Provider}};
+                \node at (0,-0.5) {\tiny (Untrusted)};
                 
-                % TDX Module
-                \draw[fill=yellow!30] (0,2.2) rectangle (8,3.2);
-                \node at (4,2.7) {\textbf{TDX Module (SEAM)}};
+                % Attack attempts
+                \draw[->,thick,red] (provider) -- (0,1.5) node[midway,right] {\tiny Read};
+                \draw[->,thick,red] (provider) -- (-1,1.5) node[midway,left] {\tiny Modify};
                 
-                % Trust Domains
-                \draw[fill=green!30] (0.5,3.5) rectangle (3.5,5.5);
-                \node at (2,5) {\textbf{TD1}};
-                \node at (2,4) {\small Encrypted};
+                % Protection barrier
+                \draw[ultra thick,blue] (-3,1.8) -- (3,1.8);
+                \node[blue] at (4,1.8) {\small TDX};
+                \draw[thick,red] (-0.3,1.6) -- (0.3,2);
+                \draw[thick,red] (0.3,1.6) -- (-0.3,2);
+                \draw[thick,red] (-1.3,1.6) -- (-0.7,2);
+                \draw[thick,red] (-0.7,1.6) -- (-1.3,2);
                 
-                \draw[fill=blue!30] (4.5,3.5) rectangle (7.5,5.5);
-                \node at (6,5) {\textbf{TD2}};
-                \node at (6,4) {\small Encrypted};
+                % Protected VMs
+                \draw[fill=green!30,draw=green!70!black,line width=1pt] (-2,2.5) rectangle (-0.5,4);
+                \node at (-1.25,3.5) {\textbf{VM1}};
+                \node at (-1.25,3) {\tiny Customer A};
+                \node at (-1.25,2.7) {\textbf{[Lock]}};
                 
-                % Lock symbols
-                \node at (2,4.5) {\textbf{[Lock]}};
-                \node at (6,4.5) {\textbf{[Lock]}};
+                \draw[fill=blue!30,draw=blue!70!black,line width=1pt] (0.5,2.5) rectangle (2,4);
+                \node at (1.25,3.5) {\textbf{VM2}};
+                \node at (1.25,3) {\tiny Customer B};
+                \node at (1.25,2.7) {\textbf{[Lock]}};
+                
+                % CPU enforcement
+                \draw[fill=yellow!30] (-3,4.5) rectangle (3,5.5);
+                \node at (0,5) {\textbf{CPU (TDX Module)}};
+                
+                % Protection arrows
+                \draw[->,thick,green!60!black] (0,4.5) -- (-1.25,4);
+                \draw[->,thick,green!60!black] (0,4.5) -- (1.25,4);
+                \node at (3.5,5) {\tiny Protects};
             \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \textbf{Key Features:}
-            \begin{itemize}
-                \item Host cannot access TD memory
-                \item Per-TD encryption keys
-                \item Attestation reports
-            \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
@@ -1387,46 +1850,118 @@ func:
     \end{columns}
 \end{frame}
 
-\begin{frame}{Measured Boot \& TPM}
+\begin{frame}{TPM - Trusted Platform Module}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \textbf{TPM Platform Configuration Registers:}
+            \textbf{What is TPM?}
             \begin{itemize}
-                \item PCR0-7: BIOS/UEFI
-                \item PCR8-9: OS Loader
-                \item PCR10: IMA (Linux)
-                \item PCR11-15: OS-specific
+                \item Hardware security chip
+                \item Cryptographic processor
+                \item Tamper-resistant storage
+                \item Platform integrity measurement
             \end{itemize}
             
             \vspace{0.3cm}
-            \textbf{Extend Operation:}
+            \textbf{TPM Capabilities:}
+            \begin{itemize}
+                \item Random number generation
+                \item Secure key generation/storage
+                \item Platform attestation
+                \item Sealed storage (bind to PCR state)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{TPM Versions:}
+            \begin{itemize}
+                \item TPM 1.2: SHA-1, RSA
+                \item TPM 2.0: SHA-256, ECC support
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % TPM Chip
+                \draw[fill=yellow!30,thick] (0,0) rectangle (5,4);
+                \node at (2.5,3.5) {\textbf{TPM Chip}};
+                
+                % Components
+                \draw[fill=blue!20] (0.3,2.5) rectangle (2.3,3.2);
+                \node at (1.3,2.85) {\tiny Crypto Engine};
+                
+                \draw[fill=green!20] (2.7,2.5) rectangle (4.7,3.2);
+                \node at (3.7,2.85) {\tiny Key Storage};
+                
+                \draw[fill=orange!20] (0.3,1.6) rectangle (2.3,2.3);
+                \node at (1.3,1.95) {\tiny RNG};
+                
+                \draw[fill=red!20] (2.7,1.6) rectangle (4.7,2.3);
+                \node at (3.7,1.95) {\tiny PCRs};
+                
+                \draw[fill=gray!20] (0.3,0.7) rectangle (4.7,1.4);
+                \node at (2.5,1.05) {\tiny Non-Volatile Storage};
+                
+                % External connections
+                \draw[<->,thick] (5,2) -- (6,2) node[right] {LPC/SPI};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \textbf{Use Cases:}
+            \begin{itemize}
+                \item BitLocker/LUKS disk encryption
+                \item Measured/Secure Boot
+                \item Remote attestation
+                \item VPN client certificates
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Measured Boot with TPM}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Platform Configuration Registers:}
+            \begin{itemize}
+                \item PCR0-7: BIOS/UEFI measurements
+                \item PCR8-9: OS Loader configuration
+                \item PCR10: IMA (Linux integrity)
+                \item PCR11-15: OS-specific
+                \item PCR16-23: Debug/Vendor-specific
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{PCR Extend Operation:}
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 PCR[i] = SHA256(PCR[i] || data)
             \end{tcolorbox}
+            \small Cannot directly write PCRs!
         \end{column}
         \begin{column}{0.5\textwidth}
-            \textbf{Boot Measurement Process:}
+            \textbf{Boot Measurement Chain:}
             \begin{tikzpicture}[scale=0.6]
                 % Components
                 \node[draw] (bios) at (0,0) {BIOS};
-                \node[draw] (mbr) at (0,-1.5) {MBR};
-                \node[draw] (loader) at (0,-3) {Bootloader};
-                \node[draw] (kernel) at (0,-4.5) {Kernel};
+                \node[draw] (mbr) at (0,-1.5) {Bootloader};
+                \node[draw] (kernel) at (0,-3) {Kernel};
+                \node[draw] (apps) at (0,-4.5) {Applications};
                 
                 % TPM
                 \draw[fill=yellow!30] (3,-2) rectangle (6,-3.5);
                 \node at (4.5,-2.75) {\textbf{TPM}};
                 
                 % Measurements
-                \draw[->,blue] (bios) -- (3,-2.2) node[midway,above] {\tiny Measure};
-                \draw[->,blue] (mbr) -- (3,-2.5) node[midway,above] {\tiny Measure};
-                \draw[->,blue] (loader) -- (3,-2.8) node[midway,below] {\tiny Measure};
-                \draw[->,blue] (kernel) -- (3,-3.3) node[midway,below] {\tiny Measure};
+                \draw[->,blue] (bios) -- (3,-2.2) node[midway,above] {\tiny PCR0};
+                \draw[->,blue] (mbr) -- (3,-2.5) node[midway,above] {\tiny PCR4};
+                \draw[->,blue] (kernel) -- (3,-2.8) node[midway,below] {\tiny PCR8};
+                \draw[->,blue] (apps) -- (3,-3.3) node[midway,below] {\tiny PCR10};
             \end{tikzpicture}
             
-            \textbf{Remote Attestation:}
-            Quote = Sign(PCRs, AIK)
+            \vspace{0.3cm}
+            \textbf{Attestation:}
+            \begin{itemize}
+                \item Quote = Sign(PCRs, AIK)
+                \item Proves system state to remote party
+                \item Unsealing secrets based on PCR values
+            \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
