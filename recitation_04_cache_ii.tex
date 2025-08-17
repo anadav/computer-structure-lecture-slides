@@ -10,16 +10,442 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds}
 \usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{xcolor}
 \usetheme{Madrid}
 
 \title{Computer Architecture}
-\subtitle{Exercise 1: Performance Evaluation Parameters \& Amdahl's Law}
+\subtitle{Cache Memory II}
 \author{Course 234267}
 \date{}
 
 \begin{document}
 
 \frame{\titlepage}
+
+\begin{frame}{How to Choose Cache Size?}
+\begin{itemize}
+    \item On one hand, we want the cache to be as large as possible to improve the hit rate
+    \item On the other hand, when the cache is too large, it consumes more energy and access time can be significantly longer
+\end{itemize}
+\vspace{0.5cm}
+\centering
+\textbf{Question:} How can we combine the need for a large cache with the need for a fast cache?
+\end{frame}
+
+\begin{frame}{Solution: Memory Hierarchy}
+\begin{itemize}
+    \item The processor contains multiple levels of cache
+    \item First level cache (L1) is a small and fast cache
+    \item L1 access time is a few clock cycles
+    \item Higher levels contain larger caches with slower access times
+\end{itemize}
+\vspace{0.5cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1 Cache};
+    \node[draw, rectangle, minimum width=3cm, minimum height=1cm, right=1cm of l1] (l2) {L2 Cache};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1cm, below=0.5cm of l2] (l3) {L3 Cache};
+    \node[draw, rectangle, minimum width=5cm, minimum height=1cm, below=0.5cm of l3] (mem) {Main Memory};
+    
+    \draw[->] (l1) -- (l2);
+    \draw[->] (l2) -- (l3);
+    \draw[->] (l3) -- (mem);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Memory Hierarchy Operation}
+\begin{itemize}
+    \item When accessing data in memory, first access L1
+    \item In case of a hit, use the data in L1
+    \item On a miss, forward the access request to the next level (L2)
+    \item For each miss, access a higher level until eventually accessing main memory itself
+\end{itemize}
+\vspace{0.5cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1 Cache};
+    \node[draw, rectangle, minimum width=3cm, minimum height=1cm, right=1cm of l1] (l2) {L2 Cache};
+    \node[draw, rectangle, minimum width=4cm, minimum height=1cm, below=0.5cm of l2] (l3) {L3 Cache};
+    \node[draw, rectangle, minimum width=5cm, minimum height=1cm, below=0.5cm of l3] (mem) {Main Memory};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Question 1: Cache Hierarchy Events}
+A computer with system 123C has a memory hierarchy containing 3 levels of cache.
+
+The CPU initiates a read from address \texttt{m}.
+
+This request triggered a chain of events in the three caches.
+
+Which of the following events are possible and why?
+
+\vspace{0.3cm}
+\small
+Note: Events are described in order: first L1, then L2, finally L3.
+\begin{itemize}
+    \item Hit=H, Miss=M
+    \item Empty cell means nothing happened (no access to that cache)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Question 1: Analysis}
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|l|}
+\hline
+L1 & L2 & L3 & Possible? Reasoning \\ \hline
+H & H & H & No - After hit at a level, we don't access lower levels \\ \hline
+H & & & Yes - Data found in first level \\ \hline
+H & M & & No - After hit at a level, we don't access lower levels \\ \hline
+& H & M & No - Must go through levels in order, through L1 \\ \hline
+M & H & & Yes - Data found in second level \\ \hline
+M & M & M & Yes - Data found only in main memory \\ \hline
+M & H & M & No - After hit, don't access lower levels \\ \hline
+M & H & H & No - After hit, don't access lower levels \\ \hline
+M & M & H & Yes - Data found in third level \\ \hline
+M & M & & No - Missing access to L3 after misses in L1 and L2 \\ \hline
+M & & H & No - Must go through levels in order \\ \hline
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Review: Cache Update Policies}
+\textbf{Write-Back}
+\begin{itemize}
+    \item On write, only write to the required level
+    \item Update to other levels occurs when data is evicted from cache
+\end{itemize}
+
+\textbf{Write-Through}
+\begin{itemize}
+    \item On write, also write the new value to the level below
+    \item When data is evicted from cache, no need to update lower level
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+    % Placeholder for illustration
+    \node[draw, rectangle] (note) {[Illustration: Write-back vs Write-through behavior]};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Review: Write Miss Policies}
+\textbf{Write Allocate}
+\begin{itemize}
+    \item On miss, send request to lower level to fetch the block
+    \item Before fetching block from lower level, free appropriate space (set and replacement policy)
+\end{itemize}
+
+\textbf{No Write Allocate}
+\begin{itemize}
+    \item On miss, send the write request itself to lower level
+    \item No fetching of block to the required level
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+    % Placeholder for illustration
+    \node[draw, rectangle] (note) {[Illustration: Write allocate vs No write allocate]};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{The Inclusion Principle}
+\begin{itemize}
+    \item In a hierarchical cache working according to the inclusion principle, each level contains all the lines (not necessarily the most updated data - remember: WB/WT) that are in the level above it
+    \item This is designed to simplify the communication protocols between levels
+    \item The principle is not implemented in all processors
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1};
+    \node[draw, rectangle, minimum width=3cm, minimum height=1.5cm, below=0.5cm of l1] (l2) {L2 Cache};
+    \node[draw, rectangle, minimum width=4cm, minimum height=2cm, below=0.5cm of l2] (l3) {L3 Cache};
+    \node[draw, rectangle, minimum width=5cm, minimum height=2.5cm, below=0.5cm of l3] (mem) {Main Memory};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Inclusion Principle - Eviction}
+To ensure the inclusion principle is maintained, every eviction of a cache line from a lower level (L2 or L3) will trigger eviction of the same line from higher levels as well.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1};
+    \node[draw, rectangle, minimum width=3cm, minimum height=1.5cm, below=0.5cm of l1] (l2) {L2 Cache};
+    \node[draw, rectangle, minimum width=4cm, minimum height=2cm, below=0.5cm of l2] (l3) {L3 Cache};
+    \node[draw, rectangle, minimum width=5cm, minimum height=2.5cm, below=0.5cm of l3] (mem) {Main Memory};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Question 2: Pentium System}
+Given a Pentium system with L2 cache such that the inclusion principle is maintained.
+
+For each of the following cases, indicate whether L2 is useful or not, and explain:
+
+\begin{enumerate}
+    \item Both cache levels are the same size
+    \begin{itemize}
+        \item L1: direct mapped
+        \item L2: fully associative
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Question 2: Continued}
+\begin{enumerate}
+    \setcounter{enumi}{1}
+    \item Access time for both cache levels is identical. L2 is larger than L1.
+    \begin{itemize}
+        \item \textbf{Answer:} Useful. There is benefit in L2. Since access time is identical and it is larger, we prefer to read directly from L2, so L1 is not useful for system performance.
+    \end{itemize}
+    
+    \item Access time to L2 and main memory is identical.
+    \begin{itemize}
+        \item \textbf{Answer:} Not useful. L2 is redundant because we can access main memory at the same speed without risk of miss.
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Inclusion Principle - Snooping}
+\textbf{Snoop:} Snoop the caches above when an entry is victimized to keep inclusion
+
+\begin{itemize}
+    \item When a cache level wants to delete certain data, it "looks" at the level above to check if the data is also there
+    \item If yes, it must be deleted first to maintain the inclusion principle
+\end{itemize}
+
+All caches work according to:
+\begin{itemize}
+    \item Write-back policy
+    \item LRU replacement policy
+    \item Maintain inclusion principle
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Inclusion Principle - Process Flow}
+\small
+Process from discovering need for line replacement in L3 until stabilization:
+
+\begin{enumerate}
+    \item L1 identifies read miss and requests data from L2
+    \item L2 identifies read miss and requests data from L3
+    \item L3 identifies read miss and selects line for replacement
+    \item \textbf{Snoops:}
+    \begin{itemize}
+        \item L3 snoops to L2 to check if copy exists
+        \item If copy in L2, L2 snoops to L1
+        \item If copy in L1 is modified (M), write it to L2
+        \item L1 marks line as invalid (I)
+        \item If copy in L2 is modified (M), write it to L3
+        \item L2 marks line as invalid (I)
+    \end{itemize}
+    \item If evicted line from L3 is in M state, write to main memory
+    \item L3 reads required line from main memory and updates LRU
+    \item Continue propagation to L2 and L1...
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Complex Cache Operation Flow}
+\begin{center}
+\begin{tikzpicture}[scale=0.5]
+    % Placeholder for complex flowchart
+    \node[draw, rectangle, text width=10cm, align=center] (note) {
+        [Complex flowchart placeholder]\\
+        Shows interaction between L1, L2, L3 with:\\
+        - Read miss detection\\
+        - Victim selection\\
+        - Snoop operations\\
+        - Write-back on dirty data\\
+        - Fill operations\\
+        - LRU updates
+    };
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Question 3: Write Policies}
+Given a cache with 3 levels maintaining the inclusion principle.
+
+L2 and L3 caches operate with \textbf{no write allocate} policy on write miss.
+
+At some point, the processor performed a write to address \texttt{n}. This request triggered a chain of events in the memory hierarchy.
+
+During this chain (which started with write miss in L1 cache), a line was evicted from L3 cache.
+
+\textbf{Question:} What is the write miss policy of L1 cache?
+
+\textbf{Answer:} The write miss policy of L1 is \textbf{write allocate}, otherwise there would be no need to read lines to cache and evict a line from L3.
+\end{frame}
+
+\begin{frame}{Question 4: Cache Configuration}
+Given a processor with two cache levels:
+\begin{itemize}
+    \item Address size: 32 bits
+    \item Cache line size for both caches: 32 bytes
+    \item Write policy: Write-back for both
+    \item Replacement policy: LRU for both
+    \item Inclusion principle is maintained
+    \item L1: 1KB, 2-way set associative
+    \item L2: 4KB, 2-way set associative
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Question 4: Program}
+Consider the following program:
+
+\begin{lstlisting}[language=C]
+int arr[512];
+int S = 0;
+for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 512; j++) {
+        S += arr[j];
+    }
+}
+\end{lstlisting}
+
+Assumptions:
+\begin{itemize}
+    \item Variables \texttt{i}, \texttt{j}, \texttt{S} and pointer \texttt{arr} are stored in registers
+    \item Integer size is 4 bytes
+    \item Cache is empty at program start
+    \item Array is aligned in memory
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Question 4a: L1 Hit Rate}
+\textbf{Analysis:}
+\begin{itemize}
+    \item We traverse the array twice
+    \item In the first iteration of outer loop, we only miss when reading a new block
+    \item Since cache line size is 32 bytes and integer size is 4 bytes, we fit 8 elements per block
+    \item We only miss on 1 out of every 8 accesses
+    \item Therefore, hit rate (HR) = $frac{7}{8}$
+\end{itemize}
+
+For the second iteration:
+\begin{itemize}
+    \item At the start, cache will only contain the second half of array (elements 256--511) due to LRU policy
+    \item We'll have misses for all first accesses to blocks containing elements 0--255
+    \item Overall HR for entire program = $frac{7}{8}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Question 4b: L2 Hit Rate}
+\textbf{L2 Hit Rate} is defined as the percentage of memory access requests to L2 where a hit occurs (only considering requests where there was a miss in L1).
+
+\begin{itemize}
+    \item In first iteration, we only access cache on block transitions
+    \item Since L2 is empty at start, first access always misses (HR = 0 for first iteration)
+    \item L2 is large enough (4KB) to hold entire array
+    \item In second iteration, every access to L2 will be a hit
+    \item Overall L2 HR = $\frac{1}{2}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Question 4c: Adding L3 Cache}
+Adding an L3 cache of 8MB size. L3 access time is about half of memory access time.
+
+\textbf{How will adding L3 affect program performance (assuming it starts empty)?}
+
+\textbf{Answer:}
+\begin{itemize}
+    \item The only misses in L2 are compulsory misses
+    \item In L3, we'll still only have compulsory misses
+    \item Therefore, no performance improvement
+    \item However, misses in L2 are now more expensive (need additional L3 access before memory)
+    \item Overall, performance will degrade
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Question 5: Prefetching}
+Program for calculating average grades:
+
+\vspace{0.3cm}
+\begin{tcolorbox}[
+    colback=gray!5,
+    colframe=gray!50,
+    boxrule=0.5pt,
+    arc=2mm,
+    left=2mm,
+    right=2mm,
+    top=1mm,
+    bottom=1mm,
+    fontupper=\small
+]
+\begin{lstlisting}[
+    language=C,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{orange},
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{white},
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    escapeinside={(*@}{@*)},
+    morekeywords={sum, average}
+]
+sum = 0;
+for (i = 0; i < NUM_STUDENTS; i++) {
+    sum += grades[i];
+}
+average = sum / NUM_STUDENTS;
+\end{lstlisting}
+\end{tcolorbox}
+
+\vspace{0.2cm}
+\begin{itemize}
+    \item Each element in \texttt{grades} is 4 bytes
+    \item L1 cache line size is 16 bytes
+    \item Time to fetch a line from memory is 32 cycles
+    \item Operation time with HIT in L1 is one clock cycle
+\end{itemize}
+
+Design a hardware prefetch system to improve L1 hit rate.
+\end{frame}
+
+\begin{frame}{Question 5: Solution}
+\textbf{Prefetch System Design:}
+
+\begin{itemize}
+    \item An efficient prefetch system should issue a cache line fetch request with timing such that when the demand request arrives, the line is already in cache
+    \item In our case, 32 clock cycles are needed to bring a line to cache
+    \item Therefore, the prefetch system should be timed to generate a request 32 clock cycles before the program requests that address
+\end{itemize}
+
+\textbf{Algorithm:}
+\begin{itemize}
+    \item Use a stride algorithm with stride of 4
+    \item Since each line has 4 array elements, on every access to line n, generate a prefetch request for line n+8
+    \item This ensures data arrives in cache with appropriate timing before required by the program
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Question 5: Prefetch Timing Diagram}
+\begin{center}
+\begin{tikzpicture}[scale=0.6]
+    % Placeholder for timing diagram
+    \node[draw, rectangle, text width=12cm, align=center] (note) {
+        [Timing Diagram Placeholder]\\
+        Shows prefetch requests being issued 32 cycles ahead\\
+        of actual data needs, with pipeline of requests\\
+        ensuring data is available when needed
+    };
+\end{tikzpicture}
+\end{center}
+\end{frame}
 
 \begin{frame}{Cache Coherence Flow}
 \begin{tikzpicture}[
