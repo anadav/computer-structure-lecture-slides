@@ -1,0 +1,389 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{bytefield}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usepackage{tcolorbox}
+\usetheme{Madrid}
+
+\title{Computer Architecture}
+\subtitle{Exercise 1: Performance Evaluation Parameters \& Amdahl's Law}
+\author{Course 234267}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%======================================
+\begin{frame}{Course Information}
+\begin{itemize}
+    \item \textbf{Course Grading:}
+    \begin{itemize}
+        \item 3 mandatory exercises
+        \item Submission in pairs
+        \item Final exam
+    \end{itemize}
+    \item \textbf{Important:} Attend lectures and tutorials!
+    \begin{itemize}
+        \item Exam material includes all content from lectures and tutorials
+        \item Slides don't contain everything
+    \end{itemize}
+    \item \textbf{Course website:}\\
+    \url{http://webcourse.cs.technion.ac.il/234267/}
+\end{itemize}
+\end{frame}
+
+%======================================
+\begin{frame}{Architecture vs. Microarchitecture}
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Architecture}
+\begin{itemize}
+    \item Interface between user (compiler/programmer) and processor
+    \item Instruction set (instruction types, number of operands, addressing modes, etc.)
+    \item Different processors can have different architectures
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Microarchitecture}
+\begin{itemize}
+    \item Internal structure of the processor
+    \item Implementation details
+    \item How the architecture is realized in hardware
+\end{itemize}
+\end{columns}
+\end{frame}
+
+%======================================
+\begin{frame}{CPU Performance and Time - Basic Concepts}
+\begin{itemize}
+    \item \textbf{CPU}: Central Processing Unit - synchronous component (operates according to internal clock signal)
+    \item \textbf{ALU}: Part of CPU that performs arithmetic calculations
+    \item \textbf{Clock Rate (CR)}: Number of clock cycles per second
+    \begin{itemize}
+        \item Measured in Hz (MHz = million cycles/second)
+    \end{itemize}
+    \item \textbf{Clock Cycle (CC)}: Time between two consecutive clock ticks
+    \begin{itemize}
+        \item Measured in seconds (1 nanosec = $10^{-9}$ sec)
+    \end{itemize}
+\end{itemize}
+
+\begin{block}{Relationship}
+$$\text{Clock Rate} = \frac{1}{\text{Clock Cycle}}$$
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Key Performance Metrics}
+\begin{itemize}
+    \item \textbf{Instruction Count (IC)}: Number of machine instructions in a program
+    \item \textbf{CPI (Cycles Per Instruction)}: Average number of clock cycles required to execute each instruction
+    \item \textbf{CPI$_i$}: Clock cycles required for instruction type $i$
+    \item \textbf{CPU Execution Time}: Time processor takes to execute a program
+\end{itemize}
+
+\begin{block}{CPU Time Formula}
+$$\text{CPU Time} = \text{IC} \times \text{CPI} \times \text{CC}$$
+$$\text{CPU Time} = \frac{\text{IC} \times \text{CPI}}{\text{Clock Rate}}$$
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Calculating CPI for Benchmark Programs}
+\begin{itemize}
+    \item $n_i$ = Number of times instruction $i$ is executed
+    \item $\text{IC} = \sum n_i$ = Total instructions executed
+    \item Frequency of instruction $i$: $f_i = \frac{n_i}{\text{IC}}$
+\end{itemize}
+
+\begin{block}{Average CPI Calculation}
+$$\text{CPI} = \frac{\text{Total Clock Cycles}}{\text{IC}} = \frac{\sum(n_i \times \text{CPI}_i)}{\sum n_i} = \sum(f_i \times \text{CPI}_i)$$
+\end{block}
+
+\begin{alertblock}{Question}
+Does lower CPI necessarily mean faster computer?
+\end{alertblock}
+
+\end{frame}
+
+%======================================
+\begin{frame}{CPU Time Formula - Dimensional Analysis}
+\centering
+\begin{alertblock}{Question}
+Does lower CPI necessarily mean faster computer?
+\end{alertblock}
+$$\text{CPU time}\left[\frac{\text{sec}}{\text{program}}\right] = 
+\text{CC}\left[\frac{\text{sec}}{\tikzmark{cyc1}\text{cycle}\tikzmark{cyc2}}\right] \times
+\text{CPI}\left[\frac{\tikzmark{cyc3}\text{cycle}\tikzmark{cyc4}}{\tikzmark{ins1}\text{instruction}\tikzmark{ins2}}\right] \times
+\text{IC}\left[\frac{\tikzmark{ins3}\text{instruction}\tikzmark{ins4}}{\text{program}}\right]$$
+
+% Add diagonal strikethrough lines using TikZ
+\begin{tikzpicture}[remember picture, overlay]
+    % Diagonal strike through "cycle" in CC term
+    \draw[red, line width=1.5pt] ([shift={(-0.1,0)}]pic cs:cyc1) -- ([shift={(0.1,0.5ex)}]pic cs:cyc2);
+    
+    % Diagonal strike through "cycle" in CPI term numerator
+    \draw[red, line width=1.5pt] ([shift={(-0.1,0)}]pic cs:cyc3) -- ([shift={(0.1,0.5ex)}]pic cs:cyc4);
+    
+    % Diagonal strike through "instruction" in CPI term denominator
+    \draw[red, line width=1.5pt] ([shift={(-0.1,0)}]pic cs:ins1) -- ([shift={(0.1,0.5ex)}]pic cs:ins2);
+    
+    % Diagonal strike through "instruction" in IC term numerator
+    \draw[red, line width=1.5pt] ([shift={(-0.1,0)}]pic cs:ins3) -- ([shift={(0.1,0.5ex)}]pic cs:ins4);
+\end{tikzpicture}
+
+\vspace{1cm}
+\normalsize
+\begin{block}{Result}
+$$\text{CPU time} = \text{CC} \times \text{CPI} \times \text{IC}$$
+Units simplify to: $\left[\frac{\text{seconds}}{\text{program}}\right]$
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Performance Comparison}
+\begin{block}{Speedup Formula}
+$$\text{Speedup} = \frac{\text{CPU Time}_\text{old}}{\text{CPU Time}_\text{new}}= \frac{\text{IC}_\text{old} \times \text{CPI}_\text{old} \times \text{CC}_\text{old}}{\text{IC}_\text{new} \times \text{CPI}_\text{new} \times \text{CC}_\text{new}}$$
+\end{block}
+
+\begin{itemize}
+    \item $\text{Speedup} > 1$: Performance improvement
+    \item $\text{Speedup} < 1$: Performance degradation
+    \item Consider all three factors: IC, CPI, and CC
+\end{itemize}
+\end{frame}
+
+%======================================
+\begin{frame}{MIPS Metric}
+\textbf{MIPS = Millions of Instructions Per Second}
+
+\begin{block}{MIPS Formula}
+$$\text{MIPS} = \frac{\text{Instruction Count}}{\text{Execution Time} \times 10^6} = \frac{\text{Clock Rate}}{\text{CPI} \times 10^6}$$
+\end{block}
+
+\textbf{Problem with MIPS:}
+\begin{itemize}
+    \item Depends on instruction set and program composition
+    \item Complex instructions may execute fewer instructions but take longer
+    \item Can be misleading when comparing different architectures
+\end{itemize}
+\end{frame}
+
+%======================================
+\begin{frame}{MFLOPS Metric}
+\textbf{MFLOPS = Millions of Floating Point Operations Per Second}
+
+\begin{block}{MFLOPS Formula}
+$$\text{MFLOPS} = \frac{\text{FP Operations Count}}{\text{Execution Time} \times 10^6}$$
+\end{block}
+
+\textbf{Issues:}
+\begin{enumerate}
+    \item Depends on compiler optimization
+    \item Different FP operations take different times (add vs. divide)
+\end{enumerate}
+
+\textbf{Solution: Weighted MFLOPS}
+\begin{itemize}
+    \item Weight operations by execution time
+    \item Example weights: Add/Sub/Mult = 1, Div/Sqrt = 4, Exp/Sin = 8
+\end{itemize}
+\end{frame}
+
+%======================================
+\begin{frame}{Benchmark Programs}
+\textbf{Common problem:} Both MIPS and MFLOPS depend on chosen benchmark
+
+\vspace{0.5em}
+\textbf{Types of Benchmarks:}
+\begin{itemize}
+    \item \textbf{Real benchmarks}: Actual applications (word processors, spreadsheets, compilers)
+    \item \textbf{Synthetic benchmarks}: Instruction collections representing "average" programs
+    \item \textbf{Combined benchmarks}: Weighted collection of real and synthetic programs
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Best practice:}
+\begin{itemize}
+    \item Compare processors under similar conditions
+    \item Same benchmark, same compiler
+    \item Run multiple programs and weight results
+    \item Best metric: Actual execution time comparison
+\end{itemize}
+\end{frame}
+
+%======================================
+\begin{frame}{Example 1: Adding New Instruction (Part 1)}
+\textbf{Given:} Computer with register-to-register operations, load/store memory access
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Instruction & Frequency & CPI \\
+\midrule
+ALU & 40\% & 1 \\
+LOAD & 20\% & 2 \\
+STORE & 10\% & 2 \\
+BRANCH & 30\% & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Observation:} 25\% of ALU instructions use data from previous LOAD
+
+\textbf{Proposal:} Add ALU-MEM instruction (direct operation between register and memory)
+\begin{itemize}
+    \item CPI = 2 for ALU-MEM
+    \item Increases BRANCH CPI to 3
+\end{itemize}
+\end{frame}
+
+%======================================
+\begin{frame}{Example 1: Solution - Before Change}
+\textbf{Calculate original CPI:}
+$$\text{CPI}_\text{old} = 0.4 \times 1 + 0.2 \times 2 + 0.1 \times 2 + 0.3 \times 2$$
+$$= 0.4 + 0.4 + 0.2 + 0.6 = 1.6$$
+
+\vspace{1em}
+\textbf{CPU Time:}
+$$\text{CPU Time}_\text{old} = \text{CPI}_\text{old} \times \text{IC}_\text{old} \times \text{CC}_\text{old}$$
+$$= 1.6 \times \text{IC}_\text{old} \times \text{CC}_\text{old}$$
+\end{frame}
+
+%======================================
+\begin{frame}{Example 1: Solution - After Change}
+\textbf{New instruction counts:}
+\begin{itemize}
+    \item ALU: $0.75 \times 0.4 \times \text{IC}_\text{old} = 0.3 \times \text{IC}_\text{old}$
+    \item ALU-MEM: $0.25 \times 0.4 \times \text{IC}_\text{old} = 0.1 \times \text{IC}_\text{old}$
+    \item LOAD: $0.2 \times \text{IC}_\text{old} - 0.1 \times \text{IC}_\text{old} = 0.1 \times \text{IC}_\text{old}$
+    \item STORE: $0.1 \times \text{IC}_\text{old}$ (unchanged)
+    \item BRANCH: $0.3 \times \text{IC}_\text{old}$ (unchanged)
+\end{itemize}
+
+\textbf{Total:} $\text{IC}_\text{new} = 0.9 \times \text{IC}_\text{old}$
+
+\textbf{New CPI:} 
+$$\text{CPI}_\text{new} = \frac{0.3 \times 1 + 0.1 \times 2 + 0.1 \times 2 + 0.1 \times 2 + 0.3 \times 3}{0.9} = 2$$
+\end{frame}
+
+%======================================
+\begin{frame}{Example 1: Performance Analysis}
+\textbf{CPU Time after change:}
+$$\text{CPU Time}_\text{new} = 0.9 \times \text{IC}_\text{old} \times 2 \times \text{CC}$$
+$$= 1.8 \times \text{IC}_\text{old} \times \text{CC}$$
+
+\vspace{1em}
+\textbf{Speedup:}
+$$\text{Speedup} = \frac{\text{CPU Time}_\text{old}}{\text{CPU Time}_\text{new}} = \frac{1.6 \times \text{IC}_\text{old} \times \text{CC}}{1.8 \times \text{IC}_\text{old} \times \text{CC}}$$
+$$= \frac{1.6}{1.8} = 0.889$$
+
+\begin{alertblock}{Result}
+The "improvement" actually causes a slowdown! ($\text{Speedup} < 1$)
+\end{alertblock}
+\end{frame}
+
+%======================================
+\begin{frame}{Amdahl's Law}
+\textbf{Question:} How much can we improve overall performance by optimizing a portion of the system?
+
+\begin{block}{Amdahl's Law Formula}
+$$\text{Speedup}_\text{overall} = \frac{1}{(1 - \text{Fraction}) + \frac{\text{Fraction}}{\text{Speedup}_\text{enhanced}}}$$
+\end{block}
+
+Where:
+\begin{itemize}
+    \item \textbf{Fraction}: Portion of execution time that can be enhanced
+    \item \textbf{Speedup$_\text{enhanced}$}: Speedup of the enhanced portion
+\end{itemize}
+
+\textbf{Note:} Fraction refers to time portion, not instruction count!
+\end{frame}
+
+%======================================
+\begin{frame}{Amdahl's Law - Example}
+\textbf{Processor enhancements:}
+\begin{itemize}
+    \item Floating point operations: 2.5× faster
+    \item Memory operations: 3× faster
+    \item Integer add/subtract: 1.5× slower
+\end{itemize}
+
+\textbf{Benchmark program profile:}
+\begin{itemize}
+    \item Floating point: 15\% of execution time
+    \item Memory operations: 20\%
+    \item Integer add/subtract: 40\%
+\end{itemize}
+
+\textbf{Calculate overall speedup}
+\end{frame}
+
+%======================================
+\begin{frame}{Amdahl's Law - Solution}
+\textbf{New execution time calculation:}
+
+Original time = 1 (normalized)
+
+New time components:
+\begin{itemize}
+    \item FP operations: $\frac{0.15}{2.5} = 0.06$
+    \item Memory operations: $\frac{0.20}{3} = 0.067$
+    \item Integer operations: $\frac{0.40}{1/1.5} = 0.40 \times 1.5 = 0.60$
+    \item Other operations: $0.25$ (unchanged)
+\end{itemize}
+
+\textbf{Total new time:} $0.06 + 0.067 + 0.60 + 0.25 = 0.977$
+
+\textbf{Overall speedup:} $\frac{1}{0.977} = 1.024$ (2.4\% improvement)
+\end{frame}
+
+%======================================
+\begin{frame}{Key Takeaways}
+\begin{enumerate}
+    \item \textbf{Performance metrics have limitations}
+    \begin{itemize}
+        \item MIPS can be misleading
+        \item MFLOPS depends on operation mix
+        \item Actual execution time is the best metric
+    \end{itemize}
+    
+    \item \textbf{Amdahl's Law insights}
+    \begin{itemize}
+        \item Limited benefit from optimizing small portions
+        \item Must consider the entire system
+        \item Bottlenecks limit overall improvement
+    \end{itemize}
+    
+    \item \textbf{Performance analysis requires}
+    \begin{itemize}
+        \item Understanding all factors: IC, CPI, Clock rate
+        \item Careful consideration of trade-offs
+        \item Real benchmarks for accurate comparison
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+%======================================
+\begin{frame}{Questions for Practice}
+\begin{enumerate}
+    \item If Computer A runs a program faster than Computer B, and both run the same assembly code, what can we conclude about their MIPS ratings?
+    
+    \item Why might adding a new instruction type actually slow down overall performance?
+    
+    \item According to Amdahl's Law, if 90\% of a program can be parallelized perfectly (infinite speedup), what is the maximum overall speedup?
+    
+    \item What are the trade-offs between complex instructions (high CPI, low IC) and simple instructions (low CPI, high IC)?
+\end{enumerate}
+\end{frame}
+
+\end{document}
