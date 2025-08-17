@@ -193,40 +193,79 @@ Given a system with L2 cache where the inclusion principle is maintained.
 
 For each of the following cases, indicate whether L2 is useful or not:
 
-\begin{enumerate}
-    \item Both cache levels are the same size
-    \begin{itemize}
-        \item L1: direct mapped
-        \item L2: fully associative
-    \end{itemize}
-\end{enumerate}
-
 \vspace{0.3cm}
+\begin{columns}[T]
+\begin{column}{0.35\textwidth}
+\textbf{Case 1:} Both cache levels are the same size
+\begin{itemize}
+    \small
+    \item L1: direct mapped
+    \item L2: fully associative
+\end{itemize}
+
+\vspace{0.5cm}
+\onslide<2->{\textcolor{green!50!black}{\textbf{Useful}}
+
+\small L2's higher associativity allows it to hold conflicting lines that L1 cannot.}
+\end{column}
+
+\begin{column}{0.65\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.7, node distance=0.8cm]
-    % L1 cache - left side
-    \node[draw, rectangle, fill=cyan!20, minimum width=0.8cm, minimum height=3cm, label=above:{\small L1: direct mapped}] (l1left) {};
-    \node[fill=yellow!40, minimum width=0.7cm, minimum height=0.5cm] at (l1left.center) {A};
+\begin{tikzpicture}[scale=0.65, node distance=0.4cm]
+    % Define styles
+    \tikzstyle{cacheA}=[fill=red!30]
+    \tikzstyle{cacheB}=[fill=blue!30]
     
-    % L2 cache - left side (positioned below L1)
-    \node[draw, rectangle, fill=cyan!30, minimum width=4cm, minimum height=0.8cm, below=1.5cm of l1left, label=left:{\small L2: fully associative}] (l2left) {};
-    \node[fill=red!40, minimum width=0.7cm, minimum height=0.6cm] at ([xshift=-1cm]l2left.center) {A};
+    % Left side - Before
+    \node[above] at (0, 2) {\footnotesize\textbf{Before}};
+    
+    % L1 cache - left side (direct mapped with cells)
+    \node[draw, rectangle, fill=cyan!10, minimum width=0.7cm, minimum height=2cm, label=left:{\tiny L1:}] (l1left) at (0,0) {};
+    % Draw horizontal lines for direct-mapped cells
+    \draw (l1left.north west) -- (l1left.north east);
+    \draw ([yshift=-0.5cm]l1left.north west) -- ([yshift=-0.5cm]l1left.north east);
+    \draw ([yshift=-1cm]l1left.north west) -- ([yshift=-1cm]l1left.north east);
+    \draw ([yshift=-1.5cm]l1left.north west) -- ([yshift=-1.5cm]l1left.north east);
+    \node[cacheA, minimum width=0.6cm, minimum height=0.4cm] at ([yshift=-0.25cm]l1left.north) {\tiny A};
+    
+    % L2 cache - left side (fully associative)
+    \node[draw, rectangle, fill=cyan!15, minimum width=2.4cm, minimum height=0.6cm, below=0.8cm of l1left, label=left:{\tiny L2:}] (l2left) {};
+    % Draw vertical lines for fully-associative cells
+    \draw ([xshift=-0.8cm]l2left.north) -- ([xshift=-0.8cm]l2left.south);
+    \draw ([xshift=-0.3cm]l2left.north) -- ([xshift=-0.3cm]l2left.south);
+    \draw ([xshift=0.3cm]l2left.north) -- ([xshift=0.3cm]l2left.south);
+    \draw ([xshift=0.8cm]l2left.north) -- ([xshift=0.8cm]l2left.south);
+    \node[cacheA, minimum width=0.4cm, minimum height=0.4cm] at ([xshift=-0.55cm]l2left.center) {\tiny A};
     
     % Arrow
-    \draw[->, thick, blue!70, line width=2pt] ([xshift=0.8cm]l1left.east) -- ++(2,0);
+    \draw[->, thick, blue!70, line width=1.5pt] (1.5,0) -- (2.5,0);
+    \node[above] at (2, 0.15) {\tiny Access B};
+    
+    % Right side - After
+    \node[above] at (4, 2) {\footnotesize\textbf{After}};
     
     % L1 cache - right side
-    \node[draw, rectangle, fill=cyan!20, minimum width=0.8cm, minimum height=3cm, right=4cm of l1left, label=above:{\small L1}] (l1right) {};
-    \node[fill=yellow!40, minimum width=0.7cm, minimum height=0.5cm] at (l1right.center) {B};
+    \node[draw, rectangle, fill=cyan!10, minimum width=0.7cm, minimum height=2cm, label=left:{\tiny L1:}] (l1right) at (4,0) {};
+    % Draw horizontal lines
+    \draw (l1right.north west) -- (l1right.north east);
+    \draw ([yshift=-0.5cm]l1right.north west) -- ([yshift=-0.5cm]l1right.north east);
+    \draw ([yshift=-1cm]l1right.north west) -- ([yshift=-1cm]l1right.north east);
+    \draw ([yshift=-1.5cm]l1right.north west) -- ([yshift=-1.5cm]l1right.north east);
+    \node[cacheB, minimum width=0.6cm, minimum height=0.4cm] at ([yshift=-0.25cm]l1right.north) {\tiny B};
     
-    % L2 cache - right side (positioned below L1 right)
-    \node[draw, rectangle, fill=cyan!30, minimum width=4cm, minimum height=0.8cm, below=1.5cm of l1right, label=left:{\small L2}] (l2right) {};
-    \node[fill=red!40, minimum width=0.7cm, minimum height=0.6cm] at ([xshift=-0.8cm]l2right.center) {A};
-    \node[fill=yellow!40, minimum width=0.7cm, minimum height=0.6cm] at ([xshift=0.8cm]l2right.center) {B};
+    % L2 cache - right side
+    \node[draw, rectangle, fill=cyan!15, minimum width=2.4cm, minimum height=0.6cm, below=0.8cm of l1right, label=left:{\tiny L2:}] (l2right) {};
+    % Draw vertical lines
+    \draw ([xshift=-0.8cm]l2right.north) -- ([xshift=-0.8cm]l2right.south);
+    \draw ([xshift=-0.3cm]l2right.north) -- ([xshift=-0.3cm]l2right.south);
+    \draw ([xshift=0.3cm]l2right.north) -- ([xshift=0.3cm]l2right.south);
+    \draw ([xshift=0.8cm]l2right.north) -- ([xshift=0.8cm]l2right.south);
+    \node[cacheA, minimum width=0.4cm, minimum height=0.4cm] at ([xshift=-0.55cm]l2right.center) {\tiny A};
+    \node[cacheB, minimum width=0.4cm, minimum height=0.4cm] at (l2right.center) {\tiny B};
 \end{tikzpicture}
 \end{center}
-
-\onslide<2->{\textbf{Answer:} Useful! L2 can hold conflicting lines that L1 cannot due to higher associativity.}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Question 2: Continued}
