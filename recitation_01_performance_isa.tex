@@ -386,4 +386,359 @@ New time components:
 \end{enumerate}
 \end{frame}
 
+%======================================
+\begin{frame}{Example 2: MFP vs NMFP Computers}
+\textbf{Given:} Two computers with 100 MHz clock rate running same benchmark
+
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Computer MFP:}
+\begin{itemize}
+    \item Has dedicated FP hardware
+    \item Different clock cycles per FP operation
+\end{itemize}
+
+\begin{table}[h]
+\small
+\begin{tabular}{lc}
+\toprule
+Operation & Clock Cycles \\
+\midrule
+FP Multiply & 6 \\
+FP Add & 4 \\
+FP Divide & 20 \\
+INT ops & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\column{0.5\textwidth}
+\textbf{Computer NMFP:}
+\begin{itemize}
+    \item No FP hardware
+    \item Emulates FP in software
+    \item Each FP → multiple INT operations
+\end{itemize}
+
+\begin{table}[h]
+\small
+\begin{tabular}{lc}
+\toprule
+FP Operation & INT ops needed \\
+\midrule
+FP Multiply & 30 \\
+FP Add & 20 \\
+FP Divide & 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{columns}
+\end{frame}
+
+%======================================
+\begin{frame}{Example 2: Benchmark Program Profile}
+\textbf{High-level language program composition:}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Operation Type & Frequency \\
+\midrule
+FP Multiply & 10\% \\
+FP Add & 15\% \\
+FP Divide & 5\% \\
+INT operations & 70\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Task:} Compare the performance of both computers
+\end{frame}
+
+%======================================
+\begin{frame}{Example 2: Part (a) - MIPS Calculation}
+\textbf{Calculate MIPS for both machines:}
+
+\textbf{MFP Computer:}
+$$\text{CPI}_{\text{MFP}} = 0.10 \times 6 + 0.15 \times 4 + 0.05 \times 20 + 0.70 \times 2$$
+$$= 0.6 + 0.6 + 1.0 + 1.4 = 3.6$$
+
+$$\text{MIPS}_{\text{MFP}} = \frac{100 \times 10^6}{3.6 \times 10^6} = 27.78$$
+
+\textbf{NMFP Computer:}
+$$\text{CPI}_{\text{NMFP}} = 2 \text{ (all operations are INT)}$$
+
+$$\text{MIPS}_{\text{NMFP}} = \frac{100 \times 10^6}{2 \times 10^6} = 50$$
+
+\begin{alertblock}{Note}
+NMFP has higher MIPS but may not be faster!
+\end{alertblock}
+\end{frame}
+
+%======================================
+\begin{frame}{Example 2: Part (b) - Instruction Count}
+\textbf{If MFP executes $3 \times 10^6$ instructions, how many for NMFP?}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Operation & Frequency & MFP Instructions & NMFP Instructions \\
+\midrule
+FP Multiply & 10\% & $3 \times 10^5$ & $3 \times 10^5 \times 30 = 9 \times 10^6$ \\
+FP Add & 15\% & $4.5 \times 10^5$ & $4.5 \times 10^5 \times 20 = 9 \times 10^6$ \\
+FP Divide & 5\% & $1.5 \times 10^5$ & $1.5 \times 10^5 \times 50 = 7.5 \times 10^6$ \\
+INT ops & 70\% & $2.1 \times 10^6$ & $2.1 \times 10^6 \times 1 = 2.1 \times 10^6$ \\
+\midrule
+\textbf{Total} & & $3 \times 10^6$ & $27.6 \times 10^6$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+NMFP needs 9.2× more instructions!
+\end{frame}
+
+%======================================
+\begin{frame}{Example 2: Part (c) - Execution Time}
+\textbf{Calculate execution time for both computers:}
+
+\textbf{MFP Computer:}
+$$\text{CPU Time}_{\text{MFP}} = \text{IC} \times \text{CPI} \times \text{CC}$$
+$$= 3 \times 10^6 \times 3.6 \times 10^{-8} = 0.108 \text{ seconds}$$
+
+\textbf{NMFP Computer:}
+$$\text{CPU Time}_{\text{NMFP}} = 27.6 \times 10^6 \times 2 \times 10^{-8}$$
+$$= 0.552 \text{ seconds}$$
+
+\begin{block}{Result}
+MFP is 5.1× faster despite lower MIPS!
+$$\text{Speedup} = \frac{0.552}{0.108} = 5.11$$
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Example 2: Part (d) - MFLOPS Comparison}
+\textbf{Calculate MFLOPS for both computers:}
+
+Number of FP operations (same for both):
+$$\text{FP ops} = (0.10 + 0.15 + 0.05) \times 3 \times 10^6 = 0.9 \times 10^6$$
+
+\textbf{MFP:}
+$$\text{MFLOPS}_{\text{MFP}} = \frac{0.9 \times 10^6}{0.108 \times 10^6} = 8.33$$
+
+\textbf{NMFP:}
+$$\text{MFLOPS}_{\text{NMFP}} = \frac{0.9 \times 10^6}{0.552 \times 10^6} = 1.63$$
+
+\begin{alertblock}{Observation}
+MFP has higher MFLOPS (correctly reflecting FP performance) unlike MIPS metric
+\end{alertblock}
+\end{frame}
+
+%======================================
+\begin{frame}{Alternative Solution Method for Example 1}
+\textbf{More intuitive approach using 100 instructions:}
+
+\begin{columns}
+\column{0.5\textwidth}
+\textbf{Before change:}
+\begin{table}[h]
+\small
+\begin{tabular}{lcc}
+\toprule
+Instruction & Count & CPI \\
+\midrule
+ALU & 40 & 1 \\
+LOAD & 20 & 2 \\
+STORE & 10 & 2 \\
+BRANCH & 30 & 2 \\
+\midrule
+Total & 100 & - \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Clock cycles = 160
+
+\column{0.5\textwidth}
+\textbf{After change:}
+\begin{table}[h]
+\small
+\begin{tabular}{lcc}
+\toprule
+Instruction & Count & CPI \\
+\midrule
+ALU & 30 & 1 \\
+LOAD & 10 & 2 \\
+STORE & 10 & 2 \\
+BRANCH & 30 & 3 \\
+ALU-MEM & 10 & 2 \\
+\midrule
+Total & 90 & - \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Clock cycles = 180
+\end{columns}
+
+\vspace{0.5em}
+Since clock rate unchanged: Comparing cycles is sufficient
+$$\text{Speedup} = \frac{160}{180} = 0.889$$
+\end{frame}
+
+%======================================
+\begin{frame}{Extended Amdahl's Law for CPI}
+When instruction count doesn't change, we can apply Amdahl's Law to CPI:
+
+\begin{block}{CPI-based Amdahl's Law}
+$$\text{CPI}_{\text{new}} = \text{CPI}_{\text{old}} \times \left[(1 - \text{Fraction}) + \frac{\text{Fraction}}{\text{Improvement}}\right]$$
+\end{block}
+
+\textbf{Conditions:}
+\begin{itemize}
+    \item Instruction count remains constant
+    \item Fraction must be valid in both cases
+    \item Clock rate unchanged
+\end{itemize}
+
+\textbf{Example application:}
+If 40\% of cycles can be improved by 2×:
+$$\text{Speedup} = \frac{1}{(1 - 0.4) + \frac{0.4}{2}} = \frac{1}{0.8} = 1.25$$
+\end{frame}
+
+%======================================
+\begin{frame}{Practice Questions - Part 1}
+\textbf{Question 1:} A high-level program contains 20 FP operations and runs faster on Computer A than Computer B. Which statements are necessarily true?
+
+\begin{enumerate}
+    \item Computer A has MIPS $\geq$ Computer B's MIPS
+    \item Computer A has MFLOPS $\geq$ Computer B's MFLOPS
+    \item Computer A's CPI $\geq$ Computer B's CPI
+    \item Computer A's CPI $\leq$ Computer B's CPI
+    \item Computer A's clock rate $\geq$ Computer B's clock rate
+    \item Computer B's cycle time $\geq$ Computer A's cycle time
+    \item None of the above can be determined with certainty
+\end{enumerate}
+
+\pause
+\textbf{Answer:} 2 - Computer A has MFLOPS $\geq$ Computer B's MFLOPS
+\end{frame}
+
+%======================================
+\begin{frame}{Practice Questions - Part 1: Explanation}
+\textbf{Why each option is true/false:}
+
+\begin{enumerate}
+    \item \textbf{MIPS $\geq$}: \textcolor{red}{FALSE} - MIPS depends on instruction count and CPI, not directly on execution time
+    \item \textbf{MFLOPS $\geq$}: \textcolor{green}{TRUE} - Same FP operations, faster time $\Rightarrow$ higher MFLOPS
+    \item \textbf{CPI $\geq$}: \textcolor{red}{FALSE} - Could have lower CPI but slower clock
+    \item \textbf{CPI $\leq$}: \textcolor{red}{FALSE} - Could have higher CPI but faster clock
+    \item \textbf{Clock rate $\geq$}: \textcolor{red}{FALSE} - Could have slower clock but better CPI
+    \item \textbf{Cycle time B $\geq$ A}: \textcolor{red}{FALSE} - Depends on clock rate, not execution time
+    \item \textbf{None certain}: \textcolor{red}{FALSE} - Option 2 is necessarily true
+\end{enumerate}
+
+\begin{block}{Key Insight}
+MFLOPS = FP operations / Time. With same FP ops and less time, MFLOPS must be higher!
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Practice Questions - Part 2}
+\textbf{Question 2:} What if the same assembly program runs on both computers?
+
+\begin{enumerate}
+    \item Computer A has MIPS $\geq$ Computer B's MIPS
+    \item Computer A has MFLOPS $\geq$ Computer B's MFLOPS
+    \item Computer A's CPI $\geq$ Computer B's CPI
+    \item Computer A's CPI $\leq$ Computer B's CPI
+    \item Computer A's clock rate $\geq$ Computer B's clock rate
+    \item Computer B's cycle time $\geq$ Computer A's cycle time
+    \item None of the above can be determined with certainty
+\end{enumerate}
+
+\pause
+\textbf{Answer:} 1 and 2 - Computer A has MIPS $\geq$ Computer B's MIPS and MFLOPS $\geq$ Computer B's MFLOPS
+\end{frame}
+
+%======================================
+\begin{frame}{Practice Questions - Part 2: Explanation}
+\textbf{Why each option is true/false (same assembly program):}
+
+\begin{enumerate}
+    \item \textbf{MIPS $\geq$}: \textcolor{green}{TRUE} - Same IC, faster time $\Rightarrow$ higher MIPS
+    \item \textbf{MFLOPS $\geq$}: \textcolor{green}{TRUE} - Same FP ops, faster time $\Rightarrow$ higher MFLOPS
+    \item \textbf{CPI $\geq$}: \textcolor{red}{FALSE} - Could have lower CPI with slower clock
+    \item \textbf{CPI $\leq$}: \textcolor{red}{FALSE} - Could have higher CPI with faster clock
+    \item \textbf{Clock rate $\geq$}: \textcolor{red}{FALSE} - Could have slower clock but lower CPI
+    \item \textbf{Cycle time B $\geq$ A}: \textcolor{red}{FALSE} - Not necessarily related to execution time
+    \item \textbf{None certain}: \textcolor{red}{FALSE} - Options 1 and 2 are necessarily true
+\end{enumerate}
+
+\begin{block}{Key Formula}
+With same IC: MIPS = IC / (Time $\times 10^6$) \\
+Faster execution $\Rightarrow$ Higher MIPS and MFLOPS
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Summary: Performance Metrics Comparison}
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Metric} & \textbf{Pros} & \textbf{Cons} \\
+\midrule
+\textbf{Execution Time} & Most accurate & Program-specific \\
+& Direct measurement & Need actual run \\
+\midrule
+\textbf{MIPS} & Easy to understand & ISA dependent \\
+& Single number & Misleading for different ISAs \\
+\midrule
+\textbf{MFLOPS} & Good for FP-intensive & Only considers FP ops \\
+& Normalized metric & Compiler dependent \\
+\midrule
+\textbf{CPI} & Architecture insight & Needs IC and clock rate \\
+& Useful for analysis & Program dependent \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{block}{Remember}
+$$\text{Performance} = \frac{1}{\text{Execution Time}}$$
+Everything else is just an approximation!
+\end{block}
+\end{frame}
+
+%======================================
+\begin{frame}{Key Insights from Examples}
+\begin{enumerate}
+    \item \textbf{MIPS can be misleading}
+    \begin{itemize}
+        \item NMFP had 50 MIPS vs MFP's 27.78 MIPS
+        \item But MFP was 5.1× faster!
+    \end{itemize}
+    
+    \item \textbf{Adding instructions can hurt performance}
+    \begin{itemize}
+        \item ALU-MEM instruction seemed beneficial
+        \item Actually caused 11\% slowdown
+    \end{itemize}
+    
+    \item \textbf{Must consider all factors}
+    \begin{itemize}
+        \item IC, CPI, and Clock Rate interact
+        \item Optimizing one may hurt others
+    \end{itemize}
+    
+    \item \textbf{Amdahl's Law limits improvements}
+    \begin{itemize}
+        \item Small fractions limit overall speedup
+        \item Must identify and optimize bottlenecks
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
 \end{document}
