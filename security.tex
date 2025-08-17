@@ -1,0 +1,857 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{bytefield}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usepackage{tcolorbox}
+\usetheme{Madrid}
+\title{Hardware Security Mechanisms}
+\subtitle{Computer Architecture}
+\author{Course 234267}
+\date{}
+\begin{document}
+\frame{\titlepage}
+
+% Outline
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+% Section 1: Memory Protection
+\section{Memory Protection Mechanisms}
+
+\begin{frame}{Pointer Tagging}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Concept:}
+            \begin{itemize}
+                \item Uses unused bits in 64-bit pointers
+                \item Tags store metadata (type, color, version)
+                \item Enables memory safety checks
+            \end{itemize}
+            
+            \vspace{0.5cm}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item Detect use-after-free
+                \item Prevent type confusion
+                \item Low overhead ($<$5\%)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.8]
+                \draw (0,0) rectangle (8,1);
+                \draw[fill=blue!30] (0,0) rectangle (2,1);
+                \draw[fill=green!30] (2,0) rectangle (8,1);
+                \node at (1,0.5) {Tag};
+                \node at (5,0.5) {Address (48 bits)};
+                \draw[<->] (0,1.3) -- (2,1.3) node[midway,above] {16 bits};
+                \draw[<->] (2,1.3) -- (8,1.3) node[midway,above] {48 bits};
+            \end{tikzpicture}
+            
+            \vspace{0.5cm}
+            \textbf{Example: ARM MTE}
+            \begin{itemize}
+                \item 4-bit tags in bits [59:56]
+                \item Hardware tag checking
+                \item Synchronous/async exceptions
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Pointer Authentication (PAC)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{ARM PAC Architecture:}
+            \begin{itemize}
+                \item Cryptographic signature in pointer
+                \item Uses QARMA block cipher
+                \item 5 128-bit keys (IA, IB, DA, DB, GA)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Operations:}
+            \begin{itemize}
+                \item \texttt{PACIA}: Sign instruction pointer
+                \item \texttt{AUTIA}: Authenticate pointer
+                \item \texttt{PACDA}: Sign data pointer
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{Function Prologue:}
+                \begin{verbatim}
+PACIASP    ; Sign LR with SP
+STP x29,x30,[sp,#-16]!
+                \end{verbatim}
+                
+                \textbf{Function Epilogue:}
+                \begin{verbatim}
+LDP x29,x30,[sp],#16
+AUTIASP    ; Verify LR
+RET        ; Return if valid
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \vspace{0.2cm}
+            \textbf{Key Terms:}
+            \begin{itemize}
+                \item \textbf{LR (x30):} Link Register - stores return address
+                \item \textbf{SP:} Stack Pointer - used as context
+                \item \textbf{x29:} Frame Pointer
+            \end{itemize}
+            
+            \textbf{Security:} Prevents ROP/JOP attacks
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Section 2: Control Flow Integrity
+\section{Control Flow Integrity}
+
+\begin{frame}{Control Flow Integrity (CFI) - Overview}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Core Concept:}
+            \begin{itemize}
+                \item Enforce legitimate control flow transfers
+                \item Prevent code-reuse attacks (ROP/JOP/COP)
+                \item Hardware + software enforcement
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Two Protection Categories:}
+            
+            \colorbox{green!20}{\textbf{Forward-Edge CFI:}}
+            \begin{itemize}
+                \item Indirect calls (call rax)
+                \item Indirect jumps (jmp rbx)
+                \item Virtual function calls
+            \end{itemize}
+            
+            \colorbox{blue!20}{\textbf{Backward-Edge CFI:}}
+            \begin{itemize}
+                \item Function returns (ret)
+                \item Return address integrity
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.6]
+                % Control flow graph
+                \node[draw,circle] (A) at (2,4) {A};
+                \node[draw,circle] (B) at (0,2) {B};
+                \node[draw,circle] (C) at (4,2) {C};
+                \node[draw,circle] (D) at (2,0) {D};
+                
+                % Valid edges (green)
+                \draw[->,thick,green!70!black] (A) -- (B);
+                \draw[->,thick,green!70!black] (A) -- (C);
+                \draw[->,thick,green!70!black] (B) -- (D);
+                \draw[->,thick,green!70!black] (C) -- (D);
+                
+                % Invalid edge (red, dashed)
+                \draw[->,thick,red,dashed] (B) to[bend left=60] (C);
+                \node[red] at (2.5,3) {\small Invalid};
+                
+                \node at (2,-1) {\textbf{CFG Enforcement}};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Attack Example:}
+                Attacker overwrites function pointer to jump from B→C, violating intended control flow
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Forward-Edge CFI Mechanisms}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Intel CET-IBT (Indirect Branch Tracking):}
+            \begin{itemize}
+                \item \texttt{ENDBRANCH} instruction marks valid targets
+                \item CPU tracks indirect branch state
+                \item Fault if target lacks \texttt{ENDBRANCH}
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{ARM BTI (Branch Target Identification):}
+            \begin{itemize}
+                \item \texttt{BTI} instructions at valid targets
+                \item Different variants: BTI c/j/jc
+                \item PSTATE.BTYPE tracks branch type
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Software CFI (LLVM):}
+            \begin{itemize}
+                \item Type-based: Check function signatures
+                \item Fine-grained: Unique IDs per callsite
+                \item Cross-DSO support
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{Example: Intel CET-IBT}
+                \begin{verbatim}
+valid_target:
+    endbranch    ; Mark as valid
+    push rbp
+    mov rbp, rsp
+    ; Function body
+    
+invalid_target:  ; No endbranch
+    push rbp     ; CPU fault here!
+    mov rbp, rsp
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \textbf{Protection Granularity:}
+            \begin{itemize}
+                \item \textbf{Coarse:} Any valid function
+                \item \textbf{Fine:} Type-compatible functions
+                \item \textbf{Ultra-fine:} Exact callsite matching
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Backward-Edge CFI Mechanisms}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Shadow Stack (Hardware):}
+            \begin{itemize}
+                \item Parallel stack for return addresses
+                \item Intel CET-SS, ARM GCS
+                \item Automatic push/pop on CALL/RET
+                \item Compare on return
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Pointer Authentication (PAC):}
+            \begin{itemize}
+                \item Cryptographic signing of return address
+                \item ARM-specific implementation
+                \item Key-based authentication
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Stack Canaries (Software):}
+            \begin{itemize}
+                \item Random value before return address
+                \item Check before function return
+                \item Limited protection scope
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Regular stack
+                \draw[thick] (0,0) rectangle (2.5,4);
+                \node at (1.25,4.3) {\small Regular Stack};
+                \draw (0,3) -- (2.5,3);
+                \node at (1.25,3.5) {\tiny Local Vars};
+                \draw (0,2) -- (2.5,2);
+                \node[red] at (1.25,2.5) {\tiny RET Addr};
+                \draw (0,1) -- (2.5,1);
+                \node at (1.25,1.5) {\tiny Saved BP};
+                \node at (1.25,0.5) {\tiny Canary};
+                
+                % Shadow stack
+                \draw[thick,blue] (3.5,0) rectangle (6,4);
+                \node at (4.75,4.3) {\small Shadow Stack};
+                \draw (3.5,3) -- (6,3);
+                \draw (3.5,2) -- (6,2);
+                \node[blue] at (4.75,2.5) {\tiny RET Addr};
+                \draw (3.5,1) -- (6,1);
+                \node at (4.75,1.5) {\tiny RET Addr};
+                \node at (4.75,0.5) {\tiny RET Addr};
+                
+                % Verification arrow
+                \draw[->,thick,green] (2.5,2.5) -- (3.5,2.5);
+                \node at (3,3) {\tiny Verify};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=orange!10]
+                \textbf{Comparison:}
+                \begin{itemize}
+                    \item Shadow Stack: Strongest, hardware
+                    \item PAC: Strong, ARM-only
+                    \item Canaries: Weakest, portable
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{FineIBT - Advanced Forward-Edge CFI}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Linux Kernel Implementation:}
+            \begin{itemize}
+                \item Combines Intel CET-IBT with kCFI
+                \item Function type hash validation
+                \item Per-function-signature protection
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{How it Works:}
+            \begin{enumerate}
+                \item Compiler generates type hash
+                \item Hash checked at indirect call site
+                \item ENDBRANCH validates branch target
+                \item Mismatch triggers exception
+            \end{enumerate}
+            
+            \vspace{0.3cm}
+            \textbf{Benefits over Basic IBT:}
+            \begin{itemize}
+                \item Type safety enforcement
+                \item Prevents type confusion attacks
+                \item Minimal overhead (1-3\%)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{Function with FineIBT:}
+                \begin{verbatim}
+; Type hash prefix
+__cfi_func:
+    mov $0x12345678, %r11d
+    
+; Actual function
+func:
+    endbranch        ; CET check
+    sub $0x12345678, %r11d
+    je .Lcontinue    ; Type check
+    ud2              ; Trap on mismatch
+.Lcontinue:
+    push rbp
+    ; Function body
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Attack Prevention:}
+                Even if attacker finds valid ENDBRANCH target, type hash must also match
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Section 3: Privilege Levels
+\section{Privilege Levels and Virtualization}
+
+\begin{frame}{Security Rings - x86 Architecture}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.8]
+            % Draw rings
+            \draw[fill=red!40] (0,0) circle (4cm);
+            \draw[fill=orange!40] (0,0) circle (3.2cm);
+            \draw[fill=yellow!40] (0,0) circle (2.4cm);
+            \draw[fill=green!40] (0,0) circle (1.6cm);
+            \draw[fill=blue!40] (0,0) circle (0.8cm);
+            
+            % Labels
+            \node at (0,0) {\small \textbf{Ring -2}};
+            \node at (0,-0.3) {\tiny SMM};
+            
+            \node at (0,1.2) {\small \textbf{Ring -1}};
+            \node at (0,0.9) {\tiny Hypervisor};
+            
+            \node at (0,2) {\small \textbf{Ring 0}};
+            \node at (0,1.7) {\tiny Kernel};
+            
+            \node at (0,2.8) {\small \textbf{Ring 1-2}};
+            \node at (0,2.5) {\tiny Drivers};
+            
+            \node at (0,3.6) {\small \textbf{Ring 3}};
+            \node at (0,3.3) {\tiny User Apps};
+            
+            % SMM indicator
+            \draw[thick,<-] (0.5,-0.2) -- (2,-1) node[right] {System Management Mode};
+            \draw[thick,<-] (0.5,1) -- (2,0.5) node[right] {VMX Root Mode};
+        \end{tikzpicture}
+    \end{center}
+    
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \textbf{Privilege Levels:}
+            \begin{itemize}
+                \item CPL: Current Privilege Level
+                \item DPL: Descriptor Privilege Level
+                \item RPL: Requested Privilege Level
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \textbf{Access Rule:}
+            \begin{tcolorbox}[colback=yellow!20]
+                MAX(CPL, RPL) $\leq$ DPL
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Security Architecture - ARM TrustZone}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.9]
+            % Secure World
+            \draw[fill=green!30,rounded corners] (-4,0) rectangle (-0.5,4);
+            \node at (-2.25,3.7) {\textbf{Secure World}};
+            
+            % Secure levels
+            \draw[fill=green!50] (-3.5,2.8) rectangle (-1,3.5);
+            \node at (-2.25,3.15) {\small S-EL3: Monitor};
+            
+            \draw[fill=green!40] (-3.5,1.9) rectangle (-1,2.6);
+            \node at (-2.25,2.25) {\small S-EL2: S-Hypervisor};
+            
+            \draw[fill=green!35] (-3.5,1) rectangle (-1,1.7);
+            \node at (-2.25,1.35) {\small S-EL1: S-Kernel};
+            
+            \draw[fill=green!25] (-3.5,0.2) rectangle (-1,0.8);
+            \node at (-2.25,0.5) {\small S-EL0: S-Apps};
+            
+            % Normal World
+            \draw[fill=blue!30,rounded corners] (0.5,0) rectangle (4,4);
+            \node at (2.25,3.7) {\textbf{Normal World}};
+            
+            % Normal levels
+            \draw[fill=blue!40] (1,1.9) rectangle (3.5,2.6);
+            \node at (2.25,2.25) {\small EL2: Hypervisor};
+            
+            \draw[fill=blue!35] (1,1) rectangle (3.5,1.7);
+            \node at (2.25,1.35) {\small EL1: OS Kernel};
+            
+            \draw[fill=blue!25] (1,0.2) rectangle (3.5,0.8);
+            \node at (2.25,0.5) {\small EL0: Applications};
+            
+            % SMC arrow
+            \draw[<->,thick,red] (-0.5,2) -- (0.5,2);
+            \node[red] at (0,2.3) {\tiny SMC};
+        \end{tikzpicture}
+    \end{center}
+    
+    \begin{tcolorbox}[colback=orange!20]
+        \centering
+        \textbf{Key Feature:} Hardware-enforced isolation between Secure and Normal worlds
+    \end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Virtualization Security}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Intel VT-x Features:}
+            \begin{itemize}
+                \item VMX root/non-root modes
+                \item VMCS (VM Control Structure)
+                \item EPT (Extended Page Tables)
+                \item VPID (Virtual Processor ID)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{VM Exits:}
+            \begin{itemize}
+                \item Privileged instructions
+                \item Page faults
+                \item I/O operations
+                \item MSR access
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Hypervisor
+                \draw[fill=gray!30] (0,0) rectangle (6,1.5);
+                \node at (3,0.75) {\textbf{Hypervisor (VMM)}};
+                
+                % VMs
+                \draw[fill=blue!30] (0.5,2) rectangle (2.5,4);
+                \node at (1.5,3.5) {VM1};
+                \node at (1.5,2.5) {\small Guest OS};
+                
+                \draw[fill=green!30] (3.5,2) rectangle (5.5,4);
+                \node at (4.5,3.5) {VM2};
+                \node at (4.5,2.5) {\small Guest OS};
+                
+                % EPT arrows
+                \draw[<->,thick] (1.5,2) -- (1.5,1.5);
+                \node[left] at (1.3,1.75) {\tiny EPT};
+                
+                \draw[<->,thick] (4.5,2) -- (4.5,1.5);
+                \node[right] at (4.7,1.75) {\tiny EPT};
+                
+                % Hardware
+                \draw[fill=black!20] (0,-0.5) rectangle (6,-1.5);
+                \node at (3,-1) {\textbf{Hardware}};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Section 4: Trusted Execution
+\section{Trusted Execution Environments}
+
+\begin{frame}{Intel TDX (Trust Domain Extensions)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Architecture:}
+            \begin{itemize}
+                \item Confidential VMs (Trust Domains)
+                \item CPU-attested execution
+                \item Memory encryption per-TD
+                \item Secure EPT (S-EPT)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{TDX Module:}
+            \begin{itemize}
+                \item SEAM mode operation
+                \item TD lifecycle management
+                \item Memory encryption keys
+                \item Remote attestation
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.6]
+                % Cloud Provider Layer
+                \draw[fill=red!20] (0,0) rectangle (8,2);
+                \node at (4,1.5) {\textbf{Untrusted Host/VMM}};
+                \node at (4,0.5) {\small Cloud Provider Control};
+                
+                % TDX Module
+                \draw[fill=yellow!30] (0,2.2) rectangle (8,3.2);
+                \node at (4,2.7) {\textbf{TDX Module (SEAM)}};
+                
+                % Trust Domains
+                \draw[fill=green!30] (0.5,3.5) rectangle (3.5,5.5);
+                \node at (2,5) {\textbf{TD1}};
+                \node at (2,4) {\small Encrypted};
+                
+                \draw[fill=blue!30] (4.5,3.5) rectangle (7.5,5.5);
+                \node at (6,5) {\textbf{TD2}};
+                \node at (6,4) {\small Encrypted};
+                
+                % Lock symbols
+                \node at (2,4.5) {\textbf{[Lock]}};
+                \node at (6,4.5) {\textbf{[Lock]}};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \textbf{Key Features:}
+            \begin{itemize}
+                \item Host cannot access TD memory
+                \item Per-TD encryption keys
+                \item Attestation reports
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Intel SGX Enclaves}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Enclave Properties:}
+            \begin{itemize}
+                \item Isolated execution environment
+                \item Encrypted memory (MEE)
+                \item Remote attestation
+                \item Sealed storage
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Instructions:}
+            \begin{itemize}
+                \item \texttt{ECREATE}: Create enclave
+                \item \texttt{EENTER}: Enter enclave
+                \item \texttt{EEXIT}: Exit enclave
+                \item \texttt{ERESUME}: Resume after AEX
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Application
+                \draw[fill=gray!20] (0,0) rectangle (6,5);
+                \node at (3,4.5) {\textbf{Application}};
+                
+                % Enclave
+                \draw[fill=green!40,thick] (1,1) rectangle (5,3.5);
+                \node at (3,3) {\textbf{SGX Enclave}};
+                \node at (3,2.5) {\small Trusted Code};
+                \node at (3,2) {\small Encrypted Data};
+                \node at (3,1.5) {\textbf{[Lock]}};
+                
+                % Untrusted part
+                \node at (3,0.5) {\small Untrusted Code};
+                
+                % EPC
+                \draw[<-,thick] (5,2) -- (6.5,2) node[right] {EPC Memory};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \textbf{Page Types:}
+            REG, TCS, SECS, VA
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{MKTME (Multi-Key Total Memory Encryption)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Features:}
+            \begin{itemize}
+                \item Multiple encryption keys
+                \item Per-VM/container isolation
+                \item KeyID in physical address bits
+                \item AES-XTS encryption
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Key Management:}
+            \begin{itemize}
+                \item Up to 15 keys (4-bit KeyID)
+                \item Software-managed keys
+                \item PCONFIG instruction
+                \item Key rotation support
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.6]
+                % Physical address
+                \draw (0,4) rectangle (8,5);
+                \draw[fill=red!30] (0,4) rectangle (1.5,5);
+                \draw[fill=blue!30] (1.5,4) rectangle (8,5);
+                \node at (0.75,4.5) {\tiny KeyID};
+                \node at (4.75,4.5) {\small Physical Address};
+                
+                % Memory regions
+                \draw[fill=green!30] (0,0) rectangle (2.5,2);
+                \node at (1.25,1.5) {VM1};
+                \node at (1.25,1) {\small Key 1};
+                
+                \draw[fill=blue!30] (3,0) rectangle (5.5,2);
+                \node at (4.25,1.5) {VM2};
+                \node at (4.25,1) {\small Key 2};
+                
+                \draw[fill=yellow!30] (6,0) rectangle (8,2);
+                \node at (7,1.5) {VM3};
+                \node at (7,1) {\small Key 3};
+                
+                % Encryption engine
+                \draw[thick,<->] (4,2.5) -- (4,3.5);
+                \node at (5.5,3) {\small AES-XTS};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \textbf{Use Cases:}
+            \begin{itemize}
+                \item Cloud multi-tenancy
+                \item Container isolation
+                \item Key-based memory domains
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Section 5: Boot Security
+\section{Boot Security}
+
+\begin{frame}{Secure Boot}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{UEFI Secure Boot Chain:}
+            \begin{enumerate}
+                \item Platform Key (PK)
+                \item Key Exchange Keys (KEK)
+                \item Signature Database (db)
+                \item Forbidden Signatures (dbx)
+            \end{enumerate}
+            
+            \vspace{0.3cm}
+            \textbf{Boot Stages:}
+            \begin{itemize}
+                \item SEC: Security phase
+                \item PEI: Pre-EFI Init
+                \item DXE: Driver Execution
+                \item BDS: Boot Device Select
+                \item OS Loader verification
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.65]
+                % Boot chain
+                \node[draw,fill=red!30] (hw) at (0,0) {Hardware};
+                \node[draw,fill=orange!30] (uefi) at (0,-1.5) {UEFI Firmware};
+                \node[draw,fill=yellow!30] (shim) at (0,-3) {Shim Loader};
+                \node[draw,fill=green!30] (grub) at (0,-4.5) {GRUB};
+                \node[draw,fill=blue!30] (kernel) at (0,-6) {OS Kernel};
+                
+                % Verification arrows
+                \draw[->,thick] (hw) -- (uefi) node[midway,right] {\small Verify};
+                \draw[->,thick] (uefi) -- (shim) node[midway,right] {\small Verify};
+                \draw[->,thick] (shim) -- (grub) node[midway,right] {\small Verify};
+                \draw[->,thick] (grub) -- (kernel) node[midway,right] {\small Verify};
+                
+                % Keys
+                \node[draw,fill=gray!30] (pk) at (4,0) {PK};
+                \node[draw,fill=gray!30] (kek) at (4,-1.5) {KEK};
+                \node[draw,fill=gray!30] (db) at (4,-3) {db};
+                
+                % Key relationships
+                \draw[dashed,->] (pk) -- (uefi);
+                \draw[dashed,->] (kek) -- (shim);
+                \draw[dashed,->] (db) -- (grub);
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Measured Boot \& TPM}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{TPM Platform Configuration Registers:}
+            \begin{itemize}
+                \item PCR0-7: BIOS/UEFI
+                \item PCR8-9: OS Loader
+                \item PCR10: IMA (Linux)
+                \item PCR11-15: OS-specific
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Extend Operation:}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                PCR[i] = SHA256(PCR[i] || data)
+            \end{tcolorbox}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Boot Measurement Process:}
+            \begin{tikzpicture}[scale=0.6]
+                % Components
+                \node[draw] (bios) at (0,0) {BIOS};
+                \node[draw] (mbr) at (0,-1.5) {MBR};
+                \node[draw] (loader) at (0,-3) {Bootloader};
+                \node[draw] (kernel) at (0,-4.5) {Kernel};
+                
+                % TPM
+                \draw[fill=yellow!30] (3,-2) rectangle (6,-3.5);
+                \node at (4.5,-2.75) {\textbf{TPM}};
+                
+                % Measurements
+                \draw[->,blue] (bios) -- (3,-2.2) node[midway,above] {\tiny Measure};
+                \draw[->,blue] (mbr) -- (3,-2.5) node[midway,above] {\tiny Measure};
+                \draw[->,blue] (loader) -- (3,-2.8) node[midway,below] {\tiny Measure};
+                \draw[->,blue] (kernel) -- (3,-3.3) node[midway,below] {\tiny Measure};
+            \end{tikzpicture}
+            
+            \textbf{Remote Attestation:}
+            Quote = Sign(PCRs, AIK)
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Section 6: Summary
+\section{Summary}
+
+\begin{frame}{Hardware Security Evolution}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.8]
+            % Timeline
+            \draw[thick,->] (0,0) -- (12,0) node[right] {Time};
+            
+            % Security features
+            \node[above] at (1,0.5) {NX Bit};
+            \draw[thick] (1,0) -- (1,0.2);
+            \node[below] at (1,-0.3) {\tiny 2000s};
+            
+            \node[above] at (3,0.5) {ASLR};
+            \draw[thick] (3,0) -- (3,0.2);
+            \node[below] at (3,-0.3) {\tiny 2005};
+            
+            \node[above] at (5,0.5) {SGX};
+            \draw[thick] (5,0) -- (5,0.2);
+            \node[below] at (5,-0.3) {\tiny 2015};
+            
+            \node[above] at (7,0.5) {CET};
+            \draw[thick] (7,0) -- (7,0.2);
+            \node[below] at (7,-0.3) {\tiny 2020};
+            
+            \node[above] at (9,0.5) {TDX};
+            \draw[thick] (9,0) -- (9,0.2);
+            \node[below] at (9,-0.3) {\tiny 2021};
+            
+            \node[above] at (11,0.5) {MTE/PAC};
+            \draw[thick] (11,0) -- (11,0.2);
+            \node[below] at (11,-0.3) {\tiny 2022};
+        \end{tikzpicture}
+    \end{center}
+    
+    \vspace{0.5cm}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Current Trends:}
+            \begin{itemize}
+                \item Hardware-software co-design
+                \item Confidential computing
+                \item Memory safety focus
+                \item Supply chain security
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Challenges:}
+            \begin{itemize}
+                \item Performance overhead
+                \item Compatibility issues
+                \item Side-channel attacks
+                \item Ecosystem adoption
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Key Takeaways}
+    \begin{itemize}
+        \item \textbf{Defense in Depth:} Multiple layers of security mechanisms
+        \vspace{0.3cm}
+        \item \textbf{Hardware Acceleration:} Critical security features need hardware support for performance
+        \vspace{0.3cm}
+        \item \textbf{Trust Boundaries:} Clear separation between trusted and untrusted components
+        \vspace{0.3cm}
+        \item \textbf{Attestation:} Cryptographic proof of system state and configuration
+        \vspace{0.3cm}
+        \item \textbf{Memory Protection:} Tags, authentication, and encryption for memory safety
+        \vspace{0.3cm}
+        \item \textbf{Control Flow:} Hardware enforcement of valid program execution paths
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    \begin{tcolorbox}[colback=blue!20]
+        \centering
+        \textbf{Future:} Homomorphic encryption, quantum-resistant crypto, AI-driven security
+    \end{tcolorbox}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+    \Huge Questions?
+    
+    \vspace{1cm}
+    \Large Thank You!
+    \end{center}
+\end{frame}
+
+\end{document}
