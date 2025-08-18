@@ -405,6 +405,79 @@
   description={},
 }
 
+
+\begin{frame}
+  \frametitle{Code Example}
+  
+  \begin{columns}[T]
+    \column{0.42\textwidth}
+    \centering
+    \textbf{C Code}
+    \vspace{0.5em}
+    
+    \begin{tcolorbox}[colback=white, colframe=black!60, boxrule=0.8pt, left=3pt, right=3pt, top=3pt, bottom=3pt]
+      \lstset{
+        language=C,
+        basicstyle=\ttfamily\small,
+        keywordstyle=\color{black}\bfseries,
+        showstringspaces=false,
+        escapechar=@,
+        frame=none,
+        tabsize=2
+      }
+      \begin{lstlisting}
+@\colorbox{red!25}{for (i=100; i>0; i--)}@
+  @\colorbox{green!25}{for (j=2; j<5; j++)}@
+    @\colorbox{cyan!25}{if (i\%j == 0) ...}@
+      \end{lstlisting}
+    \end{tcolorbox}
+    
+    \column{0.58\textwidth}
+    \centering
+    \textbf{Translation} \hfill \textcolor{blue}{\small Assembly}
+    \vspace{0.5em}
+    
+    \begin{tcolorbox}[colback=white, colframe=black!60, boxrule=0.8pt, left=3pt, right=3pt, top=3pt, bottom=3pt]
+      \small\ttfamily
+      \renewcommand{\arraystretch}{1.1}
+      \begin{tabular}{@{}r@{~~}l@{}}
+        & \colorbox{gray!25}{Addi~~~r5, r0, 5}\\
+        & \colorbox{red!25}{Addi~~~r1, r0, 100}\\
+        L1: & \colorbox{green!25}{Addi~~~r2, r0, 2}\\
+        L2: & \colorbox{cyan!25}{Mod~~~~r3, r1, r2}\\
+        & \colorbox{cyan!25}{Bne~~~~r3, r0, IF}\\
+        & \colorbox{gray!15}{. . .}\\
+        IF: & \colorbox{green!25}{Addi~~~r2, r2, 1}\\
+        & \colorbox{green!25}{Bne~~~~r2, r5, L2}\\
+        & \colorbox{red!25}{Subi~~~r1, r1, 1}\\
+        & \colorbox{red!25}{Bne~~~~r1, r0, L1}\\
+      \end{tabular}
+    \end{tcolorbox}
+  \end{columns}
+  
+  \vspace{0.8em}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      legend/.style={draw=black!50, minimum width=2.2cm, minimum height=0.5cm, font=\footnotesize, inner sep=2pt}
+    ]
+      % Legend title
+      \node[font=\small\bfseries] at (0, 0.8) {Color Mapping Legend};
+      
+      % Legend boxes
+      \node[legend, fill=red!25] (outer) at (-4.5,0) {Outer loop (i)};
+      \node[legend, fill=green!25] (inner) at (-1.5,0) {Inner loop (j)};
+      \node[legend, fill=cyan!25] (if) at (1.5,0) {If condition};
+      \node[legend, fill=gray!25] (init) at (4.5,0) {Setup/Init};
+      
+      % Note
+      \node[below=0.4cm of inner, font=\scriptsize\itshape, text width=11cm, align=center] {
+        Each C statement translates to multiple assembly instructions. Branch instructions (Bne) implement control flow.
+      };
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
 % New local frame macro using pgfkeys
 \newcommand{\localFrameKV}[1]{%
   % Initialize BHR variables to defaults
@@ -983,37 +1056,37 @@
   \frametitle{Example: Nested Loop with Switch}
   
   \begin{columns}[T]
-    \column{0.5\textwidth}
+    \column{0.7\textwidth}
     \begin{tcolorbox}[colback=gray!5, colframe=gray!50]
-      \small
-      \begin{verbatim}
-for (i=100; i>0; i--)
-  for (j=2; j<6; j++)
-    switch (i%j) {
-      case 0: ... break;
-      case 1: ... break;
-      case 2: ... break;
-      case 3: ... break;
-      case 4: ... break;
-    }
-      \end{verbatim}
+      \small\ttfamily
+      \begin{tabbing}
+      \hspace{1em}\=\hspace{1em}\=\hspace{1em}\=\hspace{1em}\=\kill
+      for (i=100; i>0; i--)\tikzmark{br0} \textcolor{blue}{$\leftarrow$ Branch 0}\\
+      \> for (j=2; j<6; j++)\tikzmark{br1} \textcolor{blue}{$\leftarrow$ Branch 1}\\
+      \> \> switch (i\%j) \{ \\
+      \> \> \> case 0: ...\tikzmark{br2} \textcolor{blue}{$\leftarrow$ Branch 2}\\
+      \> \> \> case 1: ...\tikzmark{br3} \textcolor{blue}{$\leftarrow$ Branch 3}\\
+      \> \> \> case 2: ...\tikzmark{br4} \textcolor{blue}{$\leftarrow$ Branch 4}\\
+      \> \> \> case 3: ...\tikzmark{br5} \textcolor{blue}{$\leftarrow$ Branch 5}\\
+      \> \> \> case 4: ...\tikzmark{br6} \textcolor{blue}{$\leftarrow$ Branch 6}\\
+      \> \> \}
+      \end{tabbing}
     \end{tcolorbox}
     
-    \column{0.5\textwidth}
+    \column{0.3\textwidth}
+    \centering
+    \textbf{Branch indices}\\[0.5em]
     \begin{tikzpicture}[
-      node distance=0.5cm,
-      box/.style={draw, minimum width=1cm, minimum height=0.8cm}
+      box/.style={draw, minimum width=0.8cm, minimum height=0.6cm, font=\footnotesize}
     ]
-      % Branch indices
+      % Branch indices boxes
       \node[box] (b0) at (0,0) {0};
-      \node[box, below=of b0] (b1) {1};
-      \node[box, below=of b1] (b2) {2};
-      \node[box, below=of b2] (b3) {3};
-      \node[box, below=of b3] (b4) {4};
-      \node[box, below=of b4] (b5) {5};
-      \node[box, below=of b5] (b6) {6};
-      
-      \node[left=0.5cm of b3] {Branch indices};
+      \node[box] (b1) at (0,-0.8) {1};
+      \node[box] (b2) at (0,-1.6) {2};
+      \node[box] (b3) at (0,-2.4) {3};
+      \node[box] (b4) at (0,-3.2) {4};
+      \node[box] (b5) at (0,-4.0) {5};
+      \node[box] (b6) at (0,-4.8) {6};
     \end{tikzpicture}
   \end{columns}
 \end{frame}
