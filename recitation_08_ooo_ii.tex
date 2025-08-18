@@ -20,6 +20,10 @@
 \definecolor{highlightyellow}{RGB}{255,230,100}
 \definecolor{lightblue}{RGB}{200,230,250}
 \definecolor{darkblue}{RGB}{0,100,200}
+\definecolor{lightgreen}{RGB}{144,238,144}
+
+% Define asmcode command for assembly code formatting
+\newcommand{\asmcode}[1]{\vspace{-0.2cm}\tiny\texttt{#1}}
 
 % Code listing settings
 \lstset{
@@ -384,6 +388,100 @@ Course 234267
 \end{frame}
 
 
+\begin{frame}{Out-of-Order Execution - Cycle 6a}
+\scriptsize
+\begin{tikzpicture}[
+    box/.style={draw, rectangle, minimum width=1.5cm, minimum height=0.4cm},
+    regbox/.style={draw, rectangle, minimum width=1.2cm, minimum height=0.35cm},
+    highlightbox/.style={draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen},
+    roundbox/.style={draw, ellipse, minimum width=3cm, minimum height=1cm},
+    dashedbox/.style={draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm}
+]
 
+% RAT (Register Alias Table)
+\node[draw, rectangle, minimum width=1.8cm, minimum height=4cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
+\foreach \i/\val in {1/, 2/, 3/rb4, 4/rb2, 5/rb5, 6/rb6, 7/rb7, 8/, 9/, 10/} {
+    \pgfmathsetmacro{\ypos}{1.5 - 0.35*\i}
+    \node[regbox] at (0, \ypos) {R\i \hspace{0.3cm} \val};
+}
+
+% ROB (Reorder Buffer)
+\node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=1.5cm of rat] (rob) {};
+\foreach \i/\inst/\stat in {0//,1//,2/{Add: R4,R0,20}/ok,3/{Lw R5, [100+R4]}/Inv,4/{Add: R3,R2,2}/Inv,5/{Add: R5,R3,2}/Inv,6/{Add: R6,R0,6}/Inv,7/{Add: R7,R5,R0}/Inv,8//} {
+    \pgfmathsetmacro{\ypos}{1.5 - 0.4*\i}
+    \node[box, minimum width=2.8cm] (rob\i) at ([xshift=1.5cm]rat.east |- 0,\ypos) {\i: \inst};
+    \ifnum\i=2
+        \node[text=correctgreen] at ([xshift=1.1cm]rob\i.east) {\textbf{ok}};
+    \else
+        \if\i>2
+            \if\i<8
+                \node[text=incorrectred] at ([xshift=1.1cm]rob\i.east) {\textbf{Inv}};
+            \fi
+        \fi
+    \fi
+}
+
+% IDQ (Instruction Decode Queue)
+\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=4cm of rat, yshift=1cm] (idq) {};
+\node at (idq.center) {Addi R9,R0,9};
+\node at ([yshift=-0.5cm]idq.center) {Addi R8,R0,8};
+
+% RS (Reservation Station)
+\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=0.5cm of idq] (rs) {};
+\node[box] at ([yshift=0.8cm]rs.center) {RB6 $\leftarrow$ R0+6};
+\node[box] at ([yshift=0.3cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
+\node[box] at ([yshift=-0.5cm]rs.center) {RB5 $\leftarrow$ rb4+2};
+
+% MOB (Memory Order Buffer)
+\node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=1cm of idq] (mob) {};
+\node[box] at (mob.center) {RB3$\leftarrow$Ld(Rb2+100)};
+\node[text=red] at ([xshift=1.2cm]mob.center) {\textbf{W}};
+
+% Assembly Code Box - using tabular instead of direct text to avoid line break issues
+\node[fill=lightgreen, draw, rectangle, minimum width=3.5cm, minimum height=3.5cm, right=1cm of mob, yshift=0.2cm] (code) {
+    \begin{tabular}{l}
+    \asmcode{L1:}\\
+    \asmcode{ADDI R10,R0,100}\\
+    \asmcode{SUB R1,R1,R1}\\
+    \asmcode{ADDI R4,R0,20}\\
+    \asmcode{LW R5,100(R4)}\\
+    \asmcode{ADDI R3,R2,2}\\
+    \asmcode{ADDI R5,R3,2}\\
+    \asmcode{ADDI R6,R0,6}\\
+    \asmcode{ADDI R7,R5,R0}\\
+    \asmcode{ADDI R8,R0,8}\\
+    \asmcode{ADDI R9,R0,9}\\
+    \asmcode{ADDI R1,R1,1}\\
+    \asmcode{BNE R1,R10,L1}\\
+    \asmcode{L2: ADDI R4,R0,23}
+    \end{tabular}
+};
+
+% Execute and Retire blocks
+\node[roundbox, below=3.5cm of rs] (execute) {\textbf{Execute}};
+\node[dashedbox, below=0.5cm of execute] (retire) {\textbf{Retire}};
+
+% Bottom boxes showing register mappings
+\node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, left=1cm of execute, yshift=1cm] (rb3box) {
+    \begin{tabular}{l}
+    RB3 $\leftarrow$ rb2+100\\
+    RB4 $\leftarrow$ R2+2
+    \end{tabular}
+};
+
+\node[draw, dashed, rectangle, minimum width=2.5cm, minimum height=0.6cm, below=0.3cm of rb3box] (r4box) {
+    R4 $\leftarrow$ RB2
+};
+
+% Arrows
+\draw[->, thick, yellow!80!black] (rob2.east) to[out=0, in=180] (execute.west);
+\draw[->, dotted, thick] (rob3.east) to[out=0, in=180] (rb3box.east);
+\draw[->, yellow!80!black] (r4box.north) -- (rb3box.south);
+
+% Page number
+\node at (8.5, -4) {18};
+
+\end{tikzpicture}
+\end{frame}
 
 \end{document}
