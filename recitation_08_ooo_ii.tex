@@ -25,6 +25,35 @@
 % Define asmcode command for assembly code formatting
 \newcommand{\asmcode}[1]{\vspace{-0.2cm}\tiny\texttt{#1}}
 
+% Macro for OOO execution diagram components
+\newcommand{\OOODiagram}{%
+    % Define styles
+    \tikzstyle{box}=[draw, rectangle, minimum width=1.5cm, minimum height=0.4cm]
+    \tikzstyle{regbox}=[draw, rectangle, minimum width=1.2cm, minimum height=0.35cm]
+    \tikzstyle{highlightbox}=[draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen]
+    \tikzstyle{roundbox}=[draw, ellipse, minimum width=3cm, minimum height=1cm]
+    \tikzstyle{dashedbox}=[draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm]
+    
+    % RAT (Register Alias Table) - empty structure
+    \node[draw, rectangle, minimum width=1.8cm, minimum height=4cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
+    
+    % ROB (Reorder Buffer) - empty structure
+    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=1.5cm of rat] (rob) {};
+    
+    % IDQ (Instruction Decode Queue) - empty structure
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=4cm of rat, yshift=1cm] (idq) {};
+    
+    % RS (Reservation Station) - empty structure
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=0.5cm of idq] (rs) {};
+    
+    % MOB (Memory Order Buffer) - empty structure
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=1cm of idq] (mob) {};
+    
+    % Execute and Retire blocks
+    \node[roundbox, below=3.5cm of rs] (execute) {\textbf{Execute}};
+    \node[dashedbox, below=0.5cm of execute] (retire) {\textbf{Retire}};
+}
+
 % Code listing settings
 \lstset{
     basicstyle=\ttfamily\small,
@@ -428,9 +457,9 @@ Course 234267
 
 % RS (Reservation Station)
 \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=0.5cm of idq] (rs) {};
-\node[box] at ([yshift=0.8cm]rs.center) {RB6 $\leftarrow$ R0+6};
-\node[box] at ([yshift=0.3cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
-\node[box] at ([yshift=-0.5cm]rs.center) {RB5 $\leftarrow$ rb4+2};
+\node[box, anchor=west] at ([xshift=-1cm, yshift=0.8cm]rs.center) {RB6 $\leftarrow$ R0+6};
+\node[box, anchor=west] at ([xshift=-1cm, yshift=0.3cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
+\node[box, anchor=west] at ([xshift=-1cm, yshift=-0.5cm]rs.center) {RB5 $\leftarrow$ rb4+2};
 
 % MOB (Memory Order Buffer)
 \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=1cm of idq] (mob) {};
@@ -481,6 +510,37 @@ Course 234267
 % Page number
 \node at (8.5, -4) {18};
 
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution - Example with Macro}
+\scriptsize
+\begin{tikzpicture}
+    % Use the OOODiagram macro to create the basic structure
+    \OOODiagram
+    
+    % Now add content to each component
+    % RAT entries
+    \foreach \i/\val in {1/, 2/, 3/rb4, 4/rb2, 5/rb5} {
+        \pgfmathsetmacro{\ypos}{1.5 - 0.35*\i}
+        \node[regbox] at (rat.center |- 0,\ypos) {R\i: \val};
+    }
+    
+    % ROB entries
+    \node[box, anchor=west] at ([xshift=-1.3cm, yshift=1cm]rob.center) {0: Add R4,R0,20};
+    \node[box, anchor=west] at ([xshift=-1.3cm, yshift=0.5cm]rob.center) {1: Lw R5,[100+R4]};
+    \node[box, anchor=west] at ([xshift=-1.3cm, yshift=0cm]rob.center) {2: Add R3,R2,2};
+    
+    % IDQ entries
+    \node[anchor=center] at ([yshift=0.5cm]idq.center) {Addi R8,R0,8};
+    \node[anchor=center] at ([yshift=-0.5cm]idq.center) {Addi R9,R0,9};
+    
+    % RS entries (left-aligned)
+    \node[box, anchor=west] at ([xshift=-1cm, yshift=0.5cm]rs.center) {RB6 $\leftarrow$ R0+6};
+    \node[box, anchor=west] at ([xshift=-1cm, yshift=0cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
+    
+    % MOB entry
+    \node[box] at (mob.center) {RB3$\leftarrow$Ld(rb2+100)};
 \end{tikzpicture}
 \end{frame}
 
