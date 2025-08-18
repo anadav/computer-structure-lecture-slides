@@ -82,14 +82,12 @@
 \node at (20*0.6, 0) {...};
 
 % Prediction row
-\pause
 \foreach \i in {0,...,19} {
     \node[predict] (pred\i) at (\i*0.6, -1) {1};
 }
 \node at (20*0.6, -1) {...};
 
 % Counter row
-\pause
 \foreach \i in {0,...,19} {
     \pgfmathtruncatemacro{\posInGroup}{mod(\i,5)}
     \ifnum\posInGroup=0
@@ -105,7 +103,6 @@
 \node at (20*0.6, -2) {2 3 ...};
 
 % Misprediction indicators
-\pause
 \foreach \i in {4,9,14,19} {
     % Highlight mispredicted positions
     \node[predict, wrong] at (\i*0.6, -1) {1};
@@ -116,12 +113,10 @@
     \node[color=red, font=\Large] at (\i*0.6, -0.5) {$\times$};
 }
 % Correct prediction indicators (check marks)
-\pause
 \foreach \i in {0,1,2,3,5,6,7,8,10,11,12,13,15,16,17,18} {
     \node[color=green!60!black, font=\small] at (\i*0.6, -0.5) {$\checkmark$};
 }
 % Group brackets
-\pause
 \foreach \g in {0,1,2,3} {
     \pgfmathtruncatemacro{\startx}{\g*5}
     \pgfmathtruncatemacro{\endx}{\g*5+4}
@@ -133,33 +128,32 @@
 
 \end{tikzpicture}
 
-\vspace{0.3cm}
-\pause
+%\vspace{0.3cm}
 \begin{alertblock}{Key Observation}
 \centering
 \textcolor{incorrectred}{\textbf{2-bit counter $\rightarrow$ one misprediction every iteration}}
 \end{alertblock}
 
-\pause
-\vspace{0.2cm}
+%\vspace{0.2cm}
 \begin{block}{Performance Example}
+\scriptsize
 \begin{columns}[T]
 \column{0.55\textwidth}
 \begin{itemize}
 \item<8-> Assume 1 of 20 branches mispredicts\\
-      \textcolor{gray}{\small (19 predictions are correct)}
+%      \textcolor{gray}{(19 predictions are correct)}
 \item<9-> Branch frequency: 20\%\\
-      \textcolor{gray}{\small (1 of 5 instructions is branch)}
+      \textcolor{gray}{(1 of 5 instructions is branch)}
 \item<10-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 100 instructions}}
 \end{itemize}
 
 \column{0.45\textwidth}
 \begin{itemize}
 \item<11-> IPC without penalty = 2\\
-      \textcolor{gray}{\small (two instructions finish per cycle)}
+%      \textcolor{gray}{(two instructions finish per cycle)}
 \item<12-> Mispredict penalty: 10 cycles
-\item<13-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 50 cycles}}
-\item<14-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 10 cycles penalty every 50 cycles}}
+\item[]<13-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 50 cycles}}
+\item[]<14-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 10 cycles penalty every 50 cycles}}
 \end{itemize}
 \end{columns}
 
@@ -513,59 +507,56 @@
         \end{tabbing}
       \end{tcolorbox}
       
-      \vspace{0.5em}
+     
+    \column{0.35\textwidth}
       \centering
-      \colorbox{highlightyellow}{\textbf{\localframeOutcome}}
-      
-      \column{0.70\textwidth}
-      \begin{columns}
-        \column{0.5\textwidth}
-        \centering
 
-        \footnotesize
-        \begin{tabular}{|c|ccc|c}
-            \toprule
-            tag & \multicolumn{4}{c|}{BHRs} \\
-            \midrule
-            \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
-              \cellcolor{highlightyellow}IP1 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHROne}} \\
-            \else
-              IP1 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHROne}} \\
-            \fi
-            \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
-              \cellcolor{highlightyellow}IP2 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRTwo}} \\
-            \else
-              IP2 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRTwo}} \\
-            \fi
-            \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
-              \cellcolor{highlightyellow}IP3 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRThree}} \\
-            \else
-              IP3 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRThree}} \\
-            \fi
-            \bottomrule
-        \end{tabular}
-        
-        \vspace{0.8em}
-            \centering
-            \begin{tabular}{|c|r|}
-            \toprule
-            Reg & Value \\
-            \midrule
-            r1 & \localframeROne \\
-            r2 & \localframeRTwo \\
-            r3 & \localframeRThree \\
-            \bottomrule
-            \end{tabular}
-            
-            \column{0.5\textwidth}
-            \centering\scriptsize
-            \stateTable{\localframeStates}
-        \end{columns}
-        
+      \footnotesize
+      \begin{tabular}{|c|ccc|c}
+          \toprule
+          tag & \multicolumn{4}{c|}{BHRs} \\
+          \midrule
+          \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
+            \cellcolor{highlightyellow}IP1 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHROne}} \\
+          \else
+            IP1 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHROne}} \\
+          \fi
+          \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
+            \cellcolor{highlightyellow}IP2 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRTwo}} \\
+          \else
+            IP2 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRTwo}} \\
+          \fi
+          \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
+            \cellcolor{highlightyellow}IP3 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRThree}} \\
+          \else
+            IP3 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRThree}} \\
+          \fi
+          \bottomrule
+      \end{tabular}
+      
+      \vspace{0.8em}
+          \centering
+          \begin{tabular}{|c|r|}
+          \toprule
+          Reg & Value \\
+          \midrule
+          r1 & \localframeROne \\
+          r2 & \localframeRTwo \\
+          r3 & \localframeRThree \\
+          \bottomrule
+          \end{tabular}
+          
+    \column{0.35\textwidth}
+      \centering\scriptsize
+      \stateTable{\localframeStates}
+      
       \vspace{0.5em}
       \centering
       \textcolor{blue}{\small \localframeDesc}
     \end{columns}
+    \vspace{0.5em}
+    \centering
+    \colorbox{highlightyellow}{\textbf{\localframeOutcome}}
   \end{frame}
 }
 
@@ -667,9 +658,7 @@
       \end{tabular}
       
       \vspace{0.5em}
-      \centering
-      \textcolor{blue}{\small \globalframeDesc}
-      
+     
       \column{0.35\textwidth}
       \centering
       \footnotesize
@@ -677,7 +666,9 @@
       \scriptsize
       \stateTable{\globalframeStates}
     \end{columns}
-  \end{frame}
+      \centering
+      \textcolor{blue}{\small \globalframeDesc}
+   \end{frame}
 }
 
 % Wrapper for old globalFrame calls - converts to key-value format
