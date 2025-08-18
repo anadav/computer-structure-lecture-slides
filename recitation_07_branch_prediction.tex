@@ -338,6 +338,364 @@
 \end{frame}
 
 %==========================================
+\definecolor{correctgreen}{RGB}{0,150,0}
+\definecolor{incorrectred}{RGB}{200,0,0}
+\definecolor{counterblue}{RGB}{70,130,255}
+\definecolor{highlightyellow}{RGB}{255,230,100}
+\definecolor{codeblue}{RGB}{0,0,200}
+
+% Command to highlight state changes
+\newcommand{\stateHighlight}[2]{%
+  \ifnum#1=1
+    \cellcolor{highlightyellow}#2%
+  \else
+    #2%
+  \fi
+}
+
+% Macro for BHR display as boxes
+\newcommand{\BHRbox}[4]{%
+  \begin{tikzpicture}[baseline=(current bounding box.center)]
+    \foreach \bit [count=\i] in {#1,#2,#3,#4} {
+      \node[draw, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (\i*0.7,0) {\footnotesize\bit};
+    }
+  \end{tikzpicture}
+}
+
+% Main frame macro for Local History Predictor
+\newcommand{\localFrame}[9]{%
+  % #1: Branch outcome text
+  % #2: IP1 BHR (format: {b1}{b2}{b3}{b4})
+  % #3: IP2 BHR
+  % #4: IP3 BHR
+  % #5: r1 value
+  % #6: r2 value
+  % #7: r3 value
+  % #8: State table changes (format: index,state)
+  % #9: Result description
+  \begin{frame}
+    \frametitle{Local History Branch Predictor}
+    \begin{columns}[T]
+      \column{0.30\textwidth}
+      \begin{tcolorbox}[colback=gray!5, colframe=gray!50, boxrule=0.5pt, left=2pt, right=2pt, top=2pt, bottom=2pt]
+        \footnotesize\ttfamily
+        \begin{tabbing}
+        \hspace{2em}\=\hspace{2em}\=\kill
+        \> Addi r5, r0, 5\\
+        \> Addi r1, r0, 100\\
+        L1:\> Addi r2, r0, 2\\
+        L2:\> Mod r3, r1, r2\\
+        \> Bne r3, r0, IF\\
+        \> . . .\\
+        IF:\> Addi r2, r2, 1\\
+        \> Bne r2, r5, L2\\
+        \> Subi r1, r1, 1\\
+        \> Bne r1, r0, L1
+        \end{tabbing}
+      \end{tcolorbox}
+      
+      \vspace{0.5em}
+      \centering
+      \colorbox{highlightyellow}{\textbf{#1}}
+      
+      \column{0.70\textwidth}
+      \footnotesize
+      \begin{tabular}{|c|ccc|c}
+        \toprule
+        tag & \multicolumn{4}{c|}{BHRs} \\
+        \midrule
+        IP1 & \multicolumn{4}{c|}{\BHRbox#2} \\
+        IP2 & \multicolumn{4}{c|}{\BHRbox#3} \\
+        IP3 & \multicolumn{4}{c|}{\BHRbox#4} \\
+        \bottomrule
+      \end{tabular}
+      
+      \vspace{0.8em}
+      \begin{columns}
+        \column{0.35\textwidth}
+        \centering
+        \begin{tabular}{c|r}
+          \toprule
+          Reg & Value \\
+          \midrule
+          r1 & #5 \\
+          r2 & #6 \\
+          r3 & #7 \\
+          \bottomrule
+        \end{tabular}
+        
+        \column{0.65\textwidth}
+        \centering\tiny
+        \stateTable{#8}
+      \end{columns}
+      
+      \vspace{0.5em}
+      \centering
+      \textcolor{blue}{\small #9}
+    \end{columns}
+  \end{frame}
+}
+
+% Main frame macro for Global History Predictor
+\newcommand{\globalFrame}[7]{%
+  % #1: Branch outcome text
+  % #2: Global BHR (format: {b1}{b2}{b3}{b4})
+  % #3: r1 value
+  % #4: r2 value
+  % #5: r3 value
+  % #6: State table changes (format: index,state)
+  % #7: Result description
+  \begin{frame}
+    \frametitle{Global History Branch Predictor}
+    \begin{columns}[T]
+      \column{0.42\textwidth}
+      \begin{tcolorbox}[colback=gray!5, colframe=gray!50, boxrule=0.5pt, left=2pt, right=2pt, top=2pt, bottom=2pt]
+        \footnotesize\ttfamily
+        \begin{tabbing}
+        \hspace{2em}\=\hspace{2em}\=\kill
+        \> Addi r5, r0, 5\\
+        \> Addi r1, r0, 100\\
+        L1:\> Addi r2, r0, 2\\
+        \> Mod r3, r1, r2\\
+        L2:\> Bne r3, r0, IF\\
+        \> . . .\\
+        IF:\> Addi r2, r2, 1\\
+        \> Bne r2, r5, L2\\
+        \> Subi r1, r1, 1\\
+        \> Bne r1, r0, L1
+        \end{tabbing}
+      \end{tcolorbox}
+      
+      \vspace{0.5em}
+      \centering
+      \colorbox{highlightyellow}{\textbf{#1}}
+      
+      \column{0.58\textwidth}
+      \footnotesize
+      \begin{center}
+        \textbf{Global BHR}\\[0.3em]
+        \BHRbox#2
+      \end{center}
+      
+      \vspace{0.8em}
+      \begin{columns}
+        \column{0.35\textwidth}
+        \centering
+        \begin{tabular}{c|r}
+          \toprule
+          Reg & Value \\
+          \midrule
+          r1 & #3 \\
+          r2 & #4 \\
+          r3 & #5 \\
+          \bottomrule
+        \end{tabular}
+        
+        \column{0.65\textwidth}
+        \centering
+        \textbf{Global Table}\\[0.3em]
+        \tiny
+        \stateTable{#6}
+      \end{columns}
+      
+      \vspace{0.5em}
+      \centering
+      \textcolor{blue}{\small #7}
+    \end{columns}
+  \end{frame}
+}
+
+% State table macro
+\newcommand{\stateTable}[1]{%
+  % #1: comma-separated list of index:state:highlight
+  % Format: 0:WT:0,3:ST:1,12:WNT:0,...
+  \begin{tabular}{c|c||c|c}
+    \toprule
+    \multicolumn{2}{c||}{States 0-7} & \multicolumn{2}{c}{States 8-15} \\
+    \midrule
+    \stateRow{0}{#1} & \stateRow{8}{#1} \\
+    \stateRow{1}{#1} & \stateRow{9}{#1} \\
+    \stateRow{2}{#1} & \stateRow{10}{#1} \\
+    \stateRow{3}{#1} & \stateRow{11}{#1} \\
+    \stateRow{4}{#1} & \stateRow{12}{#1} \\
+    \stateRow{5}{#1} & \stateRow{13}{#1} \\
+    \stateRow{6}{#1} & \stateRow{14}{#1} \\
+    \stateRow{7}{#1} & \stateRow{15}{#1} \\
+    \bottomrule
+  \end{tabular}
+}
+
+% Helper to format state with color
+\newcommand{\formatState}[1]{%
+  \ifnum\pdfstrcmp{#1}{ST}=0\textcolor{correctgreen}{\textbf{#1}}%
+  \else\ifnum\pdfstrcmp{#1}{WT}=0#1%
+  \else\ifnum\pdfstrcmp{#1}{WNT}=0\textcolor{incorrectred}{#1}%
+  \else\ifnum\pdfstrcmp{#1}{SNT}=0\textcolor{incorrectred}{\textbf{#1}}%
+  \else #1%
+  \fi\fi\fi\fi%
+}
+
+% Helper to get state for specific index
+\newcommand{\stateRow}[2]{%
+  % #1: index, #2: full state string
+  % Returns the row for this index
+  #1 & \getStateForIndex{#1}{#2}%
+}
+
+% Parse state string and return formatted state for given index
+\newcommand{\getStateForIndex}[2]{%
+  % Default all to WT, then override based on input
+  \def\tempstate{WT}%
+  \def\temphighlight{0}%
+  % Parse the input string for this index
+  \parseStateString{#1}{#2}%
+  \ifnum\temphighlight=1
+    \cellcolor{highlightyellow}\formatState{\tempstate}%
+  \else
+    \formatState{\tempstate}%
+  \fi
+}
+
+% Helper to parse state string - simplified version
+\newcommand{\parseStateString}[2]{%
+  % This is a simplified implementation
+  % In practice, you'd parse #2 to find if #1 appears
+  % For now, using manual specification in frames
+}
+
+% Advanced macro for complete state specification
+% Usage: \fullStateTable{index1/state1/highlight1,index2/state2/highlight2,...}
+\newcommand{\fullStateTable}[1]{%
+  \def\stateZero{WT}\def\highlightZero{0}%
+  \def\stateOne{WT}\def\highlightOne{0}%
+  \def\stateTwo{WT}\def\highlightTwo{0}%
+  \def\stateThree{WT}\def\highlightThree{0}%
+  \def\stateFour{WT}\def\highlightFour{0}%
+  \def\stateFive{WT}\def\highlightFive{0}%
+  \def\stateSix{WT}\def\highlightSix{0}%
+  \def\stateSeven{WT}\def\highlightSeven{0}%
+  \def\stateEight{WT}\def\highlightEight{0}%
+  \def\stateNine{WT}\def\highlightNine{0}%
+  \def\stateTen{WT}\def\highlightTen{0}%
+  \def\stateEleven{WT}\def\highlightEleven{0}%
+  \def\stateTwelve{WT}\def\highlightTwelve{0}%
+  \def\stateThirteen{WT}\def\highlightThirteen{0}%
+  \def\stateFourteen{WT}\def\highlightFourteen{0}%
+  \def\stateFifteen{WT}\def\highlightFifteen{0}%
+  % Parse input and update states
+  % For demonstration, manually setting based on frame
+  \begin{tabular}{c|c||c|c}
+    \toprule
+    \multicolumn{2}{c||}{States 0-7} & \multicolumn{2}{c}{States 8-15} \\
+    \midrule
+    0 & \ifnum\highlightZero=1\cellcolor{highlightyellow}\fi\formatState{\stateZero} & 
+    8 & \ifnum\highlightEight=1\cellcolor{highlightyellow}\fi\formatState{\stateEight} \\
+    1 & \ifnum\highlightOne=1\cellcolor{highlightyellow}\fi\formatState{\stateOne} & 
+    9 & \ifnum\highlightNine=1\cellcolor{highlightyellow}\fi\formatState{\stateNine} \\
+    2 & \ifnum\highlightTwo=1\cellcolor{highlightyellow}\fi\formatState{\stateTwo} & 
+    10 & \ifnum\highlightTen=1\cellcolor{highlightyellow}\fi\formatState{\stateTen} \\
+    3 & \ifnum\highlightThree=1\cellcolor{highlightyellow}\fi\formatState{\stateThree} & 
+    11 & \ifnum\highlightEleven=1\cellcolor{highlightyellow}\fi\formatState{\stateEleven} \\
+    4 & \ifnum\highlightFour=1\cellcolor{highlightyellow}\fi\formatState{\stateFour} & 
+    12 & \ifnum\highlightTwelve=1\cellcolor{highlightyellow}\fi\formatState{\stateTwelve} \\
+    5 & \ifnum\highlightFive=1\cellcolor{highlightyellow}\fi\formatState{\stateFive} & 
+    13 & \ifnum\highlightThirteen=1\cellcolor{highlightyellow}\fi\formatState{\stateThirteen} \\
+    6 & \ifnum\highlightSix=1\cellcolor{highlightyellow}\fi\formatState{\stateSix} & 
+    14 & \ifnum\highlightFourteen=1\cellcolor{highlightyellow}\fi\formatState{\stateFourteen} \\
+    7 & \ifnum\highlightSeven=1\cellcolor{highlightyellow}\fi\formatState{\stateSeven} & 
+    15 & \ifnum\highlightFifteen=1\cellcolor{highlightyellow}\fi\formatState{\stateFifteen} \\
+    \bottomrule
+  \end{tabular}
+}
+
+\section{Local History Branch Predictor}
+
+% Local History Predictor Frames
+\localFrame{Not Taken}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{100}{2}{0}{0:WT:0}{Initial state}
+
+\localFrame{Not Taken}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{100}{2}{0}{0:WNT:1}{Misprediction (predicted taken, was not taken)}
+
+\localFrame{Taken}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{100}{3}{0}{0:WT:1}{State update}
+
+\localFrame{Taken}{{0}{0}{0}{0}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{3}{0}{0:ST:1}{Correct prediction}
+
+\localFrame{Taken}{{0}{0}{0}{0}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{3}{1}{0:WNT:0}{State update}
+
+\localFrame{Taken}{{0}{0}{0}{1}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{3}{1}{0:WT:1}{Misprediction}
+
+\localFrame{Taken}{{0}{0}{0}{1}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{4}{1}{0:ST:1}{Correct prediction}
+
+\localFrame{Taken}{{0}{0}{0}{1}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{4}{1}{0:ST:1}{Correct prediction}
+
+\localFrame{Not Taken}{{0}{0}{0}{1}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{4}{0}{0:ST:0}{State update}
+
+\localFrame{Not Taken}{{0}{0}{1}{0}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{4}{0}{0:WNT:1}{Misprediction}
+
+\localFrame{Not Taken}{{0}{0}{1}{0}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{5}{0}{0:ST:1,3:ST:0}{State update}
+
+\localFrame{Not Taken}{{0}{0}{1}{0}}{{0}{1}{1}{0}}{{0}{0}{0}{0}}{100}{5}{0}{3:WNT:1}{Misprediction}
+
+\localFrame{Taken}{{0}{0}{1}{0}}{{0}{1}{1}{0}}{{0}{0}{0}{0}}{99}{5}{0}{0:ST:0}{State update}
+
+\localFrame{Taken}{{0}{0}{1}{0}}{{0}{1}{1}{0}}{{0}{0}{0}{1}}{99}{5}{0}{0:ST:1}{Correct prediction}
+
+% Transition slide
+\begin{frame}
+  \frametitle{Global History Predictor}
+  \begin{center}
+    \Large Now switching to \textbf{Global BHR}
+  \end{center}
+  
+  \vspace{1em}
+  
+  \begin{itemize}
+    \item Using a single global BHR table
+    \item In contrast to local predictors (each IP has own BHR and state table)
+    \item Still tracking history of 4 branches (4-bit BHR)
+  \end{itemize}
+  
+  \vspace{1em}
+  
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50, width=0.8\textwidth]
+    \centering
+    \textbf{Predictor Size Calculation}\\[0.5em]
+    Predictor size = $\text{history\_size} + 2 \times 2^{\text{history\_size}}$\\[0.3em]
+    With history\_size = 4:\\
+    Predictor size = $4 + 2 \times 2^4 = 36$ bits\\[0.3em]
+    \textcolor{correctgreen}{vs. 66KB for local history/state arrays!}
+  \end{tcolorbox}
+\end{frame}
+
+% Global History Predictor Frames
+\globalFrame{Not Taken}{{0}{0}{0}{0}}{100}{2}{0}{0:WT:0}{Global BHR - Initial state}
+
+\globalFrame{Not Taken}{{0}{0}{0}{0}}{100}{2}{0}{0:WNT:1}{Misprediction (predicted taken, was not taken)}
+
+\globalFrame{Taken}{{0}{0}{0}{0}}{100}{3}{0}{0:WNT:0}{State update}
+
+\globalFrame{Taken}{{0}{0}{0}{1}}{100}{3}{0}{0:WT:1}{Misprediction}
+
+\globalFrame{Taken}{{0}{0}{0}{1}}{100}{3}{1}{0:WT:0}{State update}
+
+\globalFrame{Taken}{{0}{0}{1}{1}}{100}{3}{1}{3:ST:1}{Correct prediction}
+
+\globalFrame{Taken}{{0}{0}{1}{1}}{100}{4}{1}{3:ST:0}{State update}
+
+\globalFrame{Taken}{{0}{1}{1}{1}}{100}{4}{1}{3:ST:1}{Correct prediction}
+
+\globalFrame{Not Taken}{{0}{1}{1}{1}}{100}{4}{0}{3:ST:0}{State update}
+
+\globalFrame{Not Taken}{{1}{1}{1}{0}}{100}{4}{0}{14:WNT:1}{Misprediction}
+
+\globalFrame{Not Taken}{{1}{1}{1}{0}}{100}{5}{0}{14:WNT:0}{State update}
+
+\globalFrame{Not Taken}{{1}{1}{0}{0}}{100}{5}{0}{12:WNT:1}{Misprediction}
+
+\globalFrame{Taken}{{1}{1}{0}{0}}{99}{5}{0}{12:WT:0}{State update}
+
+\globalFrame{Taken}{{1}{0}{0}{1}}{99}{5}{0}{12:ST:1}{Correct prediction}
+
+%==========================================
 % Add more slides here as needed
 
 \end{document}
