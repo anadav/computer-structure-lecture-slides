@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb}
 \usepackage{booktabs}
+\usepackage{xcolor}
 \usepackage{colortbl}
 \usepackage{hyperref}
 \usepackage{makecell}
@@ -11,6 +12,12 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
+
+\definecolor{cachecolor}{RGB}{200,220,255}
+\definecolor{memcolor}{RGB}{255,220,200}
+\definecolor{modifiedcolor}{RGB}{255,200,200}
+\definecolor{exclusivecolor}{RGB}{200,255,200}
+
 \title{MESI Protocol}
 \subtitle{Computer Architecture}
 \author{Course 234267}
@@ -160,31 +167,68 @@ L2: CVB: 01]
 \end{frame}
 
 %==========================================
-\begin{frame}{Core Valid Bits and Inclusion}
-\begin{block}{Core Valid Bits (CVB)}
-L2 keeps track of the presence of each line in each Core's L1 caches
+\begin{frame}{Core Valid Bits (CVB)}
+\begin{block}{What are Core Valid Bits?}
+L2 keeps track of the presence of each line in each Core's L1 caches using a bit vector
 \end{block}
 
+\vspace{0.5em}
 \textbf{Purpose:}
 \begin{itemize}
 \item Determine if it needs to send a snoop to a processor
-\item Determine in what state to provide a requested line (S, E)
-\item Maintain Core Valid Bits (CVB) per cache line
+\item Determine in what state to provide a requested line (S or E)
+\item Track which cores have copies of each cache line
 \end{itemize}
 
 \vspace{0.5em}
-\begin{alertblock}{Inclusion Property}
-Need to guarantee that the L1 caches in each Core are included in the L2 cache
+\textbf{Implementation:}
+\begin{itemize}
+\item One bit per core for each L2 cache line
+\item Bit = 1: Core may have the line in its L1 cache
+\item Bit = 0: Core does not have the line in its L1 cache
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Example:}
+\begin{itemize}
+\item CVB = 001: Only Core 0 has the line
+\item CVB = 110: Cores 1 and 2 have the line
+\item CVB = 000: No core has the line
+\end{itemize}
+\end{frame}
+
+%==========================================
+\begin{frame}{Inclusion Property}
+\begin{alertblock}{L2 Cache Inclusion}
+The L2 cache must guarantee that all L1 cache lines are included in L2
 \end{alertblock}
 
-\textbf{When L2 evicts a line:}
+\vspace{0.5em}
+\textbf{Why Inclusion Matters:}
 \begin{itemize}
-\item L2 sends a snoop invalidate to all processors that have it
-\item If the line is modified in L1 (exists only in that processor):
+\item Simplifies coherence protocol
+\item L2 can track all L1 contents
+\item Enables efficient snooping decisions
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{When L2 Evicts a Line:}
+\begin{itemize}
+\item L2 must first invalidate the line in all L1 caches
+\item L2 sends snoop invalidate to all processors with CVB bit set
+\item If line is Modified in L1:
     \begin{itemize}
-    \item The processor responds by sending the updated value to L2
-    \item When evicted from L2, the updated value gets written to memory
+    \item L1 responds with updated data
+    \item L2 writes updated value to memory during eviction
     \end{itemize}
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Maintaining Inclusion:}
+\begin{itemize}
+\item L2 capacity must be larger than sum of L1 caches
+\item L2 eviction triggers L1 invalidation
+\item Ensures coherence is maintained at L2 level
 \end{itemize}
 \end{frame}
 
@@ -390,6 +434,133 @@ GO and data may be sent at different cycles:
 \item X1-X4 map to same L1 set, X5 to different L1 set
 \item X1-X2 map to same L2 set, X3-X5 to different L2 set
 \end{itemize}
+\end{frame}
+
+\begin{frame}{Multi-processor System: Example (Part 1)}
+\begin{columns}[T]
+\column{0.45\textwidth}
+\textbf{Sequence of operations:}
+\begin{enumerate}
+\item P1 reads address [1000]
+\item P1 writes to address [1000]
+\end{enumerate}
+
+\vspace{1em}
+\textbf{Initial state:}
+\begin{itemize}
+\item Memory[1000] = 5
+\item Both L1 caches empty (Invalid)
+\item L2 cache empty
+\end{itemize}
+
+\pause
+\vspace{1em}
+\textbf{\color{blue}After operations:}
+\begin{itemize}
+\item<2-> \textcolor{blue}{P1 cache: Modified state}
+\item<3-> \textcolor{blue}{Value changed: 5 → 6}
+\item<4-> \textcolor{blue}{P2 cache: Still Invalid}
+\end{itemize}
+
+\column{0.55\textwidth}
+\pause
+\begin{tikzpicture}[scale=0.8, transform shape]
+% Define colors
+\definecolor{cachecolor}{rgb}{0.9, 0.95, 0.9}
+\definecolor{memcolor}{rgb}{1.0, 0.95, 0.85}
+
+% Define styles
+\tikzstyle{processor} = [rectangle, draw, fill=blue!20, minimum width=2.5cm, minimum height=1cm]
+\tikzstyle{cache} = [rectangle, draw, fill=cachecolor, minimum width=3cm, minimum height=1.5cm]
+\tikzstyle{memory} = [rectangle, draw, fill=memcolor, minimum width=4cm, minimum height=1cm]
+\tikzstyle{arrow} = [->, thick, >=stealth]
+
+% Processors
+\node[processor] (p1) at (0,4) {Processor 1};
+\node[processor] (p2) at (5,4) {Processor 2};
+
+% L1 Caches
+\node[cache] (l1p1) at (0,2) {L1 Cache};
+\node[cache] (l1p2) at (5,2) {L1 Cache};
+
+% L2 Cache
+\node[cache, minimum width=6cm, fill=cachecolor!70] (l2) at (2.5,0) {L2 Cache (Shared)};
+
+% Memory
+\node[memory, minimum width=6cm] (mem) at (2.5,-2) {Memory};
+
+% Connections
+\draw[arrow] (p1) -- (l1p1);
+\draw[arrow] (p2) -- (l1p2);
+\draw[arrow] (l1p1) -- (l2);
+\draw[arrow] (l1p2) -- (l2);
+\draw[arrow] (l2) -- (mem);
+
+% Cache contents - shown after pause
+\visible<3->{
+    % P1 L1 content
+    \node[draw=red, thick, fill=modifiedcolor, font=\small] at (0,2) {
+        \begin{tabular}{c}
+        [1000]: 6\\
+        \textbf{M}
+        \end{tabular}
+    };
+}
+
+\visible<4->{
+    % P2 L1 content
+    \node[draw=gray, dashed, font=\small] at (5,2) {
+        \begin{tabular}{c}
+        Invalid\\
+        \textbf{I}
+        \end{tabular}
+    };
+}
+
+\visible<5->{
+    % L2 content with CVB
+    \node[font=\small] at (2.5,0) {
+        \begin{tabular}{c}
+        [1000]: 5 (stale)\\
+        CVB: 001
+        \end{tabular}
+    };
+}
+
+\visible<6->{
+    % Memory content
+    \node[font=\small] at (2.5,-2) {
+        \begin{tabular}{c}
+        [1000]: 5\\
+        (not updated)
+        \end{tabular}
+    };
+}
+
+% Annotations
+\visible<3->{
+    \node[text=red, font=\footnotesize] at (-2,1.5) {Modified};
+    \draw[->, red, thick] (-1.5,1.5) -- (-0.5,2);
+}
+
+\visible<7->{
+    % Transaction flow arrows
+    \node[text=blue, font=\footnotesize, align=center] at (-2.5,3) {1. Read\\miss};
+    \draw[->, blue, thick, dashed] (-1.5,3) -- (-0.3,3) -- (-0.3,2.5);
+    
+    \node[text=green!60!black, font=\footnotesize, align=center] at (-2.5,0.5) {2. Fetch\\from L2};
+    \draw[->, green!60!black, thick, dashed] (-1.5,0.5) -- (-0.3,0.5) -- (-0.3,1.5);
+}
+
+\end{tikzpicture}
+
+\pause[8]
+\vspace{0.5em}
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!50, fonttitle=\footnotesize]
+\textbf{Key Point:} First write after read transitions from E→M locally (no bus transaction needed)
+\end{tcolorbox}
+
+\end{columns}
 \end{frame}
 
 %==========================================
