@@ -1,0 +1,155 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing}
+\usepackage{tcolorbox}
+\usepackage{array}
+\usetheme{Madrid}
+
+% Custom colors
+\definecolor{correctgreen}{RGB}{0,150,0}
+\definecolor{incorrectred}{RGB}{200,0,0}
+\definecolor{counterblue}{RGB}{70,130,255}
+\definecolor{highlightyellow}{RGB}{255,230,100}
+
+\title{Branch Prediction}
+\subtitle{Computer Architecture}
+\author{Course 234267}
+\date{}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%==========================================
+\begin{frame}{2-Bit Counter Prediction (Threshold of 2)}
+\vspace{-0.3cm}
+
+\begin{tikzpicture}[
+    every node/.style={font=\footnotesize},
+    pattern/.style={minimum width=0.5cm, minimum height=0.5cm, draw=black!60},
+    predict/.style={minimum width=0.5cm, minimum height=0.5cm, draw=black!60},
+    counter/.style={minimum width=0.5cm, minimum height=0.5cm, draw=counterblue, text=counterblue},
+    correct/.style={fill=correctgreen!20},
+    wrong/.style={fill=incorrectred!30},
+    arrow/.style={->, thick, >=stealth}
+]
+
+% Labels
+\node[anchor=east] at (-0.5, 0) {\textbf{Pattern:}};
+\node[anchor=east] at (-0.5, -1) {\textbf{2-bit Prediction:}};
+\node[anchor=east] at (-0.5, -2) {\textbf{Counter:}};
+
+% Pattern row
+\foreach \i in {0,...,19} {
+    \pgfmathtruncatemacro{\val}{mod(\i,5) < 4 ? 1 : 0}
+    \pgfmathtruncatemacro{\groupnum}{floor(\i/5)}
+    \node[pattern, fill=\val ? white : gray!20] (p\i) at (\i*0.6, 0) {\val};
+}
+\node at (20*0.6, 0) {...};
+
+% Prediction row
+\pause
+\foreach \i in {0,...,19} {
+    \pgfmathtruncatemacro{\pred}{(\i < 4) ? 1 : 1}  % All predict 1 (taken)
+    \node[predict] (pred\i) at (\i*0.6, -1) {\pred};
+}
+\node at (20*0.6, -1) {...};
+
+% Counter row
+\pause
+\foreach \i in {0,...,19} {
+    \pgfmathtruncatemacro{\groupnum}{floor(\i/5)}
+    \pgfmathtruncatemacro{\posInGroup}{mod(\i,5)}
+    \pgfmathtruncatemacro{\counterval}{
+        (\posInGroup == 0) ? 2 : 
+        (\posInGroup == 1) ? 3 : 
+        (\posInGroup == 2) ? 3 : 
+        (\posInGroup == 3) ? 3 : 
+        (\posInGroup == 4) ? 3 : 2
+    }
+    \node[counter] (c\i) at (\i*0.6, -2) {\counterval};
+}
+\node at (20*0.6, -2) {2 3 ...};
+
+% Misprediction indicators
+\pause
+\foreach \i in {4,9,14,19} {
+    % Highlight mispredicted positions
+    \node[predict, wrong] at (\i*0.6, -1) {1};
+    \draw[incorrectred, ultra thick] (p\i.south west) -- (p\i.south east);
+    \draw[incorrectred, ultra thick] (pred\i.north west) -- (pred\i.north east);
+    
+    % Add X mark for misprediction
+    \node[text=incorrectred, font=\Large] at (\i*0.6, -0.5) {$\times$};
+}
+
+% Correct prediction indicators (check marks)
+\pause
+\foreach \i in {0,1,2,3,5,6,7,8,10,11,12,13,15,16,17,18} {
+    \node[text=correctgreen, font=\small] at (\i*0.6, -0.5) {$\checkmark$};
+}
+
+% Group brackets
+\pause
+\foreach \g in {0,1,2,3} {
+    \pgfmathtruncatemacro{\startx}{\g*5}
+    \pgfmathtruncatemacro{\endx}{\g*5+4}
+    \draw[decoration={brace,amplitude=5pt,mirror}, decorate, thick, gray] 
+        (\startx*0.6-0.25, -2.5) -- (\endx*0.6+0.25, -2.5);
+    \node[gray] at (\startx*0.6+1.2, -2.9) {iteration \pgfmathparse{int(\g+1)}\pgfmathresult};
+}
+
+\end{tikzpicture}
+
+\vspace{0.3cm}
+\pause
+\begin{alertblock}{Key Observation}
+\centering
+\textcolor{incorrectred}{\textbf{2-bit counter $\rightarrow$ one misprediction every iteration}}
+\end{alertblock}
+
+\pause
+\vspace{0.2cm}
+\begin{block}{Performance Example}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\begin{itemize}
+\item<8-> Assume 1 of 20 branches mispredicts\\
+      \textcolor{gray}{\small (19 predictions are correct)}
+\item<9-> Branch frequency: 20\%\\
+      \textcolor{gray}{\small (1 of 5 instructions is branch)}
+\item<10-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 100 instructions}}
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{itemize}
+\item<11-> IPC without penalty = 2\\
+      \textcolor{gray}{\small (two instructions finish per cycle)}
+\item<12-> Mispredict penalty: 10 cycles
+\item<13-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 50 cycles}}
+\item<14-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 10 cycles penalty every 50 cycles}}
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\visible<15->{
+\begin{tcolorbox}[colback=red!10, colframe=red!60, boxrule=2pt]
+\centering
+\Large \textcolor{incorrectred}{\textbf{$\rightarrow$ 20\% performance loss!}}
+\end{tcolorbox}
+}
+\end{block}
+
+\end{frame}
+
+%==========================================
+% Add more slides here as needed
+
+\end{document}
