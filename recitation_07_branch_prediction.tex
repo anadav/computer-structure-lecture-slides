@@ -1061,11 +1061,11 @@ for (i=100; i>0; i--)
       \hline
       \textbf{Predictor Type} & \textbf{Avg Accuracy} \\
       \hline
-      2-bit counter & 78.9\% \\
+      \textcolor{blue}{2-bit counter} & \textcolor{blue}{76.7\%} \\
       Global history \& table & 79.9\% \\
-      Local history, global table & 79.8\% \\
-      Local history \& tables & 83.5\% \\
-      Global history, local tables & \textbf{84.3\%} \\
+      Local history, global table & 82.9\% \\
+      Local history \& tables & 82.1\% \\
+      \textcolor{red}{Global history, local tables} & \textcolor{red}{\textbf{83.5\%}} \\
       \hline
     \end{tabular}
     
@@ -1079,8 +1079,8 @@ for (i=100; i>0; i--)
       \begin{tikzpicture}[scale=0.7]
         % Draw bars for comparison
         \foreach \branch/\simple/\local in {
-          0/98/99.75,
-          1/74.75/99.75,
+          0/98/99,
+          1/74.75/79.75,
           2/60.5/57.25,
           3/61/74,
           4/76.75/79.75,
@@ -1099,13 +1099,6 @@ for (i=100; i>0; i--)
         \foreach \y in {0,50,100} {
           \node[left] at (-0.3, \y/20) {\tiny \y\%};
         }
-        % Legend box with clear background
-        \fill[white] (7.2, 3.8) rectangle (9, 4.8);
-        \draw[black] (7.2, 3.8) rectangle (9, 4.8);
-        \fill[blue!60] (7.4, 4.4) rectangle (7.7, 4.6);
-        \node[right] at (7.7, 4.5) {\tiny 2-bit counter};
-        \fill[red!60] (7.4, 4) rectangle (7.7, 4.2);
-        \node[right] at (7.7, 4.1) {\tiny Local hist.};
       \end{tikzpicture}
     \end{center}
   \end{columns}
@@ -1116,15 +1109,18 @@ for (i=100; i>0; i--)
   \frametitle{Performance Metrics}
   
   \begin{center}
+    \footnotesize
     \begin{tabular}{|l|c|c|c|}
       \hline
       \textbf{Configuration} & \textbf{Hit Rate} & \textbf{Cycles} & \textbf{Speedup} \\
       \hline
-      All wrong & 0.0\% & 16,000,005 & baseline \\
-      Bimodal & 78.9\% & 4,226,005 & 379\% \\
-      Local & 83.5\% & 3,470,005 & 461\% \\
-      Global hist + local count & 84.3\% & 3,342,005 & 479\% \\
-      Perfect & 100.0\% & 1,000,005 & 1600\% \\
+      All wrong & 0.0\% & 1,150,005 & baseline \\
+      2-bit counter & 76.7\% & 1,035,105 & 1.11$\times$ \\
+      Global history & 79.9\% & 1,030,165 & 1.12$\times$ \\
+      Local history, global table & 82.9\% & 1,025,612 & 1.12$\times$ \\
+      Local history \& tables & 82.1\% & 1,026,922 & 1.12$\times$ \\
+      Global hist + local table & 83.5\% & 1,024,252 & 1.12$\times$ \\
+      Perfect & 100.0\% & 1,000,005 & 1.15$\times$ \\
       \hline
     \end{tabular}
   \end{center}
