@@ -18,6 +18,14 @@
 \begin{document}
 \frame{\titlepage}
 
+% TODOs:
+% Start with the security rings.
+% When talking about SMAP, SMEP, need to somehow convey it's relevant for all high-level ring accessing arbitrary data of lower ring.
+% Remove the "Homomorphic Encryption" stuff.
+% Maybe something about the special "secutity chips" like apple's. Also "Security Processor (AMD-SP):" when talking about Intel ME.
+
+
+
 % Outline
 \begin{frame}{Outline}
     \tableofcontents
@@ -303,6 +311,186 @@ Stack Layout:
     \begin{tcolorbox}[colback=red!10]
         \textbf{Key Insight:} ROP bypasses XD/NX by reusing existing executable code - no code injection needed!
     \end{tcolorbox}
+\end{frame}
+
+% Protection Mechanisms in Detail
+\begin{frame}[fragile]{ASLR - Address Space Layout Randomization}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{How ASLR Works:}
+            \begin{itemize}
+                \item Randomizes memory addresses at runtime
+                \item Different addresses each execution
+                \item Makes hardcoded exploits fail
+                \item Low performance overhead
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{What Gets Randomized:}
+            \begin{itemize}
+                \item Stack base address
+                \item Heap base address
+                \item Library load addresses
+                \item Executable base (PIE)
+                \item mmap region
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Limitations:}
+            \begin{itemize}
+                \item Info leaks reveal addresses
+                \item Partial overwrites still work
+                \item Entropy limitations (32-bit)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \textbf{Without ASLR (predictable):}
+                \begin{verbatim}
+$ ./vuln
+Stack: 0x7fffffffe000
+Heap:  0x555555756000
+Libc:  0x7ffff7a00000
+
+$ ./vuln
+Stack: 0x7fffffffe000
+Heap:  0x555555756000
+Libc:  0x7ffff7a00000
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=green!10]
+                \small
+                \textbf{With ASLR (randomized):}
+                \begin{verbatim}
+$ ./vuln
+Stack: 0x7ffd8c3a1000
+Heap:  0x56412b8c9000
+Libc:  0x7f9a2c600000
+
+$ ./vuln
+Stack: 0x7ffe29f43000
+Heap:  0x55e7d4521000
+Libc:  0x7fc8e1200000
+                \end{verbatim}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Stack Canaries - Buffer Overflow Detection}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{How Stack Canaries Work:}
+            \begin{itemize}
+                \item Random value placed before return address
+                \item Checked before function returns
+                \item Detects buffer overflows
+                \item Compiler inserts automatically
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Canary Types:}
+            \begin{itemize}
+                \item \textbf{Random:} From /dev/urandom
+                \item \textbf{Terminator:} 0x00000aff
+                \item \textbf{Random XOR:} Includes stack ptr
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Compiler Flags:}
+            \begin{itemize}
+                \item -fstack-protector
+                \item -fstack-protector-strong
+                \item -fstack-protector-all
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=blue!10]
+                \small
+                \textbf{Vulnerable Function:}
+                \begin{verbatim}
+void vulnerable(char *input) {
+    char buffer[64];
+    strcpy(buffer, input);
+    return;
+}
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=green!10]
+                \small
+                \textbf{With Stack Canary:}
+                \begin{verbatim}
+vulnerable:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 0x50
+    
+    ; Place canary
+    mov rax, fs:[0x28]
+    mov [rbp-0x8], rax
+    
+    ; Function body
+    lea rdi, [rbp-0x48]
+    call strcpy
+    
+    ; Check canary
+    mov rax, [rbp-0x8]
+    xor rax, fs:[0x28]
+    jne .canary_fail
+    
+    leave
+    ret
+    
+.canary_fail:
+    call __stack_chk_fail
+                \end{verbatim}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Stack Canary - Memory Layout}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.9]
+            % Stack frame
+            \draw[fill=gray!20] (0,0) rectangle (6,8);
+            \node at (3,7.5) {\textbf{Stack Frame}};
+            
+            % Stack contents
+            \draw[fill=blue!30] (0.5,6.5) rectangle (5.5,7.5);
+            \node at (3,7) {Local Variables};
+            
+            \draw[fill=green!30] (0.5,5) rectangle (5.5,6);
+            \node at (3,5.5) {Buffer[64]};
+            
+            \draw[fill=red!40,thick,draw=red] (0.5,4) rectangle (5.5,5);
+            \node at (3,4.5) {\textbf{CANARY}};
+            \node at (7,4.5) {\textcolor{red}{← Check this!}};
+            
+            \draw[fill=yellow!30] (0.5,3) rectangle (5.5,4);
+            \node at (3,3.5) {Saved RBP};
+            
+            \draw[fill=orange!30] (0.5,2) rectangle (5.5,3);
+            \node at (3,2.5) {Return Address};
+            
+            \draw[fill=gray!30] (0.5,1) rectangle (5.5,2);
+            \node at (3,1.5) {Function Args};
+            
+            % Attack arrow
+            \draw[->,ultra thick,red] (8,5.5) -- (6,5.5);
+            \node[red] at (9.5,5.5) {Overflow};
+            \draw[->,dashed,red] (8,4.8) -- (6,4.5);
+            \node[red] at (10,4.3) {Corrupts canary};
+            \draw[->,dashed,red] (8,2.8) -- (6,2.5);
+            \node[red] at (10,2.3) {Want to overwrite};
+            
+            % Detection
+            \node[draw,fill=green!20] at (3,0) {Canary mismatch → abort()};
+        \end{tikzpicture}
+    \end{center}
 \end{frame}
 
 % Section: SMEP and SMAP
@@ -903,70 +1091,166 @@ plt_stub:
     \end{columns}
 \end{frame}
 
-\begin{frame}{Backward-Edge CFI Mechanisms}
+\begin{frame}[fragile]{Pointer Authentication (PAC) - ARM64}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \textbf{Stack Canaries (Software, 1998):}
+            \textbf{How PAC Works:}
             \begin{itemize}
-                \item Random value before return address
-                \item Check before function return
-                \item Limited protection (info leak bypass)
-                \item Compiler support (GCC -fstack-protector)
+                \item Signs pointers with cryptographic MAC
+                \item Uses upper bits (unused in 64-bit)
+                \item Hardware acceleration (QARMA)
+                \item 5 different keys (IA, IB, DA, DB, GA)
             \end{itemize}
             
             \vspace{0.3cm}
-            \textbf{Pointer Authentication (PAC, 2018):}
+            \textbf{PAC Instructions:}
             \begin{itemize}
-                \item Cryptographic signing of return address
-                \item ARM-specific hardware feature
-                \item Key-based authentication
-                \item Related to canaries but much stronger
+                \item \textbf{PACIA:} Sign with key A
+                \item \textbf{AUTIA:} Authenticate with key A
+                \item \textbf{PACIASP:} Sign with SP as context
+                \item \textbf{AUTIASP:} Auth with SP as context
             \end{itemize}
             
             \vspace{0.3cm}
-            \textbf{Shadow Stack (Hardware, 2020):}
+            \textbf{Protection Against:}
             \begin{itemize}
-                \item Parallel stack for return addresses
-                \item Intel CET-SS, ARM GCS
-                \item Automatic push/pop on CALL/RET
+                \item ROP/JOP attacks
+                \item Return address corruption
+                \item Function pointer hijacking
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % Regular stack
-                \draw[thick] (0,0) rectangle (2.5,4);
-                \node at (1.25,4.3) {\small Regular Stack};
-                \draw (0,3) -- (2.5,3);
-                \node at (1.25,3.5) {\tiny Local Vars};
-                \draw (0,2) -- (2.5,2);
-                \node[red] at (1.25,2.5) {\tiny RET Addr};
-                \draw (0,1) -- (2.5,1);
-                \node at (1.25,1.5) {\tiny Saved BP};
-                \node at (1.25,0.5) {\tiny Canary};
+            \begin{tcolorbox}[colback=blue!10]
+                \small
+                \textbf{C Code:}
+                \begin{verbatim}
+void sensitive_function() {
+    // Function body
+    do_something();
+    return;
+}
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=green!10]
+                \small
+                \textbf{ARM64 Assembly with PAC:}
+                \begin{verbatim}
+sensitive_function:
+    ; Sign return address
+    paciasp
+    
+    ; Save frame
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
+    
+    ; Function body
+    bl do_something
+    
+    ; Restore frame
+    ldp x29, x30, [sp], #16
+    
+    ; Authenticate return address
+    autiasp
+    
+    ; Return (crashes if auth fails)
+    ret
+                \end{verbatim}
+            \end{tcolorbox}
+            
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Pointer Format:}
+                \begin{verbatim}
+[63:56][55:48][47:0]
+  PAC   Unused  Address
+                \end{verbatim}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Shadow Stack - Hardware Return Address Protection}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Shadow Stack Concept:}
+            \begin{itemize}
+                \item Separate stack for return addresses
+                \item Write-protected by hardware
+                \item Parallel push/pop operations
+                \item Automatic verification on return
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Intel CET Implementation:}
+            \begin{itemize}
+                \item New SSP register (Shadow Stack Pointer)
+                \item WRSS/RDSS instructions (privileged)
+                \item Automatic on CALL/RET
+                \item Page table bit for SS pages
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item Complete ROP prevention
+                \item Zero false positives
+                \item Hardware speed
+                \item Transparent to applications
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.8]
+                % Regular Stack
+                \draw[fill=blue!20] (0,0) rectangle (3,6);
+                \node at (1.5,5.5) {\textbf{Regular Stack}};
                 
-                % Shadow stack
-                \draw[thick,blue] (3.5,0) rectangle (6,4);
-                \node at (4.75,4.3) {\small Shadow Stack};
-                \draw (3.5,3) -- (6,3);
-                \draw (3.5,2) -- (6,2);
-                \node[blue] at (4.75,2.5) {\tiny RET Addr};
-                \draw (3.5,1) -- (6,1);
-                \node at (4.75,1.5) {\tiny RET Addr};
-                \node at (4.75,0.5) {\tiny RET Addr};
+                \draw[fill=gray!20] (0.2,4.5) rectangle (2.8,5.3);
+                \node at (1.5,4.9) {\small Local Vars};
                 
-                % Verification arrow
-                \draw[->,thick,green] (2.5,2.5) -- (3.5,2.5);
-                \node at (3,3) {\tiny Verify};
+                \draw[fill=yellow!30] (0.2,3.5) rectangle (2.8,4.3);
+                \node at (1.5,3.9) {\small Return Addr};
+                
+                \draw[fill=gray!20] (0.2,2.5) rectangle (2.8,3.3);
+                \node at (1.5,2.9) {\small Saved RBP};
+                
+                % Shadow Stack
+                \draw[fill=green!20,thick,draw=green] (5,0) rectangle (8,6);
+                \node at (6.5,5.5) {\textbf{Shadow Stack}};
+                
+                \draw[fill=green!40] (5.2,3.5) rectangle (7.8,4.3);
+                \node at (6.5,3.9) {\small Return Addr};
+                
+                % Protection
+                \node[draw,fill=red!20] at (6.5,2) {\small Write Protected};
+                
+                % Operations
+                \draw[<->,thick] (3.2,3.9) -- (4.8,3.9);
+                \node at (4,4.3) {\tiny Verify};
+                
+                % Attack blocked
+                \draw[->,thick,red] (-1,3.9) -- (-0.2,3.9);
+                \node[red,rotate=90] at (-1.5,3.9) {\tiny Overflow};
+                
+                \draw[red,ultra thick] (8.5,3.5) -- (9.5,4.5);
+                \draw[red,ultra thick] (8.5,4.5) -- (9.5,3.5);
+                \node[red] at (10.5,4) {\small No Access};
             \end{tikzpicture}
             
             \vspace{0.3cm}
-            \begin{tcolorbox}[colback=orange!10]
-                \textbf{Comparison:}
-                \begin{itemize}
-                    \item Shadow Stack: Strongest, hardware
-                    \item PAC: Strong, ARM-only
-                    \item Canaries: Weakest, portable
-                \end{itemize}
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Operation Example:}
+                \begin{verbatim}
+CALL func:
+  - Push addr to regular stack
+  - Push addr to shadow stack
+  
+RET:
+  - Pop from regular stack -> RAX
+  - Pop from shadow stack -> RBX
+  - If RAX != RBX -> Fault
+                \end{verbatim}
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -1620,6 +1904,180 @@ func:
                 \draw[->,thick,green!60!black] (0,4.5) -- (1.25,4);
                 \node at (3.5,5) {\tiny Protects};
             \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{AMD SEV-SNP - Secure Encrypted Virtualization}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{What SEV-SNP Protects Against:}
+            \begin{itemize}
+                \item \textcolor{red}{Malicious hypervisor}
+                \item \textcolor{red}{Physical memory attacks}
+                \item \textcolor{red}{VM memory inspection}
+                \item \textcolor{red}{Replay attacks}
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Key Features:}
+            \begin{itemize}
+                \item \textbf{SEV:} Memory encryption per-VM
+                \item \textbf{SEV-ES:} Register state encryption
+                \item \textbf{SEV-SNP:} Integrity protection
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{SNP Additions:}
+            \begin{itemize}
+                \item Reverse Map Table (RMP)
+                \item Page ownership tracking
+                \item Prevents remapping attacks
+                \item Guest-controlled page validation
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.7]
+                % Untrusted hypervisor
+                \draw[fill=red!20,dashed] (0,0) rectangle (8,2);
+                \node at (4,1) {\textbf{Untrusted Hypervisor}};
+                
+                % Protected VMs
+                \draw[fill=green!30,thick] (0.5,3) rectangle (3.5,5);
+                \node at (2,4.5) {\textbf{VM1}};
+                \node at (2,4) {\small Encrypted};
+                \node at (2,3.5) {\tiny Key1};
+                
+                \draw[fill=blue!30,thick] (4.5,3) rectangle (7.5,5);
+                \node at (6,4.5) {\textbf{VM2}};
+                \node at (6,4) {\small Encrypted};
+                \node at (6,3.5) {\tiny Key2};
+                
+                % Memory controller
+                \draw[fill=yellow!30,thick] (2,6) rectangle (6,7.5);
+                \node at (4,6.75) {\textbf{AMD SP}};
+                
+                % Protection
+                \draw[<->,thick,green] (2,5) -- (4,6);
+                \draw[<->,thick,blue] (6,5) -- (4,6);
+                
+                % Attacks blocked
+                \draw[->,thick,red] (1,2) -- (1,3);
+                \draw[red,ultra thick] (0.5,2.5) -- (1.5,2.5);
+                \node[red,rotate=90] at (0,2.5) {\tiny Read};
+                
+                \draw[->,thick,red] (7,2) -- (7,3);
+                \draw[red,ultra thick] (6.5,2.5) -- (7.5,2.5);
+                \node[red,rotate=90] at (8,2.5) {\tiny Modify};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=yellow!20]
+                \textbf{RMP (Reverse Map Table):}
+                \begin{itemize}
+                    \item Tracks page ownership (ASID)
+                    \item Validates page access
+                    \item Hardware-enforced
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Merkle Trees for Memory Freshness}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The Replay Problem:}
+            \begin{itemize}
+                \item Encryption prevents reading
+                \item But not replay attacks
+                \item Attacker saves old ciphertext
+                \item Replays it later
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Merkle Tree Solution:}
+            \begin{itemize}
+                \item Tree of cryptographic hashes
+                \item Root stored in secure location
+                \item Each node hashes its children
+                \item Detects any modification
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Intel SGX Implementation:}
+            \begin{itemize}
+                \item 8-ary tree (8 children per node)
+                \item Counters at leaf level
+                \item MAC for each cache line
+                \item Root in on-chip SRAM
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.8]
+                % Root
+                \node[draw,fill=red!30,circle] (root) at (4,5) {Root};
+                \node at (4,5.7) {\tiny On-chip};
+                
+                % Level 1
+                \node[draw,fill=yellow!30,circle] (n1) at (2,3.5) {H1};
+                \node[draw,fill=yellow!30,circle] (n2) at (6,3.5) {H2};
+                
+                % Level 2
+                \node[draw,fill=green!30,circle] (n3) at (1,2) {H3};
+                \node[draw,fill=green!30,circle] (n4) at (3,2) {H4};
+                \node[draw,fill=green!30,circle] (n5) at (5,2) {H5};
+                \node[draw,fill=green!30,circle] (n6) at (7,2) {H6};
+                
+                % Data blocks
+                \node[draw,fill=blue!20] (d1) at (0,0.5) {\tiny Data};
+                \node[draw,fill=blue!20] (d2) at (1.5,0.5) {\tiny Data};
+                \node[draw,fill=blue!20] (d3) at (3,0.5) {\tiny Data};
+                \node[draw,fill=blue!20] (d4) at (4.5,0.5) {\tiny Data};
+                \node[draw,fill=blue!20] (d5) at (6,0.5) {\tiny Data};
+                \node[draw,fill=blue!20] (d6) at (7.5,0.5) {\tiny Data};
+                
+                % Edges
+                \draw[-] (root) -- (n1);
+                \draw[-] (root) -- (n2);
+                \draw[-] (n1) -- (n3);
+                \draw[-] (n1) -- (n4);
+                \draw[-] (n2) -- (n5);
+                \draw[-] (n2) -- (n6);
+                \draw[-] (n3) -- (d1);
+                \draw[-] (n3) -- (d2);
+                \draw[-] (n4) -- (d3);
+                \draw[-] (n5) -- (d4);
+                \draw[-] (n6) -- (d5);
+                \draw[-] (n6) -- (d6);
+                
+                % Attack
+                \node[red] at (d3) {X};
+                \draw[->,thick,red] (3,-0.5) -- (3,0.3);
+                \node[red] at (3,-0.7) {\tiny Replay};
+                
+                % Detection path
+                \draw[ultra thick,red] (d3) -- (n4);
+                \draw[ultra thick,red] (n4) -- (n1);
+                \draw[ultra thick,red] (n1) -- (root);
+                \node[red] at (1,4.5) {\tiny Detected!};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=green!10]
+                \small
+                \textbf{Freshness Guarantee:}
+                \begin{verbatim}
+On Write:
+  1. Update data
+  2. Update counter
+  3. Recalculate hashes to root
+  
+On Read:
+  1. Verify path to root
+  2. Check counter matches
+                \end{verbatim}
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
