@@ -67,7 +67,7 @@
 % Labels
 \node[anchor=east] at (-0.5, 0) {\textbf{Pattern:}};
 \node[anchor=east] at (-0.5, -1) {\textbf{2-bit Prediction:}};
-\node[anchor=east] at (-0.5, -2) {\textbf{Counter:}};
+\node[anchor=east] at (-0.5, -1.6) {\textbf{Counter:}};
 
 % Pattern row
 \foreach \i in {0,...,19} {
@@ -91,16 +91,15 @@
 \foreach \i in {0,...,19} {
     \pgfmathtruncatemacro{\posInGroup}{mod(\i,5)}
     \ifnum\posInGroup=0
-        \node[counter, color=blue] (c\i) at (\i*0.6, -2) {2};
+        \node[counter, color=blue] (c\i) at (\i*0.6, -1.6) {2};
     \else
         \ifnum\posInGroup=4
-            \node[counter, color=blue] (c\i) at (\i*0.6, -2) {2};
+            \node[counter, color=blue] (c\i) at (\i*0.6, -1.6) {2};
         \else
-            \node[counter, color=blue] (c\i) at (\i*0.6, -2) {3};
+            \node[counter, color=blue] (c\i) at (\i*0.6, -1.6) {3};
         \fi
     \fi
 }
-\node at (20*0.6, -2) {2 3 ...};
 
 % Misprediction indicators
 \foreach \i in {4,9,14,19} {
@@ -122,48 +121,40 @@
     \pgfmathtruncatemacro{\endx}{\g*5+4}
     \pgfmathtruncatemacro{\gnum}{\g+1}
     \draw[decoration={brace,amplitude=5pt,mirror}, decorate, thick, gray] 
-        (\startx*0.6-0.25, -2.5) -- (\endx*0.6+0.25, -2.5);
-    \node[gray] at (\startx*0.6+1.2, -2.9) {iteration \gnum};
+        (\startx*0.6-0.25, -2.0) -- (\endx*0.6+0.25, -2.0);
+    \node[gray] at (\startx*0.6+1.2, -2.4) {iteration \gnum};
 }
 
 \end{tikzpicture}
 
-%\vspace{0.3cm}
+\vspace{-0.2cm}
 \begin{alertblock}{Key Observation}
 \centering
 \textcolor{incorrectred}{\textbf{2-bit counter $\rightarrow$ one misprediction every iteration}}
 \end{alertblock}
 
-%\vspace{0.2cm}
+\vspace{-0.2cm}
 \begin{block}{Performance Example}
 \scriptsize
 \begin{columns}[T]
 \column{0.55\textwidth}
 \begin{itemize}
-\item<8-> Assume 1 of 20 branches mispredicts\\
+\item Assume 1 of 20 branches mispredicts\\
 %      \textcolor{gray}{(19 predictions are correct)}
-\item<9-> Branch frequency: 20\%\\
-      \textcolor{gray}{(1 of 5 instructions is branch)}
-\item<10-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 100 instructions}}
+\item Branch frequency: 20\% \textcolor{gray}{(1 of 5 instructions)}
+\item[] \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 100 instructions}}
+\item IPC without penalty = 2\\
 \end{itemize}
 
 \column{0.45\textwidth}
 \begin{itemize}
-\item<11-> IPC without penalty = 2\\
 %      \textcolor{gray}{(two instructions finish per cycle)}
-\item<12-> Mispredict penalty: 10 cycles
-\item[]<13-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 50 cycles}}
-\item[]<14-> \textcolor{incorrectred}{\textbf{$\rightarrow$ 10 cycles penalty every 50 cycles}}
+\item Mispredict penalty: 10 cycles
+\item[] \textcolor{incorrectred}{\textbf{$\rightarrow$ 1 mispredict every 50 cycles}}
+\item[] \textcolor{incorrectred}{\textbf{$\rightarrow$ 10 cycles penalty every 50 cycles}}
+\item[] \textcolor{incorrectred}{\textbf{$\rightarrow$ 20\% performance loss!}}
 \end{itemize}
 \end{columns}
-
-\vspace{0.3cm}
-\visible<15->{
-\begin{tcolorbox}[colback=red!10, colframe=red!60, boxrule=2pt]
-\centering
-\Large \textcolor{incorrectred}{\textbf{$\rightarrow$ 20\% performance loss!}}
-\end{tcolorbox}
-}
 \end{block}
 
 \end{frame}
@@ -1173,13 +1164,13 @@
       \hline
       \textbf{Configuration} & \textbf{Hit Rate} & \textbf{Cycles} & \textbf{Speedup} \\
       \hline
-      All wrong & 0.0\% & 1,150,005 & baseline \\
-      2-bit counter & 76.7\% & 1,035,105 & 1.11$\times$ \\
-      Global history & 79.9\% & 1,030,165 & 1.12$\times$ \\
-      Local history, global table & 82.9\% & 1,025,612 & 1.12$\times$ \\
-      Local history \& tables & 82.1\% & 1,026,922 & 1.12$\times$ \\
-      Global hist + local table & 83.5\% & 1,024,252 & 1.12$\times$ \\
-      Perfect & 100.0\% & 1,000,005 & 1.15$\times$ \\
+      All wrong & 0.0\% & 1,600,005 & baseline \\
+      2-bit counter & 79.0\% & 1,126,005 & 1.42$\times$ \\
+      Global history & 79.9\% & 1,120,842 & 1.43$\times$ \\
+      Local hist, global table & 82.9\% & 1,102,434 & 1.45$\times$ \\
+      Local hist \& tables & 82.9\% & 1,102,434 & 1.45$\times$ \\
+      Global hist + local table & 83.5\% & 1,098,594 & 1.46$\times$ \\
+      Perfect & 100.0\% & 1,000,005 & 1.60$\times$ \\
       \hline
     \end{tabular}
   \end{center}
@@ -1192,7 +1183,7 @@
       \item Instructions: 1,000,000
       \item Pipeline length: 5
       \item Misprediction penalty: 3 cycles
-      \item Branch probability: 5\%
+      \item Branch probability: 20\%
     \end{itemize}
   \end{tcolorbox}
   
