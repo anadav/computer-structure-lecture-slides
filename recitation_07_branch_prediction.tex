@@ -842,4 +842,302 @@
 %==========================================
 % Add more slides here as needed
 
+% Slide 1: Global Prediction Table Issues
+\begin{frame}
+  \frametitle{Global Prediction Table}
+  
+  \textbf{Problem:} Collision between different branch instructions in global tables
+  
+  \begin{itemize}
+    \item Different branch instructions with the same (local) history at a given moment modify the same state machines:
+    \begin{itemize}
+      \item Branch 1: (IP = ...0101) History = 1101 → Taken
+      \item Branch 2: (IP = ...1010) History = 1101 → Not Taken
+    \end{itemize}
+  \end{itemize}
+  
+  \vspace{0.5em}
+  
+  \textbf{Solution:} Create hashing in the table by XORing BHR with Branch IP
+  \begin{itemize}
+    \item Select state machine based on: BHR $\oplus$ Branch IP
+    \begin{itemize}
+      \item Branch 1: IP $\oplus$ History = 0101 $\oplus$ 1101 = 1000 → Taken
+      \item Branch 2: IP $\oplus$ History = 1010 $\oplus$ 1101 = 0111 → Not Taken
+    \end{itemize}
+  \end{itemize}
+  
+  \vspace{0.5em}
+  
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50]
+    \centering
+    \textbf{This approach is called:}\\
+    \textbf{L-Share} (Local BHR) or \textbf{G-Share} (Global BHR)\\
+    \small Note: L-Share/G-Share refers to global state table only!
+  \end{tcolorbox}
+\end{frame}
+
+% Slide 2: LShare Predictor Architecture
+\begin{frame}
+  \frametitle{Local Predictor: LShare}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      box/.style={draw, minimum height=0.8cm, minimum width=1.5cm},
+      bigbox/.style={draw, minimum height=2.5cm, minimum width=2cm},
+      xorbox/.style={draw, circle, minimum size=0.8cm},
+      arrow/.style={-latex, thick}
+    ]
+      % Branch IP
+      \node (ip) at (0,0) {Branch IP};
+      
+      % History cache
+      \node[bigbox, right=2cm of ip] (hist_cache) {};
+      \node[above=0.1cm of hist_cache.north] {history cache};
+      \node[box, above=0.2cm of hist_cache.south, anchor=south, minimum width=0.8cm] (tag) {tag};
+      \node[box, below=0.05cm of tag.south, anchor=north, minimum height=1.2cm] (history) {history};
+      
+      % XOR operation
+      \node[xorbox, below right=1.5cm and 1cm of hist_cache] (xor) {$\oplus$};
+      
+      % L.s.bits of IP
+      \node[below=2cm of ip] (lsbits) {l.s.bits of IP};
+      
+      % 2-bit counter array
+      \node[bigbox, right=2.5cm of xor, minimum width=3.5cm, minimum height=2cm] (counter_array) {};
+      \node[above=0.1cm of counter_array.north] {2-bit-sat counter array};
+      
+      % Draw counter cells
+      \foreach \x in {0,1,2,3,4} {
+        \draw ([xshift=\x*0.7cm]counter_array.south west) rectangle ++(0.7cm, 0.4cm);
+      }
+      
+      % Prediction output
+      \node[right=1.5cm of counter_array] (prediction) {prediction = msb of counter};
+      
+      % Arrows
+      \draw[arrow] (ip) -- (hist_cache);
+      \draw[arrow] (history.south) |- node[pos=0.3, right] {h} (xor);
+      \draw[arrow] (lsbits) -- (xor);
+      \draw[arrow] (xor) -- (counter_array);
+      \draw[arrow] (counter_array) -- (prediction);
+    \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5em}
+  \begin{tcolorbox}[colback=green!10, colframe=green!50]
+    \centering
+    LShare XORs the local history with the branch IP\\
+    \small This XOR significantly improves BTB performance
+  \end{tcolorbox}
+\end{frame}
+
+% Slide 3: Chooser Mechanism
+\begin{frame}
+  \frametitle{Chooser Mechanism}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      box/.style={draw, minimum height=1cm, minimum width=2cm},
+      mux/.style={draw, trapezium, trapezium left angle=70, trapezium right angle=110, minimum height=1.5cm, minimum width=1cm, rotate=270},
+      arrow/.style={-latex, thick}
+    ]
+      % Inputs
+      \node[box, align=center] (bimodal) at (0,2) {Bimodal\\or\\Local};
+      \node[box] (global) at (0,0) {Global};
+      
+      % MUX
+      \node[mux, right=2cm of bimodal, yshift=-1cm] (mux) {MUX};
+      
+      % Chooser array
+      \node[box, below=1.5cm of mux, minimum width=3cm, minimum height=1.5cm] (chooser) {};
+      \node[above=0.05cm of chooser.north] {\small Chooser array};
+      \node[below=0.05cm of chooser.south] {\tiny (array of 2-bit sat. counters)};
+      
+      % Branch IP input
+      \node[left=2cm of chooser] (branch_ip) {Branch IP};
+      
+      % Prediction output
+      \node[right=2cm of mux] (prediction) {Prediction};
+      
+      % Arrows
+      \draw[arrow] (bimodal.east) -| ([yshift=0.3cm]mux.north);
+      \draw[arrow] (global.east) -| ([yshift=-0.3cm]mux.north);
+      \draw[arrow] (mux.south) -- (prediction);
+      \draw[arrow] (branch_ip) -- (chooser);
+      \draw[arrow] (chooser.north) -- (mux.east);
+    \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5em}
+  
+  \begin{itemize}
+    \item \textbf{+1} if Bimodal/Local correct and Global wrong
+    \item \textbf{-1} if Bimodal/Local wrong and Global correct
+    \item The chooser may also be indexed by the GHR
+  \end{itemize}
+\end{frame}
+
+% Slide 4: Example Program
+\begin{frame}[fragile]
+  \frametitle{Example: Nested Loop with Switch}
+  
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+    \begin{tcolorbox}[colback=gray!5, colframe=gray!50]
+      \small
+      \begin{verbatim}
+for (i=100; i>0; i--)
+  for (j=2; j<6; j++)
+    switch (i%j) {
+      case 0: ... break;
+      case 1: ... break;
+      case 2: ... break;
+      case 3: ... break;
+      case 4: ... break;
+    }
+      \end{verbatim}
+    \end{tcolorbox}
+    
+    \column{0.5\textwidth}
+    \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={draw, minimum width=1cm, minimum height=0.8cm}
+    ]
+      % Branch indices
+      \node[box] (b0) at (0,0) {0};
+      \node[box, below=of b0] (b1) {1};
+      \node[box, below=of b1] (b2) {2};
+      \node[box, below=of b2] (b3) {3};
+      \node[box, below=of b3] (b4) {4};
+      \node[box, below=of b4] (b5) {5};
+      \node[box, below=of b5] (b6) {6};
+      
+      \node[left=0.5cm of b3] {Branch indices};
+    \end{tikzpicture}
+  \end{columns}
+\end{frame}
+
+% Slide 5: Branch Behavior Patterns
+\begin{frame}
+  \frametitle{Branch Behavior Patterns in the Program}
+  
+  \tiny
+  \begin{tcolorbox}[colback=gray!5, colframe=gray!50]
+    \textbf{Branch 0:} TTTT...TTTN (mostly taken, rarely not taken)\\
+    \vspace{0.2em}
+    \textbf{Branch 1:} TTTNTTTNTTTNTTT... (periodic pattern with N)\\
+    \vspace{0.2em}
+    \textbf{Branch 2:} TTTTNTTTTNTTNTN... (more complex pattern)\\
+    \vspace{0.2em}
+    \textbf{Branch 3:} NNNNTTTTNTTTTNTT... (mixed pattern)\\
+    \vspace{0.2em}
+    \textbf{Branch 4:} TTTTTNNNTTTTTTTT... (clusters of N within T)\\
+    \vspace{0.2em}
+    \textbf{Branch 5:} TTTTTTTTTTNNTTT... (mostly T with occasional N)\\
+    \vspace{0.2em}
+    \textbf{Branch 6:} TTTTTTTTTTTTTTTN... (almost always taken)
+  \end{tcolorbox}
+  
+  \normalsize
+  \vspace{0.5em}
+  Key observations:
+  \begin{itemize}
+    \item Different branches exhibit different patterns
+    \item Some branches have regular patterns (0, 6)
+    \item Others have complex, hard-to-predict patterns (2, 3)
+    \item Pattern complexity affects prediction accuracy
+  \end{itemize}
+\end{frame}
+
+% Slide 6: Performance Comparison
+\begin{frame}
+  \frametitle{Prediction Accuracy Comparison (5-instruction history)}
+  
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+    \begin{tabular}{|l|c|}
+      \hline
+      \textbf{Predictor Type} & \textbf{Avg Accuracy} \\
+      \hline
+      2-bit counter & 76.72\% \\
+      Global history \& table & 77.60\% \\
+      Local history, global table & \textbf{81.12\%} \\
+      Local history \& tables & 80.72\% \\
+      Global history, local tables & 81.60\% \\
+      \hline
+    \end{tabular}
+    
+    \vspace{1em}
+    \textbf{Best performer:} Global history with local tables
+    
+    \column{0.5\textwidth}
+    \begin{center}
+      \textbf{Per-Branch Accuracy}\\[0.5em]
+      \begin{tikzpicture}[scale=0.8]
+        % Draw bars for comparison
+        \foreach \branch/\simple/\local in {
+          0/98/99,
+          1/74.75/99.5,
+          2/60.5/60.25,
+          3/61/60.5,
+          4/76.75/76,
+          5/87.25/88.5,
+          6/94.75/95
+        } {
+          % Simple predictor bar
+          \fill[blue!60] (\branch*1.2, 0) rectangle (\branch*1.2+0.4, \simple/20);
+          % Local predictor bar
+          \fill[red!60] (\branch*1.2+0.4, 0) rectangle (\branch*1.2+0.8, \local/20);
+          % Branch label
+          \node[below] at (\branch*1.2+0.4, 0) {\tiny Br\branch};
+        }
+        % Y-axis
+        \draw[->] (-0.2, 0) -- (-0.2, 5);
+        \foreach \y in {0,50,100} {
+          \node[left] at (-0.3, \y/20) {\tiny \y\%};
+        }
+        % Legend
+        \fill[blue!60] (8, 4.5) rectangle (8.3, 4.7);
+        \node[right] at (8.3, 4.6) {\tiny 2-bit};
+        \fill[red!60] (8, 4) rectangle (8.3, 4.2);
+        \node[right] at (8.3, 4.1) {\tiny Local};
+      \end{tikzpicture}
+    \end{center}
+  \end{columns}
+\end{frame}
+
+% Slide 7: Performance Metrics
+\begin{frame}
+  \frametitle{Performance Metrics}
+  
+  \begin{center}
+    \begin{tabular}{|l|c|c|c|}
+      \hline
+      \textbf{Configuration} & \textbf{Hit Rate} & \textbf{Cycles} & \textbf{Speedup} \\
+      \hline
+      All wrong & 0\% & 16,000,005 & baseline \\
+      Bimodal & 76.72\% & 4,492,005 & 356.2\% \\
+      Local & 80.72\% & 3,892,005 & 411.2\% \\
+      Global hist + local count & 81.60\% & 3,760,005 & 425.5\% \\
+      Perfect & 100\% & 1,000,005 & 1599.8\% \\
+      \hline
+    \end{tabular}
+  \end{center}
+  
+  \vspace{1em}
+  
+  \begin{tcolorbox}[colback=yellow!10, colframe=yellow!50]
+    \textbf{Test Parameters:}
+    \begin{itemize}
+      \item Instructions: 1,000,000
+      \item Pipeline length: 5
+      \item Misprediction penalty: 3 cycles
+      \item Branch probability: 5\%
+    \end{itemize}
+  \end{tcolorbox}
+  
+  \textbf{Key Insight:} Even modest improvements in prediction accuracy (76\% → 81\%) yield significant performance gains
+\end{frame}
+
 \end{document}
