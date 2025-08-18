@@ -1056,52 +1056,56 @@ for (i=100; i>0; i--)
   
   \begin{columns}[T]
     \column{0.5\textwidth}
+    \footnotesize
     \begin{tabular}{|l|c|}
       \hline
       \textbf{Predictor Type} & \textbf{Avg Accuracy} \\
       \hline
-      2-bit counter & 76.72\% \\
-      Global history \& table & 77.60\% \\
-      Local history, global table & \textbf{81.12\%} \\
-      Local history \& tables & 80.72\% \\
-      Global history, local tables & 81.60\% \\
+      2-bit counter & 78.9\% \\
+      Global history \& table & 79.9\% \\
+      Local history, global table & 79.8\% \\
+      Local history \& tables & 83.5\% \\
+      Global history, local tables & \textbf{84.3\%} \\
       \hline
     \end{tabular}
     
-    \vspace{1em}
+    \vspace{0.5em}
+    \footnotesize
     \textbf{Best performer:} Global history with local tables
     
     \column{0.5\textwidth}
     \begin{center}
       \textbf{Per-Branch Accuracy}\\[0.5em]
-      \begin{tikzpicture}[scale=0.8]
+      \begin{tikzpicture}[scale=0.7]
         % Draw bars for comparison
         \foreach \branch/\simple/\local in {
-          0/98/99,
-          1/74.75/99.5,
-          2/60.5/60.25,
-          3/61/60.5,
-          4/76.75/76,
-          5/87.25/88.5,
-          6/94.75/95
+          0/98/99.75,
+          1/74.75/99.75,
+          2/60.5/57.25,
+          3/61/74,
+          4/76.75/79.75,
+          5/87.25/94.75,
+          6/94.75/99.75
         } {
           % Simple predictor bar
-          \fill[blue!60] (\branch*1.2, 0) rectangle (\branch*1.2+0.4, \simple/20);
+          \fill[blue!60] (\branch*1.1, 0) rectangle (\branch*1.1+0.35, \simple/20);
           % Local predictor bar
-          \fill[red!60] (\branch*1.2+0.4, 0) rectangle (\branch*1.2+0.8, \local/20);
+          \fill[red!60] (\branch*1.1+0.35, 0) rectangle (\branch*1.1+0.7, \local/20);
           % Branch label
-          \node[below] at (\branch*1.2+0.4, 0) {\tiny Br\branch};
+          \node[below] at (\branch*1.1+0.35, -0.1) {\tiny B\branch};
         }
         % Y-axis
         \draw[->] (-0.2, 0) -- (-0.2, 5);
         \foreach \y in {0,50,100} {
           \node[left] at (-0.3, \y/20) {\tiny \y\%};
         }
-        % Legend
-        \fill[blue!60] (8, 4.5) rectangle (8.3, 4.7);
-        \node[right] at (8.3, 4.6) {\tiny 2-bit};
-        \fill[red!60] (8, 4) rectangle (8.3, 4.2);
-        \node[right] at (8.3, 4.1) {\tiny Local};
+        % Legend box with clear background
+        \fill[white] (7.2, 3.8) rectangle (9, 4.8);
+        \draw[black] (7.2, 3.8) rectangle (9, 4.8);
+        \fill[blue!60] (7.4, 4.4) rectangle (7.7, 4.6);
+        \node[right] at (7.7, 4.5) {\tiny 2-bit counter};
+        \fill[red!60] (7.4, 4) rectangle (7.7, 4.2);
+        \node[right] at (7.7, 4.1) {\tiny Local hist.};
       \end{tikzpicture}
     \end{center}
   \end{columns}
@@ -1116,11 +1120,11 @@ for (i=100; i>0; i--)
       \hline
       \textbf{Configuration} & \textbf{Hit Rate} & \textbf{Cycles} & \textbf{Speedup} \\
       \hline
-      All wrong & 0\% & 16,000,005 & baseline \\
-      Bimodal & 76.72\% & 4,492,005 & 356.2\% \\
-      Local & 80.72\% & 3,892,005 & 411.2\% \\
-      Global hist + local count & 81.60\% & 3,760,005 & 425.5\% \\
-      Perfect & 100\% & 1,000,005 & 1599.8\% \\
+      All wrong & 0.0\% & 16,000,005 & baseline \\
+      Bimodal & 78.9\% & 4,226,005 & 379\% \\
+      Local & 83.5\% & 3,470,005 & 461\% \\
+      Global hist + local count & 84.3\% & 3,342,005 & 479\% \\
+      Perfect & 100.0\% & 1,000,005 & 1600\% \\
       \hline
     \end{tabular}
   \end{center}
