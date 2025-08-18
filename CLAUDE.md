@@ -5,3 +5,5 @@
 - If you need to build for debug, use -interaction=nonstopmode .
 
 - Use relative positioning for TikZ nodes, e.g. (current page.center) or (current page.north east).
+
+- Consider using xparse or pgfkeys for macros with many or optional arguments.
