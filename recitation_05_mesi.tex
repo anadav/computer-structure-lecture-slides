@@ -445,19 +445,20 @@ GO and data may be sent at different cycles:
 \tiny
 \vspace{-0.5cm}
 \begin{columns}[t]
-\column{0.48\textwidth}
+\column{0.5\textwidth}
 \textbf{System:} 2 proc, MESI, L1 priv, L2 shared incl, direct-map\\
 \textbf{Latencies:} L1: 3ns, L1$\leftrightarrow$L2: 20ns, L2$\leftrightarrow$Mem: 90ns
-\column{0.48\textwidth}
-\textbf{Mapping:} X1-X4→same L1 set, X5→diff L1 set\\
-X1-X2→same L2 set, X3-X5→diff L2 set
+\column{0.5\textwidth}
+\textbf{L1 Mapping:} X1,X2,X3,X4 → same set; X5 → different set\\
+\textbf{L2 Mapping:} X1,X2 → same set; X3,X4,X5 → different set
 \end{columns}
 
 \vspace{0.1cm}
 \begin{table}[h]
 \centering
-\renewcommand{\arraystretch}{0.9}
-\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{8cm}|c|c|c|c|}
+\renewcommand{\arraystretch}{0.8}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|l|c|c|c|c|}
 \hline
 \rowcolor{gray!20}
 \# & \textbf{Op} & \textbf{Messages Sent} & \textbf{Time} & \multicolumn{2}{c|}{\textbf{CVB}} & \textbf{State} \\
@@ -465,50 +466,51 @@ X1-X2→same L2 set, X3-X5→diff L2 set
 \rowcolor{gray!20}
  & & & (ns) & P0 & P1 & \\
 \hline
-1 & P0 reads X1 & 
-\textcolor{messageblue}{P0→L1 miss (3), P0-L1→L2 read miss (20), L2→MEM read (90), MEM→L2 data (90), L2→P0-L1 data (20), P0-L1→P0 data (3)} & 
-\textcolor{timecolor}{226} & 
-1 & 
-0 & 
-\cellcolor{stateE}E \\
+\only<2->{1} & \only<2->{P0 reads X1} & 
+\only<2->{\textcolor{messageblue}{P0→L1 miss, P0-L1→L2 read miss, L2→MEM read, MEM→L2 data, L2→P0-L1 data, P0→data}} & 
+\only<2->{\textcolor{timecolor}{226}} & 
+\only<2->{1} & 
+\only<2->{0} & 
+\only<2->{\cellcolor{stateE}E} \\
 \hline
 2 & P1 writes X3 & 
-\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1-L1→P1 write (3)} & 
-\textcolor{timecolor}{226} & 
+P1→L1 miss, P1-L1→L2 read miss, L2→MEM read, MEM→L2 data, L2→P1-L1 data, P1 write & 
+226 & 
 0 & 
 1 & 
 \cellcolor{stateM}M \\
 \hline
 
 3 & P1 writes X4 & 
-\only<2>{\textcolor{messageblue}{P1→L1 miss (3), \underline{P1-L1→L2 write (20)}, P1-L1→L2 read miss (20), \underline{L2→MEM write (90)}, L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1→write (3)}}\only<3->{~} & 
-\only<2>{\textcolor{timecolor}{336}}\only<3->{~} & 
-\only<2>{0}\only<3->{~} & 
-\only<2>{1}\only<3->{~} & 
-\only<2>{\cellcolor{stateM}M}\only<3->{~} \\
+\only<2->{\textcolor{messageblue}{P1→L1 miss, \underline{P1-L1→L2 wr X3}, P1-L1→L2 rd miss, \underline{L2→MEM wr}, L2→MEM rd, MEM→L2, L2→P1-L1, P1 wr}} & 
+\only<2->{\textcolor{timecolor}{336}} & 
+\only<2->{0} & 
+\only<2->{1} & 
+\only<2->{\cellcolor{stateM}M} \\
 \hline
 4 & P1 writes X5 & 
-\only<2>{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), \underline{L2→P1-L1 snoop (20)}, \underline{P1-L1→L2 data (20)}, \underline{L2→MEM write (90)}, L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1→write (3)}}\only<3->{~} & 
-\only<2>{\textcolor{timecolor}{356}}\only<3->{~} & 
-\only<2>{0}\only<3->{~} & 
-\only<2>{1}\only<3->{~} & 
-\only<2>{\cellcolor{stateM}M}\only<3->{~} \\
+\only<2->{\textcolor{messageblue}{P1→L1 miss, P1-L1→L2 rd miss, \underline{L2→P1 snoop X4}, \underline{P1→L2 data}, \underline{L2→MEM wr}, L2→MEM rd, MEM→L2, L2→P1, P1 wr}} & 
+\only<2->{\textcolor{timecolor}{356}} & 
+\only<2->{0} & 
+\only<2->{1} & 
+\only<2->{\cellcolor{stateM}M} \\
 \hline
 5 & P0 reads X5 & 
-\only<2>{\textcolor{messageblue}{P0→L1 miss (3), P0-L1→L2 read miss (20), \textbf{L2→P1-L1 snoop (20)}, \textbf{P1-L1→L2 data (20)}, L2→P0-L1 data (20), P0-L1→P0 data (3)}}\only<3->{~} & 
-\only<2>{\textcolor{timecolor}{86}}\only<3->{~} & 
-\only<2>{1}\only<3->{~} & 
-\only<2>{1}\only<3->{~} & 
-\only<2>{\cellcolor{stateS}S}\only<3->{~} \\
+\only<2->{\textcolor{messageblue}{P0→L1 miss, P0-L1→L2 rd miss, \textbf{L2→P1 snoop}, \textbf{P1→L2 data}, L2→P0 data, P0 read}} & 
+\only<2->{\textcolor{timecolor}{86}} & 
+\only<2->{1} & 
+\only<2->{1} & 
+\only<2->{\cellcolor{stateS}S} \\
 \hline
 6 & P1 reads X4 & 
-\only<2>{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), \{L2→P1-L1 snoop + L2→P0-L1 snoop + L2→MEM write\} (90), L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1-L1→P1 (3)}}\only<3->{~} & 
-\only<2>{\textcolor{timecolor}{316}}\only<3->{~} & 
-\only<2>{0}\only<3->{~} & 
-\only<2>{1}\only<3->{~} & 
-\only<2>{\cellcolor{stateE}E}\only<3->{~} \\
+\only<2->{\textcolor{messageblue}{P1→L1 miss, P1-L1→L2 rd miss, \{L2→P1+P0 snoop, L2→MEM wr X5\}, L2→MEM rd, MEM→L2, L2→P1, P1 rd}} & 
+\only<2->{\textcolor{timecolor}{316}} & 
+\only<2->{0} & 
+\only<2->{1} & 
+\only<2->{\cellcolor{stateE}E} \\
 \hline
 \end{tabular}
+}
 \end{table}
 
 \pause
