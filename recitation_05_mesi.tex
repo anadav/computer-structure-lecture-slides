@@ -442,100 +442,98 @@ GO and data may be sent at different cycles:
 \end{frame}
 
 \begin{frame}{MESI Question 3 - Solution}
-\scriptsize
-\vspace{-0.3cm}
-\textbf{System:} 2 processors, MESI, L1 private, L2 shared inclusive, direct-mapped\\
-\textbf{Latencies:} L1: 3ns, L1$\leftrightarrow$L2: 20ns, L2$\leftrightarrow$Memory: 90ns\\
-\textbf{Mapping:} X1-X4→same L1 set, X5→different L1 set | X1-X2→same L2 set, X3-X5→different L2 set
+\tiny
+\vspace{-0.5cm}
+\begin{columns}[t]
+\column{0.48\textwidth}
+\textbf{System:} 2 proc, MESI, L1 priv, L2 shared incl, direct-map\\
+\textbf{Latencies:} L1: 3ns, L1$\leftrightarrow$L2: 20ns, L2$\leftrightarrow$Mem: 90ns
+\column{0.48\textwidth}
+\textbf{Mapping:} X1-X4→same L1 set, X5→diff L1 set\\
+X1-X2→same L2 set, X3-X5→diff L2 set
+\end{columns}
 
-\vspace{0.2cm}
+\vspace{0.1cm}
 \begin{table}[h]
 \centering
-\renewcommand{\arraystretch}{1.1}
-\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{7.5cm}|c|c|c|c|}
+\renewcommand{\arraystretch}{0.9}
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{8cm}|c|c|c|c|}
 \hline
 \rowcolor{gray!20}
-\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time} & \multicolumn{2}{c|}{\textbf{CVB}} & \textbf{State} \\
+\# & \textbf{Op} & \textbf{Messages Sent} & \textbf{Time} & \multicolumn{2}{c|}{\textbf{CVB}} & \textbf{State} \\
 \cline{5-6}
 \rowcolor{gray!20}
- & & & (ns) & P0 & P1 & after \\
+ & & & (ns) & P0 & P1 & \\
 \hline
-
 1 & P0 reads X1 & 
-\only<1>{~}\only<2->{\textcolor{messageblue}{P0→L1 miss (3), P0-L1→L2 read miss (20), L2→MEM read (90), MEM→L2 data (90), L2→P0-L1 data (20), P0-L1→P0 data (3)}} & 
-\only<1-2>{~}\only<3->{\textcolor{timecolor}{226}} & 
-\only<1-3>{~}\only<4->{1} & 
-\only<1-3>{~}\only<4->{0} & 
-\only<1-3>{~}\only<4->{\cellcolor{stateE}E} \\
+\textcolor{messageblue}{P0→L1 miss (3), P0-L1→L2 read miss (20), L2→MEM read (90), MEM→L2 data (90), L2→P0-L1 data (20), P0-L1→P0 data (3)} & 
+\textcolor{timecolor}{226} & 
+1 & 
+0 & 
+\cellcolor{stateE}E \\
 \hline
-
 2 & P1 writes X3 & 
-\only<1-4>{~}\only<5->{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1-L1→P1 write (3)}} & 
-\only<1-5>{~}\only<6->{\textcolor{timecolor}{226}} & 
-\only<1-6>{~}\only<7->{0} & 
-\only<1-6>{~}\only<7->{1} & 
-\only<1-6>{~}\only<7->{\cellcolor{stateM}M} \\
+\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1-L1→P1 write (3)} & 
+\textcolor{timecolor}{226} & 
+0 & 
+1 & 
+\cellcolor{stateM}M \\
 \hline
 
 3 & P1 writes X4 & 
-\only<1-7>{~}\only<8->{\textcolor{messageblue}{P1→L1 miss (3), \underline{P1-L1→L2 write (20)}, P1-L1→L2 read miss (20), \underline{L2→MEM write (90)}, L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1→write (3)}} & 
-\only<1-8>{~}\only<9->{\textcolor{timecolor}{336}} & 
-\only<1-9>{~}\only<10->{0} & 
-\only<1-9>{~}\only<10->{1} & 
-\only<1-9>{~}\only<10->{\cellcolor{stateM}M} \\
+\only<2>{\textcolor{messageblue}{P1→L1 miss (3), \underline{P1-L1→L2 write (20)}, P1-L1→L2 read miss (20), \underline{L2→MEM write (90)}, L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1→write (3)}}\only<3->{~} & 
+\only<2>{\textcolor{timecolor}{336}}\only<3->{~} & 
+\only<2>{0}\only<3->{~} & 
+\only<2>{1}\only<3->{~} & 
+\only<2>{\cellcolor{stateM}M}\only<3->{~} \\
 \hline
-
 4 & P1 writes X5 & 
-\only<1-10>{~}\only<11->{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), \underline{L2→P1-L1 snoop (20)}, \underline{P1-L1→L2 data (20)}, \underline{L2→MEM write (90)}, L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1→write (3)}} & 
-\only<1-11>{~}\only<12->{\textcolor{timecolor}{356}} & 
-\only<1-12>{~}\only<13->{0} & 
-\only<1-12>{~}\only<13->{1} & 
-\only<1-12>{~}\only<13->{\cellcolor{stateM}M} \\
+\only<2>{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), \underline{L2→P1-L1 snoop (20)}, \underline{P1-L1→L2 data (20)}, \underline{L2→MEM write (90)}, L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1→write (3)}}\only<3->{~} & 
+\only<2>{\textcolor{timecolor}{356}}\only<3->{~} & 
+\only<2>{0}\only<3->{~} & 
+\only<2>{1}\only<3->{~} & 
+\only<2>{\cellcolor{stateM}M}\only<3->{~} \\
 \hline
-
 5 & P0 reads X5 & 
-\only<1-13>{~}\only<14->{\textcolor{messageblue}{P0→L1 miss (3), P0-L1→L2 read miss (20), \textbf{L2→P1-L1 snoop (20)}, \textbf{P1-L1→L2 data (20)}, L2→P0-L1 data (20), P0-L1→P0 data (3)}} & 
-\only<1-14>{~}\only<15->{\textcolor{timecolor}{86}} & 
-\only<1-15>{~}\only<16->{1} & 
-\only<1-15>{~}\only<16->{1} & 
-\only<1-15>{~}\only<16->{\cellcolor{stateS}S} \\
+\only<2>{\textcolor{messageblue}{P0→L1 miss (3), P0-L1→L2 read miss (20), \textbf{L2→P1-L1 snoop (20)}, \textbf{P1-L1→L2 data (20)}, L2→P0-L1 data (20), P0-L1→P0 data (3)}}\only<3->{~} & 
+\only<2>{\textcolor{timecolor}{86}}\only<3->{~} & 
+\only<2>{1}\only<3->{~} & 
+\only<2>{1}\only<3->{~} & 
+\only<2>{\cellcolor{stateS}S}\only<3->{~} \\
 \hline
-
 6 & P1 reads X4 & 
-\only<1-16>{~}\only<17->{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), \{L2→P1-L1 snoop + L2→P0-L1 snoop + L2→MEM write\} (90), L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1-L1→P1 (3)}} & 
-\only<1-17>{~}\only<18->{\textcolor{timecolor}{316}} & 
-\only<1-18>{~}\only<19->{0} & 
-\only<1-18>{~}\only<19->{1} & 
-\only<1-18>{~}\only<19->{\cellcolor{stateE}E} \\
+\only<2>{\textcolor{messageblue}{P1→L1 miss (3), P1-L1→L2 read miss (20), \{L2→P1-L1 snoop + L2→P0-L1 snoop + L2→MEM write\} (90), L2→MEM read (90), MEM→L2 data (90), L2→P1-L1 data (20), P1-L1→P1 (3)}}\only<3->{~} & 
+\only<2>{\textcolor{timecolor}{316}}\only<3->{~} & 
+\only<2>{0}\only<3->{~} & 
+\only<2>{1}\only<3->{~} & 
+\only<2>{\cellcolor{stateE}E}\only<3->{~} \\
 \hline
 \end{tabular}
 \end{table}
 
-\pause[20]
-\vspace{0.2cm}
+\pause
+\vspace{0.1cm}
+\visible<3->{
 \begin{columns}[T]
 \column{0.48\textwidth}
-\visible<20->{
-\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, fonttitle=\footnotesize, title=Key Observations]
-\footnotesize
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, fonttitle=\tiny, title=Key Observations]
+\tiny
 • \underline{Underlined}: Eviction writes\\
 • \textbf{Bold}: Modified data snoops\\
 • \{\}: Parallel operations\\
 • Row 3: X3 evicted for X4\\
 • Row 4: X4 evicted for X5
 \end{tcolorbox}
-}
 
 \column{0.48\textwidth}
-\visible<21->{
-\begin{tcolorbox}[colback=blue!10, colframe=blue!60, fonttitle=\footnotesize, title=Critical Paths]
-\footnotesize
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, fonttitle=\tiny, title=Critical Paths]
+\tiny
 • Longest: Row 4 (356ns) - eviction + snoop + fetch\\
 • Shortest: Row 5 (86ns) - data from P1's modified cache\\
 • Memory writes happen on evictions \& snoops
 \end{tcolorbox}
-}
 \end{columns}
+}
 
 \end{frame}
 
