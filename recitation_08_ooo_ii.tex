@@ -12,6 +12,7 @@
 \usepackage{array}
 \usepackage{listings}
 \usepackage{pgfkeys}
+\usepackage{bookmark}
 \usetheme{Madrid}
 
 % Custom colors
@@ -55,42 +56,43 @@
     \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};
 }
 
-\newcommand{\generateROBContent}[1]{%
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
-}
-
-\newcommand{\generateSingleColContent}[1]{%
-    |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} \\
-    |[cell]| \scriptsize{} \\
-}
-
-\newcommand{\generateExecContent}[1]{%
-    |[nocell]| \scriptsize{} \\
-    |[nocell]| \scriptsize{} \\
-}
-
-\newcommand{\generateRetireContent}[1]{%
-    |[nocell]| \scriptsize{} & |[nocell]| \scriptsize{} \\
-}
-
 \pgfkeys{
     /OOO/.is family, /OOO,
     default/.style = {
+        % RAT registers
         R1 = {}, R2 = {}, R3 = {}, R4 = {}, R5 = {},
         R6 = {}, R7 = {}, R8 = {}, R9 = {}, R10 = {},
-        % Configurable parameters with defaults
+        % ROB cells (2 columns x 9 rows)
+        rob11 = {}, rob12 = {},
+        rob21 = {}, rob22 = {},
+        rob31 = {}, rob32 = {},
+        rob41 = {}, rob42 = {},
+        rob51 = {}, rob52 = {},
+        rob61 = {}, rob62 = {},
+        rob71 = {}, rob72 = {},
+        rob81 = {}, rob82 = {},
+        rob91 = {}, rob92 = {},
+        % ROB markers
+        robmark1 = {rob1}, robmark2 = {rob2}, robmark3 = {rob3},
+        robmark4 = {rob4}, robmark5 = {rob5}, robmark6 = {rob6},
+        robmark7 = {rob7}, robmark8 = {rob8}, robmark9 = {rob9},
+        % IDQ cells
+        idq1 = {}, idq2 = {}, idq3 = {}, idq4 = {}, idq5 = {}, idq6 = {},
+        % RS cells
+        rs1 = {}, rs2 = {}, rs3 = {}, rs4 = {},
+        % RS markers
+        rsmark1 = {rs1}, rsmark2 = {rs2}, rsmark3 = {rs3}, rsmark4 = {rs4},
+        % MOB cells
+        mob1 = {}, mob2 = {},
+        % MOB markers
+        mobmark1 = {mob1}, mobmark2 = {mob2},
+        % Execute cells
+        exec1 = {}, exec2 = {},
+        % Retire cells
+        ret1 = {}, ret2 = {},
+        % Retire markers
+        retmark1 = {ret1}, retmark2 = {ret2},
+        % Number of rows/cols (for iteration purposes)
         rob rows = 9,
         idq rows = 6,
         rs rows = 4,
@@ -98,6 +100,7 @@
         execute rows = 2,
         retire cols = 2
     },
+    % RAT mappings
     R1/.estore in = \prfOne,
     R2/.estore in = \prfTwo,
     R3/.estore in = \prfThree,
@@ -108,7 +111,59 @@
     R8/.estore in = \prfEight,
     R9/.estore in = \prfNine,
     R10/.estore in = \prfTen,
-    % Store configurable parameters
+    % ROB cell contents
+    rob11/.estore in = \robOneOne, rob12/.estore in = \robOneTwo,
+    rob21/.estore in = \robTwoOne, rob22/.estore in = \robTwoTwo,
+    rob31/.estore in = \robThreeOne, rob32/.estore in = \robThreeTwo,
+    rob41/.estore in = \robFourOne, rob42/.estore in = \robFourTwo,
+    rob51/.estore in = \robFiveOne, rob52/.estore in = \robFiveTwo,
+    rob61/.estore in = \robSixOne, rob62/.estore in = \robSixTwo,
+    rob71/.estore in = \robSevenOne, rob72/.estore in = \robSevenTwo,
+    rob81/.estore in = \robEightOne, rob82/.estore in = \robEightTwo,
+    rob91/.estore in = \robNineOne, rob92/.estore in = \robNineTwo,
+    % ROB markers
+    robmark1/.estore in = \robMarkOne,
+    robmark2/.estore in = \robMarkTwo,
+    robmark3/.estore in = \robMarkThree,
+    robmark4/.estore in = \robMarkFour,
+    robmark5/.estore in = \robMarkFive,
+    robmark6/.estore in = \robMarkSix,
+    robmark7/.estore in = \robMarkSeven,
+    robmark8/.estore in = \robMarkEight,
+    robmark9/.estore in = \robMarkNine,
+    % IDQ cell contents
+    idq1/.estore in = \idqOne,
+    idq2/.estore in = \idqTwo,
+    idq3/.estore in = \idqThree,
+    idq4/.estore in = \idqFour,
+    idq5/.estore in = \idqFive,
+    idq6/.estore in = \idqSix,
+    % RS cell contents
+    rs1/.estore in = \rsOne,
+    rs2/.estore in = \rsTwo,
+    rs3/.estore in = \rsThree,
+    rs4/.estore in = \rsFour,
+    % RS markers
+    rsmark1/.estore in = \rsMarkOne,
+    rsmark2/.estore in = \rsMarkTwo,
+    rsmark3/.estore in = \rsMarkThree,
+    rsmark4/.estore in = \rsMarkFour,
+    % MOB cell contents
+    mob1/.estore in = \mobOne,
+    mob2/.estore in = \mobTwo,
+    % MOB markers
+    mobmark1/.estore in = \mobMarkOne,
+    mobmark2/.estore in = \mobMarkTwo,
+    % Execute cell contents
+    exec1/.estore in = \execOne,
+    exec2/.estore in = \execTwo,
+    % Retire cell contents
+    ret1/.estore in = \retOne,
+    ret2/.estore in = \retTwo,
+    % Retire markers
+    retmark1/.estore in = \retMarkOne,
+    retmark2/.estore in = \retMarkTwo,
+    % Store row/col counts
     rob rows/.estore in = \robRows,
     idq rows/.estore in = \idqRows,
     rs rows/.estore in = \rsRows,
@@ -149,7 +204,7 @@
         \scriptsize R10 \& \scriptsize \prfTen \\
     };
     %
-    % ROB (Reorder Buffer) - 2 columns, 9 rows by default
+    % ROB (Reorder Buffer) - 2 columns, 9 rows
     \matrix[matrix of nodes, 
             column sep=-\pgflinewidth,
             row sep=-\pgflinewidth,
@@ -157,25 +212,38 @@
             label={above:\textbf{ROB}},
             below=of rat, xshift=0.5cm,
             ampersand replacement=\&] (rob) {
-        % Generate rows - fixed 9 rows
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize \robOneOne \& |[cell]| \scriptsize \robOneTwo \\
+        |[cell]| \scriptsize \robTwoOne \& |[cell]| \scriptsize \robTwoTwo \\
+        |[cell]| \scriptsize \robThreeOne \& |[cell]| \scriptsize \robThreeTwo \\
+        |[cell]| \scriptsize \robFourOne \& |[cell]| \scriptsize \robFourTwo \\
+        |[cell]| \scriptsize \robFiveOne \& |[cell]| \scriptsize \robFiveTwo \\
+        |[cell]| \scriptsize \robSixOne \& |[cell]| \scriptsize \robSixTwo \\
+        |[cell]| \scriptsize \robSevenOne \& |[cell]| \scriptsize \robSevenTwo \\
+        |[cell]| \scriptsize \robEightOne \& |[cell]| \scriptsize \robEightTwo \\
+        |[cell]| \scriptsize \robNineOne \& |[cell]| \scriptsize \robNineTwo \\
     };
     %
     % Add markers for ROB rows (on the right)
-    \foreach \i in {1,...,\robRows} {
-        \coordinate (robmarker\i) at ($(rob-\i-2.east)+(0.2,0)$);
-        \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker\i) {rob\i};
-    }
+    \coordinate (robmarker1) at ($(rob-1-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker1) {\robMarkOne};
+    \coordinate (robmarker2) at ($(rob-2-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker2) {\robMarkTwo};
+    \coordinate (robmarker3) at ($(rob-3-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker3) {\robMarkThree};
+    \coordinate (robmarker4) at ($(rob-4-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker4) {\robMarkFour};
+    \coordinate (robmarker5) at ($(rob-5-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker5) {\robMarkFive};
+    \coordinate (robmarker6) at ($(rob-6-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker6) {\robMarkSix};
+    \coordinate (robmarker7) at ($(rob-7-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker7) {\robMarkSeven};
+    \coordinate (robmarker8) at ($(rob-8-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker8) {\robMarkEight};
+    \coordinate (robmarker9) at ($(rob-9-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker9) {\robMarkNine};
     %
-    % IDQ (Instruction Decode Queue) - 6 rows by default
+    % IDQ (Instruction Decode Queue) - 6 rows
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             inner sep=0pt,
@@ -183,15 +251,15 @@
             right=of rat, xshift=0.5cm, yshift=1cm,
             nodes={cell, minimum width=2cm},
             ampersand replacement=\&] (idq) {
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize \idqOne \\
+        |[cell]| \scriptsize \idqTwo \\
+        |[cell]| \scriptsize \idqThree \\
+        |[cell]| \scriptsize \idqFour \\
+        |[cell]| \scriptsize \idqFive \\
+        |[cell]| \scriptsize \idqSix \\
     };
     %
-    % RS (Reservation Station) - 4 rows by default
+    % RS (Reservation Station) - 4 rows
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             inner sep=0pt,
@@ -199,19 +267,23 @@
             below=of idq, yshift=0.3cm,
             nodes={cell, minimum width=2cm},
             ampersand replacement=\&] (rs) {
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize \rsOne \\
+        |[cell]| \scriptsize \rsTwo \\
+        |[cell]| \scriptsize \rsThree \\
+        |[cell]| \scriptsize \rsFour \\
     };
     %
     % Add markers for RS rows (on the right)
-    \foreach \i in {1,...,\rsRows} {
-        \coordinate (rsmarker\i) at ($(rs-\i-1.east)+(0.2,0)$);
-        \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker\i) {rs\i};
-    }
+    \coordinate (rsmarker1) at ($(rs-1-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker1) {\rsMarkOne};
+    \coordinate (rsmarker2) at ($(rs-2-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker2) {\rsMarkTwo};
+    \coordinate (rsmarker3) at ($(rs-3-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker3) {\rsMarkThree};
+    \coordinate (rsmarker4) at ($(rs-4-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker4) {\rsMarkFour};
     %
-    % MOB (Memory Order Buffer) - 2 rows by default
+    % MOB (Memory Order Buffer) - 2 rows
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             inner sep=0pt,
@@ -219,51 +291,88 @@
             right=of rs, xshift=0.3cm,
             nodes={cell, minimum width=2cm},
             ampersand replacement=\&] (mob) {
-        |[cell]| \scriptsize{} \\
-        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize \mobOne \\
+        |[cell]| \scriptsize \mobTwo \\
     };
     %
     % Add markers for MOB rows (on the right)
-    \foreach \i in {1,...,\mobRows} {
-        \coordinate (mobmarker\i) at ($(mob-\i-1.east)+(0.2,0)$);
-        \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker\i) {mob\i};
-    }
+    \coordinate (mobmarker1) at ($(mob-1-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker1) {\mobMarkOne};
+    \coordinate (mobmarker2) at ($(mob-2-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker2) {\mobMarkTwo};
     %
     % Execute block with internal rows (no borders)
-    \node[roundbox, below=of rs, yshift=-0.5cm] (execute) {};
+    \node[roundbox, below=of rs] (execute) {};
     \node[anchor=west] at (execute.east) {\textbf{Execute}};
     %
-    % Add internal structure to Execute (2 rows by default, no borders)
+    % Add internal structure to Execute (2 rows, no borders)
     \matrix[matrix of nodes,
             row sep=2pt,
             inner sep=0pt,
             at={(execute.center)},
             ampersand replacement=\&] (execMatrix) {
-        |[nocell]| \scriptsize{} \\
-        |[nocell]| \scriptsize{} \\
+        |[nocell]| \scriptsize \execOne \\
+        |[nocell]| \scriptsize \execTwo \\
     };
     %
     % Retire block with internal columns (no borders)
-    \node[dashedbox, below=of execute, yshift=-0.3cm] (retire) {};
+    \node[dashedbox, below=of execute] (retire) {};
     \node[anchor=west] at (retire.east) {\textbf{Retire}};
     %
-    % Add internal structure to Retire (2 columns by default, no borders)
+    % Add internal structure to Retire (2 columns, no borders)
     \matrix[matrix of nodes,
             column sep=10pt,
             inner sep=0pt,
             at={(retire.center)},
             ampersand replacement=\&] (retireMatrix) {
-        |[nocell]| \scriptsize{} \& |[nocell]| \scriptsize{} \\
+        |[nocell]| \scriptsize \retOne \& |[nocell]| \scriptsize \retTwo \\
     };
     %
     % Add markers for Retire entries (on the right of each column)
-    \foreach \i in {1,...,\retireCols} {
-        \coordinate (retmarker\i) at ($(retireMatrix-1-\i.east)+(0.2,0)$);
-        \node[anchor=west, inner sep=1pt, font=\tiny] at (retmarker\i) {ret\i};
-    }
+    \coordinate (retmarker1) at ($(retireMatrix-1-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (retmarker1) {\retMarkOne};
+    \coordinate (retmarker2) at ($(retireMatrix-1-2.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (retmarker2) {\retMarkTwo};
     %
     \end{tikzpicture}
 }
+
+\begin{document}
+% Example usage with custom data and markers:
+\OOODiagramKV[
+    % RAT PRF mappings
+    R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
+    R6=P6, R7=P7, R8=P8, R9=P9, R10=P10,
+    % ROB cell contents (row-column format)
+    rob11=ADD, rob12=P1,
+    rob21=SUB, rob22=P2,
+    rob31=MUL, rob32=P3,
+    rob41=LD, rob42=P4,
+    rob51=ST, rob52=P5,
+    % Custom ROB markers
+    robmark1=head, robmark2=r2, robmark3=r3, 
+    robmark4=r4, robmark5=tail,
+    % IDQ contents
+    idq1=INST1, idq2=INST2, idq3=INST3,
+    % RS contents
+    rs1=ADD, rs2=MUL, rs3=LD, rs4=BR,
+    % Custom RS markers
+    rsmark1=alu1, rsmark2=alu2, rsmark3=mem, rsmark4=branch,
+    % MOB contents
+    mob1=LD, mob2=ST,
+    % Custom MOB markers
+    mobmark1=load, mobmark2=store,
+    % Execute contents
+    exec1=ALU, exec2=FPU,
+    % Retire contents
+    ret1=WB1, ret2=WB2,
+    % Custom Retire markers
+    retmark1=port0, retmark2=port1
+]
+
+% Another example with minimal data:
+% \OOODiagramKV[R1=P1, R2=P2, rob11=I1, rs1=ALU]
+\end{document}
 % Code listing settings
 \lstset{
     basicstyle=\ttfamily\small,
@@ -721,6 +830,21 @@ Course 234267
 \node at (8.5, -4) {18};
 
 \end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+\OOODiagramKV[
+    % PRF mappings
+    R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
+    R6=P6, R7=P7, R8=P8, R9=P9, R10=P10,
+    % Configurable structure parameters
+    rob rows=9,      % Number of ROB rows (default: 9)
+    idq rows=6,      % Number of IDQ rows (default: 6)
+    rs rows=4,       % Number of RS rows (default: 4)
+    mob rows=2,      % Number of MOB rows (default: 2)
+    execute rows=2,  % Number of Execute internal rows (default: 2)
+    retire cols=2    % Number of Retire internal columns (default: 2)
+]
 \end{frame}
 
 \begin{frame}
