@@ -87,7 +87,7 @@
     \tikzstyle{cell}=[minimum width=0.8cm, minimum height=0.3cm]%
     %
     % RAT (Register Alias Table) with internal table structure
-    \node[draw, rectangle, minimum width=2cm, minimum height=4.5cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};%
+    %\node[draw, rectangle, minimum width=2cm, minimum height=4.5cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};%
     %
     % Create the 2-column table inside RAT
     \node[matrix of nodes, 
@@ -95,7 +95,8 @@
           column sep=-\pgflinewidth,
           row sep=-\pgflinewidth,
           inner sep=0pt,
-          ampersand replacement=\&] at (rat.center) {
+          label={above:\textbf{RAT}},
+          ampersand replacement=\&] (rat) at (0,0) {
         \scriptsize ARF \& \scriptsize PRF \\
         \scriptsize R1 \& \scriptsize \prfOne \\
         \scriptsize R2 \& \scriptsize \prfTwo \\
@@ -110,16 +111,16 @@
     };%
     %
     % ROB (Reorder Buffer) - empty structure
-    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=of rat, xshift=0.5cm] (rob) {};%
+    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, below=of rat, xshift=0.5cm] (rob) {};%
     %
     % IDQ (Instruction Decode Queue) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rob, xshift=0.3cm, yshift=1cm] (idq) {};%
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rat, xshift=0.3cm, yshift=1cm] (idq) {};%
     %
     % RS (Reservation Station) - empty structure
     \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq, yshift=0.3cm] (rs) {};%
     %
     % MOB (Memory Order Buffer) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of idq, xshift=0.3cm] (mob) {};%
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of rs, xshift=0.3cm] (mob) {};%
     %
     % Execute and Retire blocks
     \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};%
