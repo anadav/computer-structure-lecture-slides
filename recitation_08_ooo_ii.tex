@@ -775,7 +775,7 @@ Adding a third ALU unit - does it improve performance?
 \begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Decode}
 \OOODiagramKV[
     % PRF mappings
-    R1=\newentrya{RB1},
+    R1=\newentryb{RB1},
     R10=\newentrya{RB0},
     idq5=\newentryb{\sout{SUB R1,R1,R1}},
     idq6=\newentrya{\sout{ADDI R10,R0,100}},
@@ -788,12 +788,12 @@ Adding a third ALU unit - does it improve performance?
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Fetch]}
+\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Fetch}
 \OOODiagramKV[
     % PRF mappings
     R1=\oldentry{RB1},
     R10=\oldentry{RB0},
-    idq5=\newentrya{LW R5,100(R4)},
+    idq5=\newentryb{LW R5,100(R4)},
     idq6=\newentrya{ADDI R4,R0,20},
     rs1=\oldentry{RB0$\leftarrow$R0+100},
     rs2=\oldentry{RB1$\leftarrow$R1-R1},
@@ -811,14 +811,14 @@ Adding a third ALU unit - does it improve performance?
     R10=\oldentry{RB0},
     idq5=\oldentry{LW R5,100(R4)},
     idq6=\oldentry{ADDI R4,R0,20},
-    rs1=\oldentry{RB0$\leftarrow$R0+100},
-    rs2=\oldentry{RB1$\leftarrow$R1-R1},
-    rob11=\srcentrya{ADDI R10,R0,100},
+    rs1=\srcentrya{RB0$\leftarrow$R0+100},
+    rs2=\srcentryb{RB1$\leftarrow$R1-R1},
+    rob11=\oldentry{ADDI R10,R0,100},
     rob12=\oldentry{INV},
-    rob21=\srcentrya{SUB R1,R1,R1},
+    rob21=\oldentry{SUB R1,R1,R1},
     rob22=\oldentry{INV},
-    exec1=\newentrya{RB0$\leftarrow$RB0+100},
-    exec2=\newentrya{RB1$\leftarrow$RB1-RB1},
+    exec1=\newentrya{RB0$\leftarrow$R0+100},
+    exec2=\newentryb{RB1$\leftarrow$R1-R1},
 ]]
 \end{frame}
 
@@ -826,116 +826,36 @@ Adding a third ALU unit - does it improve performance?
 \OOODiagramKV[
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\newentrya{RB2}, R5=\newentrya{RB3},
-    idq5=\newentrya{\sout{LW R5,100(R4)}},
+    R4=\newentrya{RB2}, R5=\newentryb{RB3},
+    idq5=\newentryb{\sout{LW R5,100(R4)}},
     idq6=\newentrya{\sout{ADDI R4,R0,20}},
     rs1=\oldentry{RB0$\leftarrow$R0+100},
     rs2=\oldentry{RB1$\leftarrow$R1-R1},
     rs3=\newentrya{RB2$\leftarrow$R0+20},
-    rs4=\newentrya{RB3$\leftarrow$LD(RB2+100)},
+    rs4=\newentryb{RB3$\leftarrow$LD(RB2+100)},
     rob11=\oldentry{ADDI R10,R0,100},
     rob12=\oldentry{INV},
     rob21=\oldentry{SUB R1,R1,R1},
     rob22=\oldentry{INV},
     rob31=\newentrya{ADDI R4,R0,20},
     rob32=\newentrya{INV},
-    rob41=\newentrya{LW R5,100(R4)},
-    rob42=\newentrya{INV},
-    rs4=\newentrya{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\newentrya{INV},
-    mob1=\newentrya{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB0$\leftarrow$RB0+100},
-    exec2=\oldentry{RB1$\leftarrow$RB1-RB1},
+    rob41=\newentryb{LW R5,100(R4)},
+    rob42=\newentryb{INV},
+    mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB0$\leftarrow$R0+100},
+    exec2=\oldentry{RB1$\leftarrow$R1-R1},
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Fetch]}
+\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Fetch}
 \OOODiagramKV[
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\newentrya{SUB R1,R1,R1},
-    idq6=\newentrya{ADDI R10,R0,100},
+    idq5=\newentryb{ADDI R5, R3, 2},
+    idq6=\newentrya{ADDI R3, R2, 2},
     rs1=\oldentry{RB0$\leftarrow$R0+100},
     rs2=\oldentry{RB1$\leftarrow$R1-R1},
-    rs3=\oldentry{RB2$\leftarrow$R0+20},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{INV},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{INV},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB0$\leftarrow$RB0+100},
-    exec2=\oldentry{RB1$\leftarrow$RB1-RB1},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Completed}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{SUB R1,R1,R1},
-    idq6=\oldentry{ADDI R10,R0,100},
-    rs1=\oldentry{RB0$\leftarrow$R0+100},
-    rs2=\oldentry{RB1$\leftarrow$R1-R1},
-    rs3=\oldentry{RB2$\leftarrow$R0+20},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\newentrya{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\newentrya{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\newentrya{\sout{RB0$\leftarrow$RB0+100}},
-    exec2=\newentrya{\sout{RB1$\leftarrow$RB1-RB1}},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Starts}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{SUB R1,R1,R1},
-    idq6=\oldentry{ADDI R10,R0,100},
-    rs1=\oldentry{RB0$\leftarrow$R0+100},
-    rs2=\oldentry{RB1$\leftarrow$R1-R1},
-    rs3=\oldentry{RB2$\leftarrow$R0+20},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{OK},
-    rob31=\srcentrya{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\srcentrya{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\oldentry{INV},
-    mob1=\newentrya{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\newentrya{RB2$\leftarrow$RB0+20},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Instruction Fetch}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\newentrya{ADDI R5,R3,2},
-    idq6=\newentrya{ADDI R3,R2,2},
     rs3=\oldentry{RB2$\leftarrow$R0+20},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
     rob11=\oldentry{ADDI R10,R0,100},
@@ -950,9 +870,137 @@ Adding a third ALU unit - does it improve performance?
     rob42=\oldentry{INV},
     mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
     exec1=\oldentry{RB0$\leftarrow$R0+100},
-    exec2=\oldentry{RB1$\leftarrow$RB1-RB1},
+    exec2=\oldentry{RB1$\leftarrow$R1-R1},
 ]
 \end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Completed}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq5=\oldentry{ADDI R5, R3, 2},
+    idq6=\oldentry{ADDI R3, R2, 2},
+    rs1=\newentrya{\sout{RB0$\leftarrow$R0+100}},
+    rs2=\newentryb{\sout{RB1$\leftarrow$R1-R1}},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    rs4=\oldentry{RB3$\leftarrow$LD(RB+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\newentrya{OK},
+    rob21=\oldentry{SUB R1,R1,R1},
+    rob22=\newentryb{OK},
+    rob31=\oldentry{ADDI R4,R0,20},
+    rob32=\oldentry{INV},
+    rob41=\oldentry{LW R5,100(R4)},
+    rob42=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\newentrya{\sout{RB0$\leftarrow$RB0+100}},
+    exec2=\newentryb{\sout{RB1$\leftarrow$RB1-RB1}},
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Starts}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq5=\oldentry{ADDI R5, R3, 2},
+    idq6=\oldentry{ADDI R3, R2, 2},
+    rs3=\srcentrya{RB2$\leftarrow$R0+20},
+    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\oldentry{OK},
+    rob21=\oldentry{SUB R1,R1,R1},
+    rob22=\oldentry{OK},
+    rob31=\oldentry{ADDI R4,R0,20},
+    rob32=\oldentry{INV},
+    rob41=\oldentry{LW R5,100(R4)},
+    rob42=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\newentrya{RB2$\leftarrow$RB0+20},
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Stall on Dependencies}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq5=\oldentry{ADDI R5, R3, 2},
+    idq6=\oldentry{ADDI R3, R2, 2},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    rs4=\srcentryb{RB3$\leftarrow$LD(RB2+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\oldentry{OK},
+    rob21=\oldentry{SUB R1,R1,R1},
+    rob22=\oldentry{OK},
+    rob31=\oldentry{ADDI R4,R0,20},
+    rob32=\srcentryb{INV},
+    rob41=\oldentry{LW R5,100(R4)},
+    rob42=\oldentry{INV},
+    mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\srcentryb{RB2$\leftarrow$RB0+20},
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Decode}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R3=\newentrya{RB4},
+    R4=\oldentry{RB2}, R5=\newentryb{RB5},
+    idq5=\newentryb{\sout{ADDI R5, R3, 2}},
+    idq6=\newentrya{\sout{ADDI R3, R2, 2}},
+    rs1=\newentrya{RB4$\leftarrow$R2+R2},
+    rs2=\newentryb{RB5$\leftarrow$RB4+2},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\oldentry{OK},
+    rob21=\oldentry{SUB R1,R1,R1},
+    rob22=\oldentry{OK},
+    rob31=\oldentry{ADDI R4,R0,20},
+    rob32=\oldentry{INV},
+    rob41=\oldentry{LW R5,100(R4)},
+    rob42=\oldentry{INV},
+    rob51=\newentrya{ADDI R3,R2,2},
+    rob52=\newentrya{INV},
+    rob61=\newentryb{ADDI R5,R3,2},
+    rob62=\newentryb{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB2$\leftarrow$RB0+20},
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Fetch}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R3=\oldentry{RB4},
+    R4=\oldentry{RB2}, R5=\oldentry{RB5},
+    idq5=\newentryb{ADDI R6, R0, 6},
+    idq6=\newentrya{ADDI R5, R3, 2},
+    rs1=\oldentry{RB4$\leftarrow$R2+R2},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\oldentry{OK},
+    rob21=\oldentry{SUB R1,R1,R1},
+    rob22=\oldentry{OK},
+    rob31=\oldentry{ADDI R4,R0,20},
+    rob32=\oldentry{INV},
+    rob41=\oldentry{LW R5,100(R4)},
+    rob42=\oldentry{INV},
+    rob51=\oldentry{ADDI R3,R2,2},
+    rob52=\oldentry{INV},
+    rob61=\oldentry{ADDI R5,R3,2},
+    rob62=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB2$\leftarrow$RB0+20},
+]
+\end{frame}
+
 
 \begin{frame}{Out-of-Order Execution: Cycle 4b}
 \OOODiagramKV[
