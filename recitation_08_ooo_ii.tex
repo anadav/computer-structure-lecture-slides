@@ -175,23 +175,29 @@
     };
     %
     % ROB (Reorder Buffer) - 2 columns, 9 rows
-    \matrix[matrix of nodes, 
+    \matrix[matrix of nodes,
             column sep=-\pgflinewidth,
             row sep=-\pgflinewidth,
             inner sep=0pt,
             label={left:\textbf{ROB}},
             below=0.2cm of rat,
             anchor=north,
-            ampersand replacement=\&] (rob) {
-        |[cell]| \scriptsize \robOneOne \& |[cell]| \scriptsize \robOneTwo \\
-        |[cell]| \scriptsize \robTwoOne \& |[cell]| \scriptsize \robTwoTwo \\
-        |[cell]| \scriptsize \robThreeOne \& |[cell]| \scriptsize \robThreeTwo \\
-        |[cell]| \scriptsize \robFourOne \& |[cell]| \scriptsize \robFourTwo \\
-        |[cell]| \scriptsize \robFiveOne \& |[cell]| \scriptsize \robFiveTwo \\
-        |[cell]| \scriptsize \robSixOne \& |[cell]| \scriptsize \robSixTwo \\
-        |[cell]| \scriptsize \robSevenOne \& |[cell]| \scriptsize \robSevenTwo \\
-        |[cell]| \scriptsize \robEightOne \& |[cell]| \scriptsize \robEightTwo \\
-        |[cell]| \scriptsize \robNineOne \& |[cell]| \scriptsize \robNineTwo \\
+            nodes in empty cells,                 % ensure empty cells still have nodes
+            nodes={cell, align=left},            % your base cell style
+            % Per-column sizing:
+            column 1/.append style={nodes={text width=3cm}}, % wide first column
+            column 2/.append style={nodes={text width=1cm}},  % fixed narrower second
+            ampersand replacement=\&
+        ] (rob) {
+    |[cell]| \scriptsize \robOneOne  \& |[cell]| \scriptsize \robOneTwo \\
+    |[cell]| \scriptsize \robTwoOne  \& |[cell]| \scriptsize \robTwoTwo \\
+    |[cell]| \scriptsize \robThreeOne\& |[cell]| \scriptsize \robThreeTwo \\
+    |[cell]| \scriptsize \robFourOne \& |[cell]| \scriptsize \robFourTwo \\
+    |[cell]| \scriptsize \robFiveOne \& |[cell]| \scriptsize \robFiveTwo \\
+    |[cell]| \scriptsize \robSixOne  \& |[cell]| \scriptsize \robSixTwo \\
+    |[cell]| \scriptsize \robSevenOne\& |[cell]| \scriptsize \robSevenTwo \\
+    |[cell]| \scriptsize \robEightOne\& |[cell]| \scriptsize \robEightTwo \\
+    |[cell]| \scriptsize \robNineOne \& |[cell]| \scriptsize \robNineTwo \\
     };
     %
     % Add markers for ROB rows (on the right)
@@ -221,7 +227,7 @@
             label={right:\textbf{IDQ}},
             right=3cm of rat.north east,
             anchor=north west,
-            nodes={cell, minimum width=5cm},
+            nodes={cell, text width=3cm, align=left},
             ampersand replacement=\&] (idq) {
         |[cell]| \scriptsize \idqOne \\
         |[cell]| \scriptsize \idqTwo \\
@@ -237,7 +243,7 @@
             inner sep=0pt,
             label={above:\textbf{RS}},
             below=0.6cm of idq.south, anchor=north,
-            nodes={cell, minimum width=5cm},
+            nodes={cell, text width=3cm, align=left},
             ampersand replacement=\&] (rs) {
         |[cell]| \scriptsize \rsOne \\
         |[cell]| \scriptsize \rsTwo \\
@@ -742,33 +748,46 @@ Adding a third ALU unit - does it improve performance?
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution - Cycle 6b}
+\begin{frame}{Out-of-Order Execution}
 \OOODiagramKV[
-    % PRF mappings
-    R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
-    R6=P6, R7=P7, R8=P8, R9=P9, R10=P10,
-    % Configurable structure parameters
-    rob rows=9,      % Number of ROB rows (default: 9)
-    idq rows=6,      % Number of IDQ rows (default: 6)
-    rs rows=4,       % Number of RS rows (default: 4)
-    mob rows=2,      % Number of MOB rows (default: 2)
-    execute rows=2,  % Number of Execute internal rows (default: 2)
-    retire cols=2    % Number of Retire internal columns (default: 2)
 ]
 \end{frame}
 
-\begin{frame}
+\begin{frame}{Out-of-Order Execution: Cycle 1}
 \OOODiagramKV[
     % PRF mappings
-    R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
-    R6=P6, R7=P7, R8=P8, R9=P9, R10=P10,
-    % Configurable structure parameters
-    rob rows=9,      % Number of ROB rows (default: 9)
-    idq rows=6,      % Number of IDQ rows (default: 6)
-    rs rows=4,       % Number of RS rows (default: 4)
-    mob rows=2,      % Number of MOB rows (default: 2)
-    execute rows=2,  % Number of Execute internal rows (default: 2)
-    retire cols=2    % Number of Retire internal columns (default: 2)
+    idq5=\colorbox{yellow}{SUB~~R1,R1,R1},
+    idq6=\colorbox{yellow}{ADDI~R10,R0,100},
+ ]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 2}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\colorbox{yellow}{RB1}, R10=\colorbox{yellow}{RB0},
+    idq5=\colorbox{yellow}{LW~~~R5,100(R4)},
+    idq6=\colorbox{yellow}{ADDI~R4,R0,20},
+    rs1=\colorbox{yellow}{RB0$\leftarrow$R0+100},
+    rs2=\colorbox{yellow}{RB1$\leftarrow$R1-R1},
+    rob11=\colorbox{yellow}{ADDI R10,R0,100},
+    rob12=\colorbox{yellow}{INV},
+    rob21=\colorbox{yellow}{SUB~~R1,R1,R1},
+    rob22=\colorbox{yellow}{INV},
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 3}
+\OOODiagramKV[
+    % PRF mappings
+    R1={RB1}, R10={RB0},
+    idq5={SUB~~R1,R1,R1},
+    idq6={ADDI~R10,R0,100},
+    rs1={RB0$\leftarrow$R0+100},
+    rs2={RB1$\leftarrow$R1-R1},
+    rob11={ADDI R10,R0,100},
+    rob12={INV},
+    rob21={SUB~~R1,R1,R1},
+    rob22={INV},
 ]
 \end{frame}
 
