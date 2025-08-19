@@ -12,7 +12,6 @@
 \usepackage{array}
 \usepackage{listings}
 \usepackage{pgfkeys}
-\usepackage{bookmark}
 \usetheme{Madrid}
 
 % Custom colors
@@ -26,35 +25,6 @@
 
 % Define asmcode command for assembly code formatting
 \newcommand{\asmcode}[1]{\vspace{-0.2cm}\tiny\texttt{#1}}
-
-% Macro for OOO execution diagram components
-\newcommand{\OOODiagram}{%
-    % Define styles
-    \tikzstyle{box}=[draw, rectangle, minimum width=1.5cm, minimum height=0.4cm]
-    \tikzstyle{regbox}=[draw, rectangle, minimum width=1.2cm, minimum height=0.35cm]
-    \tikzstyle{highlightbox}=[draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen]
-    \tikzstyle{roundbox}=[draw, ellipse, minimum width=3cm, minimum height=1cm]
-    \tikzstyle{dashedbox}=[draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm]
-    
-    % RAT (Register Alias Table) - empty structure
-    \node[draw, rectangle, minimum width=1.8cm, minimum height=4cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
-    
-    % ROB (Reorder Buffer) - empty structure
-    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=of rat] (rob) {};
-    
-    % IDQ (Instruction Decode Queue) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rat, yshift=1cm] (idq) {};
-    
-    % RS (Reservation Station) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq] (rs) {};
-    
-    % MOB (Memory Order Buffer) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of idq] (rs) {};
-    
-    % Execute and Retire blocks
-    \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};
-    \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};
-}
 
 \pgfkeys{
     /OOO/.is family, /OOO,
@@ -189,9 +159,9 @@
             column sep=-\pgflinewidth,
             row sep=-\pgflinewidth,
             inner sep=0pt,
-            label={above:\textbf{RAT}},
-            ampersand replacement=\&] (rat) at (0,0) {
-        \scriptsize ARF \& \scriptsize PRF \\
+            label={left:\textbf{RAT}},
+            ampersand replacement=\&] (rat) {
+        \scriptsize \textbf{ARF} \& \scriptsize \textbf{PRF} \\
         \scriptsize R1 \& \scriptsize \prfOne \\
         \scriptsize R2 \& \scriptsize \prfTwo \\
         \scriptsize R3 \& \scriptsize \prfThree \\
@@ -209,8 +179,9 @@
             column sep=-\pgflinewidth,
             row sep=-\pgflinewidth,
             inner sep=0pt,
-            label={above:\textbf{ROB}},
-            below=of rat, xshift=0.5cm,
+            label={left:\textbf{ROB}},
+            below=0.2cm of rat,
+            anchor=north,
             ampersand replacement=\&] (rob) {
         |[cell]| \scriptsize \robOneOne \& |[cell]| \scriptsize \robOneTwo \\
         |[cell]| \scriptsize \robTwoOne \& |[cell]| \scriptsize \robTwoTwo \\
@@ -247,9 +218,10 @@
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             inner sep=0pt,
-            label={above:\textbf{IDQ}},
-            right=of rat, xshift=0.5cm, yshift=1cm,
-            nodes={cell, minimum width=2cm},
+            label={right:\textbf{IDQ}},
+            right=3cm of rat.north east,
+            anchor=north west,
+            nodes={cell, minimum width=5cm},
             ampersand replacement=\&] (idq) {
         |[cell]| \scriptsize \idqOne \\
         |[cell]| \scriptsize \idqTwo \\
@@ -264,8 +236,8 @@
             row sep=-\pgflinewidth,
             inner sep=0pt,
             label={above:\textbf{RS}},
-            below=of idq, yshift=0.3cm,
-            nodes={cell, minimum width=2cm},
+            below=0.6cm of idq.south, anchor=north,
+            nodes={cell, minimum width=5cm},
             ampersand replacement=\&] (rs) {
         |[cell]| \scriptsize \rsOne \\
         |[cell]| \scriptsize \rsTwo \\
@@ -288,7 +260,7 @@
             row sep=-\pgflinewidth,
             inner sep=0pt,
             label={above:\textbf{MOB}},
-            right=of rs, xshift=0.3cm,
+            right=2cm of rs.east,
             nodes={cell, minimum width=2cm},
             ampersand replacement=\&] (mob) {
         |[cell]| \scriptsize \mobOne \\
@@ -302,7 +274,7 @@
     \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker2) {\mobMarkTwo};
     %
     % Execute block with internal rows (no borders)
-    \node[roundbox, below=of rs] (execute) {};
+    \node[roundbox, below=0.2cm of rs.south, anchor=north] (execute) {};
     \node[anchor=west] at (execute.east) {\textbf{Execute}};
     %
     % Add internal structure to Execute (2 rows, no borders)
@@ -316,7 +288,7 @@
     };
     %
     % Retire block with internal columns (no borders)
-    \node[dashedbox, below=of execute, yshift=0.3cm] (retire) {};
+    \node[dashedbox, below=0.2cm of execute.south, anchor=north] (retire) {};
     \node[anchor=west] at (retire.east) {\textbf{Retire}};
     %
     % Add internal structure to Retire (2 columns, no borders)
@@ -337,57 +309,7 @@
     \end{tikzpicture}
 }
 
-\begin{document}
-% Example usage with custom data and markers:
-\OOODiagramKV[
-    % RAT PRF mappings
-    R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
-    R6=P6, R7=P7, R8=P8, R9=P9, R10=P10,
-    % ROB cell contents (row-column format)
-    rob11=ADD, rob12=P1,
-    rob21=SUB, rob22=P2,
-    rob31=MUL, rob32=P3,
-    rob41=LD, rob42=P4,
-    rob51=ST, rob52=P5,
-    % Custom ROB markers
-    robmark1=head, robmark2=r2, robmark3=r3, 
-    robmark4=r4, robmark5=tail,
-    % IDQ contents
-    idq1=INST1, idq2=INST2, idq3=INST3,
-    % RS contents
-    rs1=ADD, rs2=MUL, rs3=LD, rs4=BR,
-    % Custom RS markers
-    rsmark1=alu1, rsmark2=alu2, rsmark3=mem, rsmark4=branch,
-    % MOB contents
-    mob1=LD, mob2=ST,
-    % Custom MOB markers
-    mobmark1=load, mobmark2=store,
-    % Execute contents
-    exec1=ALU, exec2=FPU,
-    % Retire contents
-    ret1=WB1, ret2=WB2,
-    % Custom Retire markers
-    retmark1=port0, retmark2=port1
-]
-
-% Another example with minimal data:
-% \OOODiagramKV[R1=P1, R2=P2, rob11=I1, rs1=ALU]
-\end{document}
-% Code listing settings
-\lstset{
-    basicstyle=\ttfamily\small,
-    keywordstyle=\color{blue},
-    commentstyle=\color{gray},
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    frame=single,
-    breaklines=true
-}
-
-\title{Out-of-Order Execution (OOOE)}
-\subtitle{Computer Architecture - Example Problem}
-\author{Course 234267}
-\date{}
+% Removed duplicate document environment and settings
 
 \begin{document}
 
@@ -724,18 +646,6 @@ Adding a third ALU unit - does it improve performance?
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{Thank You!}
-\centering
-\Large Questions?
-
-\vspace{1cm}
-
-\normalsize
-Computer Architecture\\
-Course 234267
-\end{frame}
-
-
 \begin{frame}{Out-of-Order Execution - Cycle 6a}
 \scriptsize
 \begin{tikzpicture}[
@@ -832,7 +742,7 @@ Course 234267
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}
+\begin{frame}{Out-of-Order Execution - Cycle 6b}
 \OOODiagramKV[
     % PRF mappings
     R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
@@ -860,37 +770,6 @@ Course 234267
     execute rows=2,  % Number of Execute internal rows (default: 2)
     retire cols=2    % Number of Retire internal columns (default: 2)
 ]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution - Example with Macro}
-\scriptsize
-\begin{tikzpicture}
-    % Use the OOODiagram macro to create the basic structure
-    \OOODiagram
-    
-    % Now add content to each component
-    % RAT entries
-    \foreach \i/\val in {1/, 2/, 3/rb4, 4/rb2, 5/rb5} {
-        \pgfmathsetmacro{\ypos}{1.5 - 0.35*\i}
-        \node[regbox] at (rat.center |- 0,\ypos) {R\i: \val};
-    }
-    
-    % ROB entries
-    \node[box, anchor=west] at ([xshift=-1.3cm, yshift=1cm]rob.center) {0: Add R4,R0,20};
-    \node[box, anchor=west] at ([xshift=-1.3cm, yshift=0.5cm]rob.center) {1: Lw R5,[100+R4]};
-    \node[box, anchor=west] at ([xshift=-1.3cm, yshift=0cm]rob.center) {2: Add R3,R2,2};
-    
-    % IDQ entries
-    \node[anchor=center] at ([yshift=0.5cm]idq.center) {Addi R8,R0,8};
-    \node[anchor=center] at ([yshift=-0.5cm]idq.center) {Addi R9,R0,9};
-    
-    % RS entries (left-aligned)
-    \node[box, anchor=west] at ([xshift=-1cm, yshift=0.5cm]rs.center) {RB6 $\leftarrow$ R0+6};
-    \node[box, anchor=west] at ([xshift=-1cm, yshift=0cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
-    
-    % MOB entry
-    \node[box] at (mob.center) {RB3$\leftarrow$Ld(rb2+100)};
-\end{tikzpicture}
 \end{frame}
 
 \end{document}
