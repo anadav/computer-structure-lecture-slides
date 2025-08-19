@@ -11,6 +11,7 @@
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
+\usepackage{pgfkeys}
 \usetheme{Madrid}
 
 % Custom colors
@@ -38,20 +39,91 @@
     \node[draw, rectangle, minimum width=1.8cm, minimum height=4cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
     
     % ROB (Reorder Buffer) - empty structure
-    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=1.5cm of rat] (rob) {};
+    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=of rat] (rob) {};
     
     % IDQ (Instruction Decode Queue) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=4cm of rat, yshift=1cm] (idq) {};
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rat, yshift=1cm] (idq) {};
     
     % RS (Reservation Station) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=0.5cm of idq] (rs) {};
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq] (rs) {};
     
     % MOB (Memory Order Buffer) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=1cm of idq] (mob) {};
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of idq] (rs) {};
     
     % Execute and Retire blocks
-    \node[roundbox, below=3.5cm of rs] (execute) {\textbf{Execute}};
-    \node[dashedbox, below=0.5cm of execute] (retire) {\textbf{Retire}};
+    \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};
+    \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};
+}
+
+\pgfkeys{
+    /OOO/.is family, /OOO,
+    default/.style = {
+        R1 = {}, R2 = {}, R3 = {}, R4 = {}, R5 = {},
+        R6 = {}, R7 = {}, R8 = {}, R9 = {}, R10 = {}
+    },
+    R1/.estore in = \prfOne,
+    R2/.estore in = \prfTwo,
+    R3/.estore in = \prfThree,
+    R4/.estore in = \prfFour,
+    R5/.estore in = \prfFive,
+    R6/.estore in = \prfSix,
+    R7/.estore in = \prfSeven,
+    R8/.estore in = \prfEight,
+    R9/.estore in = \prfNine,
+    R10/.estore in = \prfTen,
+}
+
+
+\newcommand{\OOODiagramKV}[1][]{%
+    % Set defaults and process keys
+    \pgfkeys{/OOO, default, #1}
+    
+    % Define styles
+    \tikzstyle{box}=[draw, rectangle, minimum width=1.5cm, minimum height=0.4cm]
+    \tikzstyle{regbox}=[draw, rectangle, minimum width=1.2cm, minimum height=0.35cm]
+    \tikzstyle{highlightbox}=[draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen]
+    \tikzstyle{roundbox}=[draw, ellipse, minimum width=3cm, minimum height=1cm]
+    \tikzstyle{dashedbox}=[draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm]
+    \tikzstyle{cell}=[minimum width=0.8cm, minimum height=0.3cm]
+    
+    % RAT (Register Alias Table) with internal table structure
+    \node[draw, rectangle, minimum width=2cm, minimum height=4.5cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
+    
+    % Create the 2-column table inside RAT
+    \node[matrix of nodes, 
+          nodes={cell, draw, anchor=center},
+          column sep=-\pgflinewidth,
+          row sep=-\pgflinewidth,
+          inner sep=0pt,
+          ampersand replacement=\&] at (rat.center) {
+        \scriptsize ARF \& \scriptsize PRF \\
+        \scriptsize R1 \& \scriptsize \prfOne \\
+        \scriptsize R2 \& \scriptsize \prfTwo \\
+        \scriptsize R3 \& \scriptsize \prfThree \\
+        \scriptsize R4 \& \scriptsize \prfFour \\
+        \scriptsize R5 \& \scriptsize \prfFive \\
+        \scriptsize R6 \& \scriptsize \prfSix \\
+        \scriptsize R7 \& \scriptsize \prfSeven \\
+        \scriptsize R8 \& \scriptsize \prfEight \\
+        \scriptsize R9 \& \scriptsize \prfNine \\
+        \scriptsize R10 \& \scriptsize \prfTen \\
+    };
+    
+    % ROB (Reorder Buffer) - empty structure
+    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=of rat, xshift=0.5cm] (rob) {};
+    
+    % IDQ (Instruction Decode Queue) - empty structure
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rob, xshift=0.3cm, yshift=1cm] (idq) {};
+    
+    % RS (Reservation Station) - empty structure
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq, yshift=0.3cm] (rs) {};
+    
+    % MOB (Memory Order Buffer) - empty structure
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of idq, xshift=0.3cm] (mob) {};
+    
+    % Execute and Retire blocks
+    \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};
+    \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};
 }
 
 % Code listing settings
@@ -435,7 +507,7 @@ Course 234267
 }
 
 % ROB (Reorder Buffer)
-\node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=1.5cm of rat] (rob) {};
+\node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, below=of rat] (rob) {};
 \foreach \i/\inst/\stat in {0//,1//,2/{Add: R4,R0,20}/ok,3/{Lw R5, [100+R4]}/Inv,4/{Add: R3,R2,2}/Inv,5/{Add: R5,R3,2}/Inv,6/{Add: R6,R0,6}/Inv,7/{Add: R7,R5,R0}/Inv,8//} {
     \pgfmathsetmacro{\ypos}{1.5 - 0.4*\i}
     \node[box, minimum width=2.8cm] (rob\i) at ([xshift=1.5cm]rat.east |- 0,\ypos) {\i: \inst};
@@ -451,12 +523,12 @@ Course 234267
 }
 
 % IDQ (Instruction Decode Queue)
-\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=4cm of rat, yshift=1cm] (idq) {};
+\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rat, yshift=1cm] (idq) {};
 \node at (idq.center) {Addi R9,R0,9};
 \node at ([yshift=-0.5cm]idq.center) {Addi R8,R0,8};
 
 % RS (Reservation Station)
-\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=0.5cm of idq] (rs) {};
+\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq] (rs) {};
 \node[box, anchor=west] at ([xshift=-1cm, yshift=0.8cm]rs.center) {RB6 $\leftarrow$ R0+6};
 \node[box, anchor=west] at ([xshift=-1cm, yshift=0.3cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
 \node[box, anchor=west] at ([xshift=-1cm, yshift=-0.5cm]rs.center) {RB5 $\leftarrow$ rb4+2};
@@ -511,6 +583,10 @@ Course 234267
 \node at (8.5, -4) {18};
 
 \end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+\OOODiagramKV[R1=P12, R3=P7, R5=P9] 
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution - Example with Macro}
