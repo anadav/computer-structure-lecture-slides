@@ -55,11 +55,48 @@
     \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};
 }
 
+\newcommand{\generateROBContent}[1]{%
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} & |[cell]| \scriptsize{} \\
+}
+
+\newcommand{\generateSingleColContent}[1]{%
+    |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} \\
+    |[cell]| \scriptsize{} \\
+}
+
+\newcommand{\generateExecContent}[1]{%
+    |[nocell]| \scriptsize{} \\
+    |[nocell]| \scriptsize{} \\
+}
+
+\newcommand{\generateRetireContent}[1]{%
+    |[nocell]| \scriptsize{} & |[nocell]| \scriptsize{} \\
+}
+
 \pgfkeys{
     /OOO/.is family, /OOO,
     default/.style = {
         R1 = {}, R2 = {}, R3 = {}, R4 = {}, R5 = {},
-        R6 = {}, R7 = {}, R8 = {}, R9 = {}, R10 = {}
+        R6 = {}, R7 = {}, R8 = {}, R9 = {}, R10 = {},
+        % Configurable parameters with defaults
+        rob rows = 9,
+        idq rows = 6,
+        rs rows = 4,
+        mob rows = 2,
+        execute rows = 2,
+        retire cols = 2
     },
     R1/.estore in = \prfOne,
     R2/.estore in = \prfTwo,
@@ -71,32 +108,34 @@
     R8/.estore in = \prfEight,
     R9/.estore in = \prfNine,
     R10/.estore in = \prfTen,
+    % Store configurable parameters
+    rob rows/.estore in = \robRows,
+    idq rows/.estore in = \idqRows,
+    rs rows/.estore in = \rsRows,
+    mob rows/.estore in = \mobRows,
+    execute rows/.estore in = \executeRows,
+    retire cols/.estore in = \retireCols,
 }
-
 
 \newcommand{\OOODiagramKV}[1][]{%
     % Set defaults and process keys
-    \pgfkeys{/OOO, default, #1}%
+    \pgfkeys{/OOO,default,#1}%
     %
-    % Define styles
-    \tikzstyle{box}=[draw, rectangle, minimum width=1.5cm, minimum height=0.4cm]%
-    \tikzstyle{regbox}=[draw, rectangle, minimum width=1.2cm, minimum height=0.35cm]%
-    \tikzstyle{highlightbox}=[draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen]%
-    \tikzstyle{roundbox}=[draw, ellipse, minimum width=3cm, minimum height=1cm]%
-    \tikzstyle{dashedbox}=[draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm]%
-    \tikzstyle{cell}=[minimum width=0.8cm, minimum height=0.3cm]%
+    \begin{tikzpicture}[
+        cell/.style={draw, minimum width=0.8cm, minimum height=0.35cm},
+        nocell/.style={minimum width=0.8cm, minimum height=0.35cm},
+        roundbox/.style={draw, ellipse, minimum width=3cm, minimum height=1.5cm},
+        dashedbox/.style={draw, dashed, rectangle, minimum width=3cm, minimum height=1cm}
+    ]
     %
-    % RAT (Register Alias Table) with internal table structure
-    %\node[draw, rectangle, minimum width=2cm, minimum height=4.5cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};%
-    %
-    % Create the 2-column table inside RAT
-    \node[matrix of nodes, 
-          nodes={cell, draw, anchor=center},
-          column sep=-\pgflinewidth,
-          row sep=-\pgflinewidth,
-          inner sep=0pt,
-          label={above:\textbf{RAT}},
-          ampersand replacement=\&] (rat) at (0,0) {
+    % RAT (Register Alias Table)
+    \matrix[matrix of nodes, 
+            nodes={cell, anchor=center},
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            label={above:\textbf{RAT}},
+            ampersand replacement=\&] (rat) at (0,0) {
         \scriptsize ARF \& \scriptsize PRF \\
         \scriptsize R1 \& \scriptsize \prfOne \\
         \scriptsize R2 \& \scriptsize \prfTwo \\
@@ -108,25 +147,123 @@
         \scriptsize R8 \& \scriptsize \prfEight \\
         \scriptsize R9 \& \scriptsize \prfNine \\
         \scriptsize R10 \& \scriptsize \prfTen \\
-    };%
+    };
     %
-    % ROB (Reorder Buffer) - empty structure
-    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, below=of rat, xshift=0.5cm] (rob) {};%
+    % ROB (Reorder Buffer) - 2 columns, 9 rows by default
+    \matrix[matrix of nodes, 
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            label={above:\textbf{ROB}},
+            below=of rat, xshift=0.5cm,
+            ampersand replacement=\&] (rob) {
+        % Generate rows - fixed 9 rows
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \& |[cell]| \scriptsize{} \\
+    };
     %
-    % IDQ (Instruction Decode Queue) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rat, xshift=0.3cm, yshift=1cm] (idq) {};%
+    % Add markers for ROB rows (on the right)
+    \foreach \i in {1,...,\robRows} {
+        \coordinate (robmarker\i) at ($(rob-\i-2.east)+(0.2,0)$);
+        \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker\i) {rob\i};
+    }
     %
-    % RS (Reservation Station) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq, yshift=0.3cm] (rs) {};%
+    % IDQ (Instruction Decode Queue) - 6 rows by default
+    \matrix[matrix of nodes,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            label={above:\textbf{IDQ}},
+            right=of rat, xshift=0.5cm, yshift=1cm,
+            nodes={cell, minimum width=2cm},
+            ampersand replacement=\&] (idq) {
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+    };
     %
-    % MOB (Memory Order Buffer) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of rs, xshift=0.3cm] (mob) {};%
+    % RS (Reservation Station) - 4 rows by default
+    \matrix[matrix of nodes,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            label={above:\textbf{RS}},
+            below=of idq, yshift=0.3cm,
+            nodes={cell, minimum width=2cm},
+            ampersand replacement=\&] (rs) {
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+    };
     %
-    % Execute and Retire blocks
-    \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};%
-    \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};%
+    % Add markers for RS rows (on the right)
+    \foreach \i in {1,...,\rsRows} {
+        \coordinate (rsmarker\i) at ($(rs-\i-1.east)+(0.2,0)$);
+        \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker\i) {rs\i};
+    }
+    %
+    % MOB (Memory Order Buffer) - 2 rows by default
+    \matrix[matrix of nodes,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            label={above:\textbf{MOB}},
+            right=of rs, xshift=0.3cm,
+            nodes={cell, minimum width=2cm},
+            ampersand replacement=\&] (mob) {
+        |[cell]| \scriptsize{} \\
+        |[cell]| \scriptsize{} \\
+    };
+    %
+    % Add markers for MOB rows (on the right)
+    \foreach \i in {1,...,\mobRows} {
+        \coordinate (mobmarker\i) at ($(mob-\i-1.east)+(0.2,0)$);
+        \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker\i) {mob\i};
+    }
+    %
+    % Execute block with internal rows (no borders)
+    \node[roundbox, below=of rs, yshift=-0.5cm] (execute) {};
+    \node[anchor=west] at (execute.east) {\textbf{Execute}};
+    %
+    % Add internal structure to Execute (2 rows by default, no borders)
+    \matrix[matrix of nodes,
+            row sep=2pt,
+            inner sep=0pt,
+            at={(execute.center)},
+            ampersand replacement=\&] (execMatrix) {
+        |[nocell]| \scriptsize{} \\
+        |[nocell]| \scriptsize{} \\
+    };
+    %
+    % Retire block with internal columns (no borders)
+    \node[dashedbox, below=of execute, yshift=-0.3cm] (retire) {};
+    \node[anchor=west] at (retire.east) {\textbf{Retire}};
+    %
+    % Add internal structure to Retire (2 columns by default, no borders)
+    \matrix[matrix of nodes,
+            column sep=10pt,
+            inner sep=0pt,
+            at={(retire.center)},
+            ampersand replacement=\&] (retireMatrix) {
+        |[nocell]| \scriptsize{} \& |[nocell]| \scriptsize{} \\
+    };
+    %
+    % Add markers for Retire entries (on the right of each column)
+    \foreach \i in {1,...,\retireCols} {
+        \coordinate (retmarker\i) at ($(retireMatrix-1-\i.east)+(0.2,0)$);
+        \node[anchor=west, inner sep=1pt, font=\tiny] at (retmarker\i) {ret\i};
+    }
+    %
+    \end{tikzpicture}
 }
-
 % Code listing settings
 \lstset{
     basicstyle=\ttfamily\small,
@@ -587,9 +724,18 @@ Course 234267
 \end{frame}
 
 \begin{frame}
-\begin{tikzpicture}
-\OOODiagramKV[R1=P12, R3=P7, R5=P9] 
-\end{tikzpicture}
+\OOODiagramKV[
+    % PRF mappings
+    R1=P1, R2=P2, R3=P3, R4=P4, R5=P5,
+    R6=P6, R7=P7, R8=P8, R9=P9, R10=P10,
+    % Configurable structure parameters
+    rob rows=9,      % Number of ROB rows (default: 9)
+    idq rows=6,      % Number of IDQ rows (default: 6)
+    rs rows=4,       % Number of RS rows (default: 4)
+    mob rows=2,      % Number of MOB rows (default: 2)
+    execute rows=2,  % Number of Execute internal rows (default: 2)
+    retire cols=2    % Number of Retire internal columns (default: 2)
+]
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution - Example with Macro}
