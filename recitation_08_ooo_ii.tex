@@ -748,6 +748,10 @@ Adding a third ALU unit - does it improve performance?
 \end{tikzpicture}
 \end{frame}
 
+% new command for old that has white colorbox
+\newcommand{\oldentry}[1]{\colorbox{white}{#1}}
+\newcommand{\newentry}[1]{\colorbox{yellow}{#1}}
+
 \begin{frame}{Out-of-Order Execution}
 \OOODiagramKV[
 ]
@@ -756,44 +760,69 @@ Adding a third ALU unit - does it improve performance?
 \begin{frame}{Out-of-Order Execution: Cycle 1}
 \OOODiagramKV[
     % PRF mappings
-    idq5=\colorbox{yellow}{SUB~~R1,R1,R1},
-    idq6=\colorbox{yellow}{ADDI~R10,R0,100},
+    idq5=\newentry{SUB~~R1,R1,R1},
+    idq6=\newentry{ADDI~R10,R0,100},
  ]
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution: Cycle 2}
 \OOODiagramKV[
     % PRF mappings
-    R1=\colorbox{yellow}{RB1}, R10=\colorbox{yellow}{RB0},
-    idq5=\colorbox{yellow}{LW~~~R5,100(R4)},
-    idq6=\colorbox{yellow}{ADDI~R4,R0,20},
-    rs1=\colorbox{yellow}{RB0$\leftarrow$R0+100},
-    rs2=\colorbox{yellow}{RB1$\leftarrow$R1-R1},
-    rob11=\colorbox{yellow}{ADDI R10,R0,100},
-    rob12=\colorbox{yellow}{INV},
-    rob21=\colorbox{yellow}{SUB~~R1,R1,R1},
-    rob22=\colorbox{yellow}{INV},
+    R1=\newentry{RB1}, R10=\colorbox{yellow}{RB0},
+    idq5=\newentry{LW~~~R5,100(R4)},
+    idq6=\newentry{ADDI~R4,R0,20},
+    rs1=\newentry{RB0$\leftarrow$R0+100},
+    rs2=\newentry{RB1$\leftarrow$R1-R1},
+    rob11=\newentry{ADDI R10,R0,100},
+    rob12=\newentry{INV},
+    rob21=\newentry{SUB~~R1,R1,R1},
+    rob22=\newentry{INV},
 ]
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution: Cycle 3}
 \OOODiagramKV[
     % PRF mappings
-    R1={RB1}, R10={RB0},
-    R4=\colorbox{yellow}{RB2}, R5=\colorbox{yellow}{RB3},
-    idq5={SUB~~R1,R1,R1},
-    idq6={ADDI~R10,R0,100},
-    rs1={RB0$\leftarrow$R0+100},
-    rs2={RB1$\leftarrow$R1-R1},
-    rob11={ADDI R10,R0,100},
-    rob12={INV},
-    rob21={SUB~~R1,R1,R1},
-    rob22={INV},
-    rob31=\colorbox{yellow}{ADDI R4,R0,20},
-    rob32=\colorbox{yellow}{INV},
-    rob41=\colorbox{yellow}{LW R5,100(R4)},
-    rob42=\colorbox{yellow}{INV},
-    mob1=\colorbox{yellow}{RB3$\leftarrow$LD(RB2+100)},
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\newentry{RB2}, R5=\newentry{RB3},
+    idq5=\oldentry{SUB~~R1,R1,R1},
+    idq6=\oldentry{ADDI~R10,R0,100},
+    rs1=\oldentry{RB0$\leftarrow$R0+100},
+    rs2=\oldentry{RB1$\leftarrow$R1-R1},
+    rs3=\newentry{RB2$\leftarrow$R0+20},
+    rs4=\newentry{RB3$\leftarrow$LD(RB2+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\oldentry{INV},
+    rob21=\oldentry{SUB~~R1,R1,R1},
+    rob22=\oldentry{INV},
+    rob31=\newentry{ADDI R4,R0,20},
+    rob32=\newentry{INV},
+    rob41=\newentry{LW R5,100(R4)},
+    rob42=\newentry{INV},
+    rs4=\newentry{RB3$\leftarrow$LD(RB2+100)},
+    rob42=\newentry{INV},
+    mob1=\newentry{RB3$\leftarrow$LD(RB2+100)},
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4a}
+\OOODiagramKV[
+    % PRF mappings
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq5=\newentry{RB2$\leftarrow$R0+20},
+    idq6=\newentry{RB3$\leftarrow$LD(RB2+100)},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    rob11=\oldentry{ADDI R10,R0,100},
+    rob12=\newentry{OK},
+    rob21=\oldentry{SUB~~R1,R1,R1},
+    rob22=\newentry{OK},
+    rob31=\oldentry{ADDI R4,R0,20},
+    rob32=\oldentry{INV},
+    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    rob42=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
 ]
 \end{frame}
 
