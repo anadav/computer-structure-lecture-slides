@@ -7,7 +7,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -76,19 +76,19 @@
 
 \newcommand{\OOODiagramKV}[1][]{%
     % Set defaults and process keys
-    \pgfkeys{/OOO, default, #1}
-    
+    \pgfkeys{/OOO, default, #1}%
+    %
     % Define styles
-    \tikzstyle{box}=[draw, rectangle, minimum width=1.5cm, minimum height=0.4cm]
-    \tikzstyle{regbox}=[draw, rectangle, minimum width=1.2cm, minimum height=0.35cm]
-    \tikzstyle{highlightbox}=[draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen]
-    \tikzstyle{roundbox}=[draw, ellipse, minimum width=3cm, minimum height=1cm]
-    \tikzstyle{dashedbox}=[draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm]
-    \tikzstyle{cell}=[minimum width=0.8cm, minimum height=0.3cm]
-    
+    \tikzstyle{box}=[draw, rectangle, minimum width=1.5cm, minimum height=0.4cm]%
+    \tikzstyle{regbox}=[draw, rectangle, minimum width=1.2cm, minimum height=0.35cm]%
+    \tikzstyle{highlightbox}=[draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen]%
+    \tikzstyle{roundbox}=[draw, ellipse, minimum width=3cm, minimum height=1cm]%
+    \tikzstyle{dashedbox}=[draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm]%
+    \tikzstyle{cell}=[minimum width=0.8cm, minimum height=0.3cm]%
+    %
     % RAT (Register Alias Table) with internal table structure
-    \node[draw, rectangle, minimum width=2cm, minimum height=4.5cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
-    
+    \node[draw, rectangle, minimum width=2cm, minimum height=4.5cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};%
+    %
     % Create the 2-column table inside RAT
     \node[matrix of nodes, 
           nodes={cell, draw, anchor=center},
@@ -107,23 +107,23 @@
         \scriptsize R8 \& \scriptsize \prfEight \\
         \scriptsize R9 \& \scriptsize \prfNine \\
         \scriptsize R10 \& \scriptsize \prfTen \\
-    };
-    
+    };%
+    %
     % ROB (Reorder Buffer) - empty structure
-    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=of rat, xshift=0.5cm] (rob) {};
-    
+    \node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, right=of rat, xshift=0.5cm] (rob) {};%
+    %
     % IDQ (Instruction Decode Queue) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rob, xshift=0.3cm, yshift=1cm] (idq) {};
-    
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rob, xshift=0.3cm, yshift=1cm] (idq) {};%
+    %
     % RS (Reservation Station) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq, yshift=0.3cm] (rs) {};
-    
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq, yshift=0.3cm] (rs) {};%
+    %
     % MOB (Memory Order Buffer) - empty structure
-    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of idq, xshift=0.3cm] (mob) {};
-    
+    \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=of idq, xshift=0.3cm] (mob) {};%
+    %
     % Execute and Retire blocks
-    \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};
-    \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};
+    \node[roundbox, below=of rs, label=right:{\textbf{Execute}}] (execute) {};%
+    \node[dashedbox, below=of execute, label=right:{\textbf{Retire}}] (retire) {};%
 }
 
 % Code listing settings
@@ -586,7 +586,9 @@ Course 234267
 \end{frame}
 
 \begin{frame}
+\begin{tikzpicture}
 \OOODiagramKV[R1=P12, R3=P7, R5=P9] 
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution - Example with Macro}
