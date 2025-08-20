@@ -48,11 +48,11 @@
         robmark4 = {rob4}, robmark5 = {rob5}, robmark6 = {rob6},
         robmark7 = {rob7}, robmark8 = {rob8}, robmark9 = {rob9},
         % IDQ cells
-        idq1 = {}, idq2 = {}, idq3 = {}, idq4 = {}, idq5 = {}, idq6 = {},
+        idq1 = {}, idq2 = {},
         % RS cells
-        rs1 = {}, rs2 = {}, rs3 = {}, rs4 = {},
+        rs1 = {}, rs2 = {}, rs3 = {}, rs4 = {}, rs5 = {}, rs6 = {},
         % RS markers
-        rsmark1 = {rs1}, rsmark2 = {rs2}, rsmark3 = {rs3}, rsmark4 = {rs4},
+        rsmark1 = {}, rsmark2 = {}, rsmark3 = {}, rsmark4 = {}, rsmark5 = {}, rsmark6 = {},
         % MOB cells
         mob1 = {}, mob2 = {},
         % MOB markers
@@ -65,8 +65,8 @@
         retmark1 = {ret1}, retmark2 = {ret2},
         % Number of rows/cols (for iteration purposes)
         rob rows = 9,
-        idq rows = 6,
-        rs rows = 4,
+        idq rows = 2,
+        rs rows = 6,
         mob rows = 2,
         execute rows = 2,
         retire cols = 2
@@ -105,21 +105,21 @@
     % IDQ cell contents
     idq1/.estore in = \idqOne,
     idq2/.estore in = \idqTwo,
-    idq3/.estore in = \idqThree,
-    idq4/.estore in = \idqFour,
-    idq5/.estore in = \idqFive,
-    idq6/.estore in = \idqSix,
     % RS cell contents
     rs1/.estore in = \rsOne,
     rs2/.estore in = \rsTwo,
     rs3/.estore in = \rsThree,
     rs4/.estore in = \rsFour,
+    rs5/.estore in = \rsFive,
+    rs6/.estore in = \rsSix,
     % RS markers
     rsmark1/.estore in = \rsMarkOne,
     rsmark2/.estore in = \rsMarkTwo,
     rsmark3/.estore in = \rsMarkThree,
     rsmark4/.estore in = \rsMarkFour,
-    % MOB cell contents
+    rsmark5/.estore in = \rsMarkFive,
+    rsmark6/.estore in = \rsMarkSix,
+     % MOB cell contents
     mob1/.estore in = \mobOne,
     mob2/.estore in = \mobTwo,
     % MOB markers
@@ -235,10 +235,6 @@
             ampersand replacement=\&] (idq) {
         |[cell]| \scriptsize \idqOne \\
         |[cell]| \scriptsize \idqTwo \\
-        |[cell]| \scriptsize \idqThree \\
-        |[cell]| \scriptsize \idqFour \\
-        |[cell]| \scriptsize \idqFive \\
-        |[cell]| \scriptsize \idqSix \\
     };
     %
     % RS (Reservation Station) - 4 rows
@@ -253,6 +249,8 @@
         |[cell]| \scriptsize \rsTwo \\
         |[cell]| \scriptsize \rsThree \\
         |[cell]| \scriptsize \rsFour \\
+        |[cell]| \scriptsize \rsFive \\
+        |[cell]| \scriptsize \rsSix \\
     };
     %
     % Add markers for RS rows (on the right)
@@ -767,8 +765,8 @@ Adding a third ALU unit - does it improve performance?
 \begin{frame}{Out-of-Order Execution: Cycle 1}
 \OOODiagramKV[
     % PRF mappings
-    idq5=\newentryb{SUB R1,R1,R1},
-    idq6=\newentrya{ADDI R10,R0,100},
+    idq1=\newentryb{SUB R1,R1,R1},
+    idq2=\newentrya{ADDI R10,R0,100},
  ]
 \end{frame}
 
@@ -777,8 +775,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\newentryb{RB1},
     R10=\newentrya{RB0},
-    idq5=\newentryb{\sout{SUB R1,R1,R1}},
-    idq6=\newentrya{\sout{ADDI R10,R0,100}},
+    idq1=\newentryb{\sout{SUB R1,R1,R1}},
+    idq2=\newentrya{\sout{ADDI R10,R0,100}},
     rs1=\newentrya{RB0$\leftarrow$R0+100},
     rs2=\newentryb{RB1$\leftarrow$R1-R1},
     rob11=\newentrya{ADDI R10,R0,100},
@@ -793,8 +791,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1},
     R10=\oldentry{RB0},
-    idq5=\newentryb{LW R5,100(R4)},
-    idq6=\newentrya{ADDI R4,R0,20},
+    idq1=\newentryb{LW R5,100(R4)},
+    idq2=\newentrya{ADDI R4,R0,20},
     rs1=\oldentry{RB0$\leftarrow$R0+100},
     rs2=\oldentry{RB1$\leftarrow$R1-R1},
     rob11=\oldentry{ADDI R10,R0,100},
@@ -809,8 +807,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1},
     R10=\oldentry{RB0},
-    idq5=\oldentry{LW R5,100(R4)},
-    idq6=\oldentry{ADDI R4,R0,20},
+    idq1=\oldentry{LW R5,100(R4)},
+    idq2=\oldentry{ADDI R4,R0,20},
     rs1=\srcentrya{\sout{RB0$\leftarrow$R0+100}},
     rs2=\srcentryb{\sout{RB1$\leftarrow$R1-R1}},
     rob11=\oldentry{ADDI R10,R0,100},
@@ -827,8 +825,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\newentrya{RB2}, R5=\newentryb{RB3},
-    idq5=\newentryb{\sout{LW R5,100(R4)}},
-    idq6=\newentrya{\sout{ADDI R4,R0,20}},
+    idq1=\newentryb{\sout{LW R5,100(R4)}},
+    idq2=\newentrya{\sout{ADDI R4,R0,20}},
     rs1=\oldentry{\sout{RB0$\leftarrow$R0+100}},
     rs2=\oldentry{\sout{RB1$\leftarrow$R1-R1}},
     rs3=\newentrya{RB2$\leftarrow$R0+20},
@@ -852,8 +850,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\newentryb{ADDI R5, R3, 2},
-    idq6=\newentrya{ADDI R3, R2, 2},
+    idq1=\newentryb{ADDI R5, R3, 2},
+    idq2=\newentrya{ADDI R3, R2, 2},
     rs1=\oldentry{\sout{RB0$\leftarrow$R0+100}},
     rs2=\oldentry{\sout{RB1$\leftarrow$R1-R1}},
     rs3=\oldentry{RB2$\leftarrow$R0+20},
@@ -879,8 +877,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{ADDI R5, R3, 2},
-    idq6=\oldentry{ADDI R3, R2, 2},
+    idq1=\oldentry{ADDI R5, R3, 2},
+    idq2=\oldentry{ADDI R3, R2, 2},
     rs3=\oldentry{RB2$\leftarrow$R0+20},
     rs4=\oldentry{RB3$\leftarrow$LD(RB+100)},
     rob11=\oldentry{ADDI R10,R0,100},
@@ -902,8 +900,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{ADDI R5, R3, 2},
-    idq6=\oldentry{ADDI R3, R2, 2},
+    idq1=\oldentry{ADDI R5, R3, 2},
+    idq2=\oldentry{ADDI R3, R2, 2},
     rs3=\srcentrya{\sout{RB2$\leftarrow$R0+20}},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
     rob11=\oldentry{ADDI R10,R0,100},
@@ -924,8 +922,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{ADDI R5, R3, 2},
-    idq6=\oldentry{ADDI R3, R2, 2},
+    idq1=\oldentry{ADDI R5, R3, 2},
+    idq2=\oldentry{ADDI R3, R2, 2},
     rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
     rs4=\srcentryb{RB3$\leftarrow$LD(RB2+100)},
     rob11=\oldentry{ADDI R10,R0,100},
@@ -947,8 +945,8 @@ Adding a third ALU unit - does it improve performance?
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R3=\newentrya{RB4},
     R4=\oldentry{RB2}, R5=\newentryb{RB5},
-    idq5=\newentryb{\sout{ADDI R5, R3, 2}},
-    idq6=\newentrya{\sout{ADDI R3, R2, 2}},
+    idq1=\newentryb{\sout{ADDI R5, R3, 2}},
+    idq2=\newentrya{\sout{ADDI R3, R2, 2}},
     rs1=\newentrya{RB4$\leftarrow$R2+R2},
     rs2=\newentryb{RB5$\leftarrow$RB4+2},
     rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
@@ -976,8 +974,8 @@ Adding a third ALU unit - does it improve performance?
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R3=\oldentry{RB4},
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq5=\newentryb{ADDI R6, R0, 6},
-    idq6=\newentrya{ADDI R5, R3, 2},
+    idq1=\newentryb{ADDI R6, R0, 6},
+    idq2=\newentrya{ADDI R5, R3, 2},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
@@ -1005,8 +1003,8 @@ Adding a third ALU unit - does it improve performance?
     R1=\newentryb{\sout{RB1}}, R10=\newentrya{\sout{RB0}},
     R3=\oldentry{RB4},
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq5=\oldentry{ADDI R6, R0, 6},
-    idq6=\oldentry{ADDI R5, R3, 2},
+    idq1=\oldentry{ADDI R6, R0, 6},
+    idq2=\oldentry{ADDI R5, R3, 2},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
@@ -1035,8 +1033,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R3=\oldentry{RB4},
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq5=\oldentry{ADDI R6, R0, 6},
-    idq6=\oldentry{ADDI R5, R3, 2},
+    idq1=\oldentry{ADDI R6, R0, 6},
+    idq2=\oldentry{ADDI R5, R3, 2},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
@@ -1060,8 +1058,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R3=\oldentry{RB4},
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq5=\oldentry{ADDI R6, R0, 6},
-    idq6=\oldentry{ADDI R5, R3, 2},
+    idq1=\oldentry{ADDI R6, R0, 6},
+    idq2=\oldentry{ADDI R5, R3, 2},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\newentryb{RB3$\leftarrow$LD(\textcolor{yellow}{RB2}+100)},
@@ -1084,8 +1082,8 @@ Adding a third ALU unit - does it improve performance?
     % PRF mappings
     R3=\oldentry{RB4},
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq5=\oldentry{ADDI R6, R0, 6},
-    idq6=\oldentry{ADDI R5, R3, 2},
+    idq1=\oldentry{ADDI R6, R0, 6},
+    idq2=\oldentry{ADDI R5, R3, 2},
     rs1=\srcentrya{\sout{RB4$\leftarrow$R2+R2}},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\srcentryb{\sout{RB3$\leftarrow$LD(RB2+100)}},
@@ -1112,8 +1110,8 @@ Adding a third ALU unit - does it improve performance?
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
     R6=\newentrya{RB6},
     R7=\newentryb{RB7},
-    idq5=\srcentryb{ADDI R6, R0, 6},
-    idq6=\srcentrya{ADDI R5, R3, 2},
+    idq1=\srcentryb{ADDI R6, R0, 6},
+    idq2=\srcentrya{ADDI R5, R3, 2},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
@@ -1144,8 +1142,8 @@ Adding a third ALU unit - does it improve performance?
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
     R6=\oldentry{RB6},
     R7=\oldentry{RB7},
-    idq5=\newentryb{ADDI R9, R0, 9},
-    idq6=\newentrya{ADDI R8, R0, 8},
+    idq1=\newentryb{ADDI R9, R0, 9},
+    idq2=\newentrya{ADDI R8, R0, 8},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
@@ -1176,8 +1174,8 @@ Adding a third ALU unit - does it improve performance?
     R4=\oldentry{RB2}, R5=\oldentry{RB5},
     R6=\oldentry{RB6},
     R7=\oldentry{RB7},
-    idq5=\oldentry{ADDI R9, R0, 9},
-    idq6=\oldentry{ADDI R8, R0, 8},
+    idq1=\oldentry{ADDI R9, R0, 9},
+    idq2=\oldentry{ADDI R8, R0, 8},
     rs1=\oldentry{RB4$\leftarrow$R2+R2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
