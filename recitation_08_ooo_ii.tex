@@ -1001,53 +1001,61 @@ Adding a third ALU unit - does it improve performance?
 ]
 \end{frame}
 
-
-\begin{frame}{Out-of-Order Execution: Cycle 4b}
+\begin{frame}{Out-of-Order Execution: Cycle 5, Retire}
 \OOODiagramKV[
     % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{ADDI R5,R3,2},
-    idq6=\oldentry{ADDI R3,R2,2},
+    R1=\newentryb{\sout{RB1}}, R10=\newentrya{\sout{RB0}},
+    R3=\oldentry{RB4},
+    R4=\oldentry{RB2}, R5=\oldentry{RB5},
+    idq5=\oldentry{ADDI R6, R0, 6},
+    idq6=\oldentry{ADDI R5, R3, 2},
+    rs1=\oldentry{RB4$\leftarrow$R2+R2},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs3=\oldentry{RB2$\leftarrow$R0+20},
     rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\newentrya{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\newentryb{OK},
+    rob11=\srcentrya{\sout{ADDI R10,R0,100}},
+    rob12=\srcentrya{OK},
+    rob21=\srcentryb{\sout{SUB R1,R1,R1}},
+    rob22=\srcentryb{OK},
     rob31=\oldentry{ADDI R4,R0,20},
     rob32=\oldentry{INV},
     rob41=\oldentry{LW R5,100(R4)},
     rob42=\oldentry{INV},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\oldentry{INV},
+    rob51=\oldentry{ADDI R3,R2,2},
+    rob52=\oldentry{INV},
+    rob61=\oldentry{ADDI R5,R3,2},
+    rob62=\oldentry{INV},
     mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\newentrya{\sout{RB0$\leftarrow$RB0+100}},
-    exec2=\newentryb{\sout{RB1$\leftarrow$RB1-RB1}},
+    exec1=\oldentry{RB2$\leftarrow$RB0+20},
+    ret1=\newentrya{R10$\leftarrow$RB0},
+    ret2=\newentryb{R1$\leftarrow$RB1},
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 4c}
+
+\begin{frame}{Out-of-Order Execution: Cycle 5, Execution Completed}
 \OOODiagramKV[
     % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq5=\oldentry{ADDI R5,R3,2},
-    idq6=\oldentry{ADDI R3,R2,2},
-    rs3=\oldentry{RB2$\leftarrow$R0+20},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{OK},
+    R3=\oldentry{RB4},
+    R4=\oldentry{RB2}, R5=\oldentry{RB5},
+    idq5=\oldentry{ADDI R6, R0, 6},
+    idq6=\oldentry{ADDI R5, R3, 2},
+    rs1=\oldentry{RB4$\leftarrow$R2+R2},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
+    rs3=\srcentrya{RB2$\leftarrow$R0+20},
+    rs4=\oldentry{RB3$\leftarrow$LD(\textcolor{red}{RB2}+100)},
     rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
+    rob32=\newentrya{OK},
     rob41=\oldentry{LW R5,100(R4)},
     rob42=\oldentry{INV},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\newentrya{RB2$\leftarrow$RB0+20},
+    rob51=\oldentry{ADDI R3,R2,2},
+    rob52=\oldentry{INV},
+    rob61=\oldentry{ADDI R5,R3,2},
+    rob62=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(\textcolor{red}{RB2}+100)},
+    exec1=\srcentrya{RB2$\leftarrow$RB0+20},
+    ret1=\oldentry{R10$\leftarrow$RB0},
+    ret2=\oldentry{R1$\leftarrow$RB1},
 ]
 \end{frame}
 
