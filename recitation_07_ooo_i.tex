@@ -42,7 +42,19 @@
     % Highlight colors for specific units
     highlightinteger/.initial=white,
     highlightmultiply/.initial=white,
-    highlightdivider/.initial=white
+    highlightdivider/.initial=white,
+    % Individual multiply stage highlights
+    highlightM1/.initial=white,
+    highlightM2/.initial=white,
+    highlightM3/.initial=white,
+    highlightM4/.initial=white,
+    % Individual divider stage highlights
+    highlightD1/.initial=white,
+    highlightD2/.initial=white,
+    highlightD3/.initial=white,
+    highlightD4/.initial=white,
+    highlightD5/.initial=white,
+    highlightD6/.initial=white
 }
 
 % Macro for drawing the pipeline diagram
@@ -53,19 +65,19 @@
         \node[draw, fill=\pgfkeysvalueof{/pipeline/ifcolor}, minimum width=1.2cm, minimum height=0.8cm] (IF) {IF};
         \node[draw, fill=\pgfkeysvalueof{/pipeline/idcolor}, minimum width=1.2cm, minimum height=0.8cm, right=of IF] (ID) {ID};
         
-        % Multiply pipeline (4 stages)
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightmultiply}, minimum width=0.8cm, minimum height=0.6cm, right=2cm of ID.east] (M1) {M1};
-        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M1] (M2) {M2};
-        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M2] (M3) {M3};
-        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M3] (M4) {M4};
+        % Multiply pipeline (4 stages) - each stage can be individually highlighted
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM1}, minimum width=0.8cm, minimum height=0.6cm, right=2cm of ID.east] (M1) {M1};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM2}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M1] (M2) {M2};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM3}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M2] (M3) {M3};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM4}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M3] (M4) {M4};
         
-        % Divider pipeline (multi-stage)
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm] (D2) at ($(M1) + (0,-1.2)$) {D2};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightdivider}, minimum width=0.6cm, minimum height=0.6cm, left=0.4cm of D2] (D1) {D1};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D2] (D3) {D3};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D3] (D4) {D4};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D4] (D5) {D5};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D5] (D6) {D6};
+        % Divider pipeline (multi-stage) - each stage can be individually highlighted
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD2}, minimum width=0.6cm, minimum height=0.6cm] (D2) at ($(M1) + (0,-1.2)$) {D2};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD1}, minimum width=0.6cm, minimum height=0.6cm, left=0.4cm of D2] (D1) {D1};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD3}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D2] (D3) {D3};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD4}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D3] (D4) {D4};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD5}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D4] (D5) {D5};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD6}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D5] (D6) {D6};
 
         % Integer unit (single stage) - positioned between M2 and M3 horizontally, same distance above M as M is above D
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.6cm] (EX) at ($(M2)!0.5!(M3) + (0,1.2)$) {EX};
@@ -180,6 +192,109 @@
     \vspace{0.5cm}
     \centering
     \drawPipeline
+\end{frame}
+
+\begin{frame}{Pipeline Stage Progression: Multiply Unit}
+    \begin{exampleblock}{Example: R2 $\leftarrow$ R3 * R3}
+        The multiply operation takes 4 cycles, progressing through stages M1 $\rightarrow$ M2 $\rightarrow$ M3 $\rightarrow$ M4
+    \end{exampleblock}
+    \centering
+    \drawPipeline
+\end{frame}
+
+\begin{frame}{Multiply Pipeline: Cycle 1}
+    \centering
+    \drawPipeline[
+        highlightM1=highlightyellow,
+        multiplycontent={R2 $\leftarrow$ R3*R3}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stage M1}
+        First stage of multiplication - operand fetch and partial product generation
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Multiply Pipeline: Cycle 2}
+    \centering
+    \drawPipeline[
+        highlightM2=highlightyellow,
+        multiplycontent={R2 $\leftarrow$ R3*R3}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stage M2}
+        Second stage - partial product accumulation
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Multiply Pipeline: Cycle 3}
+    \centering
+    \drawPipeline[
+        highlightM3=highlightyellow,
+        multiplycontent={R2 $\leftarrow$ R3*R3}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stage M3}
+        Third stage - final partial products
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Multiply Pipeline: Cycle 4}
+    \centering
+    \drawPipeline[
+        highlightM4=correctgreen,
+        multiplycontent={R2 $\leftarrow$ R3*R3}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stage M4 - Complete}
+        Final stage - result ready for writeback
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Pipeline Stage Progression: Divider Unit}
+    \begin{exampleblock}{Example: R5 $\leftarrow$ R6 / R7}
+        Division takes 6+ cycles, progressing through stages D1 $\rightarrow$ D2 $\rightarrow$ D3 $\rightarrow$ D4 $\rightarrow$ D5 $\rightarrow$ D6
+    \end{exampleblock}
+    \centering
+    \drawPipeline
+\end{frame}
+
+\begin{frame}{Divider Pipeline: Cycles 1-2}
+    \centering
+    \drawPipeline[
+        highlightD1=highlightyellow,
+        highlightD2=highlightyellow,
+        dividercontent={R5 $\leftarrow$ R6/R7}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stages D1-D2}
+        Initial quotient digit generation
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Divider Pipeline: Cycles 3-4}
+    \centering
+    \drawPipeline[
+        highlightD3=highlightyellow,
+        highlightD4=highlightyellow,
+        dividercontent={R5 $\leftarrow$ R6/R7}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stages D3-D4}
+        Intermediate quotient refinement
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Divider Pipeline: Cycles 5-6}
+    \centering
+    \drawPipeline[
+        highlightD5=highlightyellow,
+        highlightD6=correctgreen,
+        dividercontent={R5 $\leftarrow$ R6/R7}
+    ]
+    \vspace{0.3cm}
+    \begin{alertblock}{Stages D5-D6 - Complete}
+        Final quotient and remainder computation
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Example - In-Order Execution}
