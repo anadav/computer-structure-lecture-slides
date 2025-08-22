@@ -403,7 +403,39 @@
         \item Even with OOO execution, this limit exists as long as we only allow parallel execution in the EXE stage
         \item If we allow multiple instructions to execute in parallel in \textbf{all stages}, we can break this barrier
     \end{itemize}
-    
+
+    \begin{tikzpicture}[node distance=2.2cm, stage/.style={font=\bfseries, inner sep=1pt}]
+        %--- stage labels (center line) ---
+        \node (IF)  {IF};
+        \node (ID)  [right=of IF]  {ID};
+        \node (EXE) [right=of ID]  {EXE};
+        \node (MEM) [right=of EXE] {MEM};
+        \node (WB)  [right=of MEM] {WB};
+
+        % vertical offset of the rails
+        \def\dy{0.62}
+        % small horizontal margin at the ends
+        \def\marg{0.6}
+        
+        % helper points for where the bump starts/ends (midpoints around EXE)
+        \coordinate (LT) at ($(ID.east)!0.5!(EXE.west)$);
+        \coordinate (RT) at ($(EXE.east)!0.5!(MEM.west)$);
+
+        %---- TOP rail: left segment, bump, right segment
+        \draw[very thick] ($(IF.west)+(-\marg,\dy)$) -- ($(LT)+(0,\dy)$);
+        \draw[very thick] ($(LT)+(0,\dy)$)
+            .. controls ($(EXE.north)+(0,1.05)$) ..
+            ($(RT)+(0,\dy)$);
+        \draw[very thick] ($(RT)+(0,\dy)$) -- ($(WB.east)+(\marg,\dy)$);
+
+        %---- BOTTOM rail: left segment, bump (down), right segment
+        \draw[very thick] ($(IF.west)+(-\marg,-\dy)$) -- ($(LT)+(0,-\dy)$);
+        \draw[very thick] ($(LT)+(0,-\dy)$)
+            .. controls ($(EXE.south)+(0,-1.05)$) ..
+            ($(RT)+(0,-\dy)$);
+        \draw[very thick] ($(RT)+(0,-\dy)$) -- ($(WB.east)+(\marg,-\dy)$);
+    \end{tikzpicture}
+
     \vspace{0.5cm}
     \centering
     \begin{tikzpicture}[scale=0.7]
