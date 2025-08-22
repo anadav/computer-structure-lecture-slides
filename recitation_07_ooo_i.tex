@@ -61,11 +61,11 @@
         
         % Divider pipeline (multi-stage)
         \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm] (D2) at ($(M1) + (0,-1.2)$) {D2};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightdivider}, minimum width=0.6cm, minimum height=0.6cm, left=0.5cm of D2] (D1) {D1};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.5cm of D2] (D3) {D3};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.5cm of D3] (D4) {D4};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.5cm of D4] (D5) {D5};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.5cm of D5] (D6) {D6};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightdivider}, minimum width=0.6cm, minimum height=0.6cm, left=0.4cm of D2] (D1) {D1};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D2] (D3) {D3};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D3] (D4) {D4};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D4] (D5) {D5};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D5] (D6) {D6};
 
         % Integer unit (single stage) - positioned between M2 and M3 horizontally, same distance above M as M is above D
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.6cm] (EX) at ($(M2)!0.5!(M3) + (0,1.2)$) {EX};
@@ -154,7 +154,8 @@
     \end{tikzpicture}
 }
 
-\title{Out-of-Order Execution\\(Part 1)}
+\title{Out-of-Order Execution: Part I}
+\subtitle{Breaking the In-Order Bottleneck}
 \author{Computer Architecture}
 \date{\today}
 
@@ -188,7 +189,7 @@
     ]
 \end{frame}
 
-\begin{frame}{Example - In-Order Step 1}
+\begin{frame}{In-Order Execution: Cycle 1}
     \centering
     \drawPipeline[
         integercontent={R1 $\leftarrow$ R1+4},
@@ -199,7 +200,7 @@
     ]
 \end{frame}
 
-\begin{frame}{Example - In-Order Step 2}
+\begin{frame}{In-Order Execution: Cycle 2}
     \centering
     \drawPipeline[
         integercontent={R4 $\leftarrow$ R3+R4},
@@ -213,7 +214,7 @@
     \textcolor{red}{Note: R4 instruction is blocked waiting for R2 multiplication to complete!}
 \end{frame}
 
-\begin{frame}{Example - In-Order Multiple Steps}
+\begin{frame}{In-Order Execution: Cycles 3-4}
     \centering
     \drawPipeline[
         multiplycontent={R2 $\leftarrow$ R3*R3},
@@ -225,7 +226,7 @@
     The multiplication continues through M2, M3, M4 stages...
 \end{frame}
 
-\begin{frame}{Example - In-Order Final Step}
+\begin{frame}{In-Order Execution: Final State}
     \centering
     \drawPipeline[
         integercontent={R4 $\leftarrow$ R3+R4},
@@ -256,7 +257,7 @@
     \end{alertblock}
 \end{frame}
 
-\begin{frame}{Example - Out-of-Order Execution}
+\begin{frame}{Out-of-Order Execution: Cycle 1}
     \centering
     \drawPipeline[
         integercontent={R1 $\leftarrow$ R1+4},
@@ -267,7 +268,7 @@
     ]
 \end{frame}
 
-\begin{frame}{Example - OOO Step 2}
+\begin{frame}{Out-of-Order Execution: Cycle 2}
     \centering
     \drawPipeline[
         integercontent={R4 $\leftarrow$ R3+R4},
@@ -308,69 +309,74 @@
     \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Data Hazards}
-    \begin{block}{RAW (Read After Write) - True Dependency}
+\begin{frame}{True Dependencies: RAW Hazards}
+    \begin{exampleblock}{Read After Write (RAW)}
         {\ttfamily\footnotesize
         (1) ADD R1, R2, R3\\
-        (2) ADD R5, R6, R1  // Depends on R1 from previous instruction
+        (2) ADD R5, R6, R1  // Must wait for R1
         }
-        The destination of the first instruction is a source in the second. This is a \textbf{true dependency} that must be maintained for program correctness.
-    \end{block}
-\end{frame}
-
-\begin{frame}{New Data Hazards in OOO Execution}
-    \begin{block}{WAR (Write After Read) - False Dependency}
-        {\ttfamily\footnotesize
-        (1) DIV R1, R2, R3  // Many cycles\\
-        (2) ADD R5, R6, R1  // Depends on previous instruction\\
-        (3) ADD R6, R7, R8  // WAR issue - might execute before (2)
-        }
-        \begin{itemize}
-            \item The long division delays instruction (2)
-            \item With OOO, instruction (3) (independent) executes before (2)
-            \item Instruction (2) might read the new R6 value instead of the old one
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}{WAW (Write After Write) - False Dependency}
-    \begin{block}{Example}
-        {\ttfamily\footnotesize
-        (1) DIV R1, R2, R3  // Many cycles\\
-        (2) ADD R5, R6, R1  // Depends on previous instruction\\
-        (3) ADD R5, R7, R8  // WAW issue - might execute before (2)
-        }
-    \end{block}
+    \end{exampleblock}
     
-    \begin{itemize}
-        \item Instruction (2) is delayed while (3) is not
-        \item This could lead to R5 containing an outdated value
-        \item Must ensure the write to R5 by instruction (3) happens after the write by instruction (2)
-    \end{itemize}
-    
-    \begin{alertblock}{False Dependencies}
-        These are called \textbf{False Dependencies} because they could be avoided by using different registers (the instructions aren't truly dependent on computed values, only on arbitrary register choices).
+    \begin{alertblock}{Key Point}
+        RAW hazards represent \textbf{true data dependencies} that cannot be eliminated—only the data flow defines program correctness.
     \end{alertblock}
 \end{frame}
 
-\begin{frame}{Register Renaming}
-    \begin{block}{Solution to False Dependencies}
-        \textbf{Register Renaming} - Maintain two register sets:
+\begin{frame}{False Dependencies: WAR Hazards}
+    \begin{exampleblock}{Write After Read (WAR)}
+        {\ttfamily\footnotesize
+        (1) DIV R1, R2, R3  // 40 cycles\\
+        (2) ADD R5, R6, R1  // Waits for R1\\
+        (3) ADD R6, R7, R8  // Could execute early!
+        }
+    \end{exampleblock}
+    
+    \begin{block}{The Problem}
+        If (3) executes before (2), instruction (2) reads the \textbf{wrong} R6 value.
+    \end{block}
+    
+    \begin{alertblock}{Key Insight}
+        WAR hazards are \textbf{artificial}—caused by register name reuse, not data flow.
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{False Dependencies: WAW Hazards}
+    \begin{exampleblock}{Write After Write (WAW)}
+        {\ttfamily\footnotesize
+        (1) DIV R1, R2, R3  // 40 cycles\\
+        (2) ADD R5, R6, R1  // Waits for R1\\
+        (3) ADD R5, R7, R8  // Could execute early!
+        }
+    \end{exampleblock}
+    
+    \begin{block}{The Problem}
+        If (3) executes before (2), R5 gets the \textbf{wrong} final value.
+    \end{block}
+    
+    \begin{alertblock}{Solution Preview}
+        Both WAR and WAW are \textbf{false dependencies}—register renaming eliminates them entirely.
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Register Renaming: Eliminating False Dependencies}
+    \begin{block}{The Mechanism}
         \begin{itemize}
-            \item \textbf{Architectural registers:} Visible to the user (e.g., R5)
-            \item \textbf{Physical registers:} Used by the compiler (e.g., P8)
-            \item More physical registers than architectural registers
+            \item \textbf{Architectural registers:} What the program sees (R0-R31)
+            \item \textbf{Physical registers:} What the hardware uses (P0-P127)
+            \item Dynamic mapping eliminates name conflicts
         \end{itemize}
     \end{block}
     
-    \begin{exampleblock}{Example}
-        When an instruction requests an architectural register, it's assigned a physical register:
+    \begin{exampleblock}{Renaming in Action}
         {\ttfamily\small
-        R1 <- R2+R3  ->  P1 <- R2+R3\\
-        R1 <- R4+R5  ->  P2 <- R4+R5
+        R1 $\leftarrow$ R2+R3  $\Rightarrow$  P17 $\leftarrow$ P5+P8\\
+        R1 $\leftarrow$ R4+R5  $\Rightarrow$  P23 $\leftarrow$ P11+P14
         }
-        Two instructions using the same architectural register automatically get different physical registers!
     \end{exampleblock}
+    
+    \begin{alertblock}{Result}
+        No WAR or WAW hazards—different physical registers for each write!
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Register Renaming - Implementation}
@@ -561,22 +567,27 @@
     \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Summary}
-    \begin{itemize}
-        \item \textbf{Problem:} Variable execution times cause pipeline stalls
-        \item \textbf{Solution:} Out-of-Order Execution
+\begin{frame}{Summary: Out-of-Order Execution}
+    \begin{block}{The Journey}
+        \begin{enumerate}
+            \item \textbf{Problem:} Long-latency operations stall the pipeline
+            \item \textbf{Solution:} Execute independent instructions out of order
+            \item \textbf{Challenge:} False dependencies (WAR, WAW)
+            \item \textbf{Solution:} Register renaming with ROB
+        \end{enumerate}
+    \end{block}
+    
+    \begin{exampleblock}{Modern Processor Pipeline}
         \begin{itemize}
-            \item Allows independent instructions to execute in parallel
-            \item Improves CPI significantly
+            \item \textbf{Front-end:} In-order fetch and decode
+            \item \textbf{Execution:} Out-of-order with multiple units
+            \item \textbf{Back-end:} In-order commit (retirement)
         \end{itemize}
-        \item \textbf{New challenges:} False dependencies (WAR, WAW)
-        \item \textbf{Solution:} Register Renaming with ROB
-        \begin{itemize}
-            \item Maps architectural registers to physical registers
-            \item Maintains program correctness while allowing OOO
-        \end{itemize}
-        \item Modern processors: In-order fetch/commit, Out-of-order execution
-    \end{itemize}
+    \end{exampleblock}
+    
+    \begin{alertblock}{Bottom Line}
+        OOO execution dramatically improves IPC by hiding latencies and maximizing parallelism.
+    \end{alertblock}
 \end{frame}
 
 \end{document}
