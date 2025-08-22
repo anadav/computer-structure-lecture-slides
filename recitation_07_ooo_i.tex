@@ -427,8 +427,8 @@
 \begin{frame}{True Dependencies: RAW Hazards}
     \begin{exampleblock}{Read After Write (RAW)}
         {\ttfamily\footnotesize
-        (1) ADD R1, R2, R3\\
-        (2) ADD R5, R6, R1  // Must wait for R1
+        (1) ADD \textcolor{red}{R1}, R2, R3\\
+        (2) ADD R5, R6, \textcolor{red}{R1}  // Must wait for \textcolor{red}{R1}
         }
     \end{exampleblock}
     
@@ -441,13 +441,13 @@
     \begin{exampleblock}{Write After Read (WAR)}
         {\ttfamily\footnotesize
         (1) DIV R1, R2, R3  // 40 cycles\\
-        (2) ADD R5, R6, R1  // Waits for R1\\
-        (3) ADD R6, R7, R8  // Could execute early!
+        (2) ADD R5, \textcolor{red}{R6}, R1  // Waits for R1\\
+        (3) ADD \textcolor{red}{R6}, R7, R8  // Could execute early!
         }
     \end{exampleblock}
     
     \begin{block}{The Problem}
-        If (3) executes before (2), instruction (2) reads the \textbf{wrong} R6 value.
+        If (3) executes before (2), instruction (2) reads the \textbf{wrong} \textcolor{red}{R6} value.
     \end{block}
     
     \begin{alertblock}{Key Insight}
@@ -459,13 +459,13 @@
     \begin{exampleblock}{Write After Write (WAW)}
         {\ttfamily\footnotesize
         (1) DIV R1, R2, R3  // 40 cycles\\
-        (2) ADD R5, R6, R1  // Waits for R1\\
-        (3) ADD R5, R7, R8  // Could execute early!
+        (2) ADD \textcolor{red}{R5}, R6, R1  // Waits for R1\\
+        (3) ADD \textcolor{red}{R5}, R7, R8  // Could execute early!
         }
     \end{exampleblock}
     
     \begin{block}{The Problem}
-        If (3) executes before (2), R5 gets the \textbf{wrong} final value.
+        If (3) executes before (2), \textcolor{red}{R5} gets the \textbf{wrong} final value.
     \end{block}
     
     \begin{alertblock}{Solution Preview}
@@ -484,8 +484,8 @@
     
     \begin{exampleblock}{Renaming in Action}
         {\ttfamily\small
-        R1 $\leftarrow$ R2+R3  $\Rightarrow$  P17 $\leftarrow$ P5+P8\\
-        R1 $\leftarrow$ R4+R5  $\Rightarrow$  P23 $\leftarrow$ P11+P14
+        \textcolor{red}{R1} $\leftarrow$ R2+R3  $\Rightarrow$  \textcolor{correctgreen}{P17} $\leftarrow$ P5+P8\\
+        \textcolor{red}{R1} $\leftarrow$ R4+R5  $\Rightarrow$  \textcolor{correctgreen}{P23} $\leftarrow$ P11+P14
         }
     \end{exampleblock}
     
