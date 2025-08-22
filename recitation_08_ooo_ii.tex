@@ -282,7 +282,7 @@
     %
     % Code display (if enabled)
     \ifnum\showCode=1
-        \node[codebox, right=1cm of mob, yshift=0.2cm, minimum height=3.5cm] (code) {
+        \node[codebox, right=0.5cm of mob.east, anchor=west, yshift=0.2cm, minimum height=3.5cm, minimum width=4cm] (code) {
             \begin{tabular}{l}
             % Highlight line 1 if requested
             \ifnum\highlightOne=1
@@ -604,14 +604,14 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{frame}
 
 % Initial state
-\begin{frame}{Out-of-Order Execution: Initial State}
+\begin{frame}{OOOE: Initial State}
 \OOODiagramKV[
     showcode=1,
 ]
 \end{frame}
 
 % Cycle 1
-\begin{frame}{Out-of-Order Execution: Cycle 1}
+\begin{frame}{OOOE: Cycle 1}
 \OOODiagramKV[
     idq1=\newentryb{SUB R1,R1,R1},
     idq2=\newentrya{ADDI R10,R0,100},
@@ -622,7 +622,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{frame}
 
 % Cycle 2 - Multiple slides to show progression
-\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Decode}
+\begin{frame}{OOOE: Cycle 2, Instruction Decode}
 \OOODiagramKV[
     R1=\newentryb{RB1},
     R10=\newentrya{RB0},
@@ -630,17 +630,17 @@ Show the system state when completing the fetch of instruction L1 for the second
     idq2=\newentrya{\sout{ADDI R10,R0,100}},
     rs1=\newentrya{RB0$\leftarrow$R0+100},
     rs2=\newentryb{RB1$\leftarrow$R1-R1},
-    robleft0=\newentrya{RB0},
+    robleft0={RB0},
     rob01=\newentrya{ADDI R10,R0,100},
     rob02=\newentrya{INV},
-    robleft1=\newentryb{RB1},
+    robleft1={RB1},
     rob11=\newentryb{SUB R1,R1,R1},
     rob12=\newentryb{INV},
     showcode=1,
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Fetch}
+\begin{frame}{OOOE: Cycle 2, Instruction Fetch}
 \OOODiagramKV[
     R1=\oldentry{RB1},
     R10=\oldentry{RB0},
@@ -661,7 +661,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{frame}
 
 % Cycle 3 - Multiple slides
-\begin{frame}{Out-of-Order Execution: Cycle 3, Execution Starts}
+\begin{frame}{OOOE: Cycle 3, Execution Starts}
 \OOODiagramKV[
     R1=\oldentry{RB1},
     R10=\oldentry{RB0},
@@ -681,7 +681,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Decode}
+\begin{frame}{OOOE: Cycle 3, Instruction Decode}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\newentrya{RB2}, R5=\newentryb{RB3},
@@ -696,10 +696,10 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft1=\oldentry{RB1},
     rob11=\oldentry{SUB R1,R1,R1},
     rob12=\oldentry{INV},
-    robleft2=\newentrya{RB2},
+    robleft2={RB2},
     rob21=\newentrya{ADDI R4,R0,20},
     rob22=\newentrya{INV},
-    robleft3=\newentryb{RB3},
+    robleft3={RB3},
     rob31=\newentryb{LW R5,100(R4)},
     rob32=\newentryb{INV},
     mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
@@ -709,7 +709,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Fetch}
+\begin{frame}{OOOE: Cycle 3, Instruction Fetch}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
@@ -740,7 +740,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{frame}
 
 % Cycle 4 - Multiple slides
-\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Completed}
+\begin{frame}{OOOE: Cycle 4, Execution Completed}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
@@ -766,7 +766,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Starts}
+\begin{frame}{OOOE: Cycle 4, Execution Starts}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
@@ -791,7 +791,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 4, Stall on Dependencies}
+\begin{frame}{OOOE: Cycle 4, Stall on Dependencies}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R4=\oldentry{RB2}, R5=\oldentry{RB3},
@@ -804,7 +804,7 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft1=\oldentry{RB1},
     rob11=\oldentry{SUB R1,R1,R1},
     rob12=\oldentry{OK},
-    robleft2=\srcentryb{RB2},
+    robleft2={RB2},
     rob21=\oldentry{ADDI R4,R0,20},
     rob22=\srcentryb{INV},
     robleft3=\oldentry{RB3},
@@ -816,7 +816,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 4, Decode}
+\begin{frame}{OOOE: Cycle 4, Decode}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R3=\newentrya{RB4},
@@ -838,10 +838,10 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft3=\oldentry{RB3},
     rob31=\oldentry{LW R5,100(R4)},
     rob32=\oldentry{INV},
-    robleft4=\newentrya{RB4},
+    robleft4={RB4},
     rob41=\newentrya{ADDI R3,R2,2},
     rob42=\newentrya{INV},
-    robleft5=\newentryb{RB5},
+    robleft5={RB5},
     rob51=\newentryb{ADDI R5,R3,2},
     rob52=\newentryb{INV},
     mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
@@ -850,7 +850,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 4, Fetch}
+\begin{frame}{OOOE: Cycle 4, Fetch}
 \OOODiagramKV[
     R1=\oldentry{RB1}, R10=\oldentry{RB0},
     R3=\oldentry{RB4},
@@ -889,7 +889,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 % Continue with remaining cycles following the same pattern...
 % (I'll continue with a few more key cycles)
 
-\begin{frame}{Out-of-Order Execution: Cycle 5, Retire}
+\begin{frame}{OOOE: Cycle 5, Retire}
 \OOODiagramKV[
     R1=\newentryb{\sout{RB1}}, R10=\newentrya{\sout{RB0}},
     R3=\oldentry{RB4},
@@ -898,10 +898,10 @@ Show the system state when completing the fetch of instruction L1 for the second
     idq2=\oldentry{ADDI R6, R0, 6},
     rs1=\oldentry{RB4$\leftarrow$R2+2},
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    robleft0=\srcentrya{\sout{RB0}},
+    robleft0={\sout{RB0}},
     rob01=\srcentrya{\sout{ADDI R10,R0,100}},
     rob02=\srcentrya{OK},
-    robleft1=\srcentryb{\sout{RB1}},
+    robleft1={\sout{RB1}},
     rob11=\srcentryb{\sout{SUB R1,R1,R1}},
     rob12=\srcentryb{OK},
     robleft2=\oldentry{RB2},
@@ -925,7 +925,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{frame}
 
 % Cycle 6 - Multiple slides showing progression
-\begin{frame}{Out-of-Order Execution: Cycle 6, Retire}
+\begin{frame}{OOOE: Cycle 6, Retire}
 \OOODiagramKV[
     R3=\oldentry{RB4},
     R4=\srcentrya{\sout{RB2}}, R5=\oldentry{RB5},
@@ -936,7 +936,7 @@ Show the system state when completing the fetch of instruction L1 for the second
     rs2=\oldentry{RB5$\leftarrow$RB4+2},
     rs3=\oldentry{RB6$\leftarrow$R0+6},
     rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    robleft2=\srcentrya{\sout{RB2}},
+    robleft2={\sout{RB2}},
     rob21=\srcentrya{\sout{ADDI R4,R0,20}},
     rob22=\srcentrya{OK},
     robleft3=\oldentry{RB3},
@@ -962,7 +962,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 6, Execution Completed, Load Issued}
+\begin{frame}{OOOE: Cycle 6, Execution Completed / Load Issued}
 \OOODiagramKV[
     R3=\oldentry{RB4},
     R5=\oldentry{RB5},
@@ -997,7 +997,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 6, Execution Starts}
+\begin{frame}{OOOE: Cycle 6, Execution Starts}
 \OOODiagramKV[
     R3=\oldentry{RB4},
     R5=\oldentry{RB5},
@@ -1031,7 +1031,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 6, Instruction Decode}
+\begin{frame}{OOOE: Cycle 6, Instruction Decode}
 \OOODiagramKV[
     R3=\oldentry{RB4},
     R5=\oldentry{RB5},
@@ -1046,7 +1046,7 @@ Show the system state when completing the fetch of instruction L1 for the second
     rs3=\oldentry{\sout{RB6$\leftarrow$R0+6}},
     rs4=\newentryb{RB0$\leftarrow$R0+9},
     rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    robleft0=\newentrya{RB0},
+    robleft0={RB0},
     rob01=\newentrya{ADDI R9,R0,9},
     rob02=\newentrya{INV},
     robleft3=\oldentry{RB3},
@@ -1064,7 +1064,7 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft7=\oldentry{RB7},
     rob71=\oldentry{ADDI R7,R5,R0},
     rob72=\oldentry{INV},
-    robleft8=\newentryb{RB8},
+    robleft8={RB8},
     rob81=\newentryb{ADDI R8,R0,8},
     rob82=\newentryb{INV},
     mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
@@ -1077,7 +1077,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 6, Instruction Fetch}
+\begin{frame}{OOOE: Cycle 6, Instruction Fetch}
 \OOODiagramKV[
     R3=\oldentry{RB4},
     R5=\oldentry{RB5},
@@ -1124,7 +1124,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{frame}
 
 % Cycle 7 - Second iteration begins
-\begin{frame}{Out-of-Order Execution: Cycle 7, Retire}
+\begin{frame}{OOOE: Cycle 7, Retire}
 \OOODiagramKV[
     R3=\newentrya{\sout{RB4}},
     R5=\oldentry{RB5},
@@ -1143,7 +1143,7 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft3=\oldentry{RB3},
     rob31=\oldentry{LW R5,100(R4)},
     rob32=\oldentry{INV},
-    robleft4=\newentrya{\sout{RB4}},
+    robleft4={\sout{RB4}},
     rob41=\newentrya{\sout{ADDI R3,R2,2}},
     rob42=\srcentrya{OK},
     robleft5=\oldentry{RB5},
@@ -1167,7 +1167,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 7, Execution Completed}
+\begin{frame}{OOOE: Cycle 7, Execution Completed}
 \OOODiagramKV[
     R3=\oldentry{\sout{RB4}},
     R5=\oldentry{RB5},
@@ -1207,7 +1207,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 7, Execution Starts}
+\begin{frame}{OOOE: Cycle 7, Execution Starts}
 \OOODiagramKV[
     R3=\oldentry{\sout{RB4}},
     R5=\oldentry{RB5},
@@ -1246,7 +1246,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 7, Instruction Decode}
+\begin{frame}{OOOE: Cycle 7, Instruction Decode}
 \OOODiagramKV[
     R1=\newentrya{RB1},
     R3=\oldentry{\sout{RB4}},
@@ -1265,10 +1265,10 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft0=\oldentry{RB0},
     rob01=\oldentry{ADDI R9,R0,9},
     rob02=\oldentry{INV},
-    robleft1=\newentrya{RB1},
+    robleft1={RB1},
     rob11=\newentrya{ADDI R1,R1,1},
     rob12=\newentrya{INV},
-    robleft2=\newentryb{RB2},
+    robleft2={RB2},
     rob21=\newentryb{BNE R1,R10,L1},
     rob22=\newentryb{INV},
     robleft3=\oldentry{RB3},
@@ -1294,7 +1294,7 @@ Show the system state when completing the fetch of instruction L1 for the second
 ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 7, Second Iteration Fetch}
+\begin{frame}{OOOE: Cycle 7, Second Iteration Fetch}
 \OOODiagramKV[
     R1=\newentrya{RB1},
     R3=\oldentry{\sout{RB4}},
@@ -1313,16 +1313,16 @@ Show the system state when completing the fetch of instruction L1 for the second
     robleft0=\oldentry{RB0},
     rob01=\oldentry{ADDI R9,R0,9},
     rob02=\oldentry{INV},
-    robleft1=\newentrya{RB1},
+    robleft1={RB1},
     rob11=\newentrya{ADDI R1,R1,1},
     rob12=\newentrya{INV},
-    robleft2=\newentryb{RB2},
+    robleft2={RB2},
     rob21=\newentryb{BNE R1,R10,L1},
     rob22=\newentryb{INV},
     robleft3=\oldentry{RB3},
     rob31=\oldentry{LW R5,100(R4)},
     rob32=\oldentry{INV},
-    robleft4=\oldentry{\sout{RB4}},
+    robleft4={\sout{RB4}},
     rob41=\oldentry{\sout{ADDI R3,R2,2}},
     rob42=\oldentry{OK},
     robleft5=\oldentry{RB5},
@@ -1442,6 +1442,8 @@ Move constant assignments outside the loop!
 \end{frame}
 
 \begin{frame}{Impact of Optimization}
+\begin{columns}
+\column{0.5\textwidth}
 \begin{block}{Analysis}
 \begin{itemize}
     \item \textbf{Before:} 10 instructions in loop
@@ -1451,17 +1453,19 @@ Move constant assignments outside the loop!
 \end{itemize}
 \end{block}
 
+\column{0.5\textwidth}
 \begin{alertblock}{Performance Result}
 \begin{itemize}
-    \item CPI increases by factor of $\approx 2$
-    \item IC (Instruction Count) decreases by factor of $\approx 2$
+    \item CPI increases by $\approx 2\times$
+    \item IC decreases by $\approx 2\times$
     \item \textbf{Total execution time: No significant change!}
 \end{itemize}
-\end{alertblock}
 
-\begin{block}{Key Insight}
+\vspace{0.3cm}
+\textbf{Key Insight:}\\
 Runtime = IC × CPI × Clock Period
-\end{block}
+\end{alertblock}
+\end{columns}
 \end{frame}
 
 \section{Hardware Improvements}
@@ -1470,6 +1474,8 @@ Runtime = IC × CPI × Clock Period
 \begin{block}{Question}
 Adding a third ALU unit - does it improve performance?
 \end{block}
+
+\vspace{0.5cm}
 
 \begin{columns}
 \column{0.5\textwidth}
