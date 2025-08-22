@@ -424,27 +424,45 @@ Address format:\\
 % Slide 18: Question 3 Memory Access Analysis
 \begin{frame}{Question 3 - Memory Access Analysis}
 \footnotesize
+% Define colors for different page table levels
+\definecolor{signcolor}{RGB}{128,128,128}
+\definecolor{pml4color}{RGB}{255,128,0}
+\definecolor{pdpcolor}{RGB}{51,153,255}
+\definecolor{dircolor}{RGB}{0,204,102}
+\definecolor{offsetcolor}{RGB}{204,0,204}
+
 \begin{center}
-\begin{tabular}{|l|c|p{7cm}|}
+\begin{tabular}{|l|c|p{6.5cm}|}
 \hline
 \textbf{Virtual Address} & \textbf{Cycles} & \textbf{Comment} \\
 \hline
-0xFF81234567​89ABCD & 401 & Miss at each level: 1 + 4×100 = 401 cycles \\
+\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{567}\textcolor{dircolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<2->{401} & \onslide<2->{Miss at each level: 1 + 4×100 = 401 cycles} \\
 \hline
-0xFF81234067​89ABCD & 202 & (PML4, PDP, DIR, TLB) = (H,H,M,M)\\
-& & 1 cycle + PDP read 1 cycle\\
-& & DIR miss: 100 cycles, PTE miss: 100 cycles \\
+\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<3->{202} & \onslide<3->{(PML4, PDP, DIR, TLB) = (H,H,M,M)}\\
+& & \onslide<3->{1 cycle + PDP read 1 cycle}\\
+& & \onslide<3->{DIR miss: 100 cycles, PTE miss: 100 cycles} \\
 \hline
-0xFF80234067​89ABCD & 401 & PMH cache miss in all levels: 1 + 4×100 = 401 \\
+\textcolor{signcolor}{0xFF80}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<4->{401} & \onslide<4->{PMH cache miss in all levels: 1 + 4×100 = 401} \\
 \hline
-0xFF81234067​09ABCD & 302 & (PML4, PDP, DIR, TLB) = (H,M,M,M)\\
-& & Entry 234 replaced by access 3 (same set)\\
-& & 2 + 3×100 = 302 cycles \\
+\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{09A}\textcolor{offsetcolor}{BCD} & \onslide<5->{302} & \onslide<5->{(PML4, PDP, DIR, TLB) = (H,M,M,M)}\\
+& & \onslide<5->{Entry 234 replaced by access 3 (same set)}\\
+& & \onslide<5->{2 + 3×100 = 302 cycles} \\
 \hline
-0xFF81234067​09A0CD & 2 & Hit in TLB - 2 cycles \\
+\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{09A}\textcolor{offsetcolor}{0CD} & \onslide<6->{2} & \onslide<6->{Hit in TLB - 2 cycles} \\
 \hline
 \end{tabular}
 \end{center}
+
+\vspace{0.5em}
+\onslide<7->{
+\small
+\textbf{Color Legend:} 
+\textcolor{signcolor}{Sign}, 
+\textcolor{pml4color}{PML4}, 
+\textcolor{pdpcolor}{PDP}, 
+\textcolor{dircolor}{DIR}, 
+\textcolor{offsetcolor}{Offset}
+}
 \end{frame}
 
 % Final slide
