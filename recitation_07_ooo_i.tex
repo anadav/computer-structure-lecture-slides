@@ -282,9 +282,9 @@
 
 \begin{frame}{Data Hazards}
     \begin{block}{RAW (Read After Write) - True Dependency}
-        {\ttfamily\small
-        ADD R1, R2, R3\\
-        ADD R5, R6, R1  // Depends on R1 from previous instruction
+        {\ttfamily\footnotesize
+        (1) ADD R1, R2, R3\\
+        (2) ADD R5, R6, R1  // Depends on R1 from previous instruction
         }
         The destination of the first instruction is a source in the second. This is a \textbf{true dependency} that must be maintained for program correctness.
     \end{block}
@@ -292,28 +292,30 @@
 
 \begin{frame}{New Data Hazards in OOO Execution}
     \begin{block}{WAR (Write After Read) - False Dependency}
-        {\ttfamily\small
-        DIV R1, R2, R3  // Many cycles\\
-        ADD R5, R6, R1  // Depends on previous instruction\\
-        ADD R6, R7, R8  // WAR issue - might execute before ADD R5
+        {\ttfamily\footnotesize
+        (1) DIV R1, R2, R3  // Many cycles\\
+        (2) ADD R5, R6, R1  // Depends on previous instruction\\
+        (3) ADD R6, R7, R8  // WAR issue - might execute before (2)
         }
         \begin{itemize}
-            \item The long division delays the second ADD
-            \item With OOO, the third instruction (independent) executes before the second
-            \item The second instruction might read the new R6 value instead of the old one
+            \item The long division delays instruction (2)
+            \item With OOO, instruction (3) (independent) executes before (2)
+            \item Instruction (2) might read the new R6 value instead of the old one
         \end{itemize}
     \end{block}
 \end{frame}
 
 \begin{frame}{WAW (Write After Write) - False Dependency}
-    {\ttfamily\small
-    DIV R1, R2, R3  // Many cycles\\
-    ADD R5, R6, R1  // Depends on previous instruction\\
-    ADD R5, R7, R8  // WAW issue - might execute before ADD R5
-    }
+    \begin{block}{Example}
+        {\ttfamily\footnotesize
+        (1) DIV R1, R2, R3  // Many cycles\\
+        (2) ADD R5, R6, R1  // Depends on previous instruction\\
+        (3) ADD R5, R7, R8  // WAW issue - might execute before (2)
+        }
+    \end{block}
     
     \begin{itemize}
-        \item The second instruction is delayed while the third is not
+        \item Instruction (2) is delayed while (3) is not
         \item This could lead to R5 containing an outdated value
         \item Must ensure the write to R5 by instruction (3) happens after the write by instruction (2)
     \end{itemize}
