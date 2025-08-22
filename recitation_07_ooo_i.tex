@@ -53,23 +53,24 @@
         \node[draw, fill=\pgfkeysvalueof{/pipeline/ifcolor}, minimum width=1.2cm, minimum height=0.8cm] (IF) {IF};
         \node[draw, fill=\pgfkeysvalueof{/pipeline/idcolor}, minimum width=1.2cm, minimum height=0.8cm, right=0.3cm of IF] (ID) {ID};
         
-        % Integer unit (single stage)
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.8cm, right=2cm of ID] (EX) {EX};
-        
         % Multiply pipeline (4 stages)
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightmultiply}, minimum width=0.8cm, minimum height=0.6cm, below right=1cm and 2cm of ID] (M1) {M1};
-        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=0 of M1] (M2) {M2};
-        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=0 of M2] (M3) {M3};
-        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=0 of M3] (M4) {M4};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightmultiply}, minimum width=0.8cm, minimum height=0.6cm, right=of ID] (M1) {M1};
+        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=of M1] (M2) {M2};
+        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=of M2] (M3) {M3};
+        \node[draw, fill=white, minimum width=0.8cm, minimum height=0.6cm, right=of M3] (M4) {M4};
+
         
         % Divider pipeline (multi-stage)
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightdivider}, minimum width=0.6cm, minimum height=0.5cm, below right=1.8cm and 2cm of ID] (D1) {D1};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=0 of D1] (D2) {D2};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=0 of D2] (D3) {D3};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=0 of D3] (D4) {D4};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=0 of D4] (D5) {D5};
-        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=0 of D5] (D6) {D6};
-        
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightdivider}, minimum width=0.6cm, minimum height=0.5cm, below right=of ID] (D1) {D1};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=of D1] (D2) {D2};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=of D2] (D3) {D3};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=of D3] (D4) {D4};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=of D4] (D5) {D5};
+        \node[draw, fill=white, minimum width=0.6cm, minimum height=0.5cm, right=of D5] (D6) {D6};
+
+        % Integer unit (single stage)
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.8cm, above=of M2] (EX) {EX};
+         
         % Execution box (drawn after units to be in background)
         \node[draw, thick, minimum width=7.5cm, minimum height=4cm, right=1.2cm of ID] (execbox) {};
         \node[above=0 of execbox.north, anchor=south, font=\small] {Execution};
@@ -87,9 +88,9 @@
         \draw[->, thick] (IF) -- (ID);
         
         % Connections from ID to execution units
-        \draw[->, thick] (ID.east) -- ++(0.5,0) |- (EX.west);
-        \draw[->, thick] (ID.east) -- ++(0.5,0) |- (M1.west);
-        \draw[->, thick] (ID.east) -- ++(0.5,0) |- (D1.west);
+        \draw[->, thick] (ID.east) -- ([xshift=2cm]ID.east) |- (EX.west);
+        \draw[->, thick] (ID.east) -- (M1.west);
+        \draw[->, thick] (ID.east) -- ([xshift=2cm]ID.east) |- (D1.west);
         
         % Connections within multiply pipeline
         \draw[->, thick] (M1) -- (M2);
@@ -104,9 +105,9 @@
         \draw[->, thick] (D5) -- (D6);
         
         % Connections from execution units to MEM
-        \draw[->, thick] (EX.east) -- ++(0.8,0) |- (MEM.west);
-        \draw[->, thick] (M4.east) -- ++(0.4,0) |- (MEM.west);
-        \draw[->, thick] (D6.east) -| ($(execbox.east)+(0.2,0)$) |- (MEM.west);
+        \draw[->, thick] (EX.east) -| ([xshift=-2cm]MEM.west) -- (MEM.west);
+        \draw[->, thick] (M4.east) -- (MEM.west);
+        \draw[->, thick] (D6.east) -| ([xshift=-2cm]MEM.west) -- (MEM.west);
         
         % Connection from MEM to WB
         \draw[->, thick] (MEM) -- (WB);
@@ -297,7 +298,7 @@
         \node[draw, fill=lightblue] (mem1) at (4.5,0) {MEM};
         \node[draw, fill=lightblue] (wb1) at (6,0) {WB};
         
-        \node[draw, fill=lightblue] (if2) at (0,-1) {IF};
+        \node[draw, fill=lightblue, below=of if1] (if2) {IF};
         \node[draw, fill=lightblue] (id2) at (1.5,-1) {ID};
         \node[draw, fill=lightblue] (exe2) at (3,-1) {EXE};
         \node[draw, fill=lightblue] (mem2) at (4.5,-1) {MEM};
@@ -544,10 +545,8 @@
         \node[draw, fill=lightblue, minimum width=1.5cm, minimum height=3cm] (alloc) at (4,0) {};
         \node at (4,0) {ALLOC};
         
-        % OOO section
-        \begin{scope}[on background layer]
-            \node[draw, fill=gray!20, rounded corners, minimum width=4cm, minimum height=3.5cm] (ooo) at (7,0) {};
-        \end{scope}
+        % OOO section (background box)
+        \node[draw, fill=gray!20, rounded corners, minimum width=4cm, minimum height=3.5cm] (ooo) at (7,0) {};
         \node at (7,1.3) {\textbf{OOO}};
         \node at (7,0.7) {\footnotesize Not a single cycle};
         \node[draw, fill=darkblue, text=white, minimum width=3cm, minimum height=0.8cm] at (7,-0.3) {EXE/MEM + WB};
