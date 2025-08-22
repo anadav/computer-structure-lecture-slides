@@ -13,7 +13,7 @@
 \usepackage{listings}
 \usepackage{pgfkeys}
 \usepackage{adjustbox}
-\usepackage[normalem]{ulem} 
+\usepackage[normalem]{ulem}
 \usetheme{Madrid}
 \usecolortheme{default}
 
@@ -174,28 +174,35 @@ Address format:\\
 
 % Slide 8: Question 1 Solution
 \begin{frame}{Question 1 - Solution}
-\textbf{1. Small page size:}
+\textcolor{blue}{\textbf{(1)}} \textbf{Small page size:}
 \begin{itemize}
     \item 12 bits in offset field $\Rightarrow 2^{12}$ = 4KB
 \end{itemize}
 
-\textbf{2. Entries per Page Table:}
+\vspace{0.3em}
+\textcolor{blue}{\textbf{(2)}} \textbf{Entries per Page Table:}
 \begin{itemize}
     \item Page Table size = Page Size = 4KB
     \item PTE = 16B
-    \item Entries = 4KB / 16B = $2^{12} / 2^4 = 2^8$ = 256 entries
+    \item Entries = $\frac{\text{4KB}}{\text{16B}} = \frac{2^{12}}{2^4} = 2^8$ = 256 entries
 \end{itemize}
 
-\textbf{3. Values of N1, N2, N3, N4:}
+\vspace{0.3em}
+\textcolor{blue}{\textbf{(3)}} \textbf{Values of N1, N2, N3, N4:}
 \begin{itemize}
     \item 256 entries $\Rightarrow$ 8 bits to address them
-    \item TABLE [19:12] $\Rightarrow$ N1 = 19
-    \item DIR [27:20] $\Rightarrow$ N2 = 27
-    \item PDP [35:28] $\Rightarrow$ N3 = 35
-    \item PML4 [43:36] $\Rightarrow$ N4 = 43
 \end{itemize}
+\begin{center}
+\begin{tabular}{lcl}
+    TABLE [19:12] & $\Rightarrow$ & N1 = 19\\
+    DIR [27:20]   & $\Rightarrow$ & N2 = 27\\
+    PDP [35:28]   & $\Rightarrow$ & N3 = 35\\
+    PML4 [43:36]  & $\Rightarrow$ & N4 = 43
+\end{tabular}
+\end{center}
 
-\textbf{4. Large page size:}
+\vspace{0.3em}
+\textcolor{blue}{\textbf{(4)}} \textbf{Large page size:}
 \begin{itemize}
     \item Large pages pointed by DIR, offset is [19:0]
     \item Size = $2^{20}$ = 1MB
@@ -204,50 +211,143 @@ Address format:\\
 
 % Slide 9: TLB Introduction
 \begin{frame}{Translation Lookaside Buffer (TLB)}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
 \begin{itemize}
-    \item Page table resides in memory
-    \item Each translation requires extra memory access
-    \item TLB caches recently used PTEs to speed up translation
-    \item Typically 128-256 entries, 4-8 way associative
+    \item Page table resides in memory\\
+    $\Rightarrow$ each translation requires extra memory access
+    \item TLB caches recently used PTEs
+    \begin{itemize}
+        \item Speed up translation
+        \item Typically 128-256 entries
+        \item 4-8 way associative
+    \end{itemize}
+    \item \textbf{TLB Indexing:}
+\end{itemize}
+\vspace{0.2cm}
+\begin{tikzpicture}[scale=0.8]
+    \draw[thick] (0,0) rectangle (4,0.5);
+    \draw[thick] (2.5,0) -- (2.5,0.5);
+    \node at (1.25,0.25) {\small Virtual Page Number};
+    \node at (3.25,0.25) {\small Offset};
+    
+    \draw[thick] (0,-0.8) rectangle (4,-0.3);
+    \draw[thick] (1.5,-0.8) -- (1.5,-0.3);
+    \draw[thick] (2.5,-0.8) -- (2.5,-0.3);
+    \node at (0.75,-0.55) {\small Tag};
+    \node at (2,-0.55) {\small Set};
+    \node at (3.25,-0.55) {\small Offset};
+\end{tikzpicture}
+
+\textbf{On TLB miss:}\\
+Page Miss Handler (PMH) gets PTE from memory
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[node distance=1.2cm, auto]
+    % Nodes
+    \node[draw, ellipse] (va) {Virtual Address};
+    \node[draw, rectangle, below=of va] (tlb) {TLB Access};
+    \node[draw, diamond, below=of tlb, aspect=2] (hit) {TLB Hit?};
+    \node[draw, rectangle, left=of hit, align=center] (pt) {Access\\Page Table\\in Memory};
+    \node[draw, ellipse, below=of hit, align=center] (pa) {Physical\\Address};
+    
+    % Arrows
+    \draw[->, thick] (va) -- (tlb);
+    \draw[->, thick] (tlb) -- (hit);
+    \draw[->, thick] (hit) -- node[right] {Yes} (pa);
+    \draw[->, thick] (hit) -- node[above] {No} (pt);
+    \draw[->, thick] (pt) |- (pa);
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+% Slide 10: STLB - Secondary TLB
+\begin{frame}{STLB - Secondary TLB}
+\begin{itemize}
+    \item PMH can access STLB instead of performing page walk
+    \item After TLB miss, look in STLB. The STLB is much larger than TLB, so it has higher hit rate but also higher access latency
+    \item If hit on STLB, copy PTE to TLB
+    \item STLB contains memory references from both I-cache and D-cache, allowing data and code pages to be shared
+    \item Like TLB, uses VPN for lookup to STLB
+    \item On STLB hit, translation is used
+    \item On STLB miss, PMH performs page walk
 \end{itemize}
 
 \vspace{1em}
-\textbf{TLB Operation:}
-\begin{enumerate}
-    \item Virtual address presented for translation
-    \item Check TLB for matching VPN
-    \item \textbf{TLB Hit:} Use cached translation
-    \item \textbf{TLB Miss:} Page Miss Handler (PMH) fetches PTE from memory
-\end{enumerate}
+\textbf{TLB Hierarchy:}
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm, auto]
+    \node[draw, rectangle] (va) {Virtual Address};
+    \node[draw, rectangle, below=of va] (tlb) {TLB};
+    \node[draw, rectangle, below=of tlb] (stlb) {STLB};
+    \node[draw, rectangle, below=of stlb] (pmh) {PMH/Page Walk};
+    \node[draw, rectangle, right=of tlb, xshift=1cm] (pa) {Physical Address};
+    
+    \draw[->, thick] (va) -- (tlb);
+    \draw[->, thick] (tlb) -- node[left] {miss} (stlb);
+    \draw[->, thick] (stlb) -- node[left] {miss} (pmh);
+    \draw[->, thick] (tlb) -- node[above] {hit} (pa);
+    \draw[->, thick] (stlb.east) -- ++(0.5,0) |- node[near end, above] {hit} (pa);
+    \draw[->, thick] (pmh.east) -- ++(1,0) |- (pa);
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
-% Slide 10: Virtual Memory and Cache
+% Slide 11: Virtual Memory and Cache
 \begin{frame}{Virtual Memory and Cache}
-\textbf{Access Flow:}
-\begin{enumerate}
+\begin{center}
+\begin{tikzpicture}[node distance=1cm and 1.5cm, auto]
+    % Nodes
+    \node[draw, ellipse, fill=yellow!20, align=center] (va) {Virtual\\Address};
+    
+    % TLB path
+    \node[draw, rectangle, fill=orange!20, below=of va, xshift=-2cm, align=center] (tlb) {Access\\TLB};
+    \node[draw, diamond, below=of tlb, aspect=1.5, align=center] (tlbhit) {TLB\\Hit?};
+    \node[draw, diamond, left=of tlbhit, aspect=1.5, align=center] (stlbhit) {STLB\\Hit?};
+    \node[draw, rectangle, above=of stlbhit, xshift=-1cm, align=center] (pw) {Page Walk:\\get PTE from\\memory\\hierarchy};
+    
+    % Cache path
+    \node[draw, rectangle, fill=green!20, below=of va, xshift=2cm, align=center] (cache) {Access\\Cache};
+    \node[draw, diamond, below=of cache, aspect=1.5, align=center] (l1hit) {L1\\Cache\\Hit?};
+    \node[draw, diamond, right=of l1hit, aspect=1.5, align=center] (l2hit) {L2\\Cache\\Hit?};
+    \node[draw, rectangle, right=of l2hit, align=center] (mem) {Access\\Memory};
+    
+    % Result nodes
+    \node[draw, ellipse, fill=blue!20, below=of tlbhit, yshift=-0.5cm, align=center] (pa) {Physical\\Address};
+    \node[draw, ellipse, fill=green!20, below=of l1hit, yshift=-0.5cm] (data) {Data};
+    
+    % Arrows - TLB path
+    \draw[->, thick] (va) -- (tlb);
+    \draw[->, thick] (tlb) -- (tlbhit);
+    \draw[->, thick] (tlbhit) -- node[left] {Yes} (pa);
+    \draw[->, thick] (tlbhit) -- node[above] {No} (stlbhit);
+    \draw[->, thick] (stlbhit) -- node[above] {No} (pw);
+    \draw[->, thick] (stlbhit) -- node[left] {Yes} (pa);
+    \draw[->, thick] (pw) |- (pa);
+    
+    % Arrows - Cache path
+    \draw[->, thick, dashed] (pa) -| (cache);
+    \draw[->, thick] (cache) -- (l1hit);
+    \draw[->, thick] (l1hit) -- node[left] {Yes} (data);
+    \draw[->, thick] (l1hit) -- node[above] {No} (l2hit);
+    \draw[->, thick] (l2hit) -- node[left] {Yes} (data);
+    \draw[->, thick] (l2hit) -- node[above] {No} (mem);
+    \draw[->, thick] (mem) |- (data);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+\begin{itemize}
     \item TLB access is serial with cache access
     \item Page table entries are cached in L1 D\$, L2\$, and L3\$ as data
-\end{enumerate}
-
-\vspace{1em}
-\textbf{On memory access:}
-\begin{itemize}
-    \item First check TLB/STLB
-    \item If TLB miss, perform page walk
-    \item Access cache hierarchy with physical address
-    \item If cache miss, access main memory
-\end{itemize}
-
-\vspace{1em}
-\textbf{TLB Types:}
-\begin{itemize}
-    \item Separate TLBs for data (dTLB) and instructions (iTLB)
-    \item Separate TLBs for 4KB and large page sizes
-    \item STLB (Secondary TLB) as second level
 \end{itemize}
 \end{frame}
 
-% Slide 11: Page Walk and PMH
+% Slide 12: Page Walk and PMH
 \begin{frame}{Page Walk Process}
 \textbf{PMH (Page Miss Handler) Operation:}
 \begin{itemize}
@@ -279,7 +379,7 @@ PML4 cache & [47:39] & PML4 entry \\
 Note: No Table cache needed as TLB stores complete translations
 \end{frame}
 
-% Slide 12: Question 2 Setup
+% Slide 13: Question 2 Setup
 \begin{frame}{Question 2}
 \textbf{System Configuration:}
 \begin{itemize}
@@ -305,7 +405,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{center}
 \end{frame}
 
-% Slide 13: Question 2 Solution
+% Slide 14: Question 2 Solution
 \begin{frame}{Question 2 - Solution}
 \begin{center}
 \begin{tabular}{|l|c|p{6cm}|}
@@ -322,7 +422,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{center}
 \end{frame}
 
-% Slide 14: Cache Design Question
+% Slide 15: Cache Design Question
 \begin{frame}{Question 2: Cache Design}
 \textbf{System Configuration:}
 \begin{itemize}
@@ -346,7 +446,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{itemize}
 \end{frame}
 
-% Slide 15: Virtual Aliasing Problem
+% Slide 16: Virtual Aliasing Problem
 \begin{frame}{Virtual Aliasing Problem}
 \textbf{Problem:} Two virtual pages mapping to same physical page
 
@@ -374,7 +474,7 @@ Example:
 \end{itemize}
 \end{frame}
 
-% Slide 16: Question 3 Setup
+% Slide 17: Question 3 Setup
 \begin{frame}{Question 3}
 \textbf{System Configuration:}
 \begin{itemize}
@@ -402,7 +502,7 @@ Address format:\\
 \end{enumerate}
 \end{frame}
 
-% Slide 17: Question 3 Solution Part 1
+% Slide 18: Question 3 Solution Part 1
 \begin{frame}{Question 3 - Solution Part 1}
 \textbf{1. Large page size:}
 \begin{itemize}
@@ -421,7 +521,7 @@ Address format:\\
 \end{itemize}
 \end{frame}
 
-% Slide 18: Question 3 Memory Access Analysis
+% Slide 19: Question 3 Memory Access Analysis
 \begin{frame}{Question 3 - Memory Access Analysis}
 \footnotesize
 % Define colors for different page table levels
