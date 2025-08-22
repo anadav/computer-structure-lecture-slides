@@ -12,6 +12,7 @@
 \usepackage{array}
 \usepackage{listings}
 \usepackage{pgfkeys}
+\usepackage{adjustbox}
 \usepackage[normalem]{ulem} 
 \usetheme{Madrid}
 
@@ -401,10 +402,50 @@
     \begin{itemize}
         \item In \textbf{in-order} machines as we've known until today, the minimum CPI achievable is 1
         \item Even with OOO execution, this limit exists as long as we only allow parallel execution in the EXE stage
+    \end{itemize}
+    %\begin{columns}
+        %\column{0.2\textwidth}
+        %\column{0.6\textwidth}
+            \centering
+        \begin{tikzpicture}[stage/.style={font=\bfseries, inner sep=1pt}]
+            %--- stage labels (center line) ---
+            \node (IF)  {IF};
+            \node (ID)  [right=of IF]  {ID};
+            \node (EXE) [right=of ID]  {EXE};
+            \node (MEM) [right=of EXE] {MEM};
+            \node (WB)  [right=of MEM] {WB};
+
+            % vertical offset of the rails
+            \def\dy{0.55}
+            % small horizontal margin at the ends
+            \def\marg{0.6}
+            
+            % helper points for where the bump starts/ends (midpoints around EXE)
+            \coordinate (LT) at ($(ID.east)!0.5!(EXE.west)$);
+            \coordinate (RT) at ($(EXE.east)!0.5!(MEM.west)$);
+
+            %---- TOP rail: left segment, bump, right segment
+            \draw[very thick] ($(IF.west)+(-\marg,\dy)$) -- ($(LT)+(0,\dy)$);
+            \draw[very thick] ($(LT)+(0,\dy)$)
+                .. controls ($(EXE.north)+(0,0.9)$) ..
+                ($(RT)+(0,\dy)$);
+            \draw[very thick] ($(RT)+(0,\dy)$) -- ($(WB.east)+(\marg,\dy)$);
+
+            %---- BOTTOM rail: left segment, bump (down), right segment
+            \draw[very thick] ($(IF.west)+(-\marg,-\dy)$) -- ($(LT)+(0,-\dy)$);
+            \draw[very thick] ($(LT)+(0,-\dy)$)
+                .. controls ($(EXE.south)+(0,-0.9)$) ..
+                ($(RT)+(0,-\dy)$);
+            \draw[very thick] ($(RT)+(0,-\dy)$) -- ($(WB.east)+(\marg,-\dy)$);
+        \end{tikzpicture}
+   % \end{columns}
+
+    \begin{itemize}
         \item If we allow multiple instructions to execute in parallel in \textbf{all stages}, we can break this barrier
     \end{itemize}
 
-    \begin{tikzpicture}[node distance=2.2cm, stage/.style={font=\bfseries, inner sep=1pt}]
+    \centering
+    \begin{tikzpicture}[stage/.style={font=\bfseries, inner sep=1pt}]
         %--- stage labels (center line) ---
         \node (IF)  {IF};
         \node (ID)  [right=of IF]  {ID};
@@ -412,48 +453,30 @@
         \node (MEM) [right=of EXE] {MEM};
         \node (WB)  [right=of MEM] {WB};
 
-        % vertical offset of the rails
         \def\dy{0.62}
-        % small horizontal margin at the ends
+        \def\dyarrowx{0.5cm}
+        \def\dyarrowy{0.1cm}
         \def\marg{0.6}
+
+        % rails
+        \draw[very thick] ($(IF.west)+(-\marg,\dy)$) -- ($(WB.east)+(\marg,\dy)$);
+        \draw[very thick] ($(IF.west)+(-\marg,-\dy)$) -- ($(WB.east)+(\marg,-\dy)$);
         
-        % helper points for where the bump starts/ends (midpoints around EXE)
-        \coordinate (LT) at ($(ID.east)!0.5!(EXE.west)$);
-        \coordinate (RT) at ($(EXE.east)!0.5!(MEM.west)$);
+        \foreach \a in {IF,ID,EXE,MEM,WB}{
+            \draw[-{Stealth}]
+                ($(\a.north)+(-\dyarrowx,\dyarrowy)$) --
+                ($(\a.north)+(\dyarrowx,\dyarrowy)$);
+            \draw[-{Stealth}]
+                ($(\a.south)+(-\dyarrowx,-\dyarrowy)$) --
+                ($(\a.south)+(\dyarrowx,-\dyarrowy)$);
+        }
 
-        %---- TOP rail: left segment, bump, right segment
-        \draw[very thick] ($(IF.west)+(-\marg,\dy)$) -- ($(LT)+(0,\dy)$);
-        \draw[very thick] ($(LT)+(0,\dy)$)
-            .. controls ($(EXE.north)+(0,1.05)$) ..
-            ($(RT)+(0,\dy)$);
-        \draw[very thick] ($(RT)+(0,\dy)$) -- ($(WB.east)+(\marg,\dy)$);
-
-        %---- BOTTOM rail: left segment, bump (down), right segment
-        \draw[very thick] ($(IF.west)+(-\marg,-\dy)$) -- ($(LT)+(0,-\dy)$);
-        \draw[very thick] ($(LT)+(0,-\dy)$)
-            .. controls ($(EXE.south)+(0,-1.05)$) ..
-            ($(RT)+(0,-\dy)$);
-        \draw[very thick] ($(RT)+(0,-\dy)$) -- ($(WB.east)+(\marg,-\dy)$);
     \end{tikzpicture}
+
 
     \vspace{0.5cm}
     \centering
-    \begin{tikzpicture}[scale=0.7]
-        \node[draw, fill=lightblue] (if1) at (0,0) {IF};
-        \node[draw, fill=lightblue] (id1) at (1.5,0) {ID};
-        \node[draw, fill=lightblue] (exe1) at (3,0) {EXE};
-        \node[draw, fill=lightblue] (mem1) at (4.5,0) {MEM};
-        \node[draw, fill=lightblue] (wb1) at (6,0) {WB};
-        
-        \node[draw, fill=lightblue, below=of if1] (if2) {IF};
-        \node[draw, fill=lightblue] (id2) at (1.5,-1) {ID};
-        \node[draw, fill=lightblue] (exe2) at (3,-1) {EXE};
-        \node[draw, fill=lightblue] (mem2) at (4.5,-1) {MEM};
-        \node[draw, fill=lightblue] (wb2) at (6,-1) {WB};
-        
-        \draw[->, thick] (if1) -- (id1) -- (exe1) -- (mem1) -- (wb1);
-        \draw[->, thick] (if2) -- (id2) -- (exe2) -- (mem2) -- (wb2);
-    \end{tikzpicture}
+
 \end{frame}
 
 \begin{frame}{True Dependencies: RAW Hazards}
