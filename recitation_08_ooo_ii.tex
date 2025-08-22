@@ -15,17 +15,24 @@
 \usepackage[normalem]{ulem} 
 \usetheme{Madrid}
 
-% Custom colors
+% Custom colors - consolidated
 \definecolor{correctgreen}{RGB}{0,150,0}
 \definecolor{incorrectred}{RGB}{200,0,0}
 \definecolor{counterblue}{RGB}{70,130,255}
 \definecolor{highlightyellow}{RGB}{255,230,100}
 \definecolor{lightblue}{RGB}{200,230,250}
 \definecolor{darkblue}{RGB}{0,100,200}
-\definecolor{lightgreen}{RGB}{144,238,144}
+\definecolor{highlightorange}{RGB}{255,200,100}
 
 % Define asmcode command for assembly code formatting
-\newcommand{\asmcode}[1]{\vspace{-0.2cm}\tiny\texttt{#1}}
+\newcommand{\asmcode}[1]{\tiny\texttt{#1}}
+
+% Commands for highlighting entries
+\newcommand{\oldentry}[1]{~#1}
+\newcommand{\newentrya}[1]{\colorbox{highlightyellow}{#1}}
+\newcommand{\newentryb}[1]{\colorbox{highlightorange}{#1}}
+\newcommand{\srcentrya}[1]{\colorbox{highlightyellow!30}{#1}}
+\newcommand{\srcentryb}[1]{\colorbox{highlightorange!30}{#1}}
 
 \pgfkeys{
     /OOO/.is family, /OOO,
@@ -34,6 +41,7 @@
         R1 = {}, R2 = {}, R3 = {}, R4 = {}, R5 = {},
         R6 = {}, R7 = {}, R8 = {}, R9 = {}, R10 = {},
         % ROB cells (2 columns x 9 rows)
+        rob01 = {}, rob02 = {},
         rob11 = {}, rob12 = {},
         rob21 = {}, rob22 = {},
         rob31 = {}, rob32 = {},
@@ -42,11 +50,10 @@
         rob61 = {}, rob62 = {},
         rob71 = {}, rob72 = {},
         rob81 = {}, rob82 = {},
-        rob91 = {}, rob92 = {},
-        % ROB markers
-        robmark1 = {rob1}, robmark2 = {rob2}, robmark3 = {rob3},
-        robmark4 = {rob4}, robmark5 = {rob5}, robmark6 = {rob6},
-        robmark7 = {rob7}, robmark8 = {rob8}, robmark9 = {rob9},
+        % ROB left markers
+        robleft0 = {}, robleft1 = {}, robleft2 = {},
+        robleft3 = {}, robleft4 = {}, robleft5 = {},
+        robleft6 = {}, robleft7 = {}, robleft8 = {},
         % IDQ cells
         idq1 = {}, idq2 = {},
         % RS cells
@@ -56,13 +63,17 @@
         % MOB cells
         mob1 = {}, mob2 = {},
         % MOB markers
-        mobmark1 = {mob1}, mobmark2 = {mob2},
+        mobmark1 = {}, mobmark2 = {},
         % Execute cells
         exec1 = {}, exec2 = {},
         % Retire cells
         ret1 = {}, ret2 = {},
         % Retire markers
-        retmark1 = {ret1}, retmark2 = {ret2},
+        retmark1 = {}, retmark2 = {},
+        % Code highlighting (line numbers to highlight)
+        highlight1 = 0, highlight2 = 0,
+        % Show code flag
+        showcode = 1,
         % Number of rows/cols (for iteration purposes)
         rob rows = 9,
         idq rows = 2,
@@ -83,6 +94,7 @@
     R9/.estore in = \prfNine,
     R10/.estore in = \prfTen,
     % ROB cell contents
+    rob01/.estore in = \robZeroOne, rob02/.estore in = \robZeroTwo,
     rob11/.estore in = \robOneOne, rob12/.estore in = \robOneTwo,
     rob21/.estore in = \robTwoOne, rob22/.estore in = \robTwoTwo,
     rob31/.estore in = \robThreeOne, rob32/.estore in = \robThreeTwo,
@@ -91,17 +103,16 @@
     rob61/.estore in = \robSixOne, rob62/.estore in = \robSixTwo,
     rob71/.estore in = \robSevenOne, rob72/.estore in = \robSevenTwo,
     rob81/.estore in = \robEightOne, rob82/.estore in = \robEightTwo,
-    rob91/.estore in = \robNineOne, rob92/.estore in = \robNineTwo,
-    % ROB markers
-    robmark1/.estore in = \robMarkOne,
-    robmark2/.estore in = \robMarkTwo,
-    robmark3/.estore in = \robMarkThree,
-    robmark4/.estore in = \robMarkFour,
-    robmark5/.estore in = \robMarkFive,
-    robmark6/.estore in = \robMarkSix,
-    robmark7/.estore in = \robMarkSeven,
-    robmark8/.estore in = \robMarkEight,
-    robmark9/.estore in = \robMarkNine,
+    % ROB left markers
+    robleft0/.estore in = \robLeftZero,
+    robleft1/.estore in = \robLeftOne,
+    robleft2/.estore in = \robLeftTwo,
+    robleft3/.estore in = \robLeftThree,
+    robleft4/.estore in = \robLeftFour,
+    robleft5/.estore in = \robLeftFive,
+    robleft6/.estore in = \robLeftSix,
+    robleft7/.estore in = \robLeftSeven,
+    robleft8/.estore in = \robLeftEight,
     % IDQ cell contents
     idq1/.estore in = \idqOne,
     idq2/.estore in = \idqTwo,
@@ -134,6 +145,10 @@
     % Retire markers
     retmark1/.estore in = \retMarkOne,
     retmark2/.estore in = \retMarkTwo,
+    % Code highlighting
+    highlight1/.estore in = \highlightOne,
+    highlight2/.estore in = \highlightTwo,
+    showcode/.estore in = \showCode,
     % Store row/col counts
     rob rows/.estore in = \robRows,
     idq rows/.estore in = \idqRows,
@@ -151,7 +166,8 @@
         cell/.style={draw, minimum width=0.8cm, minimum height=0.35cm},
         nocell/.style={minimum width=0.8cm, minimum height=0.35cm},
         roundbox/.style={draw, ellipse, minimum width=3cm, minimum height=1.5cm},
-        dashedbox/.style={draw, dashed, rectangle, minimum width=3cm, minimum height=1cm}
+        dashedbox/.style={draw, dashed, rectangle, minimum width=3cm, minimum height=1cm},
+        codebox/.style={draw, rectangle, fill=correctgreen!20, minimum width=3.5cm}
     ]
     %
     % RAT (Register Alias Table)
@@ -165,7 +181,6 @@
             inner sep=0pt,
             label={left:\textbf{RAT}},
             ampersand replacement=\&] (rat) {
-        %\scriptsize \textbf{ARF} \& \scriptsize \textbf{PRF} \\
         \scriptsize R1 \& \scriptsize \prfOne \\
         \scriptsize R2 \& \scriptsize \prfTwo \\
         \scriptsize R3 \& \scriptsize \prfThree \\
@@ -178,7 +193,7 @@
         \scriptsize R10 \& \scriptsize \prfTen \\
     };
     %
-    % ROB (Reorder Buffer) - 2 columns, 9 rows
+    % ROB (Reorder Buffer) - 3 columns (left marker, instruction, status)
     \matrix[matrix of nodes,
             column sep=-\pgflinewidth,
             row sep=-\pgflinewidth,
@@ -186,45 +201,25 @@
             label={left:\textbf{ROB}},
             below=0.2cm of rat,
             anchor=north,
-            nodes in empty cells,                 % ensure empty cells still have nodes
-            nodes={cell, align=left},            % your base cell style
-            % Per-column sizing:
-            column 1/.append style={nodes={text width=3cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
-            column 2/.append style={nodes={text width=1cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},  % fixed narrower second
+            nodes in empty cells,
+            nodes={cell, align=left},
+            column 1/.append style={nodes={text width=0.5cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
+            column 2/.append style={nodes={text width=3cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
+            column 3/.append style={nodes={text width=0.8cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
             ampersand replacement=\&
         ] (rob) {
-    |[cell]| \scriptsize \robOneOne  \& |[cell]| \scriptsize \robOneTwo \\
-    |[cell]| \scriptsize \robTwoOne  \& |[cell]| \scriptsize \robTwoTwo \\
-    |[cell]| \scriptsize \robThreeOne\& |[cell]| \scriptsize \robThreeTwo \\
-    |[cell]| \scriptsize \robFourOne \& |[cell]| \scriptsize \robFourTwo \\
-    |[cell]| \scriptsize \robFiveOne \& |[cell]| \scriptsize \robFiveTwo \\
-    |[cell]| \scriptsize \robSixOne  \& |[cell]| \scriptsize \robSixTwo \\
-    |[cell]| \scriptsize \robSevenOne\& |[cell]| \scriptsize \robSevenTwo \\
-    |[cell]| \scriptsize \robEightOne\& |[cell]| \scriptsize \robEightTwo \\
-    |[cell]| \scriptsize \robNineOne \& |[cell]| \scriptsize \robNineTwo \\
+    |[cell]| \scriptsize \robLeftZero \& |[cell]| \scriptsize \robZeroOne  \& |[cell]| \scriptsize \robZeroTwo \\
+    |[cell]| \scriptsize \robLeftOne  \& |[cell]| \scriptsize \robOneOne   \& |[cell]| \scriptsize \robOneTwo \\
+    |[cell]| \scriptsize \robLeftTwo  \& |[cell]| \scriptsize \robTwoOne   \& |[cell]| \scriptsize \robTwoTwo \\
+    |[cell]| \scriptsize \robLeftThree\& |[cell]| \scriptsize \robThreeOne \& |[cell]| \scriptsize \robThreeTwo \\
+    |[cell]| \scriptsize \robLeftFour \& |[cell]| \scriptsize \robFourOne  \& |[cell]| \scriptsize \robFourTwo \\
+    |[cell]| \scriptsize \robLeftFive \& |[cell]| \scriptsize \robFiveOne  \& |[cell]| \scriptsize \robFiveTwo \\
+    |[cell]| \scriptsize \robLeftSix  \& |[cell]| \scriptsize \robSixOne   \& |[cell]| \scriptsize \robSixTwo \\
+    |[cell]| \scriptsize \robLeftSeven\& |[cell]| \scriptsize \robSevenOne \& |[cell]| \scriptsize \robSevenTwo \\
+    |[cell]| \scriptsize \robLeftEight\& |[cell]| \scriptsize \robEightOne \& |[cell]| \scriptsize \robEightTwo \\
     };
     %
-    % Add markers for ROB rows (on the right)
-    \coordinate (robmarker1) at ($(rob-1-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker1) {\robMarkOne};
-    \coordinate (robmarker2) at ($(rob-2-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker2) {\robMarkTwo};
-    \coordinate (robmarker3) at ($(rob-3-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker3) {\robMarkThree};
-    \coordinate (robmarker4) at ($(rob-4-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker4) {\robMarkFour};
-    \coordinate (robmarker5) at ($(rob-5-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker5) {\robMarkFive};
-    \coordinate (robmarker6) at ($(rob-6-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker6) {\robMarkSix};
-    \coordinate (robmarker7) at ($(rob-7-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker7) {\robMarkSeven};
-    \coordinate (robmarker8) at ($(rob-8-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker8) {\robMarkEight};
-    \coordinate (robmarker9) at ($(rob-9-2.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (robmarker9) {\robMarkNine};
-    %
-    % IDQ (Instruction Decode Queue) - 6 rows
+    % IDQ (Instruction Decode Queue) - 2 rows
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             inner sep=0pt,
@@ -237,7 +232,7 @@
         |[cell]| \scriptsize \idqTwo \\
     };
     %
-    % RS (Reservation Station) - 4 rows
+    % RS (Reservation Station) - 6 rows
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             inner sep=0pt,
@@ -262,6 +257,10 @@
     \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker3) {\rsMarkThree};
     \coordinate (rsmarker4) at ($(rs-4-1.east)+(0.2,0)$);
     \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker4) {\rsMarkFour};
+    \coordinate (rsmarker5) at ($(rs-5-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker5) {\rsMarkFive};
+    \coordinate (rsmarker6) at ($(rs-6-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker6) {\rsMarkSix};
     %
     % MOB (Memory Order Buffer) - 2 rows
     \matrix[matrix of nodes,
@@ -280,6 +279,130 @@
     \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker1) {\mobMarkOne};
     \coordinate (mobmarker2) at ($(mob-2-1.east)+(0.2,0)$);
     \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker2) {\mobMarkTwo};
+    %
+    % Code display (if enabled)
+    \ifnum\showCode=1
+        \node[codebox, right=1cm of mob, yshift=0.2cm, minimum height=3.5cm] (code) {
+            \begin{tabular}{l}
+            % Highlight line 1 if requested
+            \ifnum\highlightOne=1
+                \colorbox{highlightyellow}{\asmcode{ADDI R10,R0,100}}\\
+            \else
+                \asmcode{ADDI R10,R0,100}\\
+            \fi
+            % Highlight line 2 if requested
+            \ifnum\highlightOne=2
+                \colorbox{highlightyellow}{\asmcode{SUB R1,R1,R1}}\\
+            \else
+                \ifnum\highlightTwo=2
+                    \colorbox{highlightorange}{\asmcode{SUB R1,R1,R1}}\\
+                \else
+                    \asmcode{SUB R1,R1,R1}\\
+                \fi
+            \fi
+            % Continue for all instructions...
+            \ifnum\highlightOne=3
+                \colorbox{highlightyellow}{\asmcode{L1: ADDI R4,R0,20}}\\
+            \else
+                \ifnum\highlightTwo=3
+                    \colorbox{highlightorange}{\asmcode{L1: ADDI R4,R0,20}}\\
+                \else
+                    \asmcode{L1: ADDI R4,R0,20}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=4
+                \colorbox{highlightyellow}{\asmcode{LW R5,100(R4)}}\\
+            \else
+                \ifnum\highlightTwo=4
+                    \colorbox{highlightorange}{\asmcode{LW R5,100(R4)}}\\
+                \else
+                    \asmcode{LW R5,100(R4)}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=5
+                \colorbox{highlightyellow}{\asmcode{ADDI R3,R2,2}}\\
+            \else
+                \ifnum\highlightTwo=5
+                    \colorbox{highlightorange}{\asmcode{ADDI R3,R2,2}}\\
+                \else
+                    \asmcode{ADDI R3,R2,2}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=6
+                \colorbox{highlightyellow}{\asmcode{ADDI R5,R3,2}}\\
+            \else
+                \ifnum\highlightTwo=6
+                    \colorbox{highlightorange}{\asmcode{ADDI R5,R3,2}}\\
+                \else
+                    \asmcode{ADDI R5,R3,2}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=7
+                \colorbox{highlightyellow}{\asmcode{ADDI R6,R0,6}}\\
+            \else
+                \ifnum\highlightTwo=7
+                    \colorbox{highlightorange}{\asmcode{ADDI R6,R0,6}}\\
+                \else
+                    \asmcode{ADDI R6,R0,6}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=8
+                \colorbox{highlightyellow}{\asmcode{ADD R7,R5,R0}}\\
+            \else
+                \ifnum\highlightTwo=8
+                    \colorbox{highlightorange}{\asmcode{ADD R7,R5,R0}}\\
+                \else
+                    \asmcode{ADD R7,R5,R0}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=9
+                \colorbox{highlightyellow}{\asmcode{ADDI R8,R0,8}}\\
+            \else
+                \ifnum\highlightTwo=9
+                    \colorbox{highlightorange}{\asmcode{ADDI R8,R0,8}}\\
+                \else
+                    \asmcode{ADDI R8,R0,8}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=10
+                \colorbox{highlightyellow}{\asmcode{ADDI R9,R0,9}}\\
+            \else
+                \ifnum\highlightTwo=10
+                    \colorbox{highlightorange}{\asmcode{ADDI R9,R0,9}}\\
+                \else
+                    \asmcode{ADDI R9,R0,9}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=11
+                \colorbox{highlightyellow}{\asmcode{ADDI R1,R1,1}}\\
+            \else
+                \ifnum\highlightTwo=11
+                    \colorbox{highlightorange}{\asmcode{ADDI R1,R1,1}}\\
+                \else
+                    \asmcode{ADDI R1,R1,1}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=12
+                \colorbox{highlightyellow}{\asmcode{BNE R1,R10,L1}}\\
+            \else
+                \ifnum\highlightTwo=12
+                    \colorbox{highlightorange}{\asmcode{BNE R1,R10,L1}}\\
+                \else
+                    \asmcode{BNE R1,R10,L1}\\
+                \fi
+            \fi
+            \ifnum\highlightOne=13
+                \colorbox{highlightyellow}{\asmcode{L2: ADDI R4,R0,23}}\\
+            \else
+                \ifnum\highlightTwo=13
+                    \colorbox{highlightorange}{\asmcode{L2: ADDI R4,R0,23}}\\
+                \else
+                    \asmcode{L2: ADDI R4,R0,23}\\
+                \fi
+            \fi
+            \end{tabular}
+        };
+    \fi
     %
     % Execute block with internal rows (no borders)
     \node[roundbox, below=0.2cm of rs.south, anchor=north] (execute) {};
@@ -317,7 +440,9 @@
     \end{tikzpicture}
 }
 
-% Removed duplicate document environment and settings
+\title{Out-of-Order Execution\\Example Problem}
+\author{Computer Architecture}
+\date{\today}
 
 \begin{document}
 
@@ -478,6 +603,753 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{itemize}
 \end{frame}
 
+% Initial state
+\begin{frame}{Out-of-Order Execution: Initial State}
+\OOODiagramKV[
+    showcode=1,
+]
+\end{frame}
+
+% Cycle 1
+\begin{frame}{Out-of-Order Execution: Cycle 1}
+\OOODiagramKV[
+    idq1=\newentryb{SUB R1,R1,R1},
+    idq2=\newentrya{ADDI R10,R0,100},
+    showcode=1,
+    highlight1=1,
+    highlight2=2,
+]
+\end{frame}
+
+% Cycle 2 - Multiple slides to show progression
+\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Decode}
+\OOODiagramKV[
+    R1=\newentryb{RB1},
+    R10=\newentrya{RB0},
+    idq1=\newentryb{\sout{SUB R1,R1,R1}},
+    idq2=\newentrya{\sout{ADDI R10,R0,100}},
+    rs1=\newentrya{RB0$\leftarrow$R0+100},
+    rs2=\newentryb{RB1$\leftarrow$R1-R1},
+    robleft0=\newentrya{RB0},
+    rob01=\newentrya{ADDI R10,R0,100},
+    rob02=\newentrya{INV},
+    robleft1=\newentryb{RB1},
+    rob11=\newentryb{SUB R1,R1,R1},
+    rob12=\newentryb{INV},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Fetch}
+\OOODiagramKV[
+    R1=\oldentry{RB1},
+    R10=\oldentry{RB0},
+    idq1=\newentryb{LW R5,100(R4)},
+    idq2=\newentrya{ADDI R4,R0,20},
+    rs1=\oldentry{RB0$\leftarrow$R0+100},
+    rs2=\oldentry{RB1$\leftarrow$R1-R1},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{INV},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{INV},
+    showcode=1,
+    highlight1=3,
+    highlight2=4,
+]
+\end{frame}
+
+% Cycle 3 - Multiple slides
+\begin{frame}{Out-of-Order Execution: Cycle 3, Execution Starts}
+\OOODiagramKV[
+    R1=\oldentry{RB1},
+    R10=\oldentry{RB0},
+    idq1=\oldentry{LW R5,100(R4)},
+    idq2=\oldentry{ADDI R4,R0,20},
+    rs1=\srcentrya{\sout{RB0$\leftarrow$R0+100}},
+    rs2=\srcentryb{\sout{RB1$\leftarrow$R1-R1}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{INV},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{INV},
+    exec1=\newentrya{RB0$\leftarrow$R0+100},
+    exec2=\newentryb{RB1$\leftarrow$R1-R1},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Decode}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\newentrya{RB2}, R5=\newentryb{RB3},
+    idq1=\srcentryb{\sout{LW R5,100(R4)}},
+    idq2=\srcentrya{\sout{ADDI R4,R0,20}},
+    rs1=\oldentry{\sout{RB0$\leftarrow$R0+100}},
+    rs2=\oldentry{\sout{RB1$\leftarrow$R1-R1}},
+    rs3=\newentrya{RB2$\leftarrow$R0+20},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{INV},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{INV},
+    robleft2=\newentrya{RB2},
+    rob21=\newentrya{ADDI R4,R0,20},
+    rob22=\newentrya{INV},
+    robleft3=\newentryb{RB3},
+    rob31=\newentryb{LW R5,100(R4)},
+    rob32=\newentryb{INV},
+    mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB0$\leftarrow$R0+100},
+    exec2=\oldentry{RB1$\leftarrow$R1-R1},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Fetch}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq1=\newentryb{ADDI R5, R3, 2},
+    idq2=\newentrya{ADDI R3, R2, 2},
+    rs1=\oldentry{\sout{RB0$\leftarrow$R0+100}},
+    rs2=\oldentry{\sout{RB1$\leftarrow$R1-R1}},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{INV},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{INV},
+    robleft2=\oldentry{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB0$\leftarrow$R0+100},
+    exec2=\oldentry{RB1$\leftarrow$R1-R1},
+    showcode=1,
+    highlight1=5,
+    highlight2=6,
+]
+\end{frame}
+
+% Cycle 4 - Multiple slides
+\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Completed}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq1=\oldentry{ADDI R5, R3, 2},
+    idq2=\oldentry{ADDI R3, R2, 2},
+    rs3=\oldentry{RB2$\leftarrow$R0+20},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\newentrya{OK},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\newentryb{OK},
+    robleft2=\oldentry{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\newentrya{\sout{RB0$\leftarrow$R0+100}},
+    exec2=\newentryb{\sout{RB1$\leftarrow$R1-R1}},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Starts}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq1=\oldentry{ADDI R5, R3, 2},
+    idq2=\oldentry{ADDI R3, R2, 2},
+    rs3=\srcentrya{\sout{RB2$\leftarrow$R0+20}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{OK},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{OK},
+    robleft2=\oldentry{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\newentrya{RB2$\leftarrow$R0+20},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Stall on Dependencies}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R4=\oldentry{RB2}, R5=\oldentry{RB3},
+    idq1=\oldentry{ADDI R5, R3, 2},
+    idq2=\oldentry{ADDI R3, R2, 2},
+    rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{OK},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{OK},
+    robleft2=\srcentryb{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\srcentryb{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\srcentryb{RB2$\leftarrow$R0+20},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Decode}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R3=\newentrya{RB4},
+    R4=\oldentry{RB2}, R5=\newentryb{RB5},
+    idq1=\newentryb{\sout{ADDI R5, R3, 2}},
+    idq2=\newentrya{\sout{ADDI R3, R2, 2}},
+    rs1=\newentrya{RB4$\leftarrow$R2+2},
+    rs2=\newentryb{RB5$\leftarrow$RB4+2},
+    rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{OK},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{OK},
+    robleft2=\oldentry{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\newentrya{RB4},
+    rob41=\newentrya{ADDI R3,R2,2},
+    rob42=\newentrya{INV},
+    robleft5=\newentryb{RB5},
+    rob51=\newentryb{ADDI R5,R3,2},
+    rob52=\newentryb{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB2$\leftarrow$R0+20},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 4, Fetch}
+\OOODiagramKV[
+    R1=\oldentry{RB1}, R10=\oldentry{RB0},
+    R3=\oldentry{RB4},
+    R4=\oldentry{RB2}, R5=\oldentry{RB5},
+    idq1=\newentryb{ADD R7, R5, R0},
+    idq2=\newentrya{ADDI R6, R0, 6},
+    rs1=\oldentry{RB4$\leftarrow$R2+2},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
+    rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R10,R0,100},
+    rob02=\oldentry{OK},
+    robleft1=\oldentry{RB1},
+    rob11=\oldentry{SUB R1,R1,R1},
+    rob12=\oldentry{OK},
+    robleft2=\oldentry{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\oldentry{INV},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB2$\leftarrow$R0+20},
+    showcode=1,
+    highlight1=7,
+    highlight2=8,
+]
+\end{frame}
+
+% Continue with remaining cycles following the same pattern...
+% (I'll continue with a few more key cycles)
+
+\begin{frame}{Out-of-Order Execution: Cycle 5, Retire}
+\OOODiagramKV[
+    R1=\newentryb{\sout{RB1}}, R10=\newentrya{\sout{RB0}},
+    R3=\oldentry{RB4},
+    R4=\oldentry{RB2}, R5=\oldentry{RB5},
+    idq1=\oldentry{ADD R7, R5, R0},
+    idq2=\oldentry{ADDI R6, R0, 6},
+    rs1=\oldentry{RB4$\leftarrow$R2+2},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
+    robleft0=\srcentrya{\sout{RB0}},
+    rob01=\srcentrya{\sout{ADDI R10,R0,100}},
+    rob02=\srcentrya{OK},
+    robleft1=\srcentryb{\sout{RB1}},
+    rob11=\srcentryb{\sout{SUB R1,R1,R1}},
+    rob12=\srcentryb{OK},
+    robleft2=\oldentry{RB2},
+    rob21=\oldentry{ADDI R4,R0,20},
+    rob22=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\oldentry{INV},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    exec1=\oldentry{RB2$\leftarrow$R0+20},
+    ret1=\newentrya{R10$\leftarrow$RB0},
+    ret2=\newentryb{R1$\leftarrow$RB1},
+    showcode=1,
+]
+\end{frame}
+
+% Cycle 6 - Multiple slides showing progression
+\begin{frame}{Out-of-Order Execution: Cycle 6, Retire}
+\OOODiagramKV[
+    R3=\oldentry{RB4},
+    R4=\srcentrya{\sout{RB2}}, R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    idq1=\oldentry{ADDI R9, R0, 9},
+    idq2=\oldentry{ADDI R8, R0, 8},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
+    rs3=\oldentry{RB6$\leftarrow$R0+6},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft2=\srcentrya{\sout{RB2}},
+    rob21=\srcentrya{\sout{ADDI R4,R0,20}},
+    rob22=\srcentrya{OK},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\oldentry{INV},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{INV},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    ret1=\newentrya{R4$\leftarrow$RB2},
+    exec1=\oldentry{RB3$\leftarrow$RB2+100},
+    exec2=\oldentry{RB4$\leftarrow$R2+2},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 6, Execution Completed, Load Issued}
+\OOODiagramKV[
+    R3=\oldentry{RB4},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    idq1=\oldentry{ADDI R9, R0, 9},
+    idq2=\oldentry{ADDI R8, R0, 8},
+    rs2=\oldentry{RB5$\leftarrow$RB4+2},
+    rs3=\oldentry{RB6$\leftarrow$R0+6},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\newentryb{OK},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{INV},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    mob1=\newentrya{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\newentrya{(1)},
+    ret1=\oldentry{R4$\leftarrow$RB2},
+    exec1=\srcentrya{RB3$\leftarrow$RB2+100},
+    exec2=\srcentryb{RB4$\leftarrow$R2+2},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 6, Execution Starts}
+\OOODiagramKV[
+    R3=\oldentry{RB4},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    idq1=\oldentry{ADDI R9, R0, 9},
+    idq2=\oldentry{ADDI R8, R0, 8},
+    rs2=\srcentrya{\sout{RB5$\leftarrow$RB4+2}},
+    rs3=\srcentryb{\sout{RB6$\leftarrow$R0+6}},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\oldentry{OK},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{INV},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\oldentry{(1)},
+    exec1=\newentrya{RB5$\leftarrow$RB4+2},
+    exec2=\newentryb{RB6$\leftarrow$R0+6},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 6, Instruction Decode}
+\OOODiagramKV[
+    R3=\oldentry{RB4},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\newentryb{RB8},
+    R9=\newentrya{RB0},
+    idq1=\srcentrya{\sout{ADDI R9, R0, 9}},
+    idq2=\srcentryb{\sout{ADDI R8, R0, 8}},
+    rs1=\newentrya{RB8$\leftarrow$R0+8},
+    rs2=\oldentry{\sout{RB5$\leftarrow$RB4+2}},
+    rs3=\oldentry{\sout{RB6$\leftarrow$R0+6}},
+    rs4=\newentryb{RB0$\leftarrow$R0+9},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft0=\newentrya{RB0},
+    rob01=\newentrya{ADDI R9,R0,9},
+    rob02=\newentrya{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\oldentry{OK},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{INV},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\newentryb{RB8},
+    rob81=\newentryb{ADDI R8,R0,8},
+    rob82=\newentryb{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\oldentry{(1)},
+    exec1=\oldentry{RB5$\leftarrow$RB4+2},
+    exec2=\oldentry{RB6$\leftarrow$R0+6},
+    showcode=1,
+    highlight1=9,
+    highlight2=10,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 6, Instruction Fetch}
+\OOODiagramKV[
+    R3=\oldentry{RB4},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\oldentry{RB8},
+    R9=\oldentry{RB0},
+    idq1=\newentryb{BNE R1, R10, L1},
+    idq2=\newentrya{ADDI R1,R1,1},
+    rs1=\oldentry{RB8$\leftarrow$R0+8},
+    rs2=\oldentry{\sout{RB5$\leftarrow$RB4+2}},
+    rs3=\oldentry{\sout{RB6$\leftarrow$R0+6}},
+    rs4=\oldentry{RB0$\leftarrow$R0+9},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R9,R0,9},
+    rob02=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{RB4},
+    rob41=\oldentry{ADDI R3,R2,2},
+    rob42=\oldentry{OK},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{INV},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\oldentry{RB8},
+    rob81=\oldentry{ADDI R8,R0,8},
+    rob82=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\oldentry{(1)},
+    exec1=\oldentry{RB5$\leftarrow$RB4+2},
+    exec2=\oldentry{RB6$\leftarrow$R0+6},
+    showcode=1,
+    highlight1=11,
+    highlight2=12,
+]
+\end{frame}
+
+% Cycle 7 - Second iteration begins
+\begin{frame}{Out-of-Order Execution: Cycle 7, Retire}
+\OOODiagramKV[
+    R3=\newentrya{\sout{RB4}},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\oldentry{RB8},
+    R9=\oldentry{RB0},
+    idq1=\oldentry{BNE R1, R10, L1},
+    idq2=\oldentry{ADDI R1,R1,1},
+    rs1=\oldentry{RB8$\leftarrow$R0+8},
+    rs4=\oldentry{RB0$\leftarrow$R0+9},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R9,R0,9},
+    rob02=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\newentrya{\sout{RB4}},
+    rob41=\newentrya{\sout{ADDI R3,R2,2}},
+    rob42=\srcentrya{OK},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{INV},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{INV},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\oldentry{RB8},
+    rob81=\oldentry{ADDI R8,R0,8},
+    rob82=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\oldentry{(1)},
+    ret1=\newentrya{R3$\leftarrow$RB4},
+    exec1=\oldentry{RB5$\leftarrow$RB4+2},
+    exec2=\oldentry{RB6$\leftarrow$R0+6},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 7, Execution Completed}
+\OOODiagramKV[
+    R3=\oldentry{\sout{RB4}},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\oldentry{RB8},
+    R9=\oldentry{RB0},
+    idq1=\oldentry{BNE R1, R10, L1},
+    idq2=\oldentry{ADDI R1,R1,1},
+    rs1=\oldentry{RB8$\leftarrow$R0+8},
+    rs4=\oldentry{RB0$\leftarrow$R0+9},
+    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R9,R0,9},
+    rob02=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\newentrya{OK},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\newentryb{OK},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\oldentry{RB8},
+    rob81=\oldentry{ADDI R8,R0,8},
+    rob82=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\newentrya{(2)},
+    ret1=\oldentry{R3$\leftarrow$RB4},
+    exec1=\srcentrya{RB5$\leftarrow$RB4+2},
+    exec2=\srcentryb{RB6$\leftarrow$R0+6},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 7, Execution Starts}
+\OOODiagramKV[
+    R3=\oldentry{\sout{RB4}},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\oldentry{RB8},
+    R9=\oldentry{RB0},
+    idq1=\oldentry{BNE R1, R10, L1},
+    idq2=\oldentry{ADDI R1,R1,1},
+    rs1=\srcentryb{\sout{RB8$\leftarrow$R0+8}},
+    rs4=\oldentry{RB0$\leftarrow$R0+9},
+    rs5=\srcentrya{\sout{RB7$\leftarrow$RB5+R0}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R9,R0,9},
+    rob02=\oldentry{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{OK},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{OK},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\oldentry{RB8},
+    rob81=\oldentry{ADDI R8,R0,8},
+    rob82=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\oldentry{(2)},
+    exec1=\newentrya{RB7$\leftarrow$RB5+R0},
+    exec2=\newentryb{RB8$\leftarrow$R0+8},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 7, Instruction Decode}
+\OOODiagramKV[
+    R1=\newentrya{RB1},
+    R3=\oldentry{\sout{RB4}},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\oldentry{RB8},
+    R9=\oldentry{RB0},
+    idq1=\srcentryb{\sout{BNE R1, R10, L1}},
+    idq2=\srcentrya{\sout{ADDI R1,R1,1}},
+    rs1=\oldentry{\sout{RB8$\leftarrow$R0+8}},
+    rs2=\newentrya{RB1$\leftarrow$R1+1},
+    rs3=\newentryb{RB2$\leftarrow$RB1-R10},
+    rs4=\oldentry{RB0$\leftarrow$R0+9},
+    rs5=\oldentry{\sout{RB7$\leftarrow$RB5+R0}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R9,R0,9},
+    rob02=\oldentry{INV},
+    robleft1=\newentrya{RB1},
+    rob11=\newentrya{ADDI R1,R1,1},
+    rob12=\newentrya{INV},
+    robleft2=\newentryb{RB2},
+    rob21=\newentryb{BNE R1,R10,L1},
+    rob22=\newentryb{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\oldentry{OK},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\oldentry{OK},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\oldentry{RB8},
+    rob81=\oldentry{ADDI R8,R0,8},
+    rob82=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\oldentry{(2)},
+    exec1=\oldentry{RB7$\leftarrow$RB5+R0},
+    exec2=\oldentry{RB8$\leftarrow$R0+8},
+    showcode=1,
+]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 7, Second Iteration Fetch}
+\OOODiagramKV[
+    R1=\newentrya{RB1},
+    R3=\oldentry{\sout{RB4}},
+    R5=\oldentry{RB5},
+    R6=\oldentry{RB6},
+    R7=\oldentry{RB7},
+    R8=\oldentry{RB8},
+    R9=\oldentry{RB0},
+    idq1=\newentryb{LW R5,100(R4)},
+    idq2=\newentrya{ADDI R4,R0,20},
+    rs1=\srcentryb{\sout{RB8$\leftarrow$R0+8}},
+    rs2=\newentrya{RB1$\leftarrow$R1+1},
+    rs3=\newentryb{RB2$\leftarrow$RB1-R10},
+    rs4=\oldentry{RB0$\leftarrow$R0+9},
+    rs5=\srcentrya{\sout{RB7$\leftarrow$RB5+R0}},
+    robleft0=\oldentry{RB0},
+    rob01=\oldentry{ADDI R9,R0,9},
+    rob02=\oldentry{INV},
+    robleft1=\newentrya{RB1},
+    rob11=\newentrya{ADDI R1,R1,1},
+    rob12=\newentrya{INV},
+    robleft2=\newentryb{RB2},
+    rob21=\newentryb{BNE R1,R10,L1},
+    rob22=\newentryb{INV},
+    robleft3=\oldentry{RB3},
+    rob31=\oldentry{LW R5,100(R4)},
+    rob32=\oldentry{INV},
+    robleft4=\oldentry{\sout{RB4}},
+    rob41=\oldentry{\sout{ADDI R3,R2,2}},
+    rob42=\oldentry{OK},
+    robleft5=\oldentry{RB5},
+    rob51=\oldentry{ADDI R5,R3,2},
+    rob52=\newentrya{OK},
+    robleft6=\oldentry{RB6},
+    rob61=\oldentry{ADDI R6,R0,6},
+    rob62=\newentryb{OK},
+    robleft7=\oldentry{RB7},
+    rob71=\oldentry{ADDI R7,R5,R0},
+    rob72=\oldentry{INV},
+    robleft8=\oldentry{RB8},
+    rob81=\oldentry{ADDI R8,R0,8},
+    rob82=\oldentry{INV},
+    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
+    mobmark1=\newentrya{(2)},
+    ret1=\newentrya{R3$\leftarrow$RB4},
+    exec1=\newentrya{RB7$\leftarrow$RB5+R0},
+    exec2=\newentryb{RB8$\leftarrow$R0+8},
+    showcode=1,
+    highlight1=3,
+    highlight2=4,
+]
+\end{frame}
+
+\section{Performance Analysis}
+
 \begin{frame}{Key Execution Cycles}
 \begin{table}
 \centering
@@ -502,8 +1374,6 @@ Show the system state when completing the fetch of instruction L1 for the second
 The load instruction creates a 5-cycle latency that affects dependent instructions.
 \end{alertblock}
 \end{frame}
-
-\section{Performance Analysis}
 
 \begin{frame}{CPI Calculation}
 \begin{block}{Performance Metrics}
@@ -652,959 +1522,6 @@ Adding a third ALU unit - does it improve performance?
         \item Memory subsystem often more critical than ALUs
     \end{itemize}
 \end{enumerate}
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution - Cycle 6a}
-\scriptsize
-\begin{tikzpicture}[
-    box/.style={draw, rectangle, minimum width=1.5cm, minimum height=0.4cm},
-    regbox/.style={draw, rectangle, minimum width=1.2cm, minimum height=0.35cm},
-    highlightbox/.style={draw, rectangle, minimum width=2.5cm, minimum height=0.35cm, fill=lightgreen},
-    roundbox/.style={draw, ellipse, minimum width=3cm, minimum height=1cm},
-    dashedbox/.style={draw, dashed, rectangle, minimum width=3cm, minimum height=0.8cm}
-]
-
-% RAT (Register Alias Table)
-\node[draw, rectangle, minimum width=1.8cm, minimum height=4cm, label=above:{\textbf{RAT}}] (rat) at (0,0) {};
-\foreach \i/\val in {1/, 2/, 3/rb4, 4/rb2, 5/rb5, 6/rb6, 7/rb7, 8/, 9/, 10/} {
-    \pgfmathsetmacro{\ypos}{1.5 - 0.35*\i}
-    \node[regbox] at (0, \ypos) {R\i \hspace{0.3cm} \val};
-}
-
-% ROB (Reorder Buffer)
-\node[draw, rectangle, minimum width=3cm, minimum height=3.5cm, label=above:{\textbf{ROB}}, below=of rat] (rob) {};
-\foreach \i/\inst/\stat in {0//,1//,2/{Add: R4,R0,20}/ok,3/{Lw R5, [100+R4]}/Inv,4/{Add: R3,R2,2}/Inv,5/{Add: R5,R3,2}/Inv,6/{Add: R6,R0,6}/Inv,7/{Add: R7,R5,R0}/Inv,8//} {
-    \pgfmathsetmacro{\ypos}{1.5 - 0.4*\i}
-    \node[box, minimum width=2.8cm] (rob\i) at ([xshift=1.5cm]rat.east |- 0,\ypos) {\i: \inst};
-    \ifnum\i=2
-        \node[text=correctgreen] at ([xshift=1.1cm]rob\i.east) {\textbf{ok}};
-    \else
-        \if\i>2
-            \if\i<8
-                \node[text=incorrectred] at ([xshift=1.1cm]rob\i.east) {\textbf{Inv}};
-            \fi
-        \fi
-    \fi
-}
-
-% IDQ (Instruction Decode Queue)
-\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{IDQ}}, right=of rat, yshift=1cm] (idq) {};
-\node at (idq.center) {Addi R9,R0,9};
-\node at ([yshift=-0.5cm]idq.center) {Addi R8,R0,8};
-
-% RS (Reservation Station)
-\node[draw, rectangle, minimum width=2.5cm, minimum height=2.5cm, label=above:{\textbf{RS}}, below=of idq] (rs) {};
-\node[box, anchor=west] at ([xshift=-1cm, yshift=0.8cm]rs.center) {RB6 $\leftarrow$ R0+6};
-\node[box, anchor=west] at ([xshift=-1cm, yshift=0.3cm]rs.center) {RB7 $\leftarrow$ rb5+R0};
-\node[box, anchor=west] at ([xshift=-1cm, yshift=-0.5cm]rs.center) {RB5 $\leftarrow$ rb4+2};
-
-% MOB (Memory Order Buffer)
-\node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm, label=above:{\textbf{MOB}}, right=1cm of idq] (mob) {};
-\node[box] at (mob.center) {RB3$\leftarrow$LD(RB2+100)};
-\node[text=red] at ([xshift=1.2cm]mob.center) {\textbf{W}};
-
-% Assembly Code Box - using tabular instead of direct text to avoid line break issues
-\node[fill=lightgreen, draw, rectangle, minimum width=3.5cm, minimum height=3.5cm, right=1cm of mob, yshift=0.2cm] (code) {
-    \begin{tabular}{l}
-    \asmcode{L1:}\\
-    \asmcode{ADDI R10,R0,100}\\
-    \asmcode{SUB R1,R1,R1}\\
-    \asmcode{ADDI R4,R0,20}\\
-    \asmcode{LW R5,100(R4)}\\
-    \asmcode{ADDI R3,R2,2}\\
-    \asmcode{ADDI R5,R3,2}\\
-    \asmcode{ADDI R6,R0,6}\\
-    \asmcode{ADDI R7,R5,R0}\\
-    \asmcode{ADDI R8,R0,8}\\
-    \asmcode{ADDI R9,R0,9}\\
-    \asmcode{ADDI R1,R1,1}\\
-    \asmcode{BNE R1,R10,L1}\\
-    \asmcode{L2: ADDI R4,R0,23}
-    \end{tabular}
-};
-
-% Execute and Retire blocks
-\node[roundbox, below=3.5cm of rs] (execute) {\textbf{Execute}};
-\node[dashedbox, below=0.5cm of execute] (retire) {\textbf{Retire}};
-
-% Bottom boxes showing register mappings
-\node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, left=1cm of execute, yshift=1cm] (rb3box) {
-    \begin{tabular}{l}
-    RB3 $\leftarrow$ rb2+100\\
-    RB4 $\leftarrow$ R2+2
-    \end{tabular}
-};
-
-\node[draw, dashed, rectangle, minimum width=2.5cm, minimum height=0.6cm, below=0.3cm of rb3box] (r4box) {
-    R4 $\leftarrow$ RB2
-};
-
-% Arrows
-\draw[->, thick, yellow!80!black] (rob2.east) to[out=0, in=180] (execute.west);
-\draw[->, dotted, thick] (rob3.east) to[out=0, in=180] (rb3box.east);
-\draw[->, yellow!80!black] (r4box.north) -- (rb3box.south);
-
-% Page number
-\node at (8.5, -4) {18};
-
-\end{tikzpicture}
-\end{frame}
-
-% new command for old that has white colorbox
-\newcommand{\oldentry}[1]{~#1}
-\newcommand{\newentrya}[1]{\colorbox{yellow}{#1}}
-\newcommand{\newentryb}[1]{\colorbox{orange}{#1}}
-\newcommand{\srcentrya}[1]{\colorbox{yellow!30}{#1}}
-\newcommand{\srcentryb}[1]{\colorbox{orange!30}{#1}}
-
-\begin{frame}{Out-of-Order Execution}
-\OOODiagramKV[
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 1}
-\OOODiagramKV[
-    % PRF mappings
-    idq1=\newentryb{SUB R1,R1,R1},
-    idq2=\newentrya{ADDI R10,R0,100},
- ]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Decode}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\newentryb{RB1},
-    R10=\newentrya{RB0},
-    idq1=\newentryb{\sout{SUB R1,R1,R1}},
-    idq2=\newentrya{\sout{ADDI R10,R0,100}},
-    rs1=\newentrya{RB0$\leftarrow$R0+100},
-    rs2=\newentryb{RB1$\leftarrow$R1-R1},
-    rob11=\newentrya{ADDI R10,R0,100},
-    rob12=\newentrya{INV},
-    rob21=\newentryb{SUB R1,R1,R1},
-    rob22=\newentryb{INV},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 2, Instruction Fetch}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1},
-    R10=\oldentry{RB0},
-    idq1=\newentryb{LW R5,100(R4)},
-    idq2=\newentrya{ADDI R4,R0,20},
-    rs1=\oldentry{RB0$\leftarrow$R0+100},
-    rs2=\oldentry{RB1$\leftarrow$R1-R1},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{INV},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{INV},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 3, Execution Starts}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1},
-    R10=\oldentry{RB0},
-    idq1=\oldentry{LW R5,100(R4)},
-    idq2=\oldentry{ADDI R4,R0,20},
-    rs1=\srcentrya{\sout{RB0$\leftarrow$R0+100}},
-    rs2=\srcentryb{\sout{RB1$\leftarrow$R1-R1}},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{INV},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{INV},
-    exec1=\newentrya{RB0$\leftarrow$R0+100},
-    exec2=\newentryb{RB1$\leftarrow$R1-R1},
-]]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Decode}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\newentrya{RB2}, R5=\newentryb{RB3},
-    idq1=\srcentryb{\sout{LW R5,100(R4)}},
-    idq2=\srcentrya{\sout{ADDI R4,R0,20}},
-    rs1=\oldentry{\sout{RB0$\leftarrow$R0+100}},
-    rs2=\oldentry{\sout{RB1$\leftarrow$R1-R1}},
-    rs3=\newentrya{RB2$\leftarrow$R0+20},
-    rs4=\newentryb{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{INV},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{INV},
-    rob31=\newentrya{ADDI R4,R0,20},
-    rob32=\newentrya{INV},
-    rob41=\newentryb{LW R5,100(R4)},
-    rob42=\newentryb{INV},
-    mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB0$\leftarrow$R0+100},
-    exec2=\oldentry{RB1$\leftarrow$R1-R1},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 3, Instruction Fetch}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq1=\newentryb{ADDI R5, R3, 2},
-    idq2=\newentrya{ADDI R3, R2, 2},
-    rs1=\oldentry{\sout{RB0$\leftarrow$R0+100}},
-    rs2=\oldentry{\sout{RB1$\leftarrow$R1-R1}},
-    rs3=\oldentry{RB2$\leftarrow$R0+20},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{INV},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{INV},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob42=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB0$\leftarrow$R0+100},
-    exec2=\oldentry{RB1$\leftarrow$R1-R1},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Completed}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq1=\oldentry{ADDI R5, R3, 2},
-    idq2=\oldentry{ADDI R3, R2, 2},
-    rs3=\oldentry{RB2$\leftarrow$R0+20},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\newentrya{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\newentryb{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\newentrya{\sout{RB0$\leftarrow$RB0+100}},
-    exec2=\newentryb{\sout{RB1$\leftarrow$RB1-RB1}},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Execution Starts}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq1=\oldentry{ADDI R5, R3, 2},
-    idq2=\oldentry{ADDI R3, R2, 2},
-    rs3=\srcentrya{\sout{RB2$\leftarrow$R0+20}},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\newentrya{RB2$\leftarrow$RB0+20},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Stall on Dependencies}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R4=\oldentry{RB2}, R5=\oldentry{RB3},
-    idq1=\oldentry{ADDI R5, R3, 2},
-    idq2=\oldentry{ADDI R3, R2, 2},
-    rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
-    rs4=\srcentryb{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\srcentryb{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    mob1=\newentryb{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\srcentryb{RB2$\leftarrow$RB0+20},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Decode}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R3=\newentrya{RB4},
-    R4=\oldentry{RB2}, R5=\newentryb{RB5},
-    idq1=\newentryb{\sout{ADDI R5, R3, 2}},
-    idq2=\newentrya{\sout{ADDI R3, R2, 2}},
-    rs1=\newentrya{RB4$\leftarrow$R2+R2},
-    rs2=\newentryb{RB5$\leftarrow$RB4+2},
-    rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\newentrya{ADDI R3,R2,2},
-    rob52=\newentrya{INV},
-    rob61=\newentryb{ADDI R5,R3,2},
-    rob62=\newentryb{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB2$\leftarrow$RB0+20},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 4, Fetch}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1}, R10=\oldentry{RB0},
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq1=\newentryb{ADDI R6, R0, 6},
-    idq2=\newentrya{ADDI R5, R3, 2},
-    rs1=\oldentry{RB4$\leftarrow$R2+R2},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs3=\oldentry{\sout{RB2$\leftarrow$R0+20}},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\oldentry{ADDI R10,R0,100},
-    rob12=\oldentry{OK},
-    rob21=\oldentry{SUB R1,R1,R1},
-    rob22=\oldentry{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB2$\leftarrow$RB0+20},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 5, Retire}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\newentryb{\sout{RB1}}, R10=\newentrya{\sout{RB0}},
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq1=\oldentry{ADDI R6, R0, 6},
-    idq2=\oldentry{ADDI R5, R3, 2},
-    rs1=\oldentry{RB4$\leftarrow$R2+R2},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob11=\srcentrya{\sout{ADDI R10,R0,100}},
-    rob12=\srcentrya{OK},
-    rob21=\srcentryb{\sout{SUB R1,R1,R1}},
-    rob22=\srcentryb{OK},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\oldentry{RB2$\leftarrow$RB0+20},
-    ret1=\newentrya{R10$\leftarrow$RB0},
-    ret2=\newentryb{R1$\leftarrow$RB1},
-]
-\end{frame}
-
-
-\begin{frame}{Out-of-Order Execution: Cycle 5, Execution Completed}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq1=\oldentry{ADDI R6, R0, 6},
-    idq2=\oldentry{ADDI R5, R3, 2},
-    rs1=\oldentry{RB4$\leftarrow$R2+R2},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs4=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\newentrya{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    exec1=\srcentrya{\sout{RB2$\leftarrow$RB0+20}},
-    ret1=\oldentry{R10$\leftarrow$RB0},
-    ret2=\oldentry{R1$\leftarrow$RB1},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 5, RB2 Forwarding}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq1=\oldentry{ADDI R6, R0, 6},
-    idq2=\oldentry{ADDI R5, R3, 2},
-    rs1=\oldentry{RB4$\leftarrow$R2+R2},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs4=\newentryb{RB3$\leftarrow$LD(\textcolor{yellow}{RB2}+100)},
-    rob31=\srcentrya{ADDI R4,R0,20},
-    rob32=\newentrya{OK},
-    rob41=\srcentryb{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    mob1=\srcentryb{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R10$\leftarrow$RB0},
-    ret2=\oldentry{R1$\leftarrow$RB1},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 5, Execution Starts}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    idq1=\oldentry{ADDI R6, R0, 6},
-    idq2=\oldentry{ADDI R5, R3, 2},
-    rs1=\srcentrya{\sout{RB4$\leftarrow$R2+R2}},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs4=\srcentryb{\sout{RB3$\leftarrow$LD(RB2+100)}},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R10$\leftarrow$RB0},
-    ret2=\oldentry{R1$\leftarrow$RB1},
-    exec1=\newentryb{RB3$\leftarrow$RB2+100},
-    exec2=\newentrya{RB4$\leftarrow$R2+2},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 5, Instruction Decode}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    R6=\newentrya{RB6},
-    R7=\newentryb{RB7},
-    idq1=\srcentryb{ADDI R6, R0, 6},
-    idq2=\srcentrya{ADDI R5, R3, 2},
-    rs1=\oldentry{\sout{RB4$\leftarrow$R2+R2}},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs3=\newentrya{RB6$\leftarrow$R0+6},
-    rs4=\oldentry{\sout{RB3$\leftarrow$LD(RB2+100)}},
-    rs5=\newentryb{RB7$\leftarrow$RB5+R0},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\newentrya{ADDI R6,R0,6},
-    rob72=\newentrya{INV},
-    rob81=\newentryb{ADDI R7,R5,R0},
-    rob82=\newentryb{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R10$\leftarrow$RB0},
-    ret2=\oldentry{R1$\leftarrow$RB1},
-    exec1=\oldentry{RB3$\leftarrow$RB2+100},
-    exec2=\oldentry{RB4$\leftarrow$R2+2},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 5, Instruction Fetch}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R4=\oldentry{RB2}, R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    idq1=\newentryb{ADDI R9, R0, 9},
-    idq2=\newentrya{ADDI R8, R0, 8},
-    rs1=\oldentry{\sout{RB4$\leftarrow$R2+R2}},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs3=\oldentry{RB6$\leftarrow$R0+6},
-    rs4=\oldentry{\sout{RB3$\leftarrow$LD(RB2+100)}},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R10$\leftarrow$RB0},
-    ret2=\oldentry{R1$\leftarrow$RB1},
-    exec1=\oldentry{RB3$\leftarrow$RB2+100},
-    exec2=\oldentry{RB4$\leftarrow$R2+2},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 6, Retire}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R4=\srcentrya{\sout{RB2}}, R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    idq1=\oldentry{ADDI R9, R0, 9},
-    idq2=\oldentry{ADDI R8, R0, 8},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs3=\oldentry{RB6$\leftarrow$R0+6},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob31=\oldentry{ADDI R4,R0,20},
-    rob32=\srcentrya{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{INV},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\newentrya{R4$\leftarrow$RB2},
-    exec1=\oldentry{RB3$\leftarrow$RB2+100},
-    exec2=\oldentry{RB4$\leftarrow$R2+2},
-]
-\end{frame}
-
-\begin{frame}{OOOE: Cycle 6, Execution Completed, Load Issued}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    idq1=\oldentry{ADDI R9, R0, 9},
-    idq2=\oldentry{ADDI R8, R0, 8},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs3=\oldentry{RB6$\leftarrow$R0+6},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob31=\srcentrya{\sout{ADDI R4,R0,20}},
-    rob32=\srcentrya{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\newentryb{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    mob1=\newentrya{RB3$\leftarrow$LD(RB2+100)},
-    mobmark1=\newentrya{(1)},
-    ret1=\oldentry{R4$\leftarrow$RB2},
-    exec1=\srcentrya{RB3$\leftarrow$RB2+100},
-    exec2=\srcentryb{RB4$\leftarrow$R2+2},
-]
-\end{frame}
-
-
-\begin{frame}{OOOE: Cycle 6, Execution Blocked on Dependencies}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    idq1=\oldentry{ADDI R9, R0, 9},
-    idq2=\oldentry{ADDI R8, R0, 8},
-    rs2=\oldentry{RB5$\leftarrow$RB4+2},
-    rs3=\oldentry{RB6$\leftarrow$R0+6},
-    rs5=\newentrya{RB7$\leftarrow$\textcolor{red}{RB5}+R0},
-    rob31=\oldentry{\sout{ADDI R4,R0,20}},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\srcentryb{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R4$\leftarrow$RB2},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 6, Execution Starts}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    idq1=\oldentry{ADDI R9, R0, 9},
-    idq2=\oldentry{ADDI R8, R0, 8},
-    rs2=\srcentrya{\sout{RB5$\leftarrow$RB4+2}},
-    rs3=\srcentryb{\sout{RB6$\leftarrow$R0+6}},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob31=\oldentry{\sout{ADDI R4,R0,20}},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R4$\leftarrow$RB2},
-    exec1=\newentrya{RB5$\leftarrow$RB4+2},
-    exec2=\newentryb{RB6$\leftarrow$R0+6},
-    mobmark1=\oldentry{(1)},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 6, Instruction Decode}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\newentryb{RB8},
-    R9=\newentrya{RB0},
-    idq1=\srcentrya{ADDI R9, R0, 9},
-    idq2=\srcentryb{ADDI R8, R0, 8},
-    rs1=\newentrya{RB8$\leftarrow$R0+8},
-    rs2=\oldentry{\sout{RB5$\leftarrow$RB4+2}},
-    rs3=\oldentry{\sout{RB6$\leftarrow$R0+6}},
-    rs4=\newentryb{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob11=\newentrya{ADDI R9,R0,9},
-    rob12=\newentrya{INV},
-    rob31=\oldentry{\sout{ADDI R4,R0,20}},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\newentryb{ADDI R8,R0,8},
-    rob92=\newentryb{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R4$\leftarrow$RB2},
-    exec1=\oldentry{RB5$\leftarrow$RB4+2},
-    exec2=\oldentry{RB6$\leftarrow$R0+6},
-    mobmark1=\oldentry{(1)},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 6, Instruction Fetch}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{RB4},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\newentryb{BNE R1, R10, L1},
-    idq2=\newentrya{ADDI R1,R1,1},
-    rs1=\oldentry{RB8$\leftarrow$R0+8},
-    rs2=\oldentry{\sout{RB5$\leftarrow$RB4+2}},
-    rs3=\oldentry{\sout{RB6$\leftarrow$R0+6}},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob31=\oldentry{\sout{ADDI R4,R0,20}},
-    rob32=\oldentry{OK},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{ADDI R3,R2,2},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R4$\leftarrow$RB2},
-    exec1=\oldentry{RB5$\leftarrow$RB4+2},
-    exec2=\oldentry{RB6$\leftarrow$R0+6},
-    mobmark1=\oldentry{(1)},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 7, Retire}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\newentrya{\sout{RB4}},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\oldentry{BNE R1, R10, L1},
-    idq2=\oldentry{ADDI R1,R1,1},
-    rs1=\oldentry{RB8$\leftarrow$R0+8},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\newentrya{\sout{ADDI R3,R2,2}},
-    rob52=\srcentrya{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{INV},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{INV},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\newentrya{R3$\leftarrow$RB4},
-    exec1=\oldentry{RB5$\leftarrow$RB4+2},
-    exec2=\oldentry{RB6$\leftarrow$R0+6},
-    mobmark1=\oldentry{(1)},
-]
-\end{frame}
-
-\begin{frame}{Out-of-Order Execution: Cycle 7, Execution Completed}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{\sout{RB4}},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\oldentry{BNE R1, R10, L1},
-    idq2=\oldentry{ADDI R1,R1,1},
-    rs1=\oldentry{RB8$\leftarrow$R0+8},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{\sout{ADDI R3,R2,2}},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\newentrya{OK},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\newentryb{OK},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R3$\leftarrow$RB4},
-    exec1=\srcentrya{RB5$\leftarrow$RB4+2},
-    exec2=\srcentryb{RB6$\leftarrow$R0+6},
-    mobmark1=\oldentry{(1)},
-]
-\end{frame}
-
-\begin{frame}{OOOE: Cycle 7, MOB Still Waits for Load}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{\sout{RB4}},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\oldentry{BNE R1, R10, L1},
-    idq2=\oldentry{ADDI R1,R1,1},
-    rs1=\oldentry{RB8$\leftarrow$R0+8},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{RB7$\leftarrow$RB5+R0},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{\sout{ADDI R3,R2,2}},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{OK},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{OK},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R3$\leftarrow$RB4},
-    exec1=\oldentry{RB5$\leftarrow$RB4+2},
-    exec2=\oldentry{RB6$\leftarrow$R0+6},
-    mobmark1=\newentrya{(2)},
-]
-\end{frame}
-
-\begin{frame}{OOOE: Cycle 7, Execution Starts, ALU Limit Reached}
-\OOODiagramKV[
-    % PRF mappings
-    R3=\oldentry{\sout{RB4}},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\oldentry{BNE R1, R10, L1},
-    idq2=\oldentry{ADDI R1,R1,1},
-    rs1=\srcentryb{\sout{RB8$\leftarrow$R0+8}},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\srcentrya{\sout{RB7$\leftarrow$RB5+R0}},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{\sout{ADDI R3,R2,2}},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{OK},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{OK},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R3$\leftarrow$RB4},
-    exec1=\newentrya{RB7$\leftarrow$RB5+R0},
-    exec2=\newentryb{RB8$\leftarrow$R0+8},
-    mobmark1=\oldentry{(2)},
-]
-\end{frame}
-
-
-\begin{frame}{OOOE: Cycle 7, Instruction Decode}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\newentrya{RB1},
-    R3=\oldentry{\sout{RB4}},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\srcentryb{BNE R1, R10, L1},
-    idq2=\srcentrya{ADDI R1,R1,1},
-    rs1=\oldentry{\sout{RB8$\leftarrow$R0+8}},
-    rs2=\newentrya{RB1$\leftarrow$R1+1},
-    rs3=\newentryb{RB2$\leftarrow$RB1-R10},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{\sout{RB7$\leftarrow$RB5+R0}},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob21=\newentrya{ADDI R1,R1,1},
-    rob22=\newentrya{INV},
-    rob31=\newentryb{BNE R1,R10,L1},
-    rob32=\newentryb{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{\sout{ADDI R3,R2,2}},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{OK},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{OK},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R3$\leftarrow$RB4},
-    exec1=\oldentry{RB7$\leftarrow$RB5+R0},
-    exec2=\oldentry{RB8$\leftarrow$R0+8},
-    mobmark1=\oldentry{(2)},
-]
-\end{frame}
-
-\begin{frame}{OOOE: Cycle 7, Instruction Fetch, Next Loop Iteration}
-\OOODiagramKV[
-    % PRF mappings
-    R1=\oldentry{RB1},
-    R3=\oldentry{\sout{RB4}},
-    R5=\oldentry{RB5},
-    R6=\oldentry{RB6},
-    R7=\oldentry{RB7},
-    R8=\oldentry{RB8},
-    R9=\oldentry{RB0},
-    idq1=\newentryb{LW R5,100(R4)},
-    idq2=\newentrya{ADDI R4,R0,20},
-    rs1=\oldentry{\sout{RB8$\leftarrow$R0+8}},
-    rs2=\oldentry{RB1$\leftarrow$R1+1},
-    rs3=\oldentry{RB2$\leftarrow$RB1-R10},
-    rs4=\oldentry{RB0$\leftarrow$R0+9},
-    rs5=\oldentry{\sout{RB7$\leftarrow$RB5+R0}},
-    rob11=\oldentry{ADDI R9,R0,9},
-    rob12=\oldentry{INV},
-    rob21=\oldentry{ADDI R1,R1,1},
-    rob22=\oldentry{INV},
-    rob31=\oldentry{BNE R1,R10,L1},
-    rob32=\oldentry{INV},
-    rob41=\oldentry{LW R5,100(R4)},
-    rob42=\oldentry{INV},
-    rob51=\oldentry{\sout{ADDI R3,R2,2}},
-    rob52=\oldentry{OK},
-    rob61=\oldentry{ADDI R5,R3,2},
-    rob62=\oldentry{OK},
-    rob71=\oldentry{ADDI R6,R0,6},
-    rob72=\oldentry{OK},
-    rob81=\oldentry{ADDI R7,R5,R0},
-    rob82=\oldentry{INV},
-    rob91=\oldentry{ADDI R8,R0,8},
-    rob92=\oldentry{INV},
-    mob1=\oldentry{RB3$\leftarrow$LD(RB2+100)},
-    ret1=\oldentry{R3$\leftarrow$RB4},
-    exec1=\oldentry{RB7$\leftarrow$RB5+R0},
-    exec2=\oldentry{RB8$\leftarrow$R0+8},
-    mobmark1=\oldentry{(2)},
-]
 \end{frame}
 
 \end{document}
