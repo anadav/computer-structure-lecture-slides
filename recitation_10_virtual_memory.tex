@@ -331,7 +331,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
     fill=white,
     minimum width=2.5cm,
     minimum height=0.35cm,
-    font=\bfseries 
+    font=\bfseries\scriptsize
   },
   pte/.style={
     entry,
@@ -346,37 +346,41 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 % Page Table Entries with proper spacing
 \node[entry, text=blue] (pt1) at (mainmem.center) [yshift=2cm] {PT};
 \node[entry, below=0.15cm of pt1, text=green] (pt2) {PT};
-\node[pte, fill=red!20, below=0.4cm of pt2.south east, text=red, anchor=north east] (pte1) {PTE};
+\node[entry, below=0.15cm of pt2, text=red, align=left, minimum height=1.6cm] (pt3) {};
+\node[anchor=north west, text=red, align=left, font=\scriptsize] at (pt3.north west) {PT};
+\node[pte, fill=red!20, below=0cm of pt3.north east, text=red, anchor=north east] (pte1) {PTE};
 \node[pte, fill=red!20, below=0cm of pte1, text=red] (pte2) {PTE};
-\node[entry, fill=white, below=0.4cm of pte2.south east, anchor=north east, text=green] (entry1) {1};
-\node[entry, fill=white, below=0.6cm of entry1, text=red] (entry2a) {2};
-\node[entry, fill=white, below=0.05cm of entry2a, text=blue] (entry2b) {2};
-\node[entry, fill=white, below=0.05cm of entry2a, text=red] (entry3) {3};
+\node[pte, fill=red!20, below=0cm of pte2, text=red] (pte3) {PTE};
+\node[text=red, below=0cm of pte3] (pten) {\ldots};
+\node[entry, fill=white, below=0.15cm of pt3.south east, anchor=north east, text=green] (entry1) {1};
+\node[entry, fill=white, below=0.15cm of entry1, text=red] (entry2a) {2};
+\node[entry, fill=white, below=0.15cm of entry2a, text=blue] (entry2b) {2};
+\node[entry, fill=white, below=0.15cm of entry2a, text=red] (entry3) {3};
 
 % PTBR Register
 \node[draw, rectangle, fill=gray!20, minimum width=1.5cm, minimum height=0.6cm, left=2cm of pte1.north west] (ptbr) {\textbf{PTBR}};
 
 % Address labels
-\node[left, font=\scriptsize] at (pte1.west) [xshift=-3mm] {00201200};
-\node[right, font=\scriptsize, red] at (pte2.east) [xshift=3mm] {940001C0};
+\node[left, font=\scriptsize, left=-1mm of pte3] at (pte3.west) {[0x201200]};
+\node[right, font=\scriptsize, red, right=3mm of pte3] at (pte3.east) {= 940001C0};
 
 % Secondary Storage/Disk
 \node[draw, cylinder, shape border rotate=90, fill=cyan!40, minimum width=3cm, minimum height=6.5cm, aspect=0.8, right=2.5cm of mainmem] (storage) {};
 \node[above] at (storage.north) {\textbf{Secondary Storage}};
 
 % Storage Pages
-\node[entry] (page1) at (storage.north) [yshift=-7mm] {1};
-\node[entry, below=0.1cm of page1] (page2a) {2};
-\node[entry, below=0.1cm of page2a] (page3a) {3};
-\node[entry, below=0.1cm of page3a] (page1b) {1};
-\node[entry, below=0.1cm of page1b] (page1c) {1};
-\node[entry, below=0.1cm of page1c] (page2b) {2};
-\node[entry, below=0.5cm of page2b] (page2c) {2};
-\node[entry, below=0.1cm of page2c] (page3b) {3};
-\node[entry, below=0.1cm of page3b] (page3c) {3};
+\node[entry, text=blue] (page1) at (storage.north) [yshift=-7mm] {1};
+\node[entry, below=0.1cm of page1, text=green] (page2a) {2};
+\node[entry, below=0.1cm of page2a, text=blue] (page3a) {3};
+\node[entry, below=0.1cm of page3a, text=red] (page1b) {1};
+\node[entry, below=0.1cm of page1b, text=green] (page1c) {1};
+\node[entry, below=0.1cm of page1c, text=blue] (page2b) {2};
+\node[entry, below=0.5cm of page2b, text=red] (page2c) {2};
+\node[entry, below=0.1cm of page2c, text=red] (page3b) {3};
+\node[entry, below=0.1cm of page3b, text=green] (page3c) {3};
 
 % Arrow from PTBR to Page Table
-\draw[->, thick] (ptbr.east) -- (pte1.north west);
+\draw[->, thick] (ptbr.east) -- (pt3.north west);
 
 % Mapping arrows from entries to storage pages
 \draw[<->, dashed, thick] (entry1.east) -- ++(0.5,0) |- (page2b.west);
