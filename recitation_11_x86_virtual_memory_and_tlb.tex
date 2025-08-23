@@ -212,7 +212,7 @@ Address format:\\
 % Slide 9: TLB Introduction
 \begin{frame}{Translation Lookaside Buffer (TLB)}
 \begin{columns}[T]
-\begin{column}{0.5\textwidth}
+\begin{column}{0.6\textwidth}
 \begin{itemize}
     \item Page table resides in memory\\
     $\Rightarrow$ each translation requires extra memory access
@@ -243,9 +243,10 @@ Address format:\\
 Page Miss Handler (PMH) gets PTE from memory
 \end{column}
 
-\begin{column}{0.5\textwidth}
+\begin{column}{0.4\textwidth}
 \begin{center}
-\begin{tikzpicture}[node distance=1.2cm, auto]
+\begin{tikzpicture}[node distance=0.8cm, auto]
+    \scriptsize
     % Nodes
     \node[draw, ellipse] (va) {Virtual Address};
     \node[draw, rectangle, below=of va] (tlb) {TLB Access};
@@ -300,25 +301,30 @@ Page Miss Handler (PMH) gets PTE from memory
 % Slide 11: Virtual Memory and Cache
 \begin{frame}{Virtual Memory and Cache}
 \begin{center}
-\begin{tikzpicture}[node distance=1cm and 1.5cm, auto]
+\begin{tikzpicture}[
+    node distance=0.4cm and 0.4cm, 
+    auto, 
+    font=\tiny,
+    diamond node/.style={draw, diamond, align=center, minimum width=1.6cm, minimum height=1.6cm}
+]
     % Nodes
     \node[draw, ellipse, fill=yellow!20, align=center] (va) {Virtual\\Address};
     
     % TLB path
-    \node[draw, rectangle, fill=orange!20, below=of va, xshift=-2cm, align=center] (tlb) {Access\\TLB};
-    \node[draw, diamond, below=of tlb, aspect=1.5, align=center] (tlbhit) {TLB\\Hit?};
-    \node[draw, diamond, left=of tlbhit, aspect=1.5, align=center] (stlbhit) {STLB\\Hit?};
-    \node[draw, rectangle, above=of stlbhit, xshift=-1cm, align=center] (pw) {Page Walk:\\get PTE from\\memory\\hierarchy};
+    \node[draw, rectangle, fill=orange!20, below=of va, align=center] (tlb) {Access\\TLB};
+    \node[diamond node, below=of tlb] (tlbhit) {TLB\\Hit?};
+    \node[diamond node, left=of tlbhit] (stlbhit) {STLB\\Hit?};
+    \node[draw, rectangle, align=center, left=of stlbhit] (pw) {Page Walk:\\get PTE from\\memory\\hierarchy};
     
     % Cache path
-    \node[draw, rectangle, fill=green!20, below=of va, xshift=2cm, align=center] (cache) {Access\\Cache};
-    \node[draw, diamond, below=of cache, aspect=1.5, align=center] (l1hit) {L1\\Cache\\Hit?};
-    \node[draw, diamond, right=of l1hit, aspect=1.5, align=center] (l2hit) {L2\\Cache\\Hit?};
+    \node[draw, rectangle, fill=green!20, below=of va, xshift=3cm, align=center] (cache) {Access\\Cache};
+    \node[diamond node, below=of cache] (l1hit) {L1\\Cache\\Hit?};
+    \node[diamond node, right=of l1hit] (l2hit) {L2\\Cache\\Hit?};
     \node[draw, rectangle, right=of l2hit, align=center] (mem) {Access\\Memory};
     
     % Result nodes
-    \node[draw, ellipse, fill=blue!20, below=of tlbhit, yshift=-0.5cm, align=center] (pa) {Physical\\Address};
-    \node[draw, ellipse, fill=green!20, below=of l1hit, yshift=-0.5cm] (data) {Data};
+    \node[draw, ellipse, fill=blue!20, below=of tlbhit, align=center] (pa) {Physical\\Address};
+    \node[draw, ellipse, fill=green!20, below=of l1hit] (data) {Data};
     
     % Arrows - TLB path
     \draw[->, thick] (va) -- (tlb);
@@ -330,7 +336,7 @@ Page Miss Handler (PMH) gets PTE from memory
     \draw[->, thick] (pw) |- (pa);
     
     % Arrows - Cache path
-    \draw[->, thick, dashed] (pa) -| (cache);
+    \draw[->, thick, dashed] (pa.south) -- ([yshift=-3mm]pa.south) -| ($(pa)!0.5!(cache)$) |- ([yshift=3mm]cache.north)  -- (cache);
     \draw[->, thick] (cache) -- (l1hit);
     \draw[->, thick] (l1hit) -- node[left] {Yes} (data);
     \draw[->, thick] (l1hit) -- node[above] {No} (l2hit);
@@ -340,7 +346,7 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.5em}
+%\vspace{0.5em}
 \begin{itemize}
     \item TLB access is serial with cache access
     \item Page table entries are cached in L1 D\$, L2\$, and L3\$ as data
