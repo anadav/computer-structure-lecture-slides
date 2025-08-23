@@ -7,7 +7,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.multipart, fit, decorations.pathreplacing, matrix}
+\usetikzlibrary{matrix, arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.multipart, fit, decorations.pathreplacing}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -491,18 +491,36 @@ Where:
 
 \begin{center}
 \begin{tikzpicture}[scale=0.9]
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2] (vaddr) {
-    \nodepart{one} VPN
-    \nodepart{two} Page Offset (q bits)
-  };
-  
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=3] (cache) at (0,-2) {
-    \nodepart{one} tag
-    \nodepart{two} set (c bits)
-    \nodepart{three} disp (b bits)
-  };
-  
-  \draw[<->, thick, correctgreen] (vaddr.two south) -- (cache.three north) node[midway, right] {contained in offset};
+
+% Virtual Address
+\matrix[matrix of nodes,
+        nodes={draw, minimum height=7mm, inner xsep=2mm, anchor=center},
+        column sep=-\pgflinewidth,
+        row sep=0pt,
+        ampersand replacement=\&] (vaddr) {
+  |[minimum width=1.8cm]| VPN \&
+  |[minimum width=3.2cm]| Page Offset (q bits) \\
+};
+
+% Cache line
+\matrix[matrix of nodes,
+        nodes={draw, minimum height=7mm, inner xsep=2mm, anchor=center},
+        column sep=-\pgflinewidth,
+        row sep=0pt,
+        below=1cm of vaddr.south east,
+        anchor=north east,
+        ampersand replacement=\&] (cache) {
+  |[minimum width=1.2cm]| tag \&
+  |[minimum width=1.8cm]| set (c bits) \&
+  |[minimum width=1.2cm]| disp (b bits) \\
+};
+
+% Arrow
+\draw[<-, thick, correctgreen] 
+  (vaddr-1-2.south) 
+  -- (cache-1-3.north -| vaddr-1-2.south)
+  node[midway, right, align=center] {contained\\in offset};
+
 \end{tikzpicture}
 \end{center}
 
