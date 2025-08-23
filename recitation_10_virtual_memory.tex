@@ -332,6 +332,11 @@ The CPU addresses only using the process's virtual addresses. To access data in 
     minimum width=2.5cm,
     minimum height=0.35cm,
     font=\bfseries 
+  },
+  pte/.style={
+    entry,
+    minimum width=1cm,  
+    font=\tiny\color{red}
   }
 }
 % Main Memory (Page Table)
@@ -341,11 +346,12 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 % Page Table Entries with proper spacing
 \node[entry, text=blue] (pt1) at (mainmem.center) [yshift=2cm] {PT};
 \node[entry, below=0.15cm of pt1, text=green] (pt2) {PT};
-\node[entry, fill=red!20, below=0.4cm of pt2, text=red] (pte1) {PTE};
-\node[entry, fill=red!20, below=0cm of pte1, text=red] (pte2) {PTE};
-\node[entry, fill=white, below=0.4cm of pte2] (entry1) {1};
-\node[entry, fill=white, below=0.6cm of entry1] (entry2) {2};
-\node[entry, fill=white, below=0.05cm of entry2] (entry3) {2};
+\node[pte, fill=red!20, below=0.4cm of pt2.south east, text=red, anchor=north east] (pte1) {PTE};
+\node[pte, fill=red!20, below=0cm of pte1, text=red] (pte2) {PTE};
+\node[entry, fill=white, below=0.4cm of pte2.south east, anchor=north east, text=green] (entry1) {1};
+\node[entry, fill=white, below=0.6cm of entry1, text=red] (entry2a) {2};
+\node[entry, fill=white, below=0.05cm of entry2a, text=blue] (entry2b) {2};
+\node[entry, fill=white, below=0.05cm of entry2a, text=red] (entry3) {3};
 
 % PTBR Register
 \node[draw, rectangle, fill=gray!20, minimum width=1.5cm, minimum height=0.6cm, left=2cm of pte1.north west] (ptbr) {\textbf{PTBR}};
@@ -373,9 +379,9 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \draw[->, thick] (ptbr.east) -- (pte1.north west);
 
 % Mapping arrows from entries to storage pages
-\draw[->, dashed, thick] (entry1.east) -- ++(0.5,0) |- (page2b.west);
-\draw[->, dashed, thick] (entry2.east) -- ++(0.7,0) |- (page3b.west);
-\draw[->, dashed, thick] (entry3.east) -- ++(0.9,0) |- (page3c.west);
+\draw[<->, dashed, thick] (entry1.east) -- ++(0.5,0) |- (page2b.west);
+\draw[<->, dashed, thick] (entry2a.east) -- ++(0.7,0) |- (page3b.west);
+\draw[<->, dashed, thick] (entry2b.east) -- ++(0.9,0) |- (page3c.west);
 
 \end{tikzpicture}
 \end{center}
