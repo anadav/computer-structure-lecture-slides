@@ -174,39 +174,36 @@ Address format:\\
 
 % Slide 8: Question 1 Solution
 \begin{frame}{Question 1 - Solution}
-\textcolor{blue}{\textbf{(1)}} \textbf{Small page size:}
-\begin{itemize}
-    \item 12 bits in offset field $\Rightarrow 2^{12}$ = 4KB
-\end{itemize}
+\begin{enumerate}
+    \item \textbf{Small page size}
+    \begin{itemize}
+        \item[] 12 bits in offset field $\Rightarrow 2^{12}$ = 4KB
+    \end{itemize}
+    \item \textbf{Entries per Page Table}
+    \begin{itemize}
+        \item Page Table size = Page Size = 4KB
+        \item PTE = 16B
+        \item Entries = $\frac{\text{4KB}}{\text{16B}} = \frac{2^{12}}{2^4} = 2^8$ = 256 entries
+    \end{itemize}
+    \item \textbf{Values of N1, N2, N3, N4}
+    \begin{itemize}
+        \item 256 entries $\Rightarrow$ 8 bits to address them
+    \end{itemize}
+    \begin{center}
+        \begin{tabular}{lcl}
+            TABLE [19:12] & $\Rightarrow$ & N1 = 19\\
+            DIR [27:20]   & $\Rightarrow$ & N2 = 27\\
+            PDP [35:28]   & $\Rightarrow$ & N3 = 35\\
+            PML4 [43:36]  & $\Rightarrow$ & N4 = 43
+        \end{tabular}
+    \end{center}
 
-\vspace{0.3em}
-\textcolor{blue}{\textbf{(2)}} \textbf{Entries per Page Table:}
-\begin{itemize}
-    \item Page Table size = Page Size = 4KB
-    \item PTE = 16B
-    \item Entries = $\frac{\text{4KB}}{\text{16B}} = \frac{2^{12}}{2^4} = 2^8$ = 256 entries
-\end{itemize}
-
-\vspace{0.3em}
-\textcolor{blue}{\textbf{(3)}} \textbf{Values of N1, N2, N3, N4:}
-\begin{itemize}
-    \item 256 entries $\Rightarrow$ 8 bits to address them
-\end{itemize}
-\begin{center}
-\begin{tabular}{lcl}
-    TABLE [19:12] & $\Rightarrow$ & N1 = 19\\
-    DIR [27:20]   & $\Rightarrow$ & N2 = 27\\
-    PDP [35:28]   & $\Rightarrow$ & N3 = 35\\
-    PML4 [43:36]  & $\Rightarrow$ & N4 = 43
-\end{tabular}
-\end{center}
-
-\vspace{0.3em}
-\textcolor{blue}{\textbf{(4)}} \textbf{Large page size:}
-\begin{itemize}
-    \item Large pages pointed by DIR, offset is [19:0]
-    \item Size = $2^{20}$ = 1MB
-\end{itemize}
+    \item \textbf{Large page size}
+    \begin{itemize}
+        \item Large pages pointed by DIR, offset is [19:0]
+        \item Size = $2^{20}$ = 1MB
+    \end{itemize}
+\end{enumerate}
 \end{frame}
 
 % Slide 9: TLB Introduction
