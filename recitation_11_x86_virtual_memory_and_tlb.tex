@@ -390,8 +390,8 @@ Note: No Table cache needed as TLB stores complete translations
 
 \begin{frame}{Caches and Translation Structures}
 \begin{tikzpicture}[
-    cache/.style={rectangle, draw, thick, minimum height=0.8cm, minimum width=2cm},
-    tlb/.style={rectangle, draw, thick, minimum height=0.8cm, minimum width=1.8cm},
+    cache/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=2cm},
+    tlb/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=1.8cm},
     bigbox/.style={rectangle, draw, thick},
     arrow/.style={->, >=stealth, thick},
     label/.style={font=\small},
@@ -414,12 +414,12 @@ Note: No Table cache needed as TLB stores complete translations
 
 % PMH and Page Walk Logic
 \node[rectangle, draw, thick, fill=yellow!20, minimum height=4cm, minimum width=1.5cm, 
-      right=0.5cm of stlb, yshift=-1.2cm] (pmh) {};
-\node[align=center, font=\small] at (pmh.north) {PMH};
+      right=1.5cm of stlb, yshift=-1.2cm] (pmh) {};
+\node[align=center, font=\small, anchor=south west] (pmhlabel) at (pmh.north) {PMH};
 \node[align=center, font=\small] at (pmh.center) {Page\\Walk\\Logic};
 
 % Fit box around translation caches
-\node[bigbox, fit=(stlb)(pdecache)(pdpcache)(pml4cache)(pmh)] (transbox) {};
+\node[bigbox, fit=(stlb)(pdecache)(pdpcache)(pml4cache)(pmh)(pmhlabel)] (transbox) {};
 
 % L2, L3, and Memory
 \node[cache, fill=gray!30, right=3.5cm of l1data, minimum width=1cm] (l2) {L2};
@@ -427,8 +427,8 @@ Note: No Table cache needed as TLB stores complete translations
 \node[cache, fill=green!30, right=0.8cm of l3, minimum width=1.5cm] (memory) {Memory};
 
 % Core box
-\node[bigbox, fit=(l1inst)(l1data)(insttlb)(datatlb)(transbox), 
-      inner sep=0.3cm, label={[font=\large]north west:Core}] (corebox) {};
+\node[bigbox, fit=(l1inst)(l1data)(insttlb)(datatlb)(transbox)(pmhlabel), 
+      inner sep=0.3cm, label={[font=\textbf]north west:Core}] (corebox) {};
 
 % On-die box
 \node[bigbox, fit=(l3), inner sep=0.2cm, label={[font=\small]above:On-die}] (ondiebox) {};
@@ -456,10 +456,10 @@ Note: No Table cache needed as TLB stores complete translations
       ($(pmh.west)!0.2!(pmh.north west)$);
 
 % VA labels on the right side of PMH
-\node[label, right=0.1cm of pmh.east, yshift=1.2cm] {VA[47:12]};
-\node[label, right=0.1cm of pmh.east, yshift=0.4cm] {VA[47:21]};
-\node[label, right=0.1cm of pmh.east, yshift=-0.4cm] {VA[47:30]};
-\node[label, right=0.1cm of pmh.east, yshift=-1.2cm] {VA[47:39]};
+%\node[label, right=0.1cm of pmh.east, yshift=1.2cm] {VA[47:12]};
+%\node[label, right=0.1cm of pmh.east, yshift=0.4cm] {VA[47:21]};
+%\node[label, right=0.1cm of pmh.east, yshift=-0.4cm] {VA[47:30]};
+%\node[label, right=0.1cm of pmh.east, yshift=-1.2cm] {VA[47:39]};
 
 % PMH to L1 data cache
 \draw[arrow, red, thick] (pmh.north) to[out=90, in=270] (l1data.south);
@@ -470,9 +470,6 @@ Note: No Table cache needed as TLB stores complete translations
 % L2 to L3 to Memory
 \draw[<->, thick] (l2.east) -- (l3.west);
 \draw[<->, thick] (l3.east) -- (memory.west);
-
-% Computer Structure - VM credit
-\node[label, anchor=south east] at (current bounding box.south east) {Computer Structure - VM};
 
 \end{tikzpicture}
 \end{frame}
