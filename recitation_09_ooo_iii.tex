@@ -8,7 +8,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, backgrounds}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -64,7 +64,7 @@
 \end{tikzpicture}
 \begin{tabular}{|c|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-\multirow{2}{*}{\#} & \multirow{2}{*}{Instruction} & \multicolumn{3}{c|}{Reg Values} & \multicolumn{2}{c|}{Mem} & \multicolumn{9}{c|}{Execution Timeline} \\
+\multirow{2}{*}{\#} & \multirow{2}{*}{Instruction} & \multicolumn{3}{c|}{Reg Values} & \multicolumn{2}{c|}{Mem} & \multicolumn{10}{c|}{Execution Timeline} \\
 \cline{3-17}
  & & R1 & R2 & R3 & addr & data & \rotatebox{90}{T alloc} & src1 & src2 & Imm & \rotatebox{90}{T src1 rdy} & \rotatebox{90}{T src2 rdy} & \rotatebox{90}{T exe} & \rotatebox{90}{Load block} & \rotatebox{90}{T data rdy} & \rotatebox{90}{T commit} \\
 \hline
@@ -111,5 +111,46 @@
 
 % Againframe to continue without overlay
 \againframe<7->{timeline-frame}
+
+\begin{frame}
+\begin{tikzpicture}[
+    node distance=6mm,
+    bluecircle/.style={circle, draw=blue!70, fill=blue!50, text=white, 
+                       minimum width=1.2cm, minimum height=0.8cm, font=\bfseries\scriptsize},
+    bluerect/.style={rectangle, draw=blue!70, fill=blue!50, text=white, 
+                     font=\bfseries, minimum width=1.5cm, minimum height=0.8cm},
+    label/.style={blue!90!black, text width=2cm, align=center}
+]
+
+% Main nodes
+\node[bluecircle] (n1) {1};
+\node[bluecircle, right=of n1] (n2) {2};
+\node[bluecircle, right=of n2] (n3) {3};
+\node[bluecircle, right=of n3] (n4) {4};
+
+% Dots
+\node[right=of n4] (dots) {\textcolor{blue!80!black}{$\bullet$ $\bullet$ $\bullet$}};
+
+% Node 10
+\node[bluecircle, right=of dots] (n10) {10};
+
+% Labels below nodes
+\node[label, below=2mm of n1] (l1) {Addr.\\ calculation};
+\node[label, below=2mm of n2] (l2) {Memory\\ checks};
+\node[label, below=2mm of n10] (l3) {L2 Hit};
+\node[bluerect, left=of l1] (load) {Load};
+
+% Arrow with "7 cycles" label
+\draw[<->, thick, blue!80!black] 
+    ([yshift=-1.5cm]n4.south west) -- node[below] (clabel) {7 cycles} 
+    ([yshift=-1.5cm]n10.east |- n4.south west);
+
+% Yellow background using fit
+\begin{scope}[on background layer]
+    \node[fill=yellow!20, inner sep=0.5cm, fit=(load)(n10)(l1)(l2)(l3)(clabel)] (bg) {};
+\end{scope}
+
+\end{tikzpicture}
+\end{frame}
 
 \end{document}
