@@ -24,7 +24,7 @@
 
 \begin{document}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile, label=timeline-frame]
 \frametitle{P6 $\mu$Architecture - Instruction Execution Timeline}
 
 \begin{adjustbox}{width=\textwidth,center}
@@ -35,6 +35,14 @@
     blue circle/.style={blue!70!black, very thick},
     arrow style/.style={->, thick, black}
 ]
+% Blue overlay for slides 4-6
+\onslide<4-6>{
+    \fill[blue!20, rounded corners=5mm] 
+        ([xshift=-1cm, yshift=1cm] current page.north west) 
+        rectangle 
+        ([xshift=1cm, yshift=-1cm] current page.north east);
+    \node[blue!80!black, font=\Large\bfseries] at ([yshift=-0.5cm] current page.north) {Overlay Content};
+}
 % Circle positioning variables
 \def\circlexshift{2mm}
 \def\circleyshift{1mm}
@@ -60,19 +68,19 @@
 \cline{3-17}
  & & R1 & R2 & R3 & addr & data & \rotatebox{90}{T alloc} & src1 & src2 & Imm & \rotatebox{90}{T src1 rdy} & \rotatebox{90}{T src2 rdy} & \rotatebox{90}{T exe} & \rotatebox{90}{Load block} & \rotatebox{90}{T data rdy} & \rotatebox{90}{T commit} \\
 \hline
-    \onslide<2->{0 & \texttt{ld R2=[R1+30]} & 10 & \underline{40} & 10 & 40 & 40 & 1 & R1 & - & 30 & 1 & - & 2 & \tiny ready & 11 & 12} \\
-    \onslide<3->{1 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green1addr}\underline{60} & 10 & 1 & P0 & R1 & 20 & 11 & 1 & \tikzmark{red2}\makecell{\tiny Std:2\\[-4pt]\tiny Sta:12} & - & 12 & 13} \\
-    \onslide<4->{2 & \texttt{ld R3=[R1+100]} & - & - & \underline{110} & \underline{110} & 110 & 1 & R1 & - & 100 & 1 & - & 2 & \tiny addr blk & 21 & 22} \\
-    \onslide<5->{3 & \texttt{st [R1+40]=R3} & - & - & - & \tikzmark{green2}50 & 110 & 1 & R1 & P2 & 40 & 1 & 21 & \tikzmark{red3}\makecell{\tiny Std:22\\[-4pt]\tiny Sta:2} & - & \tikzmark{arrow1start}22 & 23} \\
-    \onslide<6->{4 & \texttt{add R1=R1+10} & \underline{20} & - & - & - & - & 2 & R1 & - & 10 & 2 & - & \tikzmark{blue1}3 & - & - & 23} \\
-    \onslide<7->{5 & \texttt{blt (R1<100)} & 20 & 40 & 110 & - & - & 2 & P4 & - & 100 & 3 & - & 4 & - & - & 23} \\
+    \onslide<1->{0 & \texttt{ld R2=[R1+30]} & 10 & \underline{40} & 10 & 40 & 40} & \onslide<1->{1} & \onslide<1->{R1} & \onslide<1->{-} & \onslide<1->{30} & \onslide<2->{1} & \onslide<2->{-} & \onslide<3->{2} & \onslide<3->{\tiny ready} & \onslide<5->{11} & \onslide<6->{12} \\
+    \onslide<1->{1 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green1addr}\underline{60} & 10} & \onslide<7->{1} & \onslide<7->{P0} & \onslide<7->{R1} & \onslide<7->{20} & \onslide<8->{11} & \onslide<8->{1} & \onslide<9->{\tikzmark{red2}\makecell{\tiny Std:2\\[-4pt]\tiny Sta:12}} & \onslide<9->{-} & \onslide<10->{12} & \onslide<11->{13} \\
+    \onslide<1->{2 & \texttt{ld R3=[R1+100]} & - & - & \underline{110} & \underline{110} & 110} & & & & & & & & & & \\
+    \onslide<1->{3 & \texttt{st [R1+40]=R3} & - & - & - & \tikzmark{green2}50 & 110} & & & & & & & & & & \\
+    \onslide<1->{4 & \texttt{add R1=R1+10} & \underline{20} & - & - & - & -} & & & & & & & & & & \\
+    \onslide<1->{5 & \texttt{blt (R1<100)} & 20 & 40 & 110 & - & -} & & & & & & & & & & \\
     \hline
-    \onslide<8->{6 & \texttt{ld R2=[R1+30]} & - & \underline{110} & - & \underline{50} & 110 & 2 & P4 & - & 30 & 3 & - & 4 & \makecell{\tiny addr blk\\[-4pt]\tiny data blk} & \tikzmark{arrow1end}24 & 25} \\
-    \onslide<9->{7 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green3}130 & 20 & 2 & P6 & P4 & 20 & 24 & 3 & \tikzmark{red4}\makecell{\tiny Std:4\\[-4pt]\tiny Sta:25} & - & 25 & 26} \\
-    \onslide<10->{8 & \texttt{ld R3=[R1+100]} & - & - & \underline{120} & \tikzmark{red1}120 & 120 & 3 & P4 & - & 100 & 3 & - & 4 & \tiny addr blk & 27 & 28} \\
-    \onslide<11->{9 & \texttt{st [R1+40]=R3} & - & - & - & 60 & 120 & 3 & P4 & P8 & 40 & 3 & 27 & \makecell{\tiny Sta:4\\[-4pt]\tiny Std:28} & - & 28 & 29} \\
-    \onslide<12->{10 & \texttt{add R1=R1+10} & \underline{30} & - & - & - & - & 3 & P4 & - & 10 & 3 & - & 4 & - & - & 29} \\
-    \onslide<13->{11 & \texttt{blt (R1<100)} & 30 & 110 & 120 & - & - & 3 & P10 & - & 100 & 4 & - & 5 & - & - & 29} \\
+    \onslide<1->{6 & \texttt{ld R2=[R1+30]} & - & \underline{110} & - & \underline{50} & 110} & & & & & & & & & & \\
+    \onslide<1->{7 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green3}130 & 20} & & & & & & & & & & \\
+    \onslide<1->{8 & \texttt{ld R3=[R1+100]} & - & - & \underline{120} & \tikzmark{red1}120 & 120} & & & & & & & & & & \\
+    \onslide<1->{9 & \texttt{st [R1+40]=R3} & - & - & - & 60 & 120} & & & & & & & & & & \\
+    \onslide<1->{10 & \texttt{add R1=R1+10} & \underline{30} & - & - & - & -} & & & & & & & & & & \\
+    \onslide<1->{11 & \texttt{blt (R1<100)} & 30 & 110 & 120 & - & -} & & & & & & & & & & \\
     \hline
 \end{tabular}
 \end{adjustbox}
@@ -100,5 +108,8 @@
 \end{columns}
 }
 \end{frame}
+
+% Againframe to continue without overlay
+\againframe<7->{timeline-frame}
 
 \end{document}
