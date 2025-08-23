@@ -37,11 +37,48 @@
 ]
 % Blue overlay for slides 5-7
 \onslide<5-7>{
-    \fill[blue!20, rounded corners=5mm] 
+    \fill[blue!20, rounded corners=5mm, opacity=0.95] 
         ([xshift=-1cm, yshift=1cm] current page.north west) 
         rectangle 
         ([xshift=1cm, yshift=-1cm] current page.north east);
-    \node[blue!80!black, font=\Large\bfseries] at ([yshift=-0.5cm] current page.north) {Load Pipeline Diagram};
+    
+    % Pipeline diagram in the middle of the frame
+    \begin{scope}[shift={(current page.center)}, 
+        node distance=6mm,
+        bluecircle/.style={circle, draw=blue!70, fill=blue!50, text=white, 
+                           minimum width=1.2cm, minimum height=0.8cm, font=\bfseries\scriptsize},
+        bluerect/.style={rectangle, draw=blue!70, fill=blue!50, text=white, 
+                         font=\bfseries, minimum width=1.5cm, minimum height=0.8cm},
+        label/.style={blue!90!black, text width=2cm, align=center}
+    ]
+        % Main nodes
+        \node[bluecircle] (n1) {1};
+        \node[bluecircle, right=of n1] (n2) {2};
+        \node[bluecircle, right=of n2] (n3) {3};
+        \node[bluecircle, right=of n3] (n4) {4};
+        
+        % Dots
+        \node[right=of n4] (dots) {\textcolor{blue!80!black}{$\bullet$ $\bullet$ $\bullet$}};
+        
+        % Node 10
+        \node[bluecircle, right=of dots] (n10) {10};
+        
+        % Labels below nodes
+        \node[label, below=2mm of n1] (l1) {Addr.\\ calculation};
+        \node[label, below=2mm of n2] (l2) {Memory\\ checks};
+        \node[label, below=2mm of n10] (l3) {L2 Hit};
+        \node[bluerect, left=of l1] (load) {Load};
+        
+        % Arrow with "7 cycles" label
+        \draw[<->, thick, blue!80!black] 
+            ([yshift=-1.5cm]n4.south west) -- node[below] (clabel) {7 cycles} 
+            ([yshift=-1.5cm]n10.east |- n4.south west);
+        
+        % Yellow background using fit
+        \begin{scope}[on background layer]
+            \node[fill=yellow!20, inner sep=0.5cm, fit=(load)(n10)(l1)(l2)(l3)(clabel)] (bg) {};
+        \end{scope}
+    \end{scope}
 }
 % Circle positioning variables
 \def\circlexshift{2mm}
