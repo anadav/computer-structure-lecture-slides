@@ -388,6 +388,95 @@ PML4 cache & [47:39] & PML4 entry \\
 Note: No Table cache needed as TLB stores complete translations
 \end{frame}
 
+\begin{frame}{Caches and Translation Structures}
+\begin{tikzpicture}[
+    cache/.style={rectangle, draw, thick, minimum height=0.8cm, minimum width=2cm},
+    tlb/.style={rectangle, draw, thick, minimum height=0.8cm, minimum width=1.8cm},
+    bigbox/.style={rectangle, draw, thick},
+    arrow/.style={->, >=stealth, thick},
+    label/.style={font=\small}
+]
+
+% L1 Caches
+\node[cache, fill=blue!30] (l1inst) {L1 Inst. cache};
+\node[cache, fill=orange!30, right=2cm of l1inst] (l1data) {L1 data cache};
+
+% TLBs
+\node[tlb, fill=cyan!30, below=0.8cm of l1inst] (insttlb) {Inst. TLB};
+\node[tlb, fill=violet!30, below=0.8cm of l1data] (datatlb) {Data. TLB};
+
+% Translation caches
+\node[cache, below=1.5cm of insttlb, xshift=1cm] (stlb) {STLB};
+\node[cache, below=0.4cm of stlb] (pdecache) {PDE cache};
+\node[cache, below=0.4cm of pdecache] (pdpcache) {PDP cache};
+\node[cache, below=0.4cm of pdpcache] (pml4cache) {PML4 cache};
+
+% PMH and Page Walk Logic
+\node[rectangle, draw, thick, fill=yellow!20, minimum height=4cm, minimum width=1.5cm, 
+      right=0.5cm of stlb, yshift=-1.2cm] (pmh) {};
+\node[align=center, font=\small] at (pmh.north) {PMH};
+\node[align=center, font=\small] at (pmh.center) {Page\\Walk\\Logic};
+
+% Fit box around translation caches
+\node[bigbox, fit=(stlb)(pdecache)(pdpcache)(pml4cache)(pmh)] (transbox) {};
+
+% L2, L3, and Memory
+\node[cache, fill=gray!30, right=3.5cm of l1data, minimum width=1cm] (l2) {L2};
+\node[cache, fill=green!20, right=0.8cm of l2, minimum width=1cm] (l3) {L3};
+\node[cache, fill=green!30, right=0.8cm of l3, minimum width=1.5cm] (memory) {Memory};
+
+% Core box
+\node[bigbox, fit=(l1inst)(l1data)(insttlb)(datatlb)(transbox), 
+      inner sep=0.3cm, label={[font=\large]north west:Core}] (corebox) {};
+
+% On-die box
+\node[bigbox, fit=(l3), inner sep=0.2cm, label={[font=\small]above:On-die}] (ondiebox) {};
+
+% Platform box
+\node[bigbox, fit=(memory), inner sep=0.2cm, label={[font=\small]above:Platform}] (platformbox) {};
+
+% Arrows and connections
+\draw[arrow, blue] (l1inst) to[bend left=20] node[above, near end, label] {Instruction bytes} (l1data);
+\draw[arrow, cyan] (insttlb) -- (l1inst) node[midway, left, label] {translation};
+\draw[arrow, violet] (datatlb) -- (l1data) node[midway, left, label] {translation};
+
+% PTE connections
+\draw[arrow] (insttlb) to[bend right=15] node[near start, below, label] {PTE} (stlb.north west);
+\draw[arrow] (datatlb) to[bend left=15] node[near start, below, label] {PTE} (stlb.north east);
+
+% From translation caches to PMH
+\draw[arrow, red, thick] (stlb.east) -- node[above, label] {PTE} 
+      ($(pmh.west)!0.8!(pmh.north west)$);
+\draw[arrow, red, thick] (pdecache.east) -- node[above, label] {PDE entry} 
+      ($(pmh.west)!0.6!(pmh.north west)$);
+\draw[arrow, red, thick] (pdpcache.east) -- node[above, label] {PDP entry} 
+      ($(pmh.west)!0.4!(pmh.north west)$);
+\draw[arrow, red, thick] (pml4cache.east) -- node[above, label] {PML4 entry} 
+      ($(pmh.west)!0.2!(pmh.north west)$);
+
+% VA labels on the right side of PMH
+\node[label, right=0.1cm of pmh.east, yshift=1.2cm] {VA[47:12]};
+\node[label, right=0.1cm of pmh.east, yshift=0.4cm] {VA[47:21]};
+\node[label, right=0.1cm of pmh.east, yshift=-0.4cm] {VA[47:30]};
+\node[label, right=0.1cm of pmh.east, yshift=-1.2cm] {VA[47:39]};
+
+% PMH to L1 data cache
+\draw[arrow, red, thick] (pmh.north) to[out=90, in=270] (l1data.south);
+
+% L1 data cache to L2
+\draw[arrow, blue, thick] (l1data.east) -- node[above, near end, label] {Load entry} (l2.west);
+
+% L2 to L3 to Memory
+\draw[<->, thick] (l2.east) -- (l3.west);
+\draw[<->, thick] (l3.east) -- (memory.west);
+
+% Computer Structure - VM credit
+\node[label, anchor=south east] at (current bounding box.south east) {Computer Structure - VM};
+
+\end{tikzpicture}
+\end{frame}
+
+
 % Slide 13: Question 2 Setup
 \begin{frame}{Question 2}
 \textbf{System Configuration:}
@@ -447,7 +536,7 @@ Note: No Table cache needed as TLB stores complete translations
 \textbf{Analysis:}
 \begin{itemize}
     \item 64B lines $\Rightarrow$ 6 offset bits [5:0]
-    \item 32KB / (2 ways × 64B) = 256 sets $\Rightarrow$ 8 set bits [13:6]
+    \item $\frac{32\text{KB}}{(2\text{ ways} \times 64\text{B})}$ = 256 sets $\Rightarrow$ 8 set bits [13:6]
     \item 12 bits [11:0] are not translated (page offset)
     \item We lack 2 bits [13:12] for complete set address
     \item Solution: Use untranslated bits [13:12] for set lookup
