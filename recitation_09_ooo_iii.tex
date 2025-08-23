@@ -31,7 +31,8 @@
 \footnotesize
 \begin{tikzpicture}[remember picture, overlay,
     green circle/.style={green!70!black, very thick},
-    red circle/.style={red!80!black, very thick}
+    red circle/.style={red!80!black, very thick},
+    blue circle/.style={blue!70!black, very thick}
 ]
 % Circle positioning variables
 \def\circlexshift{2mm}
@@ -40,8 +41,14 @@
 \onslide<15->{\draw[green circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:green1addr) circle (9pt);}
 \onslide<16->{\draw[green circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:green2) circle (9pt);}
 \onslide<17->{\draw[green circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:green3) circle (9pt);}
-% Red circle
+% Red circle on address
 \onslide<18->{\draw[red circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:red1) circle (9pt);}
+% Red circles around Std/Sta pairs
+\onslide<19->{\draw[red circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:red2) circle (12pt);}
+\onslide<20->{\draw[red circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:red3) circle (12pt);}
+\onslide<21->{\draw[red circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:red4) circle (12pt);}
+% Blue circle around T exe
+\onslide<22->{\draw[blue circle] ([xshift=\circlexshift,yshift=\circleyshift] pic cs:blue1) circle (9pt);}
 \end{tikzpicture}
 \begin{tabular}{|c|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -50,14 +57,14 @@
  & & R1 & R2 & R3 & addr & data & \rotatebox{90}{T alloc} & src1 & src2 & Imm & \rotatebox{90}{T src1 rdy} & \rotatebox{90}{T src2 rdy} & \rotatebox{90}{T exe} & \rotatebox{90}{Load block} & \rotatebox{90}{T data rdy} & \rotatebox{90}{T commit} \\
 \hline
     \onslide<2->{0 & \texttt{ld R2=[R1+30]} & 10 & \underline{40} & 10 & 40 & 40 & 1 & R1 & - & 30 & 1 & - & 2 & \tiny ready & 11 & 12} \\
-    \onslide<3->{1 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green1addr}\underline{60} & 10 & 1 & P0 & R1 & 20 & 11 & 1 & \makecell{\tiny Std:2\\[-4pt]\tiny Sta:12} & - & 12 & 13} \\
+    \onslide<3->{1 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green1addr}\underline{60} & 10 & 1 & P0 & R1 & 20 & 11 & 1 & \tikzmark{red2}\makecell{\tiny Std:2\\[-4pt]\tiny Sta:12} & - & 12 & 13} \\
     \onslide<4->{2 & \texttt{ld R3=[R1+100]} & - & - & \underline{110} & \underline{110} & 110 & 1 & R1 & - & 100 & 1 & - & 2 & \tiny addr blk & 21 & 22} \\
-    \onslide<5->{3 & \texttt{st [R1+40]=R3} & - & - & - & \tikzmark{green2}50 & 110 & 1 & R1 & P2 & 40 & 1 & 21 & \makecell{\tiny Std:22\\[-4pt]\tiny Sta:2} & - & 22 & 23} \\
-    \onslide<6->{4 & \texttt{add R1=R1+10} & \underline{20} & - & - & - & - & 2 & R1 & - & 10 & 2 & - & 3 & - & - & 23} \\
+    \onslide<5->{3 & \texttt{st [R1+40]=R3} & - & - & - & \tikzmark{green2}50 & 110 & 1 & R1 & P2 & 40 & 1 & 21 & \tikzmark{red3}\makecell{\tiny Std:22\\[-4pt]\tiny Sta:2} & - & 22 & 23} \\
+    \onslide<6->{4 & \texttt{add R1=R1+10} & \underline{20} & - & - & - & - & 2 & R1 & - & 10 & 2 & - & \tikzmark{blue1}3 & - & - & 23} \\
     \onslide<7->{5 & \texttt{blt (R1<100)} & 20 & 40 & 110 & - & - & 2 & P4 & - & 100 & 3 & - & 4 & - & - & 23} \\
     \hline
     \onslide<8->{6 & \texttt{ld R2=[R1+30]} & - & \underline{110} & - & \underline{50} & 110 & 2 & P4 & - & 30 & 3 & - & 4 & \makecell{\tiny addr blk\\[-4pt]\tiny data blk} & 24 & 25} \\
-    \onslide<9->{7 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green3}130 & 20 & 2 & P6 & P4 & 20 & 24 & 3 & \makecell{\tiny Std:4\\[-4pt]\tiny Sta:25} & - & 25 & 26} \\
+    \onslide<9->{7 & \texttt{st [R2+20]=R1} & - & - & - & \tikzmark{green3}130 & 20 & 2 & P6 & P4 & 20 & 24 & 3 & \tikzmark{red4}\makecell{\tiny Std:4\\[-4pt]\tiny Sta:25} & - & 25 & 26} \\
     \onslide<10->{8 & \texttt{ld R3=[R1+100]} & - & - & \underline{120} & \tikzmark{red1}120 & 120 & 3 & P4 & - & 100 & 3 & - & 4 & \tiny addr blk & 27 & 28} \\
     \onslide<11->{9 & \texttt{st [R1+40]=R3} & - & - & - & 60 & 120 & 3 & P4 & P8 & 40 & 3 & 27 & \makecell{\tiny Sta:4\\[-4pt]\tiny Std:28} & - & 28 & 29} \\
     \onslide<12->{10 & \texttt{add R1=R1+10} & \underline{30} & - & - & - & - & 3 & P4 & - & 10 & 3 & - & 4 & - & - & 29} \\
