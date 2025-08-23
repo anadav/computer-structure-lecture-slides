@@ -301,6 +301,98 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \end{block}
 \end{frame}
 
+\begin{frame}{Virtual Memory: Page Table Translation}
+
+%\begin{columns}[T]
+%\column{0.4\textwidth}
+%\begin{exampleblock}{\scriptsize Address Configuration}
+%\scriptsize
+%\textbf{PTBR:} 0x1000\\
+%\textbf{Virtual Addr:} 30 bits\\
+%\textbf{Physical Addr:} 32 bits
+%\end{exampleblock}
+%
+%\column{0.6\textwidth}
+%\begin{exampleblock}{\scriptsize Translation Example}
+%\scriptsize
+%Virtual address mapped through PTE at\\
+%\texttt{(00201200 : 940001C0)} base + offset
+%\end{exampleblock}
+%\end{columns}
+
+%\vspace{0.5cm}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, every node/.style={scale=0.9}]
+\tikzset{
+  entry/.style={
+    draw,
+    rectangle,
+    fill=white,
+    minimum width=2.5cm,
+    minimum height=0.35cm,
+    font=\bfseries 
+  }
+}
+% Main Memory (Page Table)
+\node[draw, rectangle, fill=orange!40, minimum width=3cm, minimum height=5.5cm, rounded corners] (mainmem) {};
+\node[above] at (mainmem.north) {\textbf{Main Memory}};
+
+% Page Table Entries with proper spacing
+\node[entry, text=blue] (pt1) at (mainmem.center) [yshift=2cm] {PT};
+\node[entry, below=0.15cm of pt1, text=green] (pt2) {PT};
+\node[entry, fill=red!20, below=0.4cm of pt2, text=red] (pte1) {PTE};
+\node[entry, fill=red!20, below=0cm of pte1, text=red] (pte2) {PTE};
+\node[entry, fill=white, below=0.4cm of pte2] (entry1) {1};
+\node[entry, fill=white, below=0.6cm of entry1] (entry2) {2};
+\node[entry, fill=white, below=0.05cm of entry2] (entry3) {2};
+
+% PTBR Register
+\node[draw, rectangle, fill=gray!20, minimum width=1.5cm, minimum height=0.6cm, left=2cm of pte1.north west] (ptbr) {\textbf{PTBR}};
+
+% Address labels
+\node[left, font=\scriptsize] at (pte1.west) [xshift=-3mm] {00201200};
+\node[right, font=\scriptsize, red] at (pte2.east) [xshift=3mm] {940001C0};
+
+% Secondary Storage/Disk
+\node[draw, cylinder, shape border rotate=90, fill=cyan!40, minimum width=3cm, minimum height=6.5cm, aspect=0.8, right=2.5cm of mainmem] (storage) {};
+\node[above] at (storage.north) {\textbf{Secondary Storage}};
+
+% Storage Pages
+\node[entry] (page1) at (storage.north) [yshift=-7mm] {1};
+\node[entry, below=0.1cm of page1] (page2a) {2};
+\node[entry, below=0.1cm of page2a] (page3a) {3};
+\node[entry, below=0.1cm of page3a] (page1b) {1};
+\node[entry, below=0.1cm of page1b] (page1c) {1};
+\node[entry, below=0.1cm of page1c] (page2b) {2};
+\node[entry, below=0.5cm of page2b] (page2c) {2};
+\node[entry, below=0.1cm of page2c] (page3b) {3};
+\node[entry, below=0.1cm of page3b] (page3c) {3};
+
+% Arrow from PTBR to Page Table
+\draw[->, thick] (ptbr.east) -- (pte1.north west);
+
+% Mapping arrows from entries to storage pages
+\draw[->, dashed, thick] (entry1.east) -- ++(0.5,0) |- (page2b.west);
+\draw[->, dashed, thick] (entry2.east) -- ++(0.7,0) |- (page3b.west);
+\draw[->, dashed, thick] (entry3.east) -- ++(0.9,0) |- (page3c.west);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+\begin{exampleblock}{\scriptsize Key Concepts}
+\scriptsize
+\begin{itemize}
+\item PTBR points to page table location in main memory
+\item Valid PTEs contain mappings to physical frames in secondary storage
+\item Multiple virtual pages can map to the same physical frame
+\end{itemize}
+\end{exampleblock}
+
+\end{frame}
+
+
 \begin{frame}{Page Table Entry (PTE) Structure}
 \begin{center}
 \begin{tikzpicture}
