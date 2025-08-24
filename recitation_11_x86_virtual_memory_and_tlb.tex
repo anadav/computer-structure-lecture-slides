@@ -222,7 +222,7 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
 
 \begin{tikzpicture}[scale=0.18, font=\tiny]
   % Define constants
-  \def\boxheight{3}
+  \def\boxheight{4}
   \def\bitwidth{1}
   
   % Define colors by functionality
@@ -240,152 +240,152 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
   \draw[very thick] (origin) rectangle (topright);
   
   % Define field boundaries using coordinates
-  \coordinate (b63) at (0,0);
-  \coordinate (b62) at ($(b63) + (1,0)$);
-  \coordinate (b59) at ($(b62) + (4,0)$);
-  \coordinate (b58) at ($(b59) + (0,0)$);
-  \coordinate (b52) at ($(b59) + (7,0)$);
-  \coordinate (b51) at ($(b52) + (0,0)$);
-  \coordinate (b12) at ($(b52) + (40,0)$);
-  \coordinate (b11) at ($(b12) + (0,0)$);
-  \coordinate (b9) at ($(b12) + (3,0)$);
-  \coordinate (b8) at ($(b9) + (0,0)$);
-  \coordinate (b7) at ($(b9) + (1,0)$);
-  \coordinate (b6) at ($(b7) + (1,0)$);
-  \coordinate (b5) at ($(b6) + (1,0)$);
-  \coordinate (b4) at ($(b5) + (1,0)$);
-  \coordinate (b3) at ($(b4) + (1,0)$);
-  \coordinate (b2) at ($(b3) + (1,0)$);
-  \coordinate (b1) at ($(b2) + (1,0)$);
-  \coordinate (b0) at ($(b1) + (1,0)$);
+  % Working from MSB (63) to LSB (0), left to right
+  \coordinate (b63) at (0,0);               % MSB position
+  \coordinate (b62) at ($(b63) + (1,0)$);   % XD is 1 bit wide
+  \coordinate (b59) at ($(b62) + (4,0)$);   % PKE is 4 bits wide (62-59)
+  \coordinate (b52) at ($(b59) + (7,0)$);   % Available is 7 bits wide (58-52)
+  \coordinate (b12) at ($(b52) + (40,0)$);  % PFA is 40 bits wide (51-12)
+  \coordinate (b9) at ($(b12) + (3,0)$);    % AVL is 3 bits wide (11-9)
+  \coordinate (b8) at ($(b9) + (1,0)$);     % G is 1 bit wide (bit 8)
+  \coordinate (b7) at ($(b8) + (1,0)$);     % PAT is 1 bit wide (bit 7)
+  \coordinate (b6) at ($(b7) + (1,0)$);     % D is 1 bit wide (bit 6)
+  \coordinate (b5) at ($(b6) + (1,0)$);     % A is 1 bit wide (bit 5)
+  \coordinate (b4) at ($(b5) + (1,0)$);     % PCD is 1 bit wide (bit 4)
+  \coordinate (b3) at ($(b4) + (1,0)$);     % PWT is 1 bit wide (bit 3)
+  \coordinate (b2) at ($(b3) + (1,0)$);     % U/S is 1 bit wide (bit 2)
+  \coordinate (b1) at ($(b2) + (1,0)$);     % W is 1 bit wide (bit 1)
+  \coordinate (b0) at ($(b1) + (1,0)$);     % P is 1 bit wide (bit 0)
   
   % XD bit (63) - using coordinates
   \fill[fieldblue!30] (b63) rectangle ($(b62) + (0,\boxheight)$);
   \draw[thick] (b62) -- ($(b62) + (0,\boxheight)$);
-  \node at ($(b63)!0.5!(b62) + (0,\boxheight/2)$) {XD};
-  \node[above] at ($(b63)!0.5!(b62) + (0,\boxheight+0.3)$) {63};
+  \node[align=center] at ($(b63)!0.5!(b62) + (0,\boxheight/2)$) {X\\D};
+  \node[below] at ($(b63)!0.5!(b62) + (0,-0.3)$) {63};
   
   % Protection Key (59-62) - relative to previous
   \fill[fieldblue!30] (b62) rectangle ($(b59) + (0,\boxheight)$);
   \draw[thick] (b59) -- ($(b59) + (0,\boxheight)$);
   \node at ($(b62)!0.5!(b59) + (0,\boxheight/2)$) {PKE};
-  \node[above] at ($(b62) + (0,\boxheight+0.3)$) {62};
-  \node[above] at ($(b59) + (0,\boxheight+0.3)$) {59};
+  %\node[above] at ($(b62) + (0,\boxheight+0.3)$) {62};
+  %\node[above] at ($(b59) + (0,\boxheight+0.3)$) {59};
   
   % Available bits (52-58) - relative positioning
   \fill[fieldgray!30] (b59) rectangle ($(b52) + (0,\boxheight)$);
   \draw[thick] (b52) -- ($(b52) + (0,\boxheight)$);
-  \node at ($(b59)!0.5!(b52) + (0,\boxheight/2)$) {Available};
+  \node[align=center] at ($(b59)!0.5!(b52) + (0,\boxheight/2)$) {AVL};
   \node[above] at ($(b59) + (0,\boxheight+0.3)$) {58};
-  \node[above] at ($(b52) + (0,\boxheight+0.3)$) {52};
+%  \node[above] at ($(b52) + (0,\boxheight+0.3)$) {52};
   
   % Page Frame Address (12-51) - relative positioning
   \fill[fieldpurple!30] (b52) rectangle ($(b12) + (0,\boxheight)$);
   \draw[thick] (b12) -- ($(b12) + (0,\boxheight)$);
   \node at ($(b52)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address [51:12]};
   \node[above] at ($(b52) + (0,\boxheight+0.3)$) {51};
-  \node[above] at ($(b12) + (0,\boxheight+0.3)$) {12};
+  %\node[above] at ($(b12) + (0,\boxheight+0.3)$) {12};
   
   % AVL bits (9-11) - relative
   \fill[fieldgray!30] (b12) rectangle ($(b9) + (0,\boxheight)$);
   \draw[thick] (b9) -- ($(b9) + (0,\boxheight)$);
   \node at ($(b12)!0.5!(b9) + (0,\boxheight/2)$) {AVL};
   \node[above] at ($(b12) + (0,\boxheight+0.3)$) {11};
-  \node[above] at ($(b9) + (0,\boxheight+0.3)$) {9};
+  %\node[above] at ($(b9) + (0,\boxheight+0.3)$) {9};
   
   % G bit (8) - relative
-  \fill[fieldcyan!30] (b9) rectangle ($(b7) + (0,\boxheight)$);
-  \draw[thick] (b7) -- ($(b7) + (0,\boxheight)$);
-  \node at ($(b9)!0.5!(b7) + (0,\boxheight/2)$) {G};
-  \node[above] at ($(b9)!0.5!(b7) + (0,\boxheight+0.3)$) {8};
+  \fill[fieldcyan!30] (b9) rectangle ($(b8) + (0,\boxheight)$);
+  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
+  \node at ($(b9)!0.5!(b8) + (0,\boxheight/2)$) {G};
+  \node[above] at ($(b9)!0.5!(b8) + (0,\boxheight+0.3)$) {8};
   
   % PAT bit (7) - relative
-  \fill[fieldorange!30] (b7) rectangle ($(b6) + (0,\boxheight)$);
-  \draw[thick] (b6) -- ($(b6) + (0,\boxheight)$);
-  \node at ($(b7)!0.5!(b6) + (0,\boxheight/2)$) {PAT};
-  \node[above] at ($(b7)!0.5!(b6) + (0,\boxheight+0.3)$) {7};
+  \fill[fieldorange!30] (b8) rectangle ($(b7) + (0,\boxheight)$);
+  \draw[thick] (b7) -- ($(b7) + (0,\boxheight)$);
+  \node[align=center] at ($(b8)!0.5!(b7) + (0,\boxheight/2)$) {P\\A\\T};
+  \node[above] at ($(b8)!0.5!(b7) + (0,\boxheight+0.3)$) {7};
   
   % D bit (6) - relative
-  \fill[fieldgreen!30] (b6) rectangle ($(b5) + (0,\boxheight)$);
-  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
-  \node at ($(b6)!0.5!(b5) + (0,\boxheight/2)$) {D};
-  \node[above] at ($(b6)!0.5!(b5) + (0,\boxheight+0.3)$) {6};
+  \fill[fieldgreen!30] (b7) rectangle ($(b6) + (0,\boxheight)$);
+  \draw[thick] (b6) -- ($(b6) + (0,\boxheight)$);
+  \node at ($(b7)!0.5!(b6) + (0,\boxheight/2)$) {D};
+  \node[above] at ($(b7)!0.5!(b6) + (0,\boxheight+0.3)$) {6};
   
   % A bit (5) - relative
-  \fill[fieldgreen!30] (b5) rectangle ($(b4) + (0,\boxheight)$);
-  \draw[thick] (b4) -- ($(b4) + (0,\boxheight)$);
-  \node at ($(b5)!0.5!(b4) + (0,\boxheight/2)$) {A};
-  \node[above] at ($(b5)!0.5!(b4) + (0,\boxheight+0.3)$) {5};
+  \fill[fieldgreen!30] (b6) rectangle ($(b5) + (0,\boxheight)$);
+  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
+  \node at ($(b6)!0.5!(b5) + (0,\boxheight/2)$) {A};
+  \node[above] at ($(b6)!0.5!(b5) + (0,\boxheight+0.3)$) {5};
   
   % PCD bit (4) - relative
-  \fill[fieldorange!30] (b4) rectangle ($(b3) + (0,\boxheight)$);
-  \draw[thick] (b3) -- ($(b3) + (0,\boxheight)$);
-  \node at ($(b4)!0.5!(b3) + (0,\boxheight/2)$) {PCD};
-  \node[above] at ($(b4)!0.5!(b3) + (0,\boxheight+0.3)$) {4};
+  \fill[fieldorange!30] (b5) rectangle ($(b4) + (0,\boxheight)$);
+  \draw[thick] (b4) -- ($(b4) + (0,\boxheight)$);
+  \node[align=center] at ($(b5)!0.5!(b4) + (0,\boxheight/2)$) {P\\C\\D};
+  \node[above] at ($(b5)!0.5!(b4) + (0,\boxheight+0.3)$) {4};
   
   % PWT bit (3) - relative
-  \fill[fieldorange!30] (b3) rectangle ($(b2) + (0,\boxheight)$);
-  \draw[thick] (b2) -- ($(b2) + (0,\boxheight)$);
-  \node at ($(b3)!0.5!(b2) + (0,\boxheight/2)$) {PWT};
-  \node[above] at ($(b3)!0.5!(b2) + (0,\boxheight+0.3)$) {3};
+  \fill[fieldorange!30] (b4) rectangle ($(b3) + (0,\boxheight)$);
+  \draw[thick] (b3) -- ($(b3) + (0,\boxheight)$);
+  \node[align=center] at ($(b4)!0.5!(b3) + (0,\boxheight/2)$) {P\\W\\T};
+  \node[above] at ($(b4)!0.5!(b3) + (0,\boxheight+0.3)$) {3};
   
   % U/S bit (2) - relative
-  \fill[fieldblue!30] (b2) rectangle ($(b1) + (0,\boxheight)$);
-  \draw[thick] (b1) -- ($(b1) + (0,\boxheight)$);
-  \node at ($(b2)!0.5!(b1) + (0,\boxheight/2)$) {U/S};
-  \node[above] at ($(b2)!0.5!(b1) + (0,\boxheight+0.3)$) {2};
+  \fill[fieldblue!30] (b3) rectangle ($(b2) + (0,\boxheight)$);
+  \draw[thick] (b2) -- ($(b2) + (0,\boxheight)$);
+  \node[align=center] at ($(b3)!0.5!(b2) + (0,\boxheight/2)$) {U\\/\\S};
+  \node[above] at ($(b3)!0.5!(b2) + (0,\boxheight+0.3)$) {2};
   
   % W bit (1) - relative
-  \fill[fieldblue!30] (b1) rectangle ($(b0) + (0,\boxheight)$);
-  \draw[thick] (b0) -- ($(b0) + (0,\boxheight)$);
-  \node at ($(b1)!0.5!(b0) + (0,\boxheight/2)$) {W};
-  \node[above] at ($(b1)!0.5!(b0) + (0,\boxheight+0.3)$) {1};
+  \fill[fieldblue!30] (b2) rectangle ($(b1) + (0,\boxheight)$);
+  \draw[thick] (b1) -- ($(b1) + (0,\boxheight)$);
+  \node at ($(b2)!0.5!(b1) + (0,\boxheight/2)$) {W};
+  \node[above] at ($(b2)!0.5!(b1) + (0,\boxheight+0.3)$) {1};
   
   % P bit (0) - LSB on the right
-  \fill[fieldblue!30] (b0) rectangle (topright);
-  \node at ($(b0)!0.5!(topright) + (0,0)$) {P};
-  \node[above] at ($(b0)!0.5!(topright) + (-0.5,\boxheight+0.3)$) {0};
+  \fill[fieldblue!30] (b1) rectangle ($(b0) + (0,\boxheight)$);
+  \node at ($(b1)!0.5!(b0) + (0,\boxheight/2)$) {P};
+  \node[above] at ($(b1)!0.5!(b0) + (0,\boxheight+0.3)$) {0};
   
   % Add descriptive labels below with -| arrows - using relative positioning
   % Base y-coordinate for labels
   \coordinate (labelbase) at ($(origin) + (0,-2)$);
-  
+
+  \node[below, align=left, text=fieldblue!70!black] (lblXD) at ($(b63) + (-8,8)$) {Execute Disable};
+  \draw[-|, fieldblue!60!black] (lblXD.east) -| ($(b63.north)!0.5!(b62.north) + (0,\boxheight)$);
+
+  \node[below, align=left, text=fieldblue!70!black, above=1mm of lblXD.north east, anchor=south east] (lblPKE) {Protection Key (bits 59-62)};
+  \draw[-|, fieldblue!60!black] (lblPKE.east) -| ($(b62.north)!0.5!(b59.north) + (0, \boxheight)$);
+    
   % Protection fields (blue)
   \node[below, align=left, text=fieldblue!70!black] (lblP) at ($(labelbase) + (10,0)$) {Present};
-  \draw[-|, fieldblue!60!black] (lblP.north) |- ($(b0)!0.5!(topright) + (-0.5,0)$);
+  \draw[-|, fieldblue!60!black] (lblP.north) |- ($(b1)!0.5!(b0)$);
   
   \node[below, align=left, text=fieldblue!70!black] (lblW) at ($(lblP) + (0,-1)$) {Writable};
-  \draw[-|, fieldblue!60!black] (lblW.north) |- ($(b1)!0.5!(b0)$);
+  \draw[-|, fieldblue!60!black] (lblW.north) |- ($(b2)!0.5!(b1)$);
   
   \node[below, align=left, text=fieldblue!70!black] (lblUS) at ($(lblW) + (0,-1)$) {User/Supervisor};
-  \draw[-|, fieldblue!60!black] (lblUS.north) |- ($(b2)!0.5!(b1)$);
+  \draw[-|, fieldblue!60!black] (lblUS.north) |- ($(b3)!0.5!(b2)$);
   
-  \node[below, align=left, text=fieldblue!70!black] (lblPKE) at ($(lblUS) + (0,-1)$) {Protection Key (bits 59-62)};
-  \draw[-|, fieldblue!60!black] (lblPKE.north) |- ($(b62)!0.5!(b59)$);
-  
-  \node[below, align=left, text=fieldblue!70!black] (lblXD) at ($(lblPKE) + (0,-1)$) {Execute Disable};
-  \draw[-|, fieldblue!60!black] (lblXD.north) |- ($(b63)!0.5!(b62)$);
-  
+ 
+ 
   % Caching fields (orange)
   \node[below, align=left, text=fieldorange!70!black] (lblPWT) at ($(labelbase) + (25,0)$) {Write-Through};
-  \draw[-|, fieldorange!60!black] (lblPWT.north) |- ($(b3)!0.5!(b2)$);
+  \draw[-|, fieldorange!60!black] (lblPWT.north) |- ($(b4)!0.5!(b3)$);
   
   \node[below, align=left, text=fieldorange!70!black] (lblPCD) at ($(lblPWT) + (0,-1)$) {Cache Disable};
-  \draw[-|, fieldorange!60!black] (lblPCD.north) |- ($(b4)!0.5!(b3)$);
+  \draw[-|, fieldorange!60!black] (lblPCD.north) |- ($(b5)!0.5!(b4)$);
   
   \node[below, align=left, text=fieldorange!70!black] (lblPAT) at ($(lblPCD) + (0,-1)$) {Page Attribute Table};
-  \draw[-|, fieldorange!60!black] (lblPAT.north) |- ($(b7)!0.5!(b6)$);
+  \draw[-|, fieldorange!60!black] (lblPAT.north) |- ($(b8)!0.5!(b7)$);
   
   % Access tracking fields (green)
   \node[below, align=left, text=fieldgreen!70!black] (lblA) at ($(labelbase) + (40,0)$) {Accessed};
-  \draw[-|, fieldgreen!60!black] (lblA.north) |- ($(b5)!0.5!(b4)$);
+  \draw[-|, fieldgreen!60!black] (lblA.north) |- ($(b6)!0.5!(b5)$);
   
   \node[below, align=left, text=fieldgreen!70!black] (lblD) at ($(lblA) + (0,-1)$) {Dirty};
-  \draw[-|, fieldgreen!60!black] (lblD.north) |- ($(b6)!0.5!(b5)$);
+  \draw[-|, fieldgreen!60!black] (lblD.north) |- ($(b7)!0.5!(b6)$);
   
   % Other fields
   \node[below, align=left, text=fieldcyan!70!black] (lblG) at ($(lblD) + (0,-1)$) {Global};
-  \draw[-|, fieldcyan!60!black] (lblG.north) |- ($(b9)!0.5!(b7)$);
+  \draw[-|, fieldcyan!60!black] (lblG.north) |- ($(b9)!0.5!(b8)$);
   
   \node[below, align=left, text=fieldgray!70!black] (lblAVL1) at ($(labelbase) + (55,0)$) {Available for OS Use (bits 9-11)};
   \draw[-|, fieldgray!60!black] (lblAVL1.north) |- ($(b12)!0.5!(b9)$);
