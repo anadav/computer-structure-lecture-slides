@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, matrix}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{pifont}
@@ -129,54 +129,57 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \begin{frame}{BTB Structure}
 \begin{center}
 \begin{tikzpicture}[scale=1]
-    % BTB table structure first
-    \coordinate (table-top-left) at (0, 4);
-    \coordinate (table-bottom-left) at (0, 0);
-    \coordinate (table-top-right) at (7.5, 4);
-    \coordinate (table-bottom-right) at (7.5, 0);
+    % PC input
+    % BTB table as matrix using your style
+    \matrix[matrix of nodes,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            %below=1cm of pc,
+            anchor=north,
+            nodes in empty cells,
+            nodes={draw, align=center},
+            column 1/.append style={nodes={text width=2.4cm, minimum height=0.3cm}},
+            column 2/.append style={nodes={text width=2.4cm, minimum height=0.3cm}},
+            column 3/.append style={nodes={text width=1.5cm, minimum height=0.3cm}},
+            ampersand replacement=\&
+        ] (btb) {
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+    };
     
-    % Draw table borders
-    \draw[thick] (table-top-left) -- (table-bottom-left);
-    \draw[thick] (table-top-right) -- (table-bottom-right);
+    \node[draw, rectangle, above=1cm of btb-1-1.north, xshift=-10mm, font=\scriptsize] (pc) {PC of instruction to fetch};
+    % Table headers positioned relative to matrix columns
+    \node[above=1mm of btb-1-1.north, text depth=0ex, font=\scriptsize] {Look up};
+    \node[above=1mm of btb-1-2.north, text depth=0ex, font=\scriptsize] {Predicted PC};
     
-    % Table rows and column separators
-    \foreach \y in {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5} {
-        \draw (0, \y) -- (7.5, \y);
-        \draw (3, \y) -- (3, \y+0.5);
-        \draw (6, \y) -- (6, \y+0.5);
-    }
-    
-    % Top line of table
-    \draw (table-top-left) -- (table-top-right);
-    
-    % Define column centers relative to table
-    \coordinate (col1-center) at ($ (table-top-left)!0.5!(3, 4) $);
-    \coordinate (col2-center) at ($ (3, 4)!0.5!(6, 4) $);
-    \coordinate (col3-center) at ($ (6, 4)!0.5!(table-top-right) $);
-    
-    % PC input positioned relative to table
-    \node[draw, rectangle] (pc) at ($ (col1-center) + (0, 1) $) {PC of instruction to fetch};
-    
-    % Table headers positioned relative to column centers
-    \node[above=0.2cm of col1-center] {Look up};
-    \node[above=0.2cm of col2-center] {Predicted PC};
-    
-    % BTB label positioned relative to table left
-    \node[rotate=90, left=0.7cm of $ (table-top-left)!0.5!(table-bottom-left) $] {Number of entries in BTB};
+    % BTB label positioned relative to matrix left
+    \node[rotate=90, left=6mm of btb.north west, font=\tiny, anchor=north east] {$\leftarrow$ \# of BTB entries $\rightarrow$};
     
     % Comparator positioned relative to first column bottom
-    \node[circle, draw, inner sep=2pt] (comp) at ($ (col1-center) + (0, -0.5) $) {=};
+    \node[circle, draw, inner sep=2pt] (comp) at ($ (btb-8-1.south) + (0, -0.5) $) {=};
     
     % Arrows using relative positioning
-    \draw[->] (pc) -- ($ (col1-center) + (0, 0.5) $);
-    \draw[->] ($ (col1-center) + (0, 0) $) -- (comp);
-    
+    \draw[->] (pc) -- (btb-1-1.north -| pc);
+    \draw[->] ([xshift=3mm]pc.south west) |- (comp.west);
+    \draw[->] (btb-8-1.south) -- (comp);
+
+    \node[right=1cm of comp, font=\scriptsize, align=left, text=red] (no) {instruction is not\\predicted to be a branch.\\ $\Rightarrow$ Proceed normally.};
+
     % Output logic positioned relative to comparator
-    \draw[->] (comp) -- ++(0, -0.5) -- ++(1, 0) node[right, text width=4cm] {No: instruction is not predicted to be branch. Proceed normally.};
-    \draw[->] (comp) -- ++(-1, 0) -- ++(0, -0.5) node[below, text width=4cm] {Yes: instruction is branch and predicted PC should be used as next PC.};
+    \draw[->] (comp.east) -- node[above, font=\scriptsize]{no} (no);
+
+    \node[below=5mm of comp, font=\scriptsize, align=left, text=green] (yes) {Instruction is predicted to be a branch.\\ $\Rightarrow$ Should be used as next PC.};
+    \draw[->] (comp.south) -- node[left, font=\scriptsize]{yes} (yes);
     
     % Prediction output from third column
-    \draw[->] ($ (col3-center) + (0, 0) $) -- ++(0, -1) node[below, align=center] {Branch prediction\\Taken or not taken};
+    \draw[->] ([xshift=4mm]btb-8-3.south) -- ++(0, -1) node[below, align=center, font=\scriptsize] {Branch prediction\\Taken or not taken};
 \end{tikzpicture}
 \end{center}
 
