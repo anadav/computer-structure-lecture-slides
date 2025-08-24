@@ -348,53 +348,62 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
   % Base y-coordinate for labels
   \coordinate (labelbase) at ($(origin) + (0,-2)$);
 
+  % Labels ordered from MSB (63) to LSB (0), stacked vertically
+  % Start with XD bit (63) at the top
   \node[below, align=left, text=fieldblue!70!black] (lblXD) at ($(b63) + (-8,8)$) {Execute Disable};
   \draw[-|, fieldblue!60!black] (lblXD.east) -| ($(b63.north)!0.5!(b62.north) + (0,\boxheight)$);
 
-  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblXD.east, anchor=south east] (lblPKE) {Protection Key (bits 59-62)};
+  % Protection Key (59-62)
+  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblXD.east, anchor=south east] (lblPKE) {Protection Key};
   \draw[-|, fieldblue!60!black] (lblPKE.east) -| ($(b62.north)!0.5!(b59.north) + (0, \boxheight)$);
-    
-  % Protection fields (blue)
-  \node[below, align=left, text=fieldblue!70!black] (lblP) at ($(labelbase) + (10,0)$) {Present};
-  \draw[-|, fieldblue!60!black] (lblP.north) |- ($(b1)!0.5!(b0)$);
   
-  \node[below, align=left, text=fieldblue!70!black] (lblW) at ($(lblP) + (0,-1)$) {Writable};
-  \draw[-|, fieldblue!60!black] (lblW.north) |- ($(b2)!0.5!(b1)$);
+  % Available (52-58)
+  \node[below, align=left, text=fieldgray!70!black, above=0mm of lblPKE.east, anchor=south east] (lblAVL2) {Available};
+  \draw[-|, fieldgray!60!black] (lblAVL2.east) -| ($(b59.north)!0.5!(b52.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldblue!70!black] (lblUS) at ($(lblW) + (0,-1)$) {User/Supervisor};
-  \draw[-|, fieldblue!60!black] (lblUS.north) |- ($(b3)!0.5!(b2)$);
+  % Physical Page Frame Address (12-51)
+  \node[below, align=left, text=fieldpurple!70!black, above=0mm of lblAVL2.east, anchor=south east] (lblPFA) {Page Frame Address};
+  \draw[-|, fieldpurple!60!black] (lblPFA.east) -| ($(b52.north)!0.5!(b12.north) + (0, \boxheight)$);
   
- 
- 
-  % Caching fields (orange)
-  \node[below, align=left, text=fieldorange!70!black] (lblPWT) at ($(labelbase) + (25,0)$) {Write-Through};
-  \draw[-|, fieldorange!60!black] (lblPWT.north) |- ($(b4)!0.5!(b3)$);
+  % Available for OS Use (9-11)
+  \node[below, align=left, text=fieldgray!70!black, above=0mm of lblPFA.east, anchor=south east] (lblAVL1) {Available for OS Use};
+  \draw[-|, fieldgray!60!black] (lblAVL1.east) -| ($(b12.north)!0.5!(b9.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldorange!70!black] (lblPCD) at ($(lblPWT) + (0,-1)$) {Cache Disable};
-  \draw[-|, fieldorange!60!black] (lblPCD.north) |- ($(b5)!0.5!(b4)$);
+  % Global bit (8)
+  \node[below, align=left, text=fieldcyan!70!black, above=0mm of lblAVL1.east, anchor=south east] (lblG) {Global};
+  \draw[-|, fieldcyan!60!black] (lblG.east) -| ($(b9.north)!0.5!(b8.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldorange!70!black] (lblPAT) at ($(lblPCD) + (0,-1)$) {Page Attribute Table};
-  \draw[-|, fieldorange!60!black] (lblPAT.north) |- ($(b8)!0.5!(b7)$);
+  % Page Attribute Table (7)
+  \node[below, align=left, text=fieldorange!70!black, above=0mm of lblG.east, anchor=south east] (lblPAT) {Page Attribute Table};
+  \draw[-|, fieldorange!60!black] (lblPAT.east) -| ($(b8.north)!0.5!(b7.north) + (0, \boxheight)$);
   
-  % Access tracking fields (green)
-  \node[below, align=left, text=fieldgreen!70!black] (lblA) at ($(labelbase) + (40,0)$) {Accessed};
-  \draw[-|, fieldgreen!60!black] (lblA.north) |- ($(b6)!0.5!(b5)$);
+  % Dirty bit (6)
+  \node[below, align=left, text=fieldgreen!70!black, above=0mm of lblPAT.east, anchor=south east] (lblD) {Dirty};
+  \draw[-|, fieldgreen!60!black] (lblD.east) -| ($(b7.north)!0.5!(b6.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldgreen!70!black] (lblD) at ($(lblA) + (0,-1)$) {Dirty};
-  \draw[-|, fieldgreen!60!black] (lblD.north) |- ($(b7)!0.5!(b6)$);
+  % Accessed bit (5)
+  \node[below, align=left, text=fieldgreen!70!black, above=0mm of lblD.east, anchor=south east] (lblA) {Accessed};
+  \draw[-|, fieldgreen!60!black] (lblA.east) -| ($(b6.north)!0.5!(b5.north) + (0, \boxheight)$);
   
-  % Other fields
-  \node[below, align=left, text=fieldcyan!70!black] (lblG) at ($(lblD) + (0,-1)$) {Global};
-  \draw[-|, fieldcyan!60!black] (lblG.north) |- ($(b9)!0.5!(b8)$);
+  % Cache Disable (4)
+  \node[below, align=left, text=fieldorange!70!black, above=0mm of lblA.east, anchor=south east] (lblPCD) {Cache Disable};
+  \draw[-|, fieldorange!60!black] (lblPCD.east) -| ($(b5.north)!0.5!(b4.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldgray!70!black] (lblAVL1) at ($(labelbase) + (55,0)$) {Available for OS Use (bits 9-11)};
-  \draw[-|, fieldgray!60!black] (lblAVL1.north) |- ($(b12)!0.5!(b9)$);
+  % Write-Through (3)
+  \node[below, align=left, text=fieldorange!70!black, above=0mm of lblPCD.east, anchor=south east] (lblPWT) {Write-Through};
+  \draw[-|, fieldorange!60!black] (lblPWT.east) -| ($(b4.north)!0.5!(b3.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldgray!70!black] (lblAVL2) at ($(lblAVL1) + (0,-1)$) {Available (bits 52-58)};
-  \draw[-|, fieldgray!60!black] (lblAVL2.north) |- ($(b59)!0.5!(b52)$);
+  % User/Supervisor (2)
+  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblPWT.east, anchor=south east] (lblUS) {User/Supervisor};
+  \draw[-|, fieldblue!60!black] (lblUS.east) -| ($(b3.north)!0.5!(b2.north) + (0, \boxheight)$);
   
-  \node[below, align=left, text=fieldpurple!70!black] (lblPFA) at ($(labelbase) + (32,-5)$) {Physical Page Frame Address (bits 51:12)};
-  \draw[-|, fieldpurple!60!black] (lblPFA.north) |- ($(b52)!0.5!(b12)$);
+  % Writable (1)
+  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblUS.east, anchor=south east] (lblW) {Writable};
+  \draw[-|, fieldblue!60!black] (lblW.east) -| ($(b2.north)!0.5!(b1.north) + (0, \boxheight)$);
+  
+  % Present (0)
+  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblW.east, anchor=south east] (lblP) {Present};
+  \draw[-|, fieldblue!60!black] (lblP.east) -| ($(b1.north)!0.5!(b0.north) + (0, \boxheight)$);
 \end{tikzpicture}
 
 \vspace{1em}
