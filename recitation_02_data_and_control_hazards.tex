@@ -43,6 +43,61 @@
 \definecolor{flushcolor}{RGB}{211, 47, 47}
 \definecolor{emptycolor}{RGB}{238, 238, 238}
 
+% BTB Structure diagram macro
+\newcommand{\btbdiagram}{
+\begin{tikzpicture}[scale=0.8]
+    % BTB table as matrix using your style
+    \matrix[matrix of nodes,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            anchor=north,
+            nodes in empty cells,
+            nodes={draw, align=center},
+            column 1/.append style={nodes={text width=1.8cm, minimum height=0.25cm}},
+            column 2/.append style={nodes={text width=1.8cm, minimum height=0.25cm}},
+            column 3/.append style={nodes={text width=1.2cm, minimum height=0.25cm}},
+            ampersand replacement=\&
+        ] (btb) {
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+    };
+    
+    \node[draw, rectangle, above=8mm of btb-1-1.north, xshift=-8mm, font=\scriptsize] (pc) {PC of instruction to fetch};
+    % Table headers positioned relative to matrix columns
+    \node[above=1mm of btb-1-1.north, text depth=0ex, font=\scriptsize] {Look up};
+    \node[above=1mm of btb-1-2.north, text depth=0ex, font=\scriptsize] {Predicted PC};
+    
+    % BTB label positioned relative to matrix left
+    \node[rotate=90, left=5mm of btb.north west, font=\tiny, anchor=north east] {$\leftarrow$ \# of entries $\rightarrow$};
+    
+    % Comparator positioned relative to first column bottom
+    \node[circle, draw, inner sep=1pt, font=\tiny] (comp) at ($ (btb-8-1.south) + (0, -0.4) $) {=};
+    
+    % Arrows using relative positioning
+    \draw[->] (pc) -- (btb-1-1.north -| pc);
+    \draw[->] ([xshift=2mm]pc.south west) |- (comp.west);
+    \draw[->] (btb-8-1.south) -- (comp);
+
+    \node[right=8mm of comp, font=\tiny, align=left, text=red] (no) {not predicted\\to be branch.\\ $\Rightarrow$ Proceed};
+
+    % Output logic positioned relative to comparator
+    \draw[->] (comp.east) -- node[above, font=\tiny]{no} (no);
+
+    \node[below=4mm of comp, font=\tiny, align=left, text=green] (yes) {predicted to\\be branch.\\ $\Rightarrow$ Use target};
+    \draw[->] (comp.south) -- node[left, font=\tiny]{yes} (yes);
+    
+    % Prediction output from third column
+    \draw[->] ([xshift=3mm]btb-8-3.south) -- ++(0, -8mm) node[below, align=center, font=\tiny] {Branch prediction\\Taken/Not taken};
+\end{tikzpicture}
+}
+
 \title{Data and Control Hazards}
 \author{Compuetr Architecture 234267}
 \date{2025, Recitation \#2}
@@ -91,10 +146,10 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \begin{center}
 \begin{tikzpicture}[scale=1, node distance=3cm, auto]
     % Define states with minimum size
-    \node[state, fill=red!20, align=center, minimum size=1.5cm] (00) {00\\Not\\Taken};
-    \node[state, fill=orange!20, right of=00, align=center, minimum size=1.5cm] (01) {01\\Not\\Taken};
-    \node[state, fill=yellow!20, right of=01, align=center, minimum size=1.5cm] (10) {10\\Taken};
-    \node[state, fill=green!20, right of=10, align=center, minimum size=1.5cm] (11) {11\\Taken};
+    \node[state, fill=red!20, align=center, minimum size=1.8cm, font=\scriptsize] (00) {00\\Not\\Taken};
+    \node[state, fill=orange!20, right of=00, align=center, minimum size=1.8cm, font=\scriptsize] (01) {01\\Not\\Taken};
+    \node[state, fill=yellow!20, right of=01, align=center, minimum size=1.8cm, font=\scriptsize] (10) {10\\Taken};
+    \node[state, fill=green!20, right of=10, align=center, minimum size=1.8cm, font=\scriptsize] (11) {11\\Taken};
     
     % Add transitions with loops on left and right
     \path[->] 
@@ -112,8 +167,8 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
     (11) edge[loop right] node{T} (11);
     
     % Add direction arrows
-    \draw[thick, ->, blue] (0, -1.5) -- (12, -1.5) node[right, align=center] {Taken};
-    \draw[thick, ->, red] (0, -2) -- (12, -2) node[right, align=center] {Not\\Taken};
+   % \draw[thick, ->, blue] (0, -1.5) -- (12, -1.5) node[right, align=center] {Taken};
+   % \draw[thick, ->, red] (0, -2) -- (12, -2) node[right, align=center] {Not\\Taken};
 \end{tikzpicture}
 \end{center}
 
@@ -126,69 +181,60 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \end{itemize}
 \end{frame}
 
-\begin{frame}{BTB Structure}
-\begin{center}
-\begin{tikzpicture}[scale=1]
-    % PC input
-    % BTB table as matrix using your style
-    \matrix[matrix of nodes,
-            column sep=-\pgflinewidth,
-            row sep=-\pgflinewidth,
-            inner sep=0pt,
-            %below=1cm of pc,
-            anchor=north,
-            nodes in empty cells,
-            nodes={draw, align=center},
-            column 1/.append style={nodes={text width=2.4cm, minimum height=0.3cm}},
-            column 2/.append style={nodes={text width=2.4cm, minimum height=0.3cm}},
-            column 3/.append style={nodes={text width=1.5cm, minimum height=0.3cm}},
-            ampersand replacement=\&
-        ] (btb) {
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-    };
-    
-    \node[draw, rectangle, above=1cm of btb-1-1.north, xshift=-10mm, font=\scriptsize] (pc) {PC of instruction to fetch};
-    % Table headers positioned relative to matrix columns
-    \node[above=1mm of btb-1-1.north, text depth=0ex, font=\scriptsize] {Look up};
-    \node[above=1mm of btb-1-2.north, text depth=0ex, font=\scriptsize] {Predicted PC};
-    
-    % BTB label positioned relative to matrix left
-    \node[rotate=90, left=6mm of btb.north west, font=\tiny, anchor=north east] {$\leftarrow$ \# of BTB entries $\rightarrow$};
-    
-    % Comparator positioned relative to first column bottom
-    \node[circle, draw, inner sep=2pt] (comp) at ($ (btb-8-1.south) + (0, -0.5) $) {=};
-    
-    % Arrows using relative positioning
-    \draw[->] (pc) -- (btb-1-1.north -| pc);
-    \draw[->] ([xshift=3mm]pc.south west) |- (comp.west);
-    \draw[->] (btb-8-1.south) -- (comp);
+\begin{frame}{Branch Target Buffer (BTB) Structure - Overview}
+\begin{columns}
+\column{0.5\textwidth}
+\centering
+\btbdiagram
 
-    \node[right=1cm of comp, font=\scriptsize, align=left, text=red] (no) {instruction is not\\predicted to be a branch.\\ $\Rightarrow$ Proceed normally.};
+\column{0.5\textwidth}
 
-    % Output logic positioned relative to comparator
-    \draw[->] (comp.east) -- node[above, font=\scriptsize]{no} (no);
+\vspace{0.3cm}
+\textbf{Lookup Process:}
+\begin{enumerate}
+    \item Compare PC with stored addresses/tags
+    \item If match found: use prediction and target
+    \item If no match: assume not a branch
+\end{enumerate}
 
-    \node[below=5mm of comp, font=\scriptsize, align=left, text=green] (yes) {Instruction is predicted to be a branch.\\ $\Rightarrow$ Should be used as next PC.};
-    \draw[->] (comp.south) -- node[left, font=\scriptsize]{yes} (yes);
-    
-    % Prediction output from third column
-    \draw[->] ([xshift=4mm]btb-8-3.south) -- ++(0, -1) node[below, align=center, font=\scriptsize] {Branch prediction\\Taken or not taken};
-\end{tikzpicture}
-\end{center}
-
-\textbf{BTB Components:}
+\vspace{0.3cm}
+\textbf{Limitation:}
 \begin{itemize}
-    \item Left field: Branch instruction address (often uses hash table)
-    \item Middle field: Target address (added after branch executes at least once)
-    \item Right field: Prediction state (2-bit state machine)
+    \item May store partial addresses (tags) to save space
+    \item Can cause \textcolor{red}{false matches} $\Rightarrow$ mispredictions
 \end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{BTB Structure - Components}
+\begin{columns}
+\column{0.5\textwidth}
+\centering
+\btbdiagram
+
+\column{0.5\textwidth}
+\textbf{BTB Fields:}
+\begin{itemize}
+    \item \textbf{Left field:} Branch address/tag
+    \begin{itemize}
+        \item May use hash or partial address
+        \item \textcolor{red}{Tag conflicts} can cause errors
+    \end{itemize}
+    \item \textbf{Middle field:} Target address
+    \begin{itemize}
+        \item Populated after first branch execution
+        \item Used when prediction is "taken"
+    \end{itemize}
+    \item \textbf{Right field:} Prediction state
+    \begin{itemize}
+        \item 2-bit state machine (00, 01, 10, 11)
+        \item Tracks taken/not taken history
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Trade-off:} Smaller tags save space but increase collision risk
+\end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{Example: Branch Prediction}
