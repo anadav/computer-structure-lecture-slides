@@ -129,16 +129,15 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \begin{frame}{BTB Structure}
 \begin{center}
 \begin{tikzpicture}[scale=1]
-    % PC input
-    \node[draw, rectangle] (pc) at (0, 5) {PC of instruction to fetch};
+    % BTB table structure first
+    \coordinate (table-top-left) at (0, 4);
+    \coordinate (table-bottom-left) at (0, 0);
+    \coordinate (table-top-right) at (7.5, 4);
+    \coordinate (table-bottom-right) at (7.5, 0);
     
-    % BTB table with 3 columns
-    \draw[thick] (0, 4.5) -- (0, 0);
-    \draw[thick] (7.5, 4.5) -- (7.5, 0);
-    
-    % Table headers (above the table, no vertical lines)
-    \node at (1.5, 4.7) {Look up};
-    \node at (4.5, 4.7) {Predicted PC};
+    % Draw table borders
+    \draw[thick] (table-top-left) -- (table-bottom-left);
+    \draw[thick] (table-top-right) -- (table-bottom-right);
     
     % Table rows and column separators
     \foreach \y in {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5} {
@@ -148,24 +147,36 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
     }
     
     % Top line of table
-    \draw (0, 4) -- (7.5, 4);
+    \draw (table-top-left) -- (table-top-right);
     
-    % BTB label
-    \node[rotate=90] at (-0.7, 2) {Number of entries in BTB};
+    % Define column centers relative to table
+    \coordinate (col1-center) at ($ (table-top-left)!0.5!(3, 4) $);
+    \coordinate (col2-center) at ($ (3, 4)!0.5!(6, 4) $);
+    \coordinate (col3-center) at ($ (6, 4)!0.5!(table-top-right) $);
     
-    % Comparator
-    \node[circle, draw, inner sep=2pt] (comp) at (1.5, -0.5) {=};
+    % PC input positioned relative to table
+    \node[draw, rectangle] (pc) at ($ (col1-center) + (0, 1) $) {PC of instruction to fetch};
     
-    % Arrows
-    \draw[->] (pc) -- (1.5, 4.5);
-    \draw[->] (1.5, 0) -- (comp);
+    % Table headers positioned relative to column centers
+    \node[above=0.2cm of col1-center] {Look up};
+    \node[above=0.2cm of col2-center] {Predicted PC};
     
-    % Output logic
+    % BTB label positioned relative to table left
+    \node[rotate=90, left=0.7cm of $ (table-top-left)!0.5!(table-bottom-left) $] {Number of entries in BTB};
+    
+    % Comparator positioned relative to first column bottom
+    \node[circle, draw, inner sep=2pt] (comp) at ($ (col1-center) + (0, -0.5) $) {=};
+    
+    % Arrows using relative positioning
+    \draw[->] (pc) -- ($ (col1-center) + (0, 0.5) $);
+    \draw[->] ($ (col1-center) + (0, 0) $) -- (comp);
+    
+    % Output logic positioned relative to comparator
     \draw[->] (comp) -- ++(0, -0.5) -- ++(1, 0) node[right, text width=4cm] {No: instruction is not predicted to be branch. Proceed normally.};
     \draw[->] (comp) -- ++(-1, 0) -- ++(0, -0.5) node[below, text width=4cm] {Yes: instruction is branch and predicted PC should be used as next PC.};
     
     % Prediction output from third column
-    \draw[->] (6.75, 0) -- (6.75, -1) node[below, align=center] {Branch prediction\\Taken or not taken};
+    \draw[->] ($ (col3-center) + (0, 0) $) -- ++(0, -1) node[below, align=center] {Branch prediction\\Taken or not taken};
 \end{tikzpicture}
 \end{center}
 
