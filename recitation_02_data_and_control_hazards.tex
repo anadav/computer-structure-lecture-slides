@@ -132,19 +132,23 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
     % PC input
     \node[draw, rectangle] (pc) at (0, 5) {PC of instruction to fetch};
     
-    % BTB table
+    % BTB table with 3 columns
     \draw[thick] (0, 4.5) -- (0, 0);
-    \draw[thick] (6, 4.5) -- (6, 0);
+    \draw[thick] (7.5, 4.5) -- (7.5, 0);
     
-    % Table headers
-    \node at (1.5, 4.2) {Look up};
-    \node at (4.5, 4.2) {Predicted PC};
+    % Table headers (above the table, no vertical lines)
+    \node at (1.5, 4.7) {Look up};
+    \node at (4.5, 4.7) {Predicted PC};
     
-    % Table rows
+    % Table rows and column separators
     \foreach \y in {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5} {
-        \draw (0, \y) -- (6, \y);
+        \draw (0, \y) -- (7.5, \y);
         \draw (3, \y) -- (3, \y+0.5);
+        \draw (6, \y) -- (6, \y+0.5);
     }
+    
+    % Top line of table
+    \draw (0, 4) -- (7.5, 4);
     
     % BTB label
     \node[rotate=90] at (-0.7, 2) {Number of entries in BTB};
@@ -160,8 +164,8 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
     \draw[->] (comp) -- ++(0, -0.5) -- ++(1, 0) node[right, text width=4cm] {No: instruction is not predicted to be branch. Proceed normally.};
     \draw[->] (comp) -- ++(-1, 0) -- ++(0, -0.5) node[below, text width=4cm] {Yes: instruction is branch and predicted PC should be used as next PC.};
     
-    % Prediction output
-    \draw[->] (4.5, 0) -- (4.5, -1) node[below, align=center] {Branch prediction\\Taken or not taken};
+    % Prediction output from third column
+    \draw[->] (6.75, 0) -- (6.75, -1) node[below, align=center] {Branch prediction\\Taken or not taken};
 \end{tikzpicture}
 \end{center}
 
