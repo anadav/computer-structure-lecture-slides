@@ -252,10 +252,8 @@ Eviction $\rightarrow$ If dirty, write to Memory
 
 \begin{frame}{Write-Through Cache Operation}
 \centering
-
 \newlength{\blocksize}
 \setlength{\blocksize}{0.3cm}
-
 \begin{tikzpicture}[
     block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
     label/.style={font=\bfseries\large},
@@ -263,7 +261,6 @@ Eviction $\rightarrow$ If dirty, write to Memory
     state/.style={inner sep=0pt},
     node distance=0cm and 0cm
 ]
-
 % Define colors for blocks
 \def\initialL{blue!60, blue!60, green!60, green!60}
 \def\initialM{blue!60, blue!60, green!60, green!60, yellow!60, yellow!60}
@@ -287,51 +284,56 @@ Eviction $\rightarrow$ If dirty, write to Memory
 % Arrow 1
 \draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
   node[midway, above] (arrow1) {};
-
 \node[block, pattern=north east lines, pattern color=blue,
-      above=0.5cm of arrow1] (writeblock) {};
+      above=-2mm of arrow1] (writeblock) {};
+\node[above=of writeblock] (write) {Write};
 
-\node[above=0.2cm of writeblock] (write) {Write};
+% State 2: After Write - positioned relative to arrow1
+\coordinate (s2start) at ([xshift=4cm]between);
 
-% State 2: After Write
 \foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
     \ifnum\i=1
         \node[block, pattern=north east lines, pattern color=\col, 
-              right=0cm of memlbl.east, anchor=west, xshift={\i*\blocksize}] (s2_l1_\i) {};
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
+              yshift=0.75cm] (s2_l1_\i) {};
     \else
-        \node[block, fill=\col, right=0cm of memlbl.east,
-              anchor=west, xshift={\i*\blocksize}] (s2_l1_\i) {};
+        \node[block, fill=\col, right=0cm of s2start,
+              anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
     \fi
 }
 
 \foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
         \node[block, pattern=north east lines, pattern color=\col,
-              below=1.5cm of memlbl, anchor=north, xshift={\i*\blocksize}] (s2_mem_\i) {};
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
+              yshift=-0.75cm] (s2_mem_\i) {};
     \else
-        \node[block, fill=\col, below=1.5cm of memlbl,
-              anchor=north, xshift={\i*\blocksize}] (s2_mem_\i) {};
+        \node[block, fill=\col, right=0cm of s2start,
+              anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
     \fi
 }
 
 % Arrow 2
-\draw[arrow] ([xshift=1.5cm]s2_mem_6.east) -- ++(3,0) 
-    node[midway, above, align=center] {Eviction to\\make room};
+\coordinate (between2) at ([xshift=1.5cm]s2start);
+\draw[arrow] (between2) -- ++(2.5,0) 
+    node[midway, above, align=center] (arrow2) {Eviction to\\make room};
 
-% State 3: Final
-\node[state, right=12cm of l1lbl] (state3) {};
+% State 3: Final - positioned relative to arrow2
+\coordinate (s3start) at ([xshift=2.5cm]between2);
+
 \foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
-    \node[block, fill=\col, right=0cm of state3.east,
-          anchor=west, xshift={\i*\blocksize}] (s3_l1_\i) {};
+    \node[block, fill=\col, right=0cm of s3start,
+          anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s3_l1_\i) {};
 }
 
 \foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
         \node[block, pattern=north east lines, pattern color=\col,
-              below=1.5cm of state3, anchor=north, xshift={\i*\blocksize}] (s3_mem_\i) {};
+              right=0cm of s3start, anchor=west, xshift={\i*\blocksize}, 
+              yshift=-0.75cm] (s3_mem_\i) {};
     \else
-        \node[block, fill=\col, below=1.5cm of state3,
-              anchor=north, xshift={\i*\blocksize}] (s3_mem_\i) {};
+        \node[block, fill=\col, right=0cm of s3start,
+              anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
     \fi
 }
 
@@ -341,7 +343,6 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \footnotesize
 \textbf{Note:} Write-through policy ensures data is written to both L1 cache and main memory simultaneously.\\
 (Fully associative cache with 2 bytes per block)
-
 \end{frame}
 
 \begin{frame}{Write Through Policy}
