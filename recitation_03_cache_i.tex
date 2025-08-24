@@ -134,6 +134,61 @@
 \end{columns}
 \end{frame}
 
+\begin{frame}
+\begin{tikzpicture}[scale=0.25, font=\footnotesize]
+  % Define constants
+  \def\boxheight{3}
+  
+  % Define colors for different fields
+  \definecolor{fieldgreen}{RGB}{144, 238, 144}
+  \definecolor{fieldorange}{RGB}{255, 200, 100}
+  \definecolor{fieldyellow}{RGB}{255, 255, 150}
+  
+  % Define key coordinates as base references
+  \coordinate (origin) at (0,0);
+  \coordinate (topright) at (32,\boxheight);
+  
+  % Draw outer border
+  \draw[very thick] (origin) rectangle (topright);
+  
+  % Define field boundaries using coordinates
+  % Working from MSB (31) to LSB (0), left to right
+  \coordinate (b31) at (0,0);               % MSB position
+  \coordinate (b8) at ($(b31) + (24,0)$);   % Tag is 24 bits wide (31-8)
+  \coordinate (b5) at ($(b8) + (3,0)$);     % Set is 3 bits wide (7-5)
+  \coordinate (b0) at ($(b5) + (5,0)$);     % Line Offset is 5 bits wide (4-0)
+  
+  % Tag field (31-8)
+  \fill[fieldgreen!60] (b31) rectangle ($(b8) + (0,\boxheight)$);
+  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
+  \node at ($(b31)!0.5!(b8) + (0,\boxheight/2)$) {Tag};
+  
+  % Set field (7-5)
+  \fill[fieldyellow!80] (b8) rectangle ($(b5) + (0,\boxheight)$);
+  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
+  \node at ($(b8)!0.5!(b5) + (0,\boxheight/2)$) {Set};
+  
+  % Line Offset field (4-0)
+  \fill[fieldorange!60] (b5) rectangle ($(b0) + (0,\boxheight)$);
+  \node[align=center] at ($(b5)!0.5!(b0) + (0,\boxheight/2)$) {Line\\Offset};
+  
+  % Add bit numbers below
+  \node[below, font=\tiny] at ($(b31) + (0,-0.5)$) {31};
+  \node[below, font=\tiny] at ($(b8) + (0,-0.5)$) {8};
+  \node[below, font=\tiny] at ($(b8) + (1,-0.5)$) {7};
+  \node[below, font=\tiny] at ($(b5) + (0,-0.5)$) {5};
+  \node[below, font=\tiny] at ($(b5) + (1,-0.5)$) {4};
+  \node[below, font=\tiny] at ($(b0) + (0,-0.5)$) {0};
+  
+  % Add "Block number" label with bracket above
+  \draw[thick,<->] 
+    ($(b31) + (0,\boxheight + 1.5)$) -- 
+    ($(b5) + (0,\boxheight + 1.5)$)
+    node[midway, above] {Block number};  
+
+\end{tikzpicture}
+\end{frame}
+
 \begin{frame}{K-Way Set Associative Organization}
 \begin{columns}
 \column{0.5\textwidth}
@@ -838,14 +893,14 @@ Modified set = 0101 = Set 5 (but limited to 0-3 for A)
 \textbf{Example Addresses and Their Mapping:}
 
 \begin{center}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Address} & \textbf{Segment} & \textbf{Bit 28} & \textbf{Maps to Set} \\
 \hline
-0x05000010 & A0 & 0 & 0-3 (A sets) \\
-0x12345678 & B0 & 0 & 4-7 (B sets) \\
-0x25000000 & A1 & 1 & 0-3 (A sets) \\
-0x3ABCDEF0 & B1 & 1 & 4-7 (B sets) \\
+\texttt{0x05000010} & A0 & 0 & 0-3 (A sets) \\
+\texttt{0x12345678} & B0 & 0 & 4-7 (B sets) \\
+\texttt{0x25000000} & A1 & 1 & 0-3 (A sets) \\
+\texttt{0x3ABCDEF0} & B1 & 1 & 4-7 (B sets) \\
 \hline
 \end{tabular}
 \end{center}
