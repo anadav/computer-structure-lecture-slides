@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -248,6 +248,100 @@ Write $\rightarrow$ L1 Cache (set dirty bit)\\
 Eviction $\rightarrow$ If dirty, write to Memory
 \end{tcolorbox}
 \end{center}
+\end{frame}
+
+\begin{frame}{Write-Through Cache Operation}
+\centering
+
+\newlength{\blocksize}
+\setlength{\blocksize}{0.3cm}
+
+\begin{tikzpicture}[
+    block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
+    label/.style={font=\bfseries\large},
+    arrow/.style={->, >=Stealth, thick, font=\small},
+    state/.style={inner sep=0pt},
+    node distance=0cm and 0cm
+]
+
+% Define colors for blocks
+\def\initialL{blue!60, blue!60, green!60, green!60}
+\def\initialM{blue!60, blue!60, green!60, green!60, yellow!60, yellow!60}
+
+% State 1: Initial
+\node[label] (l1lbl) {L1};
+\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east, 
+          anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
+}
+
+\node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
+\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of memlbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
+}
+
+% coordinate between L1 and MEM
+\coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east)$);
+
+% Arrow 1
+\draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
+  node[midway, above] (arrow1) {};
+
+\node[block, pattern=north east lines, pattern color=blue,
+      above=0.5cm of arrow1] (writeblock) {};
+
+\node[above=0.2cm of writeblock] (write) {Write};
+
+% State 2: After Write
+\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
+    \ifnum\i=1
+        \node[block, pattern=north east lines, pattern color=\col, 
+              right=0cm of memlbl.east, anchor=west, xshift={\i*\blocksize}] (s2_l1_\i) {};
+    \else
+        \node[block, fill=\col, right=0cm of memlbl.east,
+              anchor=west, xshift={\i*\blocksize}] (s2_l1_\i) {};
+    \fi
+}
+
+\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \ifnum\i=1
+        \node[block, pattern=north east lines, pattern color=\col,
+              below=1.5cm of memlbl, anchor=north, xshift={\i*\blocksize}] (s2_mem_\i) {};
+    \else
+        \node[block, fill=\col, below=1.5cm of memlbl,
+              anchor=north, xshift={\i*\blocksize}] (s2_mem_\i) {};
+    \fi
+}
+
+% Arrow 2
+\draw[arrow] ([xshift=1.5cm]s2_mem_6.east) -- ++(3,0) 
+    node[midway, above, align=center] {Eviction to\\make room};
+
+% State 3: Final
+\node[state, right=12cm of l1lbl] (state3) {};
+\foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of state3.east,
+          anchor=west, xshift={\i*\blocksize}] (s3_l1_\i) {};
+}
+
+\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \ifnum\i=1
+        \node[block, pattern=north east lines, pattern color=\col,
+              below=1.5cm of state3, anchor=north, xshift={\i*\blocksize}] (s3_mem_\i) {};
+    \else
+        \node[block, fill=\col, below=1.5cm of state3,
+              anchor=north, xshift={\i*\blocksize}] (s3_mem_\i) {};
+    \fi
+}
+
+\end{tikzpicture}
+
+\vspace{1cm}
+\footnotesize
+\textbf{Note:} Write-through policy ensures data is written to both L1 cache and main memory simultaneously.\\
+(Fully associative cache with 2 bytes per block)
+
 \end{frame}
 
 \begin{frame}{Write Through Policy}
@@ -527,7 +621,7 @@ Given: Variable i at address 0x00000100
 \begin{itemize}
     \item Maintain linked list of 4 nodes (one per way)
     \item Store order of usage
-    \item 2 bits per way × 4 ways = 8 bits
+    \item 2 bits per way $\times$ 4 ways = 8 bits
     \item Update list on every access
 \end{itemize}
 
@@ -550,12 +644,12 @@ Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
 \begin{itemize}
     \item Store only 3 most recent ways
     \item 4th way is implicitly LRU
-    \item 2 bits × 3 = 6 bits per set
+    \item 2 bits $\times$ 3 = 6 bits per set
 \end{itemize}
 
 \textbf{Method 3: Optimal Encoding (5 bits per set)}
 \begin{itemize}
-    \item Number of possible orderings: 4! = 24
+    \item Number of possible orderings: $4! = 24$
     \item Need $\lceil \log_2(24) \rceil = 5$ bits
     \item Most space-efficient
     \item But complex encoding/decoding logic
@@ -572,8 +666,8 @@ Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
 \textbf{Solution:} Modified mapping function
 \begin{itemize}
     \item Use MSB-2 bit to distinguish A (0) from B (1)
-    \item Map sets 0-3 to A segments only
-    \item Map sets 4-7 to B segments only
+    \item Map sets 0--3 to A segments only
+    \item Map sets 4--7 to B segments only
 \end{itemize}
 
 Original: [Tag | Set | Offset]\\
