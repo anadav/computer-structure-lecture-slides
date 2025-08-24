@@ -243,7 +243,7 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
   % Working from MSB (63) to LSB (0), left to right
   \coordinate (b63) at (0,0);               % MSB position
   \coordinate (b62) at ($(b63) + (1,0)$);   % XD is 1 bit wide
-  \coordinate (b59) at ($(b62) + (4,0)$);   % PKE is 4 bits wide (62-59)
+  \coordinate (b59) at ($(b62) + (4,0)$);   % PK is 4 bits wide (62-59)
   \coordinate (b52) at ($(b59) + (7,0)$);   % Available is 7 bits wide (58-52)
   \coordinate (b12) at ($(b52) + (40,0)$);  % PFA is 40 bits wide (51-12)
   \coordinate (b9) at ($(b12) + (3,0)$);    % AVL is 3 bits wide (11-9)
@@ -266,7 +266,7 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
   % Protection Key (59-62) - relative to previous
   \fill[fieldblue!30] (b62) rectangle ($(b59) + (0,\boxheight)$);
   \draw[thick] (b59) -- ($(b59) + (0,\boxheight)$);
-  \node at ($(b62)!0.5!(b59) + (0,\boxheight/2)$) {PKE};
+  \node at ($(b62)!0.5!(b59) + (0,\boxheight/2)$) {PK};
   \node[below] at ($(b62)!0.5!(b59) + (0,-0.3)$) {62-59};
   
   % Available bits (52-58) - relative positioning
@@ -278,7 +278,7 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
   % Page Frame Address (12-51) - relative positioning
   \fill[fieldpurple!30] (b52) rectangle ($(b12) + (0,\boxheight)$);
   \draw[thick] (b12) -- ($(b12) + (0,\boxheight)$);
-  \node at ($(b52)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address [51:12]};
+  \node at ($(b52)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address};
   \node[below] at ($(b52)!0.5!(b12) + (0,-0.3)$) {51-12};
   
   % AVL bits (9-11) - relative
@@ -350,11 +350,11 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
   \draw[-|, fieldblue!60!black] (lblXD.east) -| ($(b63.north)!0.5!(b62.north) + (0,\boxheight)$);
 
   % Protection Key (59-62)
-  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblXD.east, anchor=south east] (lblPKE) {Protection Key};
-  \draw[-|, fieldblue!60!black] (lblPKE.east) -| ($(b62.north)!0.5!(b59.north) + (0, \boxheight)$);
+  \node[below, align=left, text=fieldblue!70!black, above=0mm of lblXD.east, anchor=south east] (lblPK) {Protection Key};
+  \draw[-|, fieldblue!60!black] (lblPK.east) -| ($(b62.north)!0.5!(b59.north) + (0, \boxheight)$);
   
   % Available (52-58)
-  \node[below, align=left, text=fieldgray!70!black, above=0mm of lblPKE.east, anchor=south east] (lblAVL2) {Available};
+  \node[below, align=left, text=fieldgray!70!black, above=0mm of lblPK.east, anchor=south east] (lblAVL2) {Available};
   \draw[-|, fieldgray!60!black] (lblAVL2.east) -| ($(b59.north)!0.5!(b52.north) + (0, \boxheight)$);
   
   % Physical Page Frame Address (12-51)
@@ -406,7 +406,7 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
 \small
 \begin{itemize}
   \item 64-bit entries support 52-bit physical addresses
-  \item Protection keys (PKE) provide additional access control
+  \item Protection keys (PK) provide additional access control
   \item XD bit prevents code execution from data pages
 \end{itemize}
 \end{frame}
