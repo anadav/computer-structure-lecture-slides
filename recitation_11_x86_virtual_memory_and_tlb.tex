@@ -23,6 +23,102 @@
 \definecolor{myred}{RGB}{200,0,0}
 \definecolor{mygray}{RGB}{100,100,100}
 
+% Additional colors for bit field diagrams
+\definecolor{fieldpurple}{RGB}{200,180,255}
+\definecolor{fieldblue}{RGB}{180,220,255}
+\definecolor{fieldgreen}{RGB}{180,255,180}
+\definecolor{fieldyellow}{RGB}{255,255,180}
+\definecolor{fieldorange}{RGB}{255,220,180}
+\definecolor{fieldpink}{RGB}{255,200,230}
+\definecolor{fieldgray}{RGB}{220,220,220}
+\definecolor{fieldcyan}{RGB}{180,255,255}
+\definecolor{fieldred}{RGB}{255,180,180}
+
+% Macro for creating bit field diagrams  
+\newcommand{\drawbitfield}[2]{
+  % #1: total bits (e.g., 64)
+  % #2: comma-separated list of field specifications
+  \begin{tikzpicture}[
+    scale=0.8,
+    cell/.style={rectangle, draw=black, thick, minimum height=0.8cm, font=\tiny},
+    label/.style={font=\scriptsize},
+    arrow/.style={->, >=stealth, thick}
+  ]
+    % Total width calculation
+    \pgfmathsetmacro{\bitwidth}{0.25}
+    \pgfmathsetmacro{\totalwidth}{#1*\bitwidth}
+    
+    % Draw main border first
+    \draw[very thick] (0, 0) rectangle (\totalwidth, 0.8);
+    
+    % Process each field
+    \foreach \spec in {#2} {
+      % Parse the specification
+      \pgfkeys{/bitfield/.cd, default, \spec}
+      \pgfmathtruncatemacro{\startbit}{\fieldstartbit}
+      \pgfmathtruncatemacro{\endbit}{\fieldendbit}
+      
+      % Calculate positions
+      \pgfmathsetmacro{\startx}{\startbit*\bitwidth}
+      \pgfmathsetmacro{\endx}{(\endbit+1)*\bitwidth}
+      \pgfmathsetmacro{\fieldwidth}{\endx-\startx}
+      \pgfmathsetmacro{\centerx}{(\startx+\endx)/2}
+      
+      % Draw field box with color
+      \fill[\fieldcolor!30] (\startx, 0) rectangle (\endx, 0.8);
+      \draw[thick] (\startx, 0) -- (\startx, 0.8);
+      \ifnum\endbit<#1
+        \ifnum\endbit<63
+          \draw[thick] (\endx, 0) -- (\endx, 0.8);
+        \fi
+      \fi
+      
+      % Add field text
+      \node[font=\tiny] at (\centerx, 0.4) {\fieldshortname};
+      
+      % Add bit numbers below
+      \ifnum\startbit=\endbit
+        \node[below, label] at (\centerx, 0) {\startbit};
+      \else
+        \node[below, label] at (\startx, 0) {\startbit};
+        \node[below, label] at (\endx, 0) {\endbit};
+      \fi
+      
+      % Add long description with arrow if not empty
+      \def\emptystring{}
+      \ifx\fieldlongname\emptystring\else
+        % Calculate label position (stagger heights)
+        \pgfmathsetmacro{\labely}{1.2 + 0.4*mod(\startbit/5, 4)}
+        \node[above, align=center, label, text=\fieldcolor!70!black] 
+              (label-\startbit) at (\centerx, \labely) {\fieldlongname};
+        \draw[arrow, \fieldcolor!60!black] (label-\startbit.south) -- (\centerx, 0.8);
+      \fi
+    }
+    
+    % Add overall bit range labels
+    \node[below, label] at (0, -0.5) {0};
+    \pgfmathtruncatemacro{\maxbit}{#1-1}
+    \node[below, label] at (\totalwidth, -0.5) {\maxbit};
+  \end{tikzpicture}
+}
+
+% pgfkeys for field specifications
+\pgfkeys{
+  /bitfield/.is family, /bitfield,
+  default/.style = {
+    startbit = 0,
+    endbit = 0,
+    shortname = {},
+    longname = {},
+    color = fieldgray
+  },
+  startbit/.estore in = \fieldstartbit,
+  endbit/.estore in = \fieldendbit,
+  shortname/.estore in = \fieldshortname,
+  longname/.estore in = \fieldlongname,
+  color/.estore in = \fieldcolor
+}
+
 \title{x86 Virtual Memory and TLB}
 \author{Computer Architecture 234267}
 \date{2025, Recitation \#11}
@@ -119,7 +215,157 @@ Key: P=Present, W=Writable, U=User/Supervisor, PWT=Write-Through,\\
 PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
 \end{frame}
 
-% Slide 5: 64-bit Mode Page Mapping
+% Slide 5: Intel 64-bit PTE Format  
+\begin{frame}{Intel 64-bit Page Table Entry (PTE)}
+\centering
+\textbf{64-bit Mode PTE Format}\\[1em]
+
+\begin{tikzpicture}[scale=0.18, font=\tiny]
+  % Define constants
+  \def\boxheight{3}
+  \def\bitwidth{1}
+  
+  % Draw outer border
+  \draw[very thick] (0,0) rectangle (64,\boxheight);
+  
+  % Individual bit fields - manually define each
+  % P bit (0)
+  \fill[fieldblue!30] (0,0) rectangle (1,\boxheight);
+  \draw[thick] (1,0) -- (1,\boxheight);
+  \node at (0.5,1.5) {P};
+  \node[below] at (0.5,-0.3) {0};
+  
+  % W bit (1)
+  \fill[fieldgreen!30] (1,0) rectangle (2,\boxheight);
+  \draw[thick] (2,0) -- (2,\boxheight);
+  \node at (1.5,1.5) {W};
+  \node[below] at (1.5,-0.3) {1};
+  
+  % U/S bit (2)
+  \fill[fieldyellow!30] (2,0) rectangle (3,\boxheight);
+  \draw[thick] (3,0) -- (3,\boxheight);
+  \node at (2.5,1.5) {U/S};
+  \node[below] at (2.5,-0.3) {2};
+  
+  % PWT bit (3)
+  \fill[fieldorange!30] (3,0) rectangle (4,\boxheight);
+  \draw[thick] (4,0) -- (4,\boxheight);
+  \node at (3.5,1.5) {PWT};
+  \node[below] at (3.5,-0.3) {3};
+  
+  % PCD bit (4)
+  \fill[fieldorange!30] (4,0) rectangle (5,\boxheight);
+  \draw[thick] (5,0) -- (5,\boxheight);
+  \node at (4.5,1.5) {PCD};
+  \node[below] at (4.5,-0.3) {4};
+  
+  % A bit (5)
+  \fill[fieldcyan!30] (5,0) rectangle (6,\boxheight);
+  \draw[thick] (6,0) -- (6,\boxheight);
+  \node at (5.5,1.5) {A};
+  \node[below] at (5.5,-0.3) {5};
+  
+  % D bit (6)
+  \fill[fieldcyan!30] (6,0) rectangle (7,\boxheight);
+  \draw[thick] (7,0) -- (7,\boxheight);
+  \node at (6.5,1.5) {D};
+  \node[below] at (6.5,-0.3) {6};
+  
+  % PAT bit (7)
+  \fill[fieldpink!30] (7,0) rectangle (8,\boxheight);
+  \draw[thick] (8,0) -- (8,\boxheight);
+  \node at (7.5,1.5) {PAT};
+  \node[below] at (7.5,-0.3) {7};
+  
+  % G bit (8)
+  \fill[fieldpink!30] (8,0) rectangle (9,\boxheight);
+  \draw[thick] (9,0) -- (9,\boxheight);
+  \node at (8.5,1.5) {G};
+  \node[below] at (8.5,-0.3) {8};
+  
+  % AVL bits (9-11)
+  \fill[fieldgray!30] (9,0) rectangle (12,\boxheight);
+  \draw[thick] (12,0) -- (12,\boxheight);
+  \node at (10.5,1.5) {AVL};
+  \node[below] at (9,-0.3) {9};
+  \node[below] at (12,-0.3) {11};
+  
+  % Page Frame Address (12-51)
+  \fill[fieldpurple!30] (12,0) rectangle (52,\boxheight);
+  \draw[thick] (52,0) -- (52,\boxheight);
+  \node at (32,1.5) {Page Frame Address};
+  \node[below] at (12,-0.3) {12};
+  \node[below] at (52,-0.3) {51};
+  
+  % Available bits (52-58)
+  \fill[fieldgray!30] (52,0) rectangle (59,\boxheight);
+  \draw[thick] (59,0) -- (59,\boxheight);
+  \node at (55.5,1.5) {Available};
+  \node[below] at (59,-0.3) {58};
+  
+  % Protection Key (59-62)
+  \fill[fieldyellow!30] (59,0) rectangle (63,\boxheight);
+  \draw[thick] (63,0) -- (63,\boxheight);
+  \node at (61,1.5) {PKE};
+  \node[below] at (59,-0.3) {59};
+  \node[below] at (63,-0.3) {62};
+  
+  % XD bit (63)
+  \fill[fieldred!30] (63,0) rectangle (64,\boxheight);
+  \node at (63.5,1.5) {XD};
+  \node[below] at (63.5,-0.3) {63};
+  
+  % Add descriptive labels with arrows
+  \node[above, text=fieldblue!70!black] (lblP) at (0.5,4) {Present};
+  \draw[->, fieldblue!60!black] (lblP.south) -- (0.5,\boxheight);
+  
+  \node[above, text=fieldgreen!70!black] (lblW) at (1.5,4.5) {Writable};
+  \draw[->, fieldgreen!60!black] (lblW.south) -- (1.5,\boxheight);
+  
+  \node[above, text=fieldyellow!70!black] (lblUS) at (2.5,5) {User/Supervisor};
+  \draw[->, fieldyellow!60!black] (lblUS.south) -- (2.5,\boxheight);
+  
+  \node[above, text=fieldorange!70!black] (lblPWT) at (3.5,4) {Write-Through};
+  \draw[->, fieldorange!60!black] (lblPWT.south) -- (3.5,\boxheight);
+  
+  \node[above, text=fieldorange!70!black] (lblPCD) at (4.5,4.5) {Cache Disable};
+  \draw[->, fieldorange!60!black] (lblPCD.south) -- (4.5,\boxheight);
+  
+  \node[above, text=fieldcyan!70!black] (lblA) at (5.5,5) {Accessed};
+  \draw[->, fieldcyan!60!black] (lblA.south) -- (5.5,\boxheight);
+  
+  \node[above, text=fieldcyan!70!black] (lblD) at (6.5,4) {Dirty};
+  \draw[->, fieldcyan!60!black] (lblD.south) -- (6.5,\boxheight);
+  
+  \node[above, text=fieldpink!70!black] (lblPAT) at (7.5,4.5) {Page Attr Table};
+  \draw[->, fieldpink!60!black] (lblPAT.south) -- (7.5,\boxheight);
+  
+  \node[above, text=fieldpink!70!black] (lblG) at (8.5,5) {Global};
+  \draw[->, fieldpink!60!black] (lblG.south) -- (8.5,\boxheight);
+  
+  \node[above, text=fieldgray!70!black] (lblAVL) at (10.5,4) {Available for OS};
+  \draw[->, fieldgray!60!black] (lblAVL.south) -- (10.5,\boxheight);
+  
+  \node[above, text=fieldpurple!70!black] (lblPFA) at (32,4.5) {Physical Page Frame (bits 51:12)};
+  \draw[->, fieldpurple!60!black] (lblPFA.south) -- (32,\boxheight);
+  
+  \node[above, text=fieldyellow!70!black] (lblPKE) at (61,4) {Protection Key};
+  \draw[->, fieldyellow!60!black] (lblPKE.south) -- (61,\boxheight);
+  
+  \node[above, text=fieldred!70!black] (lblXD) at (63.5,4.5) {Execute Disable};
+  \draw[->, fieldred!60!black] (lblXD.south) -- (63.5,\boxheight);
+\end{tikzpicture}
+
+\vspace{1em}
+\small
+\begin{itemize}
+  \item 64-bit entries support 52-bit physical addresses
+  \item Protection keys (PKE) provide additional access control
+  \item XD bit prevents code execution from data pages
+\end{itemize}
+\end{frame}
+
+% Slide 6: 64-bit Mode Page Mapping
 \begin{frame}{4KB Page Mapping in 64-bit Mode}
 \begin{itemize}
     \item Introduced in 2003 with AMD Opteron
