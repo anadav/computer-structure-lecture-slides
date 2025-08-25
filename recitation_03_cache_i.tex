@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -259,6 +259,7 @@ Eviction $\rightarrow$ If dirty, write to Memory
     label/.style={font=\bfseries\large},
     arrow/.style={->, >=Stealth, thick, font=\small},
     state/.style={inner sep=0pt},
+    group/.style={draw, very thick, inner sep=0pt},
     node distance=0cm and 0cm
 ]
 % Define colors for blocks
@@ -271,12 +272,19 @@ Eviction $\rightarrow$ If dirty, write to Memory
     \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east, 
           anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
 }
+% Group borders for State 1 L1
+\node[group, fit=(s1_l1_1)(s1_l1_2)] {};
+\node[group, fit=(s1_l1_3)(s1_l1_4)] {};
 
 \node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
 \foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \node[block, fill=\col, right=0cm of memlbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
 }
+% Group borders for State 1 MEM
+\node[group, fit=(s1_mem_1)(s1_mem_2)] {};
+\node[group, fit=(s1_mem_3)(s1_mem_4)] {};
+\node[group, fit=(s1_mem_5)(s1_mem_6)] {};
 
 % coordinate between L1 and MEM
 \coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east)$);
@@ -285,7 +293,7 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
   node[midway, above] (arrow1) {};
 \node[block, pattern=north east lines, pattern color=blue,
-      above=-2mm of arrow1] (writeblock) {};
+      above=of arrow1] (writeblock) {};
 \node[above=of writeblock] (write) {Write};
 
 % State 2: After Write - positioned relative to arrow1
@@ -301,6 +309,9 @@ Eviction $\rightarrow$ If dirty, write to Memory
               anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
     \fi
 }
+% Group borders for State 2 L1
+\node[group, fit=(s2_l1_1)(s2_l1_2)] {};
+\node[group, fit=(s2_l1_3)(s2_l1_4)] {};
 
 \foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
@@ -312,19 +323,26 @@ Eviction $\rightarrow$ If dirty, write to Memory
               anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
     \fi
 }
+% Group borders for State 2 MEM
+\node[group, fit=(s2_mem_1)(s2_mem_2)] {};
+\node[group, fit=(s2_mem_3)(s2_mem_4)] {};
+\node[group, fit=(s2_mem_5)(s2_mem_6)] {};
 
 % Arrow 2
-\coordinate (between2) at ([xshift=1.5cm]s2start);
-\draw[arrow] (between2) -- ++(2.5,0) 
+\coordinate (between2) at ([xshift=4*\blocksize+3cm]between);
+\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0) 
     node[midway, above, align=center] (arrow2) {Eviction to\\make room};
 
 % State 3: Final - positioned relative to arrow2
-\coordinate (s3start) at ([xshift=2.5cm]between2);
+\coordinate (s3start) at ([xshift=4cm]between2);
 
 \foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
     \node[block, fill=\col, right=0cm of s3start,
           anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s3_l1_\i) {};
 }
+% Group borders for State 3 L1
+\node[group, fit=(s3_l1_1)(s3_l1_2)] {};
+\node[group, fit=(s3_l1_3)(s3_l1_4)] {};
 
 \foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
@@ -336,6 +354,10 @@ Eviction $\rightarrow$ If dirty, write to Memory
               anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
     \fi
 }
+% Group borders for State 3 MEM
+\node[group, fit=(s3_mem_1)(s3_mem_2)] {};
+\node[group, fit=(s3_mem_3)(s3_mem_4)] {};
+\node[group, fit=(s3_mem_5)(s3_mem_6)] {};
 
 \end{tikzpicture}
 
@@ -344,6 +366,9 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \textbf{Note:} Write-through policy ensures data is written to both L1 cache and main memory simultaneously.\\
 (Fully associative cache with 2 bytes per block)
 \end{frame}
+
+
+
 
 \begin{frame}{Write Through Policy}
 \begin{itemize}
