@@ -20,10 +20,8 @@
 
 % Define TikZ styles for cache diagrams
 \tikzset{
-    writeblock/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize, pattern=grid, pattern color=#1, line width=5pt},
-    writeblock/.default=blue,
-    densegrid/.style={pattern=grid, pattern color=#1, line width=5pt},
-    densegrid/.default=blue
+    writeblock/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize, pattern=grid, pattern color=#1},
+    writeblock/.default=blue
 }
 
 \title{Cache Memory I}
@@ -268,14 +266,14 @@ Eviction $\rightarrow$ If dirty, write to Memory
     block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
     label/.style={font=\bfseries\large},
     arrow/.style={->, >=Stealth, thick, font=\small},
-    dirtymark/.style={font=\footnotesize\bfseries, white},
+    dirtymark/.style={font=\footnotesize\bfseries, black},
     group/.style={draw, very thick, inner sep=0pt},
     node distance=0cm and 0cm
 ]
 
 % State 1: Initial
 \node[label] (l1lbl) {L1};
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
     \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east, 
           anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
 }
@@ -284,7 +282,7 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \node[group, fit=(s1_l1_3)(s1_l1_4)] {};
 
 \node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \node[block, fill=\col, right=0cm of memlbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
 }
@@ -307,9 +305,9 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \coordinate (s2start) at ([xshift=4cm]between);
 
 % L1 cache with first block (both pieces) marked as dirty
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
     \ifnum\i=1
-        \node[block, densegrid=\col, 
+        \node[writeblock=\col, 
               right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
               yshift=0.75cm] (s2_l1_\i) {};
         % Add dirty bit marker
@@ -331,7 +329,7 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \node[group, fit=(s2_l1_3)(s2_l1_4)] {};
 
 % MEM remains unchanged in State 2
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \node[block, fill=\col, right=0cm of s2start,
           anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
 }
@@ -358,9 +356,9 @@ Eviction $\rightarrow$ If dirty, write to Memory
 \node[group, fit=(s3_l1_3)(s3_l1_4)] {};
 
 % MEM with updated first block (both pieces written back from cache)
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
-        \node[block, densegrid=\col,
+        \node[writeblock=\col,
               right=0cm of s3start, anchor=west, xshift={\i*\blocksize}, 
               yshift=-0.75cm] (s3_mem_\i) {};
         % Add dirty bit marker to show it was written back
@@ -403,12 +401,12 @@ The entire cache block (2 bytes) is marked dirty when any part is modified.\\
     node distance=0cm and 0cm
 ]
 % Define colors for blocks
-\def\initialL{blue!60, blue!60, green!60, green!60}
-\def\initialM{blue!60, blue!60, green!60, green!60, yellow!60, yellow!60}
+\def\initialL{blue!30, blue!30, green!60, green!60}
+\def\initialM{blue!30, blue!30, green!60, green!60, yellow!60, yellow!60}
 
 % State 1: Initial
 \node[label] (l1lbl) {L1};
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
     \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east, 
           anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
 }
@@ -417,7 +415,7 @@ The entire cache block (2 bytes) is marked dirty when any part is modified.\\
 \node[group, fit=(s1_l1_3)(s1_l1_4)] {};
 
 \node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \node[block, fill=\col, right=0cm of memlbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
 }
@@ -439,9 +437,9 @@ The entire cache block (2 bytes) is marked dirty when any part is modified.\\
 % State 2: After Write - positioned relative to arrow1
 \coordinate (s2start) at ([xshift=4cm]between);
 
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
     \ifnum\i=1
-        \node[block, densegrid=\col, 
+        \node[writeblock=\col, 
               right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
               yshift=0.75cm] (s2_l1_\i) {};
     \else
@@ -453,9 +451,9 @@ The entire cache block (2 bytes) is marked dirty when any part is modified.\\
 \node[group, fit=(s2_l1_1)(s2_l1_2)] {};
 \node[group, fit=(s2_l1_3)(s2_l1_4)] {};
 
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
-        \node[block, densegrid=\col,
+        \node[writeblock=\col,
               right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
               yshift=-0.75cm] (s2_mem_\i) {};
     \else
@@ -484,9 +482,9 @@ The entire cache block (2 bytes) is marked dirty when any part is modified.\\
 \node[group, fit=(s3_l1_1)(s3_l1_2)] {};
 \node[group, fit=(s3_l1_3)(s3_l1_4)] {};
 
-\foreach \i/\col in {1/blue!60, 2/blue!60, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
-        \node[block, densegrid=\col,
+        \node[writeblock=\col,
               right=0cm of s3start, anchor=west, xshift={\i*\blocksize}, 
               yshift=-0.75cm] (s3_mem_\i) {};
     \else
