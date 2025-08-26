@@ -24,6 +24,145 @@
     writeblock/.default=blue
 }
 
+\newcommand{\addressbreakdown}[3]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.6cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    % Calculate total bits and positions
+    \pgfmathtruncatemacro{\totalbits}{#1 + #2 + #3}
+    \pgfmathtruncatemacro{\tagstart}{\totalbits - 1}
+    \pgfmathtruncatemacro{\tagend}{\totalbits - #1}
+    \pgfmathtruncatemacro{\setstart}{\tagend - 1}
+    \pgfmathtruncatemacro{\setend}{\tagend - #2}
+    \pgfmathtruncatemacro{\offsetstart}{\setend - 1}
+    \pgfmathtruncatemacro{\offsetend}{0}
+    
+    % Scale factor for width (adjust this to change overall size)
+    \pgfmathsetmacro{\bitwidth}{0.17}
+    
+    % Starting position
+    \pgfmathsetmacro{\xpos}{0}
+    
+    % Draw tag block
+    \ifnum#1>0
+        \pgfmathsetmacro{\tagwidth}{#1 * \bitwidth}
+        \node[section, fill=blue!40, minimum width=\tagwidth cm] (tag) at (\xpos + \tagwidth/2, 0) {};
+        \node[sectionlabel] at (tag.center) {tag};
+        
+        % Add bit numbers below
+        \node[bitnumber] at ($(tag.south west) + (0mm,-1mm)$) {\tagstart};
+        \node[bitnumber] at ($(tag.south east) + (-1mm,-1mm)$) {\tagend};
+        
+        \pgfmathsetmacro{\xpos}{\xpos + \tagwidth}
+    \fi
+    
+    % Draw set block
+    \ifnum#2>0
+        \pgfmathsetmacro{\setwidth}{#2 * \bitwidth}
+        \node[section, fill=green!40, minimum width=\setwidth cm] (set) at (\xpos + \setwidth/2, 0) {};
+        % if num is smaller thean 2 rotate label
+        \ifnum#2<3
+            \node[sectionlabel, rotate=90] at (set.center) {set};
+        \else
+            \node[sectionlabel] at (set.center) {set};
+        
+        % Add bit numbers below
+        \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {\setstart};
+        \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {\setend};
+        
+        \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
+    \fi
+    
+    % Draw offset block
+    \ifnum#3>0
+        \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
+        \node[section, fill=yellow!40, minimum width=\offsetwidth cm] (offset) at (\xpos + \offsetwidth/2, 0) {};
+        \ifnum#3<3
+            \node[sectionlabel, rotate=90, font=\tiny] at (offset.center) {offset};
+        \else
+            \node[sectionlabel] at (offset.center) {offset};
+        \fi
+        
+        % Add bit numbers below
+        \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstart};
+        \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {\offsetend};
+    \fi
+    \end{tikzpicture}
+}
+
+% Alternative version with bit counts shown instead of labels
+\newcommand{\addressbreakdownbits}[3]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.8cm},
+        bitnumber/.style={font=\tiny},
+        bitcount/.style={font=\footnotesize},
+        baseline=(current bounding box.center)
+    ]
+    % Calculate total bits and positions
+    \pgfmathtruncatemacro{\totalbits}{#1 + #2 + #3}
+    \pgfmathtruncatemacro{\tagstart}{\totalbits - 1}
+    \pgfmathtruncatemacro{\tagend}{\totalbits - #1}
+    \pgfmathtruncatemacro{\setstart}{\tagend - 1}
+    \pgfmathtruncatemacro{\setend}{\tagend - #2}
+    \pgfmathtruncatemacro{\offsetstart}{\setend - 1}
+    \pgfmathtruncatemacro{\offsetend}{0}
+    
+    % Scale factor for width
+    \pgfmathsetmacro{\bitwidth}{0.25}
+    
+    % Starting position
+    \pgfmathsetmacro{\xpos}{0}
+    
+    % Draw tag block
+    \ifnum#1>0
+        \pgfmathsetmacro{\tagwidth}{#1 * \bitwidth}
+        \node[section, fill=blue!40, minimum width=\tagwidth cm] (tag) at (\xpos + \tagwidth/2, 0) {};
+        \node[bitcount] at (tag.center) {#1};
+        
+        % Add bit range below
+        \node[bitnumber, below=2pt] at (tag.south) {\tagstart:\tagend};
+        
+        \pgfmathsetmacro{\xpos}{\xpos + \tagwidth}
+    \fi
+    
+    % Draw set block
+    \ifnum#2>0
+        \pgfmathsetmacro{\setwidth}{#2 * \bitwidth}
+        \node[section, fill=green!40, minimum width=\setwidth cm] (set) at (\xpos + \setwidth/2, 0) {};
+        \node[bitcount] at (set.center) {#2};
+        
+        % Add bit range below
+        \node[bitnumber, below=2pt] at (set.south) {\setstart:\setend};
+        
+        \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
+    \fi
+    
+    % Draw offset block
+    \ifnum#3>0
+        \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
+        \node[section, fill=yellow!40, minimum width=\offsetwidth cm] (offset) at (\xpos + \offsetwidth/2, 0) {};
+        \node[bitcount] at (offset.center) {#3};
+        
+        % Add bit range below
+        \node[bitnumber, below=2pt] at (offset.south) {\offsetstart:\offsetend};
+    \fi
+    
+    % Add labels above
+    \ifnum#1>0
+        \node[font=\footnotesize, above=2pt] at (tag.north) {Tag};
+    \fi
+    \ifnum#2>0
+        \node[font=\footnotesize, above=2pt] at (set.north) {Set};
+    \fi
+    \ifnum#3>0
+        \node[font=\footnotesize, above=2pt] at (offset.north) {Offset};
+    \fi
+    \end{tikzpicture}
+}
+
 \title{Cache Memory I}
 \author{Computer Architecture 234267}
 \date{2025, Recitation \#3}
@@ -134,8 +273,7 @@
 \begin{tcolorbox}[colback=gray!10]
 \textbf{Address Fields:}\\
 \begin{center}
-[Tag | Set | Line Offset]\\
-31 \hspace{1cm} 13 \hspace{0.5cm} 5 \hspace{0.5cm} 4 \hspace{0.5cm} 0
+    \addressbreakdown{24}{3}{5}
 \end{center}
 \end{tcolorbox}
 
@@ -574,7 +712,8 @@ What happens when we need to write to data not in cache?
 \begin{itemize}
     \item 2-way set associative cache, LRU replacement
     \item 4 bytes per block (line)
-    \item Address format: [Tag(29-5) | Set(4-2) | Offset(1-0)]
+    \item Address format: %[Tag(29-5) | Set(4-2) | Offset(1-0)]
+    \addressbreakdown{25}{3}{2}
     \item Sequence: 5, 7, 1, 4, 36, 8, 100, 6, 4, 12, 36, 12, 68, 5, 7
 \end{itemize}
 
@@ -1138,10 +1277,7 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \begin{tcolorbox}[colback=yellow!10, width=0.9\textwidth]
 \textbf{Implementation:}\\
 Original Set = bits[4:2]\\
-Modified Set = \{bit[28], bits[4:2]\}\\
-\vspace{0.2cm}
-Example: Address from A0 (bit 28=0) with set bits 101:\\
-Modified set = 0101 = Set 5 (but limited to 0-3 for A)
+Modified Set = \{bit[28], bits[4:2]\}
 \end{tcolorbox}
 \end{center}
 \end{frame}
@@ -1187,8 +1323,6 @@ Modified set = 0101 = Set 5 (but limited to 0-3 for A)
 \end{center}
 \end{columns}
 
-\pause
-\vspace{0.3cm}
 \begin{tcolorbox}[colback=green!10]
 \textbf{Advantages:} Simple hardware, guaranteed 50/50 split, maintains associativity
 \end{tcolorbox}
