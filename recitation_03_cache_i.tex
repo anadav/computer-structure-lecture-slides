@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit, circuits.logic.US}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -1074,6 +1074,182 @@ for (int i=0; i<1024; i++)
 \end{enumerate}
 \end{frame}
 
+
+\tikzset{
+    % Style definitions
+    tagbox/.style={rectangle, draw, fill=green!30, minimum width=2cm, minimum height=0.6cm},
+    setbox/.style={rectangle, draw, fill=cyan!30, minimum width=1.5cm, minimum height=0.6cm},
+    offsetbox/.style={rectangle, draw, fill=orange!30, minimum width=2cm, minimum height=0.6cm},
+    cellstyle/.style={rectangle, draw, minimum width=2.2cm, minimum height=0.4cm},
+    tagcell/.style={cellstyle, fill=green!20},
+    decoder/.style={trapezium, trapezium angle=70, draw, fill=green!30, minimum width=1cm, minimum height=0.8cm, rotate=-90},
+    comparator/.style={regular polygon, regular polygon sides=5, draw, fill=green!30, minimum width=0.8cm},
+    mux/.style={trapezium, trapezium angle=70, draw, minimum width=0.8cm, minimum height=0.6cm},
+    arrow/.style={->, >=stealth, thick},
+    dasharrow/.style={dashed, ->, >=stealth}
+}
+
+% Macro for OR gate
+\newcommand{\orgate}[2]{% #1 = position, #2 = name
+    \begin{scope}[shift={(#1)}]
+        \node[or gate US, draw, logic gate inputs=nn, anchor=center] (#2) {};
+        \coordinate (#2-in1) at ([xshift=-0.5cm]#2.input 1);
+        \coordinate (#2-in2) at ([xshift=-0.5cm]#2.input 2);
+        \coordinate (#2-out) at ([xshift=0.5cm]#2.output);
+    \end{scope}
+}
+
+% Macro for comparator
+\newcommand{\comparatornode}[3]{% #1 = position, #2 = name, #3 = label
+    \node[comparator] (#2) at (#1) {#3};
+    \coordinate (#2-in1) at (#2.north);
+    \coordinate (#2-in2) at ([xshift=-0.3cm]#2.north west);
+    \coordinate (#2-out) at (#2.south);
+}
+
+% Macro for MUX
+\newcommand{\muxnode}[2]{% #1 = position, #2 = name
+    \node[mux] (#2) at (#1) {MUX};
+    \coordinate (#2-in0) at ([yshift=0.2cm]#2.west);
+    \coordinate (#2-in1) at ([yshift=0.2cm]#2.east);
+    \coordinate (#2-sel) at (#2.north);
+    \coordinate (#2-out) at (#2.south);
+}
+
+\begin{frame}[fragile]{Cache Architecture}
+\begin{center}
+\begin{tikzpicture}[scale=0.75, transform shape]
+
+% Address bits at top
+\node[tagbox] (tag) {Tag};
+\node[setbox, right=0pt of tag] (set) {Set};
+\node[offsetbox, right=0pt of set] (offset) {Line Offset};
+
+% Bit labels
+\node[above=1mm of tag.west, anchor=south] {\footnotesize 31};
+\node[above=1mm of tag.east, anchor=south] {\footnotesize 6};
+\node[above=1mm of set.east, anchor=south] {\footnotesize 5\,4};
+\node[above=1mm of offset.east, anchor=south] {\footnotesize 0};
+
+% Way 0 components
+\node[decoder, below left=2.5cm and 1.5cm of set] (decoder0) {};
+\node[left=3mm of decoder0] {\small Set\#};
+
+% Tag array matrix for Way 0
+\matrix[matrix of nodes, nodes={tagcell}, 
+        column sep=-\pgflinewidth, row sep=-\pgflinewidth,
+        right=8mm of decoder0, anchor=west] (tag0) {
+    Tag \\
+    Tag \\
+    Tag \\
+    Tag \\
+};
+\node[above=2mm of tag0] {\small Tag};
+
+% Data array matrix for Way 0
+\matrix[matrix of nodes, nodes={cellstyle}, 
+        column sep=-\pgflinewidth, row sep=-\pgflinewidth,
+        right=8mm of tag0, anchor=west] (data0) {
+    Data \\
+    Data \\
+    Data \\
+    Data \\
+};
+\node[above=5mm of data0] {\textbf{Way 0}};
+
+% Way 1 components
+\node[decoder, below right=2.5cm and 1.5cm of set] (decoder1) {};
+\node[left=3mm of decoder1] {\small Set\#};
+
+% Tag array matrix for Way 1
+\matrix[matrix of nodes, nodes={tagcell}, 
+        column sep=-\pgflinewidth, row sep=-\pgflinewidth,
+        right=8mm of decoder1, anchor=west] (tag1) {
+    Tag \\
+    Tag \\
+    Tag \\
+    Tag \\
+};
+\node[above=2mm of tag1] {\small Tag};
+
+% Data array matrix for Way 1
+\matrix[matrix of nodes, nodes={cellstyle}, 
+        column sep=-\pgflinewidth, row sep=-\pgflinewidth,
+        right=8mm of tag1, anchor=west] (data1) {
+    Data \\
+    Data \\
+    Data \\
+    Data \\
+};
+\node[above=5mm of data1] {\textbf{Way 1}};
+
+% Place comparators
+\comparatornode{$(tag0.south)+(0,-0.8)$}{comp0}{$=$}
+\comparatornode{$(tag1.south)+(0,-0.8)$}{comp1}{$=$}
+
+% Place OR gate
+\orgate{$(comp0)!0.5!(comp1)+(0,-1.5)$}{orgate}
+
+% Place MUX
+\muxnode{$(data1.south)+(0,-2)$}{mux}
+
+% Output labels
+\node[below=0.5cm of orgate] (hitmiss) {Hit/Miss};
+\node[below=0.5cm of mux] (dataout) {Data Out};
+
+% Arrows from address bits to decoders
+\draw[arrow] (set.south) -- ++(0,-0.5) coordinate (setjunction);
+\draw[arrow] (setjunction) -| (decoder0.north);
+\draw[arrow] (setjunction) -| (decoder1.north);
+
+% Arrows from address tag to comparators
+\draw[arrow] (tag.south) -- ++(0,-0.8) coordinate (tagjunction);
+\draw[arrow] (tagjunction) -| (comp0-in2);
+\draw[arrow] (tagjunction) -| (comp1-in2);
+
+% Arrows from offset to data arrays
+\draw[arrow] (offset.south) -- ++(0,-0.7) coordinate (offsetjunction);
+\draw[arrow] (offsetjunction) -| ([yshift=0.3cm]data0.north);
+\draw[arrow] (offsetjunction) -| ([yshift=0.3cm]data1.north);
+
+% Decoder to tag/data connections
+\foreach \i in {1,2,3,4} {
+    \draw[dasharrow] (decoder0.east |- tag0-\i-1.west) -- (tag0-\i-1.west);
+    \draw[dasharrow] (decoder1.east |- tag1-\i-1.west) -- (tag1-\i-1.west);
+}
+
+% Selected line highlighting (example: line 2)
+\draw[arrow, thick, orange] (tag0-2-1.east) -- ++(0.3,0) coordinate (sel0);
+\draw[arrow, thick, orange] (sel0) -- (data0-2-1.west);
+\draw[arrow, thick, orange] (tag1-2-1.east) -- ++(0.3,0) coordinate (sel1);
+\draw[arrow, thick, orange] (sel1) -- (data1-2-1.west);
+
+% Tag to comparator connections
+\draw[arrow] (tag0.south) -- (comp0-in1);
+\draw[arrow] (tag1.south) -- (comp1-in1);
+
+% Data array to MUX connections
+\draw[arrow] (data0.south) |- (mux-in0);
+\draw[arrow] (data1.south) |- (mux-in1);
+
+% Comparator outputs to OR gate
+\draw[arrow] (comp0-out) |- (orgate-in1);
+\draw[arrow] (comp1-out) |- (orgate-in2);
+
+% OR gate to Hit/Miss
+\draw[arrow] (orgate-out) -- (hitmiss.north);
+
+% Comparator to MUX select
+\draw[arrow] (comp1-out) -- ++(0,-0.3) -| (mux-sel);
+
+% MUX to data out
+\draw[arrow] (mux-out) -- (dataout.north);
+
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+
 \begin{frame}{Write Through Policy}
 \begin{itemize}
     \item Write to both cache AND main memory during write operation
@@ -1151,7 +1327,7 @@ Initial: & Way0(00) & Way1(01) & Way2(10) & Way3(11) \\
 Hit Way1: & Way1(01) & Way0(00) & Way2(10) & Way3(11) \\
 Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
 \hline
-\multicolumn{2}{l}{MRU} & & & LRU \\
+\multicolumn{2}{|l}{MRU} & & & LRU \\
 \hline
 \end{tabular}
 \end{center}
