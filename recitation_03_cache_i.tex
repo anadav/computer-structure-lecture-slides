@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit, circuits.logic.US, matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit, circuits.logic.US, matrix, backgrounds}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -1075,26 +1075,34 @@ for (int i=0; i<1024; i++)
 \end{frame}
 
 
-
 \tikzset{
     % Style definitions
-    tagbox/.style={rectangle, draw, fill=green!30, minimum width=2cm, minimum height=0.6cm},
-    setbox/.style={rectangle, draw, fill=cyan!30, minimum width=1.5cm, minimum height=0.6cm},
-    offsetbox/.style={rectangle, draw, fill=orange!30, minimum width=2cm, minimum height=0.6cm},
-    cellstyle/.style={rectangle, draw, minimum width=2.2cm, minimum height=0.4cm},
+    tagbox/.style={rectangle, draw, fill=green!30, minimum width=2cm, minimum height=0.6cm, font=\footnotesize},
+    setbox/.style={rectangle, draw, fill=cyan!30, minimum width=1.5cm, minimum height=0.6cm, font=\footnotesize},
+    offsetbox/.style={rectangle, draw, fill=orange!30, minimum width=2cm, minimum height=0.6cm, font=\footnotesize},
+    cellstyle/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.35cm, 
+                     text depth=0.1cm, text height=0.2cm, font=\tiny},
     tagcell/.style={cellstyle, fill=green!20},
-    decoder/.style={trapezium, trapezium angle=70, draw, fill=green!30, minimum width=1cm, minimum height=0.8cm, rotate=-90},
-    comparator/.style={regular polygon, regular polygon sides=5, draw, fill=green!30, minimum width=0.8cm},
-    muxshape/.style={trapezium, trapezium angle=70, draw, minimum width=1cm, minimum height=0.8cm},
+    titlecell/.style={cellstyle, font=\footnotesize},
+    decoder/.style={trapezium, trapezium angle=70, draw, fill=green!30, 
+                   minimum width=0.8cm, minimum height=1cm, rotate=90},
+    % Comparator as downward-pointing pentagon
+    comparator/.style={regular polygon, regular polygon sides=5, draw, fill=green!30, 
+                      minimum width=1cm, minimum height=1cm, rotate=180},
+    % MUX as wider trapezoid
+    muxshape/.style={trapezium, trapezium angle=60, draw, minimum width=1.5cm, minimum height=0.8cm},
     arrow/.style={->, >=stealth, thick},
     dasharrow/.style={dashed, ->, >=stealth},
-    % OR gate style
-    orgatestyle/.style={or gate US, draw, logic gate inputs=nn, anchor=center}
+    % OR gate with custom sizing
+    orgatestyle/.style={or gate US, draw, logic gate inputs=nn, anchor=center, 
+                       minimum width=1cm, minimum height=0.8cm},
+    % Junction dot style
+    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt}
 }
 
 \begin{frame}[fragile]{Cache Architecture}
 \begin{center}
-\begin{tikzpicture}[scale=0.75, transform shape]
+\begin{tikzpicture}[scale=0.8, transform shape]
 
 % Address bits at top
 \node[tagbox] (tag) {Tag};
@@ -1107,68 +1115,86 @@ for (int i=0; i<1024; i++)
 \node[above=1mm of set.east, anchor=south] {\footnotesize 5\,4};
 \node[above=1mm of offset.east, anchor=south] {\footnotesize 0};
 
-% Way 0 components
-\node[decoder, below left=2.5cm and 1.5cm of set] (decoder0) {};
-\node[left=3mm of decoder0] {\small Set\#};
+% Define base positions for ways
+\coordinate (way0base) at ($(set.south) + (-2.5,-2.5)$);
+\coordinate (way1base) at ($(set.south) + (2.5,-2.5)$);
 
-% Tag array matrix for Way 0
+% Way 0 decoder (demux)
+\node[decoder] at (way0base) (decoder0) {};
+\node[left=3mm of decoder0, font=\small] {Set\#};
+
+% Way 0 Tag array matrix
 \matrix[matrix of nodes, nodes={tagcell}, 
         column sep=-\pgflinewidth, row sep=-\pgflinewidth,
-        right=8mm of decoder0, anchor=west] (tag0) {
-    Tag \\
-    Tag \\
-    Tag \\
-    Tag \\
+        right=8mm of decoder0.east, anchor=west, font=\footnotesize] (tag0) {
+    |[titlecell]| Tag \\
+    $\ldots$ \\
+    $\vdots$ \\
+    $\ldots$ \\
 };
-\node[above=2mm of tag0] {\small Tag};
 
-% Data array matrix for Way 0
+% Way 0 Data array - positioned relative to tag0
 \matrix[matrix of nodes, nodes={cellstyle}, 
-        column sep=-\pgflinewidth, row sep=-\pgflinewidth,
-        right=8mm of tag0, anchor=west] (data0) {
-    Data \\
-    Data \\
-    Data \\
-    Data \\
+        column sep=-\pgflinewidth, row sep=-\pgflinewidth, font=\scriptsize] 
+        at ($(tag0.east) + (0.8,0)$) (data0) {
+    |[titlecell]| Data \\
+    $\ldots$ \\
+    $\vdots$ \\
+    $\ldots$ \\
 };
-\node[above=5mm of data0] {\textbf{Way 0}};
 
-% Way 1 components
-\node[decoder, below right=2.5cm and 1.5cm of set] (decoder1) {};
-\node[left=3mm of decoder1] {\small Set\#};
+% Way 0 comparator - positioned relative to tag0
+\node[comparator] at ($(tag0.south) + (0,-0.8)$) (comp0) {$=$};
 
-% Tag array matrix for Way 1
+% Way 0 label
+\node[above=5mm of $(tag0.north)!0.5!(data0.north)$] (way0label) {\textbf{Way 0}};
+
+% Way 1 decoder (demux)
+\node[decoder] at (way1base) (decoder1) {};
+\node[left=3mm of decoder1, font=\small] {Set\#};
+
+% Way 1 Tag array matrix
 \matrix[matrix of nodes, nodes={tagcell}, 
         column sep=-\pgflinewidth, row sep=-\pgflinewidth,
-        right=8mm of decoder1, anchor=west] (tag1) {
-    Tag \\
-    Tag \\
-    Tag \\
-    Tag \\
+        right=8mm of decoder1.east, anchor=west] (tag1) {
+    |[titlecell]| Tag \\
+    \\
+    $\vdots$ \\
+    \\
 };
-\node[above=2mm of tag1] {\small Tag};
 
-% Data array matrix for Way 1
+% Way 1 Data array - positioned relative to tag1
 \matrix[matrix of nodes, nodes={cellstyle}, 
-        column sep=-\pgflinewidth, row sep=-\pgflinewidth,
-        right=8mm of tag1, anchor=west] (data1) {
-    Data \\
-    Data \\
-    Data \\
-    Data \\
+        column sep=-\pgflinewidth, row sep=-\pgflinewidth] 
+        at ($(tag1.east) + (0.8,0)$) (data1) {
+    |[titlecell]| Data \\
+    \\
+    $\vdots$ \\
+    \\
 };
-\node[above=5mm of data1] {\textbf{Way 1}};
 
-% Comparators
-\node[comparator, below=8mm of tag0] (comp0) {$=$};
-\node[comparator, below=8mm of tag1] (comp1) {$=$};
+% Way 1 comparator - positioned relative to tag1
+\node[comparator] at ($(tag1.south) + (0,-0.8)$) (comp1) {$=$};
 
-% OR gate - using built-in anchors
-\node[orgatestyle, below=1.5cm of $(comp0)!0.5!(comp1)$] (orgate) {};
+% Way 1 label
+\node[above=5mm of $(tag1.north)!0.5!(data1.north)$] (way1label) {\textbf{Way 1}};
 
-% MUX - still custom but with defined anchors
-\node[muxshape, below=2cm of data1] (mux) {MUX};
-% Define MUX connection points as separate coordinates
+% Background for ways
+\begin{pgfonlayer}{background}
+    \node[fit=(way0label)(decoder0)(tag0)(data0)(comp0), 
+          fill=gray!10, draw=gray!30, dashed, rounded corners, 
+          inner sep=3mm] (way0bg) {};
+    \node[fit=(way1label)(decoder1)(tag1)(data1)(comp1), 
+          fill=gray!10, draw=gray!30, dashed, rounded corners, 
+          inner sep=3mm] (way1bg) {};
+\end{pgfonlayer}
+
+% OR gate - positioned between comparators
+\node[orgatestyle] at ($(comp0)!0.5!(comp1) + (0,-1.5)$) (orgate) {};
+
+% MUX - positioned relative to data arrays
+\node[muxshape] at ($(data0.south)!0.5!(data1.south) + (0,-2)$) (mux) {\footnotesize MUX};
+% Define MUX connection points
 \coordinate (muxin0) at ([yshift=0.2cm]mux.west);
 \coordinate (muxin1) at ([yshift=0.2cm]mux.east);
 \coordinate (muxsel) at (mux.north);
@@ -1177,50 +1203,53 @@ for (int i=0; i<1024; i++)
 \node[below=0.8cm of orgate] (hitmiss) {Hit/Miss};
 \node[below=0.5cm of mux] (dataout) {Data Out};
 
-% Arrows from address bits to decoders
+% Arrows from address bits to decoders with junction
 \draw[arrow] (set.south) -- ++(0,-0.5) coordinate (setjunction);
+\node[junction] at (setjunction) {};
 \draw[arrow] (setjunction) -| (decoder0.north);
 \draw[arrow] (setjunction) -| (decoder1.north);
 
-% Arrows from address tag to comparators
+% Arrows from address tag to comparators with junction
 \draw[arrow] (tag.south) -- ++(0,-0.8) coordinate (tagjunction);
-\draw[arrow] (tagjunction) -| ([xshift=-0.3cm]comp0.north west);
-\draw[arrow] (tagjunction) -| ([xshift=-0.3cm]comp1.north west);
+\node[junction] at (tagjunction) {};
+\draw[arrow] (tagjunction) -| ([xshift=-0.3cm]comp0.south);
+\draw[arrow] (tagjunction) -| ([xshift=-0.3cm]comp1.south);
 
-% Arrows from offset to data arrays
+% Arrows from offset to data arrays with junction
 \draw[arrow] (offset.south) -- ++(0,-0.7) coordinate (offsetjunction);
+\node[junction] at (offsetjunction) {};
 \draw[arrow] (offsetjunction) -| ([yshift=0.3cm]data0.north);
 \draw[arrow] (offsetjunction) -| ([yshift=0.3cm]data1.north);
 
-% Decoder to tag/data connections
-\foreach \i in {1,2,3,4} {
-    \draw[dasharrow] (decoder0.east |- tag0-\i-1.west) -- (tag0-\i-1.west);
-    \draw[dasharrow] (decoder1.east |- tag1-\i-1.west) -- (tag1-\i-1.west);
+% Decoder to tag arrays (dashed lines)
+\foreach \i in {2,3,4} {
+    \draw[dasharrow] (decoder0.east) -- ([yshift={-(\i-1)*0.35cm}]tag0.west);
+    \draw[dasharrow] (decoder1.east) -- ([yshift={-(\i-1)*0.35cm}]tag1.west);
 }
 
 % Selected line highlighting (example: line 2)
-\draw[arrow, thick, orange] (tag0-2-1.east) -- ++(0.3,0) coordinate (sel0);
-\draw[arrow, thick, orange] (sel0) -- (data0-2-1.west);
-\draw[arrow, thick, orange] (tag1-2-1.east) -- ++(0.3,0) coordinate (sel1);
-\draw[arrow, thick, orange] (sel1) -- (data1-2-1.west);
+\draw[arrow, thick, orange] ([yshift=-0.35cm]tag0.east) -- ++(0.2,0) coordinate (sel0);
+\draw[arrow, thick, orange] (sel0) -- ([yshift=-0.35cm]data0.west);
+\draw[arrow, thick, orange] ([yshift=-0.35cm]tag1.east) -- ++(0.2,0) coordinate (sel1);
+\draw[arrow, thick, orange] (sel1) -- ([yshift=-0.35cm]data1.west);
 
 % Tag array output to comparator
-\draw[arrow] (tag0.south) -- (comp0.north);
-\draw[arrow] (tag1.south) -- (comp1.north);
+\draw[arrow] (tag0.south) -- ([xshift=0.3cm]comp0.south);
+\draw[arrow] (tag1.south) -- ([xshift=0.3cm]comp1.south);
 
 % Data array to MUX connections
 \draw[arrow] (data0.south) |- (muxin0);
 \draw[arrow] (data1.south) |- (muxin1);
 
-% Comparator outputs to OR gate - using built-in anchors
-\draw[arrow] (comp0.south) |- (orgate.input 1);
-\draw[arrow] (comp1.south) |- (orgate.input 2);
+% Comparator outputs to OR gate
+\draw[arrow] (comp0.north) |- (orgate.input 1);
+\draw[arrow] (comp1.north) |- (orgate.input 2);
 
-% OR gate to Hit/Miss - using built-in anchor
+% OR gate to Hit/Miss
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select
-\draw[arrow] (comp1.south) -- ++(0,-0.3) -| (muxsel);
+\draw[arrow] (comp1.north) -- ++(0,-0.3) -| (muxsel);
 
 % MUX to data out
 \draw[arrow] (mux.south) -- (dataout.north);
