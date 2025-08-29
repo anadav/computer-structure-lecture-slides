@@ -183,7 +183,8 @@ Loop1 & 2 & 2 & & & & & \\
     control_path/.style={arrow, orange!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50},
-    control_signal/.style={control_block, minimum width=0.5cm, minimum height=0.3cm, font=\scriptsize}
+    control_signal/.style={control_block, minimum width=0.5cm, minimum height=0.3cm, font=\scriptsize},
+    node distance=5mm and 5mm,
 ]
 
 %\ctikzset{font=\scriptsize}
@@ -231,12 +232,12 @@ Loop1 & 2 & 2 & & & & & \\
 \node[mux2, fill=orange!20, anchor=brpin 1, right=of IDEX] (ForwardA) {};
 \node[alu_style, right=of ForwardA.brpin 1, anchor=blpin 1] (ALU) {\rotatebox{90}{ALU}};
 
-\node[mux2, fill=orange!20, anchor=brpin 1] (ForwardB) at ((ALU.blpin 2) -| (ForwardA.brpin 1)) {};
+\node[mux2, fill=orange!20, anchor=brpin 1] (ForwardB) at (ALU.blpin 2 -| ForwardA.brpin 1) {};
 \node[mux2, fill=blue!20] (RegDstMux) at (ForwardB.south) [anchor=north, yshift=-0.5cm] {};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=3.5, square pins=1}, 
-      external pins width=0, scale=0.5, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
+      external pins width=0, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
 
 % MEM Stage Components
 % Data Memory using muxdemux
