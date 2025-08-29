@@ -30,7 +30,13 @@ $(BUILDDIR)/%.pdf: %.tex $(SVGPDFS) | $(BUILDDIR)
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
 
 # Copy PDFs from build to output directory
+# Use .SECONDARY to prevent deletion of intermediate build PDFs
+.SECONDARY: $(PDFS)
 $(OUTPUTDIR)/%.pdf: $(BUILDDIR)/%.pdf | $(OUTPUTDIR)
+	@if [ ! -f "$<" ]; then \
+		echo "Error: $< doesn't exist, but Make thinks it does. Run 'make clean' and try again."; \
+		exit 1; \
+	fi
 	cp $< $@
 
 clean:
