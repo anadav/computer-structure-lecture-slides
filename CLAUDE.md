@@ -1,6 +1,6 @@
 - Beamer presentations for computer structure course. Building slides into build directory. Based on powerpoint presentation.
 
-- Remember that you cannot use linux breaks \\ inside TikZ nodes.
+- Remember that you cannot use linux breaks \\ inside TikZ nodes without setting align=center.
 
 - If you need to build for debug, use -interaction=nonstopmode .
 

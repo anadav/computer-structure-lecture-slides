@@ -8,6 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
+\usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, matrix}
 \usepackage{tcolorbox}
 \usepackage{listings}
@@ -155,6 +156,189 @@ Loop1 & 2 & 2 & & & & & \\
 \begin{document}
 
 \frame{\titlepage}
+
+
+\begin{frame}{Pipeline Processor with Hazard Detection}
+\centering
+\scalebox{0.7}{%
+\begin{tikzpicture}[
+    % Component styles
+    component/.style={draw, thick, minimum height=0.8cm},
+    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=0.3cm, minimum height=3.5cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
+    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt},
+    hazard_unit/.style={draw, thick, fill=red!60, text=white, font=\bfseries, rounded corners=3pt},
+    memory_block/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=1, w=2.5, square pins=1}, 
+                        external pins width=0, scale=0.5},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=2, NB=1, w=2.5, square pins=1}, 
+                    external pins width=0, scale=0.5, fill=cyan!20},
+    alu_style/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, w=2, inset w=1, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, scale=0.5, fill=green!20},
+    mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=0.8}, 
+                 external pins width=0, scale=0.5},
+    mux3/.style={muxdemux, muxdemux def={Lh=4, Rh=2, NL=3, NR=1, NB=1, w=1}, 
+                 external pins width=0, scale=0.5},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, blue!70},
+    control_path/.style={arrow, orange!70},
+    hazard_path/.style={arrow, red!70, dashed},
+    forward_path/.style={arrow, orange!50}
+]
+
+% Define origin
+\coordinate (origin) at (0,0);
+
+% Stage labels at top
+\node[stage_label] (IF_label) at (0, 4) {IF};
+\node[stage_label] (ID_label) at (3, 4) {ID};
+\node[stage_label] (EX_label) at (6.5, 4) {EX};
+\node[stage_label] (MEM_label) at (10, 4) {MEM};
+\node[stage_label] (WB_label) at (13, 4) {WB};
+
+% Pipeline registers
+\node[pipeline_reg] (IFID) at (1.5, 0) {};
+\node[pipeline_reg] (IDEX) at (4.5, 0) {};
+\node[pipeline_reg] (EXMEM) at (8, 0) {};
+\node[pipeline_reg] (MEMWB) at (11.5, 0) {};
+
+% Small labels on pipeline registers
+\node[font=\tiny, rotate=90] at (IFID.center) {IF/ID};
+\node[font=\tiny, rotate=90] at (IDEX.center) {ID/EX};
+\node[font=\tiny, rotate=90] at (EXMEM.center) {EX/MEM};
+\node[font=\tiny, rotate=90] at (MEMWB.center) {MEM/WB};
+
+% IF Stage Components
+\node[component, fill=yellow!30, minimum width=0.8cm] (PC) at (-0.5, 0) {PC};
+
+% Instruction Memory using muxdemux
+\node[memory_block, fill=yellow!20] (IMem) at (0.5, 1.5) {};
+\node[font=\small, align=center] at (IMem.center) {Instruction\\Memory};
+
+% ID Stage Components
+% Register File using muxdemux style
+\node[regfile] (RegFile) at (3, 0.5) {};
+\node[font=\small, align=center] at (RegFile.center) {Register\\File};
+
+% Control Unit
+\node[control_block, minimum width=1.2cm, minimum height=0.8cm] (Control) at (3, 2.5) {Control};
+
+% Hazard Detection Unit
+\node[hazard_unit, minimum width=1.5cm, minimum height=0.8cm] (HDU) at (3, -2) {HDU};
+
+% EX Stage Components
+% ALU using muxdemux style
+\node[alu_style] (ALU) at (6.5, 0.5) {};
+\node[rotate=90, font=\small] at (ALU.center) {ALU};
+
+% MUXes in EX stage
+\node[mux2, fill=orange!20] (ALUSrcMux) at (5.5, -0.5) {};
+\node[mux3, fill=orange!20] (ForwardA) at (5.5, 1.2) {};
+\node[mux3, fill=orange!20] (ForwardB) at (5.5, 0.2) {};
+
+% Forwarding Unit
+\node[control_block, minimum width=1.8cm, minimum height=0.8cm, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
+
+% MEM Stage Components
+% Data Memory using muxdemux
+\node[memory_block, fill=yellow!20] (DMem) at (10, 0.5) {};
+\node[font=\small, align=center] at (DMem.center) {Data\\Memory};
+
+% WB Stage Components
+\node[mux2, fill=blue!20] (WBMux) at (12.5, 0) {};
+
+% RegDst MUX (between ID and EX)
+\node[mux2, fill=blue!20] (RegDstMux) at (4, -1) {};
+
+% Control signal blocks in pipeline registers
+\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB1) at ([yshift=1.2cm]IDEX.center) {\tiny WB};
+\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (M1) at ([yshift=0.6cm]IDEX.center) {\tiny M};
+\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (EX1) at (IDEX.center) {\tiny EX};
+
+\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB2) at ([yshift=1.2cm]EXMEM.center) {\tiny WB};
+\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (M2) at ([yshift=0.6cm]EXMEM.center) {\tiny M};
+
+\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB3) at ([yshift=1.2cm]MEMWB.center) {\tiny WB};
+
+% Main data paths
+% PC to Instruction Memory
+\draw[data_path] (PC.east) -- (IMem.west |- PC.east);
+\draw[data_path] (IMem.east |- PC.east) -- (IFID.west |- PC.east);
+
+% IF/ID to Register File
+\draw[data_path] ([yshift=0.3cm]IFID.east) -- ++(0.3,0) |- ([yshift=0.6cm]RegFile.west);
+\draw[data_path] ([yshift=0cm]IFID.east) -- ++(0.3,0) |- ([yshift=0cm]RegFile.west);
+
+% Register File outputs to ID/EX
+\draw[data_path] ([yshift=0.6cm]RegFile.east) -- ([yshift=0.6cm]IDEX.west);
+\draw[data_path] ([yshift=0cm]RegFile.east) -- ([yshift=0cm]IDEX.west);
+
+% ID/EX to EX stage (through forwarding muxes)
+\draw[data_path] ([yshift=0.6cm]IDEX.east) -- ([yshift=0.6cm]ForwardA.west);
+\draw[data_path] ([yshift=0cm]IDEX.east) -- ([yshift=0cm]ForwardB.west);
+
+% Forwarding muxes to ALU
+\draw[data_path] (ForwardA.east) -- ([yshift=0.6cm]ALU.west);
+\draw[data_path] (ForwardB.east) -- (ALUSrcMux.north);
+\draw[data_path] (ALUSrcMux.east) -- ([yshift=-0.3cm]ALU.west);
+
+% ALU to EX/MEM
+\draw[data_path] (ALU.east) -- (EXMEM.west |- ALU.east);
+
+% EX/MEM to Data Memory
+\draw[data_path] ([yshift=0.3cm]EXMEM.east) -- ([yshift=0.3cm]DMem.west);
+\draw[data_path] ([yshift=-0.3cm]EXMEM.east) -- ([yshift=-0.3cm]DMem.west);
+
+% Data Memory to MEM/WB
+\draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
+
+% MEM/WB to WB Mux
+\draw[data_path] ([yshift=0.3cm]MEMWB.east) -- ([yshift=0.3cm]WBMux.west);
+\draw[data_path] ([yshift=-0.3cm]MEMWB.east) -- ([yshift=-0.3cm]WBMux.west);
+
+% Write back path
+\draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-2.5) -| ([yshift=-0.6cm]RegFile.south);
+
+% Control paths
+\draw[control_path] (Control.south) -- (IDEX.north |- Control.south);
+\draw[control_path] (WB1.east) -- (WB2.west);
+\draw[control_path] (M1.east) -- (M2.west);
+\draw[control_path] (WB2.east) -- (WB3.west);
+
+% Hazard detection paths
+\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) -- ([xshift=-0.2cm]HDU.north);
+\draw[hazard_path] ([xshift=0.2cm]RegFile.south) -- ([xshift=0.2cm]HDU.north);
+\draw[hazard_path] (HDU.west) -| (PC.south);
+\draw[hazard_path] (HDU.west) -| (IFID.south);
+\draw[hazard_path] (HDU.east) -| (Control.south);
+
+% Forwarding paths
+\draw[forward_path] (EXMEM.south) -- ++(0,-0.3) -| (FwdUnit.east);
+\draw[forward_path] (MEMWB.south) -- ++(0,-0.5) -| ([xshift=0.3cm]FwdUnit.east);
+\draw[forward_path] (FwdUnit.north) -- (ForwardA.south);
+\draw[forward_path] (FwdUnit.north) -- (ForwardB.south);
+
+% Add some labels
+\node[font=\tiny, above] at (PC.north) {108};
+\node[font=\tiny, left, align=center] at (RegFile.west) {Rs\\Rt\\Rd};
+\node[font=\tiny, right] at (RegFile.east) {Data};
+\node[font=\tiny, below] at (HDU.south) {gate};
+\node[font=\tiny, below] at (FwdUnit.south) {RegDest};
+
+% Instructions in pipeline (as text annotations)
+\node[font=\scriptsize, text=green!60!black, anchor=west] at (13.5, 1) {ADD \$6 ← \$6 \$7};
+\node[font=\scriptsize, text=red!60!black, anchor=west] at (13.5, 0.5) {SUB \$4 ← \$5 \$1};
+\node[font=\scriptsize, text=blue!60!black, anchor=west] at (13.5, 0) {LW \$1 ← 100(\$4)};
+
+% Instruction addresses
+\node[font=\tiny, text=blue!60!black] at (14, -1) {100: LW \$1←(100)(\$4)};
+\node[font=\tiny, text=blue!60!black] at (14, -1.3) {104: SUB \$4 ← \$5 \$1};
+\node[font=\tiny, text=blue!60!black] at (14, -1.6) {108: Add \$6 ← \$6 \$7};
+
+\end{tikzpicture}
+}
+\end{frame}
+
+
 
 \begin{frame}{Control Hazards Solutions - Branch Target Buffer (BTB)}
 \textbf{Direction Prediction (Taken/Not Taken):}
