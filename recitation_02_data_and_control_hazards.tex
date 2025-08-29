@@ -168,9 +168,9 @@ Loop1 & 2 & 2 & & & & & \\
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt},
     hazard_unit/.style={draw, thick, fill=red!60, text=white, font=\bfseries, rounded corners=3pt},
-    memory_block/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=1, w=2.5, square pins=1}, 
+    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=4, NR=1, w=3.2, square pins=1}, 
                         external pins width=0, scale=0.5},
-    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=2, NB=1, w=2.5, square pins=1}, 
+    regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
                     external pins width=0, scale=0.5, fill=cyan!20},
     alu_style/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, w=2, inset w=1, inset Lh=2, inset Rh=0, square pins=1},
                      external pins width=0, scale=0.5, fill=green!20},
@@ -220,10 +220,10 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\small, align=center] at (RegFile.center) {Register\\File};
 
 % Control Unit
-\node[control_block, minimum width=1.2cm, minimum height=0.8cm] (Control) at (3, 2.5) {Control};
+\node[control_block, ellipse, minimum width=1.2cm, minimum height=0.8cm] (Control) at (3, 2.5) {Control};
 
 % Hazard Detection Unit
-\node[hazard_unit, minimum width=1.5cm, minimum height=0.8cm] (HDU) at (3, -2) {HDU};
+\node[hazard_unit, minimum width=1.5cm, minimum height=0.8cm] (HDU) at (Control.east) [anchor=south east, yshift=0.5cm] {HDU};
 
 % EX Stage Components
 % ALU using muxdemux style
@@ -305,11 +305,11 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (WB2.east) -- (WB3.west);
 
 % Hazard detection paths
-\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) -- ([xshift=-0.2cm]HDU.north);
-\draw[hazard_path] ([xshift=0.2cm]RegFile.south) -- ([xshift=0.2cm]HDU.north);
-\draw[hazard_path] (HDU.west) -| (PC.south);
-\draw[hazard_path] (HDU.west) -| (IFID.south);
-\draw[hazard_path] (HDU.east) -| (Control.south);
+\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- (HDU.west);
+\draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- (HDU.west);
+\draw[hazard_path] (HDU.south) |- (PC.south);
+\draw[hazard_path] (HDU.south) |- (IFID.south);
+\draw[hazard_path] (HDU.west) -- (Control.east);
 
 % Forwarding paths
 \draw[forward_path] (EXMEM.south) -- ++(0,-0.3) -| (FwdUnit.east);
