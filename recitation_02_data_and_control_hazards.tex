@@ -166,7 +166,7 @@ Loop1 & 2 & 2 & & & & & \\
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=5mm, minimum height=8cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
-    hazard_unit/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=3, NB=2, w=2.5, square pins=1}, 
+    hazard_unit/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=3, NB=2, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=1, Rh=6, NR=1, w=4, square pins=1}, 
                         external pins width=0, align=center},
@@ -225,23 +225,23 @@ Loop1 & 2 & 2 & & & & & \\
 
 % EX Stage Components
 
-\node[mux2, fill=orange!20, anchor=brpin 1, right=of IDEX] (ForwardA) {};
+\node[mux2, fill=orange!20, anchor=brpin 1, right=1cm of IDEX] (ForwardA) {};
 \node[alu_style, right=of ForwardA.brpin 1, anchor=blpin 1] (ALU) {\rotatebox{90}{ALU}};
 \node[mux2, fill=orange!20, anchor=brpin 1] (ForwardB) at (ALU.blpin 2 -| ForwardA.brpin 1) {};
 \node[mux2, fill=blue!20, below=of ForwardB] (RegDstMux) {};
 
 % Forwarding Unit
-\node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=3, square pins=1}, 
+\node[muxdemux, muxdemux def={Lh=2, NL=4, Rh=2, NR=4, w=3, square pins=1}, 
       external pins width=0, fill=orange!30, font=\scriptsize, align=center, below=of ALU] (FwdUnit) {Forwarding\\Unit};
 
-\node[pipeline_reg] (EXMEM) at ([xshift=5mm]ALU.east |- IDEX) {};
+\node[pipeline_reg] (EXMEM) at ([xshift=1cm]ALU.east |- IDEX) {};
 
 % MEM Stage Components
 
 
 % Data Memory using muxdemux
 \node[memory_block, fill=yellow!20, anchor=blpin 1] (DMem) at ([xshift=5mm]EXMEM.east |- ALU) {Data\\Memory};
-\node[pipeline_reg, right=of DMem] (MEMWB) {};
+\node[pipeline_reg] (MEMWB) at ([xshift=5mm]DMem.east |- EXMEM) {};
 
 % WB Stage Components
 \node[mux2, fill=blue!20, right=of MEMWB, anchor=blpin 1] (WBMux) {};
@@ -305,13 +305,15 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
+% TODO: change to be below MEMWB
+\draw[control_path] (WB3.east) -- ++(0.2, 0) |- ([yshift=-3mm]MEMWB.south) -| ([xshift=3mm]FwdUnit.brpin 4) -- (FwdUnit.brpin 4);
 
 % Hazard detection paths
 %\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.blpin 2);
 %\draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
-%\draw[hazard_path] ([yshift=-0.3cm]HDU.south) -| (PC.north);
-%\draw[hazard_path] ([yshift=0.3cm]HDU.south) -| (IFID.north);
-\draw[hazard_path, line width=0pt] (HDU.brpin 3) |- (HDU_AND.bin 1);
+\draw[hazard_path, line width=0pt] (HDU.brpin 3) -- ++(0.2, 0) |- (HDU_AND.bin 1);
+\draw[hazard_path, line width=0pt] (HDU.blpin 1) -| (PC.north);
+\draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
 \draw[hazard_path] (HDU_AND.out) -| (Control.south);
 
 % Forwarding paths
@@ -319,6 +321,9 @@ Loop1 & 2 & 2 & & & & & \\
 %\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
 %\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
 %\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
+\draw[forward_path] (FwdUnit.blpin 1) -- (ForwardA.bbpin 1);
+\draw[forward_path] (FwdUnit.blpin 2) -- (ForwardB.bbpin 1);
+
 
 % Add some labels
 \node[font=\tiny, above] at (PC.north) {108};
