@@ -191,18 +191,18 @@ Loop1 & 2 & 2 & & & & & \\
 % Define origin
 \coordinate (origin) at (0,0);
 
-% Stage labels at top
-\node[stage_label] (IF_label) at (0, 4) {IF};
-\node[stage_label] (ID_label) at (3, 4) {ID};
-\node[stage_label] (EX_label) at (6.5, 4) {EX};
-\node[stage_label] (MEM_label) at (10, 4) {MEM};
-\node[stage_label] (WB_label) at (13, 4) {WB};
-
 % Pipeline registers
 \node[pipeline_reg] (IFID) at (1.5, 0) {};
 \node[pipeline_reg] (IDEX) at (4.5, 0) {};
 \node[pipeline_reg] (EXMEM) at (8, 0) {};
 \node[pipeline_reg] (MEMWB) at (11.5, 0) {};
+
+% Stage labels at top (after pipeline registers are defined)
+\node[stage_label] (IF_label) at (0, 4) {IF};
+\node[stage_label] (ID_label) at ($ (IFID.center)!0.5!(IDEX.center) $ |- (IF_label)) {ID};
+\node[stage_label] (EX_label) at ($ (IDEX.center)!0.5!(EXMEM.center) $) [yshift=4cm] {EX};
+\node[stage_label] (MEM_label) at ($ (EXMEM.center)!0.5!(MEMWB.center) $) [yshift=4cm] {MEM};
+\node[stage_label] (WB_label) at (13, 4) {WB};
 
 % Small labels on pipeline registers
 \node[font=\tiny, rotate=90] at (IFID.center) {IF/ID};
