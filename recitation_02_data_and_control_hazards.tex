@@ -212,7 +212,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) at (-0.5, 0) {PC};
 
 % Instruction Memory using muxdemux
-\node[memory_block, fill=yellow!20] (IMem) at (0.5, 1.5) {};
+\node[memory_block, fill=yellow!20] (IMem) at (0.5, 0) {};
 \node[font=\small, align=center] at (IMem.center) {Instruction\\Memory};
 
 % ID Stage Components
@@ -263,8 +263,9 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Main data paths
 % PC to Instruction Memory
-\draw[data_path] (PC.east) -- (IMem.west |- PC.east);
-\draw[data_path] (IMem.east |- PC.east) -- (IFID.west |- PC.east);
+\draw[data_path] (PC.east) -- (IMem.west);
+% Instruction Memory to IF/ID
+\draw[data_path] (IMem.east) -- (IFID.west);
 
 % IF/ID to Register File
 \draw[data_path] ([yshift=0.3cm]IFID.east) -- ++(0.3,0) |- ([yshift=0.6cm]RegFile.west);
