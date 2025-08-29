@@ -213,7 +213,7 @@ Loop1 & 2 & 2 & & & & & \\
 % Add labels to RegFile pins
 
 % Control Unit
-\node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm, above=1.3cm of RegFile] (Control) [rotate=90] {Control};
+\node[control_block, ellipse, minimum height=0.7cm, minimum width=1cm, above=1.3cm of RegFile] (Control) [rotate=90] {Control};
 
 % Hazard Detection Unit
 \node[hazard_unit, above=1.3cm of Control] (HDU) {HDU};
@@ -295,18 +295,18 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] ([yshift=-3cm]MEMWB.east) -- ++(0.3,0) |- (WBMux.blpin 2);
 
 % Write back path
-\draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-3) -| node[midway, above right, font=\tiny] {RegWrite} ([xshift=-5mm]RegFile.blpin 5) -- (RegFile.blpin 5);
+\draw[data_path] (WBMux.brpin 1) -- ++(0.5,0) |- ([yshift=-5mm]MEMWB.south) -| node[midway, above right, font=\tiny] {WrData} ([xshift=-5mm]RegFile.blpin 4) -- (RegFile.blpin 4);
 
 % Control paths
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (M1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (EX1.west);
-\draw[control_path] (Control.south) -- (HDU_AND.bin 2);
+\draw[control_path] (Control.south) -- ++(0.1, 0) |- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
-% TODO: change to be below MEMWB
 \draw[control_path] (WB3.east) -- ++(0.2, 0) |- ([yshift=-3mm]MEMWB.south) -| ([xshift=3mm]FwdUnit.brpin 4) -- (FwdUnit.brpin 4);
+\draw[control_path] (WB3.east) -- ++(0.2, 0) |- ([yshift=-3mm]MEMWB.south) -| node[midway, above right, font=\tiny] {RegWrite} ([xshift=-4mm]RegFile.blpin 5) -- (RegFile.blpin 5);
 
 % Hazard detection paths
 %\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.blpin 2);
@@ -314,7 +314,6 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path, line width=0pt] (HDU.brpin 3) -- ++(0.2, 0) |- (HDU_AND.bin 1);
 \draw[hazard_path, line width=0pt] (HDU.blpin 1) -| (PC.north);
 \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
-\draw[hazard_path] (HDU_AND.out) -| (Control.south);
 
 % Forwarding paths
 %\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
