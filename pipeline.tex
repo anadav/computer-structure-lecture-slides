@@ -19,7 +19,14 @@
         latch/.style={draw, thick, fill=yellow!20, minimum width=0.2cm, minimum height=4cm},
         stage/.style={font=\bfseries},
         label/.style={font=\tiny},
-        port/.style={font=\tiny, inner sep=0.035cm}
+        port/.style={font=\tiny, inner sep=0.035cm},
+        % Define styles for adder and muxes
+        adder/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, NB=1, w=1.5, inset w=0.5, inset Lh=2, inset Rh=1.5}, 
+                      external pins width=0, scale=0.4, fill=blue!15},
+        greenmux/.style={muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NR=1, NB=0, NT=0, w=1}, 
+                         external pins width=0, scale=0.6, fill=green!20},
+        bluemux/.style={muxdemux, muxdemux def={Lh=2, Rh=4, NL=1, NR=2, NB=1, w=1}, 
+                        external pins width=0, scale=0.6, fill=blue!20}
     ]
         % Define origin node for relative positioning
         \coordinate (origin) at (0,0);
@@ -39,8 +46,7 @@
         
         % Fetch Stage
         % PC MUX - blue mux should have right side wide (inputs), left side narrow (output)
-        \node[muxdemux, muxdemux def={Lh=2, Rh=4, NL=1, NR=2, NB=1, w=1}, external pins width = 0,
-              scale=0.6, fill=blue!20] (pcmux) at ($(origin) + (0.3,4.5)$) {};
+        \node[bluemux] (pcmux) at ($(origin) + (0.3,4.5)$) {};
         \node[font=\tiny] at (pcmux.center) {};
         
         % Define PC MUX coordinates for compatibility
@@ -57,8 +63,7 @@
         \node[align=center] at ([yshift=0.6cm]ICache.center) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
  
         % PC adder using circuitikz with one bit adder style
-        \node[muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, NB=0, NT=0, w=1.5, inset w=0.5, inset Lh=2, inset Rh=1.5},
-              scale=0.4, fill=blue!15] (fe_adder) at ($(PC.center) + (0.7,1.8)$) {};
+        \node[adder] (fe_adder) at ($(PC.center) + (0.7,1.8)$) {};
         \node[font=\tiny] at (fe_adder.center) {+};
         \coordinate (fe_adder_input1) at (fe_adder.blpin 1);
         \coordinate (fe_adder_input2) at (fe_adder.blpin 2);
@@ -90,16 +95,14 @@
         
         % Execute Stage
         % Execute adder using circuitikz with one bit adder style
-        \node[muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, NB=1, w=1.5, inset w=0.5, inset Lh=2, inset Rh=1.5},
-              external pins width = 0, scale=0.4, fill=blue!15] (ex_adder) at ($(L2.east)!0.5!(L3.west) + (0,1.56)$) {};
+        \node[adder] (ex_adder) at ($(L2.east)!0.5!(L3.west) + (0,1.56)$) {};
         \node[font=\tiny] at (ex_adder.center) {+};
         \coordinate (ex_adder_input1) at (ex_adder.blpin 1);
         \coordinate (ex_adder_input2) at (ex_adder.blpin 2);
         \coordinate (ex_adder_output) at (ex_adder.brpin 1);
         
         % Execute stage ALU source MUX - green mux should have left side wide (inputs), right side narrow (output)
-        \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NR=1, NB=0, NT=0, w=1}, 
-              external pins width = 0, scale=0.6, fill=green!20] (exemux) at ($(L2.east)!0.5!(L3.west) + (0,-0.32)$) {};
+        \node[greenmux] (exemux) at ($(L2.east)!0.5!(L3.west) + (0,-0.32)$) {};
         \node[font=\tiny] at (exemux.center) {};
         \coordinate (exemux_in1) at (exemux.blpin 1);
         \coordinate (exemux_in2) at (exemux.blpin 2);
@@ -125,8 +128,7 @@
         \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
         
         % Write Back Stage MUX - green mux should have left side wide (inputs), right side narrow (output)
-        \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NR=1, w=1}, 
-              external pins width = 0, scale=0.6, fill=green!20] (wbmux) at ($(L4.east) + (0.8,-0.21)$) {};
+        \node[greenmux] (wbmux) at ($(L4.east) + (0.8,-0.21)$) {};
         \node[font=\tiny] at (wbmux.center) {};
         \coordinate (wbmux_in1) at (wbmux.blpin 1);
         \coordinate (wbmux_in2) at (wbmux.blpin 2);
