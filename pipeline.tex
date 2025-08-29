@@ -8,57 +8,10 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
+\usepackage[american]{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
 \usetheme{Madrid}
 
-% Define custom ALU shape command
-\newcommand{\drawAdder}[1]{
-    \node[inner sep=0] (adder) at #1 {
-        \begin{tikzpicture}[scale=0.4]
-            \coordinate (tl) at (-0.2, 0.6);
-            \coordinate (tr) at (0.2, 0.6);
-            \coordinate (ml) at (-0.25, 0);
-            \coordinate (mr) at (0.25, 0);
-            \coordinate (bl) at (-0.2, -0.6);
-            \coordinate (br) at (0.2, -0.6);
-            
-            \fill[blue!15] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
-            \draw[thick] (tl) -- (tr) -- (mr) -- (br) -- (bl) -- (ml) -- cycle;
-            
-            \node[font=\scriptsize] at (0, 0) {+};
-        \end{tikzpicture}
-    };
-}
-
-% Define macro for placing adders in pipeline with configurable location and optional rotation
-% Usage: \placeAdder{prefix}{x,y}[rotation angle]
-\newcommand{\placeAdder}[3][0]{%
-    \begin{scope}[shift={(#2)}, scale=0.8, rotate=#1]
-        \coordinate (#3_adder) at (0,0);
-        % Trapezoid coordinates
-        \coordinate (toptopleft) at (0, 0.4);
-        \coordinate (topbottomleft) at (0, 0.15);
-        \coordinate (left) at (0.1, 0);
-        \coordinate (bottomtopleft) at (0, -0.15);
-        \coordinate (bottombottomleft) at (0, -0.4);
-        \coordinate (topright) at (0.3, 0.2);
-        \coordinate (bottomright) at (0.3, -0.2);
-        
-        % Draw the trapezoid
-        \fill[blue!15] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-        \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-        
-        % Add + text
-        \node at (0.16, 0) {\tiny +};
-
-        \coordinate (#3_adder_input1) at (0, 0.3);
-        \coordinate (#3_adder_input2) at (0, -0.3);
-        \coordinate (#3_adder_output) at (0.3, 0);
-    \end{scope}
-}
-
-% Define macro for pipeline diagram
-% Usage: \drawPipelineDiagram[x,y] - optional position, defaults to (0,0)
 \newcommand{\drawPipelineDiagram}[1][0,0]{%
     \scalebox{0.85}{%
     \begin{tikzpicture}[shift={(#1)},
@@ -85,8 +38,16 @@
         \node[stage] at ([yshift=4cm]$(L4.east) + (1.5,0)$) {WB};
         
         % Fetch Stage
-        % PC MUX (rotate=90: output on west) - positioned relative to PC
-        \placeMux[90]{$(origin) + (0.3,4.5)$}{pc}{blue!20}
+        % PC MUX using circuitikz muxdemux
+        \node[muxdemux, muxdemux def={Lh=3, NL=1, Rh=3, NR=2, NB=1, w=1.2}, 
+              scale=0.8, rotate=90, fill=blue!20] (pcmux) at ($(origin) + (0.3,4.5)$) {};
+        \node[font=\tiny, scale=0.5] at (pcmux.center) {MUX};
+        
+        % Define PC MUX coordinates for compatibility
+        \coordinate (pcmux_in1) at (pcmux.rpin 1);
+        \coordinate (pcmux_in2) at (pcmux.rpin 2);
+        \coordinate (pcmux_out) at (pcmux.lpin 1);
+        \coordinate (pcmux_selectorup) at (pcmux.bpin 1);
 
         % PC - positioned relative to L1
         \node[component, fill=blue!20, minimum width=0.6cm, minimum height=0.6cm] (PC) at ([xshift=-2.5cm, yshift=0]L1.center) {\small PC};
@@ -95,9 +56,13 @@
         \node[component, fill=purple!20, minimum width=1.2cm, minimum height=2cm] (ICache) at ([xshift=-1cm, yshift=0]L1.center) {};
         \node[align=center] at ([yshift=0.6cm]ICache.center) {\footnotesize inst.\\[-0.14cm]\footnotesize cache};
  
-        % PC adder - positioned relative to PC
-        \placeAdder{$(PC.center) + (0.7,1.8)$}{fe}
-        \node[left, font=\tiny] (four) at ([xshift=-0.3cm]fe_adder_input1) {4};
+        % PC adder using circuitikz
+        \node[adder, scale=0.6, fill=blue!15] (fe_adder) at ($(PC.center) + (0.7,1.8)$) {};
+        \node[font=\tiny] at (fe_adder.center) {+};
+        \coordinate (fe_adder_input1) at (fe_adder.in 1);
+        \coordinate (fe_adder_input2) at (fe_adder.in 2);
+        \coordinate (fe_adder_output) at (fe_adder.out);
+        \node[left, font=\tiny] (four) at ([xshift=-0.2cm]fe_adder_input1) {4};
         
         % Decode Stage - positioned between L1 and L2, with vertical offset
         \node[component, fill=pink!30, minimum width=1.2cm, minimum height=1.8cm] (RF) at ($(L1.east)!0.5!(L2.west) + (0,0.41)$) {};
@@ -123,13 +88,22 @@
         };
         
         % Execute Stage
-        % Execute adder - positioned relative to L2
-        \placeAdder{$(L2.east)!0.5!(L3.west) + (0,1.56)$}{ex}
+        % Execute adder using circuitikz
+        \node[adder, scale=0.6, fill=blue!15] (ex_adder) at ($(L2.east)!0.5!(L3.west) + (0,1.56)$) {};
+        \node[font=\tiny] at (ex_adder.center) {+};
+        \coordinate (ex_adder_input1) at (ex_adder.in 1);
+        \coordinate (ex_adder_input2) at (ex_adder.in 2);
+        \coordinate (ex_adder_output) at (ex_adder.out);
         
-        % Execute stage ALU source MUX (rotate=270: output on north, inputs on south) - relative to L2/L3
-        \placeMux[270]{$(L2.east)!0.5!(L3.west) + (0,-0.32)$}{exe}{green!20}
+        % Execute stage ALU source MUX using circuitikz muxdemux
+        \node[muxdemux, muxdemux def={Lh=3, NL=1, Rh=3, NR=2, w=1.2}, 
+              scale=0.8, rotate=270, fill=green!20] (exemux) at ($(L2.east)!0.5!(L3.west) + (0,-0.32)$) {};
+        \node[font=\tiny, scale=0.5] at (exemux.center) {MUX};
+        \coordinate (exemux_in1) at (exemux.rpin 1);
+        \coordinate (exemux_in2) at (exemux.rpin 2);
+        \coordinate (exemux_out) at (exemux.lpin 1);
         
-        % ALU - positioned between L2 and L3, aligned with register file outputs
+        % ALU - keeping the custom trapezoid shape as circuitikz doesn't have a direct ALU shape
         \begin{scope}[shift={($(L2.east)!0.65!(L3.west) + (0,0)$)}, scale=0.8]
             \coordinate (ALU) at (0,0);
             % Trapezoid coordinates
@@ -164,8 +138,13 @@
         % DCache output port
         \node[port, anchor=east] (dc_data_out) at ([xshift=0.65cm, yshift=0cm]DCache.center){};
         
-        % Write Back Stage MUX (rotate=-90: output on east, inputs on north/south) - relative to L4
-        \placeMux[270]{$(L4.east) + (0.8,-0.21)$}{wb}{green!20}
+        % Write Back Stage MUX using circuitikz muxdemux
+        \node[muxdemux, muxdemux def={Lh=3, NL=1, Rh=3, NR=2, w=1.2}, 
+              scale=0.8, rotate=270, fill=green!20] (wbmux) at ($(L4.east) + (0.8,-0.21)$) {};
+        \node[font=\tiny, scale=0.5] at (wbmux.center) {MUX};
+        \coordinate (wbmux_in1) at (wbmux.rpin 1);
+        \coordinate (wbmux_in2) at (wbmux.rpin 2);
+        \coordinate (wbmux_out) at (wbmux.lpin 1);
         
         % Main data path connections
         \draw[blue, thick, ->] (four) -- (fe_adder_input1);
@@ -224,7 +203,7 @@
         % Write back path from mux output
         \draw[green, thick, ->] (wbmux_out) -- ++(0.3,0) -- ++(0,-2.2) -| (rf_selector);
         
-        % PC MUX inputs: branch target from L3, branch from L2, and PC+4
+        % PC MUX inputs: branch target from L3
         \draw[orange!70, thick, ->] (alu_output -| L3.east) -- ++(0.35,0) -- ++(0,3.3) -| (pcmux_selectorup);
         
     \end{tikzpicture}
