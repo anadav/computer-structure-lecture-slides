@@ -243,7 +243,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[pipeline_reg, right=of DMem] (MEMWB) {};
 
 % WB Stage Components
-\node[mux2, fill=blue!20] (WBMux) at (12.5, 0) {};
+\node[mux2, fill=blue!20, right=of MEMWB, anchor=blpin 1] (WBMux) {};
 
 
 % Control signal blocks in pipeline registers
@@ -291,8 +291,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
 
 % MEM/WB to WB Mux
-\draw[data_path] ([yshift=0.3cm]MEMWB.east) -- ([yshift=0.3cm]WBMux.west);
-\draw[data_path] ([yshift=-0.3cm]MEMWB.east) -- ([yshift=-0.3cm]WBMux.west);
+\draw[data_path] (MEMWB.east) -- (WBMux.blpin 1);
+\draw[data_path] ([yshift=-3cm]MEMWB.east) -- ++(0.3,0) |- (WBMux.blpin 2);
 
 % Write back path
 \draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-2.5) -| ([yshift=-0.6cm]RegFile.south);
