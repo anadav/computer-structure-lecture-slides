@@ -164,12 +164,12 @@ Loop1 & 2 & 2 & & & & & \\
 \begin{tikzpicture}[
     % Component styles
     component/.style={draw, thick, minimum height=0.8cm},
-    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=0.3cm, minimum height=3.5cm},
+    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=0.3cm, minimum height=6cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt},
-    hazard_unit/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=3, NR=3, NB=2, w=2, square pins=1}, 
+    hazard_unit/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=3, NB=2, w=2.5, square pins=1}, 
                        external pins width=0, scale=0.5, fill=red!60, text=white, font=\bfseries},
-    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=4, NR=1, w=3.2, square pins=1}, 
+    memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=5, square pins=1}, 
                         external pins width=0, scale=0.5},
     regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
                     external pins width=0, scale=0.5, fill=cyan!20},
@@ -212,7 +212,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) at (-0.5, 0) {PC};
 
 % Instruction Memory using muxdemux
-\node[memory_block, fill=yellow!20] (IMem) at (0.5, 0) {};
+\node[memory_block, fill=yellow!20] (IMem) at (PC.east) [anchor=west, xshift=0.3cm] {};
 \node[font=\small, align=center] at (IMem.center) {Instruction\\Memory};
 
 % ID Stage Components
@@ -221,11 +221,14 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\small, align=center] at (RegFile.center) {Register\\File};
 
 % Control Unit
-\node[control_block, ellipse, minimum width=1.2cm, minimum height=0.8cm] (Control) at (3, 2.5) {Control};
+\node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm] (Control) at (3, 2.5) [rotate=90] {\rotatebox{90}{Control}};
 
 % Hazard Detection Unit
 \node[hazard_unit] (HDU) at (Control.east) [anchor=south east, yshift=0.5cm] {};
 \node[font=\small, text=white] at (HDU.center) {HDU};
+
+% AND gate for HDU control
+\node[draw, thick, fill=red!60, minimum width=0.8cm, minimum height=0.6cm] (HDU_AND) at (Control.east) [anchor=west, xshift=1cm] {AND};
 
 % EX Stage Components
 % ALU using muxdemux style
@@ -233,12 +236,14 @@ Loop1 & 2 & 2 & & & & & \\
 \node[rotate=90, font=\small] at (ALU.center) {ALU};
 
 % MUXes in EX stage
-\node[mux2, fill=orange!20] (ALUSrcMux) at (5.5, -0.5) {};
-\node[mux3, fill=orange!20] (ForwardA) at (5.5, 1.2) {};
-\node[mux3, fill=orange!20] (ForwardB) at (5.5, 0.2) {};
+\node[mux2, fill=orange!20] (ForwardA) at (5.5, 1.2) {};
+\node[mux2, fill=orange!20] (ForwardB) at (5.5, 0.2) {};
+\node[mux2, fill=blue!20] (RegDstMux) at (5.5, -0.8) {};
 
 % Forwarding Unit
-\node[control_block, minimum width=1.8cm, minimum height=0.8cm, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
+\node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=2.5, square pins=1}, 
+      external pins width=0, scale=0.5, fill=orange!30] (FwdUnit) at (6.5, -2) {};
+\node[font=\small, align=center] at (FwdUnit.center) {Forwarding\\Unit};
 
 % MEM Stage Components
 % Data Memory using muxdemux
@@ -248,8 +253,6 @@ Loop1 & 2 & 2 & & & & & \\
 % WB Stage Components
 \node[mux2, fill=blue!20] (WBMux) at (12.5, 0) {};
 
-% RegDst MUX (between ID and EX)
-\node[mux2, fill=blue!20] (RegDstMux) at (4, -1) {};
 
 % Control signal blocks in pipeline registers
 \node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB1) at ([yshift=1.2cm]IDEX.center) {\tiny WB};
@@ -263,9 +266,9 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Main data paths
 % PC to Instruction Memory
-\draw[data_path] (PC.east) -- (IMem.west);
+\draw[data_path] (PC.east) -| (IMem.west);
 % Instruction Memory to IF/ID
-\draw[data_path] (IMem.east) -- (IFID.west);
+\draw[data_path] (IMem.east) -| (IFID.west);
 
 % IF/ID to Register File
 \draw[data_path] ([yshift=0.3cm]IFID.east) -- ++(0.3,0) |- ([yshift=0.6cm]RegFile.west);
@@ -281,8 +284,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Forwarding muxes to ALU
 \draw[data_path] (ForwardA.east) -- ([yshift=0.6cm]ALU.west);
-\draw[data_path] (ForwardB.east) -- (ALUSrcMux.north);
-\draw[data_path] (ALUSrcMux.east) -- ([yshift=-0.3cm]ALU.west);
+\draw[data_path] (ForwardB.east) -- ([yshift=-0.3cm]ALU.west);
 
 % ALU to EX/MEM
 \draw[data_path] (ALU.east) -- (EXMEM.west |- ALU.east);
@@ -311,14 +313,15 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.west);
 \draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
 \draw[hazard_path] ([yshift=-0.3cm]HDU.south) -| (PC.north);
-\draw[hazard_path] ([yshift=0.3cm]HDU.south) -| (IFID.south);
-\draw[hazard_path] (HDU.east) -- (Control.east);
+\draw[hazard_path] ([yshift=0.3cm]HDU.south) -| (IFID.north);
+\draw[hazard_path] (HDU.east) -| ([yshift=0.3cm]HDU.east) |- (HDU_AND.west);
+\draw[hazard_path] (HDU_AND.east) -| (Control.west);
 
 % Forwarding paths
-\draw[forward_path] (EXMEM.south) -- ++(0,-0.3) -| (FwdUnit.east);
-\draw[forward_path] (MEMWB.south) -- ++(0,-0.5) -| ([xshift=0.3cm]FwdUnit.east);
-\draw[forward_path] (FwdUnit.north) -- (ForwardA.south);
-\draw[forward_path] (FwdUnit.north) -- (ForwardB.south);
+\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
+\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
+\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
+\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
 
 % Add some labels
 \node[font=\tiny, above] at (PC.north) {108};
