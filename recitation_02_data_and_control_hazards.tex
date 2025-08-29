@@ -199,9 +199,6 @@ Loop1 & 2 & 2 & & & & & \\
 \node[memory_block, fill=yellow!20, right=of PC] (IMem) {Instruction\\Memory};
 \node[pipeline_reg, right=of IMem] (IFID) {};
 
-% Pipeline registers
-\node[pipeline_reg] (EXMEM) at (8, 0) {};
-\node[pipeline_reg] (MEMWB) at (11.5, 0) {};
 
 % Small labels on pipeline registers
 %\node[font=\tiny, rotate=90] at (IFID.center) {IF/ID};
@@ -212,13 +209,13 @@ Loop1 & 2 & 2 & & & & & \\
 
 % ID Stage Components
 % Register File using muxdemux style
-\node[regfile, right=of IFID] (RegFile) {Register\\File};
+\node[regfile, right=1cm of IFID] (RegFile) {Register\\File};
 
 % Control Unit
-\node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm, above=of RegFile] (Control) [rotate=90] {Control};
+\node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm, above=1.3cm of RegFile] (Control) [rotate=90] {Control};
 
 % Hazard Detection Unit
-\node[hazard_unit, above=of Control] (HDU) {HDU};
+\node[hazard_unit, above=1.3cm of Control] (HDU) {HDU};
 
 % AND gate for HDU control
 \node[and port, anchor=in 2, fill=red!60, scale=0.5, external pins width=0, right=of Control] (HDU_AND) {};
@@ -226,22 +223,24 @@ Loop1 & 2 & 2 & & & & & \\
 \node[pipeline_reg, right=of RegFile] (IDEX) {};
 
 % EX Stage Components
-% ALU using muxdemux style
 
-% MUXes in EX stage
 \node[mux2, fill=orange!20, anchor=brpin 1, right=of IDEX] (ForwardA) {};
 \node[alu_style, right=of ForwardA.brpin 1, anchor=blpin 1] (ALU) {\rotatebox{90}{ALU}};
-
 \node[mux2, fill=orange!20, anchor=brpin 1] (ForwardB) at (ALU.blpin 2 -| ForwardA.brpin 1) {};
-\node[mux2, fill=blue!20] (RegDstMux) at (ForwardB.south) [anchor=north, yshift=-0.5cm] {};
+\node[mux2, fill=blue!20, below=of ForwardB] (RegDstMux) {};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=3.5, square pins=1}, 
       external pins width=0, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
 
+\node[pipeline_reg] (EXMEM) at ([xshift=5mm]ALU.east |- IDEX) {};
+
 % MEM Stage Components
+
+
 % Data Memory using muxdemux
-\node[memory_block, fill=yellow!20] (DMem) at (10, 0.5) {Data\\Memory};
+\node[memory_block, fill=yellow!20, right=of EXMEM] (DMem) {Data\\Memory};
+\node[pipeline_reg, right=of DMem] (MEMWB) {};
 
 % WB Stage Components
 \node[mux2, fill=blue!20] (WBMux) at (12.5, 0) {};
@@ -297,18 +296,21 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-2.5) -| ([yshift=-0.6cm]RegFile.south);
 
 % Control paths
+\draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (M1.west);
+\draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
+\draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (EX1.west);
 \draw[control_path] (Control.south) -- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
 
 % Hazard detection paths
-\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.west);
-\draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
-\draw[hazard_path] ([yshift=-0.3cm]HDU.south) -| (PC.north);
-\draw[hazard_path] ([yshift=0.3cm]HDU.south) -| (IFID.north);
+%\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.blpin 2);
+%\draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
+%\draw[hazard_path] ([yshift=-0.3cm]HDU.south) -| (PC.north);
+%\draw[hazard_path] ([yshift=0.3cm]HDU.south) -| (IFID.north);
 \draw[hazard_path, line width=0pt] (HDU.brpin 3) |- (HDU_AND.bin 1);
-\draw[hazard_path] (HDU_AND.out) -| (Control.west);
+\draw[hazard_path] (HDU_AND.out) -| (Control.south);
 
 % Forwarding paths
 \draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
@@ -324,11 +326,11 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\tiny, below] at (FwdUnit.south) {RegDest};
 
 % Stage labels at top (after pipeline registers are defined)
-\node[stage_label] (IF_label) at (0, 4) {IF};
-\node[stage_label] (ID_label) at ($ (IFID.center)!0.5!(IDEX.center) $ |- IF_label) {ID};
-\node[stage_label] (EX_label) at ($ (IDEX.center)!0.5!(EXMEM.center) $ |- IF_label) {EX};
-\node[stage_label] (MEM_label) at ($ (EXMEM.center)!0.5!(MEMWB.center) $ |- IF_label) {MEM};
-\node[stage_label] (WB_label) at (13, 4) {WB};
+%\node[stage_label] (IF_label) at (0, 4) {IF};
+%\node[stage_label] (ID_label) at ($ (IFID.center)!0.5!(IDEX.center) $ |- IF_label) {ID};
+%\node[stage_label] (EX_label) at ($ (IDEX.center)!0.5!(EXMEM.center) $ |- IF_label) {EX};
+%\node[stage_label] (MEM_label) at ($ (EXMEM.center)!0.5!(MEMWB.center) $ |- IF_label) {MEM};
+%\node[stage_label] (WB_label) at (13, 4) {WB};
 
 
 % Instructions in pipeline (as text annotations)
