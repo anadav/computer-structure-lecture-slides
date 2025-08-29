@@ -160,7 +160,7 @@ Loop1 & 2 & 2 & & & & & \\
 \begin{frame}{Pipeline Processor with Hazard Detection}
 \centering
 \scalebox{0.7}{%
-\begin{tikzpicture}[
+\begin{circuitikz}[
     % Component styles - avoid using scale
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=5mm, minimum height=8cm},
@@ -170,8 +170,8 @@ Loop1 & 2 & 2 & & & & & \\
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=4, square pins=1}, 
                         external pins width=0, align=center},
-    regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
-                    external pins width=0, fill=cyan!20, align=center, muxdemux label={L1=left1} },
+    regfile/.style={muxdemux, muxdemux def={Lh=5, NL=5, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
+                    external pins width=0, fill=cyan!20, align=center},
     alu_style/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, w=1.2, inset w=0.5, inset Lh=4, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20},
     mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=1}, 
@@ -210,6 +210,7 @@ Loop1 & 2 & 2 & & & & & \\
 % ID Stage Components
 % Register File using muxdemux style
 \node[regfile, right=1cm of IFID] (RegFile) {Register\\File};
+% Add labels to RegFile pins
 
 % Control Unit
 \node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm, above=1.3cm of RegFile] (Control) [rotate=90] {Control};
@@ -263,8 +264,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (IMem.east) -| (IFID.west);
 
 % IF/ID to Register File
-\draw[data_path] (IFID.east) -- ++(0.3,0) |- (RegFile.blpin 1);
-\draw[data_path] (IFID.east) -- ++(0.3,0) |- (RegFile.blpin 2);
+\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[near end, above, font=\tiny] {Rs} (RegFile.blpin 1);
+\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[near end, above, font=\tiny] {Rt} (RegFile.blpin 2);
 
 \draw[data_path] ([yshift=0.3cm]IFID.east) -- ++(0.3,0) |- (Control.north);
 
@@ -295,7 +296,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] ([yshift=-3cm]MEMWB.east) -- ++(0.3,0) |- (WBMux.blpin 2);
 
 % Write back path
-\draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-2.5) -| ([yshift=-0.6cm]RegFile.south);
+\draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-3) -| node[midway, above right, font=\tiny] {RegWrite} ([xshift=-5mm]RegFile.blpin 5) -- (RegFile.blpin 5);
 
 % Control paths
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (M1.west);
@@ -344,7 +345,7 @@ Loop1 & 2 & 2 & & & & & \\
 %\node[font=\tiny, text=blue!60!black] at (14, -1.3) {104: SUB \$4 ← \$5 \$1};
 %\node[font=\tiny, text=blue!60!black] at (14, -1.6) {108: Add \$6 ← \$6 \$7};
 
-\end{tikzpicture}
+\end{circuitikz}
 }
 \end{frame}
 
