@@ -166,13 +166,13 @@ Loop1 & 2 & 2 & & & & & \\
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=0.3cm, minimum height=6cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
-    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt},
+    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=3, NB=2, w=2.5, square pins=1}, 
                        external pins width=0, scale=0.5, fill=red!60, text=white, font=\bfseries},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=5, square pins=1}, 
                         external pins width=0, scale=0.5, font=\small, align=center},
     regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
-                    external pins width=0, scale=0.5, fill=cyan!20, font=\small, align=center},
+                    external pins width=0, scale=0.5, fill=cyan!20, font=\normalfont, align=center},
     alu_style/.style={muxdemux, muxdemux def={Lh=8, NL=2, Rh=4, NR=1, w=2.5, inset w=1, inset Lh=4, inset Rh=0, square pins=1},
                      external pins width=0, scale=0.5, fill=green!20},
     mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=0.8}, 
@@ -183,7 +183,8 @@ Loop1 & 2 & 2 & & & & & \\
     data_path/.style={arrow, black},
     control_path/.style={arrow, orange!70},
     hazard_path/.style={arrow, red!70, dashed},
-    forward_path/.style={arrow, orange!50}
+    forward_path/.style={arrow, orange!50},
+    control_signal/.style={control_block, minimum width=0.5cm, minimum height=0.3cm, font=\scriptsize}
 ]
 
 % Define origin
@@ -248,14 +249,14 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Control signal blocks in pipeline registers
-\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB1) at ([yshift=1.8cm]IDEX.center) {\tiny WB};
-\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (M1) at ([yshift=1.2cm]IDEX.center) {\tiny M};
-\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (EX1) at ([yshift=0.6cm]IDEX.center) {\tiny EX};
+\node[control_signal] (WB1) at ([yshift=-2mm]IDEX.north) {\tiny WB};
+\node[control_signal] (M1) at (WB1.south) [anchor=north, yshift=-0.1cm] {\tiny M};
+\node[control_signal] (EX1) at (M1.south) [anchor=north, yshift=-0.1cm] {\tiny EX};
 
-\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB2) at ([yshift=1.8cm]EXMEM.center) {\tiny WB};
-\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (M2) at ([yshift=1.2cm]EXMEM.center) {\tiny M};
+\node[control_signal] (WB2) at (WB1 -| EXMEM.center) {\tiny WB};
+\node[control_signal] (M2) at (WB2.south) [anchor=north, yshift=-0.1cm] {\tiny M};
 
-\node[control_block, minimum width=0.5cm, minimum height=0.3cm] (WB3) at ([yshift=1.8cm]MEMWB.center) {\tiny WB};
+\node[control_signal] (WB3) at (WB1 -| MEMWB.center) {\tiny WB};
 
 % Main data paths
 % PC to Instruction Memory
@@ -297,7 +298,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (WBMux.east) -- ++(0.5,0) -- ++(0,-2.5) -| ([yshift=-0.6cm]RegFile.south);
 
 % Control paths
-\draw[control_path] (Control.south) -- (IDEX.north |- Control.south);
+\draw[control_path] (Control.south) -- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
@@ -307,7 +308,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
 \draw[hazard_path] ([yshift=-0.3cm]HDU.south) -| (PC.north);
 \draw[hazard_path] ([yshift=0.3cm]HDU.south) -| (IFID.north);
-\draw[hazard_path, line width=0pt] (HDU.brpin 3) |- (HDU_AND.in 1);
+\draw[hazard_path, line width=0pt] (HDU.brpin 3) |- (HDU_AND.bin 1);
 \draw[hazard_path] (HDU_AND.out) -| (Control.west);
 
 % Forwarding paths
@@ -324,14 +325,14 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\tiny, below] at (FwdUnit.south) {RegDest};
 
 % Instructions in pipeline (as text annotations)
-\node[font=\scriptsize, text=green!60!black, anchor=west] at (13.5, 1) {ADD \$6 ← \$6 \$7};
-\node[font=\scriptsize, text=red!60!black, anchor=west] at (13.5, 0.5) {SUB \$4 ← \$5 \$1};
-\node[font=\scriptsize, text=blue!60!black, anchor=west] at (13.5, 0) {LW \$1 ← 100(\$4)};
+%\node[font=\scriptsize, text=green!60!black, anchor=west] at (13.5, 1) {ADD \$6 ← \$6 \$7};
+%\node[font=\scriptsize, text=red!60!black, anchor=west] at (13.5, 0.5) {SUB \$4 ← \$5 \$1};
+%\node[font=\scriptsize, text=blue!60!black, anchor=west] at (13.5, 0) {LW \$1 ← 100(\$4)};
 
 % Instruction addresses
-\node[font=\tiny, text=blue!60!black] at (14, -1) {100: LW \$1←(100)(\$4)};
-\node[font=\tiny, text=blue!60!black] at (14, -1.3) {104: SUB \$4 ← \$5 \$1};
-\node[font=\tiny, text=blue!60!black] at (14, -1.6) {108: Add \$6 ← \$6 \$7};
+%\node[font=\tiny, text=blue!60!black] at (14, -1) {100: LW \$1←(100)(\$4)};
+%\node[font=\tiny, text=blue!60!black] at (14, -1.3) {104: SUB \$4 ← \$5 \$1};
+%\node[font=\tiny, text=blue!60!black] at (14, -1.6) {108: Add \$6 ← \$6 \$7};
 
 \end{tikzpicture}
 }
