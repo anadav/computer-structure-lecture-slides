@@ -170,9 +170,9 @@ Loop1 & 2 & 2 & & & & & \\
     hazard_unit/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=3, NB=2, w=2.5, square pins=1}, 
                        external pins width=0, scale=0.5, fill=red!60, text=white, font=\bfseries},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=5, square pins=1}, 
-                        external pins width=0, scale=0.5},
+                        external pins width=0, scale=0.5, font=\small, align=center},
     regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
-                    external pins width=0, scale=0.5, fill=cyan!20},
+                    external pins width=0, scale=0.5, fill=cyan!20, font=\small, align=center},
     alu_style/.style={muxdemux, muxdemux def={Lh=8, NL=2, Rh=4, NR=1, w=2.5, inset w=1, inset Lh=4, inset Rh=0, square pins=1},
                      external pins width=0, scale=0.5, fill=green!20},
     mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=0.8}, 
@@ -180,7 +180,7 @@ Loop1 & 2 & 2 & & & & & \\
     mux3/.style={muxdemux, muxdemux def={Lh=4, Rh=2, NL=3, NR=1, NB=1, w=1}, 
                  external pins width=0, scale=0.5},
     arrow/.style={->, >=stealth, thick},
-    data_path/.style={arrow, blue!70},
+    data_path/.style={arrow, black},
     control_path/.style={arrow, orange!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50}
@@ -210,12 +210,12 @@ Loop1 & 2 & 2 & & & & & \\
 
 % IF Stage Components
 % Instruction Memory using muxdemux
-\node[memory_block, fill=yellow!20, align=center] (IMem) at (IFID.west) [anchor=east, xshift=-0.5cm] {Instruction\\Memory};
+\node[memory_block, fill=yellow!20] (IMem) at (IFID.west) [anchor=east, xshift=-0.5cm] {Instruction\\Memory};
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) at (IMem.west) [anchor=east, xshift=-0.8cm] {PC};
 
 % ID Stage Components
 % Register File using muxdemux style
-\node[regfile, align=center] (RegFile) at (3, 0.5) {Register\\File};
+\node[regfile] (RegFile) at (3, 0.5) {Register\\File};
 
 % Control Unit
 \node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm] (Control) at (3, 2.5) [rotate=90] {Control};
@@ -233,15 +233,15 @@ Loop1 & 2 & 2 & & & & & \\
 % MUXes in EX stage
 \node[mux2, fill=orange!20] (ForwardA) at (ALU.blpin 1) [anchor=brpin 1, xshift=-1cm] {};
 \node[mux2, fill=orange!20] (ForwardB) at (ALU.blpin 2) [anchor=brpin 1, xshift=-1cm] {};
-\node[mux2, fill=blue!20] (RegDstMux) at (5.5, -0.8) {};
+\node[mux2, fill=blue!20] (RegDstMux) at (ForwardB.south) [anchor=north, yshift=-0.5cm] {};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=2, w=3.5, square pins=1}, 
-      external pins width=0, scale=0.5, fill=orange!30, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
+      external pins width=0, scale=0.5, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
 
 % MEM Stage Components
 % Data Memory using muxdemux
-\node[memory_block, fill=yellow!20, align=center] (DMem) at (10, 0.5) {Data\\Memory};
+\node[memory_block, fill=yellow!20] (DMem) at (10, 0.5) {Data\\Memory};
 
 % WB Stage Components
 \node[mux2, fill=blue!20] (WBMux) at (12.5, 0) {};
