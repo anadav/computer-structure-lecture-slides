@@ -161,13 +161,13 @@ Loop1 & 2 & 2 & & & & & \\
 \centering
 \scalebox{0.7}{%
 \begin{tikzpicture}[
-    % Component styles
+    % Component styles - avoid using scale
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=5mm, minimum height=8cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=3, NB=2, w=2.5, square pins=1}, 
-                       external pins width=0, scale, fill=red!60, text=white},
+                       external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=4, square pins=1}, 
                         external pins width=0, align=center},
     regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
@@ -175,9 +175,9 @@ Loop1 & 2 & 2 & & & & & \\
     alu_style/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, w=1.2, inset w=0.5, inset Lh=4, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20},
     mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=1}, 
-                 external pins width=0, scale=0.5},
+                 external pins width=0},
     mux3/.style={muxdemux, muxdemux def={Lh=4, Rh=2, NL=3, NR=1, NB=1, w=1}, 
-                 external pins width=0, scale=0.5},
+                 external pins width=0},
     arrow/.style={->, >=stealth, thick},
     data_path/.style={arrow, black},
     control_path/.style={arrow, orange!70},
@@ -191,55 +191,52 @@ Loop1 & 2 & 2 & & & & & \\
 % Define origin
 \coordinate (origin) at (0,0);
 
+% IF Stage Components
+% Instruction Memory using muxdemux
+%\node[memory_block, fill=yellow!20] (IMem) at (IFID.west) [anchor=east, xshift=-0.5cm] {Instruction\\Memory};
+\node[component, fill=yellow!30, minimum width=0.8cm] (PC) {PC};
+\node[memory_block, fill=yellow!20, right=of PC] (IMem) {Instruction\\Memory};
+\node[pipeline_reg, right=of IMem] (IFID) {};
+
 % Pipeline registers
-\node[pipeline_reg] (IFID) at (1.5, 0) {};
-\node[pipeline_reg] (IDEX) at (4.5, 0) {};
 \node[pipeline_reg] (EXMEM) at (8, 0) {};
 \node[pipeline_reg] (MEMWB) at (11.5, 0) {};
 
-% Stage labels at top (after pipeline registers are defined)
-\node[stage_label] (IF_label) at (0, 4) {IF};
-\node[stage_label] (ID_label) at ($ (IFID.center)!0.5!(IDEX.center) $ |- IF_label) {ID};
-\node[stage_label] (EX_label) at ($ (IDEX.center)!0.5!(EXMEM.center) $) [yshift=4cm] {EX};
-\node[stage_label] (MEM_label) at ($ (EXMEM.center)!0.5!(MEMWB.center) $) [yshift=4cm] {MEM};
-\node[stage_label] (WB_label) at (13, 4) {WB};
-
 % Small labels on pipeline registers
-\node[font=\tiny, rotate=90] at (IFID.center) {IF/ID};
-\node[font=\tiny, rotate=90] at (IDEX.center) {ID/EX};
-\node[font=\tiny, rotate=90] at (EXMEM.center) {EX/MEM};
-\node[font=\tiny, rotate=90] at (MEMWB.center) {MEM/WB};
+%\node[font=\tiny, rotate=90] at (IFID.center) {IF/ID};
+%\node[font=\tiny, rotate=90] at (IDEX.center) {ID/EX};
+%\node[font=\tiny, rotate=90] at (EXMEM.center) {EX/MEM};
+%\node[font=\tiny, rotate=90] at (MEMWB.center) {MEM/WB};
 
-% IF Stage Components
-% Instruction Memory using muxdemux
-\node[memory_block, fill=yellow!20] (IMem) at (IFID.west) [anchor=east, xshift=-0.5cm] {Instruction\\Memory};
-\node[component, fill=yellow!30, minimum width=0.8cm] (PC) at (IMem.west) [anchor=east, xshift=-0.8cm] {PC};
 
 % ID Stage Components
 % Register File using muxdemux style
-\node[regfile] (RegFile) at (3, 0.5) {Register\\File};
+\node[regfile, right=of IFID] (RegFile) {Register\\File};
 
 % Control Unit
-\node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm] (Control) at (3, 2.5) [rotate=90] {Control};
+\node[control_block, ellipse, minimum height=0.8cm, minimum width=1.2cm, above=of RegFile] (Control) [rotate=90] {Control};
 
 % Hazard Detection Unit
-\node[hazard_unit] (HDU) at (Control.east) [anchor=south east, yshift=0.5cm] {HDU};
+\node[hazard_unit, above=of Control] (HDU) {HDU};
 
 % AND gate for HDU control
-\node[and port, anchor=in 1, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at (Control.east) [xshift=1cm] {};
+\node[and port, anchor=in 2, fill=red!60, scale=0.5, external pins width=0, right=of Control] (HDU_AND) {};
+
+\node[pipeline_reg, right=of RegFile] (IDEX) {};
 
 % EX Stage Components
 % ALU using muxdemux style
-\node[alu_style] (ALU) at (6.5, 0.5) {\rotatebox{90}{ALU}};
 
 % MUXes in EX stage
-\node[mux2, fill=orange!20] (ForwardA) at (ALU.blpin 1) [anchor=brpin 1, xshift=-1cm] {};
-\node[mux2, fill=orange!20] (ForwardB) at (ALU.blpin 2) [anchor=brpin 1, xshift=-1cm] {};
+\node[mux2, fill=orange!20, anchor=brpin 1, right=of IDEX] (ForwardA) {};
+\node[alu_style, right=of ForwardA.brpin 1, anchor=blpin 1] (ALU) {\rotatebox{90}{ALU}};
+
+\node[mux2, fill=orange!20, anchor=brpin 1] (ForwardB) at ((ALU.blpin 2) -| (ForwardA.brpin 1)) {};
 \node[mux2, fill=blue!20] (RegDstMux) at (ForwardB.south) [anchor=north, yshift=-0.5cm] {};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=3.5, square pins=1}, 
-      external pins width=0, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
+      external pins width=0, scale=0.5, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
 
 % MEM Stage Components
 % Data Memory using muxdemux
@@ -324,6 +321,14 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\tiny, right] at (RegFile.east) {Data};
 \node[font=\tiny, below] at (HDU.south) {gate};
 \node[font=\tiny, below] at (FwdUnit.south) {RegDest};
+
+% Stage labels at top (after pipeline registers are defined)
+\node[stage_label] (IF_label) at (0, 4) {IF};
+\node[stage_label] (ID_label) at ($ (IFID.center)!0.5!(IDEX.center) $ |- IF_label) {ID};
+\node[stage_label] (EX_label) at ($ (IDEX.center)!0.5!(EXMEM.center) $ |- IF_label) {EX};
+\node[stage_label] (MEM_label) at ($ (EXMEM.center)!0.5!(MEMWB.center) $ |- IF_label) {MEM};
+\node[stage_label] (WB_label) at (13, 4) {WB};
+
 
 % Instructions in pipeline (as text annotations)
 %\node[font=\scriptsize, text=green!60!black, anchor=west] at (13.5, 1) {ADD \$6 ← \$6 \$7};
