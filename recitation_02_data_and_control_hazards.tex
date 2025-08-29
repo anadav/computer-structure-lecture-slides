@@ -168,7 +168,7 @@ Loop1 & 2 & 2 & & & & & \\
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=3, NB=2, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
-    memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=4, square pins=1}, 
+    memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=1, Rh=6, NR=1, w=4, square pins=1}, 
                         external pins width=0, align=center},
     regfile/.style={muxdemux, muxdemux def={Lh=5, NL=5, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
@@ -285,8 +285,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (ALU.east) -- (EXMEM.west |- ALU.east);
 
 % EX/MEM to Data Memory
-\draw[data_path] ([yshift=0.3cm]EXMEM.east) -- ([yshift=0.3cm]DMem.west);
-\draw[data_path] ([yshift=-0.3cm]EXMEM.east) -- ([yshift=-0.3cm]DMem.west);
+\draw[data_path] (EXMEM.east) -- (DMem.blpin 1);
 
 % Data Memory to MEM/WB
 \draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
@@ -316,10 +315,10 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path] (HDU_AND.out) -| (Control.south);
 
 % Forwarding paths
-\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
-\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
-\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
-\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
+%\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
+%\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
+%\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
+%\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
 
 % Add some labels
 \node[font=\tiny, above] at (PC.north) {108};
