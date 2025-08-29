@@ -171,7 +171,7 @@ Loop1 & 2 & 2 & & & & & \\
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=2, Rh=6, NR=1, w=4, square pins=1}, 
                         external pins width=0, align=center},
     regfile/.style={muxdemux, muxdemux def={Lh=5, NL=3, Rh=5, NR=2, NB=1, w=3.2, square pins=1}, 
-                    external pins width=0, fill=cyan!20, align=center},
+                    external pins width=0, fill=cyan!20, align=center, muxdemux label={L1=left1} },
     alu_style/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=2, NR=1, w=1.2, inset w=0.5, inset Lh=4, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20},
     mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=1}, 
@@ -230,8 +230,8 @@ Loop1 & 2 & 2 & & & & & \\
 \node[mux2, fill=blue!20, below=of ForwardB] (RegDstMux) {};
 
 % Forwarding Unit
-\node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=3.5, square pins=1}, 
-      external pins width=0, fill=orange!30, font=\small, align=center] (FwdUnit) at (6.5, -2) {Forwarding\\Unit};
+\node[muxdemux, muxdemux def={Lh=2, NL=2, Rh=2, NR=2, w=3, square pins=1}, 
+      external pins width=0, fill=orange!30, font=\scriptsize, align=center, below=of ALU] (FwdUnit) {Forwarding\\Unit};
 
 \node[pipeline_reg] (EXMEM) at ([xshift=5mm]ALU.east |- IDEX) {};
 
@@ -322,7 +322,6 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Add some labels
 \node[font=\tiny, above] at (PC.north) {108};
-\node[font=\tiny, left, align=center] at (RegFile.west) {Rs\\Rt\\Rd};
 \node[font=\tiny, right] at (RegFile.east) {Data};
 \node[font=\tiny, below] at (HDU.south) {gate};
 \node[font=\tiny, below] at (FwdUnit.south) {RegDest};
