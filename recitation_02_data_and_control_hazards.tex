@@ -226,17 +226,16 @@ Loop1 & 2 & 2 & & & & & \\
 \node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
 \node[pipeline_reg, right=10mm of RegFile] (IDEX) {};
 
-% Register fields in IDEX latch (bottom to top)
-\node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {\tiny Rd};
-\node[data_latch] (Rt_field) at (Rd_field.north) [anchor=south, yshift=0.1cm] {\tiny Rt};
-\node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at (ForwardB.blpin 2 |- Rd_field.east) {};
-\node[data_latch, anchor=east] (Rs_field) at ([yshift=5mm]Rt_latch.east |- mux4.brpin 1) {\tiny Rs};
-
 % EX Stage Components
-
 \node[mux2, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=10mm]IDEX.east |- RegFile.brpin 1) {};
 \node[alu_style, right=of ForwardA.brpin 1, anchor=blpin 1] (ALU) {\rotatebox{90}{ALU}};
 \node[mux2, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
+
+% Register fields in IDEX latch (bottom to top)
+\node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {\tiny Rd};
+\node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at (ForwardB.blpin 2 |- Rd_field.east) {};
+\node[data_latch] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {\tiny Rt};
+\node[data_latch] (Rs_field) at (Rt_field.north) [anchor=south, yshift=0.1cm] {\tiny Rs};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=2, NL=4, Rh=2, NR=4, w=3, square pins=1}, 
