@@ -214,15 +214,16 @@ Loop1 & 2 & 2 & & & & & \\
 % Add labels to RegFile pins
 
 % Control Unit
-\node[control_block, ellipse, minimum height=0.7cm, minimum width=1cm, above=1.3cm of RegFile] (Control) [rotate=90] {Control};
+\node[control_block, ellipse, minimum height=0.5cm, minimum width=0.5cm,
+      above=of RegFile] (Control) {\rotatebox{90}{Control}};
 
 % Hazard Detection Unit
-\node[hazard_unit, above=1.3cm of Control] (HDU) {HDU};
+\node[hazard_unit, above=of Control.north west] (HDU) {HDU};
 
 % AND gate for HDU control
-\node[and port, anchor=in 2, fill=red!60, scale=0.5, external pins width=0, right=of Control] (HDU_AND) {};
+\node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
 
-\node[pipeline_reg, right=of RegFile] (IDEX) {};
+\node[pipeline_reg, right=10mm of RegFile] (IDEX) {};
 
 % EX Stage Components
 
@@ -263,25 +264,29 @@ Loop1 & 2 & 2 & & & & & \\
 \node[data_latch] (Rt_field) at (Rd_field.north) [anchor=south, yshift=0.1cm] {\tiny Rt};
 \node[data_latch] (Rs_field) at (Rt_field.north) [anchor=south, yshift=0.1cm] {\tiny Rs};
 
+% Register fields in EXMEM and MEMWB latches
+\node[data_latch] (EXMEM_RtRd) at ([yshift=2mm]EXMEM.south) {\rotatebox{90}{\tiny Rt/Rd}};
+\node[data_latch] (MEMWB_RtRd) at ([yshift=2mm]MEMWB.south) {\rotatebox{90}{\tiny Rt/Rd}};
+
 % Main data paths
 % PC to Instruction Memory
 \draw[data_path] (PC.east) -- (IMem.west);
 % Instruction Memory to IF/ID
-\draw[data_path] (IMem.east) -| (IFID.west);
+\draw[data_path] (IMem.east) -- (IFID.west);
 
 % IF/ID to Register File
 \draw[data_path] (IFID.east) -- ++(0.3,0) |- node[near end, above, font=\tiny] {Rs} (RegFile.blpin 1);
 \draw[data_path] (IFID.east) -- ++(0.3,0) |- node[near end, above, font=\tiny] {Rt} (RegFile.blpin 2);
 
-\draw[data_path] (IFID.east) -- ++(0.3,0) |- (Control.north);
+\draw[data_path] (IFID.east) -- ++(0.3,0) |- (Control.west);
 
 % Register File outputs to ID/EX
 \draw[data_path] (RegFile.brpin 1) -- (RegFile.brpin 1 -| IDEX.west);
 \draw[data_path] (RegFile.brpin 2) -- (RegFile.brpin 2 -| IDEX.west);
 
 % ID/EX to EX stage (through forwarding muxes)
-\draw[data_path] ([yshift=0.6cm]IDEX.east) -- ([yshift=0.6cm]ForwardA.west);
-\draw[data_path] ([yshift=0cm]IDEX.east) -- ([yshift=0cm]ForwardB.west);
+\draw[data_path] (IDEX.east |- RegFile.brpin 1) -- (ForwardA.blpin 1);
+\draw[data_path] (IDEX.east |- RegFile.brpin 2) -- (ForwardB.blpin 1);
 
 % Forwarding muxes to ALU
 \draw[data_path] (ForwardA.brpin 1) -- (ALU.blpin 1);
@@ -301,18 +306,26 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] ([yshift=-3cm]MEMWB.east) -- ++(0.3,0) |- (WBMux.blpin 2);
 
 % Write back path
-\draw[data_path] (WBMux.brpin 1) -- ++(0.5,0) |- ([yshift=-6mm]MEMWB.south) -| node[midway, above right, font=\tiny] {WrData} ([xshift=-5mm]RegFile.blpin 4) -- (RegFile.blpin 4);
+\draw[data_path]
+  (WBMux.brpin 1) -- ++(0.5,0)
+  |- ([yshift=-6mm]MEMWB.south)
+  -| node[midway, above right, font=\tiny]{WrData} ([xshift=-5mm]RegFile.blpin 4)
+  -- node[midway, above, font=\tiny]{WrData} % or pos=0.9, etc.
+     (RegFile.blpin 4);
 
 % Control paths
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (M1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (EX1.west);
-\draw[control_path] (Control.south) -- ++(0.1, 0) |- (HDU_AND.bin 2);
+\draw[control_path] (Control.east) -- ++(0.1, 0) |- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
-\draw[control_path] (WB3.east) -- ++(0.2, 0) |- ([yshift=-3mm]MEMWB.south) -| ([xshift=3mm]FwdUnit.brpin 4) -- (FwdUnit.brpin 4);
-\draw[control_path] (WB3.east) -- ++(0.2, 0) |- ([yshift=-3mm]MEMWB.south) -| node[midway, above right, font=\tiny] {RegWrite} ([xshift=-4mm]RegFile.blpin 5) -- (RegFile.blpin 5);
+\draw[control_path]
+    (WB3.east) -- ++(0.2, 0)
+    |- node[pos=0.1, right, font=\tiny] {RegWrite} ([yshift=-3mm]MEMWB.south)
+    -| node[midway, above right, font=\tiny] {RegWrite} ([xshift=-4mm]RegFile.blpin 5)
+    -- (RegFile.blpin 5);
 
 % Hazard detection paths
 %\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.blpin 2);
@@ -331,10 +344,6 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Add some labels
-\node[font=\tiny, above] at (PC.north) {108};
-\node[font=\tiny, right] at (RegFile.east) {Data};
-\node[font=\tiny, below] at (HDU.south) {gate};
-\node[font=\tiny, below] at (FwdUnit.south) {RegDest};
 
 % Stage labels at top (after pipeline registers are defined)
 %\node[stage_label] (IF_label) at (0, 4) {IF};
