@@ -266,8 +266,8 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Register fields in EXMEM and MEMWB latches
-\node[data_latch] (EXMEM_RtRd) at ([yshift=2mm]EXMEM.south) {\rotatebox{90}{\tiny Rt/Rd}};
-\node[data_latch] (MEMWB_RtRd) at ([yshift=2mm]MEMWB.south) {\rotatebox{90}{\tiny Rt/Rd}};
+\node[data_latch] (EXMEM_RtRd) at (EXMEM |- RegDstMux.rpin 1) {\rotatebox{90}{\tiny Rt/Rd}};
+\node[data_latch] (MEMWB_RtRd) at (MEMWB |- EXMEM_RtRd) {\rotatebox{90}{\tiny Rt/Rd}};
 
 % Main data paths
 % PC to Instruction Memory
@@ -303,6 +303,14 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (Rt_field.east) -- (RegDstMux.blpin 1);
 \draw[data_path] (Rd_field.east) -- (RegDstMux.blpin 2);
 \draw[data_path] (RegDstMux.brpin 1) --  (EXMEM_RtRd.west);
+\draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDest} (MEMWB_RtRd.west);
+\draw[data_path]
+  (MEMWB_RtRd.east) -- ++(0.5,0)
+  |- ([yshift=-7mm]MEMWB.south)
+  -| node[midway, above right, font=\tiny]{RegDst} ([xshift=-6mm]RegFile.blpin 3)
+  -- node[midway, above, font=\tiny]{RegDst} % or pos=0.9, etc.
+     (RegFile.blpin 3);
+
 
 % ALU to EX/MEM
 \draw[data_path] (ALU.east) -- (EXMEM.west |- ALU.east);
