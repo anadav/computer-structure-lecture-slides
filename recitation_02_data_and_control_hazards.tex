@@ -260,10 +260,9 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\tiny, left=-1mm of ALU.brpin 2, align=right] {res};
 
 % Addr and SHL
-\node[adder, anchor=brpin 2] (EXPCAddr) at (ALU.east |- IFNewPC) {};
+\node[adder, anchor=blpin 1] (EXPCAddr) at (ALU |- IFNewPC) {+};
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
-      above=4mm of ALU.north east, yshift=1.8mm, anchor=east, font=\tiny] (shltwo) {\rotatebox{90}{SHL2}};
-
+      left=4mm of EXPCAddr.blpin 2, font=\tiny] (SHLTwo) {\rotatebox{90}{SHL2}};
 
 % Second forwarding mux
 \node[mux2, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
@@ -279,6 +278,7 @@ Loop1 & 2 & 2 & & & & & \\
       external pins width=0, fill=orange!30, font=\scriptsize, align=center, below right=5mm of RegDstMux.east] (FwdUnit) {Forwarding\\Unit};
 
 \node[pipeline_reg] (EXMEM) at ([xshift=1cm]ALU.east |- IDEX) {};
+\node[data_latch] (EXNewPC) at (EXPCAddr.brpin 1 -| EXMEM) {\rotatebox{90}{NewPC}};
 
 % MEM Stage Components
 
@@ -341,6 +341,9 @@ Loop1 & 2 & 2 & & & & & \\
 
 \draw[data_path] (Instruction.east) -- ++(0.3,0) |- (Control.west);
 
+% PC
+\draw[data_path] (IFNewPC.east) --  (IDEX.west |- IFNewPC);
+
 % Register File outputs to ID/EX
 \draw[data_path] (RegFile.brpin 1) -- (RegFile.brpin 1 -| IDEX.west);
 \draw[data_path] (RegFile.brpin 2) -- (RegFile.brpin 2 -| IDEX.west);
@@ -369,6 +372,11 @@ Loop1 & 2 & 2 & & & & & \\
   -| node[path_label, above right]{RegDst} ([xshift=-8mm]RegFile.blpin 3)
   -- node[path_label]{RegDst} % or pos=0.9, etc.
      (RegFile.blpin 3);
+
+% EX PC Addr
+\draw[data_path] (IDEX.east |- IFNewPC) -- (EXPCAddr.blpin 1);
+\draw[data_path] (SHLTwo.east) -- (EXPCAddr.blpin 2);
+\draw[data_path] (EXPCAddr.brpin 1) -- (EXNewPC.west);
 
 % ALU to EX/MEM
 \draw[data_path] (ALU.brpin 2) -- (EXMEM.west |- ALU.brpin 2);
