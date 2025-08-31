@@ -182,7 +182,7 @@ Loop1 & 2 & 2 & & & & & \\
                  external pins width=0},
     mux3/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=3, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
-    mux4/.style={muxdemux, muxdemux def={Lh=2, Rh=1, NL=2, NR=1, NB=1, NT=1, w=1}, 
+    mux2b/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
     arrow/.style={->, >=stealth, thick},
     data_path/.style={arrow, black},
@@ -190,8 +190,8 @@ Loop1 & 2 & 2 & & & & & \\
     hazard_path_input/.style={arrow, red!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50},
-    control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, font=\tiny},
-    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, font=\tiny},
+    control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     % Connector circles
     black_connector/.style={circle, fill, inner sep=1.2pt},
     red_connector/.style={circle, fill, inner sep=1.2pt, red!70},
@@ -268,10 +268,11 @@ Loop1 & 2 & 2 & & & & & \\
 \node[mux3, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
 
 % Register fields in IDEX latch (bottom to top)
-\node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {Rd};
-\node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
+\node[data_latch, anchor=south] (Rd_field) at (IDEX.south) {Rd};
+\node[mux2b, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
 \node[data_latch] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {Rt};
-\node[data_latch, anchor=south] (Rs_field) at ([yshift=1mm]Rt_field.north) {Rs};
+\node[data_latch, above=1mm of Rt_field] (Imm_field) {Imm};
+\node[data_latch, above=1mm of Imm_field] (Rs_field) {Rs};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, w=3, square pins=1}, 
