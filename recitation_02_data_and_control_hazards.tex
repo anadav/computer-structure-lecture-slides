@@ -165,22 +165,22 @@ Loop1 & 2 & 2 & & & & & \\
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=7.4cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
-    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\footnotesize},
+    control_block/.style={draw, t3ick, fill=orange!30, rounded corners=3pt, font=\footnotesize},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=6, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=5, NL=5, Rh=5, NR=1, NT=3, w=3, square pins=1}, 
                         external pins width=0, align=center, text depth=9ex, fill=yellow!20},
     imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=4, square pins=1}, 
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    regfile/.style={muxdemux, muxdemux def={Lh=7, NL=5, Rh=7, NR=2, NB=1, NT=1, w=3.2, square pins=1}, 
+    regfile/.style={muxdemux, muxdemux def={Lh=6.5, NL=5, Rh=6.5, NR=2, NB=1, NT=1, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
-    alu_style/.style={muxdemux, muxdemux def={Lh=5, NL=2, Rh=2, NR=2, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+    alu_style/.style={muxdemux, muxdemux def={Lh=4.5, NL=2, Rh=2, NR=3, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
-    mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=3, NR=1, NB=1, NT=1, w=1}, 
+    mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
-    mux3/.style={muxdemux, muxdemux def={Lh=4, Rh=2, NL=3, NR=1, NB=1, w=1}, 
+    mux3/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=3, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
     mux4/.style={muxdemux, muxdemux def={Lh=2, Rh=1, NL=2, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
@@ -190,7 +190,7 @@ Loop1 & 2 & 2 & & & & & \\
     hazard_path_input/.style={arrow, red!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50},
-    control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, font=\scriptsize},
+    control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, font=\tiny},
     data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, font=\tiny},
     % Connector circles
     black_connector/.style={circle, fill, inner sep=1.2pt},
@@ -237,7 +237,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Control Unit
 \node[control_block, ellipse, minimum height=0.5cm, minimum width=0.5cm,
-      above=2mm of RegFile] (Control) {\rotatebox{90}{Control}};
+      above=2mm of RegFile, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
 
 % Hazard Detection Unit
 \node[hazard_unit, above=of Control.north west, yshift=-2mm, xshift=-9mm] (HDU) {HDU};
@@ -251,7 +251,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % EX Stage Components
-\node[mux2, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=10mm]IDEX.east |- RegFile.brpin 1) {};
+\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=10mm]IDEX.east |- RegFile.brpin 1) {};
 
 % ALU
 \node[alu_style, right=of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
@@ -265,7 +265,7 @@ Loop1 & 2 & 2 & & & & & \\
       left=4mm of EXPCAddr.blpin 2, font=\tiny] (SHLTwo) {\rotatebox{90}{SHL2}};
 
 % Second forwarding mux
-\node[mux2, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
+\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
 
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {\tiny Rd};
