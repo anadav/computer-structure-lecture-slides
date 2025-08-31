@@ -279,6 +279,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 5) {write\\data};
 \node[align=right, font=\tiny] at ([xshift=-3mm]DMem.brpin 1) {read\\data};
 
+\node[and port, anchor=south west, fill=cyan!20, scale=0.5, external pins width=0] (MemAnd) at ([xshift=-3mm, yshift=1mm]DMem.north west) {};
 
 \node[pipeline_reg] (MEMWB) at ([xshift=5mm]DMem.east |- EXMEM) {};
 
@@ -365,8 +366,10 @@ Loop1 & 2 & 2 & & & & & \\
     |- ([yshift=-5mm]DMem.south)
     -- ([yshift=-5mm]MEMWB.west |- DMem.south);
 
-\draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 3);
-\draw[control_path] ([yshift=-3]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 2);
+\draw[control_path] ([yshift=1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 3);
+\draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 2);
+\draw[control_path] ([yshift=-3]M2.east) -- ++(0.2, 0) |- node[control_label, near start, sloped] {Branch} (MemAnd.bin 1);
+\draw[control_path] (EXMEM.east |- ALU.brpin 1) -- ++(0.2, 0) |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
 
 % Data Memory to MEM/WB
 \draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
