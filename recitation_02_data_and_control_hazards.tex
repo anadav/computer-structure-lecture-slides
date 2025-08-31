@@ -163,7 +163,7 @@ Loop1 & 2 & 2 & & & & & \\
 \begin{circuitikz}[
     % Component styles - avoid using scale
     component/.style={draw, thick, minimum height=0.8cm},
-    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=5mm, minimum height=8cm},
+    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=7.4cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=2, w=2.5, square pins=1}, 
@@ -185,8 +185,8 @@ Loop1 & 2 & 2 & & & & & \\
     control_path/.style={arrow, orange!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50},
-    control_signal/.style={control_block, minimum width=0.5cm, minimum height=0.3cm, font=\scriptsize},
-    data_latch/.style={draw, thick, fill=cyan!20, minimum width=0.5cm, minimum height=0.3cm, font=\scriptsize},
+    control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, font=\scriptsize},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, font=\scriptsize},
     node distance=5mm and 5mm,
 ]
 
@@ -212,7 +212,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % ID Stage Components
 % Register File using muxdemux style
-\node[regfile, right=1.3cm of IFID] (RegFile) {Register\\File};
+\node[regfile, right=1.5cm of IFID] (RegFile) {Register\\File};
 % Add labels to RegFile pins
 
 % Control Unit
@@ -234,8 +234,8 @@ Loop1 & 2 & 2 & & & & & \\
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {\tiny Rd};
 \node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
-\node[data_latch] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {\tiny Rt};
-\node[data_latch] (Rs_field) at (Rt_field.north) [anchor=south, yshift=0.1cm] {\tiny Rs};
+\node[data_latch, font=\tiny] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {Rt};
+\node[data_latch, anchor=south, font=\tiny] (Rs_field) at ([yshift=1mm]Rt_field.north) {Rs};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=2, NL=4, Rh=2, NR=4, w=3, square pins=1}, 
@@ -276,13 +276,13 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (IMem.east) -- (IFID.west);
 
 % IF/ID to Register File
-\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[pos=0.9, above, font=\tiny] {Rs} (RegFile.blpin 1);
-\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[pos=0.9, above, font=\tiny] {Rt} (RegFile.blpin 2);
-\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[pos=0.8, above, font=\tiny] {Rd} (Rd_field.west);
-\draw[data_path] ([xshift=-7mm]RegFile.blpin 1) node[circle, fill, inner sep=1.2pt] {}
-                    |- node[pos=0.8, above, font=\tiny] {Rs} (Rs_field.west);  
-\draw[data_path] ([xshift=-8mm]RegFile.blpin 2) node[circle, fill, inner sep=1.2pt] {}
-                    |- node[pos=0.8, above, font=\tiny] {Rt} (Rt_field.west);  
+\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[pos=0.9, above, font=\tiny, yshift=-2] {Rs} (RegFile.blpin 1);
+\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[pos=0.9, above, font=\tiny, yshift=-2] {Rt} (RegFile.blpin 2);
+\draw[data_path] (IFID.east) -- ++(0.3,0) |- node[pos=0.8, above, font=\tiny, yshift=-2] {Rd} (Rd_field.west);
+\draw[data_path] ([xshift=-9mm]RegFile.blpin 1) node[circle, fill, inner sep=1.2pt] {}
+                    |- node[pos=0.8, above, font=\tiny, yshift=-2] {Rs} (Rs_field.west);  
+\draw[data_path] ([xshift=-10mm]RegFile.blpin 2) node[circle, fill, inner sep=1.2pt] {}
+                    |- node[pos=0.8, above, font=\tiny, yshift=-2] {Rt} (Rt_field.west);  
 
 
 \draw[data_path] (IFID.east) -- ++(0.3,0) |- (Control.west);
@@ -303,14 +303,13 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (Rt_field.east) -- (RegDstMux.blpin 1);
 \draw[data_path] (Rd_field.east) -- (RegDstMux.blpin 2);
 \draw[data_path] (RegDstMux.brpin 1) --  (EXMEM_RtRd.west);
-\draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDest} (MEMWB_RtRd.west);
+\draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDst} (MEMWB_RtRd.west);
 \draw[data_path]
   (MEMWB_RtRd.east) -- ++(0.5,0)
-  |- ([yshift=-8mm]MEMWB.south)
-  -| node[midway, above right, font=\tiny]{RegDst} ([xshift=-6mm]RegFile.blpin 3)
-  -- node[midway, above, font=\tiny]{RegDst} % or pos=0.9, etc.
+  |- ([yshift=-6mm]FwdUnit.south)
+  -| node[midway, above right, font=\tiny, yshift=-2]{RegDst} ([xshift=-8mm]RegFile.blpin 3)
+  -- node[midway, above, font=\tiny, yshift=-2]{RegDst} % or pos=0.9, etc.
      (RegFile.blpin 3);
-
 
 % ALU to EX/MEM
 \draw[data_path] (ALU.east) -- (EXMEM.west |- ALU.east);
@@ -331,9 +330,9 @@ Loop1 & 2 & 2 & & & & & \\
 % Write back path
 \draw[data_path]
   (WBMux.brpin 1) -- ++(0.5,0)
-  |- ([yshift=-6mm]MEMWB.south)
-  -| node[midway, above right, font=\tiny]{WrData} ([xshift=-5mm]RegFile.blpin 4)
-  -- node[midway, above, font=\tiny]{WrData} % or pos=0.9, etc.
+  |- ([yshift=-2mm]FwdUnit.south)
+  -| node[midway, above right, font=\tiny, yshift=-2]{WrData} ([xshift=-7mm]RegFile.blpin 4)
+  -- node[midway, above, font=\tiny, yshift=-2]{WrData} % or pos=0.9, etc.
      (RegFile.blpin 4);
 
 % Control paths
@@ -356,6 +355,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path] (HDU.brpin 3) -- ++(1, 0) |- (HDU_AND.bin 1);
 \draw[hazard_path] (HDU.blpin 1) -| (PC.north);
 \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
+\draw[hazard_path] (HDU.blpin 1 -| HDU.bbpin1) -- (HDU.bbpin1);
 
 % Forwarding paths
 %\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
