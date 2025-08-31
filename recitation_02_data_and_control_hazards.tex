@@ -168,7 +168,7 @@ Loop1 & 2 & 2 & & & & & \\
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=6, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
-    memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=5, Rh=6, NR=1, w=3, square pins=1}, 
+    memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=5, Rh=6, NR=1, NT=3, w=3, square pins=1}, 
                         external pins width=0, align=center, text depth=10ex, fill=yellow!20},
     imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=4, square pins=1}, 
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
@@ -178,7 +178,7 @@ Loop1 & 2 & 2 & & & & & \\
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=2, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
-    mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, w=1}, 
+    mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
     mux3/.style={muxdemux, muxdemux def={Lh=4, Rh=2, NL=3, NR=1, NB=1, w=1}, 
                  external pins width=0},
@@ -334,6 +334,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (IDEX.east |- RegFile.brpin 1) -- (ForwardA.blpin 1);
 \draw[data_path] (IDEX.east |- RegFile.brpin 2) -- (ForwardB.blpin 1);
 
+\draw[control_path] (EX1.east) -|  node[control_label, near end, sloped] {ALUSrc} (ForwardA.btpin 1);
+
 % Forwarding muxes to ALU
 \draw[data_path] (ForwardA.brpin 1) -- (ALU.blpin 1);
 \draw[data_path] (ForwardB.brpin 1) -- (ALU.blpin 2);
@@ -341,6 +343,9 @@ Loop1 & 2 & 2 & & & & & \\
 % TODO: add comment
 \draw[data_path] (Rt_field.east) -- (RegDstMux.blpin 1);
 \draw[data_path] (Rd_field.east) -- (RegDstMux.blpin 2);
+\draw[control_path] ([yshift=-1mm]EX1.east)
+    -| node[control_label, pos=0.96, sloped] {RegDst} ([yshift=3mm, xshift=-3mm]RegDstMux.btpin 1)
+    -| (RegDstMux.btpin 1);
 \draw[data_path] (RegDstMux.brpin 1) --  (EXMEM_RtRd.west);
 \draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDst} (MEMWB_RtRd.west);
 \draw[data_path]
@@ -360,8 +365,12 @@ Loop1 & 2 & 2 & & & & & \\
     |- ([yshift=-5mm]DMem.south)
     -- ([yshift=-5mm]MEMWB.west |- DMem.south);
 
+\draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 3);
+\draw[control_path] ([yshift=-3]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 2);
+
 % Data Memory to MEM/WB
 \draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
+
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east |- DMem.rpin 1) -- (WBMux.blpin 1);
