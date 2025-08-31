@@ -172,11 +172,11 @@ Loop1 & 2 & 2 & & & & & \\
                         external pins width=0, align=center, text depth=10ex, fill=yellow!20},
     imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=4, square pins=1}, 
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    regfile/.style={muxdemux, muxdemux def={Lh=7, NL=5, Rh=7, NR=2, NB=1, w=3.2, square pins=1}, 
+    regfile/.style={muxdemux, muxdemux def={Lh=7, NL=5, Rh=7, NR=2, NB=1, NT=1, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
     alu_style/.style={muxdemux, muxdemux def={Lh=5, NL=2, Rh=2, NR=2, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20, font=\scriptsize},
-    adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=2, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
+    adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
     mux2/.style={muxdemux, muxdemux def={Lh=3, Rh=1.5, NL=2, NR=1, NB=1, NT=1, w=1}, 
                  external pins width=0},
@@ -213,7 +213,8 @@ Loop1 & 2 & 2 & & & & & \\
 \node[imem_block, right=of PC, anchor=blpin 3] (IMem) {Instruction\\Memory};
 \node[adder, above=of IMem.north east, anchor=south east] (PCadder) {+};
 \node[pipeline_reg, right=of IMem.brpin 3, yshift=8mm] (IFID) {};
-\node[data_latch, font=\tiny] (Instruction) at (IMem.rpin 3 -| IFID) {\rotatebox{90}{instruction}};
+\node[data_latch] (Instruction) at (IMem.rpin 3 -| IFID) {\rotatebox{90}{instruction}};
+\node[data_latch] (IFNewPC) at (PCadder.brpin 1 -| IFID) {\rotatebox{90}{NewPC}};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
 % Small labels on pipeline registers
@@ -302,6 +303,8 @@ Loop1 & 2 & 2 & & & & & \\
 \node[data_latch] (EXMEM_RtRd) at (EXMEM |- RegDstMux.rpin 1) {\rotatebox{90}{\tiny Rt/Rd}};
 \node[data_latch] (MEMWB_RtRd) at (MEMWB |- EXMEM_RtRd) {\rotatebox{90}{\tiny Rt/Rd}};
 
+\node[data_latch, above=1mm of MEMWB_RtRd] (ALUresult) {\rotatebox{90}{\tiny ALUresult}};
+
 % Main data paths
 % PC to Instruction Memory
 \draw[data_path] (PC.east) -- (IMem.blpin 3);
@@ -362,9 +365,8 @@ Loop1 & 2 & 2 & & & & & \\
 
 % EX/MEM to Data Memory
 \draw[data_path] (EXMEM.east |- ALU) -- (DMem.blpin 3);
-\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU)  node[black_connector] {} 
-    |- ([yshift=-5mm]DMem.south)
-    -- ([yshift=-5mm]MEMWB.west |- DMem.south);
+\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU)  node[black_connector] (DmemConnector) {} 
+    |- (ALUresult.west);
 
 \draw[control_path] ([yshift=1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 3);
 \draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 2);
@@ -372,12 +374,13 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (EXMEM.east |- ALU.brpin 1) -- ++(0.2, 0) |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
 
 % Data Memory to MEM/WB
-\draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
+\draw[data_path] (DMem.brpin 1) -- (MEMWB.west |- DMem.brbin 1);
 
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east |- DMem.rpin 1) -- (WBMux.blpin 1);
-\draw[data_path] ([yshift=-5mm]MEMWB.east |- DMem.south) -- ++(0.3,0) |- (WBMux.blpin 2);
+\draw[data_path] (ALUresult.east) -- ++(0.3,0) |- (WBMux.blpin 2);
+\draw[control_path] ([yshift=1]WB3.east) -| node[control_label, near end, sloped] {MemtoReg} (WBMux.btpin 1);
 
 % Write back path
 \draw[data_path]
@@ -391,13 +394,14 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (M1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (EX1.west);
+\draw[control_path] (Control.south) -- (RegFile.btpin 1);
 \draw[control_path] (Control.east) -- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
 \draw[control_path]
-    (WB3.east) -- ++(0.2, 0)
-    |- node[pos=0.1, right, font=\tiny] {RegWrite} ([yshift=-2mm]FwdUnit.south)
+    ([yshift=-3]WB3.east) -- ++(0.2, 0)
+    |- node[pos=0.1, above, font=\tiny, sloped] {RegWrite} ([yshift=-2mm]FwdUnit.south)
     -| node[control_label, above right] {RegWrite} ([xshift=-4mm]RegFile.blpin 5)
     -- (RegFile.blpin 5);
 
@@ -428,6 +432,10 @@ Loop1 & 2 & 2 & & & & & \\
 
 \draw[data_path] (Rs_field.east) -- ++(0.3,0) |- (FwdUnit.blpin 3);
 \draw[data_path] ([xshift=2mm]Rt_field.east) node[black_connector] {}  |- (FwdUnit.blpin 4);
+
+
+% Special Forwarding Pathes
+%\draw[->, >=stealth, thick, orange!50] ( [yshift=3mm]ALUresult -| DmemConnector ) -- ++(0.3,0) |- (FwdUnit.blpin 1);
 
 % Add some labels
 
