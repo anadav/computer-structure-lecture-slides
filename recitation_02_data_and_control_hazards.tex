@@ -233,13 +233,13 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {\tiny Rd};
-\node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at (ForwardB.blpin 2 |- Rd_field.east) {};
+\node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
 \node[data_latch] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {\tiny Rt};
 \node[data_latch] (Rs_field) at (Rt_field.north) [anchor=south, yshift=0.1cm] {\tiny Rs};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=2, NL=4, Rh=2, NR=4, w=3, square pins=1}, 
-      external pins width=0, fill=orange!30, font=\scriptsize, align=center, below=of ALU] (FwdUnit) {Forwarding\\Unit};
+      external pins width=0, fill=orange!30, font=\scriptsize, align=center, below right=5mm of RegDstMux.east] (FwdUnit) {Forwarding\\Unit};
 
 \node[pipeline_reg] (EXMEM) at ([xshift=1cm]ALU.east |- IDEX) {};
 
@@ -362,8 +362,8 @@ Loop1 & 2 & 2 & & & & & \\
 %\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
 %\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
 %\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
-\draw[forward_path] (FwdUnit.blpin 1) -- (ForwardA.bbpin 1);
-\draw[forward_path] (FwdUnit.blpin 2) -- (ForwardB.bbpin 1);
+\draw[forward_path] (FwdUnit.blpin 1) -- ++(-0.2, 0) -- (ForwardA.bbpin 1);
+\draw[forward_path] (FwdUnit.blpin 2) -- ++(-0.2, 0) |- (ForwardB.bbpin 1);
 
 
 % Add some labels
