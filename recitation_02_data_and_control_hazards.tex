@@ -317,13 +317,16 @@ Loop1 & 2 & 2 & & & & & \\
 
 % EX/MEM to Data Memory
 \draw[data_path] (EXMEM.east |- ALU) -- (DMem.blpin 1);
+\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU)  node[circle, fill, inner sep=1.2pt] {} 
+    |- ([yshift=-5mm]DMem.south)
+    -- ([yshift=-5mm]MEMWB.west |- DMem.south)
 
 % Data Memory to MEM/WB
 \draw[data_path] (DMem.east) -- (MEMWB.west |- DMem.east);
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east) -- (WBMux.blpin 1);
-\draw[data_path] ([yshift=-3cm]MEMWB.east) -- ++(0.3,0) |- (WBMux.blpin 2);
+\draw[data_path] ([yshift=-5mm]MEMWB.east |- DMem.south) -- ++(0.3,0) |- (WBMux.blpin 2);
 
 % Write back path
 \draw[data_path]
