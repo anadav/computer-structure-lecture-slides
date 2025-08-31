@@ -218,7 +218,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Control Unit
 \node[control_block, ellipse, minimum height=0.5cm, minimum width=0.5cm,
-      above=2mm of RegFile] (Control) {\rotatebox{90}{Control}};
+      above=1mm of RegFile] (Control) {\rotatebox{90}{Control}};
 
 % Hazard Detection Unit
 \node[hazard_unit, above=of Control.north west, yshift=-2mm, xshift=-9mm] (HDU) {HDU};
@@ -239,7 +239,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[data_latch, anchor=south, font=\tiny] (Rs_field) at ([yshift=1mm]Rt_field.north) {Rs};
 
 % Forwarding Unit
-\node[muxdemux, muxdemux def={Lh=2, NL=4, Rh=2, NR=4, w=3, square pins=1}, 
+\node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, w=3, square pins=1}, 
       external pins width=0, fill=orange!30, font=\scriptsize, align=center, below right=5mm of RegDstMux.east] (FwdUnit) {Forwarding\\Unit};
 
 \node[pipeline_reg] (EXMEM) at ([xshift=1cm]ALU.east |- IDEX) {};
@@ -307,7 +307,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDst} (MEMWB_RtRd.west);
 \draw[data_path]
   (MEMWB_RtRd.east) -- ++(0.5,0)
-  |- ([yshift=-6mm]FwdUnit.south)
+  |- ([yshift=-9mm]FwdUnit.south)
   -| node[midway, above right, font=\tiny, yshift=-2]{RegDst} ([xshift=-8mm]RegFile.blpin 3)
   -- node[midway, above, font=\tiny, yshift=-2]{RegDst} % or pos=0.9, etc.
      (RegFile.blpin 3);
@@ -331,7 +331,7 @@ Loop1 & 2 & 2 & & & & & \\
 % Write back path
 \draw[data_path]
   (WBMux.brpin 1) -- ++(0.5,0)
-  |- ([yshift=-2mm]FwdUnit.south)
+  |- ([yshift=-5mm]FwdUnit.south)
   -| node[midway, above right, font=\tiny, yshift=-2]{WrData} ([xshift=-7mm]RegFile.blpin 4)
   -- node[midway, above, font=\tiny, yshift=-2]{WrData} % or pos=0.9, etc.
      (RegFile.blpin 4);
@@ -346,8 +346,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (WB2.east) -- (WB3.west);
 \draw[control_path]
     (WB3.east) -- ++(0.2, 0)
-    |- node[pos=0.1, right, font=\tiny] {RegWrite} ([yshift=-3mm]MEMWB.south)
-    -| node[midway, above right, font=\tiny] {RegWrite} ([xshift=-4mm]RegFile.blpin 5)
+    |- node[pos=0.1, right, font=\tiny] {RegWrite} ([yshift=-2mm]FwdUnit.south)
+    -| node[midway, above right, font=\tiny, yshift=-2] {RegWrite} ([xshift=-4mm]RegFile.blpin 5)
     -- (RegFile.blpin 5);
 
 % Hazard detection paths
@@ -364,8 +364,14 @@ Loop1 & 2 & 2 & & & & & \\
 %\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
 %\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
 %\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
-\draw[forward_path] (FwdUnit.blpin 1) -- ++(-0.2, 0) -- (ForwardA.bbpin 1);
-\draw[forward_path] (FwdUnit.blpin 2) -- ++(-0.2, 0) |- (ForwardB.bbpin 1);
+\draw[forward_path] (FwdUnit.blpin 1) -- ++(-0.1, 0)
+    -| ([xshift=1mm, yshift=-3mm]ForwardB.east)
+    |- ([yshift=-3mm]ForwardA.bbpin 1)
+    -- (ForwardA.bbpin 1);
+
+\draw[forward_path] (FwdUnit.blpin 2) -- ++(-0.2, 0)
+    |- ([yshift=-3mm]ForwardB.bbpin 1)
+    -- (ForwardB.bbpin 1);
 
 
 % Add some labels
