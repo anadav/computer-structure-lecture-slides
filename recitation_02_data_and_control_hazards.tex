@@ -166,7 +166,7 @@ Loop1 & 2 & 2 & & & & & \\
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=7.4cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
-    hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=2, w=2.5, square pins=1}, 
+    hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=6, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=1, Rh=6, NR=1, w=4, square pins=1}, 
                         external pins width=0, align=center},
@@ -183,6 +183,7 @@ Loop1 & 2 & 2 & & & & & \\
     arrow/.style={->, >=stealth, thick},
     data_path/.style={arrow, black},
     control_path/.style={arrow, orange!70},
+    hazard_path_input/.style={arrow, red!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50},
     control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, font=\scriptsize},
@@ -355,7 +356,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path] (HDU.brpin 3) -- ++(1, 0) |- (HDU_AND.bin 1);
 \draw[hazard_path] (HDU.blpin 1) -| (PC.north);
 \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
-\draw[hazard_path] (HDU.blpin 1 -| HDU.bbpin1) -- (HDU.bbpin1);
+\draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 2) node[circle, fill, inner sep=1.2pt, red!70] {} -- (HDU.bbpin 2);
+\draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 3) node[circle, fill, inner sep=1.2pt, red!70] {} -- (HDU.bbpin 3);
 
 % Forwarding paths
 %\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
