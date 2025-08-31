@@ -169,8 +169,8 @@ Loop1 & 2 & 2 & & & & & \\
     hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=6, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=6, NL=1, Rh=6, NR=1, w=4, square pins=1}, 
-                        external pins width=0, align=center, text depth=10ex},
-    imem_block/.style={memory_block, muxdemux label={L1={\parbox{1.5em}{\centering\tiny Read\\Addr}}}},
+                        external pins width=0, align=center, text depth=10ex, fill=yellow!20},
+    imem_block/.style={memory_block},
     regfile/.style={muxdemux, muxdemux def={Lh=7, NL=5, Rh=7, NR=2, NB=1, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
     alu_style/.style={muxdemux, muxdemux def={Lh=5, NL=2, Rh=2, NR=1, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
@@ -255,7 +255,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Data Memory using muxdemux
-\node[memory_block, fill=yellow!20, anchor=blpin 1, align=center] (DMem) at ([xshift=5mm]EXMEM.east |- ALU) {Data\\Memory};
+\node[memory_block, anchor=blpin 1, align=center] (DMem) at ([xshift=5mm]EXMEM.east |- ALU) {Data\\Memory};
 \node[pipeline_reg] (MEMWB) at ([xshift=5mm]DMem.east |- EXMEM) {};
 
 % WB Stage Components
@@ -282,6 +282,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (PC.east) -- (IMem.west);
 % Instruction Memory to IF/ID
 \draw[data_path] (IMem.east) -- (IFID.west);
+\node[align=left, font=\tiny] at ([xshift=3mm]IMem.blpin 1) {read\\addr};
 
 % IF/ID to Register File
 \draw[data_path] (IFID.east) -- ++(0.3,0) |- node[path_label, pos=0.9] {Rs} (RegFile.blpin 1);
