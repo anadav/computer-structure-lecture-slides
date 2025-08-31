@@ -165,7 +165,7 @@ Loop1 & 2 & 2 & & & & & \\
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=7.4cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
-    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\small},
+    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\footnotesize},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=6, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=5, NL=5, Rh=5, NR=1, NT=3, w=3, square pins=1}, 
@@ -237,7 +237,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Control Unit
 \node[control_block, ellipse, minimum height=0.5cm, minimum width=0.5cm,
-      above=1mm of RegFile] (Control) {\rotatebox{90}{Control}};
+      above=2mm of RegFile] (Control) {\rotatebox{90}{Control}};
 
 % Hazard Detection Unit
 \node[hazard_unit, above=of Control.north west, yshift=-2mm, xshift=-9mm] (HDU) {HDU};
@@ -245,6 +245,10 @@ Loop1 & 2 & 2 & & & & & \\
 % AND gate for HDU control
 \node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
 \node[pipeline_reg, right=10mm of RegFile] (IDEX) {};
+
+\node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
+      right=4mm of RegFile.south east, yshift=1.8mm, anchor=west, font=\tiny] (SignExt) {\rotatebox{90}{SignExt}};
+
 
 % EX Stage Components
 \node[mux2, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=10mm]IDEX.east |- RegFile.brpin 1) {};
@@ -254,6 +258,11 @@ Loop1 & 2 & 2 & & & & & \\
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 \node[font=\tiny, left=-1mm of ALU.brpin 1, align=right] {zero};
 \node[font=\tiny, left=-1mm of ALU.brpin 2, align=right] {res};
+
+% Addr and SHL
+\node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
+      above=4mm of ALU.north east, yshift=1.8mm, anchor=east, font=\tiny] (SignExt) {\rotatebox{90}{SignExt}};
+
 
 % Second forwarding mux
 \node[mux2, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
@@ -310,6 +319,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (PC.east) -- (IMem.blpin 3);
 \draw[data_path] ([xshift=2mm]PC.east) |- (PCadder.blpin 1);
 \draw[data_path] (four.east) -- (PCadder.blpin 2);
+\draw[data_path] (PCadder.brpin 1) -- (IFNewPC.west);
 % Instruction Memory to IF/ID
 \draw[data_path] (IMem.brpin 3) -- (IFID.west |- IMem.brpin 3);
 \node[align=left, font=\tiny] at ([xshift=3mm]IMem.blpin 3) {read\\addr};
@@ -365,8 +375,8 @@ Loop1 & 2 & 2 & & & & & \\
 
 % EX/MEM to Data Memory
 \draw[data_path] (EXMEM.east |- ALU) -- (DMem.blpin 3);
-\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU)  node[black_connector] (DmemConnector) {} 
-    |- (ALUresult.west);
+\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU)  node[black_connector] (DmemConnector) {} |- (ALUresult.west);
+\draw[data_path] (DmemConnector |- DMem.blpin 4) node[black_connector] {} |- (DMem.blpin 4);
 
 \draw[control_path] ([yshift=1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 3);
 \draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 2);
@@ -435,10 +445,12 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Special Forwarding Pathes
-\draw[->, >=stealth, thick, blue] (ALUresult -| DmemConnector) node[black_connector] {} 
+\draw[arrow, blue] (ALUresult -| DmemConnector) node[black_connector] {} 
     |- ([yshift=-1]FwdUnit.south)
-    -| ([xshift=-10]ForwardA.blpin 2)
-    -- (ForwardA.blpin 2);
+    -| ([xshift=-12]ForwardB.blpin 2) node[] (ForwardB_junction1) {}
+    -- (ForwardB.blpin 2);
+
+\draw[arrow, blue] (ForwardB_junction1) node[black_connector] {} |- (ForwardA.blpin 2);
 
 % Add some labels
 
