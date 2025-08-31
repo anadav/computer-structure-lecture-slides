@@ -165,7 +165,7 @@ Loop1 & 2 & 2 & & & & & \\
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=7.4cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
-    control_block/.style={draw, t3ick, fill=orange!30, rounded corners=3pt, font=\footnotesize},
+    control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\footnotesize},
     hazard_unit/.style={muxdemux, muxdemux def={Lh=1.5, NL=2, Rh=1.5, NR=3, NB=6, w=2.5, square pins=1}, 
                        external pins width=0, fill=red!60, text=white},
     memory_block/.style={muxdemux, muxdemux def={Lh=5, NL=5, Rh=5, NR=1, NT=3, w=3, square pins=1}, 
@@ -268,10 +268,10 @@ Loop1 & 2 & 2 & & & & & \\
 \node[mux3, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
 
 % Register fields in IDEX latch (bottom to top)
-\node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {\tiny Rd};
+\node[data_latch] (Rd_field) at ([yshift=2mm]IDEX.south) {Rd};
 \node[mux4, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
-\node[data_latch, font=\tiny] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {Rt};
-\node[data_latch, anchor=south, font=\tiny] (Rs_field) at ([yshift=1mm]Rt_field.north) {Rs};
+\node[data_latch] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {Rt};
+\node[data_latch, anchor=south] (Rs_field) at ([yshift=1mm]Rt_field.north) {Rs};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, w=3, square pins=1}, 
@@ -299,21 +299,21 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Control signal blocks in pipeline registers
-\node[control_signal] (WB1) at ([yshift=-2mm]IDEX.north) {\tiny WB};
-\node[control_signal] (M1) at (WB1.south) [anchor=north, yshift=-0.1cm] {\tiny M};
-\node[control_signal] (EX1) at (M1.south) [anchor=north, yshift=-0.1cm] {\tiny EX};
+\node[control_signal] (WB1) at ([yshift=-2mm]IDEX.north) {WB};
+\node[control_signal] (M1) at (WB1.south) [anchor=north, yshift=-0.1cm] {M};
+\node[control_signal] (EX1) at (M1.south) [anchor=north, yshift=-0.1cm] {EX};
 
-\node[control_signal] (WB2) at (WB1 -| EXMEM.center) {\tiny WB};
-\node[control_signal] (M2) at (WB2.south) [anchor=north, yshift=-0.1cm] {\tiny M};
+\node[control_signal] (WB2) at (WB1 -| EXMEM.center) {WB};
+\node[control_signal] (M2) at (WB2.south) [anchor=north, yshift=-0.1cm] {M};
 
-\node[control_signal] (WB3) at (WB1 -| MEMWB.center) {\tiny WB};
+\node[control_signal] (WB3) at (WB1 -| MEMWB.center) {WB};
 
 
 % Register fields in EXMEM and MEMWB latches
-\node[data_latch] (EXMEM_RtRd) at (EXMEM |- RegDstMux.rpin 1) {\rotatebox{90}{\tiny Rt/Rd}};
-\node[data_latch] (MEMWB_RtRd) at (MEMWB |- EXMEM_RtRd) {\rotatebox{90}{\tiny Rt/Rd}};
+\node[data_latch] (EXMEM_RtRd) at (EXMEM |- RegDstMux.rpin 1) {\rotatebox{90}{Rt/Rd}};
+\node[data_latch] (MEMWB_RtRd) at (MEMWB |- EXMEM_RtRd) {\rotatebox{90}{Rt/Rd}};
 
-\node[data_latch, above=1mm of MEMWB_RtRd] (ALUresult) {\rotatebox{90}{\tiny ALUresult}};
+\node[data_latch, above=1mm of MEMWB_RtRd] (ALUresult) {\rotatebox{90}{ALUresult}};
 
 % Main data paths
 % PC to Instruction Memory
