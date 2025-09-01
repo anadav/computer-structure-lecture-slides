@@ -369,7 +369,12 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] ([xshift=2mm]IDEX.east |- RegFile.brpin 2) node[black_connector] {} 
     |- (DMem.blpin 5 -| EXMEM.west);
 
-\draw[control_path] (EX1.east) -|  node[control_label, near start, sloped] {ALUSrc} (ForwardB.btpin 1);
+\draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, near start, sloped] {ALUSrc} (ForwardB.btpin 1);
+\draw[control_path] (EX1.east) -- ++(9mm, 0) |- node[control_label, near end, sloped] {ALUop} ([yshift=2mm]ALUCtrl.west);
+\draw[control_path] ([yshift=-1mm]EX1.east)
+    -| node[control_label, pos=0.96, sloped] {RegDst} ([yshift=3mm, xshift=-3mm]RegDstMux.btpin 1)
+    -| (RegDstMux.btpin 1);
+
 
 % Forwarding muxes to ALU
 \draw[data_path] (ForwardA.brpin 1) -- (ALU.blpin 1);
@@ -382,9 +387,6 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (Imm_field.east) -| (ImmTurn) -- (SHLTwo.west);
 \draw[data_path] (ImmTurn |-  ForwardB.blpin 4) node[black_connector] {} -- (ForwardB.blpin 4);
 
-\draw[control_path] ([yshift=-1mm]EX1.east)
-    -| node[control_label, pos=0.96, sloped] {RegDst} ([yshift=3mm, xshift=-3mm]RegDstMux.btpin 1)
-    -| (RegDstMux.btpin 1);
 \draw[data_path] (RegDstMux.brpin 1) --  (EXMEM_RtRd.west);
 \draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDst} (MEMWB_RtRd.west);
 \draw[data_path]
