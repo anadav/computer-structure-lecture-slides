@@ -163,7 +163,7 @@ Loop1 & 2 & 2 & & & & & \\
 \begin{circuitikz}[
     % Component styles - avoid using scale
     component/.style={draw, thick, minimum height=0.8cm},
-    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=7.4cm},
+    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=6.8cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=0.8cm, minimum height=0.5cm},
     control_block/.style={draw, thick, fill=orange!30, rounded corners=3pt, font=\scriptsize,
                           ellipse, minimum height=0.5cm, minimum width=0.5cm},
@@ -173,21 +173,21 @@ Loop1 & 2 & 2 & & & & & \\
                         external pins width=0, align=center, text depth=9ex, fill=yellow!20},
     imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=3.6, square pins=1}, 
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    regfile/.style={muxdemux, muxdemux def={Lh=6.0, NL=5, Rh=6.0, NR=2, NB=1, NT=3, w=3.2, square pins=1}, 
+    regfile/.style={muxdemux, muxdemux def={Lh=5.5, NL=5, Rh=5.5, NR=2, NB=1, NT=3, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
-    alu_style/.style={muxdemux, muxdemux def={Lh=4.2, NL=2, Rh=2, NR=3, NB=1, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+    alu_style/.style={muxdemux, muxdemux def={Lh=3.6, Rh=1.8, NL=2, NR=5, NB=1, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
-    mux2/.style={muxdemux, muxdemux def={Lh=2.4, Rh=1.3, NL=2, NR=1, NB=1, NT=1, w=0.8}, 
+    mux2/.style={muxdemux, muxdemux def={Lh=2.2, Rh=1.1, NL=2, NR=1, NB=1, NT=1, w=0.8}, 
                  external pins width=0},
     mux2r/.style={muxdemux, muxdemux def={Lh=1.3, Rh=2.4, NL=1, NR=2, NB=1, NT=1, w=0.8}, fill=cyan!20,
                  external pins width=0},
-    mux3/.style={muxdemux, muxdemux def={Lh=2.4, Rh=1.3, NL=3, NR=1, NB=1, NT=1, w=0.8}, 
+    mux3/.style={muxdemux, muxdemux def={Lh=2, Rh=1, NL=3, NR=1, NB=1, NT=1, w=0.8}, 
                  external pins width=0},
-    mux4/.style={muxdemux, muxdemux def={Lh=2.4, Rh=1.3, NL=4, NR=1, NB=1, NT=1, w=0.8}, 
+    mux4/.style={muxdemux, muxdemux def={Lh=2, Rh=1, NL=4, NR=1, NB=1, NT=1, w=0.8}, 
                  external pins width=0},
-    mux2b/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, NT=1, w=0.8}, 
+    mux2b/.style={muxdemux, muxdemux def={Lh=1.4, Rh=0.7, NL=2, NR=1, NB=1, NT=1, w=0.8}, 
                  external pins width=0},
     arrow/.style={->, >=stealth, thick},
     data_path/.style={arrow, black},
@@ -233,7 +233,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % ID Stage Components
 % Register File using muxdemux style
-\node[regfile, right=1.5cm of IFID] (RegFile) {\rotatebox{90}{Register File}};
+\node[regfile] (RegFile) at ([yshift=2mm, xshift=3cm]IFID)  {\rotatebox{90}{Register File}};
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {read\\reg 1};
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {read\\reg 2};
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {write\\reg};
@@ -260,8 +260,8 @@ Loop1 & 2 & 2 & & & & & \\
 % ALU
 \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
-\node[font=\tiny, left=-1mm of ALU.brpin 2, align=right] {zero};
-\node[font=\tiny, left=-1mm of ALU.brpin 3, align=right] {res};
+\node[font=\tiny, left=-1mm of ALU.brpin 3, align=right] {zero};
+\node[font=\tiny, left=-1mm of ALU.brpin 4, align=right] {res};
 
 % Addr and SHL
 \node[adder, anchor=blpin 1] (EXPCAddr) at (ALU |- IFNewPC) {+};
@@ -284,7 +284,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % ALU Control
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
-      font=\tiny, anchor=east] (ALUCtrl) at ([xshift=-5mm]ALU.east |- Imm_field.east) {\rotatebox{90}{ALU ctrl}};
+      font=\tiny, anchor=east] (ALUCtrl) at ([xshift=-5mm]ALU.east |- Imm_field.east) {\rotatebox{90}{ALUctrl}};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, NT=4, w=3, square pins=1}, 
@@ -297,7 +297,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Data Memory using muxdemux
-\node[memory_block, anchor=west, align=center] (DMem) at ([xshift=5mm]EXMEM.east |- ALU.brpin 3) {Data\\Memory};
+\node[memory_block, anchor=west, align=center] (DMem) at ([xshift=8mm]EXMEM.east |- ALU.brpin 4) {Data\\Memory};
 \node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 3) {write\\addr};
 \node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 4) {read\\addr};
 \node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 5) {write\\data};
@@ -305,7 +305,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 \node[and port, anchor=south west, fill=cyan!20, scale=0.5, external pins width=0] (MemAnd) at ([xshift=0mm, yshift=1mm]DMem.north west) {};
 
-\node[pipeline_reg] (MEMWB) at ([xshift=5mm]DMem.east |- EXMEM) {};
+\node[pipeline_reg] (MEMWB) at ([xshift=8mm]DMem.east |- EXMEM) {};
 
 % WB Stage Components
 \node[mux2, fill=cyan!20, anchor=blpin 1] (WBMux) at ([xshift=5mm]MEMWB.east |- DMem.rpin 1) {};
@@ -411,12 +411,12 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (ALUCtrl.east) -| (ALU.bbpin 1);
 
 % ALU to EX/MEM
-\draw[data_path] (ALU.brpin 3) -- (EXMEM.west |- ALU.brpin 3);
-\draw[control_path] (ALU.brpin 2) -- (EXMEM.west |- ALU.brpin 2);
+\draw[data_path] (ALU.brpin 4) -- (EXMEM.west |- ALU.brpin 4);
+\draw[control_path] (ALU.brpin 3) -- (EXMEM.west |- ALU.brpin 3);
 
 % EX/MEM to Data Memory
-\draw[data_path] (EXMEM.east |- ALU.brpin 3) -- (DMem.blpin 3);
-\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU.brpin 3)  node[black_connector] (DmemConnector) {} |- (ALUresult.west);
+\draw[data_path] (EXMEM.east |- ALU.brpin 4) -- (DMem.blpin 3);
+\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU.brpin 4)  node[black_connector] (DmemConnector) {} |- (ALUresult.west);
 \draw[data_path] (DmemConnector |- DMem.blpin 4) node[black_connector] {} |- (DMem.blpin 4);
 
 % Read Data 2 to Write Data
@@ -425,8 +425,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] ([yshift=1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 5);
 \draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 4);
 \draw[control_path] ([yshift=-3]M2.east) -- ++(0.4, 0) |- node[control_label, near start, sloped] {Branch} (MemAnd.bin 1);
-\draw[control_path] (EXMEM.east |- ALU.brpin 2) -- ++(0.4, 0) |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
-\draw[control_path] (MemAnd.bout) -- ++(0.3, 0) -- ++(0, 2) |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=4mm]PCSrcMux.btpin 1) -- (PCSrcMux.btpin 1);
+\draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.4, 0) |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
+\draw[control_path] (MemAnd.bout) -- ++(0.3, 0) -- ++(0, 2) |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=1mm]PCSrcMux.btpin 1 |- HDU.north) -- (PCSrcMux.btpin 1);
 
 % Data Memory to MEM/WB
 \draw[data_path] (DMem.brpin 1) -- (MEMWB.west |- DMem.brpin 1);
