@@ -175,7 +175,7 @@ Loop1 & 2 & 2 & & & & & \\
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
     regfile/.style={muxdemux, muxdemux def={Lh=6.0, NL=5, Rh=6.0, NR=2, NB=1, NT=3, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
-    alu_style/.style={muxdemux, muxdemux def={Lh=4.2, NL=2, Rh=2, NR=3, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+    alu_style/.style={muxdemux, muxdemux def={Lh=4.2, NL=2, Rh=2, NR=3, NB=1, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
@@ -196,6 +196,7 @@ Loop1 & 2 & 2 & & & & & \\
     control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     % Connector circles
+    control_connector/.style={circle, fill, inner sep=1.2pt, orange!30},
     black_connector/.style={circle, fill, inner sep=1.2pt},
     red_connector/.style={circle, fill, inner sep=1.2pt, red!70},
     % Path labels
@@ -264,6 +265,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
       left=3mm of EXPCAddr.blpin 2, font=\tiny] (SHLTwo) {\rotatebox{90}{SHL2}};
 
+
 % Second forwarding mux
 \node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
 
@@ -277,6 +279,9 @@ Loop1 & 2 & 2 & & & & & \\
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
       font=\tiny] (SignExt) at ([xshift=-8mm]Imm_field) {\rotatebox{90}{SignExt}};
 
+% ALU Control
+\node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
+      font=\tiny, anchor=east] (ALUCtrl) at ([xshift=-5mm]ALU.east |- Imm_field.east) {\rotatebox{90}{ALU ctrl}};
 
 % Forwarding Unit
 \node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, NT=4, w=3, square pins=1}, 
@@ -394,6 +399,10 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (SHLTwo.east) -- (EXPCAddr.blpin 2);
 \draw[data_path] (EXPCAddr.brpin 1) -- (EXNewPC.west);
 
+% ALU Control
+\draw[data_path] (IDEX.east |- Imm_field) -- (ALUCtrl.west);
+\draw[data_path] (ALUCtrl.east) -| (ALU.bbpin 1);
+
 % ALU to EX/MEM
 \draw[data_path] (ALU.brpin 3) -- (EXMEM.west |- ALU.brpin 3);
 \draw[control_path] (ALU.brpin 2) -- (EXMEM.west |- ALU.brpin 2);
@@ -429,9 +438,9 @@ Loop1 & 2 & 2 & & & & & \\
      (RegFile.blpin 4);
 
 % Control paths
-\draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (M1.west);
 \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
-\draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (EX1.west);
+\draw[control_path] ([xshift=3mm]HDU_AND.bout) |- (EX1.west);
+\draw[control_path] ([xshift=3mm]HDU_AND.bout |- M1.west) node[control_connector] {}  -- (M1.west);
 \draw[control_path] (Control.south) -- (RegFile.btpin 1);
 \draw[control_path] (Control.east) -- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
