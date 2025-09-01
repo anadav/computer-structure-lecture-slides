@@ -247,11 +247,11 @@ Loop1 & 2 & 2 & & & & & \\
       above=3mm of RegFile.btpin 1, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
 
 % Hazard Detection Unit
-\node[hazard_unit, above=of Control.north west, yshift=-1mm, xshift=-4mm] (HDU) {HDU};
+\node[hazard_unit, above=of Control.north west, yshift=-2mm, xshift=-7mm] (HDU) {HDU};
 
 % AND gate for HDU control
 \node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
-\node[pipeline_reg, right=4mm of RegFile] (IDEX) {};
+\node[pipeline_reg, anchor=west] (IDEX) at ([xshift=4mm]RegFile.east |- IFID) {};
 
 
 % EX Stage Components
@@ -463,11 +463,11 @@ Loop1 & 2 & 2 & & & & & \\
 % Hazard detection paths
 %\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.blpin 2);
 %\draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
-\draw[hazard_path] (HDU.brpin 3) -- ++(3mm, 0) |- (HDU_AND.bin 1);
+\draw[hazard_path] (HDU.brpin 3) -- ++(6mm, 0) |- (HDU_AND.bin 1);
 \draw[hazard_path] (HDU.blpin 1) -| (PC.north);
 \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
-\draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 2) node[red_connector] {} -- (HDU.bbpin 2);
-\draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 3) node[red_connector] {} -- (HDU.bbpin 3);
+\draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 3) node[red_connector] {} -- (HDU.bbpin 3);
+\draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 4) node[red_connector] {} -- (HDU.bbpin 4);
 \draw[hazard_path_input] ([xshift=-1cm]M2.west) node[red_connector] {} |- (HDU.brpin 2);
 \draw[hazard_path_input] ([xshift=-3mm]EXMEM_RtRd.west) node[red_connector] {} |- (HDU.brpin 1);
 
