@@ -195,12 +195,15 @@ Loop1 & 2 & 2 & & & & & \\
     hazard_path_input/.style={arrow, red!70},
     hazard_path/.style={arrow, red!70, dashed},
     forward_path/.style={arrow, orange!50},
+    forward_path_a/.style={arrow, blue},
+    forward_path_b/.style={arrow, green},
     control_signal/.style={draw, thick, fill=orange!30, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     % Connector circles
-    control_connector/.style={circle, fill, inner sep=1.2pt, orange!30},
-    black_connector/.style={circle, fill, inner sep=1.2pt},
-    red_connector/.style={circle, fill, inner sep=1.2pt, red!70},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    control_connector/.style={data_connector, orange!30},
+    hazard_connector/.style={data_connector, red!70},
+    forward_connector_a/.style={data_connector, blue},
     % Path labels
     path_label/.style={font=\tiny, midway, above, yshift=-3},
     control_label/.style={path_label, text=orange!70},
@@ -334,28 +337,28 @@ Loop1 & 2 & 2 & & & & & \\
 % Main data paths
 % PC to Instruction Memory
 \draw[data_path] (PC.east) -- (IMem.blpin 3);
-\draw[data_path] ([xshift=2mm]PC.east) node[black_connector] {} |- (PCadder.blpin 1);
+\draw[data_path] ([xshift=2mm]PC.east) node[data_connector] {} |- (PCadder.blpin 1);
 \draw[data_path] (four.east) -- (PCadder.blpin 2);
 \draw[data_path] (PCadder.brpin 1) -- (IFNewPC.west);
-\draw[data_path] ([xshift=3mm]PCadder.brpin 1) node[black_connector] {} |- (PCSrcMux.brpin 2);
+\draw[data_path] ([xshift=3mm]PCadder.brpin 1) node[data_connector] {} |- (PCSrcMux.brpin 2);
 \draw[data_path] (PCSrcMux.blpin 1) -| ([xshift=-3mm]PC.west) -- (PC.west);
 % Instruction Memory to IF/ID
 \draw[data_path] (IMem.brpin 3) -- (IFID.west |- IMem.brpin 3);
 \node[align=left, font=\tiny] at ([xshift=3mm]IMem.blpin 3) {read\\addr};
 
 % IF/ID to Register File
-\draw[data_path] ([xshift=3mm]Instruction.east |- RegFile.blpin 1) node[black_connector] {}
+\draw[data_path] ([xshift=3mm]Instruction.east |- RegFile.blpin 1) node[data_connector] {}
     -- node[path_label, pos=0.9] {Rs} (RegFile.blpin 1);
-\draw[data_path] ([xshift=3mm]Instruction.east |- RegFile.blpin 2) node[black_connector] {}
+\draw[data_path] ([xshift=3mm]Instruction.east |- RegFile.blpin 2) node[data_connector] {}
     -- node[path_label, pos=0.9] {Rt} (RegFile.blpin 2);
 \draw[data_path] (Instruction.east) -- ++(0.3,0) 
     |- node[path_label, pos=0.8] {[15--11]} (Rd_field.west);
-\draw[data_path] ([xshift=3mm]Instruction.east |- SignExt) node[black_connector] {}
+\draw[data_path] ([xshift=3mm]Instruction.east |- SignExt) node[data_connector] {}
     |- node[path_label, pos=0.9] {[15--0]} (SignExt.west);
 
-\draw[data_path] ([xshift=-9mm]RegFile.blpin 1) node[black_connector] {}
+\draw[data_path] ([xshift=-9mm]RegFile.blpin 1) node[data_connector] {}
                     |- node[path_label, pos=0.8] {Rs} (Rs_field.west);  
-\draw[data_path] ([xshift=-10mm]RegFile.blpin 2) node[black_connector] {}
+\draw[data_path] ([xshift=-10mm]RegFile.blpin 2) node[data_connector] {}
                     |- node[path_label, pos=0.8] {[20--16]} (Rt_field.west);  
 
 % SignExt to Imm field
@@ -374,13 +377,13 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (IDEX.east |- RegFile_out1) -- (ForwardA.blpin 1);
 \draw[data_path] (IDEX.east |- RegFile_out2) -- (ForwardB.blpin 1);
 
-\draw[data_path] ([xshift=2mm]IDEX.east |- RegFile_out2) node[black_connector] {} 
+\draw[data_path] ([xshift=2mm]IDEX.east |- RegFile_out2) node[data_connector] {} 
     |- (DMem.blpin 5 -| EXMEM.west);
 
-\draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, near start, sloped] {ALUSrc} (ForwardB.btpin 1);
-\draw[control_path] (EX1.east) -- ++(9mm, 0) |- node[control_label, near end, sloped] {ALUop} ([yshift=2mm]ALUCtrl.west);
+\draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, pos=0.67, sloped] {ALUSrc} (ForwardB.btpin 1);
+\draw[control_path] (EX1.east) -- ++(9mm, 0) |- node[control_label, pos=0.1, sloped] {ALUop} ([yshift=2mm]ALUCtrl.west);
 \draw[control_path] ([yshift=-1mm]EX1.east)
-    -| node[control_label, pos=0.96, sloped] {RegDst} ([yshift=3mm, xshift=-3mm]RegDstMux.btpin 1)
+    -| node[control_label, pos=0.58, sloped] {RegDst} ([yshift=3mm, xshift=-3mm]RegDstMux.btpin 1)
     -| (RegDstMux.btpin 1);
 
 
@@ -393,13 +396,15 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (Rd_field.east) -- (RegDstMux.blpin 2);
 \coordinate (ImmTurn) at ($(Imm_field.east |- SHLTwo.west) + (0.4,0)$);
 \draw[data_path] (Imm_field.east) -| (ImmTurn) -- (SHLTwo.west);
-\draw[data_path] (ImmTurn |-  ForwardB.blpin 4) node[black_connector] {} -- (ForwardB.blpin 4);
+\draw[data_path] (ImmTurn |-  ForwardB.blpin 4) node[data_connector] {} -- (ForwardB.blpin 4);
 
 \draw[data_path] (RegDstMux.brpin 1) --  (EXMEM_RtRd.west);
-\draw[data_path] (EXMEM_RtRd.east) -- node[near end, above, font=\tiny] {RegDst} (MEMWB_RtRd.west);
+\draw[data_path] (EXMEM_RtRd.east) -- node[path_label] {RegDst} (MEMWB_RtRd.west);
+\coordinate (RegDstEast) at ([xshift=5mm]MEMWB_RtRd.east);
+\coordinate (RegDstSouth) at ([yshift=-9mm]FwdUnit.south);
 \draw[data_path]
-  (MEMWB_RtRd.east) -- ++(0.5,0)
-  |- ([yshift=-9mm]FwdUnit.south)
+  (MEMWB_RtRd.east) -- (RegDstEast)
+  |- (RegDstSouth)
   -| node[path_label, above right]{RegDst} ([xshift=-8mm]RegFile.blpin 3)
   -- node[path_label]{RegDst} % or pos=0.9, etc.
      (RegFile.blpin 3);
@@ -422,8 +427,8 @@ Loop1 & 2 & 2 & & & & & \\
 
 % EX/MEM to Data Memory
 \draw[data_path] (EXMEM.east |- ALU.brpin 4) -- (DMem.blpin 3);
-\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU.brpin 4)  node[black_connector] (DmemConnector) {} |- (ALUresult.west);
-\draw[data_path] (DmemConnector |- DMem.blpin 4) node[black_connector] {} |- (DMem.blpin 4);
+\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU.brpin 4)  node[data_connector] (DmemConnector) {} |- (ALUresult.west);
+\draw[data_path] (DmemConnector |- DMem.blpin 4) node[data_connector] {} |- (DMem.blpin 4);
 
 % Read Data 2 to Write Data
 \draw[data_path] (EXMEM.east |- DMem.blpin 5) -- (DMem.blpin 5);
@@ -446,9 +451,10 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (ALUresult.east) -- ++(0.3,0) |- (WBMux.blpin 2);
 \draw[control_path] ([yshift=1]WB3.east) -| node[control_label, near end, sloped] {MemtoReg} (WBMux.btpin 1);
 
+\coordinate (WBMuxEast) at ([xshift=5mm]WBMux.east);
 % Write back path
 \draw[data_path]
-  (WBMux.brpin 1) -- ++(0.5,0)
+  (WBMux.brpin 1) -- (WBMuxEast)
   |- ([yshift=-5mm]FwdUnit.south)
   -| node[path_label, above right]{WrData} ([xshift=-7mm]RegFile.blpin 4)
   -- node[path_label]{WrData} % or pos=0.9, etc.
@@ -476,10 +482,10 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[hazard_path] (HDU.brpin 3) -- ++(6mm, 0) |- (HDU_AND.bin 1);
 \draw[hazard_path] (HDU.blpin 1) -| (PC.north);
 \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
-\draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 3) node[red_connector] {} -- (HDU.bbpin 3);
-\draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 4) node[red_connector] {} -- (HDU.bbpin 4);
-\draw[hazard_path_input] ([xshift=-1cm]M2.west) node[red_connector] {} |- (HDU.brpin 2);
-\draw[hazard_path_input] ([xshift=-3mm]EXMEM_RtRd.west) node[red_connector] {} |- (HDU.brpin 1);
+\draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 3) node[hazard_connector] {} -- (HDU.bbpin 3);
+\draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 4) node[hazard_connector] {} -- (HDU.bbpin 4);
+\draw[hazard_path_input] ([xshift=-1cm]M2.west) node[hazard_connector] {} |- (HDU.brpin 2);
+\draw[hazard_path_input] ([xshift=-3mm]EXMEM_RtRd.west) node[hazard_connector] {} |- (HDU.brpin 1);
 
 % Forwarding paths
 %\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
@@ -495,19 +501,19 @@ Loop1 & 2 & 2 & & & & & \\
     |- ([yshift=-3mm]ForwardB.bbpin 1)
     -- (ForwardB.bbpin 1);
 
-\draw[forward_path] ([xshift=1mm]EXMEM_RtRd.east) node[black_connector] {} |- (FwdUnit.brpin 1);
-
+\draw[forward_path] ([xshift=1mm]EXMEM_RtRd.east) node[data_connector] {} |- (FwdUnit.brpin 1);
+\draw[data_path] (RegDstEast |- FwdUnit.brpin 3) node[data_connector] {} |- node[path_label, pos=0.7] {RegDst} (FwdUnit.brpin 3);
 
 \draw[data_path] (Rs_field.east) -- ++(0.3,0) |- (FwdUnit.blpin 3);
-\draw[data_path] ([xshift=2mm]Rt_field.east) node[black_connector] {}  |- (FwdUnit.blpin 4);
+\draw[data_path] ([xshift=2mm]Rt_field.east) node[data_connector] {}  |- (FwdUnit.blpin 4);
 \draw[control_path] ([xshift=5mm]RegWriteSouth -| FwdUnit.brpin 4) node[control_connector] {} |- (FwdUnit.brpin 4);
 % Special Forwarding Pathes
-\draw[arrow, blue] (ALUresult -| DmemConnector) node[black_connector] {} 
+\draw[arrow, blue] (ALUresult -| DmemConnector) node[data_connector] {} 
     |- ([yshift=-3]FwdUnit.south)
     -| ([xshift=-12]ForwardB.blpin 2) coordinate (ForwardB_junction1)
     |- (ForwardA.blpin 2);
 
-\node[black_connector] at (ForwardB_junction1) {};
+\node[forward_connector_a] at (ForwardB_junction1) {};
 \draw[arrow, blue] (ForwardB_junction1) |- (ForwardB.blpin 2);
 
 % Add some labels
