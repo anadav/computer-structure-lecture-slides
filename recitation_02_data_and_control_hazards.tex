@@ -175,7 +175,7 @@ Loop1 & 2 & 2 & & & & & \\
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
     regfile/.style={muxdemux, muxdemux def={Lh=5.5, NL=5, Rh=5.5, NR=2, NB=1, NT=3, w=3.2, square pins=1}, 
                     external pins width=0, fill=cyan!20, align=center},
-    alu_style/.style={muxdemux, muxdemux def={Lh=3.6, Rh=1.8, NL=2, NR=5, NB=1, w=1.2, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NB=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
@@ -239,8 +239,11 @@ Loop1 & 2 & 2 & & & & & \\
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {write\\reg};
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {write\\data};
 \node[align=left, xshift=3mm, font=\tiny, text=orange] at (RegFile.blpin 5) {write\\enable};
-\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile.brpin 1) {read\\data 1};
-\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile.brpin 2) {read\\data 2};
+% Create coordinates for RegFile outputs with y-shifts
+\coordinate (RegFile_out1) at ([yshift=-2mm]RegFile.brpin 1);
+\coordinate (RegFile_out2) at ([yshift=1mm]RegFile.brpin 2);
+\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out1) {read\\data 1};
+\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out2) {read\\data 2};
 
 % Control Unit
 \node[control_block,
@@ -255,7 +258,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % EX Stage Components
-\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=14mm]IDEX.east |- RegFile.brpin 1) {};
+\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=14mm]IDEX.east |- RegFile_out1) {};
 
 % ALU
 \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
@@ -270,7 +273,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % Second forwarding mux
-\node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile.brpin 2) {};
+\node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile_out2) {};
 
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch, anchor=south] (Rd_field) at (IDEX.south) {Rd};
@@ -364,14 +367,14 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (IFNewPC.east) --  (IDEX.west |- IFNewPC);
 
 % Register File outputs to ID/EX
-\draw[data_path] (RegFile.brpin 1) -- (RegFile.brpin 1 -| IDEX.west);
-\draw[data_path] (RegFile.brpin 2) -- (RegFile.brpin 2 -| IDEX.west);
+\draw[data_path] (RegFile_out1) -- (RegFile_out1 -| IDEX.west);
+\draw[data_path] (RegFile_out2) -- (RegFile_out2 -| IDEX.west);
 
 % ID/EX to EX stage (through forwarding muxes)
-\draw[data_path] (IDEX.east |- RegFile.brpin 1) -- (ForwardA.blpin 1);
-\draw[data_path] (IDEX.east |- RegFile.brpin 2) -- (ForwardB.blpin 1);
+\draw[data_path] (IDEX.east |- RegFile_out1) -- (ForwardA.blpin 1);
+\draw[data_path] (IDEX.east |- RegFile_out2) -- (ForwardB.blpin 1);
 
-\draw[data_path] ([xshift=2mm]IDEX.east |- RegFile.brpin 2) node[black_connector] {} 
+\draw[data_path] ([xshift=2mm]IDEX.east |- RegFile_out2) node[black_connector] {} 
     |- (DMem.blpin 5 -| EXMEM.west);
 
 \draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, near start, sloped] {ALUSrc} (ForwardB.btpin 1);
