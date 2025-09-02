@@ -204,6 +204,7 @@ Loop1 & 2 & 2 & & & & & \\
     control_connector/.style={data_connector, orange!30},
     hazard_connector/.style={data_connector, red!70},
     forward_connector_a/.style={data_connector, blue},
+    forward_connector_b/.style={data_connector, green},
     % Path labels
     path_label/.style={font=\tiny, midway, above, yshift=-3},
     control_label/.style={path_label, text=orange!70},
@@ -453,10 +454,11 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] ([yshift=1]WB3.east) -| node[control_label, near end, sloped] {MemtoReg} (WBMux.btpin 1);
 
 \coordinate (WBMuxEast) at ([xshift=5mm]WBMux.east);
+\coordinate (WrDataSouth) at ([yshift=-5mm]FwdUnit.south);
 % Write back path
 \draw[data_path]
   (WBMux.brpin 1) -- (WBMuxEast)
-  |- ([yshift=-5mm]FwdUnit.south)
+  |- (WrDataSouth)
   -| node[path_label, above right]{WrData} ([xshift=-7mm]RegFile.blpin 4)
   -- node[path_label]{WrData} % or pos=0.9, etc.
      (RegFile.blpin 4);
@@ -522,6 +524,11 @@ Loop1 & 2 & 2 & & & & & \\
 
 \node[forward_connector_a] at (ForwardB_junction1) {};
 \draw[arrow, blue] (ForwardB_junction1) |- (ForwardB.blpin 2);
+
+%\node[forward_connector_b] at ([xshift=-2]WrDataSouth -| ForwardB_junction1) {};
+\draw[arrow, green, very think]
+    ([xshift=-2]WrDataSouth -| ForwardB_junction1) node[data_connector] {}
+    |- (ForwardA.blpin 3);
 
 % Add some labels
 
