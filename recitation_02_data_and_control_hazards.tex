@@ -428,7 +428,8 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] ([yshift=1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 5);
 \draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 4);
 \draw[control_path] ([yshift=-3]M2.east) -- ++(0.4, 0) |- node[control_label, near start, sloped] {Branch} (MemAnd.bin 1);
-\draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.4, 0) |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
+\draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.4, 0)
+    |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
 \draw[control_path] (MemAnd.bout) -| ++(0.3, 2)
     |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=2mm]PCSrcMux.btpin 1 |- HDU.north)
     -- (PCSrcMux.btpin 1);
@@ -500,10 +501,11 @@ Loop1 & 2 & 2 & & & & & \\
 % Special Forwarding Pathes
 \draw[arrow, blue] (ALUresult -| DmemConnector) node[black_connector] {} 
     |- ([yshift=-3]FwdUnit.south)
-    -| ([xshift=-12]ForwardB.blpin 2) node[] (ForwardB_junction1) {}
+    -| ([xshift=-12]ForwardB.blpin 2) coordinate (ForwardB_junction1)
     |- (ForwardA.blpin 2);
 
-\draw[arrow, blue] (ForwardB_junction1) node[black_connector] {} |- (ForwardB.blpin 2);
+\node[black_connector] at (ForwardB_junction1) {};
+\draw[arrow, blue] (ForwardB_junction1) |- (ForwardB.blpin 2);
 
 % Add some labels
 
