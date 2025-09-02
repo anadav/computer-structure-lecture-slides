@@ -207,6 +207,7 @@ Loop1 & 2 & 2 & & & & & \\
     % Path labels
     path_label/.style={font=\tiny, midway, above, yshift=-3},
     control_label/.style={path_label, text=orange!70},
+    forward_path_a/.style={path_label, text=blue},
     node distance=5mm and 5mm,
 ]
 
@@ -413,7 +414,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (IDEX.east |- IFNewPC) -- (EXPCAddr.blpin 1);
 \draw[data_path] (SHLTwo.east) -- (EXPCAddr.blpin 2);
 \draw[data_path] (EXPCAddr.brpin 1) -- (EXNewPC.west);
-\draw[data_path] (EXNewPC.east) -- ++(0.3,0)
+\draw[data_path] (EXNewPC.east) -- ++(0.2,0)
     |- ([yshift=1mm, xshift=10mm]HDU.north -| PCSrcMux.brpin 1)
     |- (PCSrcMux.brpin 1);
 
@@ -427,7 +428,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % EX/MEM to Data Memory
 \draw[data_path] (EXMEM.east |- ALU.brpin 4) -- (DMem.blpin 3);
-\draw[data_path] ([xshift=3mm]EXMEM.east |- ALU.brpin 4)  node[data_connector] (DmemConnector) {} |- (ALUresult.west);
+\draw[data_path] ([xshift=5mm]EXMEM.east |- ALU.brpin 4)  node[data_connector] (DmemConnector) {} |- (ALUresult.west);
 \draw[data_path] (DmemConnector |- DMem.blpin 4) node[data_connector] {} |- (DMem.blpin 4);
 
 % Read Data 2 to Write Data
@@ -435,8 +436,8 @@ Loop1 & 2 & 2 & & & & & \\
 
 \draw[control_path] ([yshift=1]M2.east) -| node[control_label, near end, sloped] {MemRead} (DMem.btpin 5);
 \draw[control_path] ([yshift=-1]M2.east) -| node[control_label, near end, sloped] {MemWrite} (DMem.btpin 4);
-\draw[control_path] ([yshift=-3]M2.east) -- ++(0.4, 0) |- node[control_label, near start, sloped] {Branch} (MemAnd.bin 1);
-\draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.4, 0)
+\draw[control_path] ([yshift=-3]M2.east) -- ++(0.6, 0) |- node[control_label, near start, sloped] {Branch} (MemAnd.bin 1);
+\draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.6, 0)
     |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
 \draw[control_path] (MemAnd.bout) -| ++(0.3, 2)
     |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=2mm]PCSrcMux.btpin 1 |- HDU.north)
@@ -506,11 +507,17 @@ Loop1 & 2 & 2 & & & & & \\
 
 \draw[data_path] (Rs_field.east) -- ++(0.3,0) |- (FwdUnit.blpin 3);
 \draw[data_path] ([xshift=2mm]Rt_field.east) node[data_connector] {}  |- (FwdUnit.blpin 4);
-\draw[control_path] ([xshift=5mm]RegWriteSouth -| FwdUnit.brpin 4) node[control_connector] {} |- (FwdUnit.brpin 4);
+\draw[control_path] ([xshift=5mm]RegWriteSouth 
+    -| FwdUnit.brpin 4) node[control_connector] {}
+    |- (FwdUnit.brpin 4);
+
+\draw[control_path] ([yshift=-5]M2.east) -- ++(0.3, 0) |- node[control_label, pos=0.05, sloped] {RegWrite} (FwdUnit.brpin 2);
+
+    
 % Special Forwarding Pathes
 \draw[arrow, blue] (ALUresult -| DmemConnector) node[data_connector] {} 
     |- ([yshift=-3]FwdUnit.south)
-    -| ([xshift=-12]ForwardB.blpin 2) coordinate (ForwardB_junction1)
+    -| ([xshift=-14]ForwardB.blpin 2) coordinate (ForwardB_junction1)
     |- (ForwardA.blpin 2);
 
 \node[forward_connector_a] at (ForwardB_junction1) {};
