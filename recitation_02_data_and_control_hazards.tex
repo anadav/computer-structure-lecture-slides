@@ -263,7 +263,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 
 % EX Stage Components
-\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=14mm]IDEX.east |- RegFile_out1) {};
+\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=15mm]IDEX.east |- RegFile_out1) {};
 
 % ALU
 \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
@@ -274,11 +274,11 @@ Loop1 & 2 & 2 & & & & & \\
 % Addr and SHL
 \node[adder, anchor=blpin 1] (EXPCAddr) at (ALU |- IFNewPC) {+};
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
-      left=4mm of EXPCAddr.blpin 2, font=\tiny] (SHLTwo) {\rotatebox{90}{SHL2}};
+      left=3mm of EXPCAddr.blpin 2, font=\tiny] (SHLTwo) {\rotatebox{90}{SHL2}};
 
 
 % Second forwarding mux
-\node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=10mm]IDEX.east |- RegFile_out2) {};
+\node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
 
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch, anchor=south] (Rd_field) at (IDEX.south) {Rd};
@@ -500,11 +500,9 @@ Loop1 & 2 & 2 & & & & & \\
     |- ([yshift=-3mm]ForwardA.bbpin 1)
     -- (ForwardA.bbpin 1);
 
-\draw[forward_path] (FwdUnit.blpin 2) -- ++(-0.2, 0)
-    |- ([yshift=-3mm]ForwardB.bbpin 1)
-    -- (ForwardB.bbpin 1);
+\draw[forward_path] (FwdUnit.blpin 2) -| (ForwardB.bbpin 1);
 
-\draw[forward_path] ([xshift=1mm]EXMEM_RtRd.east) node[data_connector] {} |- (FwdUnit.brpin 1);
+\draw[data_path] ([xshift=1mm]EXMEM_RtRd.east) node[data_connector] {} |- (FwdUnit.brpin 1);
 \draw[data_path] (RegDstEast |- FwdUnit.brpin 3) node[data_connector] {} |- node[path_label, pos=0.7] {RegDst} (FwdUnit.brpin 3);
 
 \draw[data_path] (Rs_field.east) -- ++(0.3,0) |- (FwdUnit.blpin 3);
