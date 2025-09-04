@@ -149,16 +149,9 @@ Loop1 & 2 & 2 & & & & & \\
 \end{tikzpicture}
 }
 
-\title{Data and Control Hazards}
-\author{Compuetr Architecture 234267}
-\date{2025, Recitation \#2}
-
-\begin{document}
-
-\frame{\titlepage}
-
-\begin{frame}{Pipeline Processor with Hazard Detection}
-\centering
+% Pipeline processor macro with configurable HDU and forwarding
+% Parameters: #1 = show forwarding (1/0), #2 = show HDU (1/0)
+\newcommand{\pipelineprocessor}[2]{%
 \scalebox{0.7}{%
 \begin{circuitikz}[
     % Component styles - avoid using scale
@@ -212,14 +205,10 @@ Loop1 & 2 & 2 & & & & & \\
     node distance=5mm and 5mm,
 ]
 
-%\ctikzset{font=\scriptsize}
-
 % Define origin
 \coordinate (origin) at (0,0);
 
 % IF Stage Components
-% Instruction Memory using muxdemux
-%\node[memory_block, fill=yellow!20] (IMem) at (IFID.west) [anchor=east, xshift=-0.5cm] {Instruction\\Memory};
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) {PC};
 \node[imem_block, right=of PC, anchor=blpin 3] (IMem) {Instruction\\Memory};
 \node[adder, above=3mm of IMem.north east, anchor=south east] (PCadder) {+};
@@ -229,15 +218,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[data_latch] (IFNewPC) at (PCadder.brpin 1 -| IFID) {\rotatebox{90}{NewPC}};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
-% Small labels on pipeline registers
-%\node[font=\tiny, rotate=90] at (IFID.center) {IF/ID};
-%\node[font=\tiny, rotate=90] at (IDEX.center) {ID/EX};
-%\node[font=\tiny, rotate=90] at (EXMEM.center) {EX/MEM};
-%\node[font=\tiny, rotate=90] at (MEMWB.center) {MEM/WB};
-
-
 % ID Stage Components
-% Register File using muxdemux style
 \node[regfile] (RegFile) at ([yshift=2mm, xshift=3cm]IFID)  {\rotatebox{90}{Register File}};
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {read\\reg 1};
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {read\\reg 2};
@@ -251,22 +232,33 @@ Loop1 & 2 & 2 & & & & & \\
 \node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out2) {read\\data 2};
 
 % Control Unit
-\node[control_block,
-      above=3mm of RegFile.btpin 1, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
+\node[control_block, above=3mm of RegFile.btpin 1, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
 
-% Hazard Detection Unit
-\node[hazard_unit, above=of Control.north west, yshift=-3mm, xshift=-8mm] (HDU) {HDU};
+\ifnum#2=1
+    % Hazard Detection Unit
+    \node[hazard_unit, above=of Control.north west, yshift=-3mm, xshift=-8mm] (HDU) {HDU};
+    % AND gate for HDU control
+    \node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
+\fi
 
-% AND gate for HDU control
-\node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
 \node[pipeline_reg, anchor=west] (IDEX) at ([xshift=4mm]RegFile.east |- IFID) {};
 
-
 % EX Stage Components
-\node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=15mm]IDEX.east |- RegFile_out1) {};
+\ifnum#1=1
+    % With forwarding - use mux3 for ForwardA and mux4 for ForwardB
+    \node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=15mm]IDEX.east |- RegFile_out1) {};
+    \node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
+\else
+    % Without forwarding - use simple mux2 only for immediate
+    \node[mux2, fill=cyan!20, anchor=blpin 1] (ImmMux) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
+\fi
 
 % ALU
-\node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
+\ifnum#1=1
+    \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
+\else
+    \node[alu_style, anchor=blpin 2] (ALU) at ([xshift=25mm]IDEX.east |- ImmMux.brpin 1) {};
+\fi
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 \node[font=\tiny, left=-1mm of ALU.brpin 3, align=right] {zero};
 \node[font=\tiny, left=-1mm of ALU.brpin 4, align=right] {res};
@@ -276,13 +268,13 @@ Loop1 & 2 & 2 & & & & & \\
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
       left=3mm of EXPCAddr.blpin 2, font=\tiny] (SHLTwo) {\rotatebox{90}{SHL2}};
 
-
-% Second forwarding mux
-\node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
-
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch, anchor=south] (Rd_field) at (IDEX.south) {Rd};
-\node[mux2b, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
+\ifnum#1=1
+    \node[mux2b, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
+\else
+    \node[mux2b, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ImmMux.blpin 2 |- Rd_field.east) {};
+\fi
 \node[data_latch] (Rt_field) at (RegDstMux.lpin 1 -| Rd_field) {Rt};
 \node[data_latch, above=2.3mm of Rt_field] (Imm_field) {Imm};
 \node[data_latch, above=2.3mm of Imm_field] (Rs_field) {Rs};
@@ -294,17 +286,16 @@ Loop1 & 2 & 2 & & & & & \\
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
       font=\tiny, anchor=east] (ALUCtrl) at ([xshift=-5mm]ALU.east |- Imm_field.east) {\rotatebox{90}{ALUctrl}};
 
-% Forwarding Unit
-\node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, NT=4, w=3, square pins=1}, 
-      external pins width=0, fill=orange!30, font=\scriptsize, align=center, below right=5mm of RegDstMux.east] (FwdUnit) {Forwarding\\Unit};
+\ifnum#1=1
+    % Forwarding Unit
+    \node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, NT=4, w=3, square pins=1}, 
+          external pins width=0, fill=orange!30, font=\scriptsize, align=center, below right=5mm of RegDstMux.east] (FwdUnit) {Forwarding\\Unit};
+\fi
 
 \node[pipeline_reg] (EXMEM) at ([xshift=10mm]ALU.east |- IDEX) {};
 \node[data_latch] (EXNewPC) at (EXPCAddr.brpin 1 -| EXMEM) {\rotatebox{90}{NewPC}};
 
 % MEM Stage Components
-
-
-% Data Memory using muxdemux
 \node[memory_block, anchor=west, align=center] (DMem) at ([xshift=8mm]EXMEM.east |- ALU.brpin 4) {Data\\Memory};
 \node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 3) {write\\addr};
 \node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 4) {read\\addr};
@@ -318,7 +309,6 @@ Loop1 & 2 & 2 & & & & & \\
 % WB Stage Components
 \node[mux2, fill=cyan!20, anchor=blpin 1] (WBMux) at ([xshift=5mm]MEMWB.east |- DMem.rpin 1) {};
 
-
 % Control signal blocks in pipeline registers
 \node[control_signal, anchor=north] (WB1) at (IDEX.north) {WB};
 \node[control_signal] (M1) at (WB1.south) [anchor=north, yshift=-0.1cm] {M};
@@ -328,7 +318,6 @@ Loop1 & 2 & 2 & & & & & \\
 \node[control_signal] (M2) at (WB2.south) [anchor=north, yshift=-0.1cm] {M};
 
 \node[control_signal] (WB3) at (WB1 -| MEMWB.center) {WB};
-
 
 % Register fields in EXMEM and MEMWB latches
 \node[data_latch] (EXMEM_RtRd) at (EXMEM |- RegDstMux.rpin 1) {\rotatebox{90}{Rt/Rd}};
@@ -375,49 +364,81 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (RegFile_out1) -- (RegFile_out1 -| IDEX.west);
 \draw[data_path] (RegFile_out2) -- (RegFile_out2 -| IDEX.west);
 
-% ID/EX to EX stage (through forwarding muxes)
-\draw[data_path] (IDEX.east |- RegFile_out1) -- (ForwardA.blpin 1);
-\draw[data_path] (IDEX.east |- RegFile_out2) -- (ForwardB.blpin 1);
+% ID/EX to EX stage
+\ifnum#1=1
+    % With forwarding
+    \draw[data_path] (IDEX.east |- RegFile_out1) -- (ForwardA.blpin 1);
+    \draw[data_path] (IDEX.east |- RegFile_out2) -- (ForwardB.blpin 1);
+    \draw[data_path] ([xshift=2mm]IDEX.east |- RegFile_out2) node[data_connector] {} 
+        |- (DMem.blpin 5 -| EXMEM.west);
+    \draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, pos=0.67, sloped] {ALUSrc} (ForwardB.btpin 1);
+\else
+    % Without forwarding
+    \draw[data_path] (IDEX.east |- RegFile_out1) -- (ALU.blpin 1);
+    \draw[data_path] (IDEX.east |- RegFile_out2) -- (ImmMux.blpin 1);
+    \draw[data_path] ([xshift=2mm]IDEX.east |- RegFile_out2) node[data_connector] {} 
+        |- (DMem.blpin 5 -| EXMEM.west);
+    \draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, pos=0.67, sloped] {ALUSrc} (ImmMux.btpin 1);
+\fi
 
-\draw[data_path] ([xshift=2mm]IDEX.east |- RegFile_out2) node[data_connector] {} 
-    |- (DMem.blpin 5 -| EXMEM.west);
-
-\draw[control_path] ([yshift=1mm]EX1.east) -|  node[control_label, pos=0.67, sloped] {ALUSrc} (ForwardB.btpin 1);
 \draw[control_path] (EX1.east) -- ++(9mm, 0) |- node[control_label, pos=0.1, sloped] {ALUop} ([yshift=2mm]ALUCtrl.west);
 \draw[control_path] ([yshift=-1mm]EX1.east)
     -| node[control_label, pos=0.58, sloped] {RegDst} ([yshift=3mm, xshift=-3mm]RegDstMux.btpin 1)
     -| (RegDstMux.btpin 1);
 
+% Connect to ALU
+\ifnum#1=1
+    % With forwarding muxes
+    \draw[data_path] (ForwardA.brpin 1) -- (ALU.blpin 1);
+    \draw[data_path] (ForwardB.brpin 1) -- (ALU.blpin 2);
+\else
+    % Without forwarding
+    \draw[data_path] (ImmMux.brpin 1) -- (ALU.blpin 2);
+\fi
 
-% Forwarding muxes to ALU
-\draw[data_path] (ForwardA.brpin 1) -- (ALU.blpin 1);
-\draw[data_path] (ForwardB.brpin 1) -- (ALU.blpin 2);
-
-% TODO: add comment
+% Register destination paths
 \draw[data_path] (Rt_field.east) -- (RegDstMux.blpin 1);
 \draw[data_path] (Rd_field.east) -- (RegDstMux.blpin 2);
 \coordinate (ImmTurn) at ($(Imm_field.east |- SHLTwo.west) + (0.4,0)$);
 \draw[data_path] (Imm_field.east) -| (ImmTurn) -- (SHLTwo.west);
-\draw[data_path] (ImmTurn |-  ForwardB.blpin 4) node[data_connector] {} -- (ForwardB.blpin 4);
+
+\ifnum#1=1
+    \draw[data_path] (ImmTurn |-  ForwardB.blpin 4) node[data_connector] {} -- (ForwardB.blpin 4);
+\else
+    \draw[data_path] (ImmTurn |-  ImmMux.blpin 2) node[data_connector] {} -- (ImmMux.blpin 2);
+\fi
 
 \draw[data_path] (RegDstMux.brpin 1) --  (EXMEM_RtRd.west);
 \draw[data_path] (EXMEM_RtRd.east) -- node[path_label] {RegDst} (MEMWB_RtRd.west);
 \coordinate (RegDstEast) at ([xshift=5mm]MEMWB_RtRd.east);
-\coordinate (RegDstSouth) at ([yshift=-9mm]FwdUnit.south);
+
+\ifnum#1=1
+    \coordinate (RegDstSouth) at ([yshift=-9mm]FwdUnit.south);
+\else
+    \coordinate (RegDstSouth) at ([yshift=-15mm]RegDstMux.south);
+\fi
+
 \draw[data_path]
   (MEMWB_RtRd.east) -- (RegDstEast)
   |- (RegDstSouth)
   -| node[path_label, above right]{RegDst} ([xshift=-8mm]RegFile.blpin 3)
-  -- node[path_label]{RegDst} % or pos=0.9, etc.
+  -- node[path_label]{RegDst}
      (RegFile.blpin 3);
 
 % EX PC Addr
 \draw[data_path] (IDEX.east |- IFNewPC) -- (EXPCAddr.blpin 1);
 \draw[data_path] (SHLTwo.east) -- (EXPCAddr.blpin 2);
 \draw[data_path] (EXPCAddr.brpin 1) -- (EXNewPC.west);
-\draw[data_path] (EXNewPC.east) -- ++(0.2,0)
-    |- ([yshift=1mm, xshift=10mm]HDU.north -| PCSrcMux.brpin 1)
-    |- (PCSrcMux.brpin 1);
+
+\ifnum#2=1
+    \draw[data_path] (EXNewPC.east) -- ++(0.2,0)
+        |- ([yshift=1mm, xshift=10mm]HDU.north -| PCSrcMux.brpin 1)
+        |- (PCSrcMux.brpin 1);
+\else
+    \draw[data_path] (EXNewPC.east) -- ++(0.2,0)
+        |- ([yshift=12mm]PCSrcMux.brpin 1)
+        |- (PCSrcMux.brpin 1);
+\fi
 
 % ALU Control
 \draw[data_path] (IDEX.east |- Imm_field) -- (ALUCtrl.west);
@@ -440,13 +461,19 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] ([yshift=-3]M2.east) -- ++(0.6, 0) |- node[control_label, near start, sloped] {Branch} (MemAnd.bin 1);
 \draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.6, 0)
     |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
-\draw[control_path] (MemAnd.bout) -| ++(0.3, 2)
-    |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=2mm]PCSrcMux.btpin 1 |- HDU.north)
-    -- (PCSrcMux.btpin 1);
+
+\ifnum#2=1
+    \draw[control_path] (MemAnd.bout) -| ++(0.3, 2)
+        |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=2mm]PCSrcMux.btpin 1 |- HDU.north)
+        -- (PCSrcMux.btpin 1);
+\else
+    \draw[control_path] (MemAnd.bout) -| ++(0.3, 2)
+        |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=8mm]PCSrcMux.btpin 1)
+        -- (PCSrcMux.btpin 1);
+\fi
 
 % Data Memory to MEM/WB
 \draw[data_path] (DMem.brpin 1) -- (MEMWB.west |- DMem.brpin 1);
-
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east |- DMem.rpin 1) -- (WBMux.blpin 1);
@@ -454,103 +481,121 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] ([yshift=1]WB3.east) -| node[control_label, near end, sloped] {MemtoReg} (WBMux.btpin 1);
 
 \coordinate (WBMuxEast) at ([xshift=5mm]WBMux.east);
-\coordinate (WrDataSouth) at ([yshift=-5mm]FwdUnit.south);
+
+\ifnum#1=1
+    \coordinate (WrDataSouth) at ([yshift=-5mm]FwdUnit.south);
+\else
+    \coordinate (WrDataSouth) at ([yshift=-11mm]RegDstMux.south);
+\fi
+
 % Write back path
 \draw[data_path]
   (WBMux.brpin 1) -- (WBMuxEast)
   |- (WrDataSouth)
   -| node[path_label, above right]{WrData} ([xshift=-7mm]RegFile.blpin 4)
-  -- node[path_label]{WrData} % or pos=0.9, etc.
+  -- node[path_label]{WrData}
      (RegFile.blpin 4);
 
 % Control paths
-\draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
-\draw[control_path] ([xshift=3mm]HDU_AND.bout) |- (EX1.west);
-\draw[control_path] ([xshift=3mm]HDU_AND.bout |- M1.west) node[control_connector] {}  -- (M1.west);
+\ifnum#2=1
+    \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
+    \draw[control_path] ([xshift=3mm]HDU_AND.bout) |- (EX1.west);
+    \draw[control_path] ([xshift=3mm]HDU_AND.bout |- M1.west) node[control_connector] {}  -- (M1.west);
+    \draw[control_path] (Control.east) -- (HDU_AND.bin 2);
+\else
+    \draw[control_path] (Control.east) -- ++(5mm, 0) |- (WB1.west);
+    \draw[control_path] ([xshift=5mm]Control.east |- EX1.west) node[control_connector] {} -- (EX1.west);
+    \draw[control_path] ([xshift=5mm]Control.east |- M1.west) node[control_connector] {} -- (M1.west);
+\fi
+
 \draw[control_path] (Control.south) -- (RegFile.btpin 1);
-\draw[control_path] (Control.east) -- (HDU_AND.bin 2);
 \draw[control_path] (WB1.east) -- (WB2.west);
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
-\coordinate (RegWriteSouth) at ([yshift=-2mm]FwdUnit.south);
+
+\ifnum#1=1
+    \coordinate (RegWriteSouth) at ([yshift=-2mm]FwdUnit.south);
+\else
+    \coordinate (RegWriteSouth) at ([yshift=-7mm]RegDstMux.south);
+\fi
+
 \draw[control_path]
     ([yshift=-3]WB3.east) -- ++(0.2, 0)
     |- node[control_label, pos=0.1, sloped] {RegWrite} (RegWriteSouth)
     -| node[control_label, above right] {RegWrite} ([xshift=-4mm]RegFile.blpin 5)
     -- (RegFile.blpin 5);
 
-% Hazard detection paths
-%\draw[hazard_path] ([xshift=-0.2cm]RegFile.south) |- ([yshift=-0.3cm]HDU.blpin 2);
-%\draw[hazard_path] ([xshift=0.2cm]RegFile.south) |- ([yshift=0.3cm]HDU.west);
-\draw[hazard_path] (HDU.brpin 3) -- ++(6mm, 0) |- (HDU_AND.bin 1);
-\draw[hazard_path] (HDU.blpin 1) -| (PC.north);
-\draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
-\draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 3) node[hazard_connector] {} -- (HDU.bbpin 3);
-\draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 4) node[hazard_connector] {} -- (HDU.bbpin 4);
-\draw[hazard_path_input] ([xshift=-1cm]M2.west) node[hazard_connector] {} |- (HDU.brpin 2);
-\draw[hazard_path_input] ([xshift=-3mm]EXMEM_RtRd.west) node[hazard_connector] {} |- (HDU.brpin 1);
+% Hazard detection paths (only if HDU is enabled)
+\ifnum#2=1
+    \draw[hazard_path] (HDU.brpin 3) -- ++(6mm, 0) |- (HDU_AND.bin 1);
+    \draw[hazard_path] (HDU.blpin 1) -| (PC.north);
+    \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
+    \draw[hazard_path_input] (RegFile.blpin 2 -| HDU.bbpin 3) node[hazard_connector] {} -- (HDU.bbpin 3);
+    \draw[hazard_path_input] (RegFile.blpin 1 -| HDU.bbpin 4) node[hazard_connector] {} -- (HDU.bbpin 4);
+    \draw[hazard_path_input] ([xshift=-1cm]M2.west) node[hazard_connector] {} |- (HDU.brpin 2);
+    \draw[hazard_path_input] ([xshift=-3mm]EXMEM_RtRd.west) node[hazard_connector] {} |- (HDU.brpin 1);
+\fi
 
-% Forwarding paths
-%\draw[forward_path] (EXMEM.south) |- ([yshift=-0.3cm]FwdUnit.west);
-%\draw[forward_path] (MEMWB.south) |- ([yshift=0.3cm]FwdUnit.west);
-%\draw[forward_path] ([yshift=0.3cm]FwdUnit.east) |- (ForwardA.south);
-%\draw[forward_path] ([yshift=-0.3cm]FwdUnit.east) |- (ForwardB.south);
-\draw[forward_path] (FwdUnit.btpin 1) % -- ++(-0.1, 0)
-%    -| ([xshift=1mm, yshift=-3mm]ForwardB.east)
-    |- ([yshift=-3mm]ForwardA.bbpin 1)
-    -- (ForwardA.bbpin 1);
-
-\draw[forward_path] (FwdUnit.blpin 2) -| (ForwardB.bbpin 1);
-
-\draw[data_path] ([xshift=1mm]EXMEM_RtRd.east) node[data_connector] {} |- (FwdUnit.brpin 1);
-\draw[data_path] (RegDstEast |- FwdUnit.brpin 3) node[data_connector] {} |- node[path_label, pos=0.7] {RegDst} (FwdUnit.brpin 3);
-
-\draw[data_path] (Rs_field.east) -- ++(0.3,0) |- (FwdUnit.blpin 3);
-\draw[data_path] ([xshift=2mm]Rt_field.east) node[data_connector] {}  |- (FwdUnit.blpin 4);
-\draw[control_path] ([xshift=5mm]RegWriteSouth 
-    -| FwdUnit.brpin 4) node[control_connector] {}
-    |- (FwdUnit.brpin 4);
-
-\draw[control_path] ([yshift=-5]M2.east) -- ++(0.3, 0) |- node[control_label, pos=0.05, sloped] {RegWrite} (FwdUnit.brpin 2);
-
+% Forwarding paths (only if forwarding is enabled)
+\ifnum#1=1
+    \draw[forward_path] (FwdUnit.btpin 1) 
+        |- ([yshift=-3mm]ForwardA.bbpin 1)
+        -- (ForwardA.bbpin 1);
     
-% Special Forwarding Pathes
-\draw[arrow, blue, very thick] (ALUresult -| DmemConnector) node[data_connector] {} 
-    |- ([yshift=-3]FwdUnit.south)
-    -| ([xshift=-14]ForwardB.blpin 2) coordinate (ForwardB_junction1)
-    |- (ForwardA.blpin 2);
-
-\node[forward_connector_a] at (ForwardB_junction1) {};
-\draw[arrow, blue] (ForwardB_junction1) |- (ForwardB.blpin 2);
-
-%\node[forward_connector_b] at ([xshift=-2]WrDataSouth -| ForwardB_junction1) {};
-\draw[arrow, green, very thick]
-    ([xshift=-2]WrDataSouth -| ForwardB_junction1) node[data_connector] {}
-    |- (ForwardA.blpin 3);
-\draw[arrow, green, very thick] (ForwardB.blpin 3 -| ForwardB_junction1) node[data_connector] {}
-    |- (ForwardB.blpin 3);
-% Add some labels
-
-% Stage labels at top (after pipeline registers are defined)
-%\node[stage_label] (IF_label) at (0, 4) {IF};
-%\node[stage_label] (ID_label) at ($ (IFID.center)!0.5!(IDEX.center) $ |- IF_label) {ID};
-%\node[stage_label] (EX_label) at ($ (IDEX.center)!0.5!(EXMEM.center) $ |- IF_label) {EX};
-%\node[stage_label] (MEM_label) at ($ (EXMEM.center)!0.5!(MEMWB.center) $ |- IF_label) {MEM};
-%\node[stage_label] (WB_label) at (13, 4) {WB};
-
-
-% Instructions in pipeline (as text annotations)
-%\node[font=\scriptsize, text=green!60!black, anchor=west] at (13.5, 1) {ADD \$6 ← \$6 \$7};
-%\node[font=\scriptsize, text=red!60!black, anchor=west] at (13.5, 0.5) {SUB \$4 ← \$5 \$1};
-%\node[font=\scriptsize, text=blue!60!black, anchor=west] at (13.5, 0) {LW \$1 ← 100(\$4)};
-
-% Instruction addresses
-%\node[font=\tiny, text=blue!60!black] at (14, -1) {100: LW \$1←(100)(\$4)};
-%\node[font=\tiny, text=blue!60!black] at (14, -1.3) {104: SUB \$4 ← \$5 \$1};
-%\node[font=\tiny, text=blue!60!black] at (14, -1.6) {108: Add \$6 ← \$6 \$7};
+    \draw[forward_path] (FwdUnit.blpin 2) -| (ForwardB.bbpin 1);
+    
+    \draw[data_path] ([xshift=1mm]EXMEM_RtRd.east) node[data_connector] {} |- (FwdUnit.brpin 1);
+    \draw[data_path] (RegDstEast |- FwdUnit.brpin 3) node[data_connector] {} |- node[path_label, pos=0.7] {RegDst} (FwdUnit.brpin 3);
+    
+    \draw[data_path] (Rs_field.east) -- ++(0.3,0) |- (FwdUnit.blpin 3);
+    \draw[data_path] ([xshift=2mm]Rt_field.east) node[data_connector] {}  |- (FwdUnit.blpin 4);
+    \draw[control_path] ([xshift=5mm]RegWriteSouth 
+        -| FwdUnit.brpin 4) node[control_connector] {}
+        |- (FwdUnit.brpin 4);
+    
+    \draw[control_path] ([yshift=-5]M2.east) -- ++(0.3, 0) |- node[control_label, pos=0.05, sloped] {RegWrite} (FwdUnit.brpin 2);
+    
+    % Special Forwarding Paths
+    \draw[arrow, blue, very thick] (ALUresult -| DmemConnector) node[data_connector] {} 
+        |- ([yshift=-3]FwdUnit.south)
+        -| ([xshift=-14]ForwardB.blpin 2) coordinate (ForwardB_junction1)
+        |- (ForwardA.blpin 2);
+    
+    \node[forward_connector_a] at (ForwardB_junction1) {};
+    \draw[arrow, blue] (ForwardB_junction1) |- (ForwardB.blpin 2);
+    
+    \draw[arrow, green, very thick]
+        ([xshift=-2]WrDataSouth -| ForwardB_junction1) node[data_connector] {}
+        |- (ForwardA.blpin 3);
+    \draw[arrow, green, very thick] (ForwardB.blpin 3 -| ForwardB_junction1) node[data_connector] {}
+        |- (ForwardB.blpin 3);
+\fi
 
 \end{circuitikz}
 }
+}
+
+\title{Data and Control Hazards}
+\author{Compuetr Architecture 234267}
+\date{2025, Recitation \#2}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Pipeline Processor with Hazard Detection and Forwarding}
+\centering
+\pipelineprocessor{1}{1}  % Show forwarding=1, Show HDU=1
+\end{frame}
+
+\begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
+\centering
+\pipelineprocessor{0}{1}  % Show forwarding=0, Show HDU=1
+\end{frame}
+
+\begin{frame}{Basic Pipeline Processor}
+\centering
+\pipelineprocessor{0}{0}  % Show forwarding=0, Show HDU=0
 \end{frame}
 
 
