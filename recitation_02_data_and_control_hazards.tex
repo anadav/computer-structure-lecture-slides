@@ -149,9 +149,16 @@ Loop1 & 2 & 2 & & & & & \\
 \end{tikzpicture}
 }
 
+% Boolean flags for pipeline processor configuration
+\newif\ifshowforwarding
+\newif\ifshowhdu
+
 % Pipeline processor macro with configurable HDU and forwarding
-% Parameters: #1 = show forwarding (1/0), #2 = show HDU (1/0)
+% Parameters: #1 = show forwarding (true/false), #2 = show HDU (true/false)
 \newcommand{\pipelineprocessor}[2]{%
+% Set the boolean flags based on parameters
+\csname showforwarding#1\endcsname
+\csname showhdu#2\endcsname
 \scalebox{0.7}{%
 \begin{circuitikz}[
     % Component styles - avoid using scale
@@ -234,7 +241,7 @@ Loop1 & 2 & 2 & & & & & \\
 % Control Unit
 \node[control_block, above=3mm of RegFile.btpin 1, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
 
-\ifnum#2=1
+\ifshowhdu
     % Hazard Detection Unit
     \node[hazard_unit, above=of Control.north west, yshift=-3mm, xshift=-8mm] (HDU) {HDU};
     % AND gate for HDU control
@@ -244,7 +251,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[pipeline_reg, anchor=west] (IDEX) at ([xshift=4mm]RegFile.east |- IFID) {};
 
 % EX Stage Components
-\ifnum#1=1
+\ifshowforwarding
     % With forwarding - use mux3 for ForwardA and mux4 for ForwardB
     \node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=15mm]IDEX.east |- RegFile_out1) {};
     \node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
@@ -254,7 +261,7 @@ Loop1 & 2 & 2 & & & & & \\
 \fi
 
 % ALU
-\ifnum#1=1
+\ifshowforwarding
     \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
 \else
     \node[alu_style, anchor=blpin 2] (ALU) at ([xshift=25mm]IDEX.east |- ImmMux.brpin 1) {};
@@ -270,7 +277,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Register fields in IDEX latch (bottom to top)
 \node[data_latch, anchor=south] (Rd_field) at (IDEX.south) {Rd};
-\ifnum#1=1
+\ifshowforwarding
     \node[mux2b, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ForwardB.blpin 2 |- Rd_field.east) {};
 \else
     \node[mux2b, fill=cyan!20, anchor=blpin 2] (RegDstMux) at ([xshift=-3mm]ImmMux.blpin 2 |- Rd_field.east) {};
@@ -286,7 +293,7 @@ Loop1 & 2 & 2 & & & & & \\
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=1pt,
       font=\tiny, anchor=east] (ALUCtrl) at ([xshift=-5mm]ALU.east |- Imm_field.east) {\rotatebox{90}{ALUctrl}};
 
-\ifnum#1=1
+\ifshowforwarding
     % Forwarding Unit
     \node[muxdemux, muxdemux def={Lh=1.6, NL=4, Rh=1.6, NR=4, NT=4, w=3, square pins=1}, 
           external pins width=0, fill=orange!30, font=\scriptsize, align=center, below right=5mm of RegDstMux.east] (FwdUnit) {Forwarding\\Unit};
@@ -365,7 +372,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (RegFile_out2) -- (RegFile_out2 -| IDEX.west);
 
 % ID/EX to EX stage
-\ifnum#1=1
+\ifshowforwarding
     % With forwarding
     \draw[data_path] (IDEX.east |- RegFile_out1) -- (ForwardA.blpin 1);
     \draw[data_path] (IDEX.east |- RegFile_out2) -- (ForwardB.blpin 1);
@@ -387,7 +394,7 @@ Loop1 & 2 & 2 & & & & & \\
     -| (RegDstMux.btpin 1);
 
 % Connect to ALU
-\ifnum#1=1
+\ifshowforwarding
     % With forwarding muxes
     \draw[data_path] (ForwardA.brpin 1) -- (ALU.blpin 1);
     \draw[data_path] (ForwardB.brpin 1) -- (ALU.blpin 2);
@@ -402,7 +409,7 @@ Loop1 & 2 & 2 & & & & & \\
 \coordinate (ImmTurn) at ($(Imm_field.east |- SHLTwo.west) + (0.4,0)$);
 \draw[data_path] (Imm_field.east) -| (ImmTurn) -- (SHLTwo.west);
 
-\ifnum#1=1
+\ifshowforwarding
     \draw[data_path] (ImmTurn |-  ForwardB.blpin 4) node[data_connector] {} -- (ForwardB.blpin 4);
 \else
     \draw[data_path] (ImmTurn |-  ImmMux.blpin 2) node[data_connector] {} -- (ImmMux.blpin 2);
@@ -412,7 +419,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (EXMEM_RtRd.east) -- node[path_label] {RegDst} (MEMWB_RtRd.west);
 \coordinate (RegDstEast) at ([xshift=5mm]MEMWB_RtRd.east);
 
-\ifnum#1=1
+\ifshowforwarding
     \coordinate (RegDstSouth) at ([yshift=-9mm]FwdUnit.south);
 \else
     \coordinate (RegDstSouth) at ([yshift=-15mm]RegDstMux.south);
@@ -430,7 +437,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[data_path] (SHLTwo.east) -- (EXPCAddr.blpin 2);
 \draw[data_path] (EXPCAddr.brpin 1) -- (EXNewPC.west);
 
-\ifnum#2=1
+\ifshowhdu
     \draw[data_path] (EXNewPC.east) -- ++(0.2,0)
         |- ([yshift=1mm, xshift=10mm]HDU.north -| PCSrcMux.brpin 1)
         |- (PCSrcMux.brpin 1);
@@ -462,7 +469,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (EXMEM.east |- ALU.brpin 3) -- ++(0.6, 0)
     |- node[control_label, near start, sloped] {} (MemAnd.bin 2);
 
-\ifnum#2=1
+\ifshowhdu
     \draw[control_path] (MemAnd.bout) -| ++(0.3, 2)
         |- node[control_label, pos=0.53, below, yshift=2mm] {PCSrc} ([yshift=2mm]PCSrcMux.btpin 1 |- HDU.north)
         -- (PCSrcMux.btpin 1);
@@ -482,7 +489,7 @@ Loop1 & 2 & 2 & & & & & \\
 
 \coordinate (WBMuxEast) at ([xshift=5mm]WBMux.east);
 
-\ifnum#1=1
+\ifshowforwarding
     \coordinate (WrDataSouth) at ([yshift=-5mm]FwdUnit.south);
 \else
     \coordinate (WrDataSouth) at ([yshift=-11mm]RegDstMux.south);
@@ -497,7 +504,7 @@ Loop1 & 2 & 2 & & & & & \\
      (RegFile.blpin 4);
 
 % Control paths
-\ifnum#2=1
+\ifshowhdu
     \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
     \draw[control_path] ([xshift=3mm]HDU_AND.bout) |- (EX1.west);
     \draw[control_path] ([xshift=3mm]HDU_AND.bout |- M1.west) node[control_connector] {}  -- (M1.west);
@@ -513,7 +520,7 @@ Loop1 & 2 & 2 & & & & & \\
 \draw[control_path] (M1.east) -- (M2.west);
 \draw[control_path] (WB2.east) -- (WB3.west);
 
-\ifnum#1=1
+\ifshowforwarding
     \coordinate (RegWriteSouth) at ([yshift=-2mm]FwdUnit.south);
 \else
     \coordinate (RegWriteSouth) at ([yshift=-7mm]RegDstMux.south);
@@ -526,7 +533,7 @@ Loop1 & 2 & 2 & & & & & \\
     -- (RegFile.blpin 5);
 
 % Hazard detection paths (only if HDU is enabled)
-\ifnum#2=1
+\ifshowhdu
     \draw[hazard_path] (HDU.brpin 3) -- ++(6mm, 0) |- (HDU_AND.bin 1);
     \draw[hazard_path] (HDU.blpin 1) -| (PC.north);
     \draw[hazard_path] (HDU.blpin 2) -| (IFID.north);
@@ -537,7 +544,7 @@ Loop1 & 2 & 2 & & & & & \\
 \fi
 
 % Forwarding paths (only if forwarding is enabled)
-\ifnum#1=1
+\ifshowforwarding
     \draw[forward_path] (FwdUnit.btpin 1) 
         |- ([yshift=-3mm]ForwardA.bbpin 1)
         -- (ForwardA.bbpin 1);
@@ -585,17 +592,17 @@ Loop1 & 2 & 2 & & & & & \\
 
 \begin{frame}{Pipeline Processor with Hazard Detection and Forwarding}
 \centering
-\pipelineprocessor{1}{1}  % Show forwarding=1, Show HDU=1
+\pipelineprocessor{true}{true}  % Show forwarding and HDU
 \end{frame}
 
 \begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
 \centering
-\pipelineprocessor{0}{1}  % Show forwarding=0, Show HDU=1
+\pipelineprocessor{false}{true}  % Show HDU only
 \end{frame}
 
 \begin{frame}{Basic Pipeline Processor}
 \centering
-\pipelineprocessor{0}{0}  % Show forwarding=0, Show HDU=0
+\pipelineprocessor{false}{false}  % Show neither forwarding nor HDU
 \end{frame}
 
 
