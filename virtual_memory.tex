@@ -821,26 +821,136 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 % Additional advanced topics
 \begin{frame}{ASID/PCID: Process Context in TLBs}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Problem:} TLB flush on context switch
 \begin{itemize}
-\item \textbf{Problem:} TLB flush on every context switch is expensive
-    \begin{itemize}
-    \item Lose all cached translations → cold TLB after switch
-    \item High miss rate until TLB warms up again
-    \end{itemize}
-\item \textbf{Solution: Address Space ID (ARM) / Process Context ID (x86)}
-    \begin{itemize}
-    \item Tag TLB entries with process identifier (12-bit PCID in x86)
-    \item Multiple processes' translations can coexist in TLB
-    \item On context switch: just change current PCID, no flush needed
-    \end{itemize}
-\item \textbf{Software impact:}
-    \begin{itemize}
-    \item OS must manage PCID allocation (limited to 4096 IDs)
-    \item Significant performance gain for frequent context switches
-    \item Critical for mitigating Meltdown patches overhead
-    \item Example: Linux KPTI uses separate PCIDs for user/kernel
-    \end{itemize}
+\item Lose all cached translations
+\item Cold TLB after switch
 \end{itemize}
+
+\textbf{Solution: Process Context ID (x86)}
+\begin{itemize}
+\item 12-bit PCID stored in CR3[11:0]
+\item Tags TLB entries with process ID
+\item Multiple processes coexist in TLB
+\end{itemize}
+
+\textbf{CR3 with PCID (CR4.PCIDE=1):}
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+    % CR3 register
+    \draw[thick] (0,0) rectangle (6,0.5);
+    \fill[blue!20] (0,0) rectangle (0.8,0.5);
+    \fill[green!20] (0.8,0) rectangle (5.2,0.5);
+    
+    % Bit positions
+    \node[above, font=\tiny] at (0,0.5) {63};
+    \node[above, font=\tiny] at (0.8,0.5) {12 11};
+    \node[above, font=\tiny] at (6,0.5) {0};
+    
+    % Labels
+    \node[font=\tiny] at (0.4,0.25) {NF};
+    \node[font=\tiny] at (3,0.25) {PML4 Base (4KB aligned)};
+    \node[font=\tiny] at (5.6,0.25) {PCID};
+    
+    % PCID breakdown
+    \draw[thick] (4.8,-0.3) rectangle (6,-0.8);
+    \foreach \i in {0,...,11} {
+        \pgfmathsetmacro\x{4.8 + \i*0.1}
+        \draw (\x,-0.3) -- (\x,-0.8);
+    }
+    \node[below, font=\tiny] at (5.4,-0.8) {12-bit PCID};
+    \draw[->] (5.4,0) -- (5.4,-0.3);
+\end{tikzpicture}
+\end{center}
+
+\textbf{Software impact:}
+\begin{itemize}
+\item OS manages 4096 PCID values
+\item Linux KPTI: separate user/kernel PCIDs
+\item Critical for Meltdown mitigation
+\end{itemize}
+\end{column}
+
+\begin{column}{0.52\textwidth}
+\textbf{TLB Entry with PCID:}
+\begin{center}
+\begin{tikzpicture}[scale=0.65]
+    % TLB structure
+    \node[font=\small, above] at (3,4.5) {TLB Set Selection};
+    
+    % Virtual address
+    \draw[thick] (0,3.5) rectangle (6,4);
+    \fill[orange!20] (0,3.5) rectangle (3.5,4);
+    \fill[yellow!20] (3.5,3.5) rectangle (4.8,4);
+    \fill[gray!20] (4.8,3.5) rectangle (6,4);
+    
+    \node[font=\tiny] at (1.75,3.75) {VPN upper bits};
+    \node[font=\tiny] at (4.15,3.75) {Set};
+    \node[font=\tiny] at (5.4,3.75) {Offset};
+    
+    % Arrow to TLB
+    \draw[->, thick] (4.15,3.5) -- (4.15,2.8);
+    \node[right, font=\tiny] at (4.3,3.15) {Selects set};
+    
+    % TLB array (4-way set associative)
+    \node[font=\small] at (3,2.5) {TLB Set};
+    \foreach \way in {0,...,3} {
+        \pgfmathsetmacro\y{2 - \way*0.5}
+        \draw[thick] (0,\y) rectangle (6,\y-0.4);
+        
+        % PCID field
+        \fill[blue!20] (0,\y) rectangle (0.8,\y-0.4);
+        % TAG field  
+        \fill[orange!20] (0.8,\y) rectangle (3.5,\y-0.4);
+        % PFN field
+        \fill[green!20] (3.5,\y) rectangle (5.5,\y-0.4);
+        % Flags
+        \fill[red!20] (5.5,\y) rectangle (6,\y-0.4);
+        
+        \node[font=\tiny] at (0.4,\y-0.2) {PCID};
+        \node[font=\tiny] at (2.15,\y-0.2) {TAG};
+        \node[font=\tiny] at (4.5,\y-0.2) {PFN};
+        \node[font=\tiny] at (5.75,\y-0.2) {V};
+        
+        \node[right, font=\tiny] at (6.1,\y-0.2) {Way \way};
+    }
+    
+    % Comparison logic
+    \draw[thick, dashed] (0,-0.5) rectangle (3.5,-1);
+    \node[font=\tiny] at (1.75,-0.75) {Compare: PCID + TAG};
+    
+    % Current PCID from CR3
+    \draw[thick] (0,-1.5) rectangle (0.8,-1.9);
+    \fill[blue!20] (0,-1.5) rectangle (0.8,-1.9);
+    \node[font=\tiny] at (0.4,-1.7) {PCID};
+    \node[right, font=\tiny] at (0.9,-1.7) {from CR3};
+    
+    % VPN tag
+    \draw[thick] (2.5,-1.5) rectangle (3.5,-1.9);
+    \fill[orange!20] (2.5,-1.5) rectangle (3.5,-1.9);
+    \node[font=\tiny] at (3,-1.7) {TAG};
+    \node[right, font=\tiny] at (3.6,-1.7) {from VA};
+    
+    % Arrows showing comparison
+    \draw[->] (0.4,-1.5) -- (0.4,-1);
+    \draw[->] (3,-1.5) -- (3,-1);
+    
+    % Hit/Miss decision
+    \node[font=\tiny] at (1.75,-2.3) {Hit if: (PCID match) AND (TAG match)};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Key points:}
+\begin{itemize}
+\item PCID is part of the tag comparison
+\item Set index uses VA bits only (not PCID)
+\item Allows same VA in TLB for different processes
+\item No flush needed on context switch
+\end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Contiguous PTE (ContPTE) - ARM Feature}
