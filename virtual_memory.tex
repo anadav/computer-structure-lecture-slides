@@ -548,12 +548,13 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{-0.1cm}
 \begin{center}
-\begin{tikzpicture}[scale=1.1,
-    box/.style={rectangle, draw, thick, minimum width=2cm, minimum height=1.2cm, text centered},
-    arrow/.style={->, thick},
-    doublearrow/.style={<->, thick}]
+\begin{tikzpicture}[
+    box/.style={rectangle, draw, thick, minimum width=1.8cm, minimum height=1cm, text centered, text width=2cm, font=\footnotesize},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    arrow/.style={->, thick, font=\scriptsize, yshift=-2mm},
+    doublearrow/.style={<->, thick, font=\scriptsize, yshift=-2mm}]
     
     % Define colors
     \definecolor{cpucolor}{RGB}{255,230,200}
@@ -562,29 +563,29 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \definecolor{memcolor}{RGB}{240,240,240}
     
     % Nodes
-    \node[box, fill=cpucolor] (cpu) at (0,0) {CPU};
-    \node[box, fill=cachecolor] (cache) at (3.5,0) {Cache};
-    \node[box, fill=memcolor, align=center] (memory) at (7,0) {Main\\Memory};
-    \node[box, fill=tlbcolor] (tlb) at (3.5,-2.5) {TLB};
+    \node[box, fill=cpucolor] (cpu) {CPU};
+    \node[box, fill=cachecolor, right=of cpu] (cache) {Cache};
+    \node[box, fill=memcolor, align=center, right=of cache] (memory) {Main Memory};
+    \node[box, fill=tlbcolor, below=3mm of cache] (tlb) {TLB};
     
     % Arrows with labels
     % CPU to Cache - bidirectional with VA going right, data going left
-    \draw[arrow] (cpu.east) -- node[above] {\small VA} (cache.west);
-    \draw[arrow] (cache.west) -- +(-0.7,0) -- +(-0.7,0.3) -- ($(cpu.east) + (0,0.3)$) -- node[above, pos=0.7] {\small data} (cpu.east |- {$(cpu.east) + (0,0.3)$});
+    %\draw[arrow] (cpu.east) -- node[above] {\small VA} (cache.west);
+    %\draw[arrow] (cache.west) -- +(-0.7,0) -- +(-0.7,0.3) -- ($(cpu.east) + (0,0.3)$) -- node[above, pos=0.7] {\small data} (cpu.east |- {$(cpu.east) + (0,0.3)$});
     
-    % Cache to Memory - bidirectional data
-    \draw[doublearrow] (cache.east) -- node[above] {\small data} (memory.west);
+    \draw[doublearrow] ([yshift=3mm]cache.west) -- node[above] {data} ([yshift=3mm]cpu.east);
     
-    % Cache to TLB - VA down
-    \draw[arrow] (cache.south) -- (tlb.north);
+    \draw[arrow] ([yshift=-3mm]cpu.east) -- node[above, near start] {VA} ([yshift=-3mm]cache.west);
     
     % TLB to Memory - PA
-    \draw[arrow] (tlb.east) -- node[above] {\small PA} (tlb.east -| memory.south) -- (memory.south);
+    \draw[arrow] (tlb.east) -- node[above] {PA} ++(0.5,0) |- ([yshift=-3mm]memory.west);
+    \draw[arrow] ([yshift=3mm]memory.west) -- node[above] {data} ([yshift=3mm]cache.east);
+    \draw[arrow] ([xshift=4mm, yshift=-3mm]cpu.east) node[data_connector] {} |- (tlb.west);
     
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.1cm}
 \begin{itemize}
 \item \textbf{Two virtual pages mapped to the same physical page}
     \begin{itemize}
