@@ -655,8 +655,8 @@ Simple instructions dominate instruction frequency
 
 % Slide 20: RISC vs CISC - Philosophy
 \begin{frame}{RISC vs CISC: Fundamental Philosophy}
-\begin{columns}
-\column{0.5\textwidth}
+\begin{columns}[T]
+\column{0.45\textwidth}
 \begin{block}{CISC}
 \textbf{Complex Instruction Set Computer}
 \begin{itemize}
@@ -665,15 +665,12 @@ Simple instructions dominate instruction frequency
     \item "Make assembly programming easier"
     \item Example: x86 (Intel, AMD)
 \end{itemize}
-\vspace{0.3cm}
-\textbf{Problem:}
-\begin{itemize}
-    \item Complex instructions slow down simple, common operations
-    \item Contradicts "\emph{Make The Common Case Fast}"
-\end{itemize}
 \end{block}
 
-\column{0.5\textwidth}
+\column{0.05\textwidth}
+% Empty column for spacing
+
+\column{0.45\textwidth}
 \begin{block}{RISC}
 \textbf{Reduced Instruction Set Computer}
 \begin{itemize}
@@ -682,14 +679,17 @@ Simple instructions dominate instruction frequency
     \item "Make hardware fast and simple"
     \item Example: ARM, RISC-V, MIPS
 \end{itemize}
-\vspace{0.3cm}
-\textbf{Benefit:}
-\begin{itemize}
-    \item Simple instructions $\Rightarrow$ fast hardware
-    \item Follows "\emph{Make The Common Case Fast}"
-\end{itemize}
 \end{block}
 \end{columns}
+
+\vspace{0.5cm}
+\begin{alertblock}{The Core Trade-off}
+\begin{itemize}
+    \item \textbf{CISC Problem:} Complex instructions slow down simple, common operations
+    \item \textbf{RISC Solution:} Simple instructions $\Rightarrow$ fast hardware
+    \item \textbf{Key Principle:} "\emph{Make The Common Case Fast}" -- simple instructions dominate
+\end{itemize}
+\end{alertblock}
 \end{frame}
 
 % Slide 21: RISC vs CISC Detailed Comparison
@@ -701,24 +701,30 @@ Simple instructions dominate instruction frequency
 \toprule
 \textbf{Aspect} & \textbf{CISC} & \textbf{RISC} \\
 \midrule
-\textbf{Instruction Set} & Large, complex & Small, simple \\
-\textbf{Instruction Length} & Variable (1-15 bytes in x86) & Fixed (e.g., 32 bits) \\
-\textbf{Addressing Modes} & Many complex modes & Few simple modes \\
+\textbf{Instruction Set} & \textcolor{red}{Large, complex} & \textcolor{mygreen}{Small, simple} \\
+\textbf{Instruction Length} & \textcolor{red}{Variable (1-15 bytes in x86)} & Fixed (e.g., 32 bits) \\
+\textbf{Addressing Modes} & \textcolor{red}{Many complex modes} & \textcolor{mygreen}{Few simple modes} \\
 \midrule
 \textbf{Memory Access} & ALU operations on memory & Load/Store architecture only \\
 & \texttt{add eax, [mem]} & Separate load, compute, store \\
 \midrule
-\textbf{Registers} & Few (8-16), non-orthogonal & Many (32+), orthogonal \\
-& Special purpose registers & General purpose registers \\
+\textbf{Registers} & \textcolor{red}{Few (8-16)}, non-orthogonal & \textcolor{mygreen}{Many (32+)}, \textcolor{mygreen}{orthogonal} \\
+& Special purpose registers & \textcolor{mygreen}{General purpose registers} \\
 \textbf{Instruction Form} & Two-address: \texttt{add dst, src} & Three-address: \texttt{add dst, src1, src2} \\
 \midrule
-\textbf{Execution Time} & Variable (1-100+ cycles) & Uniform (mostly 1 cycle) \\
-\textbf{Code Size} & Smaller (dense encoding) & Larger (simple encoding) \\
-\textbf{Compiler} & Complex, harder to optimize & Simple, easier to optimize \\
+\textbf{Execution Time} & \textcolor{red}{Variable (1-100+ cycles)} & \textcolor{mygreen}{Uniform (mostly 1 cycle)} \\
+\textbf{Code Size} & \textcolor{mygreen}{Smaller (dense encoding)} & \textcolor{red}{Larger (simple encoding)} \\
+\textbf{Compiler} & \textcolor{red}{Complex, harder to optimize} & \textcolor{mygreen}{Simple, easier to optimize} \\
+\textbf{Hardware Complexity} & \textcolor{red}{Complex control logic} & \textcolor{mygreen}{Simple control logic} \\
+\textbf{Design Time} & \textcolor{red}{Longer time-to-market} & \textcolor{mygreen}{Shorter time-to-market} \\
+\textbf{Die Space for Cache} & \textcolor{red}{Less room} & \textcolor{mygreen}{More room} \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
+\vspace{0.2cm}
+\footnotesize
+\textcolor{mygreen}{Green} = Advantage, \textcolor{red}{Red} = Disadvantage
 \end{frame}
 
 % Slide 22: Modern Processor Reality
