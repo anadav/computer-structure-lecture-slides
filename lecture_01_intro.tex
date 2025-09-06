@@ -730,31 +730,64 @@ Simple instructions dominate instruction frequency
 % Slide 22: Modern Processor Reality
 \begin{frame}{Modern Processor Reality: Convergence}
 \begin{itemize}
-    \item \textbf{Simple architecture $\Rightarrow$ Simple micro-architecture}
-    \begin{itemize}
-        \item Simple, small and fast control logic
-        \item Simpler to design and validate
-        \item Leave space for large on-die caches
-        \item Shorter time-to-market
-    \end{itemize}
-    \vspace{0.5cm}
-    \item \textbf{RISC processors are not "pure" RISC}
-    \begin{itemize}
-        \item E.g., support division which takes many cycles
-        \item Modern ARM has complex SIMD instructions
-    \end{itemize}
-    \vspace{0.5cm}
     \item \textbf{Modern CISC processors use RISC $\mu$-arch ideas}
     \begin{itemize}
         \item Internally translate CISC instructions into RISC-like micro-operations
         \item The inside core looks much like that of a RISC processor
         \item Example: Intel x86 $\rightarrow$ micro-ops (uops)
     \end{itemize}
+    \vspace{0.5cm}
+    \item \textbf{RISC processors are not "pure" RISC anymore}
+    \begin{itemize}
+        \item Support division which takes many cycles
+        \item Modern ARM has complex SIMD instructions
+        \item Some have variable-length instruction modes (ARM Thumb)
+    \end{itemize}
+    \vspace{0.5cm}
+    \item \textbf{Benefits of simple architecture remain}
+    \begin{itemize}
+        \item Simple, small and fast control logic
+        \item Simpler to design and validate
+        \item Leave space for large on-die caches
+        \item Shorter time-to-market
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+% Slide 23: Why CISC Still Has Fundamental Challenges
+\begin{frame}{Why CISC Still Has Fundamental Challenges}
+\begin{itemize}
+    \item \textbf{Variable Length Instructions remain problematic}
+    \begin{itemize}
+        \item \textcolor{red}{Difficult to decode multiple instructions in parallel}
+        \begin{itemize}
+            \item Must decode instruction to know its length
+            \item Don't know where next instruction starts until current is decoded
+        \end{itemize}
+        \item \textcolor{red}{Instructions may cross cache line or page boundaries}
+        \begin{itemize}
+            \item Requires special handling in hardware
+            \item Can cause performance penalties
+        \end{itemize}
+        \item \textcolor{red}{Complex decoder required at front-end}
+        \begin{itemize}
+            \item Takes significant die area
+            \item Consumes more power
+            \item Limits decode bandwidth
+        \end{itemize}
+    \end{itemize}
+    \vspace{0.5cm}
+    \item \textbf{RISC's fixed-length advantage}
+    \begin{itemize}
+        \item \textcolor{mygreen}{Can decode multiple instructions easily}
+        \item \textcolor{mygreen}{Instructions always aligned}
+        \item \textcolor{mygreen}{Simple decoders, higher decode bandwidth}
+    \end{itemize}
 \end{itemize}
 
 \vspace{0.3cm}
-\begin{alertblock}{Key Insight}
-Modern high-performance processors combine the best of both worlds: CISC compatibility with RISC-like internal execution
+\begin{alertblock}{Bottom Line}
+Despite convergence in execution cores, instruction encoding still matters for front-end performance
 \end{alertblock}
 \end{frame}
 
