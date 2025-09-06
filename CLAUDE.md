@@ -2,7 +2,7 @@
 
 - Remember that you cannot use linux breaks \\ inside TikZ nodes without setting align=center.
 
-- If you need to build for debug, use -interaction=nonstopmode .
+- If you need to build for debug, use -interaction=nonstopmode . Use also timeout if you run pdflatex (10 seconds).
 
 - Use relative positioning for TikZ nodes, e.g. (current page.center) or (current page.north east).
 
