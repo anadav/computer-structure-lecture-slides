@@ -139,60 +139,61 @@
 % Slide 6: MOSFET Scaling
 \begin{frame}{Moore's Law: Transistor Count Doubles Every Two Years}
 \centering
-\vspace{-0.5cm}
-% Stack the two visualizations vertically
 \begin{tikzpicture}
-    % MOSFET scaling plot on top
-    \node[anchor=north] at (0,0) {
-        \begin{tikzpicture}[scale=0.8]
-            \begin{semilogyaxis}[
-                width=0.9\textwidth,
-                height=3cm,
-                xlabel={Year},
-                ylabel={MOSFET Size (nm)},
-                ylabel style={font=\footnotesize},
-                xlabel style={font=\footnotesize},
-                xmin=1970, xmax=2025,
-                ymin=1, ymax=20000,
-                grid=major,
-                grid style={white!70},
-                tick label style={font=\scriptsize},
-                legend pos=north east,
-                legend style={font=\scriptsize, fill=white, fill opacity=0.9},
-                axis background/.style={fill=white, opacity=0.85}
-            ]
-            % MOSFET scaling data points
-            \addplot[red, very thick, mark=*, mark size=1.5pt] coordinates {
-                (1971, 10000)
-                (1974, 6000)
-                (1977, 3000)
-                (1981, 1500)
-                (1984, 1000)
-                (1987, 800)
-                (1990, 600)
-                (1993, 350)
-                (1996, 250)
-                (1999, 180)
-                (2001, 130)
-                (2003, 90)
-                (2005, 65)
-                (2007, 45)
-                (2009, 32)
-                (2012, 22)
-                (2014, 14)
-                (2016, 10)
-                (2018, 7)
-                (2020, 5)
-                (2022, 3)
-                (2025, 2)
-            };
-            \addlegendentry{MOSFET Feature Size}
-            \end{semilogyaxis}
-        \end{tikzpicture}
+    % Background: Transistor count PNG image - sized to fit frame
+    \node[anchor=center, inner sep=0] (image) at (0,0) {
+        \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{figures/Transistor-Count-over-time.png}
     };
     
-    % Transistor count image below
-    \node[anchor=north] at (0,-3.5) {\includegraphics[width=0.85\textwidth]{figures/Transistor-Count-over-time.png}};
+    % Overlay: MOSFET scaling plot on top of the image - full width
+    \begin{scope}
+        \begin{semilogyaxis}[
+            at={(image.south west)},
+            anchor=south west,
+            width=\textwidth,
+            height=0.75\textheight,
+            xlabel={Year},
+            ylabel={MOSFET Size (nm)},
+            ylabel style={font=\footnotesize, text=red!80!black},
+            xlabel style={font=\footnotesize, text=red!80!black},
+            xmin=1970, xmax=2025,
+            ymin=1, ymax=20000,
+            grid=none,
+            tick label style={font=\scriptsize, text=red!80!black},
+            legend pos=north east,
+            legend style={font=\scriptsize, fill=white, fill opacity=0.8, draw=red!80!black},
+            axis line style={red!80!black, thick},
+            tick style={red!80!black},
+            axis background/.style={fill=none}
+        ]
+        % MOSFET scaling data points
+        \addplot[red, very thick, mark=*, mark size=2pt, mark options={fill=red}] coordinates {
+            (1971, 10000)
+            (1974, 6000)
+            (1977, 3000)
+            (1981, 1500)
+            (1984, 1000)
+            (1987, 800)
+            (1990, 600)
+            (1993, 350)
+            (1996, 250)
+            (1999, 180)
+            (2001, 130)
+            (2003, 90)
+            (2005, 65)
+            (2007, 45)
+            (2009, 32)
+            (2012, 22)
+            (2014, 14)
+            (2016, 10)
+            (2018, 7)
+            (2020, 5)
+            (2022, 3)
+            (2025, 2)
+        };
+        \addlegendentry{MOSFET Feature Size}
+        \end{semilogyaxis}
+    \end{scope}
 \end{tikzpicture}
 \end{frame}
 
