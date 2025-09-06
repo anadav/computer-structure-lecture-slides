@@ -393,6 +393,76 @@ Components:
 \end{center}
 \end{frame}
 
+\begin{frame}{Virtual Memory and Cache}
+\begin{tikzpicture}[
+    node distance=3mm,
+    decision/.style={diamond, draw, fill=blue!10, text width=1cm, align=center, inner sep=1pt, minimum height=0.3cm, aspect=3, font=\tiny},
+    process/.style={rectangle, draw, fill=green!10, text width=1.5cm, align=center, minimum height=0.5cm, inner sep=2pt, font=\tiny},
+    data/.style={ellipse, draw, fill=yellow!10, text width=1cm, align=center, minimum height=0.4cm, inner sep=2pt, font=\tiny},
+    arrow/.style={->, >=stealth, thick},
+    every node/.style={font=\tiny}
+]
+
+% Top section - TLB lookup
+\node[data] (vpn) {Virtual Page Number};
+\node[decision, below=of vpn] (tlb) {TLB hit};
+\node[decision, below=of tlb] (stlb) {STLB hit};
+
+% Translation path
+\node[process, left=1cm of vpn, text width=3.5cm, minimum height=0.8cm] (pmh) {PMH injects a load to physical address PTBR+VPN$\times$PTE\_size to get the missing PTE};
+%\node[process, below=of pmh] (trans) {Get the Translation};
+\node[decision, below=of pmh] (l1) {L1\$ hit};
+\node[decision, below=of l1] (l2) {L2\$ hit};
+\node[decision, below=of l2] (l3) {L3\$ hit};
+\node[process, below=of l3] (mem1) {Access Mem};
+
+\node[data] (pfn) at ([yshift=-2mm]mem1 -| stlb) {Physical Page number};
+
+
+% Data path
+\node[process, right=2cm of vpn] (getdata) {PFN + offset};
+\node[decision, below=of getdata] (l1d) {L1\$ hit};
+\node[decision, below=of l1d] (l2d) {L2\$ hit};
+\node[decision, below=of l2d] (l3d) {L3\$ hit};
+\node[process, below=of l3d] (mem2) {Access Mem};
+\node[data, below=of mem2] (data) {Data};
+
+% Arrows
+\draw[arrow] (vpn) -- (tlb);
+\draw[arrow] (tlb) -- node[right] {No} (stlb);
+\draw[arrow] (tlb) -- ++(1,0) |- node[above] {Yes} (pfn);
+\draw[arrow] (stlb.west) -- ++(-0.5, 0) |- node[right] {No} (pmh.east);
+\draw[arrow] (stlb.south) -- node[right] {Yes} (pfn);
+%\draw[arrow] (pmh) -- (l1);
+\draw[arrow] (l1) -- node[right] {No} (l2);
+\draw[arrow] (l2) -- node[right] {No} (l3);
+\draw[arrow] (l3) -- node[right] {No} (mem1);
+\draw[arrow] (l1.east) -- node[above] {Yes} ++(1,0) |- (pfn);
+\draw[arrow] (l2.east) -- node[above] {Yes} ++(1,0) |- (pfn);
+\draw[arrow] (l3.east) -- node[above] {Yes} ++(1,0) |- (pfn);
+\draw[arrow] (mem1) -- (pfn);
+%\draw[arrow] (pmh) |- (getdata);
+%\draw[arrow] (pfn) |- node[near end, above] {PFN offset} (getdata);
+\draw[arrow] (getdata) -- (l1d);
+\draw[arrow] (l1d) -- node[right] {No} (l2d);
+\draw[arrow] (l2d) -- node[right] {No} (l3d);
+\draw[arrow] (l3d) -- node[right] {No} (mem2);
+\draw[arrow] (l1d.east) -- node[above] {Yes} ++(1,0) |- (data);
+\draw[arrow] (l2d.east) -- node[above] {Yes} ++(1,0) |- (data);
+\draw[arrow] (l3d.east) -- node[above] {Yes} ++(1,0) |- (data);
+\draw[arrow] (mem2.south) -- (data);
+
+\end{tikzpicture}
+
+\footnotesize
+\begin{itemize}
+\item Page table entries are cached in L1 D\$, L2\$ and L3\$ as data
+\item If the injected load misses in a cache $\Rightarrow$ perform a cache line fill $\Rightarrow$ all PTEs in the missed cached line are brought into the cache
+\item Only the specific missed PTE is filled into the STLB and TLB
+\end{itemize}
+\end{frame}
+
+
 \begin{frame}{Virtual Memory And Cache}
 \begin{itemize}
 \item Page table entries are cached in L1 D\$, L2\$ and L3\$ as data
@@ -788,9 +858,117 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{frame}
 
 \begin{frame}{PMH: Page Walk Flowchart}
-\begin{center}
-[Complex flowchart showing page walk process with TLB hit, STLB hit, and various cache lookups]
-\end{center}
+\begin{tikzpicture}[
+    scale=0.65, transform shape,
+    node distance=1cm,
+    decision/.style={diamond, draw, fill=blue!10, text width=1.8cm, align=center, inner sep=0pt, minimum height=1.2cm},
+    process/.style={rectangle, draw, fill=green!10, text width=2.5cm, align=center, minimum height=0.6cm, font=\footnotesize},
+    data/.style={rectangle, draw, fill=yellow!10, text width=1.8cm, align=center, minimum height=0.5cm},
+    arrow/.style={->, >=stealth, thick},
+    every node/.style={font=\small}
+]
+
+% Start
+\node[data] (va) {VA[47:12]};
+\node[decision, below=0.8cm of va] (tlb) {TLB hit};
+\node[decision, below=0.6cm of tlb] (stlb) {STLB hit};
+\node[data, right=7cm of stlb] (pte) {PTE};
+
+% PML4 level
+\node[decision, below=0.8cm of stlb] (pml4c) {PML4\$ hit};
+\node[process, left=2.5cm of pml4c, text width=2.8cm] (pml4load) {inject load to PML4 base + VA[47:39]×8 to get PML4 entry};
+\node[data, above=0.3cm of pml4load] (cr3) {CR3\\PML4 base};
+\node[decision, below=0.6cm of pml4load] (pml4l1) {L1\$ hit};
+\node[decision, below=0.4cm of pml4l1] (pml4l2) {L2\$ hit};
+\node[decision, below=0.4cm of pml4l2] (pml4l3) {L3\$ hit};
+\node[process, below=0.4cm of pml4l3] (pml4mem) {Memory};
+\node[data, right=1cm of pml4c] (pml4e) {PML4 entry};
+
+% PDP level
+\node[decision, below=0.8cm of pml4c] (pdpc) {PDP\$ hit};
+\node[process, left=2.5cm of pdpc, text width=2.8cm] (pdpload) {inject load to PDP base + VA[38:30]×8 to get PDP entry};
+\node[data, above=0.3cm of pdpload] (pdpbase) {PDP base\\VA[47:39]};
+\node[decision, below=0.6cm of pdpload] (pdpl1) {L1\$ hit};
+\node[decision, below=0.4cm of pdpl1] (pdpl2) {L2\$ hit};
+\node[decision, below=0.4cm of pdpl2] (pdpl3) {L3\$ hit};
+\node[process, below=0.4cm of pdpl3] (pdpmem) {Memory};
+\node[data, right=1cm of pdpc] (pdpe) {PDP entry};
+
+% PDE level
+\node[decision, below=0.8cm of pdpc] (pdec) {PDE\$ hit};
+\node[process, left=2.5cm of pdec, text width=2.8cm] (pdeload) {inject load to PDE base + VA[29:21]×8 to get PDE};
+\node[data, above=0.3cm of pdeload] (pdebase) {PDE base\\VA[47:30]};
+\node[decision, below=0.6cm of pdeload] (pdel1) {L1\$ hit};
+\node[decision, below=0.4cm of pdel1] (pdel2) {L2\$ hit};
+\node[decision, below=0.4cm of pdel2] (pdel3) {L3\$ hit};
+\node[process, below=0.4cm of pdel3] (pdemem) {Memory};
+\node[data, right=1cm of pdec] (pdee) {PDE\\VA[47:21]};
+
+% PT level
+\node[process, below=1cm of pdec, text width=2.8cm] (ptload) {inject load to PT base + VA[20:12]×8 to get PTE};
+\node[data, left=0.3cm of ptload] (ptbase) {PT base};
+\node[decision, below=0.6cm of ptload] (ptl1) {L1\$ hit};
+\node[decision, below=0.4cm of ptl1] (ptl2) {L2\$ hit};
+\node[decision, below=0.4cm of ptl2] (ptl3) {L3\$ hit};
+\node[process, below=0.4cm of ptl3] (ptmem) {Memory};
+
+% Arrows
+\draw[arrow] (va) -- (tlb);
+\draw[arrow] (tlb) -- node[right] {No} (stlb);
+\draw[arrow] (tlb.east) -- node[above] {Yes} ++(1,0) |- (pte);
+\draw[arrow] (stlb.east) -- node[above] {Yes} ++(0.8,0) |- (pte);
+\draw[arrow] (stlb) -- node[right] {No} (pml4c);
+
+% PML4 arrows
+\draw[arrow] (pml4c) -- node[above] {No} (pml4load);
+\draw[arrow] (cr3) -- (pml4load);
+\draw[arrow] (pml4load) -- (pml4l1);
+\draw[arrow] (pml4l1) -- node[right] {No} (pml4l2);
+\draw[arrow] (pml4l2) -- node[right] {No} (pml4l3);
+\draw[arrow] (pml4l3) -- node[right] {No} (pml4mem);
+\draw[arrow] (pml4c) -- node[above] {Yes} (pml4e);
+\draw[arrow] (pml4e) -- (pdpc);
+\foreach \x in {pml4l1,pml4l2,pml4l3,pml4mem} {
+    \draw[arrow] (\x.east) -| ([xshift=0.5cm]\x.east |- pml4e) -- (pml4e);
+}
+
+% PDP arrows
+\draw[arrow] (pdpc) -- node[above] {No} (pdpload);
+\draw[arrow] (pdpbase) -- (pdpload);
+\draw[arrow] (pdpload) -- (pdpl1);
+\draw[arrow] (pdpl1) -- node[right] {No} (pdpl2);
+\draw[arrow] (pdpl2) -- node[right] {No} (pdpl3);
+\draw[arrow] (pdpl3) -- node[right] {No} (pdpmem);
+\draw[arrow] (pdpc) -- node[above] {Yes} (pdpe);
+\draw[arrow] (pdpe) -- (pdec);
+\foreach \x in {pdpl1,pdpl2,pdpl3,pdpmem} {
+    \draw[arrow] (\x.east) -| ([xshift=0.5cm]\x.east |- pdpe) -- (pdpe);
+}
+
+% PDE arrows
+\draw[arrow] (pdec) -- node[above] {No} (pdeload);
+\draw[arrow] (pdebase) -- (pdeload);
+\draw[arrow] (pdeload) -- (pdel1);
+\draw[arrow] (pdel1) -- node[right] {No} (pdel2);
+\draw[arrow] (pdel2) -- node[right] {No} (pdel3);
+\draw[arrow] (pdel3) -- node[right] {No} (pdemem);
+\draw[arrow] (pdec) -- node[above] {Yes} (pdee);
+\draw[arrow] (pdee) -- (ptload);
+\foreach \x in {pdel1,pdel2,pdel3,pdemem} {
+    \draw[arrow] (\x.east) -| ([xshift=0.5cm]\x.east |- pdee) -- (pdee);
+}
+
+% PT arrows
+\draw[arrow] (ptbase) -- (ptload);
+\draw[arrow] (ptload) -- (ptl1);
+\draw[arrow] (ptl1) -- node[right] {No} (ptl2);
+\draw[arrow] (ptl2) -- node[right] {No} (ptl3);
+\draw[arrow] (ptl3) -- node[right] {No} (ptmem);
+\foreach \x in {ptl1,ptl2,ptl3,ptmem} {
+    \draw[arrow] (\x.east) -| ++(3,0) |- (pte);
+}
+
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Translation Page Not Present}
