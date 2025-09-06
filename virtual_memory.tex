@@ -347,19 +347,20 @@ Components:
 
 \begin{column}{0.43\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.75,
-    box/.style={rectangle, draw, thick, minimum width=2.5cm, minimum height=0.7cm, text centered},
-    decision/.style={diamond, draw, thick, minimum width=1.8cm, minimum height=1.2cm, text centered},
-    oval/.style={ellipse, draw, thick, minimum width=2.2cm, minimum height=0.8cm, text centered},
+\begin{tikzpicture}[
+    node distance=3mm,
+    box/.style={rectangle, draw, thick, minimum width=1cm, minimum height=0.7cm, text centered, font=\tiny},
+    decision/.style={diamond, draw, thick, minimum width=1.8cm, minimum height=1cm, text centered, font=\tiny},
+    oval/.style={ellipse, draw, thick, minimum width=1cm, minimum height=0.8cm, text centered, font=\tiny},
     arrow/.style={->, thick}]
     \tiny
     % Nodes
-    \node[oval, align=center] (va) at (0,6) {Virtual\\[-2pt] Address};
-    \node[box, align=center] (tlb) at (0,4.5) {\tiny TLB\\[-2pt] Access};
-    \node[decision] (hit) at (0,2.8) {\tiny TLB Hit ?};
-    \node[box, fill=yellow!10, align=center] (pmh) at (-2.5,0.8) {\tiny PMH gets PTE\\[-2pt] from Page Table\\[-2pt] in memory};
-    \node[box, align=center] (insert) at (0,-0.8) {\tiny Insert PTE into\\[-2pt] TLB (may need\\[-2pt] a victim)};
-    \node[oval, align=center] (pa) at (2.5,0.8) {\tiny Physical\\[-2pt] Addresses};
+    \node[oval, align=center] (va) at {Virtual Address};
+    \node[box, align=center, below=of va] (tlb) {TLB Access};
+    \node[decision, below=of tlb] (hit) at (0,2.8) {TLB Hit?};
+    \node[box, fill=yellow!10, align=center, left=of hit, text width=1.5cm] (pmh) {PMH gets PTE from Page Table in memory};
+    \node[box, align=center, below=of pmh] (insert) {Insert PTE into TLB (may need a victim)};
+    \node[oval, align=center,below=of hit] (pa) at (2.5,0.8) {Physical Addresses};
     
     % Arrows
     \draw[arrow] (va) -- (tlb);
