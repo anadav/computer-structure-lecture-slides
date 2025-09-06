@@ -653,54 +653,103 @@ Simple instructions dominate instruction frequency
 \end{alertblock}
 \end{frame}
 
-% Slide 20: RISC Processors
-\begin{frame}{RISC Processors}
+% Slide 20: RISC vs CISC - Philosophy
+\begin{frame}{RISC vs CISC: Fundamental Philosophy}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{block}{CISC}
+\textbf{Complex Instruction Set Computer}
 \begin{itemize}
-    \item \textbf{RISC -- Reduced Instruction Set Computer}
-    \begin{itemize}
-        \item Simple instructions enable fast hardware: make the common case fast
-        \item Example: ARM
-    \end{itemize}
-    \item \textbf{Characteristics}
-    \begin{itemize}
-        \item A small instruction set, with few instruction formats
-        \item Simple instructions that execute simple tasks, most of them single-cycle (with pipeline)
-        \item A few addressing methods, with ALU operations on registers only
-        \begin{itemize}
-            \item Memory is accessed using Load and Store instructions only
-        \end{itemize}
-        \item Many orthogonal registers -- all instructions available with all registers
-        \item Three address machine: \quad \texttt{add dst, src1, src2}
-        \item Fixed length instructions
-        \item Compiler friendly -- easier to utilize the ISA: orthogonal, simple
-    \end{itemize}
+    \item High-level machine language
+    \item Single instruction does a lot of work
+    \item "Make assembly programming easier"
+    \item Example: x86 (Intel, AMD)
 \end{itemize}
+\vspace{0.3cm}
+\textbf{Problem:}
+\begin{itemize}
+    \item Complex instructions slow down simple, common operations
+    \item Contradicts "\emph{Make The Common Case Fast}"
+\end{itemize}
+\end{block}
+
+\column{0.5\textwidth}
+\begin{block}{RISC}
+\textbf{Reduced Instruction Set Computer}
+\begin{itemize}
+    \item Simple, uniform instructions
+    \item Each instruction does one thing
+    \item "Make hardware fast and simple"
+    \item Example: ARM, RISC-V, MIPS
+\end{itemize}
+\vspace{0.3cm}
+\textbf{Benefit:}
+\begin{itemize}
+    \item Simple instructions $\Rightarrow$ fast hardware
+    \item Follows "\emph{Make The Common Case Fast}"
+\end{itemize}
+\end{block}
+\end{columns}
 \end{frame}
 
-% Slide 21: RISC Processors (Cont.)
-\begin{frame}{RISC Processors (Cont.)}
+% Slide 21: RISC vs CISC Detailed Comparison
+\begin{frame}{RISC vs CISC: Detailed Comparison}
+\centering
+\begin{table}
+\resizebox{0.95\textwidth}{!}{%
+\begin{tabular}{l|l|l}
+\toprule
+\textbf{Aspect} & \textbf{CISC} & \textbf{RISC} \\
+\midrule
+\textbf{Instruction Set} & Large, complex & Small, simple \\
+\textbf{Instruction Length} & Variable (1-15 bytes in x86) & Fixed (e.g., 32 bits) \\
+\textbf{Addressing Modes} & Many complex modes & Few simple modes \\
+\midrule
+\textbf{Memory Access} & ALU operations on memory & Load/Store architecture only \\
+& \texttt{add eax, [mem]} & Separate load, compute, store \\
+\midrule
+\textbf{Registers} & Few (8-16), non-orthogonal & Many (32+), orthogonal \\
+& Special purpose registers & General purpose registers \\
+\textbf{Instruction Form} & Two-address: \texttt{add dst, src} & Three-address: \texttt{add dst, src1, src2} \\
+\midrule
+\textbf{Execution Time} & Variable (1-100+ cycles) & Uniform (mostly 1 cycle) \\
+\textbf{Code Size} & Smaller (dense encoding) & Larger (simple encoding) \\
+\textbf{Compiler} & Complex, harder to optimize & Simple, easier to optimize \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+\end{frame}
+
+% Slide 22: Modern Processor Reality
+\begin{frame}{Modern Processor Reality: Convergence}
 \begin{itemize}
     \item \textbf{Simple architecture $\Rightarrow$ Simple micro-architecture}
     \begin{itemize}
         \item Simple, small and fast control logic
         \item Simpler to design and validate
-        \item Leave space for large on die caches
+        \item Leave space for large on-die caches
         \item Shorter time-to-market
     \end{itemize}
-    \vspace{0.3cm}
-    \item \textbf{Existing RISC processor are not ``pure'' RISC}
+    \vspace{0.5cm}
+    \item \textbf{RISC processors are not "pure" RISC}
     \begin{itemize}
         \item E.g., support division which takes many cycles
+        \item Modern ARM has complex SIMD instructions
     \end{itemize}
-    \vspace{0.3cm}
+    \vspace{0.5cm}
     \item \textbf{Modern CISC processors use RISC $\mu$-arch ideas}
     \begin{itemize}
-        \item Internally translate the CISC instructions into RISC-like operations
-        \begin{itemize}
-            \item the inside core looks much like that of a RISC processor
-        \end{itemize}
+        \item Internally translate CISC instructions into RISC-like micro-operations
+        \item The inside core looks much like that of a RISC processor
+        \item Example: Intel x86 $\rightarrow$ micro-ops (uops)
     \end{itemize}
 \end{itemize}
+
+\vspace{0.3cm}
+\begin{alertblock}{Key Insight}
+Modern high-performance processors combine the best of both worlds: CISC compatibility with RISC-like internal execution
+\end{alertblock}
 \end{frame}
 
 \end{document}
