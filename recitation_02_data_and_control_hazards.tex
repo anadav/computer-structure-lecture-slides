@@ -233,13 +233,14 @@ Loop1 & 2 & 2 & & & & & \\
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {write\\data};
 \node[align=left, xshift=3mm, font=\tiny, text=orange] at (RegFile.blpin 5) {write\\enable};
 % Create coordinates for RegFile outputs with y-shifts
-\coordinate (RegFile_out1) at ([yshift=-2mm]RegFile.brpin 1);
 \coordinate (RegFile_out2) at ([yshift=1mm]RegFile.brpin 2);
-\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out1) {read\\data 1};
-\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out2) {read\\data 2};
 
 % Control Unit
+\ifshowhdu
 \node[control_block, above=3mm of RegFile.btpin 1, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
+\else
+\node[control_block, inner sep=1pt] (Control) at (RegFile.btpin 1 |- M1) {\rotatebox{90}{Control}};
+\fi
 
 \ifshowhdu
     % Hazard Detection Unit
@@ -253,19 +254,24 @@ Loop1 & 2 & 2 & & & & & \\
 % EX Stage Components
 \ifshowforwarding
     % With forwarding - use mux3 for ForwardA and mux4 for ForwardB
+    \coordinate (RegFile_out1) at ([yshift=-2mm]RegFile.brpin 1);
     \node[mux3, fill=orange!20, anchor=blpin 1] (ForwardA) at ([xshift=15mm]IDEX.east |- RegFile_out1) {};
     \node[mux4, fill=orange!20, anchor=blpin 1] (ForwardB) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
+% ALU
+    \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
 \else
     % Without forwarding - use simple mux2 only for immediate
     \node[mux2, fill=cyan!20, anchor=blpin 1] (ImmMux) at ([xshift=11mm]IDEX.east |- RegFile_out2) {};
+% ALU
+    \node[alu_style, anchor=blpin 2] (ALU) at ([xshift=25mm]IDEX.east |- ImmMux.brpin 1) {};
+    \coordinate (RegFile_out1) at (RegFile.brpin 1 |- ALU.blpin 1);
 \fi
 
-% ALU
-\ifshowforwarding
-    \node[alu_style, right=5mm of ForwardA.brpin 1, anchor=blpin 1] (ALU) {};
-\else
-    \node[alu_style, anchor=blpin 2] (ALU) at ([xshift=25mm]IDEX.east |- ImmMux.brpin 1) {};
-\fi
+% Labels for register file outputs is here because of dependency
+\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out1) {read\\data 1};
+\node[align=left, xshift=-3.5mm, font=\tiny] at (RegFile_out2) {read\\data 2};
+
+
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 \node[font=\tiny, left=-1mm of ALU.brpin 3, align=right] {zero};
 \node[font=\tiny, left=-1mm of ALU.brpin 4, align=right] {res};
@@ -443,7 +449,6 @@ Loop1 & 2 & 2 & & & & & \\
         |- (PCSrcMux.brpin 1);
 \else
     \draw[data_path] (EXNewPC.east) -- ++(0.2,0)
-        |- ([yshift=12mm]PCSrcMux.brpin 1)
         |- (PCSrcMux.brpin 1);
 \fi
 
@@ -505,13 +510,13 @@ Loop1 & 2 & 2 & & & & & \\
 
 % Control paths
 \ifshowhdu
-    \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) |- (WB1.west);
+    \draw[control_path] (HDU_AND.bout) -- ++(0.3, 0) node[control_connector] {} |- (WB1.west);
     \draw[control_path] ([xshift=3mm]HDU_AND.bout) |- (EX1.west);
     \draw[control_path] ([xshift=3mm]HDU_AND.bout |- M1.west) node[control_connector] {}  -- (M1.west);
     \draw[control_path] (Control.east) -- (HDU_AND.bin 2);
 \else
     \draw[control_path] (Control.east) -- ++(5mm, 0) |- (WB1.west);
-    \draw[control_path] ([xshift=5mm]Control.east |- EX1.west) node[control_connector] {} -- (EX1.west);
+    \draw[control_path] ([xshift=5mm]Control.east) node[control_connector] {} |- (EX1.west);
     \draw[control_path] ([xshift=5mm]Control.east |- M1.west) node[control_connector] {} -- (M1.west);
 \fi
 
