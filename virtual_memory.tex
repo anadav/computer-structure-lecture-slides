@@ -819,6 +819,221 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{center}
 \end{frame}
 
+% Additional advanced topics
+\begin{frame}{ASID/PCID: Process Context in TLBs}
+\begin{itemize}
+\item \textbf{Problem:} TLB flush on every context switch is expensive
+    \begin{itemize}
+    \item Lose all cached translations → cold TLB after switch
+    \item High miss rate until TLB warms up again
+    \end{itemize}
+\item \textbf{Solution: Address Space ID (ARM) / Process Context ID (x86)}
+    \begin{itemize}
+    \item Tag TLB entries with process identifier (12-bit PCID in x86)
+    \item Multiple processes' translations can coexist in TLB
+    \item On context switch: just change current PCID, no flush needed
+    \end{itemize}
+\item \textbf{Software impact:}
+    \begin{itemize}
+    \item OS must manage PCID allocation (limited to 4096 IDs)
+    \item Significant performance gain for frequent context switches
+    \item Critical for mitigating Meltdown patches overhead
+    \item Example: Linux KPTI uses separate PCIDs for user/kernel
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Contiguous PTE (ContPTE) - ARM Feature}
+\begin{itemize}
+\item \textbf{Problem:} One TLB entry per 4KB page is inefficient
+    \begin{itemize}
+    \item Large memory regions need many TLB entries
+    \item Not all workloads can use huge pages (2MB/1GB)
+    \end{itemize}
+\item \textbf{ContPTE: Hardware coalescing of adjacent PTEs}
+    \begin{itemize}
+    \item Mark 16 consecutive 4KB PTEs as "contiguous" (64KB total)
+    \item Hardware can cache as single TLB entry
+    \item Intermediate size between 4KB and 2MB pages
+    \end{itemize}
+\item \textbf{Software requirements:}
+    \begin{itemize}
+    \item All 16 pages must be physically contiguous
+    \item Same permissions and attributes for all pages
+    \item OS must set contiguous bit in all 16 PTEs
+    \end{itemize}
+\item \textbf{Use cases:}
+    \begin{itemize}
+    \item Database buffer pools, JVM heap regions
+    \item Memory-mapped files with natural 64KB alignment
+    \item Transparent Huge Pages when 2MB allocation fails
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{TLB Shootdown: Maintaining Coherency}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{Problem: TLB coherency across cores}
+\begin{itemize}
+\item CPU 0 unmaps a page
+\item CPU 1's TLB still has old mapping
+\item Can access freed/reused memory!
+\end{itemize}
+
+\textbf{Classic TLB Shootdown (IPI-based):}
+\begin{enumerate}
+\item Initiator updates page table
+\item Send Inter-Processor Interrupt to all CPUs
+\item Each CPU invalidates TLB entry
+\item Wait for all acknowledgments
+\item Continue execution
+\end{enumerate}
+
+\textbf{Performance impact:}
+\begin{itemize}
+\item Synchronous operation - initiator waits
+\item IPIs interrupt all CPUs
+\item Scales poorly with core count
+\end{itemize}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % CPU cores
+    \foreach \i in {0,1,2,3} {
+        \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.8cm, fill=blue!20] 
+            (cpu\i) at ({mod(\i,2)*2}, {-floor(\i/2)*1.5}) {CPU \i};
+        \node[rectangle, draw, minimum width=1cm, minimum height=0.4cm, fill=yellow!30] 
+            (tlb\i) at ({mod(\i,2)*2}, {-floor(\i/2)*1.5-0.8}) {\tiny TLB};
+    }
+    
+    % IPI arrows from CPU 0
+    \draw[->, thick, red] (cpu0) -- node[above, sloped] {\tiny IPI} (cpu1);
+    \draw[->, thick, red] (cpu0) |- node[near end, above] {\tiny IPI} (cpu2);
+    \draw[->, thick, red] (cpu0) |- node[pos=0.3, above] {\tiny IPI} (cpu3);
+    
+    % ACK arrows back
+    \draw[->, dashed, green!60!black] (cpu1) -- node[below, sloped] {\tiny ACK} (cpu0);
+    \draw[->, dashed, green!60!black] (cpu2) -| node[near start, below] {\tiny ACK} (cpu0);
+    \draw[->, dashed, green!60!black] (cpu3) -| node[pos=0.7, below] {\tiny ACK} (cpu0);
+    
+    \node[above] at (1, 0.5) {\small TLB Shootdown};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Software workarounds:}
+\begin{itemize}
+\item Batch multiple invalidations
+\item Lazy TLB mode for idle CPUs
+\item Per-CPU page tables (KPTI)
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Modern TLB Invalidation: Broadcast Instructions}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{INVLPGB (AMD) / TLBSYNC:}
+\begin{itemize}
+\item Broadcast invalidation without IPIs
+\item Hardware handles coherency protocol
+\item Non-blocking for initiator
+\end{itemize}
+
+\textbf{How it works:}
+\begin{enumerate}
+\item Execute INVLPGB with address range
+\item Hardware broadcasts to all cores
+\item TLBSYNC waits for completion
+\item Can continue other work between INVLPGB and TLBSYNC
+\end{enumerate}
+
+\textbf{ARM: TLBI with broadcast}
+\begin{itemize}
+\item TLBI instructions with Inner Shareable scope
+\item Automatic broadcast to all cores in domain
+\item No software IPIs needed
+\end{itemize}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Memory controller/interconnect
+    \node[rectangle, draw, thick, minimum width=3cm, minimum height=0.6cm, fill=gray!30] 
+        (interconnect) at (1, 0.5) {Interconnect};
+    
+    % CPU cores
+    \foreach \i in {0,1,2,3} {
+        \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.8cm, fill=blue!20] 
+            (cpu\i) at ({mod(\i,2)*2}, {-floor(\i/2)*1.5-1.5}) {CPU \i};
+        \node[rectangle, draw, minimum width=1cm, minimum height=0.4cm, fill=yellow!30] 
+            (tlb\i) at ({mod(\i,2)*2}, {-floor(\i/2)*1.5-2.3}) {\tiny TLB};
+        
+        % Hardware broadcast lines
+        \draw[<->, thick, orange] (cpu\i) -- (interconnect);
+    }
+    
+    % Broadcast indication
+    \node[above] at (1, 1) {\small Hardware Broadcast};
+    \node[text=orange, below] at (1, -0.2) {\tiny INVLPGB};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Software benefits:}
+\begin{itemize}
+\item No IPI overhead
+\item Better scalability with core count
+\item Asynchronous operation possible
+\item Lower latency for munmap(), mprotect()
+\end{itemize}
+
+\textbf{When you see the impact:}
+\begin{itemize}
+\item JVM garbage collectors (unmapping large heaps)
+\item Database buffer pool resizing
+\item Container memory limits changes
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Software Impact: When These Features Matter}
+\begin{itemize}
+\item \textbf{PCID/ASID helps when:}
+    \begin{itemize}
+    \item Many short-lived processes (web servers, shell scripts)
+    \item Frequent system calls with KPTI/Meltdown mitigation
+    \item Container workloads with namespace switches
+    \end{itemize}
+    
+\item \textbf{ContPTE/THP benefits:}
+    \begin{itemize}
+    \item Large memory allocations (databases, scientific computing)
+    \item Better than nothing when huge pages fragment
+    \item mmap() with MAP\_POPULATE for large files
+    \end{itemize}
+    
+\item \textbf{TLB shootdown overhead visible in:}
+    \begin{itemize}
+    \item fork()/exit() in multithreaded programs
+    \item Memory-mapped file operations across threads
+    \item Dynamic memory allocators (malloc/free of large chunks)
+    \item Live migration of VMs
+    \end{itemize}
+    
+\item \textbf{Performance monitoring:}
+    \begin{itemize}
+    \item \texttt{perf stat -e tlb:tlb\_flush} - count TLB flushes
+    \item \texttt{/proc/interrupts} - look for TLB shootdown IPIs
+    \item High system CPU time often indicates TLB management overhead
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
 % Backup slides section
 \section{Backup}
 
