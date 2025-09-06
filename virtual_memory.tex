@@ -998,31 +998,185 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{frame}
 
 \begin{frame}{Contiguous PTE (ContPTE) - ARM Feature}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\textbf{Problem:} TLB pressure
 \begin{itemize}
-\item \textbf{Problem:} One TLB entry per 4KB page is inefficient
-    \begin{itemize}
-    \item Large memory regions need many TLB entries
-    \item Not all workloads can use huge pages (2MB/1GB)
-    \end{itemize}
-\item \textbf{ContPTE: Hardware coalescing of adjacent PTEs}
-    \begin{itemize}
-    \item Mark 16 consecutive 4KB PTEs as "contiguous" (64KB total)
-    \item Hardware can cache as single TLB entry
-    \item Intermediate size between 4KB and 2MB pages
-    \end{itemize}
-\item \textbf{Software requirements:}
-    \begin{itemize}
-    \item All 16 pages must be physically contiguous
-    \item Same permissions and attributes for all pages
-    \item OS must set contiguous bit in all 16 PTEs
-    \end{itemize}
-\item \textbf{Use cases:}
-    \begin{itemize}
-    \item Database buffer pools, JVM heap regions
-    \item Memory-mapped files with natural 64KB alignment
-    \item Transparent Huge Pages when 2MB allocation fails
-    \end{itemize}
+\item One TLB entry per 4KB page
+\item Large regions → many TLB entries
+\item 2MB pages often too large
 \end{itemize}
+
+\textbf{ContPTE Solution:}
+\begin{itemize}
+\item 16 consecutive PTEs marked "contiguous"
+\item Maps 64KB (16 × 4KB)
+\item Hardware coalesces into single TLB entry
+\end{itemize}
+
+\textbf{Requirements:}
+\begin{itemize}
+\item Physical pages must be contiguous
+\item Same permissions for all 16 pages
+\item Contiguous bit set in all 16 PTEs
+\end{itemize}
+
+\textbf{Benefits:}
+\begin{itemize}
+\item 16× TLB reach improvement
+\item No page table format changes
+\item Transparent to applications
+\end{itemize}
+\end{column}
+
+\begin{column}{0.55\textwidth}
+\textbf{Page Table with ContPTE:}
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    % Page table entries
+    \node[font=\small] at (2.5,4.5) {Page Table (showing 20 PTEs)};
+    
+    % Draw individual PTEs
+    \foreach \i in {0,...,3} {
+        \pgfmathsetmacro\y{4 - \i*0.35}
+        \draw[thick] (0,\y) rectangle (5,\y-0.3);
+        \fill[gray!20] (0,\y) rectangle (5,\y-0.3);
+        \node[font=\tiny] at (0.3,\y-0.15) {PTE\i};
+        \node[font=\tiny] at (2.5,\y-0.15) {Regular 4KB page};
+    }
+    
+    % Contiguous block (16 entries)
+    \draw[thick, red, line width=1.5pt] (-0.1,2.5) rectangle (5.1,0.1);
+    \foreach \i in {0,...,15} {
+        \pgfmathsetmacro\idx{int(\i + 4)}
+        \pgfmathsetmacro\y{2.4 - \i*0.15}
+        \draw[thick] (0,\y) rectangle (5,\y-0.14);
+        \fill[yellow!30] (0,\y) rectangle (5,\y-0.14);
+        
+        % Contiguous bit
+        \fill[red!40] (4.5,\y) rectangle (5,\y-0.14);
+        \node[font=\tiny] at (4.75,\y-0.07) {C};
+        
+        \node[font=\tiny] at (0.3,\y-0.07) {PTE\idx};
+        \pgfmathsetmacro\offset{int(\i * 4)}
+        \node[font=\tiny] at (2.5,\y-0.07) {Offset +\offset KB};
+    }
+    
+    % Label for contiguous block
+    \node[right, font=\small, red] at (5.2,1.25) {64KB};
+    \node[right, font=\tiny, red] at (5.2,0.95) {Contiguous};
+    \node[right, font=\tiny, red] at (5.2,0.65) {Block};
+    
+    % Arrow showing coalescing
+    \draw[->, thick, blue] (5.5,1.25) -- (6.5,1.25);
+    
+    % TLB representation
+    \draw[thick] (7,-0.5) rectangle (10,3);
+    \node[font=\small] at (8.5,2.7) {TLB};
+    
+    % Regular entries
+    \foreach \i in {0,1,2} {
+        \pgfmathsetmacro\y{2.3 - \i*0.4}
+        \draw[thick] (7.1,\y) rectangle (9.9,\y-0.35);
+        \fill[gray!20] (7.1,\y) rectangle (9.9,\y-0.35);
+        \node[font=\tiny] at (8.5,\y-0.175) {4KB page};
+    }
+    
+    % Coalesced entry
+    \draw[thick, line width=1.5pt] (7.1,0.5) rectangle (9.9,0);
+    \fill[yellow!30] (7.1,0.5) rectangle (9.9,0);
+    \node[font=\small] at (8.5,0.25) {64KB (coalesced)};
+    
+    % Annotation
+    \node[below, font=\tiny, align=center] at (8.5,-0.7) {1 TLB entry\\covers 16 pages};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{ContPTE: TLB Lookup Mechanism}
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Virtual Address
+    \draw[thick] (0,6) rectangle (8,6.6);
+    \node[above, font=\small] at (4,6.6) {Virtual Address (48-bit)};
+    
+    % VA fields
+    \fill[blue!20] (0,6) rectangle (3,6.6);
+    \fill[orange!20] (3,6) rectangle (5.5,6.6);
+    \fill[yellow!20] (5.5,6) rectangle (6.5,6.6);
+    \fill[gray!20] (6.5,6) rectangle (8,6.6);
+    
+    \node[font=\tiny] at (1.5,6.3) {Upper bits};
+    \node[font=\tiny] at (4.25,6.3) {VPN[15:4]};
+    \node[font=\tiny] at (6,6.3) {VPN[3:0]};
+    \node[font=\tiny] at (7.25,6.3) {Offset};
+    
+    % Bit positions
+    \node[below, font=\tiny] at (0,6) {47};
+    \node[below, font=\tiny] at (5.5,6) {16};
+    \node[below, font=\tiny] at (6.5,6) {12};
+    \node[below, font=\tiny] at (8,6) {0};
+    
+    % TLB lookup paths
+    \node[font=\small] at (4,5.2) {TLB Lookup Logic};
+    
+    % Regular 4KB lookup
+    \draw[thick] (0.5,4.8) rectangle (3.5,3.8);
+    \node[font=\small] at (2,4.5) {Regular 4KB};
+    \node[font=\tiny] at (2,4.2) {Match full VPN};
+    \draw[->] (4.25,5.9) -- (4.25,5) -- (2,5) -- (2,4.8);
+    
+    % ContPTE 64KB lookup
+    \draw[thick] (4.5,4.8) rectangle (7.5,3.8);
+    \node[font=\small] at (6,4.5) {ContPTE 64KB};
+    \node[font=\tiny] at (6,4.2) {Match VPN[47:16]};
+    \node[font=\tiny] at (6,3.95) {Ignore VPN[15:12]};
+    \draw[->] (4.25,5.9) -- (4.25,5.3) -- (6,5.3) -- (6,4.8);
+    
+    % Show which bits are matched
+    \draw[thick, red] (3,5.5) rectangle (5.5,5.1);
+    \node[font=\tiny, red] at (4.25,5.3) {Matched for ContPTE};
+    
+    \draw[thick, dashed, red] (5.5,5.5) rectangle (6.5,5.1);
+    \node[font=\tiny, red] at (6,5.3) {Ignored};
+    
+    % TLB entry format
+    \node[font=\small] at (4,3.2) {TLB Entry Formats:};
+    
+    % 4KB entry
+    \draw[thick] (0,2.5) rectangle (8,2);
+    \fill[blue!20] (0,2.5) rectangle (5.5,2);
+    \fill[green!20] (5.5,2.5) rectangle (7.5,2);
+    \fill[red!20] (7.5,2.5) rectangle (8,2);
+    \node[font=\tiny] at (2.75,2.25) {Full VPN Tag};
+    \node[font=\tiny] at (6.5,2.25) {PFN};
+    \node[font=\tiny] at (7.75,2.25) {F};
+    \node[left, font=\tiny] at (0,2.25) {4KB:};
+    
+    % 64KB entry
+    \draw[thick] (0,1.5) rectangle (8,1);
+    \fill[blue!20] (0,1.5) rectangle (4,1);
+    \fill[green!20] (4,1.5) rectangle (7,1);
+    \fill[yellow!20] (7,1.5) rectangle (7.5,1);
+    \fill[red!20] (7.5,1.5) rectangle (8,1);
+    \node[font=\tiny] at (2,1.25) {VPN[47:16] Tag};
+    \node[font=\tiny] at (5.5,1.25) {PFN (64KB aligned)};
+    \node[font=\tiny] at (7.25,1.25) {C};
+    \node[font=\tiny] at (7.75,1.25) {F};
+    \node[left, font=\tiny] at (0,1.25) {64KB:};
+    
+    % Legend
+    \node[font=\tiny] at (1,0.5) {F = Flags};
+    \node[font=\tiny] at (2.5,0.5) {C = Contiguous};
+    \node[font=\tiny] at (4.5,0.5) {PFN = Physical Frame};
+    
+    % Bottom note
+    \node[below, font=\small, align=center] at (4,0) {ContPTE: Single TLB entry covers 16 × 4KB = 64KB};
+    \node[below, font=\tiny, align=center] at (4,-0.4) {Hardware automatically detects contiguous bit pattern};
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{TLB Shootdown: Maintaining Coherency}
