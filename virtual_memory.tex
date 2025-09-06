@@ -888,6 +888,23 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 \node[data, left=of pml4_entry] (cr3) {CR3};
 
+\draw[arrow] (va) -- (tlb);
+\draw[arrow] (tlb) -- node[right] {No} (stlb);
+\draw[arrow] (tlb.east) -- node[above] {Yes} ++(1,0) |- (pte.east);
+\draw[arrow] (stlb.south) -- node[right] {Yes} (pte.north);
+\draw[arrow] (stlb.west) -- node[above] {No} ++(-1,0) |- (pde_hit.east);
+
+\draw[arrow] (va_pde) -- (pde_hit);
+\draw[arrow] (pde_hit.south) -- node[right] {Yes} (pde.north);
+\draw[arrow] (pde_hit.west) -- node[above] {No} (pdp_hit.east);
+
+\draw[arrow] (va_pdp) -- (pdp_hit);
+\draw[arrow] (pdp_hit.south) -- node[right] {Yes} (pdp_entry.north);
+\draw[arrow] (pdp_hit.west) -- node[above] {No} (pml4_hit.east);
+
+\draw[arrow] (va_pml4) -- (pml4_hit);
+\draw[arrow] (pml4_hit.south) -- node[right] {Yes} (pml4_entry.north);
+\draw[arrow] (pml4_hit.west) -- node[above] {No} ++(-1,0) -| (cr3.north);
 
 % PML4 level
 %\node[data, left=2cm of va] (va) {VA[47:21]};
