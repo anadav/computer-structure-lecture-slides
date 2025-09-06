@@ -876,28 +876,28 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{column}{0.52\textwidth}
 \textbf{TLB Entry with PCID:}
 \begin{center}
-\begin{tikzpicture}[scale=0.65]
-    % TLB structure
-    \node[font=\small, above] at (3,4.5) {TLB Set Selection};
+\begin{tikzpicture}[scale=0.62,
+    comp/.style={trapezium, draw, thick, trapezium left angle=70, trapezium right angle=110, minimum height=0.35cm, minimum width=0.5cm},
+    and/.style={semicircle, draw, thick, minimum width=0.5cm, rotate=270}]
     
     % Virtual address
-    \draw[thick] (0,3.5) rectangle (6,4);
-    \fill[orange!20] (0,3.5) rectangle (3.5,4);
-    \fill[yellow!20] (3.5,3.5) rectangle (4.8,4);
-    \fill[gray!20] (4.8,3.5) rectangle (6,4);
+    \draw[thick] (0,4.8) rectangle (6,5.3);
+    \fill[orange!20] (0,4.8) rectangle (3.5,5.3);
+    \fill[yellow!20] (3.5,4.8) rectangle (4.8,5.3);
+    \fill[gray!20] (4.8,4.8) rectangle (6,5.3);
     
-    \node[font=\tiny] at (1.75,3.75) {VPN upper bits};
-    \node[font=\tiny] at (4.15,3.75) {Set};
-    \node[font=\tiny] at (5.4,3.75) {Offset};
+    \node[font=\tiny] at (1.75,5.05) {VPN (Tag bits)};
+    \node[font=\tiny] at (4.15,5.05) {Set};
+    \node[font=\tiny] at (5.4,5.05) {Offset};
     
-    % Arrow to TLB
-    \draw[->, thick] (4.15,3.5) -- (4.15,2.8);
-    \node[right, font=\tiny] at (4.3,3.15) {Selects set};
+    % Arrow to TLB for set selection
+    \draw[->, thick] (4.15,4.8) -- (4.15,4.2);
+    \node[right, font=\tiny] at (4.3,4.5) {Index};
     
     % TLB array (4-way set associative)
-    \node[font=\small] at (3,2.5) {TLB Set};
+    \node[font=\small] at (3,4) {Selected TLB Set};
     \foreach \way in {0,...,3} {
-        \pgfmathsetmacro\y{2 - \way*0.5}
+        \pgfmathsetmacro\y{3.5 - \way*0.5}
         \draw[thick] (0,\y) rectangle (6,\y-0.4);
         
         % PCID field
@@ -917,37 +917,73 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
         \node[right, font=\tiny] at (6.1,\y-0.2) {Way \way};
     }
     
-    % Comparison logic
-    \draw[thick, dashed] (0,-0.5) rectangle (3.5,-1);
-    \node[font=\tiny] at (1.75,-0.75) {Compare: PCID + TAG};
+    % CR3 PCID
+    \draw[thick] (-1.5,0.5) rectangle (-0.5,0.9);
+    \fill[blue!20] (-1.5,0.5) rectangle (-0.5,0.9);
+    \node[font=\tiny] at (-1,0.7) {PCID};
+    \node[below, font=\tiny, align=center] at (-1,0.5) {from\\CR3};
     
-    % Current PCID from CR3
-    \draw[thick] (0,-1.5) rectangle (0.8,-1.9);
-    \fill[blue!20] (0,-1.5) rectangle (0.8,-1.9);
-    \node[font=\tiny] at (0.4,-1.7) {PCID};
-    \node[right, font=\tiny] at (0.9,-1.7) {from CR3};
+    % Comparators for each way
+    \foreach \way in {0,...,3} {
+        \pgfmathsetmacro\y{3.3 - \way*0.5}
+        
+        % PCID comparator
+        \node[comp, fill=white] (pcidcomp\way) at (0.4,\y-0.8) {};
+        \node[font=\tiny] at (0.4,\y-0.8) {=};
+        
+        % TAG comparator  
+        \node[comp, fill=white] (tagcomp\way) at (2.15,\y-0.8) {};
+        \node[font=\tiny] at (2.15,\y-0.8) {=};
+        
+        % AND gate
+        \node[and, fill=yellow!20] (and\way) at (3.5,\y-0.8) {};
+        \node[font=\tiny] at (3.5,\y-0.8) {\&};
+        
+        % Connect TLB PCID to comparator
+        \draw[->] (0.4,\y-0.4) -- (pcidcomp\way.north);
+        
+        % Connect CR3 PCID to comparator
+        \draw[-] (-0.5,0.7) -- (-0.3,0.7) -- (-0.3,\y-0.8) -- (pcidcomp\way.west);
+        
+        % Connect TLB TAG to comparator
+        \draw[->] (2.15,\y-0.4) -- (tagcomp\way.north);
+        
+        % Connect VA TAG to comparator
+        \draw[-] (1.75,4.8) -- (1.75,4.6-\way*0.1) -- (1.9,4.6-\way*0.1) -- (1.9,\y-0.8) -- (tagcomp\way.west);
+        
+        % Connect comparators to AND gate
+        \draw[->] (pcidcomp\way.east) -- (and\way.west);
+        \draw[->] (tagcomp\way.east) -- (and\way.210);
+        
+        % Hit signal
+        \draw[->] (and\way.east) -- ++(0.5,0) node[right, font=\tiny] {Hit\way};
+    }
     
-    % VPN tag
-    \draw[thick] (2.5,-1.5) rectangle (3.5,-1.9);
-    \fill[orange!20] (2.5,-1.5) rectangle (3.5,-1.9);
-    \node[font=\tiny] at (3,-1.7) {TAG};
-    \node[right, font=\tiny] at (3.6,-1.7) {from VA};
+    % Priority encoder / MUX indication
+    \draw[thick, dashed] (4.5,1.5) rectangle (5.8,0.2);
+    \node[font=\tiny, align=center] at (5.15,0.85) {Priority\\Encoder};
     
-    % Arrows showing comparison
-    \draw[->] (0.4,-1.5) -- (0.4,-1);
-    \draw[->] (3,-1.5) -- (3,-1);
+    % Connect hits to priority encoder
+    \foreach \way in {0,...,3} {
+        \pgfmathsetmacro\y{3.3 - \way*0.5}
+        \draw[-] (4.5,\y-0.8) -- (4.8,\y-0.8) -- (4.8,1.2-\way*0.2) -- (4.5,1.2-\way*0.2);
+    }
     
-    % Hit/Miss decision
-    \node[font=\tiny] at (1.75,-2.3) {Hit if: (PCID match) AND (TAG match)};
+    % Final output
+    \draw[->] (5.8,0.85) -- ++(0.5,0) node[right, font=\tiny, align=left] {TLB\\Hit};
+    
+    % Labels
+    \node[font=\tiny, below] at (3,-1.5) {Match: PCID from CR3 = PCID in entry};
+    \node[font=\tiny, below] at (3,-1.8) {AND: TAG from VA = TAG in entry};
 \end{tikzpicture}
 \end{center}
 
 \textbf{Key points:}
 \begin{itemize}
-\item PCID is part of the tag comparison
-\item Set index uses VA bits only (not PCID)
-\item Allows same VA in TLB for different processes
-\item No flush needed on context switch
+\item Each way has dual comparators
+\item PCID compared against CR3[11:0]
+\item TAG compared against VA bits
+\item Both must match (AND) for hit
 \end{itemize}
 \end{column}
 \end{columns}
