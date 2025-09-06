@@ -859,54 +859,54 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 \begin{frame}{PMH: Page Walk Flowchart}
 \begin{tikzpicture}[
-    scale=0.65, transform shape,
-    node distance=1cm,
-    decision/.style={diamond, draw, fill=blue!10, text width=1.8cm, align=center, inner sep=0pt, minimum height=1.2cm},
-    process/.style={rectangle, draw, fill=green!10, text width=2.5cm, align=center, minimum height=0.6cm, font=\footnotesize},
-    data/.style={rectangle, draw, fill=yellow!10, text width=1.8cm, align=center, minimum height=0.5cm},
+    transform shape,
+    node distance=3mm,
+    decision/.style={diamond, draw, fill=blue!10, text width=1cm, align=center, inner sep=1pt, minimum height=0.5cm, aspect=3, font=\tiny},
+    process/.style={rectangle, draw, fill=green!10, text width=2.5cm, align=center, minimum height=0.5cm, inner sep=2pt, font=\tiny},
+    data/.style={ellipse, draw, fill=yellow!10, text width=1.8cm, align=center, minimum height=0.4cm, inner sep=2pt, font=\tiny},
     arrow/.style={->, >=stealth, thick},
-    every node/.style={font=\small}
+    every node/.style={font=\tiny}
 ]
 
 % Start
 \node[data] (va) {VA[47:12]};
-\node[decision, below=0.8cm of va] (tlb) {TLB hit};
-\node[decision, below=0.6cm of tlb] (stlb) {STLB hit};
-\node[data, right=7cm of stlb] (pte) {PTE};
+\node[decision, below=of va] (tlb) {TLB hit};
+\node[decision, below=of tlb] (stlb) {STLB hit};
+\node[data] (pte) {PTE};
 
 % PML4 level
-\node[decision, below=0.8cm of stlb] (pml4c) {PML4\$ hit};
-\node[process, left=2.5cm of pml4c, text width=2.8cm] (pml4load) {inject load to PML4 base + VA[47:39]×8 to get PML4 entry};
-\node[data, above=0.3cm of pml4load] (cr3) {CR3\\PML4 base};
-\node[decision, below=0.6cm of pml4load] (pml4l1) {L1\$ hit};
-\node[decision, below=0.4cm of pml4l1] (pml4l2) {L2\$ hit};
-\node[decision, below=0.4cm of pml4l2] (pml4l3) {L3\$ hit};
-\node[process, below=0.4cm of pml4l3] (pml4mem) {Memory};
-\node[data, right=1cm of pml4c] (pml4e) {PML4 entry};
+\node[decision, below=of stlb] (pml4c) {PML4\$ hit};
+\node[process, left=2.5cm of pml4c, text width=3cm, minimum height=0.8cm] (pml4load) {inject load to PML4 base + VA[47:39]×8 to get PML4 entry};
+\node[data, above=of pml4load, text width=1.3cm] (cr3) {CR3 PML4 base};
+\node[decision, below=of pml4load] (pml4l1) {L1\$ hit};
+\node[decision, below=of pml4l1] (pml4l2) {L2\$ hit};
+\node[decision, below=of pml4l2] (pml4l3) {L3\$ hit};
+\node[process, below=of pml4l3] (pml4mem) {Memory};
+\node[data, right=1cm of pml4c, text width=1.2cm] (pml4e) {PML4 entry};
 
 % PDP level
 \node[decision, below=0.8cm of pml4c] (pdpc) {PDP\$ hit};
-\node[process, left=2.5cm of pdpc, text width=2.8cm] (pdpload) {inject load to PDP base + VA[38:30]×8 to get PDP entry};
-\node[data, above=0.3cm of pdpload] (pdpbase) {PDP base\\VA[47:39]};
+\node[process, left=2.5cm of pdpc, text width=3cm, minimum height=0.8cm] (pdpload) {inject load to PDP base + VA[38:30]×8 to get PDP entry};
+\node[data, above=0.3cm of pdpload, text width=1.3cm] (pdpbase) {PDP base VA[47:39]};
 \node[decision, below=0.6cm of pdpload] (pdpl1) {L1\$ hit};
 \node[decision, below=0.4cm of pdpl1] (pdpl2) {L2\$ hit};
 \node[decision, below=0.4cm of pdpl2] (pdpl3) {L3\$ hit};
 \node[process, below=0.4cm of pdpl3] (pdpmem) {Memory};
-\node[data, right=1cm of pdpc] (pdpe) {PDP entry};
+\node[data, right=1cm of pdpc, text width=1.2cm] (pdpe) {PDP entry};
 
 % PDE level
 \node[decision, below=0.8cm of pdpc] (pdec) {PDE\$ hit};
-\node[process, left=2.5cm of pdec, text width=2.8cm] (pdeload) {inject load to PDE base + VA[29:21]×8 to get PDE};
-\node[data, above=0.3cm of pdeload] (pdebase) {PDE base\\VA[47:30]};
+\node[process, left=2.5cm of pdec, text width=3cm, minimum height=0.8cm] (pdeload) {inject load to PDE base + VA[29:21]×8 to get PDE};
+\node[data, above=0.3cm of pdeload, text width=1.3cm] (pdebase) {PDE base VA[47:30]};
 \node[decision, below=0.6cm of pdeload] (pdel1) {L1\$ hit};
 \node[decision, below=0.4cm of pdel1] (pdel2) {L2\$ hit};
 \node[decision, below=0.4cm of pdel2] (pdel3) {L3\$ hit};
 \node[process, below=0.4cm of pdel3] (pdemem) {Memory};
-\node[data, right=1cm of pdec] (pdee) {PDE\\VA[47:21]};
+\node[data, right=1cm of pdec, text width=1.3cm] (pdee) {PDE VA[47:21]};
 
 % PT level
-\node[process, below=1cm of pdec, text width=2.8cm] (ptload) {inject load to PT base + VA[20:12]×8 to get PTE};
-\node[data, left=0.3cm of ptload] (ptbase) {PT base};
+\node[process, below=1cm of pdec, text width=3cm, minimum height=0.8cm] (ptload) {inject load to PT base + VA[20:12]×8 to get PTE};
+\node[data, left=0.3cm of ptload, text width=1cm] (ptbase) {PT base};
 \node[decision, below=0.6cm of ptload] (ptl1) {L1\$ hit};
 \node[decision, below=0.4cm of ptl1] (ptl2) {L2\$ hit};
 \node[decision, below=0.4cm of ptl2] (ptl3) {L3\$ hit};
