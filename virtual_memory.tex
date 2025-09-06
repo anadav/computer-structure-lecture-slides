@@ -348,25 +348,25 @@ Components:
 \begin{column}{0.43\textwidth}
 \begin{center}
 \begin{tikzpicture}[
-    node distance=3mm,
+    node distance=5mm,
     box/.style={rectangle, draw, thick, minimum width=1cm, minimum height=0.7cm, text centered, font=\tiny},
     decision/.style={diamond, draw, thick, minimum width=1.8cm, minimum height=1cm, text centered, font=\tiny},
-    oval/.style={ellipse, draw, thick, minimum width=1cm, minimum height=0.8cm, text centered, font=\tiny},
+    oval/.style={ellipse, draw, thick, minimum width=1cm, minimum height=0.8cm, text centered, font=\tiny, text width=1cm},
     arrow/.style={->, thick}]
     \tiny
     % Nodes
-    \node[oval, align=center] (va) at {Virtual Address};
+    \node[oval, align=center] (va) {Virtual Address};
     \node[box, align=center, below=of va] (tlb) {TLB Access};
-    \node[decision, below=of tlb] (hit) at (0,2.8) {TLB Hit?};
-    \node[box, fill=yellow!10, align=center, left=of hit, text width=1.5cm] (pmh) {PMH gets PTE from Page Table in memory};
-    \node[box, align=center, below=of pmh] (insert) {Insert PTE into TLB (may need a victim)};
-    \node[oval, align=center,below=of hit] (pa) at (2.5,0.8) {Physical Addresses};
+    \node[decision, below=of tlb] (hit) {TLB Hit?};
+    \node[box, fill=yellow!10, align=center, left=of hit, text width=2.5cm] (pmh) {PMH gets PTE from Page Table in memory};
+    \node[box, align=center, below=of pmh, text width=2.5cm] (insert) {Insert PTE into TLB (may need a victim)};
+    \node[oval, align=center, below=of hit] (pa) {Physical Addresses};
     
     % Arrows
     \draw[arrow] (va) -- (tlb);
     \draw[arrow] (tlb) -- (hit);
-    \draw[arrow] (hit) -- node[left] {No} (pmh);
-    \draw[arrow] (hit) -- node[above] {Yes} (pa);
+    \draw[arrow] (hit) -- node[above] {No} (pmh);
+    \draw[arrow] (hit) -- node[right] {Yes} (pa);
     \draw[arrow] (pmh) -- (insert);
     \draw[arrow] (pmh) -- (pa);
     
