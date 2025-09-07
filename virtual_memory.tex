@@ -600,7 +600,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % TLB Structure
 % TLB Set decoder - positioned below vset
-\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=1, Lh=1, Rh=2, w=0.5},
+\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=1, Lh=0.8, Rh=1.6, w=0.5},
         external pins width=0, below left=10mm and 5mm of vset, font=\tiny] 
     (tlbdec) {\rotatebox{90}{Dec}};
 
@@ -699,10 +699,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Add labels centered between decoder and arrays
 \coordinate (tlb-label-x) at ($(tlbdec.west)!0.5!(tlbval-0-1.east)$);
-\node[label] (tlblabel) at (tlb-label-x |- tlbdec.north) [above=2mm] {TLB};
+\node[label] (tlblabel) at (tlb-label-x |- tlbdec.north) [above=1mm] {TLB};
 
 \coordinate (cache-label-x) at ($(cachedec.west)!0.5!(cdata-0-3.east)$);
-\node[label] (cachelabel) at (cache-label-x |- cachedec.north) [above=2mm] {Cache};
+\node[label] (cachelabel) at (cache-label-x |- cachedec.north) [above=1mm] {Cache};
 
 % Add colored backgrounds using fit
 % TLB background
@@ -717,27 +717,27 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Connections
 % VPN set to TLB decoder (from left side)
-\draw[arrow] (vset.south) -- ++(0,-0.5) -| (tlbdec.blpin 1);
+\draw[arrow] (vset.south) -- ++(0,-0.5) -|  ([xshift=-5mm]tlbdec.blpin 1) -- (tlbdec.blpin 1);
 
 % Tag from address to all TLB comparators (from top with slight offset)
 \foreach \way in {0,...,1} {
     \draw[arrow, blue] (vtag.south) 
-        |- ([xshift=5mm, yshift=-5mm] vtag.south west)
+        |- ([xshift=5mm, yshift=-3mm] vtag.south west)
         |- ([xshift={-1mm + 0.3*\way}, yshift=3mm]tlbcomp-\way.north)
         -- ([xshift={-1mm + 0.3*\way}]tlbcomp-\way.north);
 }
 
 % Page offset set to Cache (from left side - highlighted in orange)
-\draw[arrow, orange, thick] (pset.south) -- ++(0,-0.3) -| (cachedec.blpin 1);
+\draw[arrow, orange, thick] (pset.south) -- ++(0,-0.3) -| ([xshift=-5mm]cachedec.blpin 1) -- (cachedec.blpin 1);
 
 % Decoder outputs to TLB array rows
 \foreach \set in {0,...,3} {
-    \draw[arrow] (tlbdec.brpin \the\numexpr\set+1\relax) -- (tlbtag-\set-0.west);
+    \draw[arrow] (tlbdec.brpin \the\numexpr\set+1\relax |- tlbtag-\set-0.west) -- (tlbtag-\set-0.west);
 }
 
 % Decoder outputs to Cache array rows
 \foreach \set in {0,...,7} {
-    \draw[arrow] (cachedec.brpin \the\numexpr\set+1\relax) -- (ctag-\set-0.west);
+    \draw[arrow] (cachedec.brpin \the\numexpr\set+1\relax |- ctag-\set-0.west) -- (ctag-\set-0.west);
 }
 
 % Selected TLB row output to comparators (from top with slight offset)
@@ -790,8 +790,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \draw[arrow] (dataout.south) -- (dispmux.brpin 1);
 
 % Disp signal from pdisp to displacement MUX control (routed from right of cache data table)
-\draw[arrow, red!70!black, thick] (pdisp.east) -- ++(0.5,0) 
-    |- ([xshift=3mm]cdata-7-3.south east) 
+\draw[arrow, red!70!black, thick] (pdisp.south) 
+    |- ([xshift=3mm, yshift=-2mm]pdisp.south -| cdata-7-3.east)
+    -- ([xshift=3mm]cdata-7-3.south east) 
     |- (dispmux.bbpin 1);
 
 % Displacement MUX output to final output
