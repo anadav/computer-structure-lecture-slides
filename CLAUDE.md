@@ -11,3 +11,5 @@
 - When you claim successful compilation, ensure the log doesn't show any real errors.
 
 - Try to avoid using scale in TikZ nodes, as it can distort text. Instead, adjust font size or node dimensions directly.
+
+- Use circuitikz package for drawing circuits. Not trapezoid.
