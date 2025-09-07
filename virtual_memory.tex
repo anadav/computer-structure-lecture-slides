@@ -634,7 +634,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % OR gate for TLB hit/miss - centered between comparators
 \coordinate (tlb-or-x) at ($(tlbcomp-0.south)!0.5!(tlbcomp-1.south)$);
-\node[or port, scale=0.4, number inputs=2, rotate=-90, external pins width=0] (tlbor) at ([yshift=-8mm]tlb-or-x) {};
+\node[or port, scale=0.4, number inputs=2, rotate=-90, external pins width=0] (tlbor) at ([yshift=-12mm]tlb-or-x) {};
 
 % TLB Way MUX - positioned to match width of value table (2 ways)
 \node[muxdemux, muxdemux def={NT=2, NB=1, NL=1, NR=2, Lh=0.9, Rh=1.8, w=0.5}, external pins width=0, rotate=90] 
@@ -747,14 +747,14 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Comparator outputs to OR gate for hit detection
 \foreach \way in {0,...,1} {
-    \pgfmathtruncatemacro{\inputnum}{2 - \way}
+    \pgfmathtruncatemacro{\inputnum}{1 + \way}
     \draw[arrow] (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.bin \inputnum);
     \draw[arrow] (tlbcomp-\way.south) |- (tlbmux.btpin \inputnum);
 }
 
 % TLB values to mux - from same row as tag outputs, straight down
 \foreach \way in {0,...,1} {
-    \pgfmathtruncatemacro{\muxpin}{\way + 1}
+    \pgfmathtruncatemacro{\muxpin}{2 - \way}
     \draw[arrow, gray] ([yshift=-1mm]tlbval-1-\way.south -| tlbmux.brpin \muxpin) -- (tlbmux.brpin \muxpin);
 }
 
