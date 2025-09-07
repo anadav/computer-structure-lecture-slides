@@ -11,6 +11,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, patterns, fit, matrix, backgrounds}
 \usepackage{circuitikz}
+\usepackage{verbatim}  % For comment environment
 \usetheme{Madrid}
 
 % Define colors for registers
@@ -599,7 +600,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB Structure
 \node[label, below left=8mm and 5mm of vset] (tlblabel) {TLB};
 % TLB Set decoder - relative to label
-\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.5cm}, rotate=-90, below=2mm of tlblabel] 
+\node[muxdemux, muxdemux def={Lh=8mm, Rh=3mm, w=5mm}, rotate=-90, below=2mm of tlblabel] 
     (tlbdec) {};
 \node[font=\tiny, rotate=-90] at (tlbdec) {Dec};
 
@@ -756,7 +757,6 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Mux to data output
 \draw[arrow] (cachemux.south) -- (dataout.north);
-
 \end{tikzpicture}
 \end{columns}
 \end{frame}
@@ -1315,6 +1315,8 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{frame}
 
 % Additional advanced topics
+% TEMPORARILY COMMENTED OUT - Global TLB Entries frame with matrix issues
+\begin{comment}
 \begin{frame}{Global TLB Entries}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
@@ -1386,6 +1388,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{column}
 \end{columns}
 \end{frame}
+\end{comment}
 
 \begin{frame}{ASID: Address Space Identifiers in TLBs}
 \begin{columns}[T]
@@ -1428,7 +1431,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
         \pgfmathsetmacro\x{4.8 + \i*0.1}
         \draw (\x,-0.3) -- (\x,-0.8);
     }
-    \node[below, font=\tiny] at (5.4,-0.8) {12-bit ASID (PCID)}
+    \node[below, font=\tiny] at (5.4,-0.8) {12-bit ASID (PCID)};
     \draw[->] (5.4,0) -- (5.4,-0.3);
 \end{tikzpicture}
 \end{center}
@@ -1702,13 +1705,13 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
     
     % IPI arrows from CPU 0
     \draw[->, thick, red] (cpu0) -- node[above, sloped] {\tiny IPI} (cpu1);
-    \draw[->, thick, red] (cpu0) |- node[near end, above] {\tiny IPI} (cpu2);
-    \draw[->, thick, red] (cpu0) |- node[pos=0.3, above] {\tiny IPI} (cpu3);
+    \draw[->, thick, red] (cpu0.south) -- ++(0,-0.2) -| node[near end, above] {\tiny IPI} (cpu2);
+    \draw[->, thick, red] (cpu0.east) -- ++(0.3,0) |- node[pos=0.3, above] {\tiny IPI} (cpu3);
     
     % ACK arrows back
     \draw[->, dashed, green!60!black] (cpu1) -- node[below, sloped] {\tiny ACK} (cpu0);
-    \draw[->, dashed, green!60!black] (cpu2) -| node[near start, below] {\tiny ACK} (cpu0);
-    \draw[->, dashed, green!60!black] (cpu3) -| node[pos=0.7, below] {\tiny ACK} (cpu0);
+    \draw[->, dashed, green!60!black] (cpu2.north) -- ++(0,0.2) -| node[near start, below] {\tiny ACK} (cpu0.south);
+    \draw[->, dashed, green!60!black] (cpu3.west) -- ++(-0.3,0) |- node[pos=0.7, below] {\tiny ACK} (cpu0.east);
     
     \node[above] at (1, 0.5) {\small TLB Shootdown};
 \end{tikzpicture}
