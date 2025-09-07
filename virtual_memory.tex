@@ -601,9 +601,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB Structure
 \node[label, below left=8mm and 5mm of vset] (tlblabel) {TLB};
 % TLB Set decoder - relative to label (rotated for horizontal output)
-\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=0, Lh=1, Rh=2, w=0.5}, external pins width=0, below=2mm of tlblabel] 
-    (tlbdec) {};
-\node[font=\tiny] at (tlbdec) {\rotatebox{90}{Dec}};
+\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=0, Lh=1, Rh=2, w=0.5},
+        external pins width=0, below=2mm of tlblabel, font=\tiny] 
+    (tlbdec) {\rotatebox{90}{Dec}};
 
 % TLB Tag array (4 sets x 2 ways) - relative to decoder right pins
 \node[tlbcell, fill=green!15, right=3mm of tlbdec.rpin 1] (tlbtag-0-0) {};
@@ -628,9 +628,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % TLB comparators below tags - aligned with tag outputs
-\node[comp, anchor=north] at (tlbtag-3-0.south) (tlbcomp-0) {=};
+\node[comp, anchor=north, below=of tlbtag-3-0.south] (tlbcomp-0) {=};
 \foreach \way in {1,...,1} {
-    \node[comp, anchor=north] at ([yshift=-3mm]tlbtag-3-\way.south) (tlbcomp-\way) {=};
+    \node[comp, anchor=north, below=of tlbtag-3-\way.south] (tlbcomp-\way) {=};
 }
 
 % OR gate for TLB hit/miss - rotated downward, lower position
@@ -647,9 +647,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % Cache Structure - relative to page offset
 \node[label, below right=8mm and 10mm of pset] (cachelabel) {Cache};
 % Cache Set decoder - relative to label (rotated for horizontal output)
-\node[muxdemux, muxdemux def={NB=0, NT=1, NR=8, NL=1, Lh=1, Rh=3, w=0.5}, below=2mm of cachelabel, external pins width=0] 
-    (cachedec) {};
-\node[font=\tiny] at (cachedec) {\rotatebox{90}{Dec}};
+\node[muxdemux, muxdemux def={NB=0, NT=1, NR=8, NL=1, Lh=1, Rh=3, w=0.5},
+        below=2mm of cachelabel, external pins width=0, font=\tiny]
+        (cachedec) {\rotatebox{90}{Dec}};
 
 % Cache Tag array - relative to decoder right pins
 \node[cachecell, fill=purple!15, right=3mm of cachedec.rpin 1] (ctag-0-0) {};
@@ -731,7 +731,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Selected TLB row output to comparators (from top with slight offset)
 \foreach \way in {0,...,1} {
-    \draw[arrow] (tlbtag-1-\way.south) -- ([xshift=1mm]tlbcomp-\way.north);
+    \draw[arrow] ([xshift=1mm, yshift=-1mm]tlbtag-1-\way.south -| tlbcomp-\way.north) -- ([xshift=1mm]tlbcomp-\way.north);
 }
 
 % Comparator outputs to OR gate for hit detection
