@@ -746,10 +746,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw[arrow] (tlbcomp-\way.south) |- (tlbmux.btpin \inputnum);
 }
 
-% TLB values to mux - connect to top pins of MUX
+% TLB values to mux - from same row as tag outputs, straight down
 \foreach \way in {0,...,1} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (tlbval-3-\way.south) -- ++(0,-0.3) -| (tlbmux.brpin \muxpin);
+    \draw[arrow, gray] (tlbval-1-\way.south) |- (tlbmux.brpin \muxpin);
 }
 
 % TLB mux output to physical page#
@@ -771,10 +771,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw (ccomp-\way.south) -- ++(0,-0.1) -| (cacheor.in \inputnum);
 }
 
-% Cache data to mux - connect to top pins of MUX
+% Cache data to mux - from same row as tag outputs, straight down
 \foreach \way in {0,...,3} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (cdata-7-\way.south) -- ++(0,-0.3) -| (cachemux.brpin \muxpin);
+    \draw[arrow, gray] (cdata-1-\way.south) |- (cachemux.brpin \muxpin);
 }
 
 % Mux output to data output
