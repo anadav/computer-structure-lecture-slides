@@ -713,7 +713,17 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % Page offset set to Cache (parallel - highlighted in orange)
-\draw[arrow, orange, thick] (pset.south) -- ++(0,-0.3) -| (cachedec.tpin 1);
+\draw[arrow, orange, thick] (pset.south) -- ++(0,-0.3) -| (cachedec.btpin 1);
+
+% Decoder outputs to TLB array rows
+\foreach \set in {0,...,3} {
+    \draw[arrow] (tlbdec.brpin \the\numexpr\set+1\relax) -- (tlbtag-\set-0.west);
+}
+
+% Decoder outputs to Cache array rows
+\foreach \set in {0,...,3} {
+    \draw[arrow] (cachedec.brpin \the\numexpr\set+1\relax) -- (ctag-\set-0.west);
+}
 
 % Selected TLB row output to comparators (from top with slight offset)
 \foreach \way in {0,...,3} {
