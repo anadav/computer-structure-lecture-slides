@@ -628,16 +628,16 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % TLB comparators below tags - aligned with tag outputs
-\node[comp, anchor=north] at ([yshift=-3mm]tlbtag-3-0.south) (tlbcomp-0) {=};
+\node[comp, anchor=north] at (tlbtag-3-0.south) (tlbcomp-0) {=};
 \foreach \way in {1,...,1} {
     \node[comp, anchor=north] at ([yshift=-3mm]tlbtag-3-\way.south) (tlbcomp-\way) {=};
 }
 
 % OR gate for TLB hit/miss - rotated downward, lower position
-\node[or port, scale=0.4, number inputs=2, rotate=-90, below=8mm of tlbcomp-0, external pins width=0, anchor=bin 2] (tlbor) {};
+\node[or port, scale=0.4, number inputs=2, rotate=-90, below=of tlbcomp-0, external pins width=0, anchor=bin 2] (tlbor) {};
 
 % TLB Way MUX - positioned to match width of value table (2 ways)
-\node[muxdemux, muxdemux def={NT=2, NB=1, NL=2, NR=2, Lh=0.9, Rh=1.8, w=0.5}, external pins width=0, rotate=90] 
+\node[muxdemux, muxdemux def={NT=2, NB=1, NL=1, NR=2, Lh=0.9, Rh=1.8, w=0.5}, external pins width=0, rotate=90] 
     (tlbmux) at ([yshift=-8mm]tlbval-3-0.south east) {};
 \node[font=\tiny, align=center] at (tlbmux) {Way MUX};
 
@@ -710,7 +710,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Tag from address to all TLB comparators (from top with slight offset)
 \foreach \way in {0,...,1} {
-    \draw[arrow, blue] (vtag.south) -- ++(0,-0.8) -| ([xshift={-1mm + 0.3*\way}]tlbcomp-\way.north);
+    \draw[arrow, blue] (vtag.south) 
+        |- ([xshift=5mm, yshift=-5mm] vtag.south west)
+        |- ([xshift={-1mm + 0.3*\way}, yshift=3mm]tlbcomp-\way.north)
+        -- ([xshift={-1mm + 0.3*\way}]tlbcomp-\way.north);
 }
 
 % Page offset set to Cache (parallel - highlighted in orange)
@@ -733,8 +736,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Comparator outputs to OR gate for hit detection
 \foreach \way in {0,...,1} {
-    \pgfmathtruncatemacro{\inputnum}{\way + 1}
+    \pgfmathtruncatemacro{\inputnum}{2 - \way}
     \draw[arrow] (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.bin \inputnum);
+    \draw[arrow] (tlbcomp-\way.south) |- (tlbmux.btpin \inputnum);
 }
 
 % TLB values to mux - connect to top pins of MUX
@@ -748,7 +752,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Physical page# to all cache comparators (from top with slight offset)
 \foreach \way in {0,...,3} {
-    \draw[arrow, blue, thick] (ppn.east) -- ++(2.5,0) |- ++(0,1.5) -| ([xshift={-1mm}]ccomp-\way.north);
+    \draw[arrow, blue, thick] (ppn.east) -| ([xshift={-1mm}]ccomp-\way.north);
 }
 
 % Selected cache row to comparators (from top with slight offset)
