@@ -551,6 +551,155 @@ Virtual Page Number $\rightarrow$ TLB hit? $\rightarrow$ STLB hit? $\rightarrow$
 PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ hit? $\rightarrow$ Access Mem
 \end{frame}
 
+
+\begin{frame}{Overlapping TLB \& Cache Access}
+\begin{columns}[T]
+\column{0.4\textwidth}
+\textbf{Goal:} Start cache access parallel to TLB
+\begin{itemize}
+    \item Save a cycle on TLB hit + cache hit
+    \item Cache set determined by page offset
+    \item Access cache set while TLB translates
+    \item Match physical page \# with tags
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Restriction:}
+\begin{itemize}
+    \item \#sets $\times$ line size $\leq$ page size
+    \item Cache size $\leq$ page size $\times$ associativity
+\end{itemize}
+
+\column{0.6\textwidth}
+\begin{tikzpicture}[
+    scale=0.5,
+    every node/.style={font=\tiny},
+    addr/.style={draw, rectangle, minimum height=0.4cm, fill=yellow!20},
+    cell/.style={draw, rectangle, minimum width=0.35cm, minimum height=0.25cm, inner sep=1pt, font=\tiny},
+    tlbcell/.style={cell, fill=blue!15},
+    cachecell/.style={cell, fill=green!15},
+    tagcell/.style={cell, fill=orange!15},
+    label/.style={font=\tiny\bfseries},
+    line/.style={->, >=latex},
+    thick line/.style={line, thick}
+]
+
+% Virtual Address Components
+\node[addr, minimum width=2cm] (tag) at (0,0) {Tag};
+\node[addr, minimum width=0.8cm, right=0pt of tag] (set) {Set};
+\node[addr, minimum width=1.2cm, right=0pt of set] (offset) {Page offset};
+
+% Labels
+\node[above=2pt of tag.north west, anchor=south west, label] {Virtual page number};
+\node[above=2pt of offset.north east, anchor=south east, label] {Page offset};
+
+% Split set and displacement
+\node[below=1pt of offset.west, anchor=north, font=\tiny] {Set\#};
+\node[below=1pt of offset.east, anchor=north east, font=\tiny] {disp};
+
+% TLB as matrix
+\node[below=1.2cm of tag, label] (tlblabel) {TLB};
+\matrix[matrix of nodes, nodes={tlbcell}, column sep=1pt, row sep=1pt, below=0.1cm of tlblabel] (tlb) {
+    |[minimum width=0.8cm]| VPN & |[minimum width=0.8cm]| PPN \\
+    VPN & PPN \\
+    VPN & PPN \\
+    VPN & PPN \\
+};
+
+% Cache as matrix (showing ways)
+\node[below right=1.2cm and 0.5cm of set, label] (cachelabel) {Cache (Set selected)};
+\matrix[matrix of nodes, nodes={cachecell}, column sep=2pt, row sep=1pt, below=0.1cm of cachelabel] (cache) {
+    |[tagcell]| Tag & Data & |[tagcell]| Tag & Data & |[tagcell]| Tag & Data & |[tagcell]| Tag & Data \\
+};
+
+% Physical page number from TLB
+\node[addr, minimum width=1.5cm, below=0.5cm of tlb] (ppn) {Physical page\#};
+
+% Comparators for TLB
+\foreach \i in {1,...,4} {
+    \node[circle, draw, inner sep=1pt, fill=orange!20] (tlbcomp\i) at ($(tlb-\i-2.south) + (0,-0.4)$) {=};
+}
+
+% TLB Mux
+\node[muxdemux, muxdemux def={Lh=1.5, Rh=0.4, w=0.8, NL=4, NR=1}, 
+      below=0.8cm of tlb.south, anchor=lpin 2] (tlbmux) {};
+\node[right=2pt of tlbmux, label] {MUX};
+
+% Cache tag comparators (4 ways, tag columns are 1,3,5,7)
+\foreach \way/\col in {0/1,1/3,2/5,3/7} {
+    \node[circle, draw, inner sep=1pt, fill=orange!20] (cachecomp\way) at ($(cache-1-\col.south) + (0,-0.8)$) {=};
+}
+
+% Cache Mux
+\node[muxdemux, muxdemux def={Lh=2, Rh=0.4, w=0.8, NL=4, NR=1}, 
+      below=1.5cm of cache.south, anchor=lpin 2] (cachemux) {};
+\node[right=2pt of cachemux, label] {MUX};
+
+% Hit/Miss indicators
+\node[below=0.3cm of tlbmux.rpin 1, label] (tlbhit) {Hit/Miss};
+\node[below=0.3cm of cachemux.rpin 1, label] (cachehit) {Hit/Miss};
+
+% Data output
+\node[draw, fill=gray!20, below=0.2cm of cachehit] (data) {Data};
+
+% Connections - Virtual address to TLB
+\draw[thick line] (tag.south) -- ++(0,-0.3) -| (tlb.north);
+
+% Set to Cache (parallel access - highlighted)
+\draw[thick line, red, dashed] (set.south) -- ++(0,-0.3) -| (cache.north west);
+\node[red, label, right=0.2cm of set.south] {parallel};
+
+% TLB outputs to comparators
+\foreach \i in {1,...,4} {
+    \draw[line] (tlb-\i-2.south) -- (tlbcomp\i.north);
+    \draw[line, blue] (tag.south) -- ++(0,-0.2) -| (tlbcomp\i.west);
+}
+
+% TLB comparators to mux
+\foreach \i in {1,...,4} {
+    \draw[line] (tlbcomp\i.south) |- (tlbmux.lpin \i);
+}
+\draw[line] (tlbmux.rpin 1) -- (tlbhit.north);
+
+% TLB to PPN
+\draw[thick line] (tlb-1-2.south) |- ++(0.5,-0.2) |- (ppn.north);
+
+% Cache tag outputs to comparators
+\foreach \way/\col in {0/1,1/3,2/5,3/7} {
+    \draw[line] (cache-1-\col.south) -- (cachecomp\way.north);
+}
+
+% Physical page to cache comparators (key matching)
+\foreach \way in {0,...,3} {
+    \draw[thick line, blue] (ppn.east) -| ++(2.5,-0.3) -| (cachecomp\way.west);
+}
+\node[blue, label, right=0.1cm of ppn] {match tags};
+
+% Cache comparators to mux
+\foreach \way in {0,...,3} {
+    \pgfmathsetmacro\muxpin{int(\way+1)}
+    \draw[line] (cachecomp\way.south) |- (cachemux.lpin \muxpin);
+}
+
+% Cache mux to output
+\draw[line] (cachemux.rpin 1) -- (cachehit.north);
+\draw[line] (cachehit.south) -- (data.north);
+
+% Cache data paths to mux (simplified) - data columns are 2,4,6,8
+\foreach \way/\col in {0/2,1/4,2/6,3/8} {
+    \pgfmathsetmacro\muxpin{int(\way+1)}
+    \draw[line, gray, dashed] (cache-1-\col.south) |- ++(0,-2.2) -| ($(cachemux.lpin \muxpin) + (-0.1,0)$);
+}
+
+% Highlight parallel paths
+\node[draw=red, thick, dashed, fit=(set)(cache), inner sep=4pt] {};
+\node[draw=blue, thick, dotted, fit=(ppn)(cachecomp0)(cachecomp3), inner sep=3pt] {};
+
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+
 \begin{frame}{Overlapping TLB \& Cache Access}
 \textbf{Goal:} start cache access in parallel to TLB access
 \begin{itemize}
@@ -1255,27 +1404,45 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{tikzpicture}[scale=0.75]
     % Define styles
     \tikzset{
-        tlbentry/.style={draw, thick, minimum height=0.4cm},
+        tlbentry/.style={draw, thick, minimum height=0.4cm, inner sep=1pt, text depth=0.1ex, text height=1.5ex},
         comparatorstyle/.style={draw, thick, minimum width=0.8cm, minimum height=0.5cm}
     }
     
     % Virtual address breakdown at top using addressbreakdown style
-    \node (vaddr) at (0,4) {
+    \node (vaddr) at (0,4.5) {
         \addressbreakdown{20}{8}{4}
     };
     \node[above=1mm of vaddr] {\small Virtual Address (32-bit example)};
     \node[below=1mm of vaddr, font=\tiny] {VPN[19:12] for tag, VPN[11:4] for set, [3:0] offset};
     
-    % CR3/ASID register
-    \node[draw, thick, fill=blue!20, minimum width=1.5cm, minimum height=0.5cm] 
-        (cr3) at (-4,2) {ASID};
-    \node[below=1mm of cr3, font=\tiny] {from CR3/PTBR};
+    % CR3 register with ASID in low bits
+    \begin{scope}[shift={(-4.5,3)}]
+        \draw[thick] (0,0) rectangle (4,0.4);
+        \fill[green!20] (0,0) rectangle (3.2,0.4);
+        \fill[blue!20] (3.2,0) rectangle (4,0.4);
+        
+        % Bit positions
+        \node[above, font=\tiny] at (0,0.4) {63};
+        \node[above, font=\tiny] at (3.2,0.4) {12};
+        \node[above, font=\tiny] at (4,0.4) {0};
+        
+        % Labels
+        \node[font=\tiny] at (1.6,0.2) {Page Table Base};
+        \node[font=\tiny] at (3.6,0.2) {ASID};
+        
+        % Note about bits 0-1
+        \node[below, font=\tiny] at (2,-0.1) {CR3 (x86-64)};
+        \node[below, font=\tiny, text=red!70!black] at (3.8,-0.3) {[11:2] PCID, [1:0] cache};
+    \end{scope}
     
-    % TLB structure as matrix - 4-way set associative
+    % Extract ASID arrow
+    \draw[->, thick] (-0.9,3.2) -- (-0.9,2.5) -- (-2.5,2.5) -- (-2.5,2) node[midway, above, font=\tiny] {ASID};
+    
+    % TLB structure as matrix - 4-way set associative  
     \node[font=\small] at (0,2.5) {Selected TLB Set (indexed by VPN[11:4])};
     
     \matrix[matrix of nodes, nodes={tlbentry, minimum width=1cm}, 
-            column sep=-\pgflinewidth, row sep=3mm,
+            column sep=-\pgflinewidth, row sep=-\pgflinewidth,
             font=\tiny] (tlb) at (0,1) {
         |[fill=gray!30]| Way & |[fill=blue!20]| ASID & |[fill=orange!20]| Tag & |[fill=green!20]| PPN & |[fill=red!20]| V & |[fill=yellow!20]| Flags \\
         0 & |[fill=blue!10]| 0x042 & |[fill=orange!10]| 0x1234 & |[fill=green!10]| 0x5678 & 1 & RWX \\
@@ -1312,8 +1479,8 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
         % Connections
         \pgfmathsetmacro{\tlbrow}{\way + 2}
         
-        % ASID connections
-        \draw[->] (cr3.east) -| ([xshift=-0.2cm]asidcomp\way.west);
+        % ASID connections - from extracted ASID point
+        \draw[->] (-2.5,2) -- (-2.5,\ypos) -- (asidcomp\way.west);
         \draw[->] (tlb-\tlbrow-2.south) |- ([xshift=0.2cm]asidcomp\way.west);
         
         % Tag connections  
