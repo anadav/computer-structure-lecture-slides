@@ -636,9 +636,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[or port, scale=0.4, number inputs=2, rotate=-90, below=8mm of tlbcomp-0] (tlbor) {};
 
 % TLB Way MUX - positioned to match width of value table (2 ways)
-\node[muxdemux, muxdemux def={NT=2, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.8, w=1.0}, external pins width=0, anchor=btpin 1] 
+\node[muxdemux, muxdemux def={NT=2, NB=1, NL=2, NR=2, Lh=0.9, Rh=1.8, w=0.5}, external pins width=0, anchor=brpin 1, rotate=90] 
     (tlbmux) at ([yshift=-8mm]tlbval-3-0.south east) {};
-\node[font=\tiny, align=center] at (tlbmux) {Way\\MUX};
+\node[font=\tiny, align=center] at (tlbmux) {Way MUX};
 
 % Physical page# output - below mux
 \node[addr, fill=orange!20, minimum width=1.2cm] (ppn) at ([yshift=-5mm]tlbmux.bbpin 1) {PPN};
@@ -646,7 +646,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % Cache Structure - relative to page offset
 \node[label, below right=8mm and 10mm of pset] (cachelabel) {Cache};
 % Cache Set decoder - relative to label (rotated for horizontal output)
-\node[muxdemux, muxdemux def={NB=0, NT=1, NR=8, NL=0, Lh=1, Rh=3, w=0.5}, below=2mm of cachelabel, external pins width=0] 
+\node[muxdemux, muxdemux def={NB=0, NT=1, NR=8, NL=1, Lh=1, Rh=3, w=0.5}, below=2mm of cachelabel, external pins width=0] 
     (cachedec) {};
 \node[font=\tiny] at (cachedec) {\rotatebox{90}{Dec}};
 
@@ -682,9 +682,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
 
 % Cache Way MUX - positioned to match width of data table (4 ways)
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=1.0, w=2.0}, external pins width=0, anchor=btpin 1] 
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=4, NR=4, Lh=1.2, Rh=2.4, w=1}, external pins width=0, anchor=brpin 1, rotate=90] 
     (cachemux) at ([yshift=-8mm, xshift=4mm]cdata-7-1.south east) {};
-\node[font=\tiny, align=center] at (cachemux) {Way\\MUX};
+\node[font=\tiny, align=center] at (cachemux) {Way MUX};
 
 % Hit/Miss output - relative to OR gate
 \node[font=\tiny, below=3mm of cacheor] {Hit/Miss};
@@ -739,7 +739,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB values to mux - connect to top pins of MUX
 \foreach \way in {0,...,1} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (tlbval-3-\way.south) -- ++(0,-0.3) -| (tlbmux.btpin \muxpin);
+    \draw[arrow, gray] (tlbval-3-\way.south) -- ++(0,-0.3) -| (tlbmux.brpin \muxpin);
 }
 
 % TLB mux output to physical page#
