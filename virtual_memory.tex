@@ -602,7 +602,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB Set decoder - relative to label (rotated for horizontal output)
 \node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=0, Lh=0.3, Rh=1.0, w=0.5}, below=2mm of tlblabel] 
     (tlbdec) {};
-\node[font=\tiny] at (tlbdec) {Dec};
+\node[font=\tiny] at (tlbdec) {\rotatebox{90}{Dec}};
 
 % TLB Tag array (4 sets x 4 ways) - relative to decoder
 \node[tlbcell, fill=green!15, right=3mm of tlbdec.north] (tlbtag-0-0) {};
@@ -632,11 +632,11 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \node[comp, anchor=north] at ([yshift=-3mm]tlbtag-3-\way.south) (tlbcomp-\way) {=};
 }
 
-% OR gate for TLB hit/miss - rotated downward
-\node[or port, scale=0.4, number inputs=4, rotate=-90, below=3mm of tlbcomp-1] (tlbor) {};
+% OR gate for TLB hit/miss - rotated downward, lower position
+\node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of tlbcomp-1] (tlbor) {};
 
-% TLB Way MUX - rotated with wide part up
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=0.6}, rotate=180, below=8mm of tlbval-3-2] 
+% TLB Way MUX - rotated with wide part up, wider to match table
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.2}, rotate=180, below=10mm of tlbval-3-2] 
     (tlbmux) {};
 \node[font=\tiny, rotate=180] at (tlbmux) {MUX};
 
@@ -678,11 +678,11 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \node[comp, anchor=north] at ([yshift=-3mm]ctag-3-\way.south) (ccomp-\way) {=};
 }
 
-% OR gate for cache hit/miss - rotated downward
-\node[or port, scale=0.4, number inputs=4, rotate=-90, below=3mm of ccomp-1] (cacheor) {};
+% OR gate for cache hit/miss - rotated downward, lower position
+\node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
 
-% Cache Way MUX - rotated with wide part up
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=0.6}, rotate=180, below=8mm of cdata-3-2] 
+% Cache Way MUX - rotated with wide part up, wider to match table
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.2}, rotate=180, below=10mm of cdata-3-2] 
     (cachemux) {};
 \node[font=\tiny, rotate=180] at (cachemux) {MUX};
 
@@ -729,10 +729,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.in \inputnum);
 }
 
-% TLB values to mux (also to top inputs after rotation)
+% TLB values to mux - each way to its corresponding pin
 \foreach \way in {0,...,3} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (tlbval-1-\way.south) -- ++(0,-0.2) -| (tlbmux.pin \muxpin);
+    \draw[arrow, gray] (tlbval-1-\way.south) -- ++(0,-0.3) -| ([xshift={-0.3 + 0.2*\way}cm]tlbmux.north);
 }
 
 % TLB mux output (from bottom after rotation) to physical page#
@@ -757,10 +757,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw (ccomp-\way.south) -- ++(0,-0.1) -| (cacheor.in \inputnum);
 }
 
-% Cache data to mux (also to top inputs after rotation)
+% Cache data to mux - each way to its corresponding pin
 \foreach \way in {0,...,3} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (cdata-1-\way.south) -- ++(0,-0.2) -| (cachemux.pin \muxpin);
+    \draw[arrow, gray] (cdata-1-\way.south) -- ++(0,-0.3) -| ([xshift={-0.3 + 0.2*\way}cm]cachemux.north);
 }
 
 % Mux output (from bottom after rotation) to data output
