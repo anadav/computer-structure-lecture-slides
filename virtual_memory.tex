@@ -680,7 +680,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % OR gate for cache hit/miss - centered between leftmost and rightmost comparators
 \coordinate (cache-or-x) at ($(ccomp-0.south)!0.5!(ccomp-3.south)$);
-\node[or port, scale=0.4, number inputs=4, rotate=-90] (cacheor) at ([yshift=-8mm]cache-or-x) {};
+\node[or port, scale=0.4, number inputs=4, rotate=-90, external pins width=0] (cacheor) at ([yshift=-10mm]cache-or-x) {};
 
 % Cache Way MUX - positioned to match width of data table (4 ways)
 \node[muxdemux, muxdemux def={NT=4, NB=1, NL=1, NR=4, Lh=1.4, Rh=3, w=0.8}, external pins width=0, rotate=90] 
@@ -771,10 +771,17 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw[arrow] ([xshift=1mm, yshift=-1mm]ctag-1-\way.south -| ccomp-\way.north) -- ([xshift=1mm]ccomp-\way.north);
 }
 
-% Cache comparator outputs to OR gate for hit detection
+% Cache comparator outputs to OR gate for hit detection (staggered to avoid overlaps)
 \foreach \way in {0,...,3} {
     \pgfmathtruncatemacro{\inputnum}{4 - \way}
-    \draw (ccomp-\way.south) -- ++(0,-0.1) -| (cacheor.in \inputnum);
+    \pgfmathsetmacro{\yoffset}{-1 - \way}  % Start at -3mm, each subsequent 1mm lower
+    \draw[arrow] (ccomp-\way.south) -- ++(0,\yoffset mm) -| (cacheor.bin \inputnum);
+}
+
+% Cache comparator outputs to displacement MUX control
+\foreach \way in {0,...,3} {
+    \pgfmathtruncatemacro{\inputnum}{1 + \way}
+    \draw[arrow] (ccomp-\way.south) |- (cachemux.btpin \inputnum);
 }
 
 % Cache data to mux - from same row as tag outputs, straight down
