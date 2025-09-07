@@ -636,12 +636,12 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[or port, scale=0.4, number inputs=2, rotate=-90, below=8mm of tlbcomp-0] (tlbor) {};
 
 % TLB Way MUX - positioned to match width of value table (2 ways)
-\node[muxdemux, muxdemux def={NT=2, NB=1, NL=0, NR=0, Lh=0.5, Rh=0.5, w=1.2}] 
-    (tlbmux) at ([yshift=-12mm, xshift=2mm]tlbval-3-0.south east) {};
+\node[muxdemux, muxdemux def={NT=2, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.8, w=1.0}, external pins width=0, anchor=btpin 1] 
+    (tlbmux) at ([yshift=-8mm]tlbval-3-0.south east) {};
 \node[font=\tiny, align=center] at (tlbmux) {Way\\MUX};
 
 % Physical page# output - below mux
-\node[addr, fill=orange!20, minimum width=1.2cm, below=5mm of tlbmux] (ppn) {PPN};
+\node[addr, fill=orange!20, minimum width=1.2cm] (ppn) at ([yshift=-5mm]tlbmux.bbpin 1) {PPN};
 
 % Cache Structure - relative to page offset
 \node[label, below right=8mm and 10mm of pset] (cachelabel) {Cache};
@@ -682,15 +682,15 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
 
 % Cache Way MUX - positioned to match width of data table (4 ways)
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.5, Rh=0.5, w=2.4}] 
-    (cachemux) at ([yshift=-12mm, xshift=6mm]cdata-7-1.south east) {};
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=1.0, w=2.0}, external pins width=0, anchor=btpin 1] 
+    (cachemux) at ([yshift=-8mm, xshift=4mm]cdata-7-1.south east) {};
 \node[font=\tiny, align=center] at (cachemux) {Way\\MUX};
 
 % Hit/Miss output - relative to OR gate
 \node[font=\tiny, below=3mm of cacheor] {Hit/Miss};
 
 % Data output - below mux
-\node[addr, fill=yellow!30, minimum width=0.8cm, below=5mm of cachemux] (dataout) {Data};
+\node[addr, fill=yellow!30, minimum width=0.8cm] (dataout) at ([yshift=-5mm]cachemux.bbpin 1) {Data};
 
 % Add colored backgrounds using fit
 % TLB background
@@ -739,11 +739,11 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB values to mux - connect to top pins of MUX
 \foreach \way in {0,...,1} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (tlbval-3-\way.south) -- ++(0,-0.3) -| (tlbmux.tpin \muxpin);
+    \draw[arrow, gray] (tlbval-3-\way.south) -- ++(0,-0.3) -| (tlbmux.btpin \muxpin);
 }
 
 % TLB mux output to physical page#
-\draw[arrow] (tlbmux.bpin 1) -- (ppn.north);
+\draw[arrow] (tlbmux.bbpin 1) -- (ppn.north);
 
 % Physical page# to all cache comparators (from top with slight offset)
 \foreach \way in {0,...,3} {
@@ -764,11 +764,11 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % Cache data to mux - connect to top pins of MUX
 \foreach \way in {0,...,3} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (cdata-7-\way.south) -- ++(0,-0.3) -| (cachemux.tpin \muxpin);
+    \draw[arrow, gray] (cdata-7-\way.south) -- ++(0,-0.3) -| (cachemux.btpin \muxpin);
 }
 
 % Mux output to data output
-\draw[arrow] (cachemux.bpin 1) -- (dataout.north);
+\draw[arrow] (cachemux.bbpin 1) -- (dataout.north);
 \end{tikzpicture}
 \end{columns}
 \end{frame}
