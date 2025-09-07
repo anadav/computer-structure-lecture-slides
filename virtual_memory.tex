@@ -584,94 +584,112 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     bgbox/.style={draw=none, rounded corners=2pt, inner sep=2pt}
 ]
 
-% Virtual Address at top
-\node[addr, fill=blue!20, minimum width=3cm] (vpn) at (0,5) {Virtual page number};
+% Virtual Address at top - using current page as reference
+\node[addr, fill=blue!20, minimum width=3cm] (vpn) at (current page.center) {Virtual page number};
 \node[addr, fill=yellow!20, minimum width=1.5cm, right=0pt of vpn] (poffset) {Page offset};
 
 % Tag and Set below VPN
-\node[addr, fill=green!20, minimum width=2cm] at ([yshift=-0.5cm]vpn.west) (vtag) {Tag};
+\node[addr, fill=green!20, minimum width=2cm, below=3mm of vpn.west, anchor=west] (vtag) {Tag};
 \node[addr, fill=cyan!20, minimum width=1cm, right=0pt of vtag] (vset) {Set};
 
 % Set# and disp below page offset - as a breakdown of page offset
-\node[addr, fill=cyan!10, minimum width=0.75cm] at ([yshift=-0.5cm]poffset.west |- vtag) (pset) {set};
+\node[addr, fill=cyan!10, minimum width=0.75cm, below=3mm of poffset.west, anchor=west] (pset) {set};
 \node[addr, fill=gray!10, minimum width=0.75cm, right=0pt of pset] (pdisp) {disp};
 
 % TLB Structure
-\node[label] at (-1, 3.2) {TLB};
-% TLB Set decoder - smaller on left
-\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.5cm}, rotate=-90] 
-    (tlbdec) at (-1.3, 2) {};
+\node[label, below left=8mm and 5mm of vset] (tlblabel) {TLB};
+% TLB Set decoder - relative to label
+\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.5cm}, rotate=-90, below=2mm of tlblabel] 
+    (tlbdec) {};
 \node[font=\tiny, rotate=-90] at (tlbdec) {Dec};
 
-% TLB Tag array (4 sets x 4 ways)
-\foreach \set in {0,...,3} {
+% TLB Tag array (4 sets x 4 ways) - relative to decoder
+\node[tlbcell, fill=green!15, right=3mm of tlbdec.north] (tlbtag-0-0) {};
+\foreach \way in {1,...,3} {
+    \node[tlbcell, fill=green!15, right=0pt of tlbtag-0-\the\numexpr\way-1\relax] (tlbtag-0-\way) {};
+}
+\foreach \set in {1,...,3} {
     \foreach \way in {0,...,3} {
-        \node[tlbcell, fill=green!15] (tlbtag-\set-\way) at (0.3*\way, 2.5-0.3*\set) {};
+        \node[tlbcell, fill=green!15, below=0pt of tlbtag-\the\numexpr\set-1\relax-\way] (tlbtag-\set-\way) {};
     }
 }
 
-% TLB Value array
-\foreach \set in {0,...,3} {
+% TLB Value array - relative to tag array
+\node[tlbcell, fill=purple!15, right=3mm of tlbtag-0-3] (tlbval-0-0) {};
+\foreach \way in {1,...,3} {
+    \node[tlbcell, fill=purple!15, right=0pt of tlbval-0-\the\numexpr\way-1\relax] (tlbval-0-\way) {};
+}
+\foreach \set in {1,...,3} {
     \foreach \way in {0,...,3} {
-        \node[tlbcell, fill=purple!15] (tlbval-\set-\way) at (1.5+0.3*\way, 2.5-0.3*\set) {};
+        \node[tlbcell, fill=purple!15, below=0pt of tlbval-\the\numexpr\set-1\relax-\way] (tlbval-\set-\way) {};
     }
 }
 
-% TLB comparators below tags
-\foreach \way in {0,...,3} {
-    \node[comp] (tlbcomp-\way) at (0.3*\way, 1) {=};
+% TLB comparators below tags - relative positioning
+\node[comp, below=5mm of tlbtag-3-0] (tlbcomp-0) {=};
+\foreach \way in {1,...,3} {
+    \node[comp, below=5mm of tlbtag-3-\way] (tlbcomp-\way) {=};
 }
 
-% OR gate for TLB hit/miss
-\node[or port, scale=0.4] (tlbor) at (0.45, 0.5) {};
+% OR gate for TLB hit/miss - relative to comparators
+\node[or port, scale=0.4, below right=3mm and 2mm of tlbcomp-1] (tlbor) {};
 
-% TLB Way MUX
-\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.8cm}] 
-    (tlbmux) at (2, 0.3) {};
+% TLB Way MUX - relative to value array
+\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.8cm}, below=8mm of tlbval-3-2] 
+    (tlbmux) {};
 \node[font=\tiny] at (tlbmux) {MUX};
 
-% Physical page# output
-\node[addr, fill=orange!20, minimum width=1.2cm] (ppn) at (2, -0.5) {PPN};
+% Physical page# output - below mux
+\node[addr, fill=orange!20, minimum width=1.2cm, below=5mm of tlbmux] (ppn) {PPN};
 
-% Cache Structure
-\node[label] at (5.5, 3.2) {Cache};
-% Cache Set decoder - wider on right for set outputs
-\node[muxdemux, muxdemux def={Lh=0.5cm, Rh=1.2cm, w=0.6cm}, rotate=-90] 
-    (cachedec) at (4, 2) {};
+% Cache Structure - relative to page offset
+\node[label, below right=8mm and 10mm of pset] (cachelabel) {Cache};
+% Cache Set decoder - relative to label
+\node[muxdemux, muxdemux def={Lh=0.5cm, Rh=1.2cm, w=0.6cm}, rotate=-90, below=2mm of cachelabel] 
+    (cachedec) {};
 \node[font=\tiny, rotate=-90] at (cachedec) {Dec};
 
-% Cache Tag array (larger - 8 ways shown as 2 blocks)
-\foreach \set in {0,...,3} {
+% Cache Tag array - relative to decoder
+\node[cachecell, fill=purple!15, right=3mm of cachedec.north] (ctag-0-0) {};
+\foreach \way in {1,...,3} {
+    \node[cachecell, fill=purple!15, right=0pt of ctag-0-\the\numexpr\way-1\relax] (ctag-0-\way) {};
+}
+\foreach \set in {1,...,3} {
     \foreach \way in {0,...,3} {
-        \node[cachecell, fill=purple!15] (ctag-\set-\way) at (4.8+0.25*\way, 2.5-0.25*\set) {};
+        \node[cachecell, fill=purple!15, below=0pt of ctag-\the\numexpr\set-1\relax-\way] (ctag-\set-\way) {};
     }
 }
 
-% Cache Data array
-\foreach \set in {0,...,3} {
+% Cache Data array - relative to tag array
+\node[cachecell, fill=yellow!15, right=3mm of ctag-0-3] (cdata-0-0) {};
+\foreach \way in {1,...,3} {
+    \node[cachecell, fill=yellow!15, right=0pt of cdata-0-\the\numexpr\way-1\relax] (cdata-0-\way) {};
+}
+\foreach \set in {1,...,3} {
     \foreach \way in {0,...,3} {
-        \node[cachecell, fill=yellow!15] (cdata-\set-\way) at (6.2+0.25*\way, 2.5-0.25*\set) {};
+        \node[cachecell, fill=yellow!15, below=0pt of cdata-\the\numexpr\set-1\relax-\way] (cdata-\set-\way) {};
     }
 }
 
-% Cache comparators below tags - only 4 for the 4 ways we show
-\foreach \way in {0,...,3} {
-    \node[comp] (ccomp-\way) at (4.8+0.25*\way, 1) {=};
+% Cache comparators below tags - relative positioning
+\node[comp, below=5mm of ctag-3-0] (ccomp-0) {=};
+\foreach \way in {1,...,3} {
+    \node[comp, below=5mm of ctag-3-\way] (ccomp-\way) {=};
 }
 
-% OR gate for cache hit/miss
-\node[or port, scale=0.4] (cacheor) at (5.3, 0.5) {};
+% OR gate for cache hit/miss - relative to comparators
+\node[or port, scale=0.4, below right=3mm and 2mm of ccomp-1] (cacheor) {};
 
-% Cache Way MUX
-\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.8cm}] 
-    (cachemux) at (6.5, 0.3) {};
+% Cache Way MUX - relative to data array
+\node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.8cm}, below=8mm of cdata-3-2] 
+    (cachemux) {};
 \node[font=\tiny] at (cachemux) {MUX};
 
-% Hit/Miss output
-\node[font=\tiny] at (6.5, -0.2) {Hit/Miss};
+% Hit/Miss output - relative to OR gate
+\node[font=\tiny, below=3mm of cacheor] {Hit/Miss};
 
-% Data output
-\node[addr, fill=yellow!30, minimum width=0.8cm] (dataout) at (6.5, -0.7) {Data};
+% Data output - below mux
+\node[addr, fill=yellow!30, minimum width=0.8cm, below=5mm of cachemux] (dataout) {Data};
 
 % Add colored backgrounds using fit
 % TLB background
