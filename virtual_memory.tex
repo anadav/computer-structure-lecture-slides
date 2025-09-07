@@ -577,8 +577,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \column{0.62\textwidth}
 \begin{tikzpicture}[
     addr/.style={draw, rectangle, minimum height=0.35cm, inner sep=1pt, font=\tiny},
-    tlbcell/.style={draw, minimum width=0.25cm, minimum height=0.2cm, inner sep=0pt, font=\tiny},
-    cachecell/.style={draw, minimum width=0.25cm, minimum height=0.2cm, inner sep=0pt, font=\tiny},
+    tlbcell/.style={draw, minimum width=4mm, minimum height=2mm, inner sep=0pt, font=\tiny},
+    cachecell/.style={draw, minimum width=4mm, minimum height=2mm, inner sep=0pt, font=\tiny},
     comp/.style={circle, draw, inner sep=0pt, minimum size=3mm, font=\tiny},
     label/.style={font=\tiny\bfseries},
     arrow/.style={->, >=latex},
@@ -600,7 +600,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB Structure
 \node[label, below left=8mm and 5mm of vset] (tlblabel) {TLB};
 % TLB Set decoder - relative to label (rotated for horizontal output)
-\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=0, Lh=0.3, Rh=1.0, w=0.5}, below=2mm of tlblabel] 
+\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=0, Lh=1, Rh=2, w=0.5}, external pins width=0, below=2mm of tlblabel] 
     (tlbdec) {};
 \node[font=\tiny] at (tlbdec) {\rotatebox{90}{Dec}};
 
@@ -646,7 +646,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % Cache Structure - relative to page offset
 \node[label, below right=8mm and 10mm of pset] (cachelabel) {Cache};
 % Cache Set decoder - relative to label (rotated for horizontal output)
-\node[muxdemux, muxdemux def={NB=0, NT=1, NR=4, NL=0, Lh=0.3, Rh=1.2, w=0.5}, below=2mm of cachelabel] 
+\node[muxdemux, muxdemux def={NB=0, NT=1, NR=8, NL=0, Lh=1, Rh=3, w=0.5}, below=2mm of cachelabel, external pins width=0] 
     (cachedec) {};
 \node[font=\tiny] at (cachedec) {\rotatebox{90}{Dec}};
 
@@ -655,7 +655,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \foreach \way in {1,...,3} {
     \node[cachecell, fill=purple!15, right=0pt of ctag-0-\the\numexpr\way-1\relax] (ctag-0-\way) {};
 }
-\foreach \set in {1,...,3} {
+\foreach \set in {1,...,7} {
     \foreach \way in {0,...,3} {
         \node[cachecell, fill=purple!15, below=0pt of ctag-\the\numexpr\set-1\relax-\way] (ctag-\set-\way) {};
     }
@@ -666,23 +666,23 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \foreach \way in {1,...,3} {
     \node[cachecell, fill=yellow!15, right=0pt of cdata-0-\the\numexpr\way-1\relax] (cdata-0-\way) {};
 }
-\foreach \set in {1,...,3} {
+\foreach \set in {1,...,7} {
     \foreach \way in {0,...,3} {
         \node[cachecell, fill=yellow!15, below=0pt of cdata-\the\numexpr\set-1\relax-\way] (cdata-\set-\way) {};
     }
 }
 
 % Cache comparators below tags - aligned with tag outputs
-\node[comp, anchor=north] at ([yshift=-3mm]ctag-3-0.south) (ccomp-0) {=};
+\node[comp, anchor=north] at ([yshift=-3mm]ctag-7-0.south) (ccomp-0) {=};
 \foreach \way in {1,...,3} {
-    \node[comp, anchor=north] at ([yshift=-3mm]ctag-3-\way.south) (ccomp-\way) {=};
+    \node[comp, anchor=north] at ([yshift=-3mm]ctag-7-\way.south) (ccomp-\way) {=};
 }
 
 % OR gate for cache hit/miss - rotated downward, lower position
 \node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
 
 % Cache Way MUX - rotated with wide part up, wider to match table
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.2}, rotate=180, below=10mm of cdata-3-2] 
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.2}, rotate=180, below=10mm of cdata-7-2] 
     (cachemux) {};
 \node[font=\tiny, rotate=180] at (cachemux) {MUX};
 
@@ -700,7 +700,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 % Cache background
 \begin{scope}[on background layer]
-    \node[bgbox, fill=green!5, fit=(cachedec)(ctag-0-0)(cdata-3-3)(ccomp-0)(ccomp-3)(cacheor)(cachemux)] (cachebg) {};
+    \node[bgbox, fill=green!5, fit=(cachedec)(ctag-0-0)(cdata-7-3)(ccomp-0)(ccomp-3)(cacheor)(cachemux)] (cachebg) {};
 \end{scope}
 
 % Connections
@@ -721,7 +721,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % Decoder outputs to Cache array rows
-\foreach \set in {0,...,3} {
+\foreach \set in {0,...,7} {
     \draw[arrow] (cachedec.brpin \the\numexpr\set+1\relax) -- (ctag-\set-0.west);
 }
 
