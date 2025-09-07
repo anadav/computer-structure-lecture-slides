@@ -632,7 +632,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % OR gate for TLB hit/miss - relative to comparators
-\node[or port, scale=0.4, below right=3mm and 2mm of tlbcomp-1] (tlbor) {};
+\node[or port, scale=0.4, number inputs=4, below right=3mm and 2mm of tlbcomp-1] (tlbor) {};
 
 % TLB Way MUX - relative to value array
 \node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.8cm}, below=8mm of tlbval-3-2] 
@@ -678,7 +678,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % OR gate for cache hit/miss - relative to comparators
-\node[or port, scale=0.4, below right=3mm and 2mm of ccomp-1] (cacheor) {};
+\node[or port, scale=0.4, number inputs=4, below right=3mm and 2mm of ccomp-1] (cacheor) {};
 
 % Cache Way MUX - relative to data array
 \node[muxdemux, muxdemux def={Lh=0.8cm, Rh=0.3cm, w=0.8cm}, below=8mm of cdata-3-2] 
@@ -721,7 +721,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \foreach \way in {0,...,3} {
     \draw[arrow] (tlbcomp-\way.south) |- ([yshift={0.1cm-0.05cm*\way}]tlbmux.west);
     % Connect to OR gate for hit detection  
-    \draw (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.in \way);
+    \pgfmathtruncatemacro{\inputnum}{\way + 1}
+    \draw (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.in \inputnum);
 }
 
 % TLB values to mux
@@ -744,7 +745,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \foreach \way in {0,...,3} {
     \draw[arrow] (ccomp-\way.south) |- ([yshift={0.15cm-0.04cm*\way}]cachemux.west);
     % Connect to OR gate for hit detection
-    \draw (ccomp-\way.south) -- ++(0,-0.1) -| (cacheor.in \way);
+    \pgfmathtruncatemacro{\inputnum}{\way + 1}
+    \draw (ccomp-\way.south) -- ++(0,-0.1) -| (cacheor.in \inputnum);
 }
 
 % Cache data to mux
