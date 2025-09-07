@@ -604,41 +604,41 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     (tlbdec) {};
 \node[font=\tiny] at (tlbdec) {\rotatebox{90}{Dec}};
 
-% TLB Tag array (4 sets x 4 ways) - relative to decoder right pins
+% TLB Tag array (4 sets x 2 ways) - relative to decoder right pins
 \node[tlbcell, fill=green!15, right=3mm of tlbdec.rpin 1] (tlbtag-0-0) {};
-\foreach \way in {1,...,3} {
+\foreach \way in {1,...,1} {
     \node[tlbcell, fill=green!15, right=0pt of tlbtag-0-\the\numexpr\way-1\relax] (tlbtag-0-\way) {};
 }
 \foreach \set in {1,...,3} {
-    \foreach \way in {0,...,3} {
+    \foreach \way in {0,...,1} {
         \node[tlbcell, fill=green!15, below=0pt of tlbtag-\the\numexpr\set-1\relax-\way] (tlbtag-\set-\way) {};
     }
 }
 
 % TLB Value array - relative to tag array
-\node[tlbcell, fill=purple!15, right=3mm of tlbtag-0-3] (tlbval-0-0) {};
-\foreach \way in {1,...,3} {
+\node[tlbcell, fill=purple!15, right=3mm of tlbtag-0-1] (tlbval-0-0) {};
+\foreach \way in {1,...,1} {
     \node[tlbcell, fill=purple!15, right=0pt of tlbval-0-\the\numexpr\way-1\relax] (tlbval-0-\way) {};
 }
 \foreach \set in {1,...,3} {
-    \foreach \way in {0,...,3} {
+    \foreach \way in {0,...,1} {
         \node[tlbcell, fill=purple!15, below=0pt of tlbval-\the\numexpr\set-1\relax-\way] (tlbval-\set-\way) {};
     }
 }
 
 % TLB comparators below tags - aligned with tag outputs
 \node[comp, anchor=north] at ([yshift=-3mm]tlbtag-3-0.south) (tlbcomp-0) {=};
-\foreach \way in {1,...,3} {
+\foreach \way in {1,...,1} {
     \node[comp, anchor=north] at ([yshift=-3mm]tlbtag-3-\way.south) (tlbcomp-\way) {=};
 }
 
 % OR gate for TLB hit/miss - rotated downward, lower position
-\node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of tlbcomp-1] (tlbor) {};
+\node[or port, scale=0.4, number inputs=2, rotate=-90, below=8mm of tlbcomp-0] (tlbor) {};
 
-% TLB Way MUX - rotated with wide part up, wider to match table
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.2}, rotate=180, below=10mm of tlbval-3-2] 
-    (tlbmux) {};
-\node[font=\tiny, rotate=180] at (tlbmux) {MUX};
+% TLB Way MUX - positioned to match width of value table (2 ways)
+\node[muxdemux, muxdemux def={NT=2, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.0}, rotate=180] 
+    (tlbmux) at ([yshift=-10mm, xshift=2mm]tlbval-3-0.south east) {};
+\node[font=\tiny, rotate=180] at (tlbmux) {Way MUX};
 
 % Physical page# output - below mux
 \node[addr, fill=orange!20, minimum width=1.2cm, below=5mm of tlbmux] (ppn) {PPN};
@@ -681,10 +681,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % OR gate for cache hit/miss - rotated downward, lower position
 \node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
 
-% Cache Way MUX - rotated with wide part up, wider to match table
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=1.2}, rotate=180, below=10mm of cdata-7-2] 
-    (cachemux) {};
-\node[font=\tiny, rotate=180] at (cachemux) {MUX};
+% Cache Way MUX - positioned to match width of data table (4 ways)
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=0, NR=0, Lh=0.3, Rh=0.3, w=2.0}, rotate=180] 
+    (cachemux) at ([yshift=-10mm, xshift=4mm]cdata-7-1.south east) {};
+\node[font=\tiny, rotate=180] at (cachemux) {Way MUX};
 
 % Hit/Miss output - relative to OR gate
 \node[font=\tiny, below=3mm of cacheor] {Hit/Miss};
@@ -695,7 +695,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % Add colored backgrounds using fit
 % TLB background
 \begin{scope}[on background layer]
-    \node[bgbox, fill=blue!5, fit=(tlbdec)(tlbtag-0-0)(tlbval-3-3)(tlbcomp-0)(tlbcomp-3)(tlbor)(tlbmux)] (tlbbg) {};
+    \node[bgbox, fill=blue!5, fit=(tlbdec)(tlbtag-0-0)(tlbval-3-1)(tlbcomp-0)(tlbcomp-1)(tlbor)(tlbmux)] (tlbbg) {};
 \end{scope}
 
 % Cache background
@@ -708,7 +708,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \draw[arrow] (vset.south) -- ++(0,-0.5) -| (tlbdec.btpin 1);
 
 % Tag from address to all TLB comparators (from top with slight offset)
-\foreach \way in {0,...,3} {
+\foreach \way in {0,...,1} {
     \draw[arrow, blue] (vtag.south) -- ++(0,-0.8) -| ([xshift={-1mm + 0.3*\way}]tlbcomp-\way.north);
 }
 
@@ -726,12 +726,12 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % Selected TLB row output to comparators (from top with slight offset)
-\foreach \way in {0,...,3} {
+\foreach \way in {0,...,1} {
     \draw[arrow] (tlbtag-1-\way.south) -- ([xshift=1mm]tlbcomp-\way.north);
 }
 
 % Comparator outputs to TLB mux (top inputs after rotation) and OR gate
-\foreach \way in {0,...,3} {
+\foreach \way in {0,...,1} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
     \draw[arrow] (tlbcomp-\way.south) |- (tlbmux.tpin \muxpin);
     % Connect to OR gate for hit detection  
@@ -739,11 +739,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.in \inputnum);
 }
 
-% TLB values to mux - each way to its corresponding pin
-\foreach \way in {0,...,3} {
-    \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \pgfmathsetmacro{\xpos}{-0.3 + 0.2*\way}
-    \draw[arrow, gray] (tlbval-1-\way.south) -- ++(0,-0.3) -| ([xshift=\xpos cm]tlbmux.north);
+% TLB values to mux - direct connection from each way to corresponding position
+\foreach \way in {0,...,1} {
+    \draw[arrow, gray] (tlbval-3-\way.south) -- ++(0,-0.8) -| (tlbval-3-\way.south |- tlbmux.north);
 }
 
 % TLB mux output (from bottom after rotation) to physical page#
@@ -768,11 +766,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw (ccomp-\way.south) -- ++(0,-0.1) -| (cacheor.in \inputnum);
 }
 
-% Cache data to mux - each way to its corresponding pin
+% Cache data to mux - direct connection from each way to corresponding position
 \foreach \way in {0,...,3} {
-    \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \pgfmathsetmacro{\xpos}{-0.3 + 0.2*\way}
-    \draw[arrow, gray] (cdata-1-\way.south) -- ++(0,-0.3) -| ([xshift=\xpos cm]cachemux.north);
+    \draw[arrow, gray] (cdata-7-\way.south) -- ++(0,-0.8) -| (cdata-7-\way.south |- cachemux.north);
 }
 
 % Mux output (from bottom after rotation) to data output
@@ -853,10 +849,10 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \vspace{-0.1cm}
 \begin{center}
 \begin{tikzpicture}[
-    box/.style={rectangle, draw, thick, minimum width=1.8cm, minimum height=1cm, text centered, text width=2cm, font=\footnotesize},
+    box/.style={rectangle, draw, thick, minimum width=1.8cm, minimum height=1cm, text centered, text width=2cm},
     data_connector/.style={circle, fill, inner sep=1.2pt},
-    arrow/.style={->, thick, font=\scriptsize, yshift=-2mm},
-    doublearrow/.style={<->, thick, font=\scriptsize, yshift=-2mm}]
+    arrow/.style={->, thick, yshift=-2mm},
+    doublearrow/.style={<->, thick, yshift=-2mm}]
     
     % Define colors
     \definecolor{cpucolor}{RGB}{255,230,200}
