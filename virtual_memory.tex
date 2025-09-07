@@ -9,7 +9,8 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, patterns, fit, matrix}
+\usepackage{circuitikz}
 \usetheme{Madrid}
 
 % Define colors for registers
@@ -24,6 +25,76 @@
 
 % Define hyphenation command
 \newcommand{\hyp}{\-}
+
+% Address breakdown command from recitation
+\newcommand{\addressbreakdown}[3]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.6cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    % Calculate total bits and positions
+    \pgfmathtruncatemacro{\totalbits}{#1 + #2 + #3}
+    \pgfmathtruncatemacro{\tagstart}{\totalbits - 1}
+    \pgfmathtruncatemacro{\tagend}{\totalbits - #1}
+    \pgfmathtruncatemacro{\setstart}{\tagend - 1}
+    \pgfmathtruncatemacro{\setend}{\tagend - #2}
+    \pgfmathtruncatemacro{\offsetstart}{\setend - 1}
+    \pgfmathtruncatemacro{\offsetend}{0}
+    
+    % Scale factor for width (adjust this to change overall size)
+    \pgfmathsetmacro{\bitwidth}{0.17}
+    
+    % Starting position
+    \pgfmathsetmacro{\xpos}{0}
+    
+    % Draw tag block
+    \ifnum#1>0
+        \pgfmathsetmacro{\tagwidth}{#1 * \bitwidth}
+        \node[section, fill=blue!40, minimum width=\tagwidth cm] (tag) at (\xpos + \tagwidth/2, 0) {};
+        \node[sectionlabel] at (tag.center) {tag};
+        
+        % Add bit numbers below
+        \node[bitnumber] at ($(tag.south west) + (0mm,-1mm)$) {\tagstart};
+        \node[bitnumber] at ($(tag.south east) + (-1mm,-1mm)$) {\tagend};
+        
+        \pgfmathsetmacro{\xpos}{\xpos + \tagwidth}
+    \fi
+    
+    % Draw set block
+    \ifnum#2>0
+        \pgfmathsetmacro{\setwidth}{#2 * \bitwidth}
+        \node[section, fill=green!40, minimum width=\setwidth cm] (set) at (\xpos + \setwidth/2, 0) {};
+        % if num is smaller than 2 rotate label
+        \ifnum#2<3
+            \node[sectionlabel, rotate=90] at (set.center) {set};
+        \else
+            \node[sectionlabel] at (set.center) {set};
+        \fi
+        % Add bit numbers below
+        \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {\setstart};
+        \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {\setend};
+        
+        \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
+    \fi
+    
+    % Draw offset block
+    \ifnum#3>0
+        \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
+        \node[section, fill=yellow!40, minimum width=\offsetwidth cm] (offset) at (\xpos + \offsetwidth/2, 0) {};
+        \ifnum#3<3
+            \node[sectionlabel, rotate=90, font=\tiny] at (offset.center) {offset};
+        \else
+            \node[sectionlabel] at (offset.center) {offset};
+        \fi
+        
+        % Add bit numbers below
+        \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstart};
+        \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {\offsetend};
+    \fi
+    \end{tikzpicture}
+}
 
 % Proportional widths for the table-only version
 \newlength\TotalW
@@ -1033,6 +1104,78 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{frame}
 
 % Additional advanced topics
+\begin{frame}{Global TLB Entries}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Problem:} Some pages used by all processes
+\begin{itemize}
+\item Kernel code pages
+\item Shared libraries (libc, etc.)
+\item System call handlers
+\item Interrupt handlers
+\end{itemize}
+
+\textbf{Solution: Global bit in TLB}
+\begin{itemize}
+\item G bit in page table entry
+\item TLB entry marked as global
+\item Not flushed on context switch
+\item Remains valid across all ASIDs
+\end{itemize}
+\end{column}
+
+\begin{column}{0.52\textwidth}
+\textbf{TLB Entry with Global Bit:}
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % Define styles
+    \tikzset{
+        entry/.style={draw, thick, minimum height=0.4cm},
+        globalentry/.style={entry, pattern=north east lines, pattern color=red!30}
+    }
+    
+    % TLB structure as matrix
+    \matrix[matrix of nodes, nodes={entry, minimum width=0.8cm}, 
+            column sep=-\pgflinewidth, row sep=2mm,
+            font=\tiny] (tlb) {
+        |[fill=blue!20]| ASID & |[fill=orange!20]| VPN & |[fill=green!20]| PPN & |[fill=red!20]| G & |[fill=yellow!20]| Flags \\
+        |[fill=blue!10]| 0x001 & |[fill=orange!10]| 0x7FFF & |[fill=green!10]| 0x2000 & |[globalentry]| 1 & |[fill=yellow!10]| RX \\
+        |[fill=blue!10]| 0x001 & |[fill=orange!10]| 0x8000 & |[fill=green!10]| 0x3000 & |[globalentry]| 1 & |[fill=yellow!10]| RX \\
+        |[fill=blue!10]| 0x042 & |[fill=orange!10]| 0x1234 & |[fill=green!10]| 0x5678 & 0 & |[fill=yellow!10]| RW \\
+        |[fill=blue!10]| 0x042 & |[fill=orange!10]| 0x2000 & |[fill=green!10]| 0x9ABC & 0 & |[fill=yellow!10]| RW \\
+        |[fill=blue!10]| 0x055 & |[fill=orange!10]| 0x4000 & |[fill=green!10]| 0xDEF0 & 0 & |[fill=yellow!10]| RW \\
+    };
+    
+    % Labels
+    \node[above=2mm of tlb-1-1] {\scriptsize Process};
+    \node[above=2mm of tlb-1-2] {\scriptsize Virtual};
+    \node[above=2mm of tlb-1-3] {\scriptsize Physical};
+    \node[above=2mm of tlb-1-4] {\scriptsize Global};
+    \node[above=2mm of tlb-1-5] {\scriptsize Perms};
+    
+    % Annotations
+    \node[right=5mm of tlb-2-5, text=red!70!black] {\scriptsize Kernel};
+    \node[right=5mm of tlb-3-5, text=red!70!black] {\scriptsize Kernel};
+    \node[right=5mm of tlb-4-5, text=blue!70!black] {\scriptsize Process A};
+    \node[right=5mm of tlb-5-5, text=blue!70!black] {\scriptsize Process A};
+    \node[right=5mm of tlb-6-5, text=green!70!black] {\scriptsize Process B};
+    
+    % Context switch annotation
+    \draw[thick, dashed, red] ([yshift=-2mm]tlb-3-1.south west) -- ([yshift=-2mm]tlb-3-5.south east);
+    \node[below=5mm of tlb-5-3, text=red!70!black] {\scriptsize Context Switch: Global entries remain};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Benefits:}
+\begin{itemize}
+\item Reduced TLB misses for kernel code
+\item Better performance for system calls
+\item No need to reload common mappings
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
 \begin{frame}{ASID: Address Space Identifiers in TLBs}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
@@ -1109,115 +1252,111 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 \begin{frame}{TLB Lookup with ASID}
 \begin{center}
-\begin{tikzpicture}[scale=0.85]
-    % Define the center as reference
-    \coordinate (center) at (0,0);
-    
-    % Virtual address at top center
-    \node[rectangle, draw, thick, minimum width=5.5cm, minimum height=0.5cm, anchor=north] 
-        (vaddr) at ([yshift=2.5cm]center) {};
-    \fill[orange!20] ([xshift=-2.75cm]vaddr.south west) rectangle ([xshift=-0.15cm]vaddr.south west |- vaddr.north);
-    \fill[yellow!20] ([xshift=-0.15cm]vaddr.south west) rectangle ([xshift=0.9cm]vaddr.south west |- vaddr.north);
-    \fill[gray!20] ([xshift=0.9cm]vaddr.south west) rectangle (vaddr.north east);
-    
-    \node[font=\footnotesize] at ([xshift=-1.45cm]vaddr.center) {VPN (Tag bits)};
-    \node[font=\footnotesize] at ([xshift=0.375cm]vaddr.center) {Set};
-    \node[font=\footnotesize] at ([xshift=1.65cm]vaddr.center) {Offset};
-    \node[above=2mm of vaddr, font=\small] {Virtual Address};
-    
-    % Arrow for set indexing
-    \draw[->, thick] ([xshift=0.375cm]vaddr.south) -- ++(0,-0.7) node[midway, right, font=\tiny] {Index};
-    
-    % TLB Set label
-    \node[below=1cm of vaddr, font=\small] (tlblabel) {Selected TLB Set};
-    
-    % TLB entries (4 ways) - positioned relative to label
-    \foreach \way in {0,...,3} {
-        \node[rectangle, draw, thick, minimum width=5.5cm, minimum height=0.45cm, 
-              below={\way*0.1cm+0.3cm} of tlblabel.south, anchor=north] (entry\way) {};
-        
-        % ASID field
-        \fill[blue!20] ([xshift=0cm]entry\way.west) rectangle ([xshift=0.7cm]entry\way.west |- entry\way.north);
-        \node[font=\tiny] at ([xshift=0.35cm]entry\way.west) {ASID};
-        
-        % TAG field
-        \fill[orange!20] ([xshift=0.7cm]entry\way.west) rectangle ([xshift=3.2cm]entry\way.west |- entry\way.north);
-        \node[font=\tiny] at ([xshift=1.95cm]entry\way.west) {TAG};
-        
-        % PFN field
-        \fill[green!20] ([xshift=3.2cm]entry\way.west) rectangle ([xshift=5cm]entry\way.west |- entry\way.north);
-        \node[font=\tiny] at ([xshift=4.1cm]entry\way.west) {PFN};
-        
-        % Valid bit
-        \fill[red!20] ([xshift=5cm]entry\way.west) rectangle (entry\way.east |- entry\way.north);
-        \node[font=\tiny] at ([xshift=5.25cm]entry\way.west) {V};
-        
-        % Way label
-        \node[right=2mm of entry\way, font=\tiny] {Way \way};
+\begin{tikzpicture}[scale=0.75]
+    % Define styles
+    \tikzset{
+        tlbentry/.style={draw, thick, minimum height=0.4cm},
+        comparatorstyle/.style={draw, thick, minimum width=0.8cm, minimum height=0.5cm}
     }
     
-    % CR3 ASID source - positioned left of TLB entries
-    \node[rectangle, draw, thick, fill=blue!20, minimum width=1cm, minimum height=0.5cm,
-          left=1.5cm of entry1.west] (cr3asid) {ASID};
-    \node[below=1mm of cr3asid, font=\tiny] {from CR3};
-    
-    % Comparison logic below TLB entries
-    \coordinate (compbase) at ([yshift=-2cm]entry3.south);
-    
-    \foreach \way in {0,...,3} {
-        % ASID comparator
-        \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.15cm,
-              at={([xshift=0.35cm, yshift={\way*-0.25cm}]compbase)}] (asidcmp\way) {\tiny =};
-        
-        % TAG comparator
-        \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.15cm,
-              at={([xshift=1.95cm, yshift={\way*-0.25cm}]compbase)}] (tagcmp\way) {\tiny =};
-        
-        % AND gate
-        \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.15cm,
-              at={([xshift=3.45cm, yshift={\way*-0.25cm}]compbase)}] (and\way) {\tiny \&};
-        
-        % Connections from TLB entries
-        \draw[-] ([xshift=0.35cm]entry\way.south) -- (asidcmp\way.north);
-        \draw[-] ([xshift=1.95cm]entry\way.south) -- (tagcmp\way.north);
-        
-        % Connection from CR3 ASID
-        \draw[-] (cr3asid.east) -| ([xshift=-0.3cm]asidcmp\way.west) -- (asidcmp\way.west);
-        
-        % Connection from VA TAG
-        \draw[-] ([xshift=-1.45cm]vaddr.south) -- ([xshift=-1.45cm, yshift=-1.8cm-\way*0.05cm]vaddr.south) 
-                 -| ([xshift=-0.3cm]tagcmp\way.west) -- (tagcmp\way.west);
-        
-        % Connect comparators to AND
-        \draw[-] (asidcmp\way.east) -- (and\way.west);
-        \draw[-] (tagcmp\way.east) -- (and\way.west);
-        
-        % Valid bit check
-        \draw[-] ([xshift=5.25cm]entry\way.south) |- (and\way.south);
-        
-        % Hit output
-        \node[right=5mm of and\way] (hit\way) {\tiny Hit\way};
-        \draw[->] (and\way.east) -- (hit\way.west);
-    }
-    
-    % Priority encoder
-    \node[rectangle, draw, thick, dashed, minimum width=0.8cm, minimum height=0.6cm,
-          below right=0.5cm and 1cm of and3] (encoder) {\tiny \shortstack{Priority\\Encoder}};
-    
-    % Hit signals to encoder
-    \foreach \way in {0,...,3} {
-        \draw[-] (hit\way.east) -| ([yshift={\way*0.15cm-0.225cm}]encoder.west);
-    }
-    
-    % Final TLB Hit
-    \draw[->] (encoder.east) -- ++(0.5,0) node[right, font=\tiny] {TLB Hit};
-    
-    % Bottom caption
-    \node[font=\tiny, align=center] at ([yshift=-3.5cm]center) {
-        Match: ASID from CR3 = ASID in entry\\
-        AND: TAG from VA = TAG in entry\\
-        AND: Valid bit = 1
+    % Virtual address breakdown at top using addressbreakdown style
+    \node (vaddr) at (0,4) {
+        \addressbreakdown{20}{8}{4}
     };
+    \node[above=1mm of vaddr] {\small Virtual Address (32-bit example)};
+    \node[below=1mm of vaddr, font=\tiny] {VPN[19:12] for tag, VPN[11:4] for set, [3:0] offset};
+    
+    % CR3/ASID register
+    \node[draw, thick, fill=blue!20, minimum width=1.5cm, minimum height=0.5cm] 
+        (cr3) at (-4,2) {ASID};
+    \node[below=1mm of cr3, font=\tiny] {from CR3/PTBR};
+    
+    % TLB structure as matrix - 4-way set associative
+    \node[font=\small] at (0,2.5) {Selected TLB Set (indexed by VPN[11:4])};
+    
+    \matrix[matrix of nodes, nodes={tlbentry, minimum width=1cm}, 
+            column sep=-\pgflinewidth, row sep=3mm,
+            font=\tiny] (tlb) at (0,1) {
+        |[fill=gray!30]| Way & |[fill=blue!20]| ASID & |[fill=orange!20]| Tag & |[fill=green!20]| PPN & |[fill=red!20]| V & |[fill=yellow!20]| Flags \\
+        0 & |[fill=blue!10]| 0x042 & |[fill=orange!10]| 0x1234 & |[fill=green!10]| 0x5678 & 1 & RWX \\
+        1 & |[fill=blue!10]| 0x001 & |[fill=orange!10]| 0x7FFF & |[fill=green!10]| 0x2000 & 1 & R-X \\
+        2 & |[fill=blue!10]| 0x042 & |[fill=orange!10]| 0xABCD & |[fill=green!10]| 0x9000 & 1 & RW- \\
+        3 & |[fill=blue!10]| 0x055 & |[fill=orange!10]| 0x4000 & |[fill=green!10]| 0xDEF0 & 0 & --- \\
+    };
+    
+    % Comparators using circuitikz
+    \node[font=\small] at (0,-1.2) {Comparison Logic (per way)};
+    
+    % For each way, create comparators
+    \foreach \way in {0,...,3} {
+        \pgfmathsetmacro{\ypos}{-2.5 - \way*0.8}
+        
+        % ASID comparator
+        \node[comparatorstyle] (asidcomp\way) at (-2.5,\ypos) {};
+        \node at (asidcomp\way) {\tiny ASID=};
+        
+        % Tag comparator  
+        \node[comparatorstyle] (tagcomp\way) at (0,\ypos) {};
+        \node at (tagcomp\way) {\tiny TAG=};
+        
+        % AND gate from circuitikz
+        \node[and port, scale=0.5] (and\way) at (2.5,\ypos) {};
+        
+        % Valid check
+        \node[comparatorstyle, minimum width=0.5cm] (validchk\way) at (1.3,\ypos-0.3) {};
+        \node at (validchk\way) {\tiny V};
+        
+        % Hit signal
+        \node (hit\way) at (4,\ypos) {\tiny Hit[\way]};
+        
+        % Connections
+        \pgfmathsetmacro{\tlbrow}{\way + 2}
+        
+        % ASID connections
+        \draw[->] (cr3.east) -| ([xshift=-0.2cm]asidcomp\way.west);
+        \draw[->] (tlb-\tlbrow-2.south) |- ([xshift=0.2cm]asidcomp\way.west);
+        
+        % Tag connections  
+        \draw[->] ([xshift=-2cm, yshift=0.3cm]vaddr.south) |- ([xshift=-0.2cm]tagcomp\way.west);
+        \draw[->] (tlb-\tlbrow-3.south) |- ([xshift=0.2cm]tagcomp\way.west);
+        
+        % Valid bit connection
+        \draw[->] (tlb-\tlbrow-5.south) |- (validchk\way.north);
+        
+        % Connect comparators to AND gate
+        \draw[->] (asidcomp\way.east) -- (and\way.in 1);
+        \draw[->] (tagcomp\way.east) -- (and\way.in 2);
+        \draw[->] (validchk\way.east) -| ([xshift=-0.1cm]and\way.south);
+        
+        % AND to hit
+        \draw[->] (and\way.out) -- (hit\way.west);
+    }
+    
+    % Priority encoder / OR logic
+    \node[draw, thick, dashed, minimum width=1cm, minimum height=1.5cm] 
+        (encoder) at (5.5,-3.5) {\tiny \shortstack{Priority\\Encoder\\+\\OR}};
+    
+    % Connect hits to encoder
+    \foreach \way in {0,...,3} {
+        \draw[->] (hit\way.east) -| ([yshift={0.3cm-\way*0.3cm}]encoder.west);
+    }
+    
+    % Final outputs
+    \node (tlbhit) at (7.5,-3) {\small TLB Hit};
+    \node (data) at (7.5,-4) {\small PPN + Flags};
+    
+    \draw[->] ([yshift=0.2cm]encoder.east) -- (tlbhit.west);
+    \draw[->] ([yshift=-0.2cm]encoder.east) -- (data.west);
+    
+    % Data mux (simplified)
+    \draw[dashed, gray] (3.5,-1.5) rectangle (4.5,-5.5);
+    \node[rotate=90, gray] at (4,-3.5) {\tiny MUX};
+    
+    % PPN connections to MUX
+    \foreach \way in {0,...,3} {
+        \pgfmathsetmacro{\tlbrow}{\way + 2}
+        \draw[gray, dashed, ->] (tlb-\tlbrow-4.east) -| (3.7,{-2.5 - \way*0.8});
+    }
 \end{tikzpicture}
 \end{center}
 \end{frame}
