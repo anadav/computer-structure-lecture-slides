@@ -1033,7 +1033,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{frame}
 
 % Additional advanced topics
-\begin{frame}{ASID/PCID: Process Context in TLBs}
+\begin{frame}{ASID: Address Space Identifiers in TLBs}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \textbf{Problem:} TLB flush on context switch
@@ -1042,14 +1042,15 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \item Cold TLB after switch
 \end{itemize}
 
-\textbf{Solution: Process Context ID (x86)}
+\textbf{Solution: Address Space ID (ASID)}
 \begin{itemize}
-\item 12-bit PCID stored in CR3[11:0]
-\item Tags TLB entries with process ID
+\item Unique identifier per address space
+\item Tags TLB entries with process context
 \item Multiple processes coexist in TLB
+\item x86: called PCID, 12-bit stored in CR3[11:0]
 \end{itemize}
 
-\textbf{CR3 with PCID (CR4.PCIDE=1):}
+\textbf{CR3 with ASID (CR4.PCIDE=1):}
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
     % CR3 register
@@ -1065,149 +1066,160 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
     % Labels
     \node[font=\tiny] at (0.4,0.25) {NF};
     \node[font=\tiny] at (3,0.25) {PML4 Base (4KB aligned)};
-    \node[font=\tiny] at (5.6,0.25) {PCID};
+    \node[font=\tiny] at (5.6,0.25) {ASID};
     
-    % PCID breakdown
+    % ASID breakdown
     \draw[thick] (4.8,-0.3) rectangle (6,-0.8);
     \foreach \i in {0,...,11} {
         \pgfmathsetmacro\x{4.8 + \i*0.1}
         \draw (\x,-0.3) -- (\x,-0.8);
     }
-    \node[below, font=\tiny] at (5.4,-0.8) {12-bit PCID};
+    \node[below, font=\tiny] at (5.4,-0.8) {12-bit ASID (PCID)}
     \draw[->] (5.4,0) -- (5.4,-0.3);
 \end{tikzpicture}
 \end{center}
 
 \textbf{Software impact:}
 \begin{itemize}
-\item OS manages 4096 PCID values
-\item Linux KPTI: separate user/kernel PCIDs
+\item OS manages 4096 ASID values
+\item Linux KPTI: separate user/kernel ASIDs
 \item Critical for Meltdown mitigation
 \end{itemize}
 \end{column}
 
 \begin{column}{0.52\textwidth}
-\textbf{TLB Lookup with PCID:}
-\begin{center}
-\begin{tikzpicture}[scale=0.68]
-    % Virtual address at top
-    \draw[thick] (0,5.5) rectangle (5.5,6);
-    \fill[orange!20] (0,5.5) rectangle (3.2,6);
-    \fill[yellow!20] (3.2,5.5) rectangle (4.3,6);
-    \fill[gray!20] (4.3,5.5) rectangle (5.5,6);
-    
-    \node[font=\footnotesize] at (1.6,5.75) {VPN (Tag bits)};
-    \node[font=\footnotesize] at (3.75,5.75) {Set};
-    \node[font=\footnotesize] at (4.9,5.75) {Offset};
-    
-    \node[above, font=\small] at (2.75,6) {Virtual Address};
-    
-    % Arrow for set indexing
-    \draw[->, thick] (3.75,5.5) -- (3.75,4.8) node[midway, right, font=\tiny] {Index};
-    
-    % TLB Set label
-    \node[font=\small] at (2.75,4.5) {Selected TLB Set};
-    
-    % TLB entries (4 ways)
-    \foreach \way in {0,...,3} {
-        \pgfmathsetmacro\y{4 - \way*0.55}
-        % Entry box
-        \draw[thick] (0,\y) rectangle (5.5,\y-0.45);
-        
-        % PCID field
-        \fill[blue!20] (0,\y) rectangle (0.7,\y-0.45);
-        \node[font=\tiny] at (0.35,\y-0.225) {PCID};
-        
-        % TAG field
-        \fill[orange!20] (0.7,\y) rectangle (3.2,\y-0.45);
-        \node[font=\tiny] at (1.95,\y-0.225) {TAG};
-        
-        % PFN field
-        \fill[green!20] (3.2,\y) rectangle (5,\y-0.45);
-        \node[font=\tiny] at (4.1,\y-0.225) {PFN};
-        
-        % Valid bit
-        \fill[red!20] (5,\y) rectangle (5.5,\y-0.45);
-        \node[font=\tiny] at (5.25,\y-0.225) {V};
-        
-        % Way label
-        \node[right, font=\tiny] at (5.7,\y-0.225) {Way \way};
-    }
-    
-    % CR3 PCID source
-    \draw[thick] (-2,1.5) rectangle (-1,2);
-    \fill[blue!20] (-2,1.5) rectangle (-1,2);
-    \node[font=\tiny] at (-1.5,1.75) {PCID};
-    \node[below, font=\tiny] at (-1.5,1.5) {from CR3};
-    
-    % Comparison logic for each way - cleaner layout
-    \foreach \way in {0,...,3} {
-        \pgfmathsetmacro\y{3.775 - \way*0.55}
-        \pgfmathsetmacro\compy{0.8 - \way*0.2}
-        
-        % Comparator boxes
-        % PCID comparator
-        \draw[thick] (0.1,\compy) rectangle (0.6,\compy-0.15);
-        \node[font=\tiny] at (0.35,\compy-0.075) {=};
-        
-        % TAG comparator
-        \draw[thick] (1.7,\compy) rectangle (2.2,\compy-0.15);
-        \node[font=\tiny] at (1.95,\compy-0.075) {=};
-        
-        % AND gate (rectangular style)
-        \draw[thick] (3.2,\compy) rectangle (3.7,\compy-0.15);
-        \node[font=\tiny] at (3.45,\compy-0.075) {\&};
-        
-        % Connections from TLB entries to comparators
-        \draw[-] (0.35,\y-0.45) -- (0.35,\compy);
-        \draw[-] (1.95,\y-0.45) -- (1.95,\compy);
-        
-        % Connection from CR3 PCID (clean routing)
-        \draw[-] (-1,1.75) -- (-0.7,1.75) -- (-0.7,\compy-0.075) -- (0.1,\compy-0.075);
-        
-        % Connection from VA TAG (clean routing)
-        \draw[-] (1.6,5.5) -- (1.6,5.3-\way*0.05) -- (1.5,5.3-\way*0.05) -- (1.5,\compy-0.075) -- (1.7,\compy-0.075);
-        
-        % Connect comparators to AND
-        \draw[-] (0.6,\compy-0.075) -- (3.2,\compy-0.075);
-        \draw[-] (2.2,\compy-0.075) -- (3.2,\compy-0.075);
-        
-        % Valid bit check
-        \draw[-] (5.25,\y-0.45) -- (5.25,\y-0.55) -- (3.45,\y-0.55) -- (3.45,\compy-0.15);
-        
-        % Hit output
-        \draw[->] (3.7,\compy-0.075) -- (4.2,\compy-0.075);
-        \node[right, font=\tiny] at (4.2,\compy-0.075) {Hit\way};
-    }
-    
-    % Priority encoder
-    \draw[thick, dashed] (4.7,0.5) rectangle (5.5,-0.1);
-    \node[font=\tiny, align=center] at (5.1,0.2) {Priority\\Encoder};
-    
-    % Hit signals to encoder
-    \foreach \way in {0,...,3} {
-        \pgfmathsetmacro\compy{0.725 - \way*0.2}
-        \draw[-] (4.5,\compy) -- (4.7,\compy);
-    }
-    
-    % Final TLB Hit
-    \draw[->] (5.5,0.2) -- (6,0.2) node[right, font=\tiny] {TLB Hit};
-    
-    % Bottom caption
-    \node[font=\tiny, below] at (2.75,-0.5) {Match: PCID from CR3 = PCID in entry};
-    \node[font=\tiny, below] at (2.75,-0.75) {AND: TAG from VA = TAG in entry};
-    \node[font=\tiny, below] at (2.75,-1) {AND: Valid bit = 1};
-\end{tikzpicture}
-\end{center}
-
-\textbf{Key points:}
+\textbf{How ASID works:}
 \begin{itemize}
-\item Set selected using VA bits only
-\item PCID enables multiple contexts
-\item All comparisons in parallel
+\item TLB entries tagged with ASID
+\item Lookup requires both VA match AND ASID match
+\item Set-associative structure remains same
+\item Parallel comparison for performance
+\end{itemize}
+
+\textbf{Key benefits:}
+\begin{itemize}
+\item No flush on context switch
+\item Multiple address spaces in TLB
+\item Reduces cold start penalty
+\item Essential for virtualization
 \end{itemize}
 \end{column}
 \end{columns}
+\end{frame}
+
+\begin{frame}{TLB Lookup with ASID}
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Define the center as reference
+    \coordinate (center) at (0,0);
+    
+    % Virtual address at top center
+    \node[rectangle, draw, thick, minimum width=5.5cm, minimum height=0.5cm, anchor=north] 
+        (vaddr) at ([yshift=2.5cm]center) {};
+    \fill[orange!20] ([xshift=-2.75cm]vaddr.south west) rectangle ([xshift=-0.15cm]vaddr.south west |- vaddr.north);
+    \fill[yellow!20] ([xshift=-0.15cm]vaddr.south west) rectangle ([xshift=0.9cm]vaddr.south west |- vaddr.north);
+    \fill[gray!20] ([xshift=0.9cm]vaddr.south west) rectangle (vaddr.north east);
+    
+    \node[font=\footnotesize] at ([xshift=-1.45cm]vaddr.center) {VPN (Tag bits)};
+    \node[font=\footnotesize] at ([xshift=0.375cm]vaddr.center) {Set};
+    \node[font=\footnotesize] at ([xshift=1.65cm]vaddr.center) {Offset};
+    \node[above=2mm of vaddr, font=\small] {Virtual Address};
+    
+    % Arrow for set indexing
+    \draw[->, thick] ([xshift=0.375cm]vaddr.south) -- ++(0,-0.7) node[midway, right, font=\tiny] {Index};
+    
+    % TLB Set label
+    \node[below=1cm of vaddr, font=\small] (tlblabel) {Selected TLB Set};
+    
+    % TLB entries (4 ways) - positioned relative to label
+    \foreach \way in {0,...,3} {
+        \node[rectangle, draw, thick, minimum width=5.5cm, minimum height=0.45cm, 
+              below={\way*0.1cm+0.3cm} of tlblabel.south, anchor=north] (entry\way) {};
+        
+        % ASID field
+        \fill[blue!20] ([xshift=0cm]entry\way.west) rectangle ([xshift=0.7cm]entry\way.west |- entry\way.north);
+        \node[font=\tiny] at ([xshift=0.35cm]entry\way.west) {ASID};
+        
+        % TAG field
+        \fill[orange!20] ([xshift=0.7cm]entry\way.west) rectangle ([xshift=3.2cm]entry\way.west |- entry\way.north);
+        \node[font=\tiny] at ([xshift=1.95cm]entry\way.west) {TAG};
+        
+        % PFN field
+        \fill[green!20] ([xshift=3.2cm]entry\way.west) rectangle ([xshift=5cm]entry\way.west |- entry\way.north);
+        \node[font=\tiny] at ([xshift=4.1cm]entry\way.west) {PFN};
+        
+        % Valid bit
+        \fill[red!20] ([xshift=5cm]entry\way.west) rectangle (entry\way.east |- entry\way.north);
+        \node[font=\tiny] at ([xshift=5.25cm]entry\way.west) {V};
+        
+        % Way label
+        \node[right=2mm of entry\way, font=\tiny] {Way \way};
+    }
+    
+    % CR3 ASID source - positioned left of TLB entries
+    \node[rectangle, draw, thick, fill=blue!20, minimum width=1cm, minimum height=0.5cm,
+          left=1.5cm of entry1.west] (cr3asid) {ASID};
+    \node[below=1mm of cr3asid, font=\tiny] {from CR3};
+    
+    % Comparison logic below TLB entries
+    \coordinate (compbase) at ([yshift=-2cm]entry3.south);
+    
+    \foreach \way in {0,...,3} {
+        % ASID comparator
+        \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.15cm,
+              at={([xshift=0.35cm, yshift={\way*-0.25cm}]compbase)}] (asidcmp\way) {\tiny =};
+        
+        % TAG comparator
+        \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.15cm,
+              at={([xshift=1.95cm, yshift={\way*-0.25cm}]compbase)}] (tagcmp\way) {\tiny =};
+        
+        % AND gate
+        \node[rectangle, draw, thick, minimum width=0.5cm, minimum height=0.15cm,
+              at={([xshift=3.45cm, yshift={\way*-0.25cm}]compbase)}] (and\way) {\tiny \&};
+        
+        % Connections from TLB entries
+        \draw[-] ([xshift=0.35cm]entry\way.south) -- (asidcmp\way.north);
+        \draw[-] ([xshift=1.95cm]entry\way.south) -- (tagcmp\way.north);
+        
+        % Connection from CR3 ASID
+        \draw[-] (cr3asid.east) -| ([xshift=-0.3cm]asidcmp\way.west) -- (asidcmp\way.west);
+        
+        % Connection from VA TAG
+        \draw[-] ([xshift=-1.45cm]vaddr.south) -- ([xshift=-1.45cm, yshift=-1.8cm-\way*0.05cm]vaddr.south) 
+                 -| ([xshift=-0.3cm]tagcmp\way.west) -- (tagcmp\way.west);
+        
+        % Connect comparators to AND
+        \draw[-] (asidcmp\way.east) -- (and\way.west);
+        \draw[-] (tagcmp\way.east) -- (and\way.west);
+        
+        % Valid bit check
+        \draw[-] ([xshift=5.25cm]entry\way.south) |- (and\way.south);
+        
+        % Hit output
+        \node[right=5mm of and\way] (hit\way) {\tiny Hit\way};
+        \draw[->] (and\way.east) -- (hit\way.west);
+    }
+    
+    % Priority encoder
+    \node[rectangle, draw, thick, dashed, minimum width=0.8cm, minimum height=0.6cm,
+          below right=0.5cm and 1cm of and3] (encoder) {\tiny \shortstack{Priority\\Encoder}};
+    
+    % Hit signals to encoder
+    \foreach \way in {0,...,3} {
+        \draw[-] (hit\way.east) -| ([yshift={\way*0.15cm-0.225cm}]encoder.west);
+    }
+    
+    % Final TLB Hit
+    \draw[->] (encoder.east) -- ++(0.5,0) node[right, font=\tiny] {TLB Hit};
+    
+    % Bottom caption
+    \node[font=\tiny, align=center] at ([yshift=-3.5cm]center) {
+        Match: ASID from CR3 = ASID in entry\\
+        AND: TAG from VA = TAG in entry\\
+        AND: Valid bit = 1
+    };
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{Contiguous PTE (ContPTE) - ARM Feature}
@@ -1540,7 +1552,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 \begin{frame}{Software Impact: When These Features Matter}
 \begin{itemize}
-\item \textbf{PCID/ASID helps when:}
+\item \textbf{ASID helps when:}
     \begin{itemize}
     \item Many short-lived processes (web servers, shell scripts)
     \item Frequent system calls with KPTI/Meltdown mitigation
