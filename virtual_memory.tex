@@ -632,8 +632,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \node[comp, anchor=north, below=of tlbtag-3-\way.south] (tlbcomp-\way) {=};
 }
 
-% OR gate for TLB hit/miss - rotated downward, lower position
-\node[or port, scale=0.4, number inputs=2, rotate=-90, below=of tlbcomp-0, external pins width=0, anchor=bin 2] (tlbor) {};
+% OR gate for TLB hit/miss - centered between comparators
+\coordinate (tlb-or-x) at ($(tlbcomp-0.south)!0.5!(tlbcomp-1.south)$);
+\node[or port, scale=0.4, number inputs=2, rotate=-90, external pins width=0] (tlbor) at ([yshift=-8mm]tlb-or-x) {};
 
 % TLB Way MUX - positioned to match width of value table (2 ways)
 \node[muxdemux, muxdemux def={NT=2, NB=1, NL=1, NR=2, Lh=0.9, Rh=1.8, w=0.5}, external pins width=0, rotate=90] 
@@ -677,8 +678,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \node[comp, anchor=north, below=of ctag-7-\way.south] (ccomp-\way) {=};
 }
 
-% OR gate for cache hit/miss - rotated downward, lower position
-\node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
+% OR gate for cache hit/miss - centered between leftmost and rightmost comparators
+\coordinate (cache-or-x) at ($(ccomp-0.south)!0.5!(ccomp-3.south)$);
+\node[or port, scale=0.4, number inputs=4, rotate=-90] (cacheor) at ([yshift=-8mm]cache-or-x) {};
 
 % Cache Way MUX - positioned to match width of data table (4 ways)
 \node[muxdemux, muxdemux def={NT=4, NB=1, NL=1, NR=4, Lh=1.4, Rh=3, w=0.8}, external pins width=0, rotate=90] 
@@ -710,8 +712,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \end{scope}
 
 % Connections
-% VPN set to TLB decoder (to top pin)
-\draw[arrow] (vset.south) -- ++(0,-0.5) -| (tlbdec.btpin 1);
+% VPN set to TLB decoder (from left side)
+\draw[arrow] (vset.south) -- ++(0,-0.5) -| (tlbdec.blpin 1);
 
 % Tag from address to all TLB comparators (from top with slight offset)
 \foreach \way in {0,...,1} {
@@ -721,8 +723,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
         -- ([xshift={-1mm + 0.3*\way}]tlbcomp-\way.north);
 }
 
-% Page offset set to Cache (parallel - highlighted in orange)
-\draw[arrow, orange, thick] (pset.south) -- ++(0,-0.3) -| (cachedec.btpin 1);
+% Page offset set to Cache (from left side - highlighted in orange)
+\draw[arrow, orange, thick] (pset.south) -- ++(0,-0.3) -| (cachedec.blpin 1);
 
 % Decoder outputs to TLB array rows
 \foreach \set in {0,...,3} {
@@ -749,7 +751,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % TLB values to mux - from same row as tag outputs, straight down
 \foreach \way in {0,...,1} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (tlbval-1-\way.south) |- (tlbmux.brpin \muxpin);
+    \draw[arrow, gray] (tlbval-1-\way.south) -- (tlbmux.brpin \muxpin);
 }
 
 % TLB mux output to physical page#
@@ -760,9 +762,9 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
     \draw[arrow, blue, thick] (ppn.east) -| ([xshift={-1mm}]ccomp-\way.north);
 }
 
-% Selected cache row to comparators (from top with slight offset)
+% Selected cache row to comparators (consistent with TLB style)
 \foreach \way in {0,...,3} {
-    \draw[arrow] (ctag-1-\way.south) -- ([xshift=1mm]ccomp-\way.north);
+    \draw[arrow] ([xshift=1mm, yshift=-1mm]ctag-1-\way.south -| ccomp-\way.north) -- ([xshift=1mm]ccomp-\way.north);
 }
 
 % Cache comparator outputs to OR gate for hit detection
@@ -774,7 +776,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % Cache data to mux - from same row as tag outputs, straight down
 \foreach \way in {0,...,3} {
     \pgfmathtruncatemacro{\muxpin}{\way + 1}
-    \draw[arrow, gray] (cdata-1-\way.south) |- (cachemux.brpin \muxpin);
+    \draw[arrow, gray] (cdata-1-\way.south) -- (cachemux.brpin \muxpin);
 }
 
 % Mux output to data output
