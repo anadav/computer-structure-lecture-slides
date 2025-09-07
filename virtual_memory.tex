@@ -634,7 +634,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % OR gate for TLB hit/miss - rotated downward, lower position
-\node[or port, scale=0.4, number inputs=2, rotate=-90, below=8mm of tlbcomp-0, external pins width=0] (tlbor) {};
+\node[or port, scale=0.4, number inputs=2, rotate=-90, below=8mm of tlbcomp-0, external pins width=0, anchor=bin 2] (tlbor) {};
 
 % TLB Way MUX - positioned to match width of value table (2 ways)
 \node[muxdemux, muxdemux def={NT=2, NB=1, NL=2, NR=2, Lh=0.9, Rh=1.8, w=0.5}, external pins width=0, rotate=90] 
@@ -683,7 +683,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[or port, scale=0.4, number inputs=4, rotate=-90, below=8mm of ccomp-1] (cacheor) {};
 
 % Cache Way MUX - positioned to match width of data table (4 ways)
-\node[muxdemux, muxdemux def={NT=4, NB=1, NL=4, NR=4, Lh=1.2, Rh=2.4, w=1}, external pins width=0, rotate=90] 
+\node[muxdemux, muxdemux def={NT=4, NB=1, NL=1, NR=4, Lh=1.4, Rh=3, w=0.8}, external pins width=0, rotate=90] 
     (cachemux) at ([yshift=-8mm, xshift=4mm]cdata-7-1.south west) {};
 \node[font=\tiny, align=center] at (cachemux) {Way MUX};
 
@@ -691,7 +691,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[font=\tiny, below=3mm of cacheor] {Hit/Miss};
 
 % Data output - below mux
-\node[addr, fill=yellow!30, minimum width=0.8cm] (dataout) at ([yshift=-5mm]cachemux.bbpin 1) {Data};
+\node[addr, fill=yellow!30, minimum width=0.8cm, below=of cachemux.blpin 1] (dataout) {Data};
 
 % Add colored backgrounds using fit
 % TLB background
@@ -769,7 +769,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 }
 
 % Mux output to data output
-\draw[arrow] (cachemux.bbpin 1) -- (dataout.north);
+\draw[arrow] (cachemux.blpin 1) -- (dataout.north);
 \end{tikzpicture}
 \end{columns}
 \end{frame}
