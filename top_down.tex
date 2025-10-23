@@ -95,16 +95,16 @@
   \draw[->, thick] (uopcache.east) -- ++(0.3, 0) |- (mux.lpin 1);
   \draw[->, thick] (mux.rpin 1) -- (uopqueue);
   
-  % Main connection with 4 µops label
-  \draw[->, thick] (uopqueue) -- (6.5,0);
-  \draw[thick] (5.35,-0.1) -- (5.45,0.1);  % Small slash through line
-  \node[above] at (5.4,0.05) {\footnotesize 4 µops};
-  
+  % Main connection with 4 µops label - create intermediate point for branching
+  \draw[thick] (uopqueue.east) -- ++(0.8, 0) coordinate (uoprint);
+  \draw[thick] ([xshift=0.4cm]uopqueue.east) +(-0.05,-0.1) -- +(0.05,0.1);  % Small slash through line
+  \node[above] at ([xshift=0.4cm]uopqueue.east) {\footnotesize 4 µops};
+
   % Connect to backend components
-  \draw[->, thick] (6.5,0) -- ++(0.5, 0) |- (rs.east); 
-  \draw[->, thick] (6.5,0) -- ++(0.5, 0) |- (lb.east); 
-  \draw[->, thick] (6.5,0) -- ++(0.5, 0) |- (sb.east); 
-  \draw[->, thick] (6.5,0) -- ++(0.5, 0) |- (rob.east); 
+  \draw[->, thick] (uoprint) |- (rs.west);
+  \draw[->, thick] (uoprint) |- (lb.west);
+  \draw[->, thick] (uoprint) |- (sb.west);
+  \draw[->, thick] (uoprint) |- (rob.west);
   
   % Connect RS and LB to execution units
   \draw[->, thick] (rs) -- (eus);
@@ -116,7 +116,7 @@
 
   % Alloc Stall - big red arrow pointing left, touching IDQ Empty arrow
   \node[single arrow, fill=red, text=white, font=\footnotesize\bfseries, minimum height=0.8cm, minimum width=1.5cm,
-        single arrow head extend=0.15cm, inner sep=2pt, shape border rotate=180, anchor=west] (allocstall) at (idqempty.east) {Alloc Stall};
+        single arrow head extend=0.15cm, inner sep=2pt, shape border rotate=180, anchor=west] (allocstall) at ([xshift=3mm]idqempty.east) {Alloc Stall};
 
   % Arrow from IDQ Empty pointing down to µop queue
   \draw[->, line width=2pt, red] (idqempty.south) -- ++(0,-0.3) -| (uopqueue.north);
