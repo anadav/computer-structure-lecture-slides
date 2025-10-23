@@ -262,27 +262,9 @@
     \coordinate (rsmarker6) at ($(rs-6-1.east)+(0.2,0)$);
     \node[anchor=west, inner sep=1pt, font=\tiny] at (rsmarker6) {\rsMarkSix};
     %
-    % MOB (Memory Order Buffer) - 2 rows
-    \matrix[matrix of nodes,
-            row sep=-\pgflinewidth,
-            inner sep=0pt,
-            label={above:\textbf{MOB}},
-            right=1.5cm of rs.east,
-            nodes={cell, minimum width=2cm, text width=3cm},
-            ampersand replacement=\&] (mob) {
-        |[cell]| \scriptsize \mobOne \\
-        |[cell]| \scriptsize \mobTwo \\
-    };
-    %
-    % Add markers for MOB rows (on the right)
-    \coordinate (mobmarker1) at ($(mob-1-1.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker1) {\mobMarkOne};
-    \coordinate (mobmarker2) at ($(mob-2-1.east)+(0.2,0)$);
-    \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker2) {\mobMarkTwo};
-    %
     % Code display (if enabled)
     \ifnum\showCode=1
-        \node[codebox, anchor=north east, font=\scriptsize, text width=2.1cm, align=left, minimum height=3cm] (code) at ($(current bounding box.north east)+(0.3,-0.5)$) {
+        \node[codebox, anchor=north west, font=\scriptsize, text width=2.1cm, align=left, minimum height=3cm, right=3.5cm of idq.north east, anchor=north] (code) {
             \begin{tabular}{@{}r@{\hspace{2pt}}l@{}}
             % Highlight line 1 if requested
             \ifnum\highlightOne=1
@@ -403,6 +385,38 @@
             \end{tabular}
         };
     \fi
+    %
+    % MOB (Memory Order Buffer) - 2 rows, positioned below code
+    \ifnum\showCode=1
+        \matrix[matrix of nodes,
+                row sep=-\pgflinewidth,
+                inner sep=0pt,
+                label={above:\textbf{MOB}},
+                below=0.8cm of code.south west,
+                anchor=north west,
+                nodes={cell, minimum width=2cm, text width=3cm},
+                ampersand replacement=\&] (mob) {
+            |[cell]| \scriptsize \mobOne \\
+            |[cell]| \scriptsize \mobTwo \\
+        };
+    \else
+        \matrix[matrix of nodes,
+                row sep=-\pgflinewidth,
+                inner sep=0pt,
+                label={above:\textbf{MOB}},
+                right=1.5cm of rs.east,
+                nodes={cell, minimum width=2cm, text width=3cm},
+                ampersand replacement=\&] (mob) {
+            |[cell]| \scriptsize \mobOne \\
+            |[cell]| \scriptsize \mobTwo \\
+        };
+    \fi
+    %
+    % Add markers for MOB rows (on the right)
+    \coordinate (mobmarker1) at ($(mob-1-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker1) {\mobMarkOne};
+    \coordinate (mobmarker2) at ($(mob-2-1.east)+(0.2,0)$);
+    \node[anchor=west, inner sep=1pt, font=\tiny] at (mobmarker2) {\mobMarkTwo};
     %
     % Execute block with internal rows (no borders)
     \node[roundbox, below=0.6cm of rs.south, anchor=north] (execute) {};
