@@ -997,20 +997,26 @@ next (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID
 \end{itemize}
 
 \textbf{Challenge:} Programs may reach branch from different locations
+
+\vspace{0.1cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.7]
-    \node[draw, rectangle] (j1) at (0, 2) {200: Jump 100};
-    \node[draw, rectangle] (j2) at (0, 1) {2000: Jump 100};
-    \node[draw, rectangle] (j3) at (0, 0) {300: Jump 100};
-    \node[draw, rectangle, fill=blue!20] (target) at (4, 1) {100: Jump 1000};
-    \node[draw, rectangle, fill=green!20] (dest) at (8, 1) {1000: ...};
-    
-    \draw[->] (j1) -- (target);
-    \draw[->] (j2) -- (target);
-    \draw[->] (j3) -- (target);
-    \draw[->] (target) -- (dest);
+\begin{tikzpicture}[
+    every node/.style={font=\small\ttfamily},
+    box/.style={draw, rectangle, minimum height=0.6cm, text width=3cm, align=center}
+]
+    \node[box] (j1) {200: Jump 100};
+    \node[box, below=0.1cm of j1] (j2) {280: Jump 100};
+    \node[box, below=0.1cm of j2] (j3) {300: Jump 100};
+    \node[box, fill=blue!20, right=1.5cm of j2] (target) {100: Jump 1000};
+    \node[box, fill=green!20, text width=2cm, right=1.5cm of target] (dest) {1000: ...};
+
+    \draw[->, thick] (j1.east) -- (target.north west);
+    \draw[->, thick] (j2.east) -- (target.west);
+    \draw[->, thick] (j3.east) -- (target.south west);
+    \draw[->, thick] (target.east) -- (dest.west);
 \end{tikzpicture}
 \end{center}
+\vspace{0.1cm}
 
 \textbf{Solution 2:} Store target instruction itself in BTB (saves IF stage)
 
