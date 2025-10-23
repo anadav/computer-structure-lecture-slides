@@ -1549,79 +1549,95 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{column}{0.55\textwidth}
 \textbf{Page Table with ContPTE:}
 \begin{center}
-\begin{tikzpicture}[scale=0.75]
-    % Page table entries
-    \node[font=\small] at (2.5,4.5) {Page Table (aligned blocks)};
+\begin{tikzpicture}[
+    pte/.style={draw, thick, minimum width=40mm, minimum height=2.5mm, font=\tiny, inner sep=0pt},
+    pte_regular/.style={pte, fill=gray!20},
+    pte_contig/.style={pte, fill=yellow!30},
+    tlb_entry/.style={draw, thick, minimum width=25mm, minimum height=3.5mm, font=\tiny},
+    section_title/.style={font=\tiny, anchor=south}
+]
+    % Virtual Address at top
+    \node[draw, thick, minimum width=50mm, minimum height=4mm] (va) at (0,0) {};
+    \node[above=1mm of va, font=\tiny] {Virtual Address (48-bit)};
     
-    % Draw some regular PTEs (0-15)
+    % VA sections - showing the ContPTE-relevant bits
+    \fill[blue!20] ([xshift=0mm]va.west) rectangle ([xshift=15mm]va.west |- va.north);
+    \fill[orange!20] ([xshift=15mm]va.west) rectangle ([xshift=32mm]va.west |- va.north);
+    \fill[yellow!20] ([xshift=32mm]va.west) rectangle ([xshift=38mm]va.west |- va.north);
+    \fill[gray!20] ([xshift=38mm]va.west) rectangle ([xshift=50mm]va.west |- va.north);
+    
+    \node[font=\tiny] at ([xshift=7.5mm]va.west) {[47:16]};
+    \node[font=\tiny] at ([xshift=23.5mm]va.west) {VPN[15:4]};
+    \node[font=\tiny] at ([xshift=35mm]va.west) {[3:0]};
+    \node[font=\tiny] at ([xshift=44mm]va.west) {Offset};
+    
+    % Page table
+    \node[section_title] (pt_title) at (-1.5,-0.8) {Page Table};
+    
+    % Regular PTEs (0-15)
     \foreach \i in {0,...,15} {
-        \pgfmathsetmacro\y{4 - \i*0.15}
-        \draw[thick] (0,\y) rectangle (5,\y-0.14);
-        \fill[gray!20] (0,\y) rectangle (5,\y-0.14);
-        \node[font=\tiny] at (0.3,\y-0.07) {\i};
-        % Show PFN and flags more abstractly
-        \draw[thick] (0.6,\y) -- (0.6,\y-0.14);
-        \draw[thick] (4.5,\y) -- (4.5,\y-0.14);
-        \node[font=\tiny] at (2.5,\y-0.07) {PFN};
+        \node[pte_regular, anchor=north] (pte\i) at ([yshift=-\i*2.7mm]pt_title.south) {};
+        \node[font=\tiny, anchor=west] at ([xshift=1mm]pte\i.west) {\i};
+        \draw ([xshift=5mm]pte\i.west) -- ([xshift=5mm]pte\i.west |- pte\i.south);
+        \node[font=\tiny] at (pte\i.center) {PFN};
+        \draw ([xshift=-4mm]pte\i.east) -- ([xshift=-4mm]pte\i.east |- pte\i.south);
     }
     
-    % Naturally aligned contiguous block (16 entries starting at PTE 16)
-    \draw[thick, red, line width=1.5pt] (-0.1,1.7) rectangle (5.1,-0.7);
+    % Gap before aligned block
+    \coordinate (gap_start) at ([yshift=-1mm]pte15.south);
+    
+    % Contiguous block (PTEs 16-31) - aligned
     \foreach \i in {0,...,15} {
         \pgfmathsetmacro\idx{int(\i + 16)}
-        \pgfmathsetmacro\y{1.6 - \i*0.15}
-        \draw[thick] (0,\y) rectangle (5,\y-0.14);
-        \fill[yellow!30] (0,\y) rectangle (5,\y-0.14);
-        
-        % PTE number
-        \node[font=\tiny] at (0.3,\y-0.07) {\idx};
-        \draw[thick] (0.6,\y) -- (0.6,\y-0.14);
-        
-        % Physical frame - show they're contiguous
-        \pgfmathsetmacro\pfn{int(1000 + \i)}
-        \node[font=\tiny] at (2.5,\y-0.07) {PFN+\i};
-        
-        % Contiguous bit
-        \draw[thick] (4.5,\y) -- (4.5,\y-0.14);
-        \fill[red!40] (4.5,\y) rectangle (5,\y-0.14);
-        \node[font=\tiny] at (4.75,\y-0.07) {C};
+        \node[pte_contig, anchor=north] (pte_c\i) at ([yshift=-\i*2.7mm]gap_start) {};
+        \node[font=\tiny, anchor=west] at ([xshift=1mm]pte_c\i.west) {\idx};
+        \draw ([xshift=5mm]pte_c\i.west) -- ([xshift=5mm]pte_c\i.west |- pte_c\i.south);
+        \node[font=\tiny] at (pte_c\i.center) {PFN+\i};
+        \draw ([xshift=-4mm]pte_c\i.east) -- ([xshift=-4mm]pte_c\i.east |- pte_c\i.south);
+        \fill[red!40] ([xshift=-4mm]pte_c\i.east) rectangle (pte_c\i.south east);
+        \node[font=\tiny] at ([xshift=-2mm]pte_c\i.east) {C};
     }
     
-    % More regular PTEs after
-    \foreach \i in {32,...,35} {
-        \pgfmathsetmacro\idx{int(\i - 32)}
-        \pgfmathsetmacro\y{-0.9 - \idx*0.15}
-        \draw[thick] (0,\y) rectangle (5,\y-0.14);
-        \fill[gray!20] (0,\y) rectangle (5,\y-0.14);
-        \node[font=\tiny] at (0.3,\y-0.07) {\i};
+    % Red border around contiguous block
+    \draw[thick, red, line width=1.2pt] 
+        ([shift={(-0.5mm,0.5mm)}]pte_c0.north west) rectangle 
+        ([shift={(0.5mm,-0.5mm)}]pte_c15.south east);
+    
+    % More regular PTEs (32+)
+    \foreach \i in {0,...,3} {
+        \pgfmathsetmacro\idx{int(\i + 32)}
+        \node[pte_regular, anchor=north] (pte_r\i) at ([yshift=-1mm-\i*2.7mm]pte_c15.south) {};
+        \node[font=\tiny, anchor=west] at ([xshift=1mm]pte_r\i.west) {\idx};
     }
     
-    % Label for contiguous block
-    \node[right, font=\small, red] at (5.2,0.45) {64KB};
-    \node[right, font=\tiny, red, align=left] at (5.2,0.15) {Aligned at\\PTE 16};
+    % Arrow with label for contiguous block
+    \draw[->, thick, orange] (pte_c7.east) -- ++(8mm,0) 
+        node[midway, above, font=\tiny, align=center] {16 aligned\\4KB pages\\= 64KB};
+    \node[font=\tiny, red] at ([xshift=6mm]pte_c0.east) {Aligned at 16};
     
-    % Arrow showing coalescing
-    \draw[->, thick, blue] (5.5,0.45) -- (6.5,0.45);
+    % TLB
+    \node[section_title] (tlb_title) at (3.5,-0.8) {TLB};
     
-    % TLB representation
-    \draw[thick] (7,-0.5) rectangle (10,3);
-    \node[font=\small] at (8.5,2.7) {TLB};
+    % TLB box
+    \node[draw, thick, minimum width=30mm, minimum height=35mm, anchor=north] (tlb_box) at (tlb_title.south) {};
     
-    % Regular entries
-    \foreach \i in {0,1,2} {
-        \pgfmathsetmacro\y{2.3 - \i*0.4}
-        \draw[thick] (7.1,\y) rectangle (9.9,\y-0.35);
-        \fill[gray!20] (7.1,\y) rectangle (9.9,\y-0.35);
-        \node[font=\tiny] at (8.5,\y-0.175) {4KB page};
-    }
+    % Regular TLB entries
+    \node[tlb_entry, fill=gray!20, anchor=north] (tlb0) at ([yshift=-2mm]tlb_title.south) {4KB page};
+    \node[tlb_entry, fill=gray!20, anchor=north] (tlb1) at ([yshift=-1mm]tlb0.south) {4KB page};
+    \node[tlb_entry, fill=gray!20, anchor=north] (tlb2) at ([yshift=-1mm]tlb1.south) {4KB page};
     
-    % Coalesced entry
-    \draw[thick, line width=1.5pt] (7.1,0.5) rectangle (9.9,0);
-    \fill[yellow!30] (7.1,0.5) rectangle (9.9,0);
-    \node[font=\small] at (8.5,0.25) {64KB (coalesced)};
+    % Coalesced entry (emphasized)
+    \node[tlb_entry, fill=yellow!30, line width=1.2pt, minimum height=5mm, anchor=north] 
+        (tlb_coal) at ([yshift=-5mm]tlb2.south) {64KB coalesced};
     
     % Annotation
-    \node[below, font=\tiny, align=center] at (8.5,-0.7) {1 TLB entry\\for PTEs 16-31};
+    \node[font=\tiny, align=center] at ([yshift=-2mm]tlb_coal.south) {1 entry for\\PTEs 16-31};
+    
+    % Lookup arrows from VA
+    \draw[->, thick, blue] ([xshift=-10mm, yshift=-2mm]va.south) -- ++(0,-4mm) -| (pt_title.north)
+        node[pos=0.5, left, font=\tiny] {Lookup};
+    \draw[->, thick, blue] ([xshift=10mm, yshift=-2mm]va.south) -- ++(0,-4mm) -| (tlb_title.north)
+        node[pos=0.5, right, font=\tiny] {TLB check};
 \end{tikzpicture}
 \end{center}
 \end{column}
