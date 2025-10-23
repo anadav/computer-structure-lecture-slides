@@ -4,6 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{tikz}
+\usepackage{circuitikz}
 \usepackage{array}
 \usepackage{colortbl}
 \usepackage{multirow}
@@ -70,28 +71,27 @@
   
   % µop cache positioned above the mux
   \node[draw, rectangle, fill=orange!30, minimum width=1.2cm, minimum height=0.7cm, align=center] (uopcache) at (2,1.2) {µop\\cache};
-  
-  % Mux (trapezoid) - selecting between µop cache and ID
-  \path[draw, fill=green!20] 
-    (2.2,0.7) -- (2.2,-0.7) -- (3.0,-0.2) -- (3.0,0.2) -- cycle;
-  
+
+  % Mux - selecting between µop cache and ID
+  \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.6, NL=2, NB=0, NT=0}, fill=green!20] (mux) at (2.6,0) {};
+
   % µop queue (rectangle after mux)
   \node[draw, rectangle, fill=lightgray!50, minimum width=1.2cm, minimum height=0.7cm, align=center] (uopqueue) at (4.2,0) {µop\\queue};
-  
+
   % Backend components
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (rs) at (7.5,1.2) {RS};
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (lb) at (7.5,0.4) {LB};
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (sb) at (7.5,-0.4) {SB};
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (rob) at (7.5,-1.2) {ROB};
-  
+
   \node[draw, rectangle, fill=red!15, minimum width=1.2cm, minimum height=0.7cm] (eus) at (9.5,1.2) {EUs};
   \node[draw, rectangle, fill=red!15, minimum width=1.2cm, minimum height=0.7cm] (dcu) at (9.5,0.4) {DCU};
-  
+
   % Arrows
   \draw[->, thick] (icache) -- (id);
-  \draw[->, thick] (id) -- (2.2,0);
-  \draw[->, thick] (uopcache) -- (2.2,0.4);
-  \draw[->, thick] (3.0,0) -- (uopqueue);
+  \draw[->, thick] (id) -- (mux.lpin 2);
+  \draw[->, thick] (uopcache.east) -| (mux.lpin 1);
+  \draw[->, thick] (mux.rpin 1) -- (uopqueue);
   
   % Main connection with 4 µops label
   \draw[->, thick] (uopqueue) -- (6.5,0);
@@ -155,30 +155,27 @@
   
   % µop cache positioned above the mux
   \node[draw, rectangle, fill=orange!30, minimum width=1.2cm, minimum height=0.7cm, align=center] (uopcache) at (2,1.2) {µop\\cache};
-  
-  % Mux (trapezoid) - selecting between µop cache and ID
-  \begin{scope}
-    \path[draw, fill=green!20] 
-      (2.2,0.7) -- (2.2,-0.7) -- (3.0,-0.2) -- (3.0,0.2) -- cycle;
-  \end{scope}
-  
+
+  % Mux - selecting between µop cache and ID
+  \node[muxdemux, muxdemux def={Lh=0.7, w=0.6, NL=2, NB=0, NT=0}, fill=green!20] (mux) at (2.6,0) {};
+
   % µop queue (rectangle after mux)
   \node[draw, rectangle, fill=lightgray!50, minimum width=1.2cm, minimum height=0.7cm, align=center] (uopqueue) at (4.2,0) {µop\\queue};
-  
+
   % Backend components
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (rs) at (7.5,1.2) {RS};
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (lb) at (7.5,0.4) {LB};
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (sb) at (7.5,-0.4) {SB};
   \node[draw, rectangle, fill=blue!20, minimum width=1.2cm, minimum height=0.7cm] (rob) at (7.5,-1.2) {ROB};
-  
+
   \node[draw, rectangle, fill=red!15, minimum width=1.2cm, minimum height=0.7cm] (eus) at (9.5,1.2) {EUs};
   \node[draw, rectangle, fill=red!15, minimum width=1.2cm, minimum height=0.7cm] (dcu) at (9.5,0.4) {DCU};
-  
+
   % Arrows
   \draw[->, thick] (icache) -- (id);
-  \draw[->, thick] (id) -- (2.2,0);
-  \draw[->, thick] (uopcache) -- (2.2,0.4);
-  \draw[->, thick] (3.0,0) -- (uopqueue);
+  \draw[->, thick] (id) -- (mux.lpin 2);
+  \draw[->, thick] (uopcache.east) -| (mux.lpin 1);
+  \draw[->, thick] (mux.rpin 1) -- (uopqueue);
   
   % Main connection with 4 µops label
   \draw[->, thick] (uopqueue) -- (6.5,0);
