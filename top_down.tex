@@ -506,16 +506,16 @@
 ]
   % Root
   \node[box, text width=12cm, fill=red!20, align=center] (root) at (0,0) {CPU Bound $\Rightarrow$ Analyze};
-  
-  % Level 1
-  \node[box, below=0.1cm of root, xshift=-4.5cm] (frontend) {Frontend Bound};
-  \node[box, below=0.1cm of root, xshift=-2.3cm] (badspec) {Bad Speculation};
-  \node[box, below=0.1cm of root, xshift=-0.1cm] (retiring) {Retiring};
-  \node[box, text width=4cm, below=0.1cm of root, xshift=3cm, align=center] (backend) {Backend Bound};
-  
+
+  % Level 1 - positioned relative to root and each other
+  \node[box, anchor=north west, yshift=-0.2cm] (frontend) at (root.south west) {Frontend Bound};
+  \node[box, anchor=west, right=0.1cm of frontend.east] (badspec) {Bad Speculation};
+  \node[box, anchor=west, right=0.1cm of badspec.east] (retiring) {Retiring};
+  \node[box, text width=4cm, align=center, anchor=west, right=0.1cm of retiring.east] (backend) {Backend Bound};
+
   % Level 2 - Frontend
-  \node[smallbox, below=0.1cm of frontend, xshift=-0.7cm] (latency) {Frontend Latency};
-  \node[smallbox, below=0.1cm of frontend, xshift=0.7cm] (bandwidth) {Band-width};
+  \node[smallbox, anchor=north west, below=0.1cm of frontend.south west] (latency) {Frontend Latency};
+  \node[smallbox, anchor=west, right=0.1cm of latency.east] (bandwidth) {Band-width};
   
   % Level 2 - Bad Spec
   \node[smallbox, below=0.1cm of badspec, xshift=-0.5cm] (branch) {Branch Mispred.};
@@ -543,11 +543,11 @@
   \node[tinybox, below=0.1cm of core, xshift=-0.5cm] {Divider};
   \node[smallbox, below=0.1cm of core, xshift=0.5cm] {Ports Utilization};
   
-  \node[smallbox, below=0.1cm of memory, xshift=-1.2cm] {Stores Bound};
-  \node[smallbox, below=0.1cm of memory, xshift=-0.3cm] {L1 Bound};
-  \node[smallbox, below=0.1cm of memory, xshift=0.6cm] {L2 Bound};
-  \node[smallbox, below=0.1cm of memory, xshift=1.5cm] {L3 Bound};
-  \node[smallbox, below=0.1cm of memory, xshift=2.4cm] {Ext. Memory Bound};
+  \node[smallbox, below=0.1cm of memory.south, xshift=-1.2cm] {Stores Bound};
+  \node[smallbox, below=0.1cm of memory.south, xshift=-0.3cm] {L1 Bound};
+  \node[smallbox, below=0.1cm of memory.south, xshift=0.6cm] {L2 Bound};
+  \node[smallbox, below=0.1cm of memory.south, xshift=1.5cm] {L3 Bound};
+  \node[smallbox, below=0.1cm of memory.south, xshift=2.4cm] {Ext. Memory Bound};
   
   % Level 4 - More details
   \node[tinybox, below=0.5cm of memory, xshift=-1.2cm, font=\tiny] {Store DTLB};
