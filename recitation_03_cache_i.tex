@@ -268,6 +268,109 @@
 \end{columns}
 \end{frame}
 
+\begin{frame}{Fully Associative Cache - Structure}
+\centering
+\begin{tikzpicture}[
+    tagbox/.style={draw, thick, minimum width=1.5cm, minimum height=0.4cm, fill=green!20},
+    databox/.style={draw, thick, minimum width=3.5cm, minimum height=0.4cm, fill=white},
+    offsetbox/.style={draw, thick, minimum width=0.6cm, minimum height=0.4cm, fill=orange!20},
+    label/.style={font=\small},
+    biglabel/.style={font=\bfseries},
+    node distance=0cm
+]
+
+% Address breakdown at top
+\node[label, font=\small] (addr_title) at (0, 4.5) {Address Fields};
+\node[draw, thick, fill=green!20, minimum width=5.5cm, minimum height=0.7cm, font=\small] (tag_field) at (-0.5, 3.7) {Tag = Block\#};
+\node[draw, thick, fill=orange!20, minimum width=1.2cm, minimum height=0.7cm, anchor=west, font=\small] (offset_field) at (tag_field.east) {Line Offset};
+\node[label, font=\tiny, above] at (tag_field.north west) {31};
+\node[label, font=\tiny, above] at (offset_field.west |- tag_field.north) {4};
+\node[label, font=\tiny, above] at (offset_field.north east) {0};
+
+% Labels for columns
+\node[label, below=0.4cm of tag_field.south, xshift=0.5cm] (tag_array_label) {Tag Array};
+\node[label, below=0.4cm of offset_field.south, xshift=1.5cm] (data_array_label) {Data array};
+
+% Create arrays using loops
+\foreach \i in {0,...,7} {
+    % Tag array - adjacent boxes (no space)
+    \ifnum\i=0
+        \node[tagbox, below=0cm of tag_array_label] (tag\i) {};
+        \node[label, font=\tiny] at (tag\i.center) {Tag};
+    \else
+        \pgfmathtruncatemacro{\prev}{\i-1}
+        \node[tagbox, below=0cm of tag\prev] (tag\i) {};
+    \fi
+
+    % Comparators using muxdemux - anchored at lpin 2 relative to tag
+    \node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
+          external pins width=0, fill=cyan!20, anchor=lpin 2] (comp\i) at ([xshift=0.8cm]tag\i.east) {};
+    % Add "=" inside comparator
+    \node[font=\fontsize{4}{4}\selectfont] at (comp\i.center) {=};
+
+    % Data array
+    \node[databox, right=0.8cm of comp\i] (data\i) {};
+    \ifnum\i=0
+        \node[label, font=\tiny] at (data\i.west) [anchor=west, xshift=1mm] {Line};
+        % Orange box only on first line
+        \node[offsetbox, anchor=west] at (data\i.east) (offset\i) {};
+    \fi
+}
+
+% Mux below data array
+\node[muxdemux, muxdemux def={Lh=2.5, Rh=1, NL=8, NR=1, w=1.2},
+      external pins width=0, fill=cyan!20, below=0.6cm of data4.south] (mux) {};
+
+% Tag input vertical line
+\coordinate (tag_input_top) at ([xshift=-0.5cm]comp3.west);
+\draw[->, >=stealth, thick] (tag_field.south) -- (tag_field.south |- tag_input_top) -| (tag_input_top);
+
+% Connect tag input to all comparators
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] (tag_input_top) -- (tag_input_top -| comp\i.lpin 1) -- (comp\i.lpin 1);
+}
+
+% Connect arrays using loops
+\foreach \i in {0,...,7} {
+    % Tag to comparator (other input)
+    \draw[->, >=stealth, thick] (tag\i.east) -- (comp\i.lpin 2);
+    % Comparator to data
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data\i.west);
+    % Data to mux
+    \pgfmathtruncatemacro{\pin}{\i+1}
+    \draw[->, >=stealth, thick] (data\i.south) -- (data\i.south |- mux.blpin \pin) -- (mux.blpin \pin);
+}
+
+% OR gate for hit/miss
+\node[or port, anchor=north, external pins width=0, fill=cyan!20,
+      scale=0.4, rotate=-90, below=0.2cm of comp7.south] (or_gate) {};
+
+% Connect comparators to OR gate
+\coordinate (or_input) at ([yshift=0.3cm]or_gate.north);
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] (comp\i.bpin 1) -- (comp\i.bpin 1 |- or_input) -- (or_input);
+}
+\draw[->, >=stealth, thick] (or_input) -- (or_gate.bin 1);
+
+% Hit/Miss output
+\node[label, below=0.5cm of or_gate.bout, font=\bfseries] (hit_miss) {Hit/Miss};
+\draw[->, >=stealth, thick] (or_gate.bout) -- (hit_miss.north);
+
+% Data output
+\node[label, below=0.2cm of mux.south, font=\bfseries] (data_out) {data};
+\draw[->, >=stealth, thick] (mux.brpin 1) -- (data_out.north);
+
+% Offset input to mux control
+\coordinate (offset_input) at ([xshift=1cm]mux.east);
+\draw[->, >=stealth, thick] (offset_field.south) |- (offset_input) |- (mux.north);
+
+% Bit labels at bottom
+\node[label, font=\tiny, below=0.2cm of tag7.south] {31};
+\node[label, font=\tiny, below=0.2cm of data7.south east, xshift=3mm] {0};
+
+\end{tikzpicture}
+\end{frame}
+
 \begin{frame}{Direct Mapping Organization}
 \begin{columns}
 \column{0.5\textwidth}
