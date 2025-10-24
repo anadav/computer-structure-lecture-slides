@@ -69,14 +69,15 @@
             \node[sectionlabel, rotate=90] at (set.center) {set};
         \else
             \node[sectionlabel] at (set.center) {set};
-        
+        \fi
+
         % Add bit numbers below
         \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {\setstart};
         \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {\setend};
-        
+
         \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
     \fi
-    
+
     % Draw offset block
     \ifnum#3>0
         \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
@@ -86,9 +87,15 @@
         \else
             \node[sectionlabel] at (offset.center) {offset};
         \fi
-        
-        % Add bit numbers below
-        \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstart};
+
+        % Add bit numbers below - fix for when set bits = 0
+        \ifnum#2>0
+            \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstart};
+        \else
+            % When no set bits, offset starts directly after tag
+            \pgfmathtruncatemacro{\offsetstartalt}{\tagend - 1}
+            \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstartalt};
+        \fi
         \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {\offsetend};
     \fi
     \end{tikzpicture}
@@ -112,7 +119,7 @@
     \pgfmathtruncatemacro{\offsetend}{0}
     
     % Scale factor for width
-    \pgfmathsetmacro{\bitwidth}{0.25}
+    \pgfmathsetmacro{\bitwidth}{0.15}
     
     % Starting position
     \pgfmathsetmacro{\xpos}{0}
@@ -134,23 +141,29 @@
         \pgfmathsetmacro{\setwidth}{#2 * \bitwidth}
         \node[section, fill=green!40, minimum width=\setwidth cm] (set) at (\xpos + \setwidth/2, 0) {};
         \node[bitcount] at (set.center) {#2};
-        
+
         % Add bit range below
         \node[bitnumber, below=2pt] at (set.south) {\setstart:\setend};
-        
+
         \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
     \fi
-    
+
     % Draw offset block
     \ifnum#3>0
         \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
         \node[section, fill=yellow!40, minimum width=\offsetwidth cm] (offset) at (\xpos + \offsetwidth/2, 0) {};
         \node[bitcount] at (offset.center) {#3};
-        
-        % Add bit range below
-        \node[bitnumber, below=2pt] at (offset.south) {\offsetstart:\offsetend};
+
+        % Add bit range below - fix for when set bits = 0
+        \ifnum#2>0
+            \node[bitnumber, below=2pt] at (offset.south) {\offsetstart:\offsetend};
+        \else
+            % When no set bits, offset range is directly after tag
+            \pgfmathtruncatemacro{\offsetstartalt}{\tagend - 1}
+            \node[bitnumber, below=2pt] at (offset.south) {\offsetstartalt:\offsetend};
+        \fi
     \fi
-    
+
     % Add labels above
     \ifnum#1>0
         \node[font=\footnotesize, above=2pt] at (tag.north) {Tag};
@@ -246,8 +259,7 @@
 \begin{tcolorbox}[colback=gray!10]
 \textbf{Address Fields:}\\
 \begin{center}
-[Tag | Line Offset]\\
-31 \hspace{2cm} 4 \hspace{0.5cm} 0
+    \addressbreakdown{27}{0}{5}
 \end{center}
 \end{tcolorbox}
 
