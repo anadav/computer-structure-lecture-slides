@@ -1557,7 +1557,7 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \pause
 \textbf{Original Cache Mapping (8 sets example):}
 \begin{itemize}
-    \item Address format: \addressbreakdown{27}{3}{2}
+    \item Address format: \addressbreakdown{25}{3}{2}
     \item Any address can map to any set (0-7)
     \item Problem: A segments could occupy 100\% of cache!
 \end{itemize}
@@ -1571,13 +1571,39 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \end{itemize}
 
 \pause
-\begin{center}
-\begin{tcolorbox}[colback=yellow!10, width=0.9\textwidth]
-\textbf{Implementation:}\\
-Original Set = bits[4:2]\\
-Modified Set = \{bit[28], bits[4:2]\}
-\end{tcolorbox}
-\end{center}
+\textbf{Modified Address Format:}\\[0.3cm]
+\begin{tikzpicture}[
+    section/.style={draw, very thick, minimum height=0.6cm},
+    bitnumber/.style={font=\tiny},
+    sectionlabel/.style={font=\scriptsize}
+]
+    % Tag section - bit 29
+    \node[section, fill=blue!40, minimum width=0.17cm] (tag29) at (0,0) {};
+    \node[sectionlabel, rotate=90, font=\tiny] at (tag29.center) {tag};
+    \node[bitnumber] at ($(tag29.south west) + (0mm,-1mm)$) {29};
+
+    % Set section - bit 28 (segment bit)
+    \node[section, fill=green!40, minimum width=0.17cm, anchor=west] (set28) at (tag29.east) {};
+    \node[sectionlabel, rotate=90, font=\tiny] at (set28.center) {set};
+    \node[bitnumber] at ($(set28.south west) + (1mm,-1mm)$) {28};
+
+    % Tag section - bits 27-5
+    \node[section, fill=blue!40, minimum width=3.91cm, anchor=west] (tag275) at (set28.east) {};
+    \node[sectionlabel] at (tag275.center) {tag};
+    \node[bitnumber] at ($(tag275.south east) + (-1mm,-1mm)$) {5};
+
+    % Set section - bits 4-2
+    \node[section, fill=green!40, minimum width=0.51cm, anchor=west] (set42) at (tag275.east) {};
+    \node[sectionlabel, rotate=90] at (set42.center) {set};
+    \node[bitnumber] at ($(set42.south west) + (1mm,-1mm)$) {4};
+    \node[bitnumber] at ($(set42.south east) + (-1mm,-1mm)$) {2};
+
+    % Offset section - bits 1-0
+    \node[section, fill=yellow!40, minimum width=0.34cm, anchor=west] (offset) at (set42.east) {};
+    \node[sectionlabel, rotate=90, font=\tiny] at (offset.center) {offset};
+    \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {1};
+    \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {0};
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Segment-Based Cache: Concrete Example}
@@ -1671,30 +1697,6 @@ Small blocks & Less wasted transfer & Poor spatial locality \\
     \end{itemize}
     \item Real systems use multi-level hierarchies (L1, L2, L3)
 \end{itemize}
-\end{frame}
-
-\begin{frame}{Practice Problems}
-\begin{enumerate}
-    \item Given a 32KB 8-way cache with 64-byte blocks:
-    \begin{itemize}
-        \item How many sets?
-        \item How many tag bits?
-        \item Directory size with LRU and dirty bits?
-    \end{itemize}
-    
-    \item For the access pattern: 0, 64, 128, 192, 256, 0, 64
-    \begin{itemize}
-        \item Direct mapped cache with 4 sets: how many misses?
-        \item 2-way cache with 2 sets: how many misses?
-    \end{itemize}
-    
-    \item Design a cache for:
-    \begin{itemize}
-        \item 90\% hit rate minimum
-        \item 1 cycle hit time
-        \item What parameters would you choose?
-    \end{itemize}
-\end{enumerate}
 \end{frame}
 
 \end{document}
