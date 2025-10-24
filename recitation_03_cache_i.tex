@@ -317,10 +317,6 @@
     \fi
 }
 
-% Mux below data array
-\node[muxdemux, muxdemux def={Lh=2.5, Rh=1, NL=8, NR=1, w=1.2},
-      external pins width=0, fill=cyan!20, below=0.6cm of data4.south] (mux) {};
-
 % Tag input vertical line
 \coordinate (tag_input_top) at ([xshift=-0.5cm]comp3.west);
 \draw[->, >=stealth, thick] (tag_field.south) -- (tag_field.south |- tag_input_top) -| (tag_input_top);
@@ -336,14 +332,11 @@
     \draw[->, >=stealth, thick] (tag\i.east) -- (comp\i.lpin 2);
     % Comparator to data
     \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data\i.west);
-    % Data to mux
-    \pgfmathtruncatemacro{\pin}{\i+1}
-    \draw[->, >=stealth, thick] (data\i.south) -- (data\i.south |- mux.blpin \pin) -- (mux.blpin \pin);
 }
 
 % OR gate for hit/miss
 \node[or port, anchor=north, external pins width=0, fill=cyan!20,
-      scale=0.4, rotate=-90, below=0.2cm of comp7.south] (or_gate) {};
+      scale=0.4, rotate=-90, below right=0.2cm and 0.8cm of comp7.south] (or_gate) {};
 
 % Connect comparators to OR gate
 \coordinate (or_input) at ([yshift=0.3cm]or_gate.north);
@@ -356,17 +349,9 @@
 \node[label, below=0.5cm of or_gate.bout, font=\bfseries] (hit_miss) {Hit/Miss};
 \draw[->, >=stealth, thick] (or_gate.bout) -- (hit_miss.north);
 
-% Data output
-\node[label, below=0.2cm of mux.south, font=\bfseries] (data_out) {data};
-\draw[->, >=stealth, thick] (mux.brpin 1) -- (data_out.north);
-
-% Offset input to mux control
-\coordinate (offset_input) at ([xshift=1cm]mux.east);
-\draw[->, >=stealth, thick] (offset_field.south) |- (offset_input) |- (mux.north);
-
 % Bit labels at bottom
-\node[label, font=\tiny, below=0.2cm of tag7.south] {31};
-\node[label, font=\tiny, below=0.2cm of data7.south east, xshift=3mm] {0};
+\node[label, font=\tiny] at ([yshift=-2mm]data7.south west) {31};
+\node[label, font=\tiny] at ([yshift=-2mm]data7.south east) {0};
 
 \end{tikzpicture}
 \end{frame}
