@@ -13,6 +13,7 @@
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{arydshln}
 \usetheme{Madrid}
 
 % Define blocksize length once globally
@@ -847,25 +848,31 @@ What happens when we need to write to data not in cache?
 \end{center}
 \end{frame}
 
-\begin{frame}{Example 1: Trace Table (Part 1)}
+\begin{frame}{Example 1: Trace Table}
 \begin{center}
 \footnotesize
-\begin{tabular}{|c|c|c|c|c|c|l|}
+\begin{tabular}{|c:c|c|c|c|c|l|}
 \hline
-\textbf{Addr} & \textbf{Binary (Tag|Set|Off)} & \textbf{Tag} & \textbf{Set} & \textbf{H/M} & \textbf{Way} & \textbf{Explanation} \\
+\textbf{Addr} & \textcolor{blue}{\textbf{Tag}} \textcolor{green!70!black}{\textbf{Set}} \textcolor{orange}{\textbf{Off}} & \textbf{Tag} & \textbf{Set} & \textbf{H/M} & \textbf{Way/LRU} & \textbf{Explanation} \\
 \hline
-5 & \textcolor{blue}{0000000}\textcolor{red}{01}\textcolor{green}{01} & 0 & 1 & M & 0/1 & First access to set 1 \\
-7 & \textcolor{blue}{0000000}\textcolor{red}{01}\textcolor{green}{11} & 0 & 1 & H & 0/1 & Same block as addr 5 \\
-1 & \textcolor{blue}{0000000}\textcolor{red}{00}\textcolor{green}{01} & 0 & 0 & M & 0/1 & First access to set 0 \\
-4 & \textcolor{blue}{0000000}\textcolor{red}{01}\textcolor{green}{00} & 0 & 1 & H & 0/1 & Already loaded with addr 5 \\
-36 & \textcolor{blue}{0000001}\textcolor{red}{01}\textcolor{green}{00} & 1 & 1 & M & 1/0 & Different tag, use way 1 \\
-8 & \textcolor{blue}{0000000}\textcolor{red}{10}\textcolor{green}{00} & 0 & 2 & M & 0/1 & First access to set 2 \\
-100 & \textcolor{blue}{0000011}\textcolor{red}{01}\textcolor{green}{00} & 3 & 1 & M & 0/1 & Evict way 0 (LRU) \\
+5 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{01} & 0 & 1 & M & 0/1 & First access to set 1 \\
+7 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{11} & 0 & 1 & H & 0/1 & Same block as addr 5 (4-7) \\
+1 & \textcolor{blue}{00}\textcolor{green!70!black}{000}\textcolor{orange}{01} & 0 & 0 & M & 0/1 & First access to set 0 \\
+4 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 0 & 1 & H & 0/1 & Already loaded (1) \\
+36 & \textcolor{blue}{01}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 1 & 1 & M & 1/0 & Different tag, set=1 (1), way=1 \\
+8 & \textcolor{blue}{00}\textcolor{green!70!black}{010}\textcolor{orange}{00} & 0 & 2 & M & 0/1 & First access to set 2 \\
+100 & \textcolor{blue}{11}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 3 & 1 & M & 0/1 & Evict way 0 (LRU), set=1 \\
+6 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{10} & 0 & 1 & M & 1/0 & Block 4-7 evicted (7), use way 0 (LRU) \\
+4 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 0 & 1 & H & 1/0 & Loaded again (8) \\
+12 & \textcolor{blue}{00}\textcolor{green!70!black}{011}\textcolor{orange}{00} & 0 & 3 & M & 0/1 & First access to set 3 \\
+36 & \textcolor{blue}{01}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 1 & 1 & M & 0/1 & Evict way 0 (LRU), set=1 \\
+12 & \textcolor{blue}{00}\textcolor{green!70!black}{011}\textcolor{orange}{00} & 0 & 3 & H & 0/1 & Already loaded (10) \\
+68 & \textcolor{blue}{10}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 2 & 1 & M & 1/0 & Evict way 1 (LRU), set=1 \\
+5 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{01} & 0 & 1 & M & 0/1 & Block evicted (8,13), use way 1 (LRU) \\
+7 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{11} & 0 & 1 & H & 0/1 & Loaded again (14) \\
 \hline
 \end{tabular}
 \end{center}
-\vspace{0.2cm}
-\textbf{Color Key:} \textcolor{blue}{Tag bits (29-5)} | \textcolor{red}{Set bits (4-2)} | \textcolor{green}{Offset bits (1-0)}
 \end{frame}
 
 \begin{frame}{Example 1: Final Results}
