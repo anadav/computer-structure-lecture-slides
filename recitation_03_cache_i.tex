@@ -290,7 +290,7 @@
 
 % Labels for columns
 \node[label, below=0.4cm of tag_field.south, xshift=0.5cm] (tag_array_label) {Tag Array};
-\node[label, below=0.4cm of offset_field.south, xshift=1.5cm] (data_array_label) {Data array};
+\node[label, below=0.4cm of offset_field.south, xshift=2cm] (data_array_label) {Data Array};
 
 % Create arrays using loops
 \foreach \i in {0,...,7} {
@@ -311,24 +311,21 @@
 
     % Data array
     \node[databox, right=1.2cm of comp\i] (data\i) {};
-    \ifnum\i=0
-        \node[label, font=\tiny] at (data\i.west) [anchor=west, xshift=1mm] {Line};
-        % Orange box only on first line
-        \node[offsetbox, anchor=west] at (data\i.east) (offset\i) {};
-    \fi
 }
+
+\node[label, font=\tiny] at (data0.west) [anchor=west, xshift=1mm] {Line};
+% Orange box only on first line
+\node[offsetbox, anchor=west] at ([xshift=1cm]data0.west) (thedata) {};
 
 % Tag input vertical line
 \coordinate (tag_input_top) at ([xshift=-0.5cm]comp3.west);
-
-%\foreach \i in {0,...,7} {
-%    \draw[->, >=stealth, thick] (tag_input_top) -- (tag_input_top -| comp\i.lpin 1) -- (comp\i.lpin 1);
-%}
 
 % Connect tag input to all comparators
 \foreach \i in {0,...,7} {
     \draw[->, >=stealth, thick] ([xshift=3mm]tag_field.south -| tag1.east) -- ([xshift=3mm]tag\i.east |- comp\i.lpin 1) node[data_connector] {}  -- (comp\i.lpin 1);
 }
+
+\draw[->, >=stealth, thick] (offset_field.south) -- (thedata.north);
 
 % Connect arrays using loops
 \foreach \i in {0,...,7} {
@@ -340,7 +337,7 @@
 
 % OR gate for hit/miss
 \node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
-      xscale=0.7, yscale=0.3, rotate=-90, below right=0.5cm and 0.6cm of comp7.south, anchor=pin 1] (or_gate) {};
+      xscale=0.7, yscale=0.3, rotate=-90, below right=0.5cm and 0.6cm of comp7.south, anchor=out] (or_gate) {};
 
 % Connect comparators to OR gate
 \foreach \i in {0,...,7} {
@@ -1560,7 +1557,7 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \pause
 \textbf{Original Cache Mapping (8 sets example):}
 \begin{itemize}
-    \item Address format: [Tag | Set(4-2) | Offset(1-0)]
+    \item Address format: \addressbreakdown{27}{3}{2}
     \item Any address can map to any set (0-7)
     \item Problem: A segments could occupy 100\% of cache!
 \end{itemize}
