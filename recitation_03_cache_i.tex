@@ -1568,28 +1568,27 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
     \item Include segment bit (bit 28) in set calculation
     \item New set field: concatenate bit 28 with original set bits
     \item Result: Sets 0-3 for A segments, Sets 4-7 for B segments
-\end{itemize}
-
-\pause
-\textbf{Modified Address Format:}\\[0.3cm]
+    \item Modified address format:
 \begin{tikzpicture}[
     section/.style={draw, very thick, minimum height=0.6cm},
     bitnumber/.style={font=\tiny},
-    sectionlabel/.style={font=\scriptsize}
+    sectionlabel/.style={font=\scriptsize},
+    baseline=(current bounding box.center)
 ]
     % Tag section - bit 29
     \node[section, fill=blue!40, minimum width=0.17cm] (tag29) at (0,0) {};
     \node[sectionlabel, rotate=90, font=\tiny] at (tag29.center) {tag};
-    \node[bitnumber] at ($(tag29.south west) + (0mm,-1mm)$) {29};
+    \node[bitnumber] at ($(tag29.south) + (0mm,-1mm)$) {29};
 
     % Set section - bit 28 (segment bit)
     \node[section, fill=green!40, minimum width=0.17cm, anchor=west] (set28) at (tag29.east) {};
     \node[sectionlabel, rotate=90, font=\tiny] at (set28.center) {set};
-    \node[bitnumber] at ($(set28.south west) + (1mm,-1mm)$) {28};
+    \node[bitnumber] at ($(set28.south) + (0mm,-1mm)$) {28};
 
     % Tag section - bits 27-5
     \node[section, fill=blue!40, minimum width=3.91cm, anchor=west] (tag275) at (set28.east) {};
     \node[sectionlabel] at (tag275.center) {tag};
+    \node[bitnumber] at ($(tag275.south west) + (1mm,-1mm)$) {27};
     \node[bitnumber] at ($(tag275.south east) + (-1mm,-1mm)$) {5};
 
     % Set section - bits 4-2
@@ -1604,6 +1603,7 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
     \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {1};
     \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {0};
 \end{tikzpicture}
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Segment-Based Cache: Concrete Example}
