@@ -230,18 +230,20 @@
 
 \vspace{0.3cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
-  % Decision tree
+\begin{tikzpicture}
+  % Decision tree - positioned relatively
   \node[draw, rectangle, fill=blue!30, rounded corners, align=center] (root) at (0,0) {µop\\Allocated?};
-  
-  \node[draw, rectangle, fill=green!30, rounded corners, align=center] (retired) at (-2,-1.5) {µop ever\\Retired?};
-  \node[draw, rectangle, fill=yellow!30, rounded corners, align=center] (stall) at (2,-1.5) {Back-end\\stall?};
-  
-  \node[draw, rectangle, fill=retiring, text=white] (retiring) at (-3.5,-3) {Retiring};
-  \node[draw, rectangle, fill=badspec, text=white, align=center] (badspec) at (-0.5,-3) {Bad\\Speculation};
-  \node[draw, rectangle, fill=backendbound, align=center] (backend) at (0.8,-3) {Backend\\Bound};
-  \node[draw, rectangle, fill=frontendbound, text=white, align=center] (frontend) at (3.2,-3) {Frontend\\Bound};
-  
+
+  % Second level - relative to root with larger horizontal distance
+  \node[draw, rectangle, fill=green!30, rounded corners, align=center, below left=0.5cm and 1.3cm of root] (retired) {µop ever\\Retired?};
+  \node[draw, rectangle, fill=yellow!30, rounded corners, align=center, below right=0.5cm and 1.3cm of root] (stall) {Back-end\\stall?};
+
+  % Third level - relative to second level with smaller horizontal distance
+  \node[draw, rectangle, fill=retiring, text=white, below left=0.5cm and 0.3cm of retired] (retiring) {Retiring};
+  \node[draw, rectangle, fill=badspec, text=white, align=center, below right=0.5cm and 0.3cm of retired] (badspec) {Bad\\Speculation};
+  \node[draw, rectangle, fill=backendbound, align=center, below left=0.5cm and 0.3cm of stall] (backend) {Backend\\Bound};
+  \node[draw, rectangle, fill=frontendbound, text=white, align=center, below right=0.5cm and 0.3cm of stall] (frontend) {Frontend\\Bound};
+
   % Arrows
   \draw[->, thick] (root) -- node[left] {Yes} (retired);
   \draw[->, thick] (root) -- node[right] {No} (stall);
