@@ -321,11 +321,11 @@
 % Tag input vertical line
 \coordinate (tag_input_top) at ([xshift=-0.5cm]comp3.west);
 
-% Connect tag input to all comparators
-\foreach \i in {0,...,7} {
-    \draw[->, >=stealth, thick] (tag_input_top) -- (tag_input_top -| comp\i.lpin 1) -- (comp\i.lpin 1);
-}
+%\foreach \i in {0,...,7} {
+%    \draw[->, >=stealth, thick] (tag_input_top) -- (tag_input_top -| comp\i.lpin 1) -- (comp\i.lpin 1);
+%}
 
+% Connect tag input to all comparators
 \foreach \i in {0,...,7} {
     \draw[->, >=stealth, thick] ([xshift=3mm]tag_field.south -| tag1.east) -- ([xshift=3mm]tag\i.east |- comp\i.lpin 1) node[data_connector] {}  -- (comp\i.lpin 1);
 }
@@ -339,15 +339,13 @@
 }
 
 % OR gate for hit/miss
-\node[or port, anchor=north, external pins width=0, fill=cyan!20,
+\node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
       scale=0.4, rotate=-90, below right=0.2cm and 0.8cm of comp7.south] (or_gate) {};
 
 % Connect comparators to OR gate
-\coordinate (or_input) at ([yshift=0.3cm]or_gate.north);
 \foreach \i in {0,...,7} {
-    \draw[->, >=stealth, thick] (comp\i.bpin 1) -- (comp\i.bpin 1 |- or_input) -- (or_input);
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (comp\i.rpin 1 -| or_gate.bin \the\numexpr\i+1\relax) node[data_connector] {} -- (or_gate.bin \the\numexpr\i+1\relax);
 }
-\draw[->, >=stealth, thick] (or_input) -- (or_gate.bin 1);
 
 % Hit/Miss output
 \node[label, below=0.5cm of or_gate.bout, font=\bfseries] (hit_miss) {Hit/Miss};
