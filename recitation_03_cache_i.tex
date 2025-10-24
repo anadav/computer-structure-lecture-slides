@@ -856,21 +856,21 @@ What happens when we need to write to data not in cache?
 \hline
 & \textbf{Addr} & \textcolor{blue}{\textbf{Tag}} \textcolor{green!70!black}{\textbf{Set}} \textcolor{orange}{\textbf{Off}} & \textbf{Tag} & \textbf{Set} & \textbf{\shortstack{Hit/\\Miss}} & \textbf{\shortstack{Way/\\LRU}} & \textbf{Explanation} \\
 \hline
-1 & 5 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{01} & 0 & 1 & \textcolor{red}{M} & 0/1 & First access to set 1 \\
-2 & 7 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{11} & 0 & 1 & \textcolor{green!70!black}{H} & 0/1 & Same block as addr 5 (4-7) \\
-3 & 1 & \textcolor{blue}{00}\textcolor{green!70!black}{000}\textcolor{orange}{01} & 0 & 0 & \textcolor{red}{M} & 0/1 & First access to set 0 \\
-4 & 4 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 0 & 1 & \textcolor{green!70!black}{H} & 0/1 & Already loaded (1) \\
-5 & 36 & \textcolor{blue}{01}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 1 & 1 & \textcolor{red}{M} & 1/0 & Different tag, set=1 (1), way=1 \\
-6 & 8 & \textcolor{blue}{00}\textcolor{green!70!black}{010}\textcolor{orange}{00} & 0 & 2 & \textcolor{red}{M} & 0/1 & First access to set 2 \\
-7 & 100 & \textcolor{blue}{11}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 3 & 1 & \textcolor{red}{M} & 0/1 & Evict way 0 (LRU), set=1 \\
-8 & 6 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{10} & 0 & 1 & \textcolor{red}{M} & 1/0 & Block 4-7 evicted (7), use way 0 (LRU) \\
-9 & 4 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 0 & 1 & \textcolor{green!70!black}{H} & 1/0 & Loaded again (8) \\
-10 & 12 & \textcolor{blue}{00}\textcolor{green!70!black}{011}\textcolor{orange}{00} & 0 & 3 & \textcolor{red}{M} & 0/1 & First access to set 3 \\
-11 & 36 & \textcolor{blue}{01}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 1 & 1 & \textcolor{red}{M} & 0/1 & Evict way 0 (LRU), set=1 \\
-12 & 12 & \textcolor{blue}{00}\textcolor{green!70!black}{011}\textcolor{orange}{00} & 0 & 3 & \textcolor{green!70!black}{H} & 0/1 & Already loaded (10) \\
-13 & 68 & \textcolor{blue}{10}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 2 & 1 & \textcolor{red}{M} & 1/0 & Evict way 1 (LRU), set=1 \\
-14 & 5 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{01} & 0 & 1 & \textcolor{red}{M} & 0/1 & Block evicted (8,13), use way 1 (LRU) \\
-15 & 7 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{11} & 0 & 1 & \textcolor{green!70!black}{H} & 0/1 & Loaded again (14) \\
+1 & 5 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{01} & 0 & 1 & \uncover<1->{\textcolor{red}{M}} & \uncover<1->{0/1} & \uncover<1->{First access to set 1} \\
+2 & 7 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{11} & 0 & 1 & \uncover<2->{\textcolor{green!70!black}{H}} & \uncover<2->{0/1} & \uncover<2->{Same block as addr 5 (4-7)} \\
+3 & 1 & \textcolor{blue}{00}\textcolor{green!70!black}{000}\textcolor{orange}{01} & 0 & 0 & \uncover<3->{\textcolor{red}{M}} & \uncover<3->{0/1} & \uncover<3->{First access to set 0} \\
+4 & 4 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 0 & 1 & \uncover<4->{\textcolor{green!70!black}{H}} & \uncover<4->{0/1} & \uncover<4->{Already loaded (1)} \\
+5 & 36 & \textcolor{blue}{01}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 1 & 1 & \uncover<5->{\textcolor{red}{M}} & \uncover<5->{1/0} & \uncover<5->{Different tag, set=1 (1), way=1} \\
+6 & 8 & \textcolor{blue}{00}\textcolor{green!70!black}{010}\textcolor{orange}{00} & 0 & 2 & \uncover<6->{\textcolor{red}{M}} & \uncover<6->{0/1} & \uncover<6->{First access to set 2} \\
+7 & 100 & \textcolor{blue}{11}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 3 & 1 & \uncover<7->{\textcolor{red}{M}} & \uncover<7->{0/1} & \uncover<7->{Evict way 0 (LRU), set=1} \\
+8 & 6 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{10} & 0 & 1 & \uncover<8->{\textcolor{red}{M}} & \uncover<8->{1/0} & \uncover<8->{Block 4-7 evicted (7), use way 0 (LRU)} \\
+9 & 4 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 0 & 1 & \uncover<9->{\textcolor{green!70!black}{H}} & \uncover<9->{1/0} & \uncover<9->{Loaded again (8)} \\
+10 & 12 & \textcolor{blue}{00}\textcolor{green!70!black}{011}\textcolor{orange}{00} & 0 & 3 & \uncover<10->{\textcolor{red}{M}} & \uncover<10->{0/1} & \uncover<10->{First access to set 3} \\
+11 & 36 & \textcolor{blue}{01}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 1 & 1 & \uncover<11->{\textcolor{red}{M}} & \uncover<11->{0/1} & \uncover<11->{Evict way 0 (LRU), set=1} \\
+12 & 12 & \textcolor{blue}{00}\textcolor{green!70!black}{011}\textcolor{orange}{00} & 0 & 3 & \uncover<12->{\textcolor{green!70!black}{H}} & \uncover<12->{0/1} & \uncover<12->{Already loaded (10)} \\
+13 & 68 & \textcolor{blue}{10}\textcolor{green!70!black}{001}\textcolor{orange}{00} & 2 & 1 & \uncover<13->{\textcolor{red}{M}} & \uncover<13->{1/0} & \uncover<13->{Evict way 1 (LRU), set=1} \\
+14 & 5 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{01} & 0 & 1 & \uncover<14->{\textcolor{red}{M}} & \uncover<14->{0/1} & \uncover<14->{Block evicted (8,13), use way 1 (LRU)} \\
+15 & 7 & \textcolor{blue}{00}\textcolor{green!70!black}{001}\textcolor{orange}{11} & 0 & 1 & \uncover<15->{\textcolor{green!70!black}{H}} & \uncover<15->{0/1} & \uncover<15->{Loaded again (14)} \\
 \hline
 \end{tabular}
 \end{center}
