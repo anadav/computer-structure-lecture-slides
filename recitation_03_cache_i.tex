@@ -462,6 +462,146 @@ Each set has 2 possible locations\\
 \end{columns}
 \end{frame}
 
+\begin{frame}{2 way set associative Organization}
+\centering
+\begin{tikzpicture}[
+    tagbox/.style={draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=green!20},
+    setbox/.style={draw, thick, minimum width=1.2cm, minimum height=0.4cm, fill=yellow!40},
+    databox/.style={draw, thick, minimum width=2.5cm, minimum height=0.4cm, fill=white},
+    offsetbox/.style={draw, thick, minimum width=0.4cm, minimum height=0.3cm, fill=orange!20},
+    label/.style={font=\small},
+    biglabel/.style={font=\bfseries},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    node distance=0cm,
+    scale=0.85,
+    every node/.style={scale=0.85}
+]
+
+% Address breakdown at top
+\node[draw, thick, fill=green!20, minimum width=4cm, minimum height=0.7cm, font=\small] (tag_field) {Tag};
+\node[draw, thick, fill=yellow!40, minimum width=1.2cm, minimum height=0.7cm, anchor=west, font=\small] (set_field) at (tag_field.east) {Set};
+\node[draw, thick, fill=orange!20, minimum width=1.2cm, minimum height=0.7cm, anchor=west, font=\small] (offset_field) at (set_field.east) {Line Offset};
+\node[label, font=\tiny, above] at (tag_field.north west) {31};
+\node[label, font=\tiny, above] at (set_field.west |- tag_field.north) {6};
+\node[label, font=\tiny, above] at (set_field.east |- tag_field.north) {5};
+\node[label, font=\tiny, above] at (offset_field.west |- tag_field.north) {4};
+\node[label, font=\tiny, above] at (offset_field.north east) {0};
+
+% Way 0 label
+\node[label, below=1.2cm of tag_field.south, xshift=-2cm] (way0_label) {Way 0};
+
+% Tag array for Way 0
+\node[tagbox, below=0.3cm of way0_label] (tag0_0) {};
+\node[label, font=\tiny] at (tag0_0.center) {Tag};
+\foreach \i in {1,...,3} {
+    \pgfmathtruncatemacro{\prev}{\i-1}
+    \node[tagbox, below=0cm of tag0_\prev] (tag0_\i) {};
+}
+
+% Set# array for Way 0
+\node[setbox, right=0.3cm of tag0_0] (set0_0) {};
+\node[label, font=\tiny, rotate=90] at (set0_0.center) {Set\#};
+\foreach \i in {1,...,3} {
+    \pgfmathtruncatemacro{\prev}{\i-1}
+    \node[setbox, below=0cm of set0_\prev] (set0_\i) {};
+}
+
+% Comparator for Way 0
+\node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
+      external pins width=0, fill=cyan!20, anchor=lpin 2, right=0.5cm of set0_1] (comp0) {};
+\node[font=\fontsize{4}{4}\selectfont] at (comp0.center) {=};
+
+% Data array for Way 0
+\node[databox, right=0.8cm of comp0] (data0_0) {};
+\foreach \i in {1,...,3} {
+    \pgfmathtruncatemacro{\prev}{\i-1}
+    \node[databox, below=0cm of data0_\prev] (data0_\i) {};
+}
+% Orange box on first line of Way 0
+\node[offsetbox, anchor=west] at ([xshift=0.5cm]data0_0.west) (thedata0) {};
+
+% Way 1 label
+\node[label, right=2.5cm of way0_label] (way1_label) {Way 1};
+
+% Tag array for Way 1
+\node[tagbox, below=0.3cm of way1_label] (tag1_0) {};
+\node[label, font=\tiny] at (tag1_0.center) {Tag};
+\foreach \i in {1,...,3} {
+    \pgfmathtruncatemacro{\prev}{\i-1}
+    \node[tagbox, below=0cm of tag1_\prev] (tag1_\i) {};
+}
+
+% Set# array for Way 1
+\node[setbox, right=0.3cm of tag1_0] (set1_0) {};
+\node[label, font=\tiny, rotate=90] at (set1_0.center) {Set\#};
+\foreach \i in {1,...,3} {
+    \pgfmathtruncatemacro{\prev}{\i-1}
+    \node[setbox, below=0cm of set1_\prev] (set1_\i) {};
+}
+
+% Comparator for Way 1
+\node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
+      external pins width=0, fill=cyan!20, anchor=lpin 2, right=0.5cm of set1_1] (comp1) {};
+\node[font=\fontsize{4}{4}\selectfont] at (comp1.center) {=};
+
+% Data array for Way 1
+\node[databox, right=0.8cm of comp1] (data1_0) {};
+\foreach \i in {1,...,3} {
+    \pgfmathtruncatemacro{\prev}{\i-1}
+    \node[databox, below=0cm of data1_\prev] (data1_\i) {};
+}
+% Orange box on first line of Way 1
+\node[offsetbox, anchor=west] at ([xshift=0.5cm]data1_0.west) (thedata1) {};
+
+% Connections from address fields to comparators
+% Tag field to both comparators
+\draw[->, >=stealth, thick] (tag_field.south) -- ++(0,-0.3cm) -| (comp0.lpin 1);
+\draw[->, >=stealth, thick] (tag_field.south) -- ++(0,-0.3cm) -| (comp1.lpin 1);
+
+% Set field to set arrays
+\draw[->, >=stealth, thick] (set_field.south) -- ++(0,-0.5cm) -| ([xshift=-0.2cm]set0_0.north);
+\draw[->, >=stealth, thick] (set_field.south) -- ++(0,-0.5cm) -| ([xshift=-0.2cm]set1_0.north);
+
+% Offset field to data
+\draw[->, >=stealth, thick] (offset_field.south) -- ++(0,-0.5cm) -| (thedata0.north);
+\draw[->, >=stealth, thick] (offset_field.south) -- ++(0,-0.5cm) -| (thedata1.north);
+
+% Tag to comparator connections
+\draw[->, >=stealth, thick] (tag0_1.east) -- (comp0.lpin 2);
+\draw[->, >=stealth, thick] (tag1_1.east) -- (comp1.lpin 2);
+
+% Comparator to data connections
+\draw[->, >=stealth, thick] (comp0.rpin 1) -- (comp0.rpin 1 -| data0_1.west) node[data_connector] {} -- (data0_1.west);
+\draw[->, >=stealth, thick] (comp1.rpin 1) -- (comp1.rpin 1 -| data1_1.west) node[data_connector] {} -- (data1_1.west);
+
+% MUX
+\node[muxdemux, muxdemux def={Lh=1, NL=2, NB=1, w=0.8},
+      external pins width=0, fill=gray!20, below right=1cm and -0.5cm of data1_3] (mux) {};
+\node[font=\fontsize{5}{5}\selectfont] at (mux.center) {MUX};
+
+% Data outputs to MUX
+\draw[->, >=stealth, thick] (data0_3.south) -- ++(0,-0.3cm) -| (mux.lpin 1);
+\draw[->, >=stealth, thick] (data1_3.south) -- ++(0,-0.3cm) -| (mux.lpin 2);
+
+% Data Out
+\node[label, below=0.3cm of mux.rpin 1, font=\bfseries] (data_out) {Data Out};
+\draw[->, >=stealth, thick] (mux.rpin 1) -- (data_out.north);
+
+% OR gate for hit/miss
+\node[or port, number inputs=2, anchor=north, external pins width=0, fill=cyan!20,
+      xscale=0.5, yscale=0.4, rotate=-90, below=1.5cm of comp0.south] (or_gate) {};
+
+% Connect comparators to OR gate
+\draw[->, >=stealth, thick] (comp0.rpin 1) -- (comp0.rpin 1 |- or_gate.bin 1) node[data_connector] {} -- (or_gate.bin 1);
+\draw[->, >=stealth, thick] (comp1.rpin 1) -- (comp1.rpin 1 |- or_gate.bin 2) node[data_connector] {} -- (or_gate.bin 2);
+
+% Hit/Miss output
+\node[label, below=0.3cm of or_gate.bout, font=\bfseries] (hit_miss) {Hit/Miss};
+\draw[->, >=stealth, thick] (or_gate.bout) -- (hit_miss.north);
+
+\end{tikzpicture}
+\end{frame}
+
 \section{Replacement Policies}
 \begin{frame}{Eviction Policies}
 When cache is full and we need to bring in a new block, which block should be evicted?
