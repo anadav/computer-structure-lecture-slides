@@ -1336,8 +1336,8 @@ for (int i=0; i<1024; i++)
 \begin{center}
 \begin{tikzpicture}[scale=0.8, transform shape]
 
-% Address bits at top
-\node[tagbox] (tag) {Tag};
+% Address bits at top - shifted to the right
+\node[tagbox] at (2,0) (tag) {Tag};
 \node[setbox, right=0pt of tag] (set) {Set};
 \node[offsetbox, right=0pt of set] (offset) {Line Offset};
 
@@ -1364,8 +1364,8 @@ for (int i=0; i<1024; i++)
 
 % Way 0 decoder (demux) - aligned with first tag box using rpin 1, further left
 \node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
-      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag0_0.west) + (-0.5,0)$) (decoder0) {};
-\node[left=3mm of decoder0, font=\small] {Set\#};
+      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag0_0.west) + (-1.5,0)$) (decoder0) {};
+\node[font=\small, anchor=east] at ([xshift=-5mm]decoder0.lpin 1) {Set\#};
 
 % Way 0 Data array - using for loop, positioned relative to tag array
 \coordinate (data0_start) at ($(tag0_0.east) + (0.8,0)$);
@@ -1399,8 +1399,8 @@ for (int i=0; i<1024; i++)
 
 % Way 1 decoder (demux) - aligned with first tag box using rpin 1, further left
 \node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
-      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag1_0.west) + (-0.5,0)$) (decoder1) {};
-\node[left=3mm of decoder1, font=\small] {Set\#};
+      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag1_0.west) + (-1.5,0)$) (decoder1) {};
+\node[font=\small, anchor=east] at ([xshift=-5mm]decoder1.lpin 1) {Set\#};
 
 % Way 1 Data array - using for loop, positioned relative to tag array
 \coordinate (data1_start) at ($(tag1_0.east) + (0.8,0)$);
@@ -1445,8 +1445,8 @@ for (int i=0; i<1024; i++)
 % Arrows from address bits to decoders with junction - initial line has no arrow
 \draw (set.south) -- ++(0,-0.5) coordinate (setjunction);
 \node[junction] at (setjunction) {};
-\draw[arrow] (setjunction) -| (decoder0.lpin 1);
-\draw[arrow] (setjunction) -| (decoder1.lpin 1);
+\draw[arrow] (setjunction) -| ([xshift=-5mm]decoder0.lpin 1) -- (decoder0.lpin 1);
+\draw[arrow] (setjunction) -| ([xshift=-5mm]decoder1.lpin 1) -- (decoder1.lpin 1);
 
 % Arrows from address tag to comparators with junction - initial line has no arrow
 \draw (tag.south) -- ++(0,-0.8) coordinate (tagjunction);
