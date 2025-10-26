@@ -192,6 +192,216 @@
     \end{tikzpicture}
 }
 
+% Macro for virtual address breakdown with 6 fields (for 4KB pages)
+% Usage: \vmaddressbreakdownsix{bits1}{bits2}{bits3}{bits4}{bits5}{bits6}
+% Field labels: Sign Ext, PML4, PDP, DIR, TABLE, OFFSET
+\newcommand{\vmaddressbreakdownsix}[6]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.7cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    \pgfmathsetmacro{\bitwidth}{0.17}
+
+    % Field 1: Sign extension
+    \pgfmathtruncatemacro{\vmfieldAstart}{63}
+    \pgfmathtruncatemacro{\vmfieldAend}{64 - #1}
+    \pgfmathsetmacro{\vmfieldAwidth}{#1 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{0}
+
+    \node[section, fill=gray!40, minimum width=\vmfieldAwidth cm] (f1) at (\xpos + \vmfieldAwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f1.center) {Sign\\Ext};
+    \node[bitnumber] at ($(f1.south west) + (2mm,-1mm)$) {\vmfieldAstart};
+    \node[bitnumber] at ($(f1.south east) + (-2mm,-1mm)$) {\vmfieldAend};
+
+    % Field 2: PML4
+    \pgfmathtruncatemacro{\vmfieldBstart}{\vmfieldAend - 1}
+    \pgfmathtruncatemacro{\vmfieldBend}{\vmfieldBstart - #2 + 1}
+    \pgfmathsetmacro{\vmfieldBwidth}{#2 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldAwidth}
+
+    \node[section, fill=orange!40, minimum width=\vmfieldBwidth cm] (f2) at (\xpos + \vmfieldBwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f2.center) {PML4};
+    \node[bitnumber] at ($(f2.south west) + (2mm,-1mm)$) {\vmfieldBstart};
+    \node[bitnumber] at ($(f2.south east) + (-2mm,-1mm)$) {\vmfieldBend};
+
+    % Field 3: PDP
+    \pgfmathtruncatemacro{\vmfieldCstart}{\vmfieldBend - 1}
+    \pgfmathtruncatemacro{\vmfieldCend}{\vmfieldCstart - #3 + 1}
+    \pgfmathsetmacro{\vmfieldCwidth}{#3 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldBwidth}
+
+    \node[section, fill=blue!40, minimum width=\vmfieldCwidth cm] (f3) at (\xpos + \vmfieldCwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f3.center) {PDP};
+    \node[bitnumber] at ($(f3.south west) + (2mm,-1mm)$) {\vmfieldCstart};
+    \node[bitnumber] at ($(f3.south east) + (-2mm,-1mm)$) {\vmfieldCend};
+
+    % Field 4: DIR
+    \pgfmathtruncatemacro{\vmfieldDstart}{\vmfieldCend - 1}
+    \pgfmathtruncatemacro{\vmfieldDend}{\vmfieldDstart - #4 + 1}
+    \pgfmathsetmacro{\vmfieldDwidth}{#4 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldCwidth}
+
+    \node[section, fill=green!40, minimum width=\vmfieldDwidth cm] (f4) at (\xpos + \vmfieldDwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f4.center) {DIR};
+    \node[bitnumber] at ($(f4.south west) + (2mm,-1mm)$) {\vmfieldDstart};
+    \node[bitnumber] at ($(f4.south east) + (-2mm,-1mm)$) {\vmfieldDend};
+
+    % Field 5: TABLE
+    \pgfmathtruncatemacro{\vmfieldEstart}{\vmfieldDend - 1}
+    \pgfmathtruncatemacro{\vmfieldEend}{\vmfieldEstart - #5 + 1}
+    \pgfmathsetmacro{\vmfieldEwidth}{#5 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldDwidth}
+
+    \node[section, fill=yellow!40, minimum width=\vmfieldEwidth cm] (f5) at (\xpos + \vmfieldEwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f5.center) {TABLE};
+    \node[bitnumber] at ($(f5.south west) + (2mm,-1mm)$) {\vmfieldEstart};
+    \node[bitnumber] at ($(f5.south east) + (-2mm,-1mm)$) {\vmfieldEend};
+
+    % Field 6: OFFSET
+    \pgfmathtruncatemacro{\vmfieldFstart}{\vmfieldEend - 1}
+    \pgfmathtruncatemacro{\vmfieldFend}{\vmfieldFstart - #6 + 1}
+    \pgfmathsetmacro{\vmfieldFwidth}{#6 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldEwidth}
+
+    \node[section, fill=red!40, minimum width=\vmfieldFwidth cm] (f6) at (\xpos + \vmfieldFwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f6.center) {OFFSET};
+    \node[bitnumber] at ($(f6.south west) + (2mm,-1mm)$) {\vmfieldFstart};
+    \node[bitnumber] at ($(f6.south east) + (-2mm,-1mm)$) {\vmfieldFend};
+
+    \end{tikzpicture}
+}
+
+% Macro for 2MB page address breakdown (5 fields)
+% Usage: \vmaddressbreakdown2MB{bits1}{bits2}{bits3}{bits4}{bits5}
+% Field labels: Sign Ext, PML4, PDP, DIR, OFFSET
+\newcommand{\vmaddressbreakdowntwoMB}[5]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.7cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    \pgfmathsetmacro{\bitwidth}{0.17}
+
+    % Field 1: Sign extension
+    \pgfmathtruncatemacro{\vmfieldAstart}{63}
+    \pgfmathtruncatemacro{\vmfieldAend}{64 - #1}
+    \pgfmathsetmacro{\vmfieldAwidth}{#1 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{0}
+
+    \node[section, fill=gray!40, minimum width=\vmfieldAwidth cm] (f1) at (\xpos + \vmfieldAwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f1.center) {Sign\\Ext};
+    \node[bitnumber] at ($(f1.south west) + (2mm,-1mm)$) {\vmfieldAstart};
+    \node[bitnumber] at ($(f1.south east) + (-2mm,-1mm)$) {\vmfieldAend};
+
+    % Field 2: PML4
+    \pgfmathtruncatemacro{\vmfieldBstart}{\vmfieldAend - 1}
+    \pgfmathtruncatemacro{\vmfieldBend}{\vmfieldBstart - #2 + 1}
+    \pgfmathsetmacro{\vmfieldBwidth}{#2 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldAwidth}
+
+    \node[section, fill=orange!40, minimum width=\vmfieldBwidth cm] (f2) at (\xpos + \vmfieldBwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f2.center) {PML4};
+    \node[bitnumber] at ($(f2.south west) + (2mm,-1mm)$) {\vmfieldBstart};
+    \node[bitnumber] at ($(f2.south east) + (-2mm,-1mm)$) {\vmfieldBend};
+
+    % Field 3: PDP
+    \pgfmathtruncatemacro{\vmfieldCstart}{\vmfieldBend - 1}
+    \pgfmathtruncatemacro{\vmfieldCend}{\vmfieldCstart - #3 + 1}
+    \pgfmathsetmacro{\vmfieldCwidth}{#3 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldBwidth}
+
+    \node[section, fill=blue!40, minimum width=\vmfieldCwidth cm] (f3) at (\xpos + \vmfieldCwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f3.center) {PDP};
+    \node[bitnumber] at ($(f3.south west) + (2mm,-1mm)$) {\vmfieldCstart};
+    \node[bitnumber] at ($(f3.south east) + (-2mm,-1mm)$) {\vmfieldCend};
+
+    % Field 4: DIR
+    \pgfmathtruncatemacro{\vmfieldDstart}{\vmfieldCend - 1}
+    \pgfmathtruncatemacro{\vmfieldDend}{\vmfieldDstart - #4 + 1}
+    \pgfmathsetmacro{\vmfieldDwidth}{#4 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldCwidth}
+
+    \node[section, fill=green!40, minimum width=\vmfieldDwidth cm] (f4) at (\xpos + \vmfieldDwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f4.center) {DIR};
+    \node[bitnumber] at ($(f4.south west) + (2mm,-1mm)$) {\vmfieldDstart};
+    \node[bitnumber] at ($(f4.south east) + (-2mm,-1mm)$) {\vmfieldDend};
+
+    % Field 5: OFFSET
+    \pgfmathtruncatemacro{\vmfieldEstart}{\vmfieldDend - 1}
+    \pgfmathtruncatemacro{\vmfieldEend}{\vmfieldEstart - #5 + 1}
+    \pgfmathsetmacro{\vmfieldEwidth}{#5 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldDwidth}
+
+    \node[section, fill=red!40, minimum width=\vmfieldEwidth cm] (f5) at (\xpos + \vmfieldEwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f5.center) {OFFSET};
+    \node[bitnumber] at ($(f5.south west) + (2mm,-1mm)$) {\vmfieldEstart};
+    \node[bitnumber] at ($(f5.south east) + (-2mm,-1mm)$) {\vmfieldEend};
+
+    \end{tikzpicture}
+}
+
+% Macro for 1GB page address breakdown (4 fields)
+% Usage: \vmaddressbreakdown1GB{bits1}{bits2}{bits3}{bits4}
+% Field labels: Sign Ext, PML4, PDP, OFFSET
+\newcommand{\vmaddressbreakdownoneGB}[4]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.7cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    \pgfmathsetmacro{\bitwidth}{0.17}
+
+    % Field 1: Sign extension
+    \pgfmathtruncatemacro{\vmfieldAstart}{63}
+    \pgfmathtruncatemacro{\vmfieldAend}{64 - #1}
+    \pgfmathsetmacro{\vmfieldAwidth}{#1 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{0}
+
+    \node[section, fill=gray!40, minimum width=\vmfieldAwidth cm] (f1) at (\xpos + \vmfieldAwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f1.center) {Sign\\Ext};
+    \node[bitnumber] at ($(f1.south west) + (2mm,-1mm)$) {\vmfieldAstart};
+    \node[bitnumber] at ($(f1.south east) + (-2mm,-1mm)$) {\vmfieldAend};
+
+    % Field 2: PML4
+    \pgfmathtruncatemacro{\vmfieldBstart}{\vmfieldAend - 1}
+    \pgfmathtruncatemacro{\vmfieldBend}{\vmfieldBstart - #2 + 1}
+    \pgfmathsetmacro{\vmfieldBwidth}{#2 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldAwidth}
+
+    \node[section, fill=orange!40, minimum width=\vmfieldBwidth cm] (f2) at (\xpos + \vmfieldBwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f2.center) {PML4};
+    \node[bitnumber] at ($(f2.south west) + (2mm,-1mm)$) {\vmfieldBstart};
+    \node[bitnumber] at ($(f2.south east) + (-2mm,-1mm)$) {\vmfieldBend};
+
+    % Field 3: PDP
+    \pgfmathtruncatemacro{\vmfieldCstart}{\vmfieldBend - 1}
+    \pgfmathtruncatemacro{\vmfieldCend}{\vmfieldCstart - #3 + 1}
+    \pgfmathsetmacro{\vmfieldCwidth}{#3 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldBwidth}
+
+    \node[section, fill=blue!40, minimum width=\vmfieldCwidth cm] (f3) at (\xpos + \vmfieldCwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f3.center) {PDP};
+    \node[bitnumber] at ($(f3.south west) + (2mm,-1mm)$) {\vmfieldCstart};
+    \node[bitnumber] at ($(f3.south east) + (-2mm,-1mm)$) {\vmfieldCend};
+
+    % Field 4: OFFSET
+    \pgfmathtruncatemacro{\vmfieldDstart}{\vmfieldCend - 1}
+    \pgfmathtruncatemacro{\vmfieldDend}{\vmfieldDstart - #4 + 1}
+    \pgfmathsetmacro{\vmfieldDwidth}{#4 * \bitwidth}
+    \pgfmathsetmacro{\xpos}{\xpos + \vmfieldCwidth}
+
+    \node[section, fill=red!40, minimum width=\vmfieldDwidth cm] (f4) at (\xpos + \vmfieldDwidth/2, 0) {};
+    \node[sectionlabel, align=center] at (f4.center) {OFFSET};
+    \node[bitnumber] at ($(f4.south west) + (2mm,-1mm)$) {\vmfieldDstart};
+    \node[bitnumber] at ($(f4.south east) + (-2mm,-1mm)$) {\vmfieldDend};
+
+    \end{tikzpicture}
+}
+
 \title{x86 Virtual Memory and TLB}
 \author{Computer Architecture 234267}
 \date{2025, Recitation \#11}
@@ -499,22 +709,21 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
 \end{itemize}
 
 \vspace{1em}
-Linear Address breakdown (4KB page):\\
-\texttt{[63:48] Sign Ext | [47:39] PML4 | [38:30] PDP | [29:21] DIR | [20:12] TABLE | [11:0] OFFSET}
+\textbf{Linear Address breakdown (4KB page):} \vmaddressbreakdownsix{16}{9}{9}{9}{9}{12}
 \end{frame}
 
 % Slide 6: Large Pages in 64-bit Mode
 \begin{frame}{Large Pages in 64-bit Mode}
 \textbf{2MB Page Mapping:}
 \begin{itemize}
-    \item Linear Address: Sign Ext | PML4[47:39] | PDP[38:30] | DIR[29:21] | OFFSET[20:0]
+    \item Linear Address: \vmaddressbreakdowntwoMB{16}{9}{9}{9}{21}
     \item Page size: $2^{21}$ = 2MB
 \end{itemize}
 
 \vspace{1em}
 \textbf{1GB Page Mapping:}
 \begin{itemize}
-    \item Linear Address: Sign Ext | PML4[47:39] | PDP[38:30] | OFFSET[29:0]
+    \item Linear Address: \vmaddressbreakdownoneGB{16}{9}{9}{30}
     \item Page size: $2^{30}$ = 1GB
 \end{itemize}
 \end{frame}
