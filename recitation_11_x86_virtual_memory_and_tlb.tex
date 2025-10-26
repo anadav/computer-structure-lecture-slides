@@ -562,8 +562,72 @@ Core similar to X86 in 64-bit mode:
 \end{itemize}
 
 \vspace{0.5em}
-Address format:\\
-\texttt{[63:N4+1] Sign Ext | [N4:N3+1] PML4 | [N3:N2+1] PDP | [N2:N1+1] DIR | [N1:12] TABLE | [11:0] OFFSET}
+\textbf{Address format:}
+\begin{center}
+\begin{tikzpicture}[
+    section/.style={draw, very thick, minimum height=0.7cm},
+    bitnumber/.style={font=\tiny, anchor=south},
+    sectionlabel/.style={font=\scriptsize}
+]
+\pgfmathsetmacro{\bitwidth}{0.17}
+\pgfmathsetmacro{\xpos}{0}
+
+% Field widths (using standard x86 9-bit fields)
+\def\signbits{16}
+\def\pmlfourbits{9}
+\def\pdpbits{9}
+\def\dirbits{9}
+\def\tablebits{8}
+\def\offsetbits{12}
+
+% Sign Extension
+\pgfmathsetmacro{\fldwidth}{\signbits * \bitwidth}
+\node[section, fill=gray!40, minimum width=\fldwidth cm] (f1) at (\xpos + \fldwidth/2, 0) {};
+\node[sectionlabel, align=center] at (f1.center) {Sign Ext};
+\node[bitnumber, anchor=north west] at (f1.south west) {63};
+\node[bitnumber, anchor=north east] at (f1.south east) {N4+1};
+\pgfmathsetmacro{\xpos}{\xpos + \fldwidth}
+
+% PML4
+\pgfmathsetmacro{\fldwidth}{\pmlfourbits * \bitwidth}
+\node[section, fill=orange!40, minimum width=\fldwidth cm] (f2) at (\xpos + \fldwidth/2, 0) {};
+\node[sectionlabel, align=center] at (f2.center) {PML4};
+\node[bitnumber, anchor=north west] at (f2.south west) {N4};
+\node[bitnumber, anchor=north east] at (f2.south east) {N3+1};
+\pgfmathsetmacro{\xpos}{\xpos + \fldwidth}
+
+% PDP
+\pgfmathsetmacro{\fldwidth}{\pdpbits * \bitwidth}
+\node[section, fill=blue!40, minimum width=\fldwidth cm] (f3) at (\xpos + \fldwidth/2, 0) {};
+\node[sectionlabel, align=center] at (f3.center) {PDP};
+\node[bitnumber, anchor=north west] at (f3.south west) {N3};
+\node[bitnumber, anchor=north east] at (f3.south east) {N2+1};
+\pgfmathsetmacro{\xpos}{\xpos + \fldwidth}
+
+% DIR
+\pgfmathsetmacro{\fldwidth}{\dirbits * \bitwidth}
+\node[section, fill=green!40, minimum width=\fldwidth cm] (f4) at (\xpos + \fldwidth/2, 0) {};
+\node[sectionlabel, align=center] at (f4.center) {DIR};
+\node[bitnumber, anchor=north west] at (f4.south west) {N2};
+\node[bitnumber, anchor=north east] at (f4.south east) {N1+1};
+\pgfmathsetmacro{\xpos}{\xpos + \fldwidth}
+
+% TABLE
+\pgfmathsetmacro{\fldwidth}{\tablebits * \bitwidth}
+\node[section, fill=yellow!40, minimum width=\fldwidth cm] (f5) at (\xpos + \fldwidth/2, 0) {};
+\node[sectionlabel, align=center] at (f5.center) {TABLE};
+\node[bitnumber, anchor=north west] at (f5.south west) {N1};
+\node[bitnumber, anchor=north east] at (f5.south east) {12};
+\pgfmathsetmacro{\xpos}{\xpos + \fldwidth}
+
+% OFFSET
+\pgfmathsetmacro{\fldwidth}{\offsetbits * \bitwidth}
+\node[section, fill=red!40, minimum width=\fldwidth cm] (f6) at (\xpos + \fldwidth/2, 0) {};
+\node[sectionlabel, align=center] at (f6.center) {OFFSET};
+\node[bitnumber, anchor=north west] at (f6.south west) {11};
+\node[bitnumber, anchor=north east] at (f6.south east) {0};
+\end{tikzpicture}
+\end{center}
 
 \vspace{0.5em}
 \textbf{Questions:}
