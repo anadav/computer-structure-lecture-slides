@@ -277,46 +277,187 @@
 % Slide 4: PDE and PTE Format
 \begin{frame}{32-bit Mode: PDE and PTE Format}
 \centering
-\textbf{Page Directory Entry (4KB page table)}\\[0.5em]
-\begin{tikzpicture}[scale=0.9]
-    % PDE structure
-    \draw[thick] (0,0) rectangle (12,0.6);
-    \foreach \x/\txt in {0/0,1/1,2/2,3/3,4/4,5/5,6/6,7/7,8/8,11/{11-9},12/{31-12}} {
-        \draw (\x,0) -- (\x,0.6);
-        \node[below] at (\x-0.5,-0.1) {\tiny \txt};
-    }
-    \node at (6,0.3) {\tiny Page Frame Address 31:12};
-    \node at (10.5,0.3) {\tiny AVAIL};
-    \node at (9.5,0.3) {\tiny G};
-    \node at (8.5,0.3) {\tiny 0};
-    \node at (7.5,0.3) {\tiny A};
-    \node at (6.5,0.3) {\tiny PCD};
-    \node at (5.5,0.3) {\tiny PWT};
-    \node at (4.5,0.3) {\tiny U};
-    \node at (3.5,0.3) {\tiny W};
-    \node at (0.5,0.3) {\tiny P};
+\textbf{Page Directory Entry (PDE) - 4KB page table}\\[0.5em]
+
+\begin{tikzpicture}[scale=0.26, font=\tiny]
+  \def\boxheight{4}
+
+  % Define key coordinates (32-bit format)
+  \coordinate (origin) at (0,0);
+  \coordinate (topright) at (32,\boxheight);
+
+  \draw[very thick] (origin) rectangle (topright);
+
+  % Define field boundaries from MSB (31) to LSB (0)
+  \coordinate (b31) at (0,0);
+  \coordinate (b12) at ($(b31) + (20,0)$);  % PFA: 20 bits (31-12)
+  \coordinate (b9) at ($(b12) + (3,0)$);    % AVAIL: 3 bits (11-9)
+  \coordinate (b8) at ($(b9) + (1,0)$);     % G: 1 bit (8)
+  \coordinate (b7) at ($(b8) + (1,0)$);     % PS: 1 bit (7)
+  \coordinate (b6) at ($(b7) + (1,0)$);     % 0: 1 bit (6)
+  \coordinate (b5) at ($(b6) + (1,0)$);     % A: 1 bit (5)
+  \coordinate (b4) at ($(b5) + (1,0)$);     % PCD: 1 bit (4)
+  \coordinate (b3) at ($(b4) + (1,0)$);     % PWT: 1 bit (3)
+  \coordinate (b2) at ($(b3) + (1,0)$);     % U/S: 1 bit (2)
+  \coordinate (b1) at ($(b2) + (1,0)$);     % R/W: 1 bit (1)
+  \coordinate (b0) at ($(b1) + (1,0)$);     % P: 1 bit (0)
+
+  % Page Frame Address (31-12)
+  \fill[fieldpurple!30] (b31) rectangle ($(b12) + (0,\boxheight)$);
+  \draw[thick] (b12) -- ($(b12) + (0,\boxheight)$);
+  \node at ($(b31)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address};
+  \node[below] (b31lbl) at ($(b31) + (1,-0.3)$) {31};
+  \node[below] (b12lbl) at ($(b12) + (-1,-0.3)$) {12};
+
+  % AVAIL (11-9)
+  \fill[fieldgray!30] (b12) rectangle ($(b9) + (0,\boxheight)$);
+  \draw[thick] (b9) -- ($(b9) + (0,\boxheight)$);
+  \node at ($(b12)!0.5!(b9) + (0,\boxheight/2)$) {AVL};
+  \node[below] at ($(b12)!0.5!(b9) + (0,-0.3)$) {11-9};
+
+  % G (8)
+  \fill[fieldcyan!30] (b9) rectangle ($(b8) + (0,\boxheight)$);
+  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
+  \node at ($(b9)!0.5!(b8) + (0,\boxheight/2)$) {G};
+  \node[below] at ($(b9)!0.5!(b8) + (0,-0.3)$) {8};
+
+  % PS (7)
+  \fill[fieldcyan!30] (b8) rectangle ($(b7) + (0,\boxheight)$);
+  \draw[thick] (b7) -- ($(b7) + (0,\boxheight)$);
+  \node[align=center] at ($(b8)!0.5!(b7) + (0,\boxheight/2)$) {P\\S};
+  \node[below] at ($(b8)!0.5!(b7) + (0,-0.3)$) {7};
+
+  % 0 (6)
+  \fill[fieldgray!30] (b7) rectangle ($(b6) + (0,\boxheight)$);
+  \draw[thick] (b6) -- ($(b6) + (0,\boxheight)$);
+  \node at ($(b7)!0.5!(b6) + (0,\boxheight/2)$) {0};
+  \node[below] at ($(b7)!0.5!(b6) + (0,-0.3)$) {6};
+
+  % A (5)
+  \fill[fieldgreen!30] (b6) rectangle ($(b5) + (0,\boxheight)$);
+  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
+  \node at ($(b6)!0.5!(b5) + (0,\boxheight/2)$) {A};
+  \node[below] at ($(b6)!0.5!(b5) + (0,-0.3)$) {5};
+
+  % PCD (4)
+  \fill[fieldorange!30] (b5) rectangle ($(b4) + (0,\boxheight)$);
+  \draw[thick] (b4) -- ($(b4) + (0,\boxheight)$);
+  \node[align=center] at ($(b5)!0.5!(b4) + (0,\boxheight/2)$) {P\\C\\D};
+  \node[below] at ($(b5)!0.5!(b4) + (0,-0.3)$) {4};
+
+  % PWT (3)
+  \fill[fieldorange!30] (b4) rectangle ($(b3) + (0,\boxheight)$);
+  \draw[thick] (b3) -- ($(b3) + (0,\boxheight)$);
+  \node[align=center] at ($(b4)!0.5!(b3) + (0,\boxheight/2)$) {P\\W\\T};
+  \node[below] at ($(b4)!0.5!(b3) + (0,-0.3)$) {3};
+
+  % U/S (2)
+  \fill[fieldblue!30] (b3) rectangle ($(b2) + (0,\boxheight)$);
+  \draw[thick] (b2) -- ($(b2) + (0,\boxheight)$);
+  \node[align=center] at ($(b3)!0.5!(b2) + (0,\boxheight/2)$) {U\\/\\S};
+  \node[below] at ($(b3)!0.5!(b2) + (0,-0.3)$) {2};
+
+  % R/W (1)
+  \fill[fieldblue!30] (b2) rectangle ($(b1) + (0,\boxheight)$);
+  \draw[thick] (b1) -- ($(b1) + (0,\boxheight)$);
+  \node[align=center] at ($(b2)!0.5!(b1) + (0,\boxheight/2)$) {R\\/\\W};
+  \node[below] at ($(b2)!0.5!(b1) + (0,-0.3)$) {1};
+
+  % P (0)
+  \fill[fieldblue!30] (b1) rectangle ($(b0) + (0,\boxheight)$);
+  \node at ($(b1)!0.5!(b0) + (0,\boxheight/2)$) {P};
+  \node[below] at ($(b1)!0.5!(b0) + (0,-0.3)$) {0};
 \end{tikzpicture}
 
-\vspace{1em}
-\textbf{Page Table Entry}\\[0.5em]
-\begin{tikzpicture}[scale=0.9]
-    % PTE structure
-    \draw[thick] (0,0) rectangle (12,0.6);
-    \foreach \x/\txt in {0/0,1/1,2/2,3/3,4/4,5/5,6/6,7/7,8/8,11/{11-9},12/{31-12}} {
-        \draw (\x,0) -- (\x,0.6);
-        \node[below] at (\x-0.5,-0.1) {\tiny \txt};
-    }
-    \node at (6,0.3) {\tiny Page Frame Address 31:12};
-    \node at (10.5,0.3) {\tiny AVAIL};
-    \node at (9.5,0.3) {\tiny G};
-    \node at (8.5,0.3) {\tiny PAT};
-    \node at (7.5,0.3) {\tiny D};
-    \node at (6.5,0.3) {\tiny A};
-    \node at (5.5,0.3) {\tiny PCD};
-    \node at (4.5,0.3) {\tiny PWT};
-    \node at (3.5,0.3) {\tiny U};
-    \node at (2.5,0.3) {\tiny W};
-    \node at (0.5,0.3) {\tiny P};
+\vspace{0.8em}
+\textbf{Page Table Entry (PTE)}\\[0.5em]
+
+\begin{tikzpicture}[scale=0.26, font=\tiny]
+  \def\boxheight{4}
+
+  \coordinate (origin) at (0,0);
+  \coordinate (topright) at (32,\boxheight);
+  \draw[very thick] (origin) rectangle (topright);
+
+  % Define field boundaries from MSB (31) to LSB (0)
+  \coordinate (b31) at (0,0);
+  \coordinate (b12) at ($(b31) + (20,0)$);  % PFA: 20 bits (31-12)
+  \coordinate (b9) at ($(b12) + (3,0)$);    % AVAIL: 3 bits (11-9)
+  \coordinate (b8) at ($(b9) + (1,0)$);     % G: 1 bit (8)
+  \coordinate (b7) at ($(b8) + (1,0)$);     % PAT: 1 bit (7)
+  \coordinate (b6) at ($(b7) + (1,0)$);     % D: 1 bit (6)
+  \coordinate (b5) at ($(b6) + (1,0)$);     % A: 1 bit (5)
+  \coordinate (b4) at ($(b5) + (1,0)$);     % PCD: 1 bit (4)
+  \coordinate (b3) at ($(b4) + (1,0)$);     % PWT: 1 bit (3)
+  \coordinate (b2) at ($(b3) + (1,0)$);     % U/S: 1 bit (2)
+  \coordinate (b1) at ($(b2) + (1,0)$);     % R/W: 1 bit (1)
+  \coordinate (b0) at ($(b1) + (1,0)$);     % P: 1 bit (0)
+
+  % Page Frame Address (31-12)
+  \fill[fieldpurple!30] (b31) rectangle ($(b12) + (0,\boxheight)$);
+  \draw[thick] (b12) -- ($(b12) + (0,\boxheight)$);
+  \node at ($(b31)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address};
+  \node[below] at ($(b31) + (1,-0.3)$) {31};
+  \node[below] at ($(b12) + (-1,-0.3)$) {12};
+
+  % AVAIL (11-9)
+  \fill[fieldgray!30] (b12) rectangle ($(b9) + (0,\boxheight)$);
+  \draw[thick] (b9) -- ($(b9) + (0,\boxheight)$);
+  \node at ($(b12)!0.5!(b9) + (0,\boxheight/2)$) {AVL};
+  \node[below] at ($(b12)!0.5!(b9) + (0,-0.3)$) {11-9};
+
+  % G (8)
+  \fill[fieldcyan!30] (b9) rectangle ($(b8) + (0,\boxheight)$);
+  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
+  \node at ($(b9)!0.5!(b8) + (0,\boxheight/2)$) {G};
+  \node[below] at ($(b9)!0.5!(b8) + (0,-0.3)$) {8};
+
+  % PAT (7)
+  \fill[fieldorange!30] (b8) rectangle ($(b7) + (0,\boxheight)$);
+  \draw[thick] (b7) -- ($(b7) + (0,\boxheight)$);
+  \node[align=center] at ($(b8)!0.5!(b7) + (0,\boxheight/2)$) {P\\A\\T};
+  \node[below] at ($(b8)!0.5!(b7) + (0,-0.3)$) {7};
+
+  % D (6)
+  \fill[fieldgreen!30] (b7) rectangle ($(b6) + (0,\boxheight)$);
+  \draw[thick] (b6) -- ($(b6) + (0,\boxheight)$);
+  \node at ($(b7)!0.5!(b6) + (0,\boxheight/2)$) {D};
+  \node[below] at ($(b7)!0.5!(b6) + (0,-0.3)$) {6};
+
+  % A (5)
+  \fill[fieldgreen!30] (b6) rectangle ($(b5) + (0,\boxheight)$);
+  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
+  \node at ($(b6)!0.5!(b5) + (0,\boxheight/2)$) {A};
+  \node[below] at ($(b6)!0.5!(b5) + (0,-0.3)$) {5};
+
+  % PCD (4)
+  \fill[fieldorange!30] (b5) rectangle ($(b4) + (0,\boxheight)$);
+  \draw[thick] (b4) -- ($(b4) + (0,\boxheight)$);
+  \node[align=center] at ($(b5)!0.5!(b4) + (0,\boxheight/2)$) {P\\C\\D};
+  \node[below] at ($(b5)!0.5!(b4) + (0,-0.3)$) {4};
+
+  % PWT (3)
+  \fill[fieldorange!30] (b4) rectangle ($(b3) + (0,\boxheight)$);
+  \draw[thick] (b3) -- ($(b3) + (0,\boxheight)$);
+  \node[align=center] at ($(b4)!0.5!(b3) + (0,\boxheight/2)$) {P\\W\\T};
+  \node[below] at ($(b4)!0.5!(b3) + (0,-0.3)$) {3};
+
+  % U/S (2)
+  \fill[fieldblue!30] (b3) rectangle ($(b2) + (0,\boxheight)$);
+  \draw[thick] (b2) -- ($(b2) + (0,\boxheight)$);
+  \node[align=center] at ($(b3)!0.5!(b2) + (0,\boxheight/2)$) {U\\/\\S};
+  \node[below] at ($(b3)!0.5!(b2) + (0,-0.3)$) {2};
+
+  % R/W (1)
+  \fill[fieldblue!30] (b2) rectangle ($(b1) + (0,\boxheight)$);
+  \draw[thick] (b1) -- ($(b1) + (0,\boxheight)$);
+  \node[align=center] at ($(b2)!0.5!(b1) + (0,\boxheight/2)$) {R\\/\\W};
+  \node[below] at ($(b2)!0.5!(b1) + (0,-0.3)$) {1};
+
+  % P (0)
+  \fill[fieldblue!30] (b1) rectangle ($(b0) + (0,\boxheight)$);
+  \node at ($(b1)!0.5!(b0) + (0,\boxheight/2)$) {P};
+  \node[below] at ($(b1)!0.5!(b0) + (0,-0.3)$) {0};
 \end{tikzpicture}
 
 \vspace{1em}
