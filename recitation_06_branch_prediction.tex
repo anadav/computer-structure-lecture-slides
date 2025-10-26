@@ -1002,27 +1002,28 @@
       \node[box, align=center, right=0.8cm of conn, anchor=west] (bimodal) {Bimodal\\or Local};
 
       % Global box
-      \node[box, below=0.5cm of bimodal] (global) {Global};
+      \node[box, below=0.3cm of bimodal] (global) {Global};
 
       % Chooser array - drawn with loop and dashed lines, closer to global
-      \coordinate (array_start) at ([yshift=-0.5cm]global.south);
+      \coordinate (array_start) at ([yshift=-0.3cm]global.south);
 
       % Draw array box outline - smaller
       \draw[draw=black!80, line width=1pt, fill=cyan!8]
-        ([xshift=-0.4cm]array_start) rectangle ++(0.8cm, -2cm)
+        ([xshift=-0.4cm]array_start) rectangle ++(0.8cm, -1.9cm)
         node[pos=0.5] (chooser_center) {};
 
       % Draw dashed lines to show array elements - aligned properly
-      \foreach \i in {1,2,3,4,5} {
+      \foreach \i in {1,2,3,4} {
         \draw[dashed, black!40] ([xshift=-0.4cm, yshift=-\i*0.38cm]array_start) -- ++(0.8cm, 0);
       }
 
       % Highlight one element in the middle - aligned with dashed lines
       \draw[draw=orange!70, line width=1.5pt, fill=orange!20]
-        ([xshift=-0.38cm, yshift=-1.14cm]array_start) rectangle ++(0.76cm, -0.36cm);
+        ([xshift=-0.38cm, yshift=-1.14cm]array_start) rectangle ++(0.76cm, -0.36cm)
+        coordinate[pos=1] (highlight_se);
 
       % Label for chooser array - BELOW the array
-      \node[below=2.2cm of array_start, font=\scriptsize, text=black, align=center]
+      \node[below=0.8cm of chooser_center.south, font=\scriptsize, text=black, align=center, anchor=north]
         {Chooser Array\\[-1pt]\tiny (2-bit sat. counters)};
 
       % Store chooser position for connections
@@ -1057,11 +1058,15 @@
       % Arrow - MUX to Prediction
       \draw[arrow] (mux.rpin 1) -- (prediction);
 
-      % Add update explanation in the diagram
-      \node[below=2.9cm of array_start, font=\scriptsize, text=black!70, align=center] {
+      % Add update explanation right below the highlighted box
+      \node[anchor=north west, font=\scriptsize, text=black!70, align=left] (update_text)
+        at ([xshift=1cm, yshift=-0.3cm]highlight_se) {
         Update: +1 if Bimodal/Local correct\\
         \phantom{Update: }-1 if Global correct
       };
+
+      % Arrow from text to highlighted box
+      \draw[-latex, draw=black!50, thin] (update_text.north west) -- (highlight_se);
 
     \end{tikzpicture}
   \end{center}
