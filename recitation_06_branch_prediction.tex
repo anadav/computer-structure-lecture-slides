@@ -8,6 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing}
+\usepackage[siunitx, RPvoltages]{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usetheme{Madrid}
@@ -984,45 +985,73 @@
 % Slide 3: Chooser Mechanism
 \begin{frame}
   \frametitle{Chooser Mechanism}
-  
+
   \begin{center}
     \begin{tikzpicture}[
-      box/.style={draw, minimum height=1cm, minimum width=2cm},
-      mux/.style={draw, trapezium, trapezium left angle=70, trapezium right angle=110, minimum height=1.5cm, minimum width=1cm, rotate=270},
-      arrow/.style={-latex, thick}
+      box/.style={draw, minimum height=1.2cm, minimum width=3.5cm, fill=green!20, thick},
+      arraybox/.style={draw, minimum height=2cm, minimum width=1cm, fill=white, thick},
+      elementbox/.style={draw, minimum height=0.4cm, minimum width=0.8cm, fill=gray!30, thick},
+      arrow/.style={-latex, thick},
+      data_connector/.style={circle, fill, inner sep=1.2pt}
     ]
-      % Inputs
-      \node[box, align=center] (bimodal) at (0,2) {Bimodal\\or\\Local};
-      \node[box] (global) at (0,0) {Global};
-      
-      % MUX
-      \node[mux, right=2cm of bimodal, yshift=-1cm] (mux) {MUX};
-      
-      % Chooser array
-      \node[box, below=1.5cm of mux, minimum width=3cm, minimum height=1.5cm] (chooser) {};
-      \node[above=0.05cm of chooser.north] {\small Chooser array};
-      \node[below=0.05cm of chooser.south] {\tiny (array of 2-bit sat. counters)};
-      
       % Branch IP input
-      \node[left=2cm of chooser] (branch_ip) {Branch IP};
-      
+      \node[font=\normalfont, text=blue] (branch_ip) at (0,0) {\textbf{Branch IP}};
+
+      % Connector for Branch IP
+      \node[data_connector, right=1cm of branch_ip.east] (conn) {};
+
+      % Bimodal or Local box
+      \node[box, align=center, right=1.5cm of conn, anchor=west] (bimodal) {Bimodal\\or Local};
+
+      % Global box
+      \node[box, below=0.5cm of bimodal] (global) {Global};
+
+      % Chooser array (vertical rectangle)
+      \node[arraybox, below=0.5cm of global] (chooser) {};
+      \node[above=0.05cm of chooser.north, font=\small, text=magenta] {\textbf{Chooser array}};
+      \node[below=0.05cm of chooser.south, font=\tiny, text=magenta, align=center] {\textbf{(2-bit sat. counters)}};
+
+      % Highlighted element in the array
+      \node[elementbox] at (chooser.center) {};
+
+      % MUX using circuitikz muxdemux
+      \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NB=1, w=2},
+            external pins width=0, fill=yellow!20, anchor=lpin 2] (mux) at ([xshift=1.5cm]global.east) {};
+
+      % Label for MUX
+      \node at (mux.center) [font=\footnotesize] {MUX};
+
       % Prediction output
-      \node[right=2cm of mux] (prediction) {Prediction};
-      
-      % Arrows
-      \draw[arrow] (bimodal.east) -| ([yshift=0.3cm]mux.north);
-      \draw[arrow] (global.east) -| ([yshift=-0.3cm]mux.north);
-      \draw[arrow] (mux.south) -- (prediction);
-      \draw[arrow] (branch_ip) -- (chooser);
-      \draw[arrow] (chooser.north) -- (mux.east);
+      \node[right=1.5cm of mux.rpin 1, text=blue] (prediction) {Prediction};
+
+      % Arrows - Branch IP to all three components
+      \draw[thick] (branch_ip) -- (conn);
+      \draw[arrow] (conn) |- (bimodal.west);
+      \node[data_connector] (conn2) at (conn |- global.west) {};
+      \draw[arrow] (conn2) -- (global.west);
+      \draw[arrow] (conn) |- (chooser.west);
+
+      % Arrows - from predictors to MUX
+      \draw[arrow] (bimodal.east) -- ++(0.5, 0) |- (mux.lpin 1);
+      \draw[arrow] (global.east) -- ++(0.5, 0) |- (mux.lpin 2);
+
+      % Arrow - Chooser to MUX control (bottom pin)
+      \draw[arrow] (chooser.east) -| (mux.bpin 1);
+
+      % Arrow - MUX to Prediction
+      \draw[arrow] (mux.rpin 1) -- (prediction);
+
+      % Add labels for the chooser update rules
+      \node[below=0.8cm of chooser.south, yshift=-0.3cm, align=left, font=\footnotesize, text=blue] {
+        \textbf{+1} if Bimodal / Local correct and Global wrong\\
+        \textbf{-1} if Bimodal / Local wrong and Global correct
+      };
     \end{tikzpicture}
   \end{center}
-  
+
   \vspace{0.5em}
-  
+
   \begin{itemize}
-    \item \textbf{+1} if Bimodal/Local correct and Global wrong
-    \item \textbf{-1} if Bimodal/Local wrong and Global correct
     \item The chooser may also be indexed by the GHR
   \end{itemize}
 \end{frame}
