@@ -122,9 +122,7 @@
 % Unified macro for virtual address breakdown with up to 6 fields
 % Usage: \vmaddressbreakdown{signbits}{pml4bits}{pdpbits}{dirbits}{tablebits}{offsetbits}
 % Pass 0 for fields that should be skipped
-% When DIR=0 and TABLE=0, the last field becomes OFFSET
-% When DIR>0 and TABLE=0, the last field becomes DIR/OFFSET combined
-% When both DIR>0 and TABLE>0, they are separate fields with OFFSET last
+% Automatically calculates the starting bit based on total bits (supports 32-bit and 64-bit)
 \newcommand{\vmaddressbreakdown}[6]{%
     \begin{tikzpicture}[
         section/.style={draw, very thick, minimum height=0.7cm},
@@ -134,7 +132,10 @@
     ]
     \pgfmathsetmacro{\bitwidth}{0.17}
     \pgfmathsetmacro{\xpos}{0}
-    \pgfmathtruncatemacro{\currentbit}{63}
+
+    % Calculate total bits and starting bit
+    \pgfmathtruncatemacro{\totalbits}{#1 + #2 + #3 + #4 + #5 + #6}
+    \pgfmathtruncatemacro{\currentbit}{\totalbits - 1}
 
     % Field 1: Sign extension
     \ifnum#1>0
