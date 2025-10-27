@@ -110,40 +110,34 @@
   \begin{center}
     \scalebox{0.7}{
     \begin{tikzpicture}[
-      stage/.style={draw=black!80, line width=1.5pt, minimum height=1.3cm, minimum width=1.8cm, fill=blue!60, font=\Large\bfseries, text=white},
+      stage/.style={draw=blue!40, line width=1pt, minimum height=1cm, minimum width=1.5cm, fill=blue!10, font=\large, text=blue!80, rounded corners=2pt},
       latch/.style={draw=black!70, thick, fill=yellow!30, minimum width=0.25cm, minimum height=4.5cm},
       component/.style={draw=black!80, line width=1pt, fill=cyan!20, font=\small},
-      btb/.style={draw=black!80, line width=1.5pt, minimum height=1cm, minimum width=1.2cm, fill=green!40, font=\small\bfseries}
+      btb/.style={draw=black!80, line width=1.5pt, minimum height=1cm, minimum width=1.2cm, fill=green!40, font=\small\bfseries},
+      arrow/.style={->, >=stealth, thick}
     ]
 
-      % Pipeline stages at top - using relative positioning
-      \node[stage] (if_stage) at (0, 3.5) {IF};
-      \node[stage, right=1cm of if_stage] (id_stage) {ID};
-      \node[stage, right=1cm of id_stage] (ex_stage) {EX};
-      \node[stage, right=1cm of ex_stage] (mem_stage) {MEM};
-      \node[stage, right=1cm of mem_stage] (wb_stage) {WB};
-
-      % Instruction Memory - left of first latch position
-      \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=2, NL=0, NR=0},
-            external pins width=0, fill=cyan!20, below=1.5cm of if_stage] (imem) {};
-      \node[font=\tiny, align=center] at (imem.center) {Instruction\\Memory};
+      % Instruction Memory - starting point (1.5x bigger)
+      \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=0, NR=0},
+            external pins width=0, fill=cyan!20] (imem) at (0,0) {};
+      \node[font=\small, align=center] at (imem.center) {Instruction\\Memory};
 
       % Latch L1 - to the right of Instruction Memory
       \node[latch, right=0.5cm of imem] (L1) {};
 
-      % Register File - to the right of L1
-      \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=2, NL=4, NR=0},
+      % Register File - to the right of L1 (1.5x bigger)
+      \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=4, NR=0},
             external pins width=0, fill=cyan!20, right=0.5cm of L1] (regfile) {};
-      \node[font=\tiny, align=center] at (regfile.center) {Register\\File};
+      \node[font=\small, align=center] at (regfile.center) {Register\\File};
       \coordinate (regfile_in4) at (regfile.lpin 4);
 
       % Latch L2 - to the right of Register File
       \node[latch, right=0.5cm of regfile] (L2) {};
 
-      % ALU - to the right of L2
-      \node[muxdemux, muxdemux def={Lh=5, NL=2, Rh=2, NR=1, NB=2, NT=1, w=2, inset w=1, inset Lh=2, inset Rh=0, square pins=1},
-            external pins width=0, scale=0.5, fill=green!15, right=0.5cm of L2] (alu) {};
-      \node[rotate=90, font=\tiny] at (alu.center) {ALU};
+      % ALU - to the right of L2 (1.5x bigger)
+      \node[muxdemux, muxdemux def={Lh=7.5, NL=2, Rh=3, NR=1, NB=2, NT=1, w=3, inset w=1.5, inset Lh=3, inset Rh=0, square pins=1},
+            external pins width=0, scale=0.5, fill=cyan!20, right=0.5cm of L2] (alu) {};
+      \node[rotate=90, font=\small] at (alu.center) {ALU};
       \coordinate (alu_in1) at (alu.blpin 1);
       \coordinate (alu_in2) at (alu.blpin 2);
       \coordinate (alu_out) at (alu.brpin 1);
@@ -151,20 +145,30 @@
       % Latch L3 - to the right of ALU
       \node[latch, right=0.5cm of alu] (L3) {};
 
-      % Data Memory - to the right of L3
-      \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=2, NL=0, NR=0},
+      % Data Memory - to the right of L3 (1.5x bigger)
+      \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=0, NR=0},
             external pins width=0, fill=cyan!20, right=0.5cm of L3] (dmem) {};
-      \node[font=\tiny, align=center] at (dmem.center) {Data\\Memory};
+      \node[font=\small, align=center] at (dmem.center) {Data\\Memory};
 
       % Latch L4 - to the right of Data Memory
       \node[latch, right=0.5cm of dmem] (L4) {};
 
-      % WB Mux - to the right of L4
-      \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NR=1, w=1},
-            external pins width=0, scale=0.6, fill=orange!30, right=0.5cm of L4] (wb_mux) {};
+      % WB Mux - to the right of L4 (1.5x bigger)
+      \node[muxdemux, muxdemux def={Lh=6, Rh=3, NL=2, NR=1, w=1.5},
+            external pins width=0, scale=0.6, fill=cyan!20, right=0.5cm of L4] (wb_mux) {};
       \coordinate (wbmux_in1) at (wb_mux.blpin 1);
       \coordinate (wbmux_in2) at (wb_mux.blpin 2);
       \coordinate (wbmux_out) at (wb_mux.brpin 1);
+
+      % Pipeline stages at top - north aligned with latches
+      \coordinate (if_pos) at ($(imem.north)!0.5!(L1.north)$);
+      \coordinate (wb_pos) at ($(L4.north)!0.5!(wb_mux.north)$);
+
+      \node[stage, anchor=north] (id_stage) at ($(L1.north)!0.5!(L2.north)$) {ID};
+      \node[stage, anchor=north] (if_stage) at (id_stage.north -| imem) {IF};
+      \node[stage, anchor=north] (ex_stage) at ($(L2.north)!0.5!(L3.north)$) {EX};
+      \node[stage, anchor=north] (mem_stage) at ($(L3.north)!0.5!(L4.north)$) {MEM};
+      \node[stage, anchor=north] (wb_stage) at (mem_stage.north -| wb_mux) {WB};
 
       % BTB - positioned below Instruction Memory
       \node[btb, below=0.8cm of imem] (btb) {BTB};
@@ -172,51 +176,46 @@
 
       % Main wiring
       % IF to L1
-      \draw[thick, ->] (imem.east) -- (L1.west);
+      \draw[arrow] (imem.east) -- (L1.west);
 
       % L1 to Register File
-      \draw[thick, ->] (L1.east) -- (regfile.west);
+      \draw[arrow] (L1.east) -- (regfile.west);
 
       % Register File to L2
-      \draw[thick, ->] (regfile.east) -- (L2.west);
+      \draw[arrow] (regfile.east) -- (L2.west);
 
       % L2 to ALU
-      \draw[thick, ->] (L2.east) -- ++(0.3,0) |- (alu_in1);
-      \draw[thick, ->] (L2.east) -- ++(0.3,0) |- (alu_in2);
+      \draw[arrow] (L2.east) -- ++(0.3,0) |- (alu_in1);
+      \draw[arrow] (L2.east) -- ++(0.3,0) |- (alu_in2);
 
       % ALU to L3
-      \draw[thick, ->] (alu_out) -- (L3.west);
+      \draw[arrow] (alu_out) -- (L3.west);
 
       % L3 to Data Memory
-      \draw[thick, ->] (L3.east) -- (dmem.west);
+      \draw[arrow] (L3.east) -- (dmem.west);
 
       % Data Memory to L4
-      \draw[thick, ->] (dmem.east) -- (L4.west);
+      \draw[arrow] (dmem.east) -- (L4.west);
 
       % L4 to WB Mux
-      \draw[thick, ->] (L4.east) -- ++(0.2,0) |- (wbmux_in1);
-      \draw[thick, ->] (L4.east) -- ++(0.2,0) |- (wbmux_in2);
+      \draw[arrow] (L4.east) -- ++(0.2,0) |- (wbmux_in1);
+      \draw[arrow] (L4.east) -- ++(0.2,0) |- (wbmux_in2);
 
       % WB Mux output with feedback to Register File
-      \draw[thick, ->] (wbmux_out) -- ++(0.5,0) coordinate (wb_out_point)
-                       |- ([yshift=-0.5cm, xshift=0.5cm]L1.south east)
+      \draw[arrow] (wbmux_out) -- ++(0.5,0) coordinate (wb_out_point)
+                       |- ([yshift=-3mm,xshift=-3mm]L1.south -| regfile.west)
                        |- (regfile_in4);
 
     \end{tikzpicture}
     }
   \end{center}
 
-  \vspace{0.5cm}
-  \begin{center}
-    \begin{minipage}{0.85\textwidth}
-      \textcolor{green!70!black}{$\diamond$ Branch resolution known at Execute stage}
-
-      \textcolor{green!70!black}{$\diamond$ If branch jumps $\rightarrow$ flush all pipeline stages before Execute}
-
-      \vspace{0.3em}
-      \textbf{Solution:} Use Branch Target Buffer (BTB) at Fetch stage to predict branch behavior
-    \end{minipage}
-  \end{center}
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item Branch resolution known at Execute stage
+    \item If branch jumps $\rightarrow$ flush pipeline stages before Execute
+    \item \textbf{Solution:} Use BTB at Fetch stage for branch prediction
+  \end{itemize}
 \end{frame}
 
 %==========================================
