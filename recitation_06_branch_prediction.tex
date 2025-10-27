@@ -540,6 +540,138 @@
 \end{frame}
 
 %==========================================
+% Slide: Local vs Global BHR
+\begin{frame}[fragile]
+  \frametitle{Branch History Register (BHR)}
+
+  \vspace{-0.3cm}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{\large Local BHR}
+    \vspace{0.3em}
+    \begin{itemize}
+      \item Each branch instruction has its own BHR (local BHR)
+      \item Effective for capturing recurring patterns of a specific branch
+    \end{itemize}
+
+    \vspace{1em}
+    \textbf{Example:}
+    \begin{tcolorbox}[colback=green!5, colframe=green!40, boxrule=0.8pt]
+      \small
+      Loop with pattern:\\
+      \texttt{1110 1110 1110...}\\
+      Local BHR captures this repeated pattern
+    \end{tcolorbox}
+
+    \column{0.48\textwidth}
+    \textbf{\large Global BHR}
+    \vspace{0.3em}
+    \begin{itemize}
+      \item One shared global History Register for all Branch instructions
+      \item Effective for capturing dependencies between different branches
+    \end{itemize}
+
+    \vspace{1em}
+    \textbf{Example:}
+    \begin{tcolorbox}[colback=blue!5, colframe=blue!40, boxrule=0.8pt]
+      \small
+\begin{verbatim}
+if (...)
+  if (...)
+    if (...)
+      if (true) { ... }
+\end{verbatim}
+      \vspace{-0.5em}
+      When global history is \texttt{111}, always predict Taken
+    \end{tcolorbox}
+  \end{columns}
+\end{frame}
+
+%==========================================
+% Slide: Prediction State Machine Table
+\begin{frame}
+  \frametitle{Prediction State Machine Table}
+
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{\large Global Table}
+    \vspace{0.3em}
+    \begin{itemize}
+      \item Can hold a global state machine table to save space
+      \item Allows longer BHRs (note that the table grows exponentially)
+    \end{itemize}
+
+    \vspace{1em}
+    \begin{tcolorbox}[colback=cyan!10, colframe=cyan!50]
+      \footnotesize
+      Shared by all branches\\
+      Size = $2^n$ counters\\
+      (where $n$ = history length)
+    \end{tcolorbox}
+
+    \column{0.48\textwidth}
+    \textbf{\large Local (Per Branch) Table}
+    \vspace{0.3em}
+    \begin{itemize}
+      \item Can hold a separate (local) state machine table for each branch instruction
+    \end{itemize}
+
+    \vspace{1em}
+    \begin{tcolorbox}[colback=green!10, colframe=green!50]
+      \footnotesize
+      Dedicated per branch\\
+      More accurate but uses more space\\
+      Each branch has $2^n$ counters
+    \end{tcolorbox}
+  \end{columns}
+
+  \vspace{1em}
+  \begin{tcolorbox}[colback=orange!10, colframe=orange!50]
+    \centering
+    \textbf{Trade-off:} Global tables save space but may have conflicts between branches\\
+    Local tables provide better accuracy but require more storage
+  \end{tcolorbox}
+\end{frame}
+
+%==========================================
+% Slide: Local BHR Table and Size Calculation
+\begin{frame}
+  \frametitle{Local BHR Table and Size}
+
+  \textbf{Example:} Calculate predictor size for local BHR configuration:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item History table with 1024 entries, history length 4 bits, Fully Associative
+    \item Address is 32 bits and all instructions are aligned to 4-byte boundaries\\
+          (so we can drop the 2 LSB bits for the tag in the table)
+  \end{itemize}
+
+  \vspace{0.8em}
+  \textbf{What is the predictor size?}
+
+  \vspace{0.5em}
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50, title=Formula]
+    \small
+    \textbf{Predictor size} = \#entries $\times$ (tag\_size + history\_size + $2 \times 2^{\text{history\_size}}$)
+  \end{tcolorbox}
+
+  \vspace{0.5em}
+  \begin{align*}
+    \text{\#entries} &= 1024 \\
+    \text{tag\_size (Branch IP w/o 2 lsb bits)} &= 32 - 2 = 30 \text{ bit} \\
+    \text{history\_size} &= 4 \text{ bit} \\
+    \text{Counter array size} &= 2 \times 2^4 = 32 \text{ bits (16 counters × 2 bits each)}
+  \end{align*}
+
+  \vspace{0.3em}
+  \begin{tcolorbox}[colback=green!10, colframe=green!50]
+    \centering
+    \textbf{Predictor size} = $1024 \times (30 + 4 + 32) = 1024 \times 66 = \textbf{66 KB}$
+  \end{tcolorbox}
+\end{frame}
+
+%==========================================
 \begin{frame}
   \frametitle{Code Example}
   
