@@ -633,41 +633,47 @@ if (...)
   \begin{columns}[t]
     \column{0.48\textwidth}
     \textbf{\large Local (Per Branch) Table}
-    \vspace{0.3em}
+    \vspace{0.1em}
     \begin{itemize}
       \item Can hold a separate (local) state machine table for each branch instruction
     \end{itemize}
 
-    \vspace{1em}
-    \begin{tcolorbox}[colback=green!5, colframe=green!40, boxrule=0.8pt]
-      \footnotesize
-      Dedicated per branch\\
-      More accurate but uses more space\\
-      Each branch has $2^n$ counters
-    \end{tcolorbox}
-
     \column{0.48\textwidth}
     \textbf{\large Global Table}
-    \vspace{0.3em}
+    \vspace{0.1em}
     \begin{itemize}
       \item Can hold a global state machine table to save space
       \item Allows longer BHRs (note that the table grows exponentially)
     \end{itemize}
+  \end{columns}
 
-    \vspace{1em}
-    \begin{tcolorbox}[colback=blue!5, colframe=blue!40, boxrule=0.8pt]
+  \vspace{-0.8em}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \begin{tcolorbox}[colback=green!5, colframe=green!40, boxrule=0.8pt, height=3.2cm]
       \footnotesize
-      Shared by all branches\\
-      Size = $2^n$ counters\\
-      (where $n$ = history length)
+      \textbf{Dedicated} per branch\\[0.3em]
+      \textbf{Accuracy:} {\color{green!70!black}\checkmark} More accurate\\[0.3em]
+      \textbf{Space:} {\color{red!70!black}\texttimes} Uses more space\\[0.3em]
+      \textbf{Size:} $M \times 2^n$ counters\\
+      \hspace*{1em}($M$ branches, $n$ = history length)
+    \end{tcolorbox}
+
+    \column{0.48\textwidth}
+    \begin{tcolorbox}[colback=blue!5, colframe=blue!40, boxrule=0.8pt, height=3.2cm]
+      \footnotesize
+      \textbf{Shared} by all branches\\[0.3em]
+      \textbf{Accuracy:} {\color{red!70!black}\texttimes} May have conflicts\\[0.3em]
+      \textbf{Space:} {\color{green!70!black}\checkmark} Saves space\\[0.3em]
+      \textbf{Size:} $2^n$ counters total\\
+      \hspace*{1em}($n$ = history length)
     \end{tcolorbox}
   \end{columns}
 
-  \vspace{1em}
+  \vspace{-0.1em}
   \begin{tcolorbox}[colback=orange!10, colframe=orange!50]
     \centering
-    \textbf{Trade-off:} Global tables save space but may have conflicts between branches\\
-    Local tables provide better accuracy but require more storage
+    \textbf{Trade-off:} Accuracy vs Space
   \end{tcolorbox}
 \end{frame}
 
