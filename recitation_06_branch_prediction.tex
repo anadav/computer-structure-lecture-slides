@@ -930,50 +930,76 @@
 % Slide 2: LShare Predictor Architecture
 \begin{frame}
   \frametitle{Local Predictor: LShare}
-  
+
   \begin{center}
     \begin{tikzpicture}[
       box/.style={draw, minimum height=0.8cm, minimum width=1.5cm},
       bigbox/.style={draw, minimum height=2.5cm, minimum width=2cm},
-      xorbox/.style={draw, circle, minimum size=0.8cm},
-      arrow/.style={-latex, thick}
+      arrow/.style={-latex, thick},
+      data_connector/.style={circle, fill=black, inner sep=1.2pt}
     ]
       % Branch IP
       \node (ip) at (0,0) {Branch IP};
-      
-      % History cache
-      \node[bigbox, right=2cm of ip] (hist_cache) {};
+
+      % Data connector circle to the right of Branch IP
+      \node[data_connector, right=1cm of ip.east] (connector) {};
+
+      % History cache - draw outer box
+      \node[bigbox, right=2cm of ip, minimum width=2.5cm, minimum height=2.5cm] (hist_cache) {};
       \node[above=0.1cm of hist_cache.north] {history cache};
-      \node[box, above=0.2cm of hist_cache.south, anchor=south, minimum width=0.8cm] (tag) {tag};
-      \node[box, below=0.05cm of tag.south, anchor=north, minimum height=1.2cm] (history) {history};
-      
-      % XOR operation
-      \node[xorbox, below right=1.5cm and 1cm of hist_cache] (xor) {$\oplus$};
-      
-      % L.s.bits of IP
-      \node[below=2cm of ip] (lsbits) {l.s.bits of IP};
-      
-      % 2-bit counter array
-      \node[bigbox, right=2.5cm of xor, minimum width=3.5cm, minimum height=2cm] (counter_array) {};
-      \node[above=0.1cm of counter_array.north] {2-bit-sat counter array};
-      
-      % Draw counter cells
-      \foreach \x in {0,1,2,3,4} {
-        \draw ([xshift=\x*0.7cm]counter_array.south west) rectangle ++(0.7cm, 0.4cm);
+
+      % Draw vertical separator line for tag and history columns
+      \draw ([xshift=-0.5cm]hist_cache.north) -- ([xshift=-0.5cm]hist_cache.south);
+
+      % Draw horizontal dashed lines for rows
+      \foreach \i in {1,2,3,4} {
+        \draw[dashed] ([yshift=-\i*0.5cm]hist_cache.north west) -- ([yshift=-\i*0.5cm]hist_cache.north east);
       }
-      
+
+      % Add labels in one of the rows (second row)
+      \node[font=\scriptsize] at ([xshift=-0.85cm, yshift=-0.75cm]hist_cache.north) {tag};
+      \node[font=\scriptsize] at ([xshift=0.35cm, yshift=-0.75cm]hist_cache.north) {history};
+
+      % Reference point for history output
+      \coordinate (history_out) at ([xshift=0.35cm, yshift=-0.75cm]hist_cache.south);
+
+      % XOR operation - just the symbol without extra circle
+      \node[below right=1.5cm and 1cm of hist_cache, font=\Large] (xor) {$\oplus$};
+
+      % Calculate coordinates for routing around history cache
+      \coordinate (lower_left) at ([xshift=-0.3cm, yshift=-0.3cm]hist_cache.south west);
+      \coordinate (lower_right) at ([xshift=0.3cm, yshift=-0.3cm]hist_cache.south east);
+
+      % Label for LSBs
+      \node[font=\scriptsize, anchor=east] at ([xshift=-0.2cm]lower_left) {LSBs of IP};
+
+      % 2-bit counter array - vertical array
+      \node[right=2.5cm of xor] (counter_array_center) {};
+      \node[above=1.5cm of counter_array_center] (counter_label) {2-bit-sat counter array};
+
+      % Draw vertical counter array
+      \foreach \i in {0,1,2,3,4,5,6,7} {
+        \draw ([yshift=-\i*0.4cm]counter_label.south) ++(-0.35cm, 0) rectangle ++(0.7cm, -0.4cm);
+      }
+
+      % Draw dots to indicate more entries
+      \node[below=3.3cm of counter_label] {...};
+
       % Prediction output
-      \node[right=1.5cm of counter_array] (prediction) {prediction = msb of counter};
-      
+      \node[right=2cm of counter_array_center] (prediction) {prediction = msb of counter};
+
       % Arrows
-      \draw[arrow] (ip) -- (hist_cache);
-      \draw[arrow] (history.south) |- node[pos=0.3, right] {h} (xor);
-      \draw[arrow] (lsbits) -- (xor);
-      \draw[arrow] (xor) -- (counter_array);
-      \draw[arrow] (counter_array) -- (prediction);
+      \draw[thick] (ip) -- (connector);
+      \draw[arrow] (connector) |- (hist_cache.west);
+      \draw[arrow] (history_out) |- node[pos=0.3, right] {h} (xor);
+      % Route from connector around history cache to XOR
+      \draw[thick] (connector) -- (lower_left) -- (lower_right);
+      \draw[arrow] (lower_right) -- (xor);
+      \draw[arrow] (xor) -- (counter_array_center);
+      \draw[arrow] (counter_array_center) -- (prediction);
     \end{tikzpicture}
   \end{center}
-  
+
   \vspace{0.5em}
   \begin{tcolorbox}[colback=green!10, colframe=green!50]
     \centering
@@ -992,17 +1018,22 @@
       arrow/.style={-latex, thick, draw=black!70},
       data_connector/.style={circle, fill=black, inner sep=1.2pt}
     ]
+
+      % MUX using circuitikz muxdemux
+      \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NB=1, w=2},
+            external pins width=0, fill=yellow!20, anchor=lpin 2] (mux) at ([xshift=1.5cm]global.east) {};
+
+      % Bimodal or Local box
+      \node[box, align=center, left=0.8cm of mux.lpin 1, anchor=east] (bimodal) {Bimodal\\or Local};
+
       % Branch IP input
-      \node[font=\normalsize, text=blue!80!black] (branch_ip) at (0,0) {Branch IP};
+      \node[font=\normalsize, text=blue!80!black, left=1cm of bimodal.west] (branch_ip) {Branch IP};
 
       % Connector for Branch IP
       \node[data_connector, right=0.6cm of branch_ip.east] (conn) {};
 
-      % Bimodal or Local box
-      \node[box, align=center, right=0.8cm of conn, anchor=west] (bimodal) {Bimodal\\or Local};
-
       % Global box
-      \node[box, below=0.3cm of bimodal] (global) {Global};
+      \node[box, left=0.8cm of mux.lpin 2] (global) {Global};
 
       % Chooser array - drawn with loop and dashed lines, closer to global
       \coordinate (array_start) at ([yshift=-0.3cm]global.south);
@@ -1029,10 +1060,6 @@
       % Store chooser position for connections
       \coordinate (chooser_west) at ([xshift=-0.4cm, yshift=-1.32cm]array_start);
       \coordinate (chooser_east) at ([xshift=0.4cm, yshift=-1.32cm]array_start);
-
-      % MUX using circuitikz muxdemux
-      \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NB=1, w=2},
-            external pins width=0, fill=yellow!20, anchor=lpin 2] (mux) at ([xshift=1.5cm]global.east) {};
 
       % Label for MUX
       \node at (mux.center) [font=\small] {MUX};
