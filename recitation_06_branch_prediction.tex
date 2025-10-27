@@ -933,21 +933,21 @@
 
   \begin{center}
     \begin{tikzpicture}[
-      box/.style={draw, minimum height=0.8cm, minimum width=1.5cm},
-      bigbox/.style={draw, minimum height=2.5cm, minimum width=2cm},
-      arrow/.style={-latex, thick},
+      box/.style={draw=black!80, line width=1pt, minimum height=1cm, minimum width=2.5cm, fill=cyan!15, rounded corners=2pt, font=\small},
+      bigbox/.style={draw=black!80, line width=1pt, fill=cyan!15, rounded corners=2pt},
+      arrow/.style={-latex, thick, draw=black!70},
       data_connector/.style={circle, fill=black, inner sep=1.2pt}
     ]
       % History cache - draw outer box first to reference it
       \node[bigbox, minimum width=2.5cm, minimum height=2.5cm] (hist_cache) at (3,0) {};
-      \node[above=0.1cm of hist_cache.north] {history cache};
+      \node[above=0.1cm of hist_cache.north, font=\small] {history cache};
 
       % Draw vertical separator line for tag and history columns
-      \draw ([xshift=-0.5cm]hist_cache.north) -- ([xshift=-0.5cm]hist_cache.south);
+      \draw[draw=black!80, line width=1pt] ([xshift=-0.5cm]hist_cache.north) -- ([xshift=-0.5cm]hist_cache.south);
 
       % Draw horizontal dashed lines for rows
       \foreach \i in {1,2,3,4} {
-        \draw[dashed] ([yshift=-\i*0.5cm]hist_cache.north west) -- ([yshift=-\i*0.5cm]hist_cache.north east);
+        \draw[dashed, black!40] ([yshift=-\i*0.5cm]hist_cache.north west) -- ([yshift=-\i*0.5cm]hist_cache.north east);
       }
 
       % Define tag and history box coordinates
@@ -962,7 +962,7 @@
       \coordinate (tag_entry) at ([xshift=-1.25cm, yshift=-0.75cm]hist_cache.north);
 
       % Branch IP - positioned to the left of tag entry
-      \node[left=1cm of tag_entry] (ip) {Branch IP};
+      \node[left=1cm of tag_entry, font=\normalsize, text=blue!80!black] (ip) {Branch IP};
 
       % Data connector circle - to the right of the tag column separator
       \coordinate (separator_line) at ([xshift=-0.5cm]hist_cache.west);
@@ -980,28 +980,28 @@
 
       % 2-bit counter array - vertical array
       \node[right=2.5cm of xor] (counter_array_center) {};
-      \node[above=1.5cm of counter_array_center] (counter_label) {2-bit-sat counter array};
+      \node[above=1.5cm of counter_array_center, font=\small] (counter_label) {2-bit-sat counter array};
 
-      % Draw vertical counter array
+      % Draw vertical counter array with consistent styling
       \foreach \i in {0,1,2,3,4,5,6,7} {
-        \draw ([yshift=-\i*0.4cm]counter_label.south) ++(-0.35cm, 0) rectangle ++(0.7cm, -0.4cm);
+        \draw[draw=black!80, line width=0.8pt, fill=cyan!8] ([yshift=-\i*0.4cm]counter_label.south) ++(-0.35cm, 0) rectangle ++(0.7cm, -0.4cm);
       }
 
       % Prediction output with line break
-      \node[right=2cm of counter_array_center, align=center] (prediction) {prediction =\\msb of counter};
+      \node[right=2cm of counter_array_center, align=center, font=\normalsize, text=blue!80!black] (prediction) {prediction =\\msb of counter};
 
       % Arrows
       % Branch IP to tag entry point (west of tag box), then to connector
       \draw[arrow] (ip) -- (tag_entry);
-      \draw[thick] (tag_entry) -- (connector);
+      \draw[thick, draw=black!70] (tag_entry) -- (connector);
 
       % History output from east side going to XOR - using -| pattern with bit width notation
       \draw[arrow] (history_out) -| node[pos=0.2, right, font=\scriptsize] {$/h$} (xor.north);
 
       % Route from connector around history cache to XOR bottom with bit width notation
-      \draw[thick] (connector) |- (lower_left);
-      \draw[thick] (lower_left) -- node[midway, below, font=\scriptsize] {$h$ l.s.bits of IP} (lower_right);
-      \draw[arrow] (lower_right) -| (xor.south);
+      \draw[thick, draw=black!70] (connector) |- (lower_left);
+      \draw[thick, draw=black!70] (lower_left) -- node[midway, below, font=\scriptsize] {$/h$ l.s.bits of IP} (lower_right);
+      \draw[arrow] (lower_right) |- (xor.south);
 
       \draw[arrow] (xor) -- (counter_array_center);
       \draw[arrow] (counter_array_center) -- (prediction);
