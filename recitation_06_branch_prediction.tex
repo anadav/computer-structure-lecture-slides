@@ -457,11 +457,8 @@
       arrow/.style={-latex, thick, draw=black!70}
     ]
 
-      % Branch IP
-      \node[font=\normalsize, text=blue!80!black] (ip) at (0, 0) {Branch IP};
-
       % History cache with dashed rows - using relative positioning
-      \node[bigbox, minimum width=2.5cm, minimum height=2.5cm, right=1.5cm of ip] (hist_cache) {};
+      \node[bigbox, minimum width=2.5cm, minimum height=2.5cm] (hist_cache) at (3, 0) {};
       \node[above=0.05cm of hist_cache.north, font=\small] {History};
 
       % Draw vertical separator line for tag and history columns
@@ -483,8 +480,11 @@
       \node[font=\scriptsize] at (tag_box) {tag};
       \node[font=\scriptsize] at (history_box) {history};
 
-      % Define tag box entry point (west side of tag cell)
-      \coordinate (tag_entry) at ([xshift=-1.25cm, yshift=-0.75cm]hist_cache.north);
+      % Define tag box west side for Branch IP positioning
+      \coordinate (tag_west) at ([xshift=-1.25cm, yshift=-0.75cm]hist_cache.north);
+
+      % Branch IP - anchored east, positioned relative to tag west
+      \node[anchor=east, left=0.3cm of tag_west, font=\normalsize, text=blue!80!black] (ip) {Branch IP};
 
       % 2-bit counters array - using relative positioning, 2x wider
       \def\counterwidth{1.4cm}
@@ -498,6 +498,17 @@
         \draw[dashed, black!40] ([yshift=-\i*\rowheight]counter_array.north west) -- ([yshift=-\i*\rowheight]counter_array.north east);
       }
 
+      % Draw vertical dashed lines in 2nd row to show array elements
+      % 2nd row spans from yshift=-0.5cm to yshift=-1.0cm (between 1st and 2nd dashed horizontal lines)
+      \def\numelements{4}
+      \coordinate (row2_top) at ([yshift=-0.5cm]counter_array.north west);
+      \coordinate (row2_bottom) at ([yshift=-1.0cm]counter_array.north west);
+
+      \foreach \i in {1,2,3} {
+        \pgfmathsetmacro{\xpos}{\i*\counterwidth/\numelements}
+        \draw[dashed, black!40] ([xshift=\xpos]row2_top) -- ([xshift=\xpos]row2_bottom);
+      }
+
       % Define 2nd row coordinate for arrow target
       \coordinate (counter_row2) at ([yshift=-0.75cm]counter_array.north west);
 
@@ -505,7 +516,7 @@
       \node[right=1.5cm of counter_array, font=\normalsize, text=blue!80!black] (prediction) {prediction};
 
       % Arrows
-      \draw[arrow] (ip) -- (tag_entry);
+      \draw[arrow] (ip) -- (tag_west);
       \draw[arrow] ([xshift=0.7cm]history_box) -- (counter_row2);
       \draw[arrow] ([xshift=0.7cm]counter_row2) -- (prediction);
 
