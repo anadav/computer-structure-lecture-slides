@@ -609,7 +609,7 @@
 %==========================================
 % Slide: Branch History Register (BHR)
 \begin{frame}
-  \frametitle{BHR: Branch History Register}
+  \frametitle{Branch History Register (BHR): Shift Register Mechanism}
 
   \begin{itemize}
     \item We hold in a shift register of $n$ bits that indicates at every given moment the branch history (0 for not-taken and 1 for taken)
@@ -619,27 +619,36 @@
   \vspace{1em}
   \begin{center}
     \begin{tikzpicture}[
-      box/.style={draw=black!80, line width=1.2pt, minimum width=0.8cm, minimum height=0.8cm, font=\Large}
+      box/.style={draw=black!80, line width=1.2pt, minimum width=0.8cm, minimum height=0.8cm, font=\Large},
+      fadedbox/.style={draw=black!30, line width=1.2pt, minimum width=0.8cm, minimum height=0.8cm, font=\Large, text=black!30}
     ]
       % First BHR state
-      \node[box] at (0, 0) {1};
-      \node[box] at (1, 0) {1};
-      \node[box] at (2, 0) {0};
-      \node[box] at (3, 0) {1};
-      \node[box, fill=blue!20] at (4, 0) {0};
+      \node[box] (box0) at (0, 0) {1};
+      \node[box, anchor=west] (box1) at ([xshift=1mm]box0.east) {1};
+      \node[box, anchor=west] (box2) at ([xshift=1mm]box1.east)  {0};
+      \node[box, anchor=west] (box3) at ([xshift=1mm]box2.east)  {1};
+      \node[box, anchor=west] (box4) at ([xshift=1mm]box3.east)  {0};
 
-      \node[right=0.3cm, font=\small] at (4.5, 0) {recent};
+      % Faded evicted bit on the left - relative positioning
+      \node[fadedbox, anchor=west] (evicted) at ([xshift=2cm]box4.east) {1};
 
-      % Arrow showing transition
-      \draw[-latex, ultra thick, blue!70] (5.5, 0) -- (6.5, 0);
-      \node[above, font=\small] at (6, 0.1) {Taken};
+      % Second BHR state after taken - relative to evicted box
+      \node[box, anchor=west] (newbox0) at ([xshift=1mm]evicted.east) {1};
+      \node[box, anchor=west] (newbox1) at ([xshift=1mm]newbox0.east) {0};
+      \node[box, anchor=west] (newbox2) at ([xshift=1mm]newbox1.east) {1};
+      \node[box, anchor=west] (newbox3) at ([xshift=1mm]newbox2.east) {0};
+      \node[box, fill=blue!20, anchor=west] (newbox4) at ([xshift=1mm]newbox3.east) {1};
 
-      % Second BHR state after taken
-      \node[box] at (7.5, 0) {1};
-      \node[box] at (8.5, 0) {0};
-      \node[box] at (9.5, 0) {1};
-      \node[box] at (10.5, 0) {0};
-      \node[box, fill=blue!20] at (11.5, 0) {1};
+      % Arrow showing transition - relative to box4
+      \draw[-latex, ultra thick, blue!70] ([xshift=5mm]box4.east) -- ([xshift=-5mm]evicted.west) node[midway, above] {Taken};
+
+      % Arrow showing shift direction (left-pointing) between boxes
+      \draw[-latex] ([yshift=-2mm]newbox3.south east) -- ([yshift=-2mm]newbox0.south west) node[midway, below, font=\tiny] {shift direction};
+
+      % "recent" label aligned to rightmost box
+      \node[anchor=north east, font=\tiny] (recent) at ([yshift=-2mm]newbox4.south east) {recent};
+
+
 
     \end{tikzpicture}
   \end{center}
@@ -654,7 +663,7 @@
 %==========================================
 % Slide: Local vs Global BHR
 \begin{frame}[fragile]
-  \frametitle{Branch History Register (BHR)}
+  \frametitle{BHR Types: Local vs Global}
 
   \vspace{-0.3cm}
   \begin{columns}[t]
