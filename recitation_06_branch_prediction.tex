@@ -958,8 +958,11 @@
       \node[font=\scriptsize] at (tag_box) {tag};
       \node[font=\scriptsize] at (history_box) {history};
 
-      % Branch IP - positioned to the left of tag box
-      \node[left=1.5cm of tag_box] (ip) {Branch IP};
+      % Define tag box entry point (west side of tag cell)
+      \coordinate (tag_entry) at ([xshift=-1.25cm, yshift=-0.75cm]hist_cache.north);
+
+      % Branch IP - positioned to the left of tag entry
+      \node[left=1cm of tag_entry] (ip) {Branch IP};
 
       % Data connector circle - to the right of the tag column separator
       \coordinate (separator_line) at ([xshift=-0.5cm]hist_cache.west);
@@ -968,8 +971,8 @@
       % Reference point for history output from east of history box
       \coordinate (history_out) at ([xshift=0.7cm]history_box);
 
-      % XOR operation - just the symbol without extra circle
-      \node[below right=1.5cm and 1cm of hist_cache, font=\Large] (xor) {$\oplus$};
+      % XOR operation - positioned even higher
+      \node[right=1cm of history_box, yshift=-0.5cm, font=\Large] (xor) {$\oplus$};
 
       % Calculate coordinates for routing around history cache
       \coordinate (lower_left) at ([xshift=-0.3cm, yshift=-0.3cm]hist_cache.south west);
@@ -987,24 +990,21 @@
         \draw ([yshift=-\i*0.4cm]counter_label.south) ++(-0.35cm, 0) rectangle ++(0.7cm, -0.4cm);
       }
 
-      % Draw dots to indicate more entries
-      \node[below=3.3cm of counter_label] {...};
-
-      % Prediction output
-      \node[right=2cm of counter_array_center] (prediction) {prediction = msb of counter};
+      % Prediction output with line break
+      \node[right=2cm of counter_array_center, align=center] (prediction) {prediction =\\msb of counter};
 
       % Arrows
-      % Branch IP to tag box (via connector)
-      \draw[thick] (ip) -- (tag_box);
-      \draw[arrow] (tag_box) -- (connector);
+      % Branch IP to tag entry point (west of tag box), then to connector
+      \draw[arrow] (ip) -- (tag_entry);
+      \draw[thick] (tag_entry) -- (connector);
 
-      % History output from east side going to XOR top
-      \draw[arrow] (history_out) |- node[pos=0.2, above] {h} (xor.north);
+      % History output from east side going to XOR - using -| pattern
+      \draw[arrow] (history_out) -| node[pos=0.2, right] {h} (xor.north);
 
-      % Route from connector around history cache to XOR
+      % Route from connector around history cache to XOR bottom
       \draw[thick] (connector) |- (lower_left);
       \draw[thick] (lower_left) -- (lower_right);
-      \draw[arrow] (lower_right) -- (xor);
+      \draw[arrow] (lower_right) |- (xor.south);
 
       \draw[arrow] (xor) -- (counter_array_center);
       \draw[arrow] (counter_array_center) -- (prediction);
