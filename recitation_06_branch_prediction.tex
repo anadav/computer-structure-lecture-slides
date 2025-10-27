@@ -19,6 +19,82 @@
 \definecolor{counterblue}{RGB}{70,130,255}
 \definecolor{highlightyellow}{RGB}{255,230,100}
 
+% Address breakdown macro for showing tag/set/offset
+\newcommand{\addressbreakdown}[3]{%
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.6cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    % Calculate total bits and positions
+    \pgfmathtruncatemacro{\totalbits}{#1 + #2 + #3}
+    \pgfmathtruncatemacro{\tagstart}{\totalbits - 1}
+    \pgfmathtruncatemacro{\tagend}{\totalbits - #1}
+    \pgfmathtruncatemacro{\setstart}{\tagend - 1}
+    \pgfmathtruncatemacro{\setend}{\tagend - #2}
+    \pgfmathtruncatemacro{\offsetstart}{\setend - 1}
+    \pgfmathtruncatemacro{\offsetend}{0}
+
+    % Scale factor for width
+    \pgfmathsetmacro{\bitwidth}{0.17}
+
+    % Starting position
+    \pgfmathsetmacro{\xpos}{0}
+
+    % Draw tag block
+    \ifnum#1>0
+        \pgfmathsetmacro{\tagwidth}{#1 * \bitwidth}
+        \node[section, fill=blue!40, minimum width=\tagwidth cm] (tag) at (\xpos + \tagwidth/2, 0) {};
+        \node[sectionlabel] at (tag.center) {tag};
+
+        % Add bit numbers below
+        \node[bitnumber] at ($(tag.south west) + (0mm,-1mm)$) {\tagstart};
+        \node[bitnumber] at ($(tag.south east) + (-1mm,-1mm)$) {\tagend};
+
+        \pgfmathsetmacro{\xpos}{\xpos + \tagwidth}
+    \fi
+
+    % Draw set block
+    \ifnum#2>0
+        \pgfmathsetmacro{\setwidth}{#2 * \bitwidth}
+        \node[section, fill=green!40, minimum width=\setwidth cm] (set) at (\xpos + \setwidth/2, 0) {};
+        \ifnum#2<3
+            \node[sectionlabel, rotate=90] at (set.center) {set};
+        \else
+            \node[sectionlabel] at (set.center) {set};
+        \fi
+
+        % Add bit numbers below
+        \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {\setstart};
+        \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {\setend};
+
+        \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
+    \fi
+
+    % Draw offset block
+    \ifnum#3>0
+        \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
+        \node[section, fill=yellow!40, minimum width=\offsetwidth cm] (offset) at (\xpos + \offsetwidth/2, 0) {};
+        \ifnum#3<3
+            \node[sectionlabel, rotate=90, font=\tiny] at (offset.center) {offset};
+        \else
+            \node[sectionlabel] at (offset.center) {offset};
+        \fi
+
+        % Add bit numbers below
+        \ifnum#2>0
+            \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstart};
+        \else
+            % When no set bits, offset starts directly after tag
+            \pgfmathtruncatemacro{\offsetstartalt}{\tagend - 1}
+            \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstartalt};
+        \fi
+        \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {\offsetend};
+    \fi
+    \end{tikzpicture}
+}
+
 \title{Branch Prediction}
 \author{Computer Architecture 2340267}
 \date{2025, Recitation \#6}
@@ -680,38 +756,46 @@ if (...)
 %==========================================
 % Slide: Local BHR Table and Size Calculation
 \begin{frame}
-  \frametitle{Local BHR Table and Size}
+  \frametitle{Local BHR Table and Size (Question)}
 
-  \textbf{Example:} Calculate predictor size for local BHR configuration:
+  \textbf{Example:} Calculate predictor size for the following configuration:
 
-  \vspace{0.5em}
-  \begin{itemize}
-    \item History table with 1024 entries, history length 4 bits, Fully Associative
-    \item Address is 32 bits and all instructions are aligned to 4-byte boundaries\\
-          (so we can drop the 2 LSB bits for the tag in the table)
-  \end{itemize}
+  \vspace{0.3em}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{Address Format:}
+    \begin{itemize}
+      \item 32-bit addresses
+      \item 4-byte aligned instructions
+    \end{itemize}
+    \vspace{0.3em}
+    \centering
+    \addressbreakdown{30}{0}{2}
 
-  \vspace{0.8em}
+    \column{0.48\textwidth}
+    \textbf{History Table:}
+    \begin{itemize}
+      \item 1024 entries
+      \item Fully associative
+      \item History length: 4 bits
+    \end{itemize}
+  \end{columns}
+
+  \vspace{0.3em}
   \textbf{What is the predictor size?}
 
-  \vspace{0.5em}
+  \pause
+  \vspace{-0.2em}
   \begin{tcolorbox}[colback=blue!10, colframe=blue!50, title=Formula]
     \small
     \textbf{Predictor size} = \#entries $\times$ (tag\_size + history\_size + $2 \times 2^{\text{history\_size}}$)
   \end{tcolorbox}
 
-  \vspace{0.5em}
-  \begin{align*}
-    \text{\#entries} &= 1024 \\
-    \text{tag\_size (Branch IP w/o 2 lsb bits)} &= 32 - 2 = 30 \text{ bit} \\
-    \text{history\_size} &= 4 \text{ bit} \\
-    \text{Counter array size} &= 2 \times 2^4 = 32 \text{ bits (16 counters × 2 bits each)}
-  \end{align*}
-
-  \vspace{0.3em}
+  \pause
+  \vspace{-0.8em}
   \begin{tcolorbox}[colback=green!10, colframe=green!50]
     \centering
-    \textbf{Predictor size} = $1024 \times (30 + 4 + 32) = 1024 \times 66 = \textbf{66 KB}$
+    \textbf{Predictor size} = $1024 \times (30 + 4 + 32) = 1024 \times 66 = \textbf{66 Kbits}$
   \end{tcolorbox}
 \end{frame}
 
