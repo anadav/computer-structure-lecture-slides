@@ -453,42 +453,61 @@
   \begin{center}
     \begin{tikzpicture}[
       box/.style={draw=black!80, line width=1pt, minimum height=1cm, minimum width=2.5cm, fill=cyan!15, rounded corners=2pt, font=\small},
-      cache/.style={draw=black!80, line width=1pt, minimum height=2.5cm, minimum width=2cm, fill=cyan!15, rounded corners=2pt},
-      counterarray/.style={draw=black!80, line width=1pt, minimum height=2.5cm, minimum width=1.5cm, fill=cyan!8, rounded corners=2pt},
+      bigbox/.style={draw=black!80, line width=1pt, fill=cyan!15, rounded corners=2pt},
       arrow/.style={-latex, thick, draw=black!70}
     ]
 
       % Branch IP
       \node[font=\normalsize, text=blue!80!black] (ip) at (0, 0) {Branch IP};
 
-      % History cache
-      \node[cache, right=1.5cm of ip] (hist_cache) {};
-      \node[above=0.1cm of hist_cache.north, font=\small] {History};
+      % History cache with dashed rows - using relative positioning
+      \node[bigbox, minimum width=2.5cm, minimum height=2.5cm, right=1.5cm of ip] (hist_cache) {};
+      \node[above=0.05cm of hist_cache.north, font=\small] {History};
 
-      % Draw separator
-      \draw[draw=black!80, line width=1pt] ([xshift=-0.4cm]hist_cache.north) -- ([xshift=-0.4cm]hist_cache.south);
+      % Draw vertical separator line for tag and history columns
+      \draw[draw=black!80, line width=1pt] ([xshift=-0.5cm]hist_cache.north) -- ([xshift=-0.5cm]hist_cache.south);
 
-      % Add labels
-      \node[font=\scriptsize] at ([xshift=-0.6cm]hist_cache.center) {tag};
-      \node[font=\scriptsize] at ([xshift=0.4cm]hist_cache.center) {history};
+      % Define row height to ensure consistency
+      \def\rowheight{0.5cm}
 
-      % 2-bit counters array
-      \node[counterarray, right=3cm of hist_cache] (counters) {};
-      \node[above=0.1cm of counters.north, font=\small] {2-bit counters};
-
-      % Draw some counter boxes
-      \foreach \i in {0,1,2} {
-        \draw[draw=black!80, line width=0.8pt] ([yshift=-\i*0.6cm-0.3cm]counters.north) ++(-0.3cm, 0) rectangle ++(0.6cm, -0.5cm);
+      % Draw horizontal dashed lines for rows (5 rows total)
+      \foreach \i in {1,2,3,4} {
+        \draw[dashed, black!40] ([yshift=-\i*\rowheight]hist_cache.north west) -- ([yshift=-\i*\rowheight]hist_cache.north east);
       }
-      \node[font=\tiny] at ([yshift=-2.1cm]counters.north) {...};
 
-      % Prediction output
-      \node[right=1.5cm of counters, font=\normalsize, text=blue!80!black] (prediction) {prediction};
+      % Define coordinates for tag and history boxes (2nd row)
+      \coordinate (tag_box) at ([xshift=-0.85cm, yshift=-0.75cm]hist_cache.north);
+      \coordinate (history_box) at ([xshift=0.35cm, yshift=-0.75cm]hist_cache.north);
+
+      % Add labels in one of the rows (second row)
+      \node[font=\scriptsize] at (tag_box) {tag};
+      \node[font=\scriptsize] at (history_box) {history};
+
+      % Define tag box entry point (west side of tag cell)
+      \coordinate (tag_entry) at ([xshift=-1.25cm, yshift=-0.75cm]hist_cache.north);
+
+      % 2-bit counters array - using relative positioning, 2x wider
+      \def\counterwidth{1.4cm}
+
+      % Draw outer box for counter array to match history table height
+      \node[bigbox, minimum width=\counterwidth, minimum height=2.5cm, right=2.5cm of hist_cache] (counter_array) {};
+      \node[above=0.05cm of counter_array.north, font=\small] {2-bit counters};
+
+      % Draw horizontal dashed lines for counter array rows
+      \foreach \i in {1,2,3,4} {
+        \draw[dashed, black!40] ([yshift=-\i*\rowheight]counter_array.north west) -- ([yshift=-\i*\rowheight]counter_array.north east);
+      }
+
+      % Define 2nd row coordinate for arrow target
+      \coordinate (counter_row2) at ([yshift=-0.75cm]counter_array.north west);
+
+      % Prediction output - using relative positioning
+      \node[right=1.5cm of counter_array, font=\normalsize, text=blue!80!black] (prediction) {prediction};
 
       % Arrows
-      \draw[arrow] (ip) -- (hist_cache);
-      \draw[arrow] ([xshift=0.5cm]hist_cache.east) -- node[midway, above, font=\scriptsize] {} (counters);
-      \draw[arrow] (counters) -- (prediction);
+      \draw[arrow] (ip) -- (tag_entry);
+      \draw[arrow] ([xshift=0.7cm]history_box) -- (counter_row2);
+      \draw[arrow] ([xshift=0.7cm]counter_row2) -- (prediction);
 
     \end{tikzpicture}
   \end{center}
@@ -558,9 +577,13 @@
     \textbf{Example:}
     \begin{tcolorbox}[colback=green!5, colframe=green!40, boxrule=0.8pt]
       \small
-      Loop with pattern:\\
-      \texttt{1110 1110 1110...}\\
-      Local BHR captures this repeated pattern
+\begin{verbatim}
+for (j=0; j<4; j++)
+  { ... }
+\end{verbatim}
+      \vspace{-0.5em}
+      Pattern: \texttt{1110}\\
+      Local BHR captures this pattern
     \end{tcolorbox}
 
     \column{0.48\textwidth}
