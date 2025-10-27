@@ -978,9 +978,6 @@
       \coordinate (lower_left) at ([xshift=-0.3cm, yshift=-0.3cm]hist_cache.south west);
       \coordinate (lower_right) at ([xshift=0.3cm, yshift=-0.3cm]hist_cache.south east);
 
-      % Label for LSBs
-      \node[font=\scriptsize, anchor=east] at ([xshift=-0.2cm]lower_left) {LSBs of IP};
-
       % 2-bit counter array - vertical array
       \node[right=2.5cm of xor] (counter_array_center) {};
       \node[above=1.5cm of counter_array_center] (counter_label) {2-bit-sat counter array};
@@ -998,13 +995,13 @@
       \draw[arrow] (ip) -- (tag_entry);
       \draw[thick] (tag_entry) -- (connector);
 
-      % History output from east side going to XOR - using -| pattern
-      \draw[arrow] (history_out) -| node[pos=0.2, right] {h} (xor.north);
+      % History output from east side going to XOR - using -| pattern with bit width notation
+      \draw[arrow] (history_out) -| node[pos=0.2, right, font=\scriptsize] {$/h$} (xor.north);
 
-      % Route from connector around history cache to XOR bottom
+      % Route from connector around history cache to XOR bottom with bit width notation
       \draw[thick] (connector) |- (lower_left);
-      \draw[thick] (lower_left) -- (lower_right);
-      \draw[arrow] (lower_right) |- (xor.south);
+      \draw[thick] (lower_left) -- node[midway, below, font=\scriptsize] {$h$ l.s.bits of IP} (lower_right);
+      \draw[arrow] (lower_right) -| (xor.south);
 
       \draw[arrow] (xor) -- (counter_array_center);
       \draw[arrow] (counter_array_center) -- (prediction);
