@@ -965,30 +965,47 @@
       \node[left=1cm of tag_entry, font=\normalsize, text=blue!80!black] (ip) {Branch IP};
 
       % Data connector circle - to the right of the tag column separator
-      \coordinate (separator_line) at ([xshift=-0.5cm]hist_cache.west);
-      \node[data_connector] (connector) at ([xshift=0.3cm]separator_line |- tag_box) {};
+      \node[data_connector] (connector) at ([xshift=-0.5cm]hist_cache.west |- tag_box) {};
 
       % Reference point for history output from east of history box
       \coordinate (history_out) at ([xshift=0.7cm]history_box);
-
-      % XOR operation - positioned even higher
-      \node[right=1cm of history_box, yshift=-0.5cm, font=\Large] (xor) {$\oplus$};
 
       % Calculate coordinates for routing around history cache
       \coordinate (lower_left) at ([xshift=-0.3cm, yshift=-0.3cm]hist_cache.south west);
       \coordinate (lower_right) at ([xshift=0.3cm, yshift=-0.3cm]hist_cache.south east);
 
-      % 2-bit counter array - vertical array
-      \node[right=2.5cm of xor] (counter_array_center) {};
-      \node[above=1.5cm of counter_array_center, font=\small] (counter_label) {2-bit-sat counter array};
+      % 2-bit counter array - vertical array (define first to position XOR relative to it)
+      \node at (7, 0) (counter_array_center) {};
+      \node[above=1.5cm of counter_array_center, font=\scriptsize, align=center] (counter_label) {2-bit sat.\\counter array};
 
       % Draw vertical counter array with consistent styling
       \foreach \i in {0,1,2,3,4,5,6,7} {
         \draw[draw=black!80, line width=0.8pt, fill=cyan!8] ([yshift=-\i*0.4cm]counter_label.south) ++(-0.35cm, 0) rectangle ++(0.7cm, -0.4cm);
       }
 
-      % Prediction output with line break
-      \node[right=2cm of counter_array_center, align=center, font=\normalsize, text=blue!80!black] (prediction) {prediction =\\msb of counter};
+      % Draw dashed lines between rows
+      \foreach \i in {1,2,3,4,5,6,7} {
+        \draw[dashed, black!40] ([yshift=-\i*0.4cm]counter_label.south) ++(-0.35cm, 0) -- ++(0.7cm, 0);
+      }
+
+      % Draw orange highlight box around index 4 (5th row)
+      \draw[draw=orange!70, line width=1.5pt, fill=orange!20]
+        ([yshift=-4*0.4cm, xshift=-0.33cm]counter_label.south) rectangle ++(0.66cm, -0.38cm);
+
+      % Highlight one box in row 5 (index 4) with counter value
+      \node[font=\tiny] at ([yshift=-4*0.4cm-0.2cm]counter_label.south) {\textcolor{red!70}{\textbf{1}}0};
+
+      % Store the highlighted box position for arrow (west side)
+      \coordinate (highlighted_box_west) at ([xshift=-0.35cm, yshift=-4*0.4cm-0.2cm]counter_label.south);
+
+      % Store the highlighted box east position
+      \coordinate (highlighted_box_east) at ([xshift=0.35cm, yshift=-4*0.4cm-0.2cm]counter_label.south);
+
+      % XOR operation - positioned to the left of the orange box at the same height
+      \node[left=1cm of highlighted_box_west, font=\Large] (xor) {$\oplus$};
+
+      % Prediction output with line break and MSB highlighted - anchored west, right of orange box
+      \node[anchor=west, right=0.5cm of highlighted_box_east, align=left, font=\normalsize, text=blue!80!black] (prediction) {prediction =\\\textcolor{red!70}{\textbf{msb}} of counter};
 
       % Arrows
       % Branch IP to tag entry point (west of tag box), then to connector
@@ -996,20 +1013,23 @@
       \draw[thick, draw=black!70] (tag_entry) -- (connector);
 
       % History output from east side going to XOR - using -| pattern with bit width notation
-      \draw[arrow] (history_out) -| node[pos=0.2, right, font=\scriptsize] {$/h$} (xor.north);
+      % Draw slash on the line
+      \draw[arrow] (history_out) -| node[pos=0.35, font=\scriptsize] {/} node[pos=0.35, above, font=\scriptsize] {$h$} (xor.north);
 
       % Route from connector around history cache to XOR bottom with bit width notation
+      % Draw slash on the line with text below
       \draw[thick, draw=black!70] (connector) |- (lower_left);
-      \draw[thick, draw=black!70] (lower_left) -- node[midway, below, font=\scriptsize] {$/h$ l.s.bits of IP} (lower_right);
-      \draw[arrow] (lower_right) |- (xor.south);
+      \draw[thick, draw=black!70] (lower_left) -- (lower_right) node[midway, sloped, font=\scriptsize] {/} node[midway, below=2pt, font=\scriptsize] {$h$ l.s.bits of IP};
+      \draw[arrow] (lower_right) -| (xor.south);
 
-      \draw[arrow] (xor) -- (counter_array_center);
-      \draw[arrow] (counter_array_center) -- (prediction);
+      % Arrow from XOR to highlighted box west in counter array with slash notation
+      \draw[arrow] (xor) -- node[midway, sloped, font=\scriptsize] {/} node[midway, below=1pt, font=\scriptsize] {$h$} (highlighted_box_west);
+      \draw[arrow] (highlighted_box_east) -- (prediction);
     \end{tikzpicture}
   \end{center}
 
   \vspace{0.5em}
-  \begin{tcolorbox}[colback=green!10, colframe=green!50]
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50]
     \centering
     LShare XORs the local history with the branch IP\\
     \small This XOR significantly improves BTB performance
