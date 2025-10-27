@@ -938,14 +938,8 @@
       arrow/.style={-latex, thick},
       data_connector/.style={circle, fill=black, inner sep=1.2pt}
     ]
-      % Branch IP
-      \node (ip) at (0,0) {Branch IP};
-
-      % Data connector circle to the right of Branch IP
-      \node[data_connector, right=1cm of ip.east] (connector) {};
-
-      % History cache - draw outer box
-      \node[bigbox, right=2cm of ip, minimum width=2.5cm, minimum height=2.5cm] (hist_cache) {};
+      % History cache - draw outer box first to reference it
+      \node[bigbox, minimum width=2.5cm, minimum height=2.5cm] (hist_cache) at (3,0) {};
       \node[above=0.1cm of hist_cache.north] {history cache};
 
       % Draw vertical separator line for tag and history columns
@@ -956,12 +950,23 @@
         \draw[dashed] ([yshift=-\i*0.5cm]hist_cache.north west) -- ([yshift=-\i*0.5cm]hist_cache.north east);
       }
 
-      % Add labels in one of the rows (second row)
-      \node[font=\scriptsize] at ([xshift=-0.85cm, yshift=-0.75cm]hist_cache.north) {tag};
-      \node[font=\scriptsize] at ([xshift=0.35cm, yshift=-0.75cm]hist_cache.north) {history};
+      % Define tag and history box coordinates
+      \coordinate (tag_box) at ([xshift=-0.85cm, yshift=-0.75cm]hist_cache.north);
+      \coordinate (history_box) at ([xshift=0.35cm, yshift=-0.75cm]hist_cache.north);
 
-      % Reference point for history output
-      \coordinate (history_out) at ([xshift=0.35cm, yshift=-0.75cm]hist_cache.south);
+      % Add labels in one of the rows (second row)
+      \node[font=\scriptsize] at (tag_box) {tag};
+      \node[font=\scriptsize] at (history_box) {history};
+
+      % Branch IP - positioned to the left of tag box
+      \node[left=1.5cm of tag_box] (ip) {Branch IP};
+
+      % Data connector circle - to the right of the tag column separator
+      \coordinate (separator_line) at ([xshift=-0.5cm]hist_cache.west);
+      \node[data_connector] (connector) at ([xshift=0.3cm]separator_line |- tag_box) {};
+
+      % Reference point for history output from east of history box
+      \coordinate (history_out) at ([xshift=0.7cm]history_box);
 
       % XOR operation - just the symbol without extra circle
       \node[below right=1.5cm and 1cm of hist_cache, font=\Large] (xor) {$\oplus$};
@@ -989,12 +994,18 @@
       \node[right=2cm of counter_array_center] (prediction) {prediction = msb of counter};
 
       % Arrows
-      \draw[thick] (ip) -- (connector);
-      \draw[arrow] (connector) |- (hist_cache.west);
-      \draw[arrow] (history_out) |- node[pos=0.3, right] {h} (xor);
+      % Branch IP to tag box (via connector)
+      \draw[thick] (ip) -- (tag_box);
+      \draw[arrow] (tag_box) -- (connector);
+
+      % History output from east side going to XOR top
+      \draw[arrow] (history_out) |- node[pos=0.2, above] {h} (xor.north);
+
       % Route from connector around history cache to XOR
-      \draw[thick] (connector) -- (lower_left) -- (lower_right);
+      \draw[thick] (connector) |- (lower_left);
+      \draw[thick] (lower_left) -- (lower_right);
       \draw[arrow] (lower_right) -- (xor);
+
       \draw[arrow] (xor) -- (counter_array_center);
       \draw[arrow] (counter_array_center) -- (prediction);
     \end{tikzpicture}
