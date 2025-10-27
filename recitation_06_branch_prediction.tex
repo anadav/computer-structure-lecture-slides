@@ -27,6 +27,55 @@
 \frame{\titlepage}
 
 %==========================================
+% Slide: Branch Prediction Overview (Recitation Exercise 2)
+\begin{frame}
+  \frametitle{Branch Prediction (Recitation Exercise 2)}
+
+  \begin{center}
+    \begin{tikzpicture}[
+      stage/.style={draw=black!80, line width=1.5pt, minimum height=1.2cm, minimum width=1.5cm, fill=blue!60, font=\Large\bfseries, text=white},
+      component/.style={draw=black!80, line width=1pt, minimum height=1cm, minimum width=1.8cm, fill=cyan!30, font=\small},
+      btb/.style={draw=red!70, line width=2.5pt, minimum height=1cm, minimum width=1.2cm, fill=green!40, font=\small\bfseries},
+      arrow/.style={-latex, thick, draw=black!70}
+    ]
+
+      % Pipeline stages
+      \node[stage] (if) at (0, 2) {IF};
+      \node[stage, right=2cm of if] (id) {ID};
+      \node[stage, right=2cm of id] (ex) {EX};
+      \node[stage, right=2cm of ex] (mem) {MEM};
+      \node[stage, right=2cm of mem] (wb) {WB};
+
+      % BTB in IF stage - with red circle around it
+      \node[btb] (btb) at ([yshift=-1.5cm]if) {BTB};
+      \draw[red!70, line width=3pt] ([xshift=-0.1cm, yshift=0.1cm]btb.north west)
+        ellipse [x radius=1cm, y radius=0.8cm];
+
+      % Components
+      \node[component, below=2.5cm of if, minimum height=2cm, align=center] (imem) {Instruction\\Memory};
+      \node[component, below=1.5cm of id, minimum height=1.5cm, align=center] (regfile) {Register\\File};
+      \node[component, below=1.5cm of ex] (alu) {ALU};
+      \node[component, below=1.5cm of mem, minimum height=2cm, align=center] (dmem) {Data\\Memory};
+
+      % Pipeline registers (vertical bars)
+      \foreach \x in {1, 3, 5, 7} {
+        \draw[fill=yellow!30, draw=black!70, line width=1pt] (\x, -0.5) rectangle ++(0.3, 5.5);
+      }
+
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3em}
+  \begin{itemize}
+    \item Branch instructions may jump
+    \item Jump resolution known @ Execution phase
+    \item Trivial optimization: Assume Not Taken
+    \item If branch will jump $\rightarrow$ need to flush all pipe stages before Execution
+    \item \textbf{Better solution: Use Branch Predictor (BTB) @ Fetch}
+  \end{itemize}
+\end{frame}
+
+%==========================================
 \begin{frame}{2-Bit Counter Prediction (Threshold of 2)}
 \vspace{-0.3cm}
 
@@ -388,8 +437,109 @@
   states={},
   description={},
 }
+%==========================================
+% Slide: 2-Level Branch Prediction
+\begin{frame}
+  \frametitle{2-Level Branch Prediction}
 
+  \begin{itemize}
+    \item In this type of predictor, there exists a set of Histories and a set of State machines
+    \item This is called 2-Level
+    \item For each branch instruction, instead of holding a single state machine, we hold 2$^n$ state machines (one for each possible value of history of length $n$ bits)
+    \item We select the desired state machine based on the history of $n$ recent branch decisions (taken/not-taken) of that same branch instruction
+  \end{itemize}
 
+  \vspace{1em}
+  \begin{center}
+    \begin{tikzpicture}[
+      box/.style={draw=black!80, line width=1pt, minimum height=1cm, minimum width=2.5cm, fill=cyan!15, rounded corners=2pt, font=\small},
+      cache/.style={draw=black!80, line width=1pt, minimum height=2.5cm, minimum width=2cm, fill=cyan!15, rounded corners=2pt},
+      counterarray/.style={draw=black!80, line width=1pt, minimum height=2.5cm, minimum width=1.5cm, fill=cyan!8, rounded corners=2pt},
+      arrow/.style={-latex, thick, draw=black!70}
+    ]
+
+      % Branch IP
+      \node[font=\normalsize, text=blue!80!black] (ip) at (0, 0) {Branch IP};
+
+      % History cache
+      \node[cache, right=1.5cm of ip] (hist_cache) {};
+      \node[above=0.1cm of hist_cache.north, font=\small] {History};
+
+      % Draw separator
+      \draw[draw=black!80, line width=1pt] ([xshift=-0.4cm]hist_cache.north) -- ([xshift=-0.4cm]hist_cache.south);
+
+      % Add labels
+      \node[font=\scriptsize] at ([xshift=-0.6cm]hist_cache.center) {tag};
+      \node[font=\scriptsize] at ([xshift=0.4cm]hist_cache.center) {history};
+
+      % 2-bit counters array
+      \node[counterarray, right=3cm of hist_cache] (counters) {};
+      \node[above=0.1cm of counters.north, font=\small] {2-bit counters};
+
+      % Draw some counter boxes
+      \foreach \i in {0,1,2} {
+        \draw[draw=black!80, line width=0.8pt] ([yshift=-\i*0.6cm-0.3cm]counters.north) ++(-0.3cm, 0) rectangle ++(0.6cm, -0.5cm);
+      }
+      \node[font=\tiny] at ([yshift=-2.1cm]counters.north) {...};
+
+      % Prediction output
+      \node[right=1.5cm of counters, font=\normalsize, text=blue!80!black] (prediction) {prediction};
+
+      % Arrows
+      \draw[arrow] (ip) -- (hist_cache);
+      \draw[arrow] ([xshift=0.5cm]hist_cache.east) -- node[midway, above, font=\scriptsize] {} (counters);
+      \draw[arrow] (counters) -- (prediction);
+
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+%==========================================
+% Slide: Branch History Register (BHR)
+\begin{frame}
+  \frametitle{BHR: Branch History Register}
+
+  \begin{itemize}
+    \item We hold in a shift register of $n$ bits that indicates at every given moment the branch history (0 for not-taken and 1 for taken)
+    \item For example, for a branch predictor with BHR of length 5 bits:
+  \end{itemize}
+
+  \vspace{1em}
+  \begin{center}
+    \begin{tikzpicture}[
+      box/.style={draw=black!80, line width=1.2pt, minimum width=0.8cm, minimum height=0.8cm, font=\Large}
+    ]
+      % First BHR state
+      \node[box] at (0, 0) {1};
+      \node[box] at (1, 0) {1};
+      \node[box] at (2, 0) {0};
+      \node[box] at (3, 0) {1};
+      \node[box, fill=blue!20] at (4, 0) {0};
+
+      \node[right=0.3cm, font=\small] at (4.5, 0) {recent};
+
+      % Arrow showing transition
+      \draw[-latex, ultra thick, blue!70] (5.5, 0) -- (6.5, 0);
+      \node[above, font=\small] at (6, 0.1) {Taken};
+
+      % Second BHR state after taken
+      \node[box] at (7.5, 0) {1};
+      \node[box] at (8.5, 0) {0};
+      \node[box] at (9.5, 0) {1};
+      \node[box] at (10.5, 0) {0};
+      \node[box, fill=blue!20] at (11.5, 0) {1};
+
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{2em}
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50]
+    \small
+    The BHR shifts left, the new result enters from the right (most recent), and the oldest bit is discarded from the left
+  \end{tcolorbox}
+\end{frame}
+
+%==========================================
 \begin{frame}
   \frametitle{Code Example}
   
