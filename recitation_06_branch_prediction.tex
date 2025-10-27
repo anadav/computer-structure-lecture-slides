@@ -103,52 +103,120 @@
 \frame{\titlepage}
 
 %==========================================
-% Slide: Branch Prediction Overview (Recitation Exercise 2)
+% Slide: Branch Prediction Overview
 \begin{frame}
-  \frametitle{Branch Prediction (Recitation Exercise 2)}
+  \frametitle{Branch Prediction (Reminder)}
 
   \begin{center}
+    \scalebox{0.7}{
     \begin{tikzpicture}[
-      stage/.style={draw=black!80, line width=1.5pt, minimum height=1.2cm, minimum width=1.5cm, fill=blue!60, font=\Large\bfseries, text=white},
-      component/.style={draw=black!80, line width=1pt, minimum height=1cm, minimum width=1.8cm, fill=cyan!30, font=\small},
-      btb/.style={draw=red!70, line width=2.5pt, minimum height=1cm, minimum width=1.2cm, fill=green!40, font=\small\bfseries},
-      arrow/.style={-latex, thick, draw=black!70}
+      stage/.style={draw=black!80, line width=1.5pt, minimum height=1.3cm, minimum width=1.8cm, fill=blue!60, font=\Large\bfseries, text=white},
+      latch/.style={draw=black!70, thick, fill=yellow!30, minimum width=0.25cm, minimum height=4.5cm},
+      component/.style={draw=black!80, line width=1pt, fill=cyan!20, font=\small},
+      btb/.style={draw=black!80, line width=1.5pt, minimum height=1cm, minimum width=1.2cm, fill=green!40, font=\small\bfseries}
     ]
 
-      % Pipeline stages
-      \node[stage] (if) at (0, 2) {IF};
-      \node[stage, right=2cm of if] (id) {ID};
-      \node[stage, right=2cm of id] (ex) {EX};
-      \node[stage, right=2cm of ex] (mem) {MEM};
-      \node[stage, right=2cm of mem] (wb) {WB};
+      % Pipeline stages at top - using relative positioning
+      \node[stage] (if_stage) at (0, 3.5) {IF};
+      \node[stage, right=1cm of if_stage] (id_stage) {ID};
+      \node[stage, right=1cm of id_stage] (ex_stage) {EX};
+      \node[stage, right=1cm of ex_stage] (mem_stage) {MEM};
+      \node[stage, right=1cm of mem_stage] (wb_stage) {WB};
 
-      % BTB in IF stage - with red circle around it
-      \node[btb] (btb) at ([yshift=-1.5cm]if) {BTB};
-      \draw[red!70, line width=3pt] ([xshift=-0.1cm, yshift=0.1cm]btb.north west)
-        ellipse [x radius=1cm, y radius=0.8cm];
+      % Instruction Memory - left of first latch position
+      \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=2, NL=0, NR=0},
+            external pins width=0, fill=cyan!20, below=1.5cm of if_stage] (imem) {};
+      \node[font=\tiny, align=center] at (imem.center) {Instruction\\Memory};
 
-      % Components
-      \node[component, below=2.5cm of if, minimum height=2cm, align=center] (imem) {Instruction\\Memory};
-      \node[component, below=1.5cm of id, minimum height=1.5cm, align=center] (regfile) {Register\\File};
-      \node[component, below=1.5cm of ex] (alu) {ALU};
-      \node[component, below=1.5cm of mem, minimum height=2cm, align=center] (dmem) {Data\\Memory};
+      % Latch L1 - to the right of Instruction Memory
+      \node[latch, right=0.5cm of imem] (L1) {};
 
-      % Pipeline registers (vertical bars)
-      \foreach \x in {1, 3, 5, 7} {
-        \draw[fill=yellow!30, draw=black!70, line width=1pt] (\x, -0.5) rectangle ++(0.3, 5.5);
-      }
+      % Register File - to the right of L1
+      \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=2, NL=4, NR=0},
+            external pins width=0, fill=cyan!20, right=0.5cm of L1] (regfile) {};
+      \node[font=\tiny, align=center] at (regfile.center) {Register\\File};
+      \coordinate (regfile_in4) at (regfile.lpin 4);
+
+      % Latch L2 - to the right of Register File
+      \node[latch, right=0.5cm of regfile] (L2) {};
+
+      % ALU - to the right of L2
+      \node[muxdemux, muxdemux def={Lh=5, NL=2, Rh=2, NR=1, NB=2, NT=1, w=2, inset w=1, inset Lh=2, inset Rh=0, square pins=1},
+            external pins width=0, scale=0.5, fill=green!15, right=0.5cm of L2] (alu) {};
+      \node[rotate=90, font=\tiny] at (alu.center) {ALU};
+      \coordinate (alu_in1) at (alu.blpin 1);
+      \coordinate (alu_in2) at (alu.blpin 2);
+      \coordinate (alu_out) at (alu.brpin 1);
+
+      % Latch L3 - to the right of ALU
+      \node[latch, right=0.5cm of alu] (L3) {};
+
+      % Data Memory - to the right of L3
+      \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=2, NL=0, NR=0},
+            external pins width=0, fill=cyan!20, right=0.5cm of L3] (dmem) {};
+      \node[font=\tiny, align=center] at (dmem.center) {Data\\Memory};
+
+      % Latch L4 - to the right of Data Memory
+      \node[latch, right=0.5cm of dmem] (L4) {};
+
+      % WB Mux - to the right of L4
+      \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NR=1, w=1},
+            external pins width=0, scale=0.6, fill=orange!30, right=0.5cm of L4] (wb_mux) {};
+      \coordinate (wbmux_in1) at (wb_mux.blpin 1);
+      \coordinate (wbmux_in2) at (wb_mux.blpin 2);
+      \coordinate (wbmux_out) at (wb_mux.brpin 1);
+
+      % BTB - positioned below Instruction Memory
+      \node[btb, below=0.8cm of imem] (btb) {BTB};
+      \draw[red!70, line width=2.5pt] (btb) ellipse [x radius=1cm, y radius=0.7cm];
+
+      % Main wiring
+      % IF to L1
+      \draw[thick, ->] (imem.east) -- (L1.west);
+
+      % L1 to Register File
+      \draw[thick, ->] (L1.east) -- (regfile.west);
+
+      % Register File to L2
+      \draw[thick, ->] (regfile.east) -- (L2.west);
+
+      % L2 to ALU
+      \draw[thick, ->] (L2.east) -- ++(0.3,0) |- (alu_in1);
+      \draw[thick, ->] (L2.east) -- ++(0.3,0) |- (alu_in2);
+
+      % ALU to L3
+      \draw[thick, ->] (alu_out) -- (L3.west);
+
+      % L3 to Data Memory
+      \draw[thick, ->] (L3.east) -- (dmem.west);
+
+      % Data Memory to L4
+      \draw[thick, ->] (dmem.east) -- (L4.west);
+
+      % L4 to WB Mux
+      \draw[thick, ->] (L4.east) -- ++(0.2,0) |- (wbmux_in1);
+      \draw[thick, ->] (L4.east) -- ++(0.2,0) |- (wbmux_in2);
+
+      % WB Mux output with feedback to Register File
+      \draw[thick, ->] (wbmux_out) -- ++(0.5,0) coordinate (wb_out_point)
+                       |- ([yshift=-0.5cm, xshift=0.5cm]L1.south east)
+                       |- (regfile_in4);
 
     \end{tikzpicture}
+    }
   \end{center}
 
-  \vspace{0.3em}
-  \begin{itemize}
-    \item Branch instructions may jump
-    \item Jump resolution known @ Execution phase
-    \item Trivial optimization: Assume Not Taken
-    \item If branch will jump $\rightarrow$ need to flush all pipe stages before Execution
-    \item \textbf{Better solution: Use Branch Predictor (BTB) @ Fetch}
-  \end{itemize}
+  \vspace{0.5cm}
+  \begin{center}
+    \begin{minipage}{0.85\textwidth}
+      \textcolor{green!70!black}{$\diamond$ Branch resolution known at Execute stage}
+
+      \textcolor{green!70!black}{$\diamond$ If branch jumps $\rightarrow$ flush all pipeline stages before Execute}
+
+      \vspace{0.3em}
+      \textbf{Solution:} Use Branch Target Buffer (BTB) at Fetch stage to predict branch behavior
+    \end{minipage}
+  \end{center}
 \end{frame}
 
 %==========================================
