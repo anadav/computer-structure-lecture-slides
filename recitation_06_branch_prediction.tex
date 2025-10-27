@@ -509,16 +509,22 @@
         \draw[dashed, black!40] ([xshift=\xpos]row2_top) -- ([xshift=\xpos]row2_bottom);
       }
 
-      % Define 2nd row coordinate for arrow target
-      \coordinate (counter_row2) at ([yshift=-0.75cm]counter_array.north west);
+      % Define the 3rd array element positions in 2nd row
+      \pgfmathsetmacro{\thirdelem}{2.5*\counterwidth/\numelements}
+      \coordinate (third_element_top) at ([xshift=\thirdelem, yshift=-0.5cm]counter_array.north west);
+      \coordinate (third_element_bottom) at ([xshift=\thirdelem, yshift=-1.0cm]counter_array.north west);
 
-      % Prediction output - using relative positioning
-      \node[right=1.5cm of counter_array, font=\normalsize, text=blue!80!black] (prediction) {prediction};
+      % Prediction output - positioned higher with yshift
+      \node[anchor=west, right=1.5cm of counter_array.east, yshift=1cm, font=\normalsize, text=blue!80!black] (prediction) {prediction};
 
       % Arrows
       \draw[arrow] (ip) -- (tag_west);
-      \draw[arrow] ([xshift=0.7cm]history_box) -- (counter_row2);
-      \draw[arrow] ([xshift=0.7cm]counter_row2) -- (prediction);
+
+      % Arrow from history: go right, then up, then use -| to south of 3rd element
+      \draw[arrow] ([xshift=0.7cm]history_box) -- ++(0.8, 0) -- ++(0, -0.6) -| (third_element_bottom);
+
+      % Arrow from top of 3rd element to prediction
+      \draw[arrow] (third_element_top) |- (prediction.west);
 
     \end{tikzpicture}
   \end{center}
