@@ -154,11 +154,13 @@ Loop1 & 2 & 2 & & & & & \\
 \newif\ifshowhdu
 
 % Pipeline processor macro with configurable HDU and forwarding
-% Parameters: #1 = show forwarding (true/false), #2 = show HDU (true/false)
-\newcommand{\pipelineprocessor}[2]{%
+% Parameters: #1 = show forwarding (true/false), #2 = show HDU (true/false), #3 = show stage labels (true/false)
+\newif\ifshowstagelabels
+\newcommand{\pipelineprocessor}[3][false]{%
 % Set the boolean flags based on parameters
-\csname showforwarding#1\endcsname
-\csname showhdu#2\endcsname
+\csname showforwarding#2\endcsname
+\csname showhdu#3\endcsname
+\csname showstagelabels#1\endcsname
 \scalebox{0.7}{%
 \begin{circuitikz}[
     % Component styles - avoid using scale
@@ -235,7 +237,16 @@ Loop1 & 2 & 2 & & & & & \\
 % Create coordinates for RegFile outputs with y-shifts
 \coordinate (RegFile_out2) at ([yshift=1mm]RegFile.brpin 2);
 
-% Control Unit
+% Create pipeline register first to establish positions
+\node[pipeline_reg, anchor=west] (IDEX) at ([xshift=4mm]RegFile.east |- IFID) {};
+
+% Control signal blocks in pipeline registers - define early for positioning
+\coordinate (WB1_pos) at (IDEX.north);
+\node[control_signal, anchor=north] (WB1) at (WB1_pos) {WB};
+\node[control_signal] (M1) at (WB1.south) [anchor=north, yshift=-0.1cm] {M};
+\node[control_signal] (EX1) at (M1.south) [anchor=north, yshift=-0.1cm] {EX};
+
+% Control Unit - now M1 exists
 \ifshowhdu
 \node[control_block, above=3mm of RegFile.btpin 1, inner sep=1pt] (Control) {\rotatebox{90}{Control}};
 \else
@@ -248,8 +259,6 @@ Loop1 & 2 & 2 & & & & & \\
     % AND gate for HDU control
     \node[and port, anchor=bin 2, fill=red!60, scale=0.5, external pins width=0] (HDU_AND) at ([xshift=5mm]Control.east) {};
 \fi
-
-\node[pipeline_reg, anchor=west] (IDEX) at ([xshift=4mm]RegFile.east |- IFID) {};
 
 % EX Stage Components
 \ifshowforwarding
@@ -322,11 +331,7 @@ Loop1 & 2 & 2 & & & & & \\
 % WB Stage Components
 \node[mux2, fill=cyan!20, anchor=blpin 1] (WBMux) at ([xshift=5mm]MEMWB.east |- DMem.rpin 1) {};
 
-% Control signal blocks in pipeline registers
-\node[control_signal, anchor=north] (WB1) at (IDEX.north) {WB};
-\node[control_signal] (M1) at (WB1.south) [anchor=north, yshift=-0.1cm] {M};
-\node[control_signal] (EX1) at (M1.south) [anchor=north, yshift=-0.1cm] {EX};
-
+% Additional control signal blocks in pipeline registers (WB1, M1, EX1 already defined)
 \node[control_signal] (WB2) at (WB1 -| EXMEM.center) {WB};
 \node[control_signal] (M2) at (WB2.south) [anchor=north, yshift=-0.1cm] {M};
 
@@ -583,6 +588,24 @@ Loop1 & 2 & 2 & & & & & \\
         |- (ForwardB.blpin 3);
 \fi
 
+% Stage labels (only if enabled)
+\ifshowstagelabels
+    % ID stage label - use midpoint between IFID and IDEX (define first for reference)
+    \node[stage_label] (ID_label) at ($ (IFID.north)!0.5!(IDEX.north) + (0,3mm) $) {ID};
+
+    % IF stage label - align with ID label Y-position
+    \node[stage_label] (IF_label) at (PC.north |- ID_label) {IF};
+
+    % EX stage label - use midpoint between IDEX and EXMEM
+    \node[stage_label] (EX_label) at ($ (IDEX.north)!0.5!(EXMEM.north) + (0,3mm) $) {EX};
+
+    % MEM stage label - use midpoint between EXMEM and MEMWB
+    \node[stage_label] (MEM_label) at ($ (EXMEM.north)!0.5!(MEMWB.north) + (0,3mm) $) {MEM};
+
+    % WB stage label - align with ID label Y-position
+    \node[stage_label] (WB_label) at (WBMux.north |- ID_label) {WB};
+\fi
+
 \end{circuitikz}
 }
 }
@@ -595,19 +618,108 @@ Loop1 & 2 & 2 & & & & & \\
 
 \frame{\titlepage}
 
-\begin{frame}{Pipeline Processor with Hazard Detection and Forwarding}
+\begin{frame}{Basic Pipeline Processor}
 \centering
-\pipelineprocessor{true}{true}  % Show forwarding and HDU
+\pipelineprocessor[true]{false}{false}  % Show stage labels, no forwarding, no HDU
+\end{frame}
+
+\begin{frame}{Pipeline Stages Overview}
+\begin{enumerate}
+    \item \textbf{IF (Instruction Fetch):}
+    \begin{itemize}
+        \item Fetch instruction from instruction memory
+        \item Update PC (Program Counter)
+    \end{itemize}
+
+    \item \textbf{ID (Instruction Decode):}
+    \begin{itemize}
+        \item Decode instruction
+        \item Read register operands from register file
+        \item Control unit generates control signals
+    \end{itemize}
+
+    \item \textbf{EX (Execute):}
+    \begin{itemize}
+        \item ALU performs computation
+        \item Calculate branch target address
+        \item Determine branch outcome
+    \end{itemize}
+
+    \item \textbf{MEM (Memory):}
+    \begin{itemize}
+        \item Access data memory for loads/stores
+        \item Finalize branch decision
+    \end{itemize}
+
+    \item \textbf{WB (Write Back):}
+    \begin{itemize}
+        \item Write result back to register file
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{RAW Data Hazard - Read After Write}
+\centering
+\pipelineprocessor[true]{false}{false}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}[
+    instr_box/.style={draw, thick, minimum width=3.5cm, minimum height=0.6cm, align=center, font=\ttfamily\small},
+    stage_marker/.style={font=\tiny, text=gray}
+]
+    % Instructions positioned to align with stages
+    \node[instr_box, fill=green!20] (add) at (0, 0) {ADD \$1 $\leftarrow$ \$2, \$3};
+    \node[instr_box, fill=orange!20] (sub) at (0, -0.8) {SUB \$4 $\leftarrow$ \underline{\$1}, \$5};
+
+    % Stage markers
+    \node[stage_marker, left=0.5cm of add] {EX:};
+    \node[stage_marker, left=0.5cm of sub] {ID:};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+\textbf{Problem:} SUB needs the value of \$1, but ADD hasn't written it yet!
+\end{frame}
+
+\begin{frame}{Understanding RAW Data Hazards}
+\textbf{What is a RAW (Read After Write) Hazard?}
+
+A data hazard occurs when an instruction depends on the result of a previous instruction that hasn't completed yet.
+
+\vspace{0.3cm}
+\textbf{Example:}
+\begin{center}
+\begin{tabular}{ll}
+\texttt{ADD \$1 $\leftarrow$ \$2, \$3} & \textit{(produces \$1)} \\
+\texttt{SUB \$4 $\leftarrow$ \$1, \$5} & \textit{(needs \$1)} \\
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{The Problem:}
+\begin{itemize}
+    \item ADD writes \$1 in WB stage (cycle 5)
+    \item SUB reads \$1 in ID stage (cycle 3)
+    \item SUB reads \textbf{stale data} from register file!
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Solutions:}
+\begin{enumerate}
+    \item \textbf{Stalling:} Insert bubbles to wait for the result
+    \item \textbf{Forwarding (Bypassing):} Forward result directly from pipeline stages
+\end{enumerate}
 \end{frame}
 
 \begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
 \centering
-\pipelineprocessor{false}{true}  % Show HDU only
+\pipelineprocessor[false]{false}{true}  % No stage labels, no forwarding, show HDU
 \end{frame}
 
-\begin{frame}{Basic Pipeline Processor}
+\begin{frame}{Pipeline Processor with Hazard Detection and Forwarding}
 \centering
-\pipelineprocessor{false}{false}  % Show neither forwarding nor HDU
+\pipelineprocessor[false]{true}{true}  % No stage labels, show forwarding and HDU
 \end{frame}
 
 
