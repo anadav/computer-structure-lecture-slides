@@ -679,10 +679,6 @@ Loop1 & 2 & 2 & & & & & \\
 \pipelineprocessor[true]{false}{false}
 
 \begin{tikzpicture}[remember picture, overlay]
-    % Debug: draw vertical lines from labels
-    \draw[red, thick] (ID_label) -- ++(0, -4);
-    \draw[blue, thick] (EX_label) -- ++(0, -4);
-
     % Instruction boxes aligned with stage labels from the pipeline
     \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
           font=\ttfamily\footnotesize, fill=orange!20]
@@ -697,6 +693,37 @@ Loop1 & 2 & 2 & & & & & \\
           anchor=south west, inner sep=4pt, text width=4cm]
           at ($(current page.south west) + (0.2, 1)$)
           {\textbf{Problem:} SUB needs the value of \$1, but ADD hasn't written it yet!};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Stalling to Resolve Data Hazard}
+\centering
+\pipelineprocessor[true]{false}{false}
+
+\begin{tikzpicture}[remember picture, overlay]
+    % Instruction boxes aligned with stage labels from the pipeline
+    \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
+          font=\ttfamily\footnotesize, fill=orange!20]
+          at ($(ID_label) + (0, -5.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
+
+    % Bubbles (stalls) in EX and MEM
+    \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
+          font=\ttfamily\footnotesize, fill=gray!20]
+          at ($(EX_label) + (0, -5.5)$) {BUBBLE};
+
+    \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
+          font=\ttfamily\footnotesize, fill=gray!20]
+          at ($(MEM_label) + (0, -5.5)$) {BUBBLE};
+
+    \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
+          font=\ttfamily\footnotesize, fill=green!20]
+          at ($(WB_label) + (0, -5.5)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
+
+    % Solution text in bottom left
+    \node[draw, thick, fill=yellow!20, align=left, font=\small,
+          anchor=south west, inner sep=4pt, text width=4cm]
+          at ($(current page.south west) + (0.2, 1)$)
+          {\textbf{Solution:} Insert stalls (bubbles) until ADD writes \$1 in WB stage.};
 \end{tikzpicture}
 \end{frame}
 
