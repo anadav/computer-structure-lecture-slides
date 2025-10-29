@@ -128,7 +128,7 @@
 
       % Register File - to the right of L1 (1.5x bigger)
       \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=4, NR=2},
-            external pins width=0, fill=cyan!20, anchor=lpin 2] at ([xshift=1cm]L1.east |- imem.rpin 1) (regfile) {};
+            external pins width=0, fill=cyan!20, anchor=lpin 2] at ([xshift=6mm]L1.east |- imem.rpin 1) (regfile) {};
       \node[font=\small, align=center] at (regfile.center) {Register\\File};
 
       % Latch L2 - to the right of Register File
@@ -136,15 +136,15 @@
 
       % ALU - to the right of L2 (1.5x bigger)
       \node[muxdemux, muxdemux def={Lh=7.5, NL=2, Rh=3, NR=1, NB=2, NT=1, w=3, inset w=1.5, inset Lh=3, inset Rh=0, square pins=1},
-            external pins width=0, scale=0.5, fill=cyan!20, anchor={lpin 1}] at ([xshift=10mm]L2.east |- {regfile.rpin 1}) (alu) {};
-      \node[rotate=90, font=\small] at (alu.center) {ALU};
+            external pins width=0, scale=0.4, fill=cyan!20, anchor={lpin 1}] at ([xshift=10mm]L2.east |- {regfile.rpin 1}) (alu) {};
+      \node[rotate=90, font=\small] at ([xshift=1mm]alu.center) {ALU};
 
       % Latch L3 - to the right of ALU
       \node[latch, anchor=west] at ([xshift=5mm]alu.east |- L1) (L3) {};
 
       % Data Memory - to the right of L3 (1.5x bigger)
-      \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=1, NR=1},
-            external pins width=0, fill=cyan!20, anchor=lpin 1] at ([xshift=5mm]L3) (dmem) {};
+      \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=3, NR=1},
+            external pins width=0, fill=cyan!20, anchor=lpin 1] at ([xshift=5mm]L3.east |- alu.rpin 1) (dmem) {};
       \node[font=\small, align=center] at (dmem.center) {Data\\Memory};
 
       % Latch L4 - to the right of Data Memory
@@ -176,22 +176,32 @@
 
       % Register File to L2
       \draw[arrow] (regfile.rpin 1) -- (L2.west |- alu.lpin 1);
+      \draw[arrow] (regfile.rpin 2) -- (L2.west |- regfile.rpin 2);
 
       % L2 to ALU
-      \draw[arrow] (L2.east |- alu.lpin 1) -- (alu.lpin 1);
-      \draw[arrow] (L2.east) -- ++(0.3,0) |- (alu.blpin 2);
+      \draw[arrow] (L2.east |- regfile.rpin 1) -- (alu.lpin 1);
+      \draw[arrow] (L2.east |- regfile.rpin 2) -- ++(0.3,0) |- (alu.lpin 2);
+
+      % L2 to L3
+      \node[data_connector] at ([xshift=3mm]L2.east |- alu.lpin 2) (alu_conn) {};
+      \draw[arrow] (alu_conn) |- (L3.west |- dmem.lpin 3); 
+      %\draw[arrow] (L2.east |- alu.lpin 1) -- (L3.west);
 
       % ALU to L3
-      \draw[arrow] (alu.brpin 1) -- (L3.west);
+      \draw[arrow] (alu.rpin 1) -- (L3.west |- alu.rpin 1);
 
       % L3 to Data Memory
-      \draw[arrow] (L3.east) -- (dmem.west);
+      \draw[arrow] (L3.east |- alu.rpin 1) -- (dmem.lpin 1);
+      \node[data_connector] at ([xshift=2mm]L3.east |- alu.rpin 1) (dmem_conn) {};
+      \draw[arrow] (dmem_conn) |- (dmem.lpin 2);
+      \draw[arrow] (L3.east |- dmem.lpin 3) -- (dmem.lpin 3);
 
       % Data Memory to L4
-      \draw[arrow] (dmem.east) -- (L4.west);
+      \draw[arrow] (dmem.rpin 1) -- (L4.west |- wb_mux.lpin 1);
+      \draw[arrow] ([shift=2mm]L3.east |- dmem.lpin 2) |- (L4.west |- wb_mux.lpin 2);
 
       % L4 to WB Mux
-      \draw[arrow] (L4.east) -- ++(0.2,0) |- (wb_mux.blpin 1);
+      \draw[arrow] (L4.east |- dmem.rpin 1) -- (wb_mux.blpin 1);
       \draw[arrow] (L4.east) -- ++(0.2,0) |- (wb_mux.blpin 2);
 
       % WB Mux output with feedback to Register File

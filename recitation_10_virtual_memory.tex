@@ -523,9 +523,9 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \begin{enumerate}
 \item Convert to binary: 0x0A100100
 \begin{itemize}
-  \item = 0000 1010 0001 0000 0000 0001 0000 0000 (binary)
-  \item With 23-bit PFN and 32-bit physical address: offset = 9 bits
-  \item VPN = upper 21 bits, offset = lower 9 bits
+  \item = \textcolor{blue}{0000 1010 0001 0000 0000 001}\textcolor{red}{0 0000 0000} (binary)
+  \item With 23-bit PFN and 32-bit physical address: \textcolor{red}{offset} = 32 - 23 = 9 bits
+  \item \textcolor{blue}{VPN} = upper 21 bits, \textcolor{red}{offset} = lower 9 bits
 \end{itemize}
 \item Calculate PTE address:
 \begin{itemize}
@@ -535,7 +535,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \begin{itemize}
   \item Valid = 1, PFN = 0x0001C0
 \end{itemize}
-\item Physical address = (PFN << 9) | offset = 0x000380A0
+\item Physical address = (PFN $\ll$ 9) + offset = 0x000380A0
 \end{enumerate}
 
 \textbf{Answer:} 2 memory accesses (1 for PTE, 1 for data)
