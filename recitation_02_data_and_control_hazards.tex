@@ -154,8 +154,9 @@ Loop1 & 2 & 2 & & & & & \\
 \newif\ifshowhdu
 
 % Pipeline processor macro with configurable HDU and forwarding
-% Parameters: #1 = show forwarding (true/false), #2 = show HDU (true/false), #3 = show stage labels (true/false)
+% Parameters: #1 = show stage labels (true/false), #2 = show forwarding (true/false), #3 = show HDU (true/false)
 \newif\ifshowstagelabels
+
 \newcommand{\pipelineprocessor}[3][false]{%
 % Set the boolean flags based on parameters
 \csname showforwarding#2\endcsname
@@ -591,23 +592,32 @@ Loop1 & 2 & 2 & & & & & \\
 % Stage labels (only if enabled)
 \ifshowstagelabels
     % ID stage label - use midpoint between IFID and IDEX (define first for reference)
-    \node[stage_label] (ID_label) at ($ (IFID.north)!0.5!(IDEX.north) + (0,3mm) $) {ID};
+    \node[stage_label, remember picture] (ID_label) at ($ (IFID.north)!0.5!(IDEX.north) + (0,3mm) $) {ID};
 
     % IF stage label - align with ID label Y-position
-    \node[stage_label] (IF_label) at (PC.north |- ID_label) {IF};
+    \node[stage_label, remember picture] (IF_label) at (PC.north |- ID_label) {IF};
 
     % EX stage label - use midpoint between IDEX and EXMEM
-    \node[stage_label] (EX_label) at ($ (IDEX.north)!0.5!(EXMEM.north) + (0,3mm) $) {EX};
+    \node[stage_label, remember picture] (EX_label) at ($ (IDEX.north)!0.5!(EXMEM.north) + (0,3mm) $) {EX};
 
     % MEM stage label - use midpoint between EXMEM and MEMWB
-    \node[stage_label] (MEM_label) at ($ (EXMEM.north)!0.5!(MEMWB.north) + (0,3mm) $) {MEM};
+    \node[stage_label, remember picture] (MEM_label) at ($ (EXMEM.north)!0.5!(MEMWB.north) + (0,3mm) $) {MEM};
 
     % WB stage label - align with ID label Y-position
-    \node[stage_label] (WB_label) at (WBMux.north |- ID_label) {WB};
+    \node[stage_label, remember picture] (WB_label) at (WBMux.north |- ID_label) {WB};
 \fi
 
 \end{circuitikz}
 }
+}
+
+% Wrapper for use within frame's custom TikZ - just calls the pipeline at origin
+% Use this inside a frame when you want to add custom overlays
+\newcommand{\drawpipelineprocessor}[3][false]{%
+\csname showforwarding#2\endcsname
+\csname showhdu#3\endcsname
+\csname showstagelabels#1\endcsname
+\pipelineprocessor[#1]{#2}{#3}
 }
 
 \title{Data and Control Hazards}
@@ -667,35 +677,25 @@ Loop1 & 2 & 2 & & & & & \\
 \end{frame}
 
 \begin{frame}{RAW Data Hazard - Read After Write}
-\vspace{-0.3cm}
 \centering
-\scalebox{0.85}{
-\begin{tikzpicture}
-    % Draw the pipeline processor and capture stage label positions
-    \node[inner sep=0] (pipeline) {\pipelineprocessor[true]{false}{false}};
+\pipelineprocessor[true]{false}{false}
 
-    % Define approximate X positions for stages (adjust based on your pipeline width)
-    % These coordinates are relative to the pipeline node
-    \coordinate (EX_pos) at ($(pipeline.south) + (0.5, -0.8)$);
-    \coordinate (ID_pos) at ($(pipeline.south) + (-2.5, -0.8)$);
+\begin{tikzpicture}[remember picture, overlay]
+    % Instruction boxes aligned with stage labels from the pipeline
+    \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
+          font=\ttfamily\footnotesize, fill=orange!20]
+          at ($(ID_label) + (0, -3.8)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
 
-    % Instruction boxes positioned below pipeline, aligned with stages
-    \node[draw, thick, minimum width=3.5cm, minimum height=0.6cm, align=center,
-          font=\ttfamily\small, fill=green!20, anchor=west] (add_instr)
-          at ($(EX_pos) + (-1.75, 0)$) {ADD \$1 $\leftarrow$ \$2, \$3};
+    \node[draw, thick, minimum width=2.8cm, minimum height=0.5cm, align=center,
+          font=\ttfamily\footnotesize, fill=green!20]
+          at ($(EX_label) + (-1.3, -3.8)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
 
-    \node[draw, thick, minimum width=3.5cm, minimum height=0.6cm, align=center,
-          font=\ttfamily\small, fill=orange!20, anchor=west] (sub_instr)
-          at ($(ID_pos) + (-1.75, 0)$) {SUB \$4 $\leftarrow$ \underline{\$1}, \$5};
-
-    % Stage labels for instructions
-    \node[font=\small\bfseries, left=0.2cm of add_instr] {EX:};
-    \node[font=\small\bfseries, left=0.2cm of sub_instr] {ID:};
+    % Problem text in bottom left
+    \node[draw, thick, fill=yellow!20, align=left, font=\small,
+          anchor=south west, inner sep=4pt, text width=4cm]
+          at ($(current page.south west) + (0.2, 1)$)
+          {\textbf{Problem:} SUB needs the value of \$1, but ADD hasn't written it yet!};
 \end{tikzpicture}
-}
-
-\vspace{0.3cm}
-\textbf{Problem:} SUB needs the value of \$1, but ADD hasn't written it yet!
 \end{frame}
 
 \begin{frame}{Understanding RAW Data Hazards}
