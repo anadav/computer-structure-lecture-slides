@@ -667,26 +667,34 @@ Loop1 & 2 & 2 & & & & & \\
 \end{frame}
 
 \begin{frame}{RAW Data Hazard - Read After Write}
+\vspace{-0.3cm}
 \centering
-\pipelineprocessor[true]{false}{false}
+\scalebox{0.85}{
+\begin{tikzpicture}
+    % Draw the pipeline processor and capture stage label positions
+    \node[inner sep=0] (pipeline) {\pipelineprocessor[true]{false}{false}};
+
+    % Define approximate X positions for stages (adjust based on your pipeline width)
+    % These coordinates are relative to the pipeline node
+    \coordinate (EX_pos) at ($(pipeline.south) + (0.5, -0.8)$);
+    \coordinate (ID_pos) at ($(pipeline.south) + (-2.5, -0.8)$);
+
+    % Instruction boxes positioned below pipeline, aligned with stages
+    \node[draw, thick, minimum width=3.5cm, minimum height=0.6cm, align=center,
+          font=\ttfamily\small, fill=green!20, anchor=west] (add_instr)
+          at ($(EX_pos) + (-1.75, 0)$) {ADD \$1 $\leftarrow$ \$2, \$3};
+
+    \node[draw, thick, minimum width=3.5cm, minimum height=0.6cm, align=center,
+          font=\ttfamily\small, fill=orange!20, anchor=west] (sub_instr)
+          at ($(ID_pos) + (-1.75, 0)$) {SUB \$4 $\leftarrow$ \underline{\$1}, \$5};
+
+    % Stage labels for instructions
+    \node[font=\small\bfseries, left=0.2cm of add_instr] {EX:};
+    \node[font=\small\bfseries, left=0.2cm of sub_instr] {ID:};
+\end{tikzpicture}
+}
 
 \vspace{0.3cm}
-\begin{center}
-\begin{tikzpicture}[
-    instr_box/.style={draw, thick, minimum width=3.5cm, minimum height=0.6cm, align=center, font=\ttfamily\small},
-    stage_marker/.style={font=\tiny, text=gray}
-]
-    % Instructions positioned to align with stages
-    \node[instr_box, fill=green!20] (add) at (0, 0) {ADD \$1 $\leftarrow$ \$2, \$3};
-    \node[instr_box, fill=orange!20] (sub) at (0, -0.8) {SUB \$4 $\leftarrow$ \underline{\$1}, \$5};
-
-    % Stage markers
-    \node[stage_marker, left=0.5cm of add] {EX:};
-    \node[stage_marker, left=0.5cm of sub] {ID:};
-\end{tikzpicture}
-\end{center}
-
-\vspace{0.2cm}
 \textbf{Problem:} SUB needs the value of \$1, but ADD hasn't written it yet!
 \end{frame}
 
