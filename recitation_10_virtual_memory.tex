@@ -513,31 +513,36 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \end{frame}
 
 \begin{frame}{Example: Address Translation}
-\textbf{Question:} A program reads a DW (4 bytes) from virtual address 0x0A100100
+\textbf{Question:} A program reads a dword (4 bytes) from virtual address 0x0A100100
 \begin{enumerate}
 \item What is the physical address?
 \item How many memory accesses are needed?
 \end{enumerate}
 
 \textbf{Solution:}
+\pause
 \begin{enumerate}
 \item Convert to binary: 0x0A100100
 \begin{itemize}
   \item = \textcolor{blue}{0000 1010 0001 0000 0000 001}\textcolor{red}{0 0000 0000} (binary)
-  \item With 23-bit PFN and 32-bit physical address: \textcolor{red}{offset} = 32 - 23 = 9 bits
-  \item \textcolor{blue}{VPN} = upper 21 bits, \textcolor{red}{offset} = lower 9 bits
+  \item \textcolor{red}{offset bits} = [phys addr width] - [PFN bits] = 32 - 23 = \textcolor{red}{9} $\rightarrow$ \textcolor{red}{offset} = bits [8:0]
+  \item \textcolor{blue}{VPN bits} = [virt addr width] - [offset bits] = 30 - \textcolor{red}{9} = \textcolor{blue}{21} $\rightarrow$ \textcolor{blue}{VPN} = bits [30:9]
 \end{itemize}
+\pause
 \item Calculate PTE address:
 \begin{itemize}
-  \item VPN × 4 + PTBR = 0x00201200
+  \item \textcolor{blue}{VPN} × \textcolor{green!50!black}{[PTE size]} + PTBR = \textcolor{blue}{VPN} × \textcolor{green!50!black}{4} + PTBR = 0x00201200
 \end{itemize}
-\item Read PTE content: 0xC0010094
+\pause
+\item Read PTE content: 0xC0010094 (little-endian: 0xC0 01 00 94 $\rightarrow$ 0x940100C0)
 \begin{itemize}
-  \item Valid = 1, PFN = 0x0001C0
+  \item Valid (bit 31) = 1, PFN (bits [22:0]) = 0x0001C0
 \end{itemize}
-\item Physical address = (PFN $\ll$ 9) + offset = 0x000380A0
+\pause
+\item Physical address = (PFN $\ll$ \textcolor{red}{9}) + \textcolor{red}{offset} = 0x000380A0
 \end{enumerate}
 
+\pause
 \textbf{Answer:} 2 memory accesses (1 for PTE, 1 for data)
 \end{frame}
 
