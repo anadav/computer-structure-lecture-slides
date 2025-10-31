@@ -489,9 +489,7 @@ Each set has 2 possible locations\\
 
 \begin{frame}[fragile]{2-Way Set Associative Organization}
 \begin{center}
-\begin{tikzpicture}[scale=0.8, transform shape,
-    every tag node/.style={tagcell},
-    every data node/.style={cellstyle}]
+\begin{tikzpicture}[scale=0.8, transform shape]
 
 % Address bits at top - shifted to the right
 \node[tagbox] at (2,0) (tag) {Tag};
@@ -601,12 +599,12 @@ Each set has 2 possible locations\\
 \node[orgatestyle] at ($(comp0)!0.5!(comp1) + (0,-1.5)$) (orgate) {};
 
 % MUX - using muxdemux, rotated 90 degrees, positioned relative to data arrays
-\node[muxdemux, muxdemux def={Lh=0.5, Rh=1, NL=2, NB=1, w=0.8},
-      external pins width=0, fill=gray!20, rotate=90] at ($(data0_3.south)!0.5!(data1_3.south) + (0,-2)$) (mux) {};
+\node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NB=1, w=1},
+      external pins width=0, fill=gray!20, rotate=270] at ($(data1_3.south east) + (0.3,-1.8)$) (mux) {MUX};
 
 % Output labels
 \node[below=0.8cm of orgate] (hitmiss) {Hit/Miss};
-\node[below=0.5cm of mux.bpin 1] (dataout) {Data Out};
+\node[below=0.5cm of mux.rpin 1] (dataout) {Data Out};
 
 % Arrows from address bits to decoders with junction - initial line has no arrow
 \draw (set.south) -- ++(0,-0.5) coordinate (setjunction);
@@ -648,8 +646,8 @@ Each set has 2 possible locations\\
 \draw[arrow] (tag1_1.east) -| (comp1.lpin 2);
 
 % Data array to MUX connections
-\draw[arrow] (data0_3.south) |- (mux.lpin 1);
-\draw[arrow] (data1_3.south) |- (mux.lpin 2);
+\draw[arrow] (data0_3.south) |- ([yshift=8mm]mux.lpin 1) -- (mux.lpin 1);
+\draw[arrow] (data1_3.south) |- ([yshift=8mm]mux.lpin 2) -- (mux.lpin 2);
 
 % Comparator outputs to OR gate
 \draw[arrow] (comp0.rpin 1) |- (orgate.input 1);
@@ -659,10 +657,10 @@ Each set has 2 possible locations\\
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select (using comp1 output)
-\draw[arrow] (comp1.rpin 1) |- (mux.north);
+\draw[arrow] (comp1.rpin 1) |- (mux.bpin 1);
 
 % MUX to data out
-\draw[arrow] (mux.bpin 1) -- (dataout.north);
+\draw[arrow] (mux.rpin 1) -- (dataout.north);
 
 \end{tikzpicture}
 \end{center}
@@ -1511,11 +1509,11 @@ for (int i=0; i<1024; i++)
 
 % MUX - using muxdemux, rotated 90 degrees, positioned relative to data arrays
 \node[muxdemux, muxdemux def={Lh=0.5, Rh=1, NL=2, NB=1, w=0.8},
-      external pins width=0, fill=gray!20, rotate=90] at ($(data0_3.south)!0.5!(data1_3.south) + (0,-2)$) (mux) {};
+      external pins width=0, fill=gray!20, rotate=90] at ($(data0_3.south)!0.5!(data1_3.south) + (0.5,-1.2)$) (mux) {};
 
 % Output labels
 \node[below=0.8cm of orgate] (hitmiss) {Hit/Miss};
-\node[below=0.5cm of mux.bpin 1] (dataout) {Data Out};
+\node[below=0.5cm of mux.rpin 1] (dataout) {Data Out};
 
 % Arrows from address bits to decoders with junction - initial line has no arrow
 \draw (set.south) -- ++(0,-0.5) coordinate (setjunction);
@@ -1568,10 +1566,10 @@ for (int i=0; i<1024; i++)
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select (using comp1 output)
-\draw[arrow] (comp1.rpin 1) |- (mux.north);
+\draw[arrow] (comp1.rpin 1) |- (mux.bpin 1);
 
 % MUX to data out
-\draw[arrow] (mux.bpin 1) -- (dataout.north);
+\draw[arrow] (mux.rpin 1) -- (dataout.north);
 
 \end{tikzpicture}
 \end{center}
