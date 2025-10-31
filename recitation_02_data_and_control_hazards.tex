@@ -830,31 +830,34 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Forwarding Unit: Logic}
-\textbf{ForwardA Logic} (similar for ForwardB with Rt):
+\begin{frame}[fragile]{Forwarding Unit: Logic}
+\small
+\textbf{ForwardA Logic} (similar for ForwardB using Rt instead of Rs):
 
 \vspace{0.3cm}
-\textbf{Priority 1 - MEM $\rightarrow$ EX Forwarding:}
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\scriptsize]
+// Priority 1: MEM->EX (most recent)
+if (EX/MEM.RegWrite && EX/MEM.Rd != 0 &&
+    EX/MEM.Rd == ID/EX.Rs)
+    ForwardA = 10;  // Forward from EX/MEM
+
+// Priority 2: WB->EX
+else if (MEM/WB.RegWrite && MEM/WB.Rd != 0 &&
+         MEM/WB.Rd == ID/EX.Rs)
+    ForwardA = 01;  // Forward from MEM/WB
+
+// No forwarding needed
+else
+    ForwardA = 00;  // Use Register File
+\end{lstlisting}
+
+\vspace{0.2cm}
+\textbf{Key Points:}
 \begin{itemize}
-    \item If (EX/MEM.RegWrite = 1) AND (EX/MEM.Rd $\neq$ 0) AND (EX/MEM.Rd = ID/EX.Rs)
-    \item Then \textbf{ForwardA = 10}
+    \item MEM $\rightarrow$ EX has priority (newer data)
+    \item Check Rd $\neq$ 0 (R0 is hardwired to zero)
+    \item Check RegWrite to ensure destination will be written
 \end{itemize}
-
-\vspace{0.3cm}
-\textbf{Priority 2 - WB $\rightarrow$ EX Forwarding:}
-\begin{itemize}
-    \item Else if (MEM/WB.RegWrite = 1) AND (MEM/WB.Rd $\neq$ 0) AND (MEM/WB.Rd = ID/EX.Rs)
-    \item Then \textbf{ForwardA = 01}
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{No Forwarding:}
-\begin{itemize}
-    \item Else \textbf{ForwardA = 00}
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Note:} MEM $\rightarrow$ EX has priority over WB $\rightarrow$ EX (newer data)
 \end{frame}
 
 \begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
