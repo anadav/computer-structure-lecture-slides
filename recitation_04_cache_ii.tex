@@ -554,9 +554,10 @@ Design a hardware prefetch system to improve L1 hit rate.
 \begin{itemize}
     \item Use a stride prefetch algorithm (detects sequential access pattern)
     \item Each cache line holds \textcolor{blue!70!black}{\textbf{4 array elements}} ($\frac{16 \text{ bytes}}{4 \text{ bytes}} = 4$ elements)
-    \item On every access to line $n$, generate a prefetch request for line \textcolor{red!70!black}{\textbf{$n+8$}}
-    \item \textbf{Why $n+8$?} Because accessing 4 elements per line takes $4 \times 1 = 4$ cycles, so we need to prefetch $\frac{32}{4} = 8$ lines ahead
-    \item This ensures data arrives in cache with appropriate timing before required by the program
+    \item Accessing 4 elements per line takes $4 \times 1 = 4$ cycles
+    \item To cover the 32-cycle memory latency, we need to prefetch $\frac{32}{4} = 8$ lines ahead
+    \item Therefore: On every access to line $n$, generate a prefetch request for line \textcolor{red!70!black}{\textbf{$n+8$}}
+    \item This ensures data arrives in cache just in time when needed
 \end{itemize}
 \end{frame}
 
