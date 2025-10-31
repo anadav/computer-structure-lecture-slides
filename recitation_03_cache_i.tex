@@ -489,7 +489,9 @@ Each set has 2 possible locations\\
 
 \begin{frame}[fragile]{2-Way Set Associative Organization}
 \begin{center}
-\begin{tikzpicture}[scale=0.8, transform shape]
+\begin{tikzpicture}[scale=0.8, transform shape,
+    every tag node/.style={tagcell},
+    every data node/.style={cellstyle}]
 
 % Address bits at top - shifted to the right
 \node[tagbox] at (2,0) (tag) {Tag};
@@ -509,14 +511,16 @@ Each set has 2 possible locations\\
 
 % Way 0 Tag array - using for loop (create first to align demux)
 \coordinate (tag0_start) at ($(way0base) + (2.5,0.5)$);
+\begin{scope}[every node/.style={tagcell}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[tagcell, anchor=north] at (tag0_start) (tag0_\i) {\scriptsize Tag};
+        \node[anchor=north] at (tag0_start) (tag0_\i) {\scriptsize Tag};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[tagcell, below=0cm of tag0_\prev.south, anchor=north] (tag0_\i) {};
+        \node[below=0cm of tag0_\prev.south, anchor=north] (tag0_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 0 decoder (demux) - aligned with first tag box using rpin 1, further left
 \node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
@@ -525,33 +529,37 @@ Each set has 2 possible locations\\
 
 % Way 0 Data array - using for loop, positioned relative to tag array
 \coordinate (data0_start) at ($(tag0_0.east) + (0.8,0)$);
+\begin{scope}[every node/.style={cellstyle}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[cellstyle, anchor=west] at (data0_start) (data0_\i) {\scriptsize Data};
+        \node[anchor=west] at (data0_start) (data0_\i) {\scriptsize Data};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[cellstyle, below=0cm of data0_\prev.south, anchor=north] (data0_\i) {};
+        \node[below=0cm of data0_\prev.south, anchor=north] (data0_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 0 comparator - using muxdemux rotated 270 degrees
 \node[muxdemux, muxdemux def={Lh=0.8, Rh=0.4, NL=2, NB=1, w=0.7},
       external pins width=0, fill=green!30, rotate=270] at ([xshift=1.5cm, yshift=-0.5cm] tag0_3.south west) (comp0) {};
-\node[font=\fontsize{6}{6}\selectfont, rotate=90] at (comp0.center) {=};
+\node[font=\fontsize{8}{8}\selectfont] at (comp0.center) {=};
 
 % Way 0 label
 \node[above=5mm of tag0_0.north] (way0label) {\textbf{Way 0}};
 
 % Way 1 Tag array - using for loop (create first to align demux)
 \coordinate (tag1_start) at ($(way1base) + (2.5,0.5)$);
+\begin{scope}[every node/.style={tagcell}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[tagcell, anchor=north] at (tag1_start) (tag1_\i) {\scriptsize Tag};
+        \node[anchor=north] at (tag1_start) (tag1_\i) {\scriptsize Tag};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[tagcell, below=0cm of tag1_\prev.south, anchor=north] (tag1_\i) {};
+        \node[below=0cm of tag1_\prev.south, anchor=north] (tag1_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 1 decoder (demux) - aligned with first tag box using rpin 1, further left
 \node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
@@ -560,19 +568,21 @@ Each set has 2 possible locations\\
 
 % Way 1 Data array - using for loop, positioned relative to tag array
 \coordinate (data1_start) at ($(tag1_0.east) + (0.8,0)$);
+\begin{scope}[every node/.style={cellstyle}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[cellstyle, anchor=west] at (data1_start) (data1_\i) {\scriptsize Data};
+        \node[anchor=west] at (data1_start) (data1_\i) {\scriptsize Data};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[cellstyle, below=0cm of data1_\prev.south, anchor=north] (data1_\i) {};
+        \node[below=0cm of data1_\prev.south, anchor=north] (data1_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 1 comparator - using muxdemux rotated 270 degrees (matching Way 0)
 \node[muxdemux, muxdemux def={Lh=0.8, Rh=0.4, NL=2, NB=1, w=0.7},
       external pins width=0, fill=green!30, rotate=270] at ([xshift=1.5cm, yshift=-0.5cm] tag1_3.south west) (comp1) {};
-\node[font=\fontsize{6}{6}\selectfont, rotate=90] at (comp1.center) {=};
+\node[font=\fontsize{8}{8}\selectfont] at (comp1.center) {=};
 
 % Way 1 label
 \node[above=5mm of tag1_0.north] (way1label) {\textbf{Way 1}};
@@ -1410,14 +1420,16 @@ for (int i=0; i<1024; i++)
 
 % Way 0 Tag array - using for loop (create first to align demux)
 \coordinate (tag0_start) at ($(way0base) + (2.5,0.5)$);
+\begin{scope}[every node/.style={tagcell}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[tagcell, anchor=north] at (tag0_start) (tag0_\i) {\scriptsize Tag};
+        \node[anchor=north] at (tag0_start) (tag0_\i) {\scriptsize Tag};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[tagcell, below=0cm of tag0_\prev.south, anchor=north] (tag0_\i) {};
+        \node[below=0cm of tag0_\prev.south, anchor=north] (tag0_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 0 decoder (demux) - aligned with first tag box using rpin 1, further left
 \node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
@@ -1426,14 +1438,16 @@ for (int i=0; i<1024; i++)
 
 % Way 0 Data array - using for loop, positioned relative to tag array
 \coordinate (data0_start) at ($(tag0_0.east) + (0.8,0)$);
+\begin{scope}[every node/.style={cellstyle}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[cellstyle, anchor=west] at (data0_start) (data0_\i) {\scriptsize Data};
+        \node[anchor=west] at (data0_start) (data0_\i) {\scriptsize Data};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[cellstyle, below=0cm of data0_\prev.south, anchor=north] (data0_\i) {};
+        \node[below=0cm of data0_\prev.south, anchor=north] (data0_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 0 comparator - using muxdemux rotated 90 degrees
 \node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
@@ -1445,14 +1459,16 @@ for (int i=0; i<1024; i++)
 
 % Way 1 Tag array - using for loop (create first to align demux)
 \coordinate (tag1_start) at ($(way1base) + (2.5,0.5)$);
+\begin{scope}[every node/.style={tagcell}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[tagcell, anchor=north] at (tag1_start) (tag1_\i) {\scriptsize Tag};
+        \node[anchor=north] at (tag1_start) (tag1_\i) {\scriptsize Tag};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[tagcell, below=0cm of tag1_\prev.south, anchor=north] (tag1_\i) {};
+        \node[below=0cm of tag1_\prev.south, anchor=north] (tag1_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 1 decoder (demux) - aligned with first tag box using rpin 1, further left
 \node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
@@ -1461,14 +1477,16 @@ for (int i=0; i<1024; i++)
 
 % Way 1 Data array - using for loop, positioned relative to tag array
 \coordinate (data1_start) at ($(tag1_0.east) + (0.8,0)$);
+\begin{scope}[every node/.style={cellstyle}]
 \foreach \i in {0,...,3} {
     \ifnum\i=0
-        \node[cellstyle, anchor=west] at (data1_start) (data1_\i) {\scriptsize Data};
+        \node[anchor=west] at (data1_start) (data1_\i) {\scriptsize Data};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[cellstyle, below=0cm of data1_\prev.south, anchor=north] (data1_\i) {};
+        \node[below=0cm of data1_\prev.south, anchor=north] (data1_\i) {};
     \fi
 }
+\end{scope}
 
 % Way 1 comparator - using muxdemux rotated 90 degrees
 \node[muxdemux, muxdemux def={Lh=0.3, Rh=0.6, NL=2, NB=1, w=0.5},
