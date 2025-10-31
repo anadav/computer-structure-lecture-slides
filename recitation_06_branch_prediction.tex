@@ -198,11 +198,12 @@
 
       % Data Memory to L4
       \draw[arrow] (dmem.rpin 1) -- (L4.west |- wb_mux.lpin 1);
-      \draw[arrow] ([xshift=2mm]L3.east |- dmem.lpin 2) |- (L4.west |- wb_mux.lpin 2);
+      \node[data_connector] at ([xshift=2mm]L3.east |- dmem.rpin 2) (dmem_conn2) {};
+      \draw[arrow] (dmem_conn2) |- (L4.west |- wb_mux.lpin 2);
 
       % L4 to WB Mux
-      \draw[arrow] (L4.east |- dmem.rpin 1) -- (wb_mux.blpin 1);
-      \draw[arrow] (L4.east) -- ++(0.2,0) |- (wb_mux.blpin 2);
+      \draw[arrow] (L4.east |- dmem.rpin 1) -- (wb_mux.lpin 1);
+      \draw[arrow] (L4.east |- wb_mux.lpin 2) -- (wb_mux.lpin 2);
 
       % WB Mux output with feedback to Register File
       \draw[arrow] (wb_mux.brpin 1) -- ++(0.5,0)
