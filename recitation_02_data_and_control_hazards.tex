@@ -836,13 +836,11 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 
 \begin{lstlisting}[language=C, basicstyle=\ttfamily\scriptsize]
 // Priority 1: MEM->EX (most recent)
-if (EX/MEM.RegWrite && EX/MEM.Rd != 0 &&
-    EX/MEM.Rd == ID/EX.Rs)
+if (EX/MEM.RegWrite && EX/MEM.Rd != 0 && EX/MEM.Rd == ID/EX.Rs)
     ForwardA = 10;  // Forward from EX/MEM
 
 // Priority 2: WB->EX
-else if (MEM/WB.RegWrite && MEM/WB.Rd != 0 &&
-         MEM/WB.Rd == ID/EX.Rs)
+else if (MEM/WB.RegWrite && MEM/WB.Rd != 0 && MEM/WB.Rd == ID/EX.Rs)
     ForwardA = 01;  // Forward from MEM/WB
 
 // No forwarding needed
