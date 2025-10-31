@@ -696,37 +696,6 @@ Loop1 & 2 & 2 & & & & & \\
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Stalling to Resolve Data Hazard}
-\centering
-\pipelineprocessor[true]{false}{false}
-
-\begin{tikzpicture}[remember picture, overlay,
-    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize},
-    bubble_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\scriptsize, inner sep=2pt, fill=gray!20}
-]
-    % Instruction boxes aligned with stage labels from the pipeline
-    \node[instr_box, fill=orange!20, minimum width=2.8cm] (sub_instr)
-          at ($(ID_label) + (0, -6.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
-
-    % Bubbles (stalls) in EX and MEM - same height as SUB
-    \node[bubble_box]
-          at ($(EX_label) + (0, -6.5)$) {BUBBLE};
-
-    \node[bubble_box]
-          at ($(MEM_label) + (0, -6.5)$) {BUBBLE};
-
-    % ADD instruction - aligned to right edge of page at same height as SUB
-    \node[instr_box, fill=green!20, minimum width=2.8cm, anchor=east]
-          at ($(current page.east |- sub_instr) + (-0.3, 0)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
-
-    % Solution text in bottom left
-    \node[draw, thick, fill=yellow!20, align=left, font=\small,
-          anchor=south west, inner sep=4pt, text width=4cm]
-          at ($(current page.south west) + (0.2, 1)$)
-          {\textbf{Solution:} Insert stalls (bubbles) until ADD writes \$1 in WB stage.};
-\end{tikzpicture}
-\end{frame}
-
 \begin{frame}{Understanding RAW Data Hazards}
 \textbf{What is a RAW (Read After Write) Hazard?}
 
@@ -755,6 +724,87 @@ A data hazard occurs when an instruction depends on the result of a previous ins
     \item \textbf{Stalling:} Insert bubbles to wait for the result
     \item \textbf{Forwarding (Bypassing):} Forward result directly from pipeline stages
 \end{enumerate}
+\end{frame}
+
+\begin{frame}{Stalling to Resolve Data Hazard}
+\centering
+\pipelineprocessor[true]{false}{false}
+
+\begin{tikzpicture}[remember picture, overlay,
+    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize},
+    bubble_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\scriptsize, inner sep=2pt, fill=gray!20}
+]
+    % Instruction boxes aligned with stage labels from the pipeline
+    \node[instr_box, fill=orange!20, minimum width=2.8cm] (sub_instr)
+          at ($(ID_label) + (0, -6.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
+
+    % Bubbles (stalls) in EX and MEM - same height as SUB
+    \node[bubble_box]
+          at ($(EX_label) + (0, -6.5)$) {BUBBLE};
+
+    \node[bubble_box]
+          at ($(MEM_label) + (0, -6.5)$) {BUBBLE};
+
+    % ADD instruction - aligned to right edge of page at same height as SUB
+    \node[instr_box, fill=green!20, minimum width=2.8cm, anchor=east] (add_instr)
+          at ($(current page.east |- sub_instr) + (-0.3, 0)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
+
+    % Solution text in bottom left
+    \node[draw, thick, fill=yellow!20, align=left, font=\small,
+          anchor=south west, inner sep=4pt, text width=4cm]
+          at ($(current page.south west) + (0.2, 1)$)
+          {\textbf{Solution:} Insert stalls (bubbles) until ADD writes \$1 in WB stage.};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Forwarding: MEM to EX}
+\centering
+\pipelineprocessor[true]{true}{false}
+
+\begin{tikzpicture}[remember picture, overlay,
+    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize}
+]
+    % ADD in MEM stage, SUB in EX stage
+    \node[instr_box, fill=green!20, minimum width=2.8cm]
+          at ($(MEM_label) + (0, -6.5)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
+
+    \node[instr_box, fill=orange!20, minimum width=2.8cm] (sub_instr)
+          at ($(EX_label) + (0, -6.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
+
+    % Blue forwarding line from ADD to SUB (MEM to EX)
+    \draw[->, very thick, blue] ($(MEM_label) + (0, -6.2)$) -- ($(EX_label) + (0, -6.2)$);
+
+    % Solution text in bottom left
+    \node[draw, thick, fill=yellow!20, align=left, font=\small,
+          anchor=south west, inner sep=4pt, text width=4.5cm]
+          at ($(current page.south west) + (0.2, 1)$)
+          {\textbf{MEM $\rightarrow$ EX Forwarding:} Result forwarded from MEM stage to EX stage (blue path).};
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Forwarding: WB to EX}
+\centering
+\pipelineprocessor[true]{true}{false}
+
+\begin{tikzpicture}[remember picture, overlay,
+    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize}
+]
+    % ADD in WB stage, SUB in EX stage
+    \node[instr_box, fill=green!20, minimum width=2.8cm, anchor=east]
+          at ($(current page.east |- EX_label) + (-0.3, -6.5)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
+
+    \node[instr_box, fill=orange!20, minimum width=2.8cm]
+          at ($(EX_label) + (0, -6.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
+
+    % Green forwarding line from ADD to SUB (WB to EX)
+    \draw[->, very thick, green] ($(WB_label) + (0, -6.2)$) -- ($(EX_label) + (0, -6.2)$);
+
+    % Solution text in bottom left
+    \node[draw, thick, fill=yellow!20, align=left, font=\small,
+          anchor=south west, inner sep=4pt, text width=4.5cm]
+          at ($(current page.south west) + (0.2, 1)$)
+          {\textbf{WB $\rightarrow$ EX Forwarding:} Result forwarded from WB stage to EX stage (green path).};
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
