@@ -808,6 +808,55 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{tikzpicture}
 \end{frame}
 
+\begin{frame}{Forwarding Unit: Inputs \& Outputs}
+\textbf{Inputs:}
+\begin{itemize}
+    \item \textbf{ID/EX.Rs, ID/EX.Rt:} Source register numbers in EX stage
+    \item \textbf{EX/MEM.Rd:} Destination register from MEM stage
+    \item \textbf{MEM/WB.Rd:} Destination register from WB stage
+    \item \textbf{EX/MEM.RegWrite:} Will MEM stage write to register?
+    \item \textbf{MEM/WB.RegWrite:} Will WB stage write to register?
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Outputs:}
+\begin{itemize}
+    \item \textbf{ForwardA, ForwardB:} Mux control signals for ALU inputs
+    \begin{itemize}
+        \item 00: Use value from Register File (no forwarding)
+        \item 10: Forward from EX/MEM (MEM $\rightarrow$ EX)
+        \item 01: Forward from MEM/WB (WB $\rightarrow$ EX)
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Forwarding Unit: Logic}
+\textbf{ForwardA Logic} (similar for ForwardB with Rt):
+
+\vspace{0.3cm}
+\textbf{Priority 1 - MEM $\rightarrow$ EX Forwarding:}
+\begin{itemize}
+    \item If (EX/MEM.RegWrite = 1) AND (EX/MEM.Rd $\neq$ 0) AND (EX/MEM.Rd = ID/EX.Rs)
+    \item Then \textbf{ForwardA = 10}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Priority 2 - WB $\rightarrow$ EX Forwarding:}
+\begin{itemize}
+    \item Else if (MEM/WB.RegWrite = 1) AND (MEM/WB.Rd $\neq$ 0) AND (MEM/WB.Rd = ID/EX.Rs)
+    \item Then \textbf{ForwardA = 01}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{No Forwarding:}
+\begin{itemize}
+    \item Else \textbf{ForwardA = 00}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Note:} MEM $\rightarrow$ EX has priority over WB $\rightarrow$ EX (newer data)
+\end{frame}
+
 \begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
 \centering
 \pipelineprocessor[false]{false}{true}  % No stage labels, no forwarding, show HDU
