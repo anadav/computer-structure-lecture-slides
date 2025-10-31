@@ -482,7 +482,7 @@ Each set has 2 possible locations\\
     dasharrow/.style={dashed, ->, >=stealth},
     % OR gate with custom sizing (rotated 90 degrees counter-clockwise)
     orgatestyle/.style={or gate US, draw, logic gate inputs=nn, anchor=center,
-                       minimum width=1cm, minimum height=0.8cm, rotate=90},
+                       minimum width=0.5cm, minimum height=0.5cm, rotate=270},
     % Junction dot style
     junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt}
 }
@@ -599,11 +599,12 @@ Each set has 2 possible locations\\
 \node[orgatestyle] at ($(comp0)!0.5!(comp1) + (0,-1.5)$) (orgate) {};
 
 % MUX - using muxdemux, rotated 90 degrees, positioned relative to data arrays
-\node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NB=1, w=1},
-      external pins width=0, fill=gray!20, rotate=270] at ($(data1_3.south east) + (0.3,-1.8)$) (mux) {MUX};
+\node[muxdemux, muxdemux def={Lh=2, Rh=1, NL=2, NB=2, w=1},
+      external pins width=0, fill=gray!20, rotate=270, font=\scriptsize, anchor=lpin 1]
+      at ([yshift=-1.2cm]data1_3.south) (mux) {\rotatebox{90}{MUX}};
 
 % Output labels
-\node[below=0.8cm of orgate] (hitmiss) {Hit/Miss};
+\node[below=0.3cm of orgate.out] (hitmiss) {Hit/Miss};
 \node[below=0.5cm of mux.rpin 1] (dataout) {Data Out};
 
 % Arrows from address bits to decoders with junction - initial line has no arrow
@@ -646,18 +647,19 @@ Each set has 2 possible locations\\
 \draw[arrow] (tag1_1.east) -| (comp1.lpin 2);
 
 % Data array to MUX connections
-\draw[arrow] (data0_3.south) |- ([yshift=8mm]mux.lpin 1) -- (mux.lpin 1);
-\draw[arrow] (data1_3.south) |- ([yshift=8mm]mux.lpin 2) -- (mux.lpin 2);
+\draw[arrow] (data1_3.south) -- (mux.lpin 1);
+\draw[arrow] (data0_3.south) |- ([yshift=3mm]mux.lpin 2) -- (mux.lpin 2);
 
 % Comparator outputs to OR gate
-\draw[arrow] (comp0.rpin 1) |- (orgate.input 1);
-\draw[arrow] (comp1.rpin 1) |- (orgate.input 2);
+\draw[arrow] (comp0.rpin 1) |- ([yshift=3mm]orgate.input 1) -- (orgate.input 1);
+\draw[arrow] (comp1.rpin 1) |- ([yshift=3mm]orgate.input 2) -- (orgate.input 2);
 
 % OR gate to Hit/Miss
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select (using comp1 output)
-\draw[arrow] (comp1.rpin 1) |- (mux.bpin 1);
+\draw[arrow] (comp0.rpin 1) |- (mux.bpin 1);
+\draw[arrow] (comp1.rpin 1) |- (mux.bpin 2);
 
 % MUX to data out
 \draw[arrow] (mux.rpin 1) -- (dataout.north);
@@ -1505,7 +1507,7 @@ for (int i=0; i<1024; i++)
 \end{pgfonlayer}
 
 % OR gate - positioned between comparators
-\node[orgatestyle] at ($(comp0)!0.5!(comp1) + (0,-1.5)$) (orgate) {};
+\node[orgatestyle] at ($(comp0)!0.5!(comp1) + (0,-1)$) (orgate) {};
 
 % MUX - using muxdemux, rotated 90 degrees, positioned relative to data arrays
 \node[muxdemux, muxdemux def={Lh=0.5, Rh=1, NL=2, NB=1, w=0.8},
