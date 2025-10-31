@@ -1032,26 +1032,36 @@ What happens when we need to write to data not in cache?
 \end{frame}
 
 \begin{frame}{Example 1: Solution Setup}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
 \textbf{Address Analysis:}
 \begin{itemize}
     \item Block size = 4 bytes $\rightarrow$ 2 offset bits
     \item Addresses 0-3 $\rightarrow$ block 0, 4-7 $\rightarrow$ block 1, etc.
     \item Set = $\lfloor$Address / 4$\rfloor$ mod 4
 \end{itemize}
+\end{column}
 
-\begin{center}
+\begin{column}{0.48\textwidth}
+\centering
+\footnotesize
 \begin{tabular}{|c|c|c|c|}
 \hline
-\textbf{Address} & \textbf{Block\#} & \textbf{Tag} & \textbf{Set} \\
+\textbf{Addr} & \textbf{Block} & \textbf{Tag} & \textbf{Set} \\
 \hline
 5 & 1 & 0 & 1 \\
 7 & 1 & 0 & 1 \\
 1 & 0 & 0 & 0 \\
 4 & 1 & 0 & 1 \\
 36 & 9 & 1 & 1 \\
+8 & 2 & 0 & 2 \\
+6 & 1 & 0 & 1 \\
+12 & 3 & 0 & 3 \\
+68 & 17 & 2 & 1 \\
 \hline
 \end{tabular}
-\end{center}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Example 1: Trace Table}
