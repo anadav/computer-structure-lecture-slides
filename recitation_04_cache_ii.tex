@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds, decorations.pathreplacing}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -559,14 +559,78 @@ Design a hardware prefetch system to improve L1 hit rate.
 
 \begin{frame}{Question 5: Prefetch Timing Diagram}
 \begin{center}
-\begin{tikzpicture}[scale=0.6]
-    % Placeholder for timing diagram
-    \node[draw, rectangle, text width=12cm, align=center] (note) {
-        [Timing Diagram Placeholder]\\
-        Shows prefetch requests being issued 32 cycles ahead\\
-        of actual data needs, with pipeline of requests\\
-        ensuring data is available when needed
-    };
+\begin{tikzpicture}[
+    scale=1,
+    instbox/.style={rectangle, draw, minimum height=0.5cm, minimum width=0.5cm, font=\tiny},
+    cache/.style={rectangle, draw, fill=green!30, minimum height=0.8cm, minimum width=0.8cm, font=\scriptsize\bfseries},
+    prefetch/.style={rectangle, draw, fill=yellow!50, minimum height=0.8cm, minimum width=0.8cm, font=\scriptsize\bfseries}
+]
+    % Timeline axis - shorter to fit inside figure
+    \draw[->, thick] (0,0) -- (13,0);
+
+    % Instruction label - aligned with instruction boxes
+    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, 0) {Instruction};
+
+    % Instruction tick marks (1-4, then ..., then cycles 32-40)
+    \foreach \i in {1,2,3,4} {
+        \node[above, font=\tiny] at (\i*0.8, 0.3) {\i};
+        \draw (\i*0.8, -0.2) -- (\i*0.8, 0.2);
+    }
+
+    % Dots separator
+    \node[font=\normalsize\bfseries] at (4.6, 0) {\dots};
+
+    % Cycle numbers 32-40 with tick marks
+    \foreach \i/\addr in {0/32, 1/33, 2/34, 3/35, 4/36, 5/37, 6/38, 7/39, 8/40} {
+        \node[below, font=\tiny] at (6+\i*0.8, -0.3) {\addr};
+        \draw (6+\i*0.8, -0.2) -- (6+\i*0.8, 0.2);
+    }
+
+    % Instruction boxes (0-8) positioned above the timeline, aligned with cycle numbers
+    \node[instbox] at (6, 0.6) {\textbf{0}};
+    \node[instbox] at (6.8, 0.6) {\textbf{1}};
+    \node[instbox] at (7.6, 0.6) {\textbf{2}};
+    \node[instbox] at (8.4, 0.6) {\textbf{3}};
+    \node[instbox] at (9.2, 0.6) {\textbf{4}};
+    \node[instbox] at (10, 0.6) {\textbf{5}};
+    \node[instbox] at (10.8, 0.6) {\textbf{6}};
+    \node[instbox] at (11.6, 0.6) {\textbf{7}};
+    \node[instbox] at (12.4, 0.6) {\textbf{8}};
+
+    % Line groupings with braces (not mirrored = upright) - above the instruction boxes
+    \draw[decorate, decoration={brace, amplitude=5pt}] (5.75,1.0) -- (8.65,1.0);
+    \node[above, font=\scriptsize\bfseries] at (7.2, 1.1) {Line 0};
+
+    \draw[decorate, decoration={brace, amplitude=5pt}] (8.95,1.0) -- (11.85,1.0);
+    \node[above, font=\scriptsize\bfseries] at (10.4, 1.1) {Line 1};
+
+    % Prefetch Request row - closer to timeline
+    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, -1.2) {Prefetch\\Request};
+    \node[prefetch] (p1) at (1, -1.2) {0:3};
+    \node[below, font=\tiny] at (p1.south) {Line0};
+
+    \node[prefetch] (p2) at (2.6, -1.2) {4:7};
+    \node[below, font=\tiny] at (p2.south) {Line1};
+
+    \node[font=\large\bfseries] at (4.3, -1.2) {\dots};
+
+    % Aligned to cycle 32 (x=6)
+    \node[prefetch] (p3) at (7.2, -1.2) {32:35};
+    \node[below, font=\tiny] at (p3.south) {Line8};
+
+    % Aligned to cycle 36 (x=9.2)
+    \node[prefetch] (p4) at (10.4, -1.2) {36:39};
+    \node[below, font=\tiny] at (p4.south) {Line9};
+
+    % Aligned to cycle 40 (x=12.4)
+    \node[prefetch] (p5) at (12.4, -1.2) {40:43};
+    \node[below, font=\tiny] at (p5.south) {Line9};
+
+    % Data Valid row - closer to Prefetch Request
+    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, -2.5) {Data\\Valid};
+    \node[cache] at (7.2, -2.5) {0:3};
+    \node[cache] at (10.4, -2.5) {4:7};
+
 \end{tikzpicture}
 \end{center}
 \end{frame}
