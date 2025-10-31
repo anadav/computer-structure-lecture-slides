@@ -1025,27 +1025,108 @@ loop2:
 \end{itemize}
 
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-    % Pipeline stages
-    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=blue!20, align=center] (if) at (0, 0) {IF\\[5pt]Instruction\\Memory};
-    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=green!20, align=center] (id) at (2, 0) {ID\\[5pt]BTB\\Read\\[5pt]Register\\File};
-    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=yellow!20, align=center] (ex) at (4, 0) {EX\\[5pt]ALU};
-    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=orange!20, align=center] (mem) at (6, 0) {MEM\\[5pt]Data\\Memory};
-    \node[draw, rectangle, minimum width=1.5cm, minimum height=3cm, fill=red!20, align=center] (wb) at (8, 0) {WB};
-    
-    % BTB
-    \node[draw, rectangle, fill=cyan!20] (btb) at (2, -2.5) {BTB};
-    
-    % Connections
-    \draw[->] (if) -- (id);
-    \draw[->] (id) -- (ex);
-    \draw[->] (ex) -- (mem);
-    \draw[->] (mem) -- (wb);
-    \draw[<->, dashed] (id) -- (btb);
-    
-    % Feedback path
-    \draw[->, thick, red] (ex.south) -- ++(0, -1) -- ++(-4, 0) -- ++(0, 1.5) node[above] {Flush} -- (if.south);
-\end{tikzpicture}
+  \scalebox{0.7}{%
+  \begin{tikzpicture}[
+    stage/.style={draw=blue!40, line width=1pt, minimum height=1cm, minimum width=1.5cm, fill=blue!10, font=\large, text=blue!80, rounded corners=2pt},
+    latch/.style={draw=black!70, thick, fill=yellow!30, minimum width=0.25cm, minimum height=4.5cm},
+    component/.style={draw=black!80, line width=1pt, fill=cyan!20, font=\small},
+    btb/.style={draw=black!80, line width=1.5pt, minimum height=1cm, minimum width=1.2cm, fill=green!40, font=\small\bfseries, align=center},
+    arrow/.style={->, >=stealth, thick},
+    data_connector/.style={circle, fill, inner sep=1.2pt}
+  ]
+
+    % Instruction Memory - starting point (1.5x bigger)
+    \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=1, NR=1},
+          external pins width=0, fill=cyan!20] (imem) {};
+    \node[font=\small, align=center] at (imem.center) {Instruction\\Memory};
+
+    % Latch L1 - to the right of Instruction Memory
+    \node[latch, anchor=west] at ([xshift=5mm]imem.rpin 1) (L1) {};
+
+    % Register File - to the right of L1 (1.5x bigger)
+    \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=4, NR=2},
+          external pins width=0, fill=cyan!20, anchor=lpin 2] at ([xshift=6mm]L1.east |- imem.rpin 1) (regfile) {};
+    \node[font=\small, align=center] at (regfile.center) {Register\\File};
+
+    % Latch L2 - to the right of Register File
+    \node[latch, anchor=west] at ([xshift=5mm]regfile.rpin 1 |- L1) (L2) {};
+
+    % ALU - to the right of L2 (1.5x bigger)
+    \node[muxdemux, muxdemux def={Lh=7.5, NL=2, Rh=3, NR=1, NB=2, NT=1, w=3, inset w=1.5, inset Lh=3, inset Rh=0, square pins=1},
+          external pins width=0, scale=0.4, fill=cyan!20, anchor=lpin 1] at ([xshift=10mm]L2.east |- regfile.rpin 1) (alu) {};
+    \node[rotate=90, font=\small] at ([xshift=1mm]alu.center) {ALU};
+
+    % Latch L3 - to the right of ALU
+    \node[latch, anchor=west] at ([xshift=5mm]alu.east |- L1) (L3) {};
+
+    % Data Memory - to the right of L3 (1.5x bigger)
+    \node[muxdemux, muxdemux def={Lh=3, Rh=3, w=3, NL=3, NR=1},
+          external pins width=0, fill=cyan!20, anchor=lpin 1] at ([xshift=5mm]L3.east |- alu.rpin 1) (dmem) {};
+    \node[font=\small, align=center] at (dmem.center) {Data\\Memory};
+
+    % Latch L4 - to the right of Data Memory
+    \node[latch, anchor=west] at ([xshift=5mm]dmem.rpin 1 |- L1) (L4) {};
+
+    % WB Mux - to the right of L4 (1.5x bigger)
+    \node[muxdemux, muxdemux def={Lh=6, Rh=3, NL=2, NR=1, w=1.5},
+          external pins width=0, scale=0.6, fill=cyan!20, anchor=lpin 1] at ([xshift=8mm]L4.east |- dmem.rpin 1) (wb_mux) {};
+
+    % Pipeline stages at top - north aligned with latches
+
+    \node[stage, anchor=north] (id_stage) at ($(L1.north)!0.5!(L2.north)$) {ID};
+    \node[stage, anchor=north] (if_stage) at (id_stage.north -| imem) {IF};
+    \node[stage, anchor=north] (ex_stage) at ($(L2.north)!0.5!(L3.north)$) {EX};
+    \node[stage, anchor=north] (mem_stage) at ($(L3.north)!0.5!(L4.north)$) {MEM};
+    \node[stage, anchor=north] (wb_stage) at (mem_stage.north -| wb_mux) {WB};
+
+    % BTB - positioned below Register File (ID stage)
+    \node[btb, below=0.2cm of regfile] (btb) {BTB\\Read};
+
+    % Main wiring
+    % IF to L1
+    \draw[arrow] (imem.east) -- (L1.west);
+
+    % L1 to Register File
+    \draw[arrow] (L1.east) -- ++(0.3,0) |- (regfile.lpin 1);
+    \draw[arrow] (L1.east) -- (regfile.lpin 2);
+
+    % Register File to L2f
+    \draw[arrow] (regfile.rpin 1) -- (L2.west |- alu.lpin 1);
+    \draw[arrow] (regfile.rpin 2) -- (L2.west |- regfile.rpin 2);
+
+    % L2 to ALU
+    \draw[arrow] (L2.east |- regfile.rpin 1) -- (alu.lpin 1);
+    \draw[arrow] (L2.east |- regfile.rpin 2) -- ++(0.3,0) |- (alu.lpin 2);
+
+    % L2 to L3
+    \node[data_connector] at ([xshift=3mm]L2.east |- alu.lpin 2) (alu_conn) {};
+    \draw[arrow] (alu_conn) |- (L3.west |- dmem.lpin 3);
+    %\draw[arrow] (L2.east |- alu.lpin 1) -- (L3.west);
+
+    % ALU to L3
+    \draw[arrow] (alu.rpin 1) -- (L3.west |- alu.rpin 1);
+
+    % L3 to Data Memory
+    \draw[arrow] (L3.east |- alu.rpin 1) -- (dmem.lpin 1);
+    \node[data_connector] at ([xshift=2mm]L3.east |- alu.rpin 1) (dmem_conn) {};
+    \draw[arrow] (dmem_conn) |- (dmem.lpin 2);
+    \draw[arrow] (L3.east |- dmem.lpin 3) -- (dmem.lpin 3);
+
+    % Data Memory to L4
+    \draw[arrow] (dmem.rpin 1) -- (L4.west |- wb_mux.lpin 1);
+    \draw[arrow] ([xshift=2mm]L3.east |- dmem.lpin 2) |- (L4.west |- wb_mux.lpin 2);
+
+    % L4 to WB Mux
+    \draw[arrow] (L4.east |- dmem.rpin 1) -- (wb_mux.lpin 1);
+    \draw[arrow] (L4.east |- wb_mux.lpin 2) -- (wb_mux.lpin 2);
+
+    % WB Mux output with feedback to Register File
+    \draw[arrow] (wb_mux.brpin 1) -- ++(0.5,0)
+                     |- ([yshift=-3mm,xshift=-3mm]L1.south -| regfile.west)
+                     |- (regfile.lpin 4);
+
+  \end{tikzpicture}
+  }
 \end{center}
 
 \textbf{Question:} How many clock cycles are wasted for correct prediction vs. misprediction?
