@@ -545,19 +545,29 @@ Design a hardware prefetch system to improve L1 hit rate.
 
 \begin{itemize}
     \item An efficient prefetch system should issue a cache line fetch request with timing such that when the demand request arrives, the line is already in cache
-    \item In our case, 32 clock cycles are needed to bring a line to cache
-    \item Therefore, the prefetch system should be timed to generate a request 32 clock cycles before the program requests that address
+    \item In our case, \textcolor{blue!70!black}{\textbf{32 clock cycles}} are needed to bring a line to cache
+    \item Therefore, the prefetch system should be timed to generate a request \textcolor{blue!70!black}{\textbf{32 clock cycles before}} the program requests that address
 \end{itemize}
 
-\textbf{Algorithm:}
+\vspace{0.3cm}
+\textbf{Prefetch Algorithm:}
 \begin{itemize}
-    \item Use a stride algorithm with stride of 4
-    \item Since each line has 4 array elements, on every access to line n, generate a prefetch request for line n+8
+    \item Use a stride prefetch algorithm (detects sequential access pattern)
+    \item Each cache line holds \textcolor{blue!70!black}{\textbf{4 array elements}} ($\frac{16 \text{ bytes}}{4 \text{ bytes}} = 4$ elements)
+    \item On every access to line $n$, generate a prefetch request for line \textcolor{red!70!black}{\textbf{$n+8$}}
+    \item \textbf{Why $n+8$?} Because accessing 4 elements per line takes $4 \times 1 = 4$ cycles, so we need to prefetch $\frac{32}{4} = 8$ lines ahead
     \item This ensures data arrives in cache with appropriate timing before required by the program
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Question 5: Prefetch Timing Diagram}
+\vspace{-0.2cm}
+\begin{itemize}
+    \item \textbf{Key insight:} Prefetch requests (yellow) are issued 32 cycles before data is needed
+    \item When instructions 0-3 execute (cycles 32-35), data from Line0 is already valid (green)
+\end{itemize}
+
+\vspace{0.2cm}
 \begin{center}
 \begin{tikzpicture}[
     scale=1,
