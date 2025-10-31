@@ -885,45 +885,66 @@ then stall
 
 %% Slide: Software Scheduling to Avoid Load Hazards
 \begin{frame}[fragile]{Software Scheduling to Avoid Load Hazards}
-    Example: code for (assume all variables are in memory):
-    \begin{center}
-        \texttt{a = b + c;}\\
-        \texttt{d = e - f;}
-    \end{center}
-    
-    \begin{columns}
-        \column{0.5\textwidth}
-        \textbf{Slow code:}
-        \begin{verbatim}
-LW   Rb,b
-LW   Rc,c
-Stall
-ADD  Ra,Rb,Rc
-SW   a,Ra
-LW   Re,e
-LW   Rf,f
-Stall
-SUB  Rd,Re,Rf
-SW   d,Rd
-        \end{verbatim}
-        
-        \column{0.5\textwidth}
-        \textbf{Fast code:}
-        \begin{verbatim}
-LW   Rb,b
-LW   Rc,c
-LW   Re,e
-ADD  Ra,Rb,Rc
-LW   Rf,f
-SW   a,Ra
-SUB  Rd,Re,Rf
-SW   d,Rd
-        \end{verbatim}
-    \end{columns}
-    
-    \vspace{0.5cm}
-    \centering
-    \textit{Instruction order can be changed as long as the correctness is kept}
+    \begin{tikzpicture}[remember picture, overlay]
+        % Calculate base position
+        \coordinate (base) at ($(current page.north) + (0, -2.5)$);
+
+        % Example C code (left column)
+        \node[anchor=north west, align=left] (example) at ($(base) + (-5.5, 0)$) {
+            Example: code for (assume all\\
+            variables are in memory):
+        };
+        \node[anchor=north west, font=\ttfamily, align=left] (c_code) at ($(example.south west) + (0, -0.1)$) {
+            a = b + c;\\
+            d = e - f;
+        };
+
+        % Slow code column
+        \node[anchor=north west, align=left] (slow_title) at ($(base) + (-1.5, 0)$) {\textbf{Slow code}};
+        \draw (slow_title.south west) -- (slow_title.south east);
+
+        \node[anchor=north west, font=\small\ttfamily, align=left] (slow_code) at ($(slow_title.south west) + (0, -0.1)$) {
+            LW~~~\underline{Rb},b\\
+            LW~~~\underline{\textcolor{red}{Rc}},c\\
+            \textcolor{blue}{Stall}\\
+            ADD~~\underline{Ra},\underline{Rb},\underline{\textcolor{red}{Rc}}\\
+            \tikzmark{slow_sw1}SW~~~\underline{a},\underline{Ra}\\
+            \tikzmark{slow_re}LW~~~\underline{Re},e\\
+            LW~~~\underline{\textcolor{red}{Rf}},f\\
+            \textcolor{blue}{Stall}\\
+            SUB~~\underline{Rd},\underline{Re},\underline{\textcolor{red}{Rf}}\\
+            SW~~~\underline{d},\underline{Rd}
+        };
+
+        % Fast code column
+        \node[anchor=north west, align=left] (fast_title) at ($(base) + (2.5, 0)$) {\textbf{Fast code}};
+        \draw (fast_title.south west) -- (fast_title.south east);
+
+        \node[anchor=north west, font=\small\ttfamily, align=left] (fast_code) at ($(fast_title.south west) + (0, -0.1)$) {
+            LW~~~\underline{Rb},b\\
+            LW~~~\underline{Rc},c\\
+            \tikzmark{fast_re}LW~~~\textcolor{green!60!black}{\underline{Re},e}\\
+            ADD~~\underline{Ra},\underline{Rb},\underline{Rc}\\
+            LW~~~\underline{Rf},f\\
+            \tikzmark{fast_sw1}SW~~~\textcolor{green!60!black}{\underline{a},\underline{Ra}}\\
+            SUB~~\underline{Rd},\underline{Re},\underline{Rf}\\
+            SW~~~\underline{d},\underline{Rd}
+        };
+
+        % Arrows using tikzmark
+        \begin{scope}[overlay, remember picture]
+            % Arrow from slow LW Re,e to fast LW Re,e
+            \draw[->, thick] ($(pic cs:slow_re) + (2.2, 0.1)$) to[out=0, in=180] ($(pic cs:fast_re) + (-0.3, 0.1)$);
+
+            % Arrow from slow SW a,Ra to fast SW a,Ra
+            \draw[->, thick] ($(pic cs:slow_sw1) + (2.2, 0.1)$) to[out=0, in=180] ($(pic cs:fast_sw1) + (-0.3, 0.1)$);
+        \end{scope}
+
+        % Bottom text
+        \node[anchor=north, align=center] at ($(current page.south) + (0, 1.2)$) {
+            {\large Instruction order can be changed \underline{as long as} the correctness is kept}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}[label=control-hazard]{Control Hazard on Branches}
