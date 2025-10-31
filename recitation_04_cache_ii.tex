@@ -8,11 +8,21 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds, decorations.pathreplacing}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds, decorations.pathreplacing, patterns}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{xcolor}
 \usetheme{Madrid}
+
+% Define blocksize length for cache illustrations
+\newlength{\blocksize}
+\setlength{\blocksize}{0.3cm}
+
+% Define writeblock style for cache illustrations
+\tikzset{
+    writeblock/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize, pattern=grid, pattern color=#1},
+    writeblock/.default=blue
+}
 
 \title{Cache Memory II}
 \author{Computer Architecture 2340267}
@@ -45,12 +55,21 @@
 
 \begin{frame}{How to Choose Cache Size?}
 \begin{itemize}
-    \item On one hand, we want the cache to be as large as possible to improve the hit rate
-    \item On the other hand, when the cache is too large, it consumes more energy and access time can be significantly longer
+    \item On one hand, we want the cache to be as \textcolor{blue!70!black}{\textbf{large}} as possible to improve the hit rate
+    \item On the other hand, when the cache is too large:
+    \begin{itemize}
+        \item Consumes more energy
+        \item Access time can be significantly longer
+    \end{itemize}
 \end{itemize}
+
 \vspace{0.5cm}
+\begin{center}
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!80, width=0.85\textwidth, arc=2mm]
 \centering
-\textbf{Question:} How can we combine the need for a large cache with the need for a fast cache?
+\textbf{Question:} How can we combine the need for a \textcolor{blue!70!black}{\textbf{large cache}} with the need for a \textcolor{red!70!black}{\textbf{fast cache}}?
+\end{tcolorbox}
+\end{center}
 \end{frame}
 
 \begin{frame}{Solution: Memory Hierarchy}
@@ -124,46 +143,255 @@ M & & H & \onslide<12->{\textcolor{red}{\textbf{No}}} & \onslide<12->{Must go th
 \end{table}
 \end{frame}
 
-\begin{frame}{Review: Cache Update Policies}
-\textbf{Write-Back}
+\begin{frame}{Revisit: Write-Back Policy}
+\vspace{-0.3cm}
 \begin{itemize}
-    \item On write, only write to the required level
-    \item Update to other levels occurs when data is evicted from cache
+    \item Write only to cache during write operation
+    \item Update main memory only when block is evicted
+    \item Requires a \textbf{dirty bit} per block to indicate if block was modified
 \end{itemize}
 
-\textbf{Write-Through}
-\begin{itemize}
-    \item On write, also write the new value to the level below
-    \item When data is evicted from cache, no need to update lower level
-\end{itemize}
+\centering
+\begin{tikzpicture}[
+    block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
+    label/.style={font=\bfseries\large},
+    arrow/.style={->, >=Stealth, thick, font=\small},
+    dirtymark/.style={font=\footnotesize\bfseries, black},
+    group/.style={draw, very thick, inner sep=0pt},
+    node distance=0cm and 0cm,
+    scale=0.9
+]
 
-\begin{center}
-\begin{tikzpicture}[scale=0.7]
-    % Placeholder for illustration
-    \node[draw, rectangle] (note) {[Illustration: Write-back vs Write-through behavior]};
+% State 1: Initial
+\node[label] (l1lbl) {L1};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
+}
+\node[group, fit=(s1_l1_1)(s1_l1_2)] {};
+\node[group, fit=(s1_l1_3)(s1_l1_4)] {};
+
+\node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of memlbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
+}
+\node[group, fit=(s1_mem_1)(s1_mem_2)] {};
+\node[group, fit=(s1_mem_3)(s1_mem_4)] {};
+\node[group, fit=(s1_mem_5)(s1_mem_6)] {};
+
+\coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east)$);
+
+% Arrow 1 with "Write" label
+\draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
+  node[midway, above] (arrow1) {};
+\node[writeblock=blue,
+      above=of arrow1] (writeblock) {};
+\node[above=of writeblock] (write) {Write};
+
+% State 2: After Write
+\coordinate (s2start) at ([xshift=4cm]between);
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \ifnum\i=1
+        \node[writeblock=\col,
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
+              yshift=0.75cm] (s2_l1_\i) {};
+        \node[dirtymark] at (s2_l1_\i) {D};
+    \else
+        \ifnum\i=2
+            \node[block, fill=\col, right=0cm of s2start,
+                  anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
+            \node[dirtymark] at (s2_l1_\i) {D};
+        \else
+            \node[block, fill=\col, right=0cm of s2start,
+                  anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
+        \fi
+    \fi
+}
+\node[group, fit=(s2_l1_1)(s2_l1_2)] {};
+\node[group, fit=(s2_l1_3)(s2_l1_4)] {};
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of s2start,
+          anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
+}
+\node[group, fit=(s2_mem_1)(s2_mem_2)] {};
+\node[group, fit=(s2_mem_3)(s2_mem_4)] {};
+\node[group, fit=(s2_mem_5)(s2_mem_6)] {};
+
+% Arrow 2
+\coordinate (between2) at ([xshift=4*\blocksize+3cm]between);
+\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0)
+    node[midway, above, align=center] (arrow2) {Eviction};
+
+% State 3: Final
+\coordinate (s3start) at ([xshift=4cm]between2);
+
+\foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of s3start,
+          anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s3_l1_\i) {};
+}
+\node[group, fit=(s3_l1_1)(s3_l1_2)] {};
+\node[group, fit=(s3_l1_3)(s3_l1_4)] {};
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \ifnum\i=1
+        \node[writeblock=\col,
+              right=0cm of s3start, anchor=west, xshift={\i*\blocksize},
+              yshift=-0.75cm] (s3_mem_\i) {};
+        \node[dirtymark] at (s3_mem_\i) {D};
+    \else
+        \ifnum\i=2
+            \node[block, fill=\col, right=0cm of s3start,
+                  anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
+            \node[dirtymark] at (s3_mem_\i) {D};
+        \else
+            \node[block, fill=\col, right=0cm of s3start,
+                  anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
+        \fi
+    \fi
+}
+\node[group, fit=(s3_mem_1)(s3_mem_2)] {};
+\node[group, fit=(s3_mem_3)(s3_mem_4)] {};
+\node[group, fit=(s3_mem_5)(s3_mem_6)] {};
+
 \end{tikzpicture}
-\end{center}
+
+\vspace{0.3cm}
+\footnotesize
+Dirty blocks (marked 'D') are written back to memory on eviction
 \end{frame}
 
-\begin{frame}{Review: Write Miss Policies}
-\textbf{Write Allocate}
+\begin{frame}{Revisit: Write-Through Policy}
+\vspace{-0.3cm}
 \begin{itemize}
-    \item On miss, send request to lower level to fetch the block
-    \item Before fetching block from lower level, free appropriate space (set and replacement policy)
+    \item Write to both cache AND main memory during write operation
+    \item No need to update memory when block is evicted
+    \item No dirty bit needed - simpler but more memory traffic
 \end{itemize}
 
-\textbf{No Write Allocate}
-\begin{itemize}
-    \item On miss, send the write request itself to lower level
-    \item No fetching of block to the required level
-\end{itemize}
+\centering
+\begin{tikzpicture}[
+    block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
+    label/.style={font=\bfseries\large},
+    arrow/.style={->, >=Stealth, thick, font=\small},
+    group/.style={draw, very thick, inner sep=0pt},
+    node distance=0cm and 0cm,
+    scale=0.9
+]
 
-\begin{center}
-\begin{tikzpicture}[scale=0.7]
-    % Placeholder for illustration
-    \node[draw, rectangle] (note) {[Illustration: Write allocate vs No write allocate]};
+% State 1: Initial
+\node[label] (l1lbl) {L1};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
+}
+\node[group, fit=(s1_l1_1)(s1_l1_2)] {};
+\node[group, fit=(s1_l1_3)(s1_l1_4)] {};
+
+\node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of memlbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
+}
+\node[group, fit=(s1_mem_1)(s1_mem_2)] {};
+\node[group, fit=(s1_mem_3)(s1_mem_4)] {};
+\node[group, fit=(s1_mem_5)(s1_mem_6)] {};
+
+\coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east)$);
+
+% Arrow 1
+\draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
+  node[midway, above] (arrow1) {};
+\node[writeblock=blue,
+      above=of arrow1] (writeblock) {};
+\node[above=of writeblock] (write) {Write};
+
+% State 2: After Write
+\coordinate (s2start) at ([xshift=4cm]between);
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \ifnum\i=1
+        \node[writeblock=\col,
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
+              yshift=0.75cm] (s2_l1_\i) {};
+    \else
+        \node[block, fill=\col, right=0cm of s2start,
+              anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
+    \fi
+}
+\node[group, fit=(s2_l1_1)(s2_l1_2)] {};
+\node[group, fit=(s2_l1_3)(s2_l1_4)] {};
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \ifnum\i=1
+        \node[writeblock=\col,
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
+              yshift=-0.75cm] (s2_mem_\i) {};
+    \else
+        \node[block, fill=\col, right=0cm of s2start,
+              anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
+    \fi
+}
+\node[group, fit=(s2_mem_1)(s2_mem_2)] {};
+\node[group, fit=(s2_mem_3)(s2_mem_4)] {};
+\node[group, fit=(s2_mem_5)(s2_mem_6)] {};
+
+% Arrow 2
+\coordinate (between2) at ([xshift=4*\blocksize+3cm]between);
+\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0)
+    node[midway, above, align=center] (arrow2) {Eviction};
+
+% State 3: Final
+\coordinate (s3start) at ([xshift=4cm]between2);
+
+\foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of s3start,
+          anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s3_l1_\i) {};
+}
+\node[group, fit=(s3_l1_1)(s3_l1_2)] {};
+\node[group, fit=(s3_l1_3)(s3_l1_4)] {};
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \ifnum\i=1
+        \node[writeblock=\col,
+              right=0cm of s3start, anchor=west, xshift={\i*\blocksize},
+              yshift=-0.75cm] (s3_mem_\i) {};
+    \else
+        \node[block, fill=\col, right=0cm of s3start,
+              anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
+    \fi
+}
+\node[group, fit=(s3_mem_1)(s3_mem_2)] {};
+\node[group, fit=(s3_mem_3)(s3_mem_4)] {};
+\node[group, fit=(s3_mem_5)(s3_mem_6)] {};
+
 \end{tikzpicture}
-\end{center}
+
+\vspace{0.3cm}
+\footnotesize
+Both cache and memory are updated simultaneously on write
+\end{frame}
+
+\begin{frame}{Revisit: Write Miss Policies}
+What happens when we need to write to data not in cache?
+
+\begin{block}{Write Allocate}
+\begin{itemize}
+    \item On write miss: fetch block from memory
+    \item Allocate space in cache (may require eviction)
+    \item Then perform the write
+\end{itemize}
+\end{block}
+
+\begin{block}{No Write Allocate}
+\begin{itemize}
+    \item On write miss: write directly to memory
+    \item Don't bring block to cache
+    \item Simpler but may miss future locality
+\end{itemize}
+\end{block}
 \end{frame}
 
 \begin{frame}{The Inclusion Principle}
