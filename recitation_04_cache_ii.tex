@@ -18,6 +18,27 @@
 \author{Computer Architecture 2340267}
 \date{2025, Recitation \#4}
 
+% Macro for memory hierarchy diagram
+\newcommand{\memoryhierarchy}[1][1]{%
+\begin{tikzpicture}[scale=#1]
+    % Cache levels (L1 on top)
+    \node[draw, fill=white, thick, minimum width=4cm, minimum height=0.6cm, rectangle, font=\small\bfseries] (l3) {L3 Cache};
+    \node[draw, fill=white, thick, minimum width=3.5cm, minimum height=0.6cm, rectangle, font=\small\bfseries, above=0.1cm of l3] (l2) {L2 Cache};
+    \node[draw, fill=white, thick, minimum width=3cm, minimum height=0.6cm, rectangle, font=\small\bfseries, above=0.1cm of l2] (l1) {L1 Cache};
+
+    % Multi-level cache container - drawn in background layer
+    \begin{scope}[on background layer]
+        \node[draw, fill=red!30, thick, rectangle, fit=(l1)(l2)(l3), inner sep=0.15cm] (cachecontainer) {};
+    \end{scope}
+
+    % Multi-level cache label
+    \node[right=0.2cm of cachecontainer.east, font=\normalsize, align=left, anchor=west] {Multi level\\Cache};
+
+    % Main Memory
+    \node[draw, fill=green!20, thick, minimum width=5cm, minimum height=0.8cm, rectangle, font=\small\bfseries, below=0.3cm of cachecontainer] (mem) {Main Memory};
+\end{tikzpicture}%
+}
+
 \begin{document}
 
 \frame{\titlepage}
@@ -39,18 +60,9 @@
     \item L1 access time is a few clock cycles
     \item Higher levels contain larger caches with slower access times
 \end{itemize}
-\vspace{0.5cm}
+\vspace{0.3cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1 Cache};
-    \node[draw, rectangle, minimum width=3cm, minimum height=1cm, right=1cm of l1] (l2) {L2 Cache};
-    \node[draw, rectangle, minimum width=4cm, minimum height=1cm, below=0.5cm of l2] (l3) {L3 Cache};
-    \node[draw, rectangle, minimum width=5cm, minimum height=1cm, below=0.5cm of l3] (mem) {Main Memory};
-    
-    \draw[->] (l1) -- (l2);
-    \draw[->] (l2) -- (l3);
-    \draw[->] (l3) -- (mem);
-\end{tikzpicture}
+\memoryhierarchy[0.9]
 \end{center}
 \end{frame}
 
@@ -61,14 +73,9 @@
     \item On a miss, forward the access request to the next level (L2)
     \item For each miss, access a higher level until eventually accessing main memory itself
 \end{itemize}
-\vspace{0.5cm}
+\vspace{0.3cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1 Cache};
-    \node[draw, rectangle, minimum width=3cm, minimum height=1cm, right=1cm of l1] (l2) {L2 Cache};
-    \node[draw, rectangle, minimum width=4cm, minimum height=1cm, below=0.5cm of l2] (l3) {L3 Cache};
-    \node[draw, rectangle, minimum width=5cm, minimum height=1cm, below=0.5cm of l3] (mem) {Main Memory};
-\end{tikzpicture}
+\memoryhierarchy[0.9]
 \end{center}
 \end{frame}
 
@@ -167,12 +174,7 @@ M & & H & \onslide<12->{\textcolor{red}{\textbf{No}}} & \onslide<12->{Must go th
 \end{itemize}
 
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1};
-    \node[draw, rectangle, minimum width=3cm, minimum height=1.5cm, below=0.5cm of l1] (l2) {L2 Cache};
-    \node[draw, rectangle, minimum width=4cm, minimum height=2cm, below=0.5cm of l2] (l3) {L3 Cache};
-    \node[draw, rectangle, minimum width=5cm, minimum height=2.5cm, below=0.5cm of l3] (mem) {Main Memory};
-\end{tikzpicture}
+\memoryhierarchy[0.8]
 \end{center}
 \end{frame}
 
@@ -180,12 +182,7 @@ M & & H & \onslide<12->{\textcolor{red}{\textbf{No}}} & \onslide<12->{Must go th
 To ensure the inclusion principle is maintained, every eviction of a cache line from a lower-level cache (L2 or L3) will trigger eviction of the same line from higher-level caches (closer to CPU).
 
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-    \node[draw, rectangle, minimum width=2cm, minimum height=1cm] (l1) {L1};
-    \node[draw, rectangle, minimum width=3cm, minimum height=1.5cm, below=0.5cm of l1] (l2) {L2 Cache};
-    \node[draw, rectangle, minimum width=4cm, minimum height=2cm, below=0.5cm of l2] (l3) {L3 Cache};
-    \node[draw, rectangle, minimum width=5cm, minimum height=2.5cm, below=0.5cm of l3] (mem) {Main Memory};
-\end{tikzpicture}
+\memoryhierarchy[0.8]
 \end{center}
 \end{frame}
 
