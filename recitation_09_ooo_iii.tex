@@ -24,6 +24,143 @@
 
 \begin{document}
 
+\frame{\titlepage}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}{Reminders: P6 Memory Operations}
+\begin{itemize}
+    \item P6 L1 and L2 caches are \textbf{non-blocking}
+    \item RS (Reservation Station) solves false register dependencies
+    \item MOB (Memory Order Buffer) solves memory dependencies
+    \begin{itemize}
+        \item Some dependencies can be resolved statically: \texttt{store r1,a; load r2,b}
+        \item Problem: Some cannot: \texttt{store r1,[r3]; load r2,b}
+    \end{itemize}
+    \item Stores/loads are heavily used in x86 due to limited registers
+    \item \textbf{Stores are NOT executed out-of-order} (difficult to undo)
+    \begin{itemize}
+        \item Decomposed into 2 uops: STA (Store Address) and STD (Store Data)
+    \end{itemize}
+    \item \textbf{Loads ARE executed out-of-order}
+    \item Previous stores may have unknown virtual addresses
+\end{itemize}
+\end{frame}
+
+\section{Memory Operation Lifecycle}
+
+\begin{frame}{The Life of a Load}
+\begin{itemize}
+    \item \textbf{Allocation:} 1 entry in ROB, RS, and Load Buffer + RAT rename
+    \item \textbf{Dispatch:} Address calculation to AGU when source ready $\rightarrow$ Release RS
+    \item \textbf{Address Calculation:} AGU updates Load Buffer, pipeline to dTLB
+    \item \textbf{Blocking Check:} Load Buffer checks for hazards, dispatches to DCU
+    \item \textbf{Data Return:} DCU sends result to RS and updates ROB
+    \item \textbf{Retire:} When all previous instructions retired $\rightarrow$ Update RAT
+    \item \textbf{Release:} LB and ROB entries freed
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Life of a Store}
+\begin{itemize}
+    \item \textbf{Allocation:} 1 ROB entry, 2 RS entries, 1 Store Buffer entry
+    \item \textbf{STA (Store Address):}
+    \begin{itemize}
+        \item Dispatch when address sources ready $\rightarrow$ Release RS entry
+        \item AGU calculates virtual address $\rightarrow$ Update Store Buffer
+        \item Pipeline to dTLB $\rightarrow$ Physical address in Store Buffer
+        \item Provides address to dependent loads
+    \end{itemize}
+    \item \textbf{STD (Store Data):}
+    \begin{itemize}
+        \item Dispatch when data ready $\rightarrow$ Update Store Buffer
+        \item Provides data to dependent loads via forwarding
+    \end{itemize}
+    \item \textbf{Retire:} Store Buffer updates ROB as valid, marks as \textbf{Senior Store}
+    \item \textbf{Write:} Store Buffer initiates DCU write \textbf{after} commit
+    \item \textbf{Release:} Store Buffer entry freed after write completes
+\end{itemize}
+\end{frame}
+
+\section{Example Problem}
+
+\begin{frame}[fragile]{Problem Setup}
+\textbf{Given Code:}
+\begin{lstlisting}[basicstyle=\footnotesize\ttfamily]
+1000  ld  R2=[R1+30]   ; R2=m[R1+30]
+1004  st  [R2+20]=R1   ; m[R2+20]=R1
+1008  ld  R3=[R1+100]  ; R3=m[R1+100]
+100C  st  [R1+40]=R3   ; m[R1+40]=R3
+1010  add R1=R1+10     ; R1=R1+10
+1014  blt R1,100,1000  ; if (R1<100) PC=1000
+\end{lstlisting}
+
+\textbf{Assumptions:}
+\begin{itemize}
+    \item Initial state: R1=R2=R3=10, memory address N contains value N
+    \item Addresses are physical (no translation needed)
+    \item Numbers in base 16
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Processor Configuration}
+\textbf{Allocation:}
+\begin{itemize}
+    \item 4-wide allocation (at least 4 instructions ready each cycle)
+    \item ROB, MOB, and RS are large and never fill
+\end{itemize}
+
+\textbf{Execution:}
+\begin{itemize}
+    \item Infinite execution units
+    \item Instructions enter execution when data sources are ready
+    \item Blocked instructions enter execution immediately when unblocked
+    \item ALU: 1 cycle, Branch: 1 cycle
+    \item Misprediction: Flush at T+1, allocate correct path at T+6
+\end{itemize}
+
+\textbf{Memory:}
+\begin{itemize}
+    \item L1 data cache: 1 cycle (initially empty)
+    \item L2 data cache: 7 cycles (contains all requested addresses)
+    \item Cache line size: 0x80 bytes
+    \item Write policy: no-write-allocate
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Load/Store Execution Details}
+\textbf{Load Execution:}
+\begin{itemize}
+    \item Dispatched when address calculation sources are ready
+    \item \textbf{Cycle 1:} Address calculation
+    \item \textbf{Cycle 2:} Virtual$\rightarrow$Physical via dTLB + dependency check
+    \begin{itemize}
+        \item For each prior store: Check if store address known and differs, OR addresses match and store data ready
+    \end{itemize}
+    \item \textbf{Cycle 3:} Data from L1 (if hit) or forwarding from MOB
+    \item \textbf{Cycle 10:} Data from L2 (if L1 miss, no forwarding)
+    \item If dependency check fails: Load \textbf{blocked}, re-dispatched when condition clears (restart from cycle 1)
+\end{itemize}
+
+\textbf{Store Execution:}
+\begin{itemize}
+    \item Address calculation: 1 cycle, written to MOB
+    \item Data: Written to MOB independently when ready
+    \item Cache write occurs \textbf{after commit}
+\end{itemize}
+
+\textbf{Commit:}
+\begin{itemize}
+    \item Instructions commit starting the cycle after execution completes
+    \item Must wait for all previous instructions to commit (in-order)
+    \item No limit on commits per cycle
+\end{itemize}
+\end{frame}
+
 \begin{frame}[fragile, label=timeline-frame]
 \frametitle{P6 $\mu$Architecture - Instruction Execution Timeline}
 
