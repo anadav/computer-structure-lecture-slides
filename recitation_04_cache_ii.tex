@@ -453,10 +453,10 @@ What happens when we need to write to data not in cache?
     \tikzstyle{cacheB}=[fill=blue!30]
 
     % Left side - Before
-    \node[above] at (0, 2) {\footnotesize\textbf{Before}};
+    \node[font=\footnotesize\bfseries] (before) {Before};
 
     % L1 cache - left side (direct mapped with cells)
-    \node[draw, rectangle, fill=cyan!10, minimum width=0.7cm, minimum height=2cm, label=left:{\tiny L1:}] (l1left) at (0,0) {};
+    \node[draw, rectangle, fill=cyan!10, minimum width=0.7cm, minimum height=2cm, label=left:{\tiny L1:}, below=0.3cm of before] (l1left) {};
     % Draw horizontal lines for direct-mapped cells (3 internal dividers for 4 cells)
     \foreach \y in {0.5, 1, 1.5, 2} {
         \draw ([yshift=-\y cm]l1left.north west) -- ([yshift=-\y cm]l1left.north east);
@@ -472,14 +472,13 @@ What happens when we need to write to data not in cache?
     \node[cacheA, minimum width=0.4cm, minimum height=0.4cm] at ([xshift=-0.9cm]l2left.center) {\tiny A};
 
     % Arrow
-    \draw[->, thick, blue!70, line width=1.5pt] (1.5,0) -- (2.5,0);
-    \node[above] at (2, 0.15) {\tiny Access B};
+    \draw[->, thick, blue!70, line width=1.5pt] (l1left.east) ++(0.3cm,0) -- ++(1.6cm,0) node[midway, above, font=\tiny] {Access B};
 
-    % Right side - After (moved further right)
-    \node[above] at (5, 2) {\footnotesize\textbf{After}};
+    % Right side - After (aligned with Before)
+    \node[font=\footnotesize\bfseries, anchor=base, right=2.2cm of before] (after) {After};
 
     % L1 cache - right side
-    \node[draw, rectangle, fill=cyan!10, minimum width=0.7cm, minimum height=2cm, label=left:{\tiny L1:}] (l1right) at (5,0) {};
+    \node[draw, rectangle, fill=cyan!10, minimum width=0.7cm, minimum height=2cm, label=left:{\tiny L1:}, below=0.3cm of after] (l1right) {};
     % Draw horizontal lines for direct-mapped cells (3 internal dividers for 4 cells)
     \foreach \y in {0.5, 1, 1.5, 2} {
         \draw ([yshift=-\y cm]l1right.north west) -- ([yshift=-\y cm]l1right.north east);
