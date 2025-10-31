@@ -726,7 +726,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{Stalling to Resolve Data Hazard}
+\begin{frame}{Solution: Stalling to Resolve Data Hazard}
 \centering
 \pipelineprocessor[true]{false}{false}
 
@@ -762,17 +762,17 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \pipelineprocessor[true]{true}{false}
 
 \begin{tikzpicture}[remember picture, overlay,
-    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize}
+    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize, inner sep=2pt}
 ]
     % ADD in MEM stage, SUB in EX stage
-    \node[instr_box, fill=green!20, minimum width=2.8cm]
+    \node[instr_box, fill=green!20] (add_instr)
           at ($(MEM_label) + (0, -6.5)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
 
-    \node[instr_box, fill=orange!20, minimum width=2.8cm] (sub_instr)
+    \node[instr_box, fill=orange!20] (sub_instr)
           at ($(EX_label) + (0, -6.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
 
-    % Blue forwarding line from ADD to SUB (MEM to EX)
-    \draw[->, very thick, blue] ($(MEM_label) + (0, -6.2)$) -- ($(EX_label) + (0, -6.2)$);
+    % Blue forwarding line from ADD to SUB (MEM to EX) - between boxes
+    \draw[->, very thick, blue] (add_instr.west) -- (sub_instr.east);
 
     % Solution text in bottom left
     \node[draw, thick, fill=yellow!20, align=left, font=\small,
@@ -787,17 +787,17 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \pipelineprocessor[true]{true}{false}
 
 \begin{tikzpicture}[remember picture, overlay,
-    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize}
+    instr_box/.style={draw, thick, minimum height=0.5cm, align=center, font=\ttfamily\footnotesize, inner sep=2pt}
 ]
     % ADD in WB stage, SUB in EX stage
-    \node[instr_box, fill=green!20, minimum width=2.8cm, anchor=east]
+    \node[instr_box, fill=green!20, anchor=east] (add_instr)
           at ($(current page.east |- EX_label) + (-0.3, -6.5)$) {ADD \textcolor{red}{\$1}$\leftarrow$\$2,\$3};
 
-    \node[instr_box, fill=orange!20, minimum width=2.8cm]
+    \node[instr_box, fill=orange!20] (sub_instr)
           at ($(EX_label) + (0, -6.5)$) {SUB \$4$\leftarrow$\textcolor{red}{\$1},\$5};
 
-    % Green forwarding line from ADD to SUB (WB to EX)
-    \draw[->, very thick, green] ($(WB_label) + (0, -6.2)$) -- ($(EX_label) + (0, -6.2)$);
+    % Green forwarding line from ADD to SUB (WB to EX) - between boxes
+    \draw[->, very thick, green] (add_instr.west) -- (sub_instr.east);
 
     % Solution text in bottom left
     \node[draw, thick, fill=yellow!20, align=left, font=\small,
@@ -1346,7 +1346,7 @@ place1:
 \textbf{Answer:} 7 cycles (7 instructions in the iteration)
 \end{frame}
 
-\begin{frame}{Analysis}
+\begin{frame}{Exam Question: Analysis}
 \textbf{\ding{193}} If the entire code takes 33 cycles, how many times was LD executed?
 
 \textbf{Analysis:}
@@ -1367,7 +1367,7 @@ $$2 \times \text{\#iterations} \geq \text{\#mispredictions}$$
 $\Rightarrow$ LD executed \textbf{3 times}
 \end{frame}
 
-\begin{frame}{State Machine Configuration}
+\begin{frame}{Question: State Machine Configuration}
 \textbf{\ding{194}} Design a state machine that produces 4 mispredictions in 6 branch executions (3~iterations)
 
 \pause
