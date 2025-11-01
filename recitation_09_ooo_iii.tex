@@ -112,6 +112,8 @@
         alu = {ALU1}, agu = {AGU},
         % Retire
         retire = { },
+        % Retire box (optional box next to retire)
+        retirebox = { },
         % Arrow flags (0-4)
         arrows = 0,
     },
@@ -136,10 +138,23 @@
     alu/.estore in = \aluContent,
     agu/.estore in = \aguContent,
     retire/.estore in = \retireContent,
+    retirebox/.estore in = \retireBoxContent,
     arrows/.estore in = \arrowFlags,
 }
 
 % Macro for creating load lifecycle diagram using matrix of nodes
+% Usage: \LoadLifecycleDiagram[key=value, ...]
+% Available keys:
+%   rat0, rat1, rat2, rat3 - RAT physical register mappings
+%   robNum, robValid, robRdy, robData - ROB entry fields
+%   iq1, iq2, iq3, iq4 - Instruction Queue entries
+%   rs - Reservation Station content
+%   sb1, sb2 - Store Buffer entries
+%   lbV, lbAddr, lbBC - Load Buffer fields (Valid, Address, Blocking Conditions)
+%   alu, agu - EXE unit contents
+%   retire - Retire stage content
+%   retirebox - Optional box next to retire (for additional information)
+%   arrows - Arrow display flag (0-4, controls which arrows are shown)
 \newcommand{\LoadLifecycleDiagram}[1][]{%
     % Set defaults and process keys
     \pgfkeys{/LoadLife,default,#1}%
@@ -165,10 +180,10 @@
         column 2/.append style={nodes={text width=0.9cm, align=center, minimum width=0.9cm}},
         ampersand replacement=\&] (rat) {
     Arch \& Phys \\
-    R0 \& \ratZero \\
-    R1 \& \ratOne \\
-    R2 \& \ratTwo \\
-    R3 \& \ratThree \\
+    R0 \& \ifx\ratZero\empty{ }\else\ratZero\fi \\
+    R1 \& \ifx\ratOne\empty{ }\else\ratOne\fi \\
+    R2 \& \ifx\ratTwo\empty{ }\else\ratTwo\fi \\
+    R3 \& \ifx\ratThree\empty{ }\else\ratThree\fi \\
 };
 
 % ROB (Reorder Buffer)
@@ -188,7 +203,6 @@
         column 5/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         ampersand replacement=\&] (rob) {
     \# \& Val \& Rdy \& Data \& DST \\
-    {} \& id \& {} \& {} \& {} \\
     \robNum \& \robValid \& \robRdy \& \robData \& R3 \\
     0 \& {} \& {} \& {} \& {} \\
     0 \& {} \& {} \& {} \& {} \\
@@ -226,47 +240,48 @@
     \iqFour \\
 };
 
-% MOB (Memory Order Buffer) - Load Buffer first to establish width
+% MOB (Memory Order Buffer) - Load Buffer with title above
+\node[headerbox, right=0.5cm of rs.north east, anchor=north west, text width=2.1cm] (loadbuftitle) {Load Buffer};
+
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        right=0.5cm of rs.north east,
-        anchor=north west,
+        below=0pt of loadbuftitle.south,
+        anchor=north,
         nodes={cell, align=center},
         row 1/.style={nodes={headerbox}},
-        row 2/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.6cm}},
         column 2/.append style={nodes={text width=1.0cm}},
         column 3/.append style={nodes={text width=0.5cm}},
         ampersand replacement=\&] (loadbuf) {
-    |[text width=2.1cm]| Load Buffer \& {} \& {} \\
     V \& Addr \& BC \\
     \lbV \& \lbAddr \& \lbBC \\
 };
 
-% Store Buffer (above Load Buffer, matching its width)
+% Store Buffer title
+\node[headerbox, above=0pt of loadbuftitle.north, anchor=south, text width=2.1cm] (storebuftitle) {Store Buffer};
+
+% Store Buffer (above Load Buffer title, matching its width)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        above=0pt of loadbuf.north,
-        anchor=south,
+        below=0pt of storebuftitle.south,
+        anchor=north,
         nodes={cell, align=center},
-        row 1/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.6cm}},
         column 2/.append style={nodes={text width=1.0cm}},
         column 3/.append style={nodes={text width=0.5cm}},
         ampersand replacement=\&] (storebuf) {
-    |[text width=2.1cm]| Store Buffer \& {} \& {} \\
     \sbOne \& {} \& {} \\
     \sbTwo \& {} \& {} \\
 };
 
 % MOB label and cyan background using fit
-\node[labelstyle, above=0.1cm of storebuf.north] (moblabel) {MOB};
+\node[labelstyle, above=0.1cm of storebuftitle.north] (moblabel) {MOB};
 \begin{scope}[on background layer]
-\node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
+\node[draw, fill=lightcyan, fit=(moblabel)(storebuftitle)(storebuf)(loadbuftitle)(loadbuf), inner sep=2pt] {};
 \end{scope}
 
 % Data Cache
@@ -308,18 +323,31 @@
 \node[draw, fill=lightyellow, fit=(exelabel)(alu1)(dots)(agu), inner sep=2pt] (exeblock) {};
 \end{scope}
 
-% Retire (below EXE block)
+% Retire (below EXE block, anchored to south east)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        label={[labelstyle]above:Retire},
-        below=0.4cm of exeblock.south west,
-        anchor=north west,
+        label={[labelstyle]left:Retire},
+        below=0.4cm of exeblock.south east,
+        anchor=north east,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.8cm}},
         ampersand replacement=\&] (retire) {
     \retireContent \\
+};
+
+% Retire box (optional box next to retire)
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        right=0.3cm of retire.north east,
+        anchor=north west,
+        nodes={cell, align=center},
+        column 1/.append style={nodes={text width=1.8cm}},
+        ampersand replacement=\&] (retirebox) {
+    \retireBoxContent \\
 };
 
 % Draw green arrows based on flags
