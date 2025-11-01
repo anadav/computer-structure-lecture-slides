@@ -238,15 +238,14 @@
     \ifx\iqTwo\empty{ }\else\iqTwo\fi \\
 };
 
-% MOB (Memory Order Buffer) - Load Buffer with title above
-\node[headerbox, right=0.5cm of rs.north east, anchor=north west, text width=2.1cm] (loadbuftitle) {Load Buffer};
-
+% MOB (Memory Order Buffer) - Load Buffer
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        below=0pt of loadbuftitle.south,
-        anchor=north,
+        label={[labelstyle]above:Load Buffer},
+        right=0.5cm of rs.north east,
+        anchor=north west,
         nodes={cell, align=center},
         row 1/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.6cm}},
@@ -257,16 +256,14 @@
     \ifx\lbV\empty{ }\else\lbV\fi \& \ifx\lbAddr\empty{ }\else\lbAddr\fi \& \ifx\lbBC\empty{ }\else\lbBC\fi \\
 };
 
-% Store Buffer title
-\node[headerbox, above=0pt of loadbuftitle.north, anchor=south, text width=2.1cm] (storebuftitle) {Store Buffer};
-
-% Store Buffer (above Load Buffer title, matching its width)
+% Store Buffer (above Load Buffer, matching its width)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        below=0pt of storebuftitle.south,
-        anchor=north,
+        label={[labelstyle]above:Store Buffer},
+        above=0.3cm of loadbuf.north,
+        anchor=south,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=0.6cm}},
         column 2/.append style={nodes={text width=1.0cm}},
@@ -277,9 +274,9 @@
 };
 
 % MOB label and cyan background using fit
-\node[labelstyle, above=0.1cm of storebuftitle.north] (moblabel) {MOB};
+\node[labelstyle, above=0.1cm of storebuf.north] (moblabel) {MOB};
 \begin{scope}[on background layer]
-\node[draw, fill=lightcyan, fit=(moblabel)(storebuftitle)(storebuf)(loadbuftitle)(loadbuf), inner sep=2pt] {};
+\node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
 \end{scope}
 
 % Data Cache
