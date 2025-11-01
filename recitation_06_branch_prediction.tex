@@ -581,13 +581,14 @@
 }
 
 % Helper for pgfkeys stored BHR (no highlighting)
+% Now uses text with | delimiters for consistency
 \newcommand{\BHRdisplay}[1]{%
   % #1 contains {b1}{b2}{b3}{b4}
   % We need to extract these values
   \expandafter\BHRdisplayHelper#1%
 }
 \newcommand{\BHRdisplayHelper}[4]{%
-  \BHRbox{#1}{#2}{#3}{#4}%
+  #1 & #2 & #3 & #4%
 }
 
 % (Removed old BHRdisplayH and BHRtextH definitions)
@@ -1086,37 +1087,28 @@ if (...)
       \centering
 
       \footnotesize
-      \begin{tabular}{|c|ccc|c}
+      \begin{tabular}{|c|c|c|c|c|}
           \toprule
           tag & \multicolumn{4}{c|}{BHRs} \\
           \midrule
           \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
-            \cellcolor{highlightyellow}IP1 & \multicolumn{4}{c|}{%
-              \ifx\localframeBHROneDisplay\empty\BHRdisplay{\localframeBHROne}\else\localframeBHROneDisplay\fi%
-            } \\
+            \cellcolor{highlightyellow}IP1
           \else
-            IP1 & \multicolumn{4}{c|}{%
-              \ifx\localframeBHROneDisplay\empty\BHRdisplay{\localframeBHROne}\else\localframeBHROneDisplay\fi%
-            } \\
+            IP1
           \fi
+           & \ifx\localframeBHROneDisplay\empty\BHRdisplay{\localframeBHROne}\else\localframeBHROneDisplay\fi \\
           \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
-            \cellcolor{highlightyellow}IP2 & \multicolumn{4}{c|}{%
-              \ifx\localframeBHRTwoDisplay\empty\BHRdisplay{\localframeBHRTwo}\else\localframeBHRTwoDisplay\fi%
-            } \\
+            \cellcolor{highlightyellow}IP2
           \else
-            IP2 & \multicolumn{4}{c|}{%
-              \ifx\localframeBHRTwoDisplay\empty\BHRdisplay{\localframeBHRTwo}\else\localframeBHRTwoDisplay\fi%
-            } \\
+            IP2
           \fi
+           & \ifx\localframeBHRTwoDisplay\empty\BHRdisplay{\localframeBHRTwo}\else\localframeBHRTwoDisplay\fi \\
           \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
-            \cellcolor{highlightyellow}IP3 & \multicolumn{4}{c|}{%
-              \ifx\localframeBHRThreeDisplay\empty\BHRdisplay{\localframeBHRThree}\else\localframeBHRThreeDisplay\fi%
-            } \\
+            \cellcolor{highlightyellow}IP3
           \else
-            IP3 & \multicolumn{4}{c|}{%
-              \ifx\localframeBHRThreeDisplay\empty\BHRdisplay{\localframeBHRThree}\else\localframeBHRThreeDisplay\fi%
-            } \\
+            IP3
           \fi
+           & \ifx\localframeBHRThreeDisplay\empty\BHRdisplay{\localframeBHRThree}\else\localframeBHRThreeDisplay\fi \\
           \bottomrule
       \end{tabular}
       
@@ -1600,7 +1592,7 @@ if (...)
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
-    bhr1display={\BHRbit{0}{0} | \BHRbit{0}{0} | \BHRbit{0}{0} | \BHRbit{0}{1}},
+    bhr1display={\BHRbit{0}{0} & \BHRbit{0}{0} & \BHRbit{0}{0} & \BHRbit{0}{1}},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
     states1={0:WNT:0},
