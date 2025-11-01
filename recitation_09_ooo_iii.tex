@@ -108,8 +108,8 @@
         sb1 = { }, sb2 = { },
         % Load Buffer (V, Addr, BC)
         lbV = { }, lbAddr = { }, lbBC = { },
-        % EXE units
-        alu = {ALU1}, agu = {AGU},
+        % EXE units (second row content)
+        alu = {}, agu = { },
         % Retire
         retire = { },
         % Retire box (optional box next to retire)
@@ -151,7 +151,7 @@
 %   rs - Reservation Station content
 %   sb1, sb2 - Store Buffer entries
 %   lbV, lbAddr, lbBC - Load Buffer fields (Valid, Address, Blocking Conditions)
-%   alu, agu - EXE unit contents
+%   alu, agu - EXE unit contents (second row; first row is hard-coded as "ALU1"/"AGU")
 %   retire - Retire stage content
 %   retirebox - Optional box next to retire (for additional information)
 %   arrows - Arrow display flag (0-4, controls which arrows are shown)
@@ -300,7 +300,8 @@
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.2cm}},
         ampersand replacement=\&] (alu1) {
-    \aluContent \\
+    ALU1 \\
+    \ifx\aluContent\empty{ }\else\aluContent\fi \\
 };
 
 \node[font=\large, right=0.25cm of alu1] (dots) {$\bullet\bullet\bullet$};
@@ -314,6 +315,7 @@
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.2cm}},
         ampersand replacement=\&] (agu) {
+    AGU \\
     \aguContent \\
 };
 
@@ -366,8 +368,6 @@
 \LoadLifecycleDiagram[
     iq1={R3$\leftarrow$MEM(R2+50)},
     lbAddr={Not Valid},
-    alu={ALU1},
-    agu={AGU},
     arrows=0
 ]
 \end{center}
@@ -388,8 +388,6 @@
     lbV={1},
     lbAddr={Not Valid},
     lbBC={0},
-    alu={ALU1},
-    agu={AGU},
     arrows=1
 ]
 \end{center}
@@ -412,7 +410,6 @@ $\bullet$ 1 entry in the ROB, RS and Load Buffer + rename in RAT
     lbV={1},
     lbAddr={Not Valid},
     lbBC={0},
-    alu={ALU1},
     agu={R2+50},
     arrows=2
 ]
@@ -436,8 +433,6 @@ $\bullet$ Dispatch Load address calculation to AGU when source is ready -- Relea
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    alu={ALU1},
-    agu={AGU},
     arrows=3
 ]
 \end{center}
@@ -460,8 +455,6 @@ $\bullet$ AGU updates the address in the Load buffer. Pipeline proceeds to dTLB
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    alu={ALU1},
-    agu={AGU},
     arrows=4
 ]
 \end{center}
@@ -484,8 +477,6 @@ $\bullet$ Load Buffer checks for blocking conditions and dispatches the Load to 
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    alu={ALU1},
-    agu={AGU},
     arrows=4
 ]
 \end{center}
@@ -503,8 +494,6 @@ $\bullet$ DCU sends the result to RS and updates the ROB with the load result
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    alu={ALU1},
-    agu={AGU},
     arrows=0
 ]
 \end{center}
