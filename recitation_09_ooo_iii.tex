@@ -420,7 +420,6 @@ The load is allocated with one entry in the ROB, one in the RS, and one in the L
     robValid={1},
     robRdy={0},
     robData={X},
-    iq1={R3$\leftarrow$MEM(R2+50)},
     rs1={\removedentry{RF0$\leftarrow$MEM(R2+50)}},
     lbV={1},
     lbAddr={Invalid},
@@ -444,7 +443,6 @@ The load address calculation is dispatched to the AGU when the source register R
     robValid={1},
     robRdy={0},
     robData={X},
-    iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={\newentry{V(R2+50)}},
     lbBC={0},
@@ -468,7 +466,6 @@ The AGU computes the virtual address and updates the Load Buffer with V(R2+50). 
     robValid={1},
     robRdy={0},
     robData={X},
-    iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
@@ -491,7 +488,6 @@ The Load Buffer checks for memory hazards with prior stores. If no blocking cond
     robValid={1},
     robRdy={\newentry{1}},
     robData={\newentry{data}},
-    iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
@@ -509,10 +505,16 @@ The Data Cache returns the requested data. The result is sent to the RS (for for
 \frametitle{The Life of a Load: Retire \& Release}
 \begin{center}
 \LoadLifecycleDiagram[
-    iq1={R3$\leftarrow$MEM(R2+50)},
-    lbV={1},
-    lbAddr={V(R2+50)},
-    lbBC={0}
+    rat3={\removedentry{RF0}},
+    robOp={\removedentry{Ld}},
+    robValid={\removedentry{1}},
+    robRdy={\removedentry{1}},
+    robData={\removedentry{data}},
+    robDst={\removedentry{R3}},
+    lbV={\removedentry{1}},
+    lbAddr={\removedentry{V(R2+50)}},
+    lbBC={\removedentry{0}},
+    retire={R3$\leftarrow$data}
 ]
 \end{center}
 \vspace{-2mm}
