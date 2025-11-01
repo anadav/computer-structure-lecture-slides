@@ -105,7 +105,7 @@
         % RAT physical registers
         rat0 = {}, rat1 = {}, rat2 = {}, rat3 = {},
         % ROB first entry
-        robOp = {}, robValid = {}, robRdy = {}, robData = {},
+        robOp = {}, robValid = {}, robRdy = {}, robData = {}, robDst = {R3},
         % Instruction Queue (2 rows)
         iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = {},
         % RS content (2 rows)
@@ -133,6 +133,7 @@
     robValid/.estore in = \robValid,
     robRdy/.estore in = \robRdy,
     robData/.estore in = \robData,
+    robDst/.estore in = \robDst,
     iq1/.estore in = \iqOne,
     iq2/.estore in = \iqTwo,
     rs1/.estore in = \rsOne,
@@ -219,7 +220,7 @@
         column 6/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         ampersand replacement=\&] (rob) {
     {\tiny\begin{tabular}{@{}c@{}}Phys\\Reg\end{tabular}} \& Op \& Val \& Rdy \& Data \& DST \\
-    RF0 \& \ifx\robOp\empty{ }\else\robOp\fi \& \ifx\robValid\empty{ }\else\robValid\fi \& \ifx\robRdy\empty{ }\else\robRdy\fi \& \ifx\robData\empty{ }\else\robData\fi \& R3 \\
+    RF0 \& \ifx\robOp\empty{ }\else\robOp\fi \& \ifx\robValid\empty{ }\else\robValid\fi \& \ifx\robRdy\empty{ }\else\robRdy\fi \& \ifx\robData\empty{ }\else\robData\fi \& \ifx\robDst\empty{ }\else\robDst\fi \\
     RF1 \& {} \& {} \& {} \& {} \& {} \\
     RF2 \& {} \& {} \& {} \& {} \& {} \\
     RF3 \& {} \& {} \& {} \& {} \& {} \\
@@ -231,7 +232,7 @@
         column sep=-\pgflinewidth,
         inner sep=0pt,
         label={[labelstyle]above:RS},
-        below right=0.25cm and 0.5cm of rob.north east,
+        below right=1.2cm and 0.5cm of rob.north east,
         anchor=north west,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=2.8cm}},
@@ -348,13 +349,13 @@
 % dTLB (right of AGU, aligned with second row)
 \node[smallbox, right=1.2cm of agu.east, anchor=west] (dtlb) {dTLB};
 
-% Retire (below EXE block, aligned with RS west edge)
+% Retire (below ROB, left-aligned with ROB)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
         label={[labelstyle]left:Retire},
-        below=0.4cm of exeblock.south west,
+        below=0.4cm of rob.south west,
         anchor=north west,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.8cm}},
@@ -374,8 +375,9 @@
 \frametitle{The Life of a Load: Initial State}
 \begin{center}
 \LoadLifecycleDiagram[
-    iq1={R3$\leftarrow$MEM(R2+50)},
-    lbAddr={Invalid}
+    iq1={\newentry{R3$\leftarrow$MEM(R2+50)}},
+    lbAddr={Invalid},
+    robDst={}
 ]
 \end{center}
 \vspace{-2mm}
@@ -520,7 +522,7 @@ When all previous instructions have retired, the load retires in-order. The RAT 
 \begin{frame}
 \frametitle{The Life of a Load: Summary}
 \small
-\vspace{-4mm}
+\vspace{-6mm}
 \begin{columns}[T]
 \begin{column}{0.52\textwidth}
 \begin{enumerate}
