@@ -571,6 +571,10 @@
   r2/.store in=\localframeRTwo,
   r3/.store in=\localframeRThree,
   states/.store in=\localframeStates,
+  states1/.store in=\localframeStatesOne,
+  states2/.store in=\localframeStatesTwo,
+  states3/.store in=\localframeStatesThree,
+  active/.store in=\localframeActive,
   description/.store in=\localframeDesc,
   % Set defaults - don't set BHR defaults, they cause issues
   ip={},
@@ -582,6 +586,8 @@
   r2={0},
   r3={0},
   states={},
+  % Don't set states1, states2, states3 defaults here - they are set in the macro initialization
+  active={0},
   description={},
 }
 %==========================================
@@ -954,6 +960,12 @@ if (...)
   \def\localframeBHROne{{0}{0}{0}{0}}%
   \def\localframeBHRTwo{{0}{0}{0}{0}}%
   \def\localframeBHRThree{{0}{0}{0}{0}}%
+  % Initialize new three-table variables
+  \def\localframeStatesOne{}%
+  \def\localframeStatesTwo{}%
+  \def\localframeStatesThree{}%
+  \def\localframeActive{0}%
+  \def\localframeUseThreeTables{0}%
   \pgfkeys{/localframe/.cd,#1}%
   \begin{frame}
     \frametitle{Local History Branch Predictor}
@@ -1031,8 +1043,9 @@ if (...)
           
     \column{0.35\textwidth}
       \centering\scriptsize
-      \stateTable{\localframeStates}
-      
+      % Render state tables (single or three-table mode)
+      \renderStateTables
+
       \vspace{0.5em}
       \centering
     \end{columns}
@@ -1192,6 +1205,107 @@ if (...)
     \stateRow{15}{#1} \\
     \bottomrule
   \end{tabular}
+}
+
+% Macro for labeled state table (normal)
+\newcommand{\stateTableNormal}[2]{%
+  % #1: label (e.g., "State IP1")
+  % #2: state data (same format as \stateTable)
+  \begin{tabular}{|c|c|}
+    \toprule
+    \multicolumn{2}{|c|}{#1} \\
+    \midrule
+    \stateRow{0}{#2} \\
+    \stateRow{1}{#2} \\
+    \stateRow{2}{#2} \\
+    \stateRow{3}{#2} \\
+    \stateRow{4}{#2} \\
+    \stateRow{5}{#2} \\
+    \stateRow{6}{#2} \\
+    \stateRow{7}{#2} \\
+    \stateRow{8}{#2} \\
+    \stateRow{9}{#2} \\
+    \stateRow{10}{#2} \\
+    \stateRow{11}{#2} \\
+    \stateRow{12}{#2} \\
+    \stateRow{13}{#2} \\
+    \stateRow{14}{#2} \\
+    \stateRow{15}{#2} \\
+    \bottomrule
+  \end{tabular}%
+}
+
+% Macro for labeled state table (faded)
+\newcommand{\stateTableFaded}[2]{%
+  % #1: label (e.g., "State IP1")
+  % #2: state data (same format as \stateTable)
+  \begin{tabular}{|c|c|}
+    \toprule
+    \multicolumn{2}{|c|}{\cellcolor{gray!30}#1} \\
+    \midrule
+    \stateRow{0}{#2} \\
+    \stateRow{1}{#2} \\
+    \stateRow{2}{#2} \\
+    \stateRow{3}{#2} \\
+    \stateRow{4}{#2} \\
+    \stateRow{5}{#2} \\
+    \stateRow{6}{#2} \\
+    \stateRow{7}{#2} \\
+    \stateRow{8}{#2} \\
+    \stateRow{9}{#2} \\
+    \stateRow{10}{#2} \\
+    \stateRow{11}{#2} \\
+    \stateRow{12}{#2} \\
+    \stateRow{13}{#2} \\
+    \stateRow{14}{#2} \\
+    \stateRow{15}{#2} \\
+    \bottomrule
+  \end{tabular}%
+}
+
+% Wrapper to render state tables - handles single or three-table mode
+% This macro precomputes all conditionals before rendering to avoid expansion issues
+\newcommand{\renderStateTables}{%
+  % Check if three-table mode is enabled by testing if localframeStatesOne is non-empty
+  \ifx\localframeStatesOne\empty
+    % Single table mode - localframeStatesOne is empty
+    \stateTable{\localframeStates}%
+  \else
+    % Three table mode - precompute which macros to use based on active IP
+    \edef\activeip{\localframeActive}%
+    % Set up macro names based on active IP
+    \expandafter\ifnum\activeip=1\relax
+      \let\macroOne\stateTableNormal
+      \let\macroTwo\stateTableFaded
+      \let\macroThree\stateTableFaded
+    \else\expandafter\ifnum\activeip=2\relax
+      \let\macroOne\stateTableFaded
+      \let\macroTwo\stateTableNormal
+      \let\macroThree\stateTableFaded
+    \else\expandafter\ifnum\activeip=3\relax
+      \let\macroOne\stateTableFaded
+      \let\macroTwo\stateTableFaded
+      \let\macroThree\stateTableNormal
+    \else
+      % Default: all normal
+      \let\macroOne\stateTableNormal
+      \let\macroTwo\stateTableNormal
+      \let\macroThree\stateTableNormal
+    \fi\fi\fi
+    % Render three tables
+    \begin{minipage}[t]{0.30\textwidth}
+      \centering\tiny
+      \macroOne{States IP1}{\localframeStatesOne}%
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.30\textwidth}
+      \centering\tiny
+      \macroTwo{States IP2}{\localframeStatesTwo}%
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.30\textwidth}
+      \centering\tiny
+      \macroThree{States IP3}{\localframeStatesThree}%
+    \end{minipage}%
+  \fi
 }
 
 % Helper to format state with color
