@@ -303,7 +303,7 @@
 \end{scope}
 
 % MOB label positioned above the cyan box
-\node[labelstyle, above=0.15cm of mobbox.north] (moblabel) {MOB};
+\node[labelstyle, anchor=south] at ([yshift=0.05cm]mobbox.north) (moblabel) {MOB};
 
 % Data Cache (right of Load Buffer, aligned with data row)
 \node[smallbox, right=1.2cm of loadbuf.east, anchor=west] (dcache) {Data\\Cache};
@@ -519,19 +519,62 @@ When all previous instructions have retired, the load retires in-order. The RAT 
 % Summary slide for Life of a Load
 \begin{frame}
 \frametitle{The Life of a Load: Summary}
-\begin{tcolorbox}[colback=green!5!white,colframe=green!75!black,title=Complete Load Lifecycle]
-A load instruction goes through the following stages in the P6 microarchitecture:
-\end{tcolorbox}
-\vspace{3mm}
-\begin{enumerate}
-    \item \textbf{Initial State:} Load waits in the Instruction Queue
-    \item \textbf{Allocation:} Allocate entries in ROB, RS, and Load Buffer; rename destination in RAT
-    \item \textbf{Dispatch to AGU:} When source operands are ready, dispatch address calculation to AGU; release RS entry
-    \item \textbf{Address Calculation:} AGU computes virtual address and updates Load Buffer; pipeline to dTLB
-    \item \textbf{Blocking Check \& Dispatch:} Load Buffer checks for memory hazards; if clear, dispatch to Data Cache
-    \item \textbf{Data Return:} Cache returns data; update ROB and forward to dependent instructions via RS
-    \item \textbf{Retire \& Release:} When all prior instructions retire, commit load; update RAT; release Load Buffer and ROB entries
-\end{enumerate}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{1. Initial State}
+\begin{itemize}
+    \item Load waits in Instruction Queue
+\end{itemize}
+\vspace{2mm}
+
+\textbf{2. Allocation}
+\begin{itemize}
+    \item Allocate entries in ROB, RS, Load Buffer
+    \item Rename destination in RAT
+\end{itemize}
+\vspace{2mm}
+
+\textbf{3. Dispatch to AGU}
+\begin{itemize}
+    \item Wait for source operands ready
+    \item Dispatch address calculation to AGU
+    \item Release RS entry
+\end{itemize}
+\vspace{2mm}
+
+\textbf{4. Address Calculation}
+\begin{itemize}
+    \item AGU computes virtual address
+    \item Update Load Buffer
+    \item Pipeline to dTLB
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{5. Blocking Check \& Dispatch}
+\begin{itemize}
+    \item Load Buffer checks memory hazards
+    \item If clear, dispatch to Data Cache
+\end{itemize}
+\vspace{2mm}
+
+\textbf{6. Data Return}
+\begin{itemize}
+    \item Cache returns data
+    \item Update ROB
+    \item Forward to dependent instructions via RS
+\end{itemize}
+\vspace{2mm}
+
+\textbf{7. Retire \& Release}
+\begin{itemize}
+    \item Wait for all prior instructions to retire
+    \item Commit load
+    \item Update RAT
+    \item Release Load Buffer and ROB entries
+\end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 \section{Example Problem}
