@@ -590,24 +590,7 @@
   \BHRbox{#1}{#2}{#3}{#4}%
 }
 
-% NEW: Display BHR with highlight using explicit expansion
-% Must be called with BOTH parameters already expanded
-\newcommand{\BHRdisplayH}[8]{%
-  \BHRboxH{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}%
-}
-
-% Simple text-based BHR display for use in tables (no TikZ)
-\newcommand{\BHRtextH}[8]{%
-  % #1-#4 = BHR bit values
-  % #5-#8 = Highlight flags (1 = highlight)
-  \ifnum#5=1\relax\cellcolor{highlightyellow}\textcolor{red}{#1}\else#1\fi%
-  \,|\,%
-  \ifnum#6=1\relax\cellcolor{highlightyellow}\textcolor{red}{#2}\else#2\fi%
-  \,|\,%
-  \ifnum#7=1\relax\cellcolor{highlightyellow}\textcolor{red}{#3}\else#3\fi%
-  \,|\,%
-  \ifnum#8=1\relax\cellcolor{highlightyellow}\textcolor{red}{#4}\else#4\fi%
-}
+% (Removed old BHRdisplayH and BHRtextH definitions)
 
 % Simple BHR bit formatter with highlighting
 % Takes individual bit and highlight values (NOT lists)
@@ -619,6 +602,10 @@
     #1%
   \fi
 }
+
+% Note: BHR highlighting must be done manually per slide
+% Use \BHRbit{value}{highlight} directly in the table for slides needing highlighting
+% Example: \BHRbit{0}{1} | \BHRbit{0}{0} | \BHRbit{0}{0} | \BHRbit{0}{0}
 
 % Setup pgfkeys for local frame parameters
 \pgfkeys{
@@ -632,6 +619,9 @@
   bhr1h/.code={\def\localframeBHROneHighlight{#1}},
   bhr2h/.code={\def\localframeBHRTwoHighlight{#1}},
   bhr3h/.code={\def\localframeBHRThreeHighlight{#1}},
+  bhr1display/.code={\def\localframeBHROneDisplay{#1}},
+  bhr2display/.code={\def\localframeBHRTwoDisplay{#1}},
+  bhr3display/.code={\def\localframeBHRThreeDisplay{#1}},
   r1/.store in=\localframeROne,
   r2/.store in=\localframeRTwo,
   r3/.store in=\localframeRThree,
@@ -1033,6 +1023,10 @@ if (...)
   \def\localframeBHROneHighlight{{0}{0}{0}{0}}%
   \def\localframeBHRTwoHighlight{{0}{0}{0}{0}}%
   \def\localframeBHRThreeHighlight{{0}{0}{0}{0}}%
+  % Initialize BHR display overrides (empty = use default)
+  \def\localframeBHROneDisplay{}%
+  \def\localframeBHRTwoDisplay{}%
+  \def\localframeBHRThreeDisplay{}%
   % Initialize new three-table variables
   \def\localframeStatesOne{}%
   \def\localframeStatesTwo{}%
@@ -1097,19 +1091,31 @@ if (...)
           tag & \multicolumn{4}{c|}{BHRs} \\
           \midrule
           \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
-            \cellcolor{highlightyellow}IP1 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHROne}} \\
+            \cellcolor{highlightyellow}IP1 & \multicolumn{4}{c|}{%
+              \ifx\localframeBHROneDisplay\empty\BHRdisplay{\localframeBHROne}\else\localframeBHROneDisplay\fi%
+            } \\
           \else
-            IP1 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHROne}} \\
+            IP1 & \multicolumn{4}{c|}{%
+              \ifx\localframeBHROneDisplay\empty\BHRdisplay{\localframeBHROne}\else\localframeBHROneDisplay\fi%
+            } \\
           \fi
           \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
-            \cellcolor{highlightyellow}IP2 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRTwo}} \\
+            \cellcolor{highlightyellow}IP2 & \multicolumn{4}{c|}{%
+              \ifx\localframeBHRTwoDisplay\empty\BHRdisplay{\localframeBHRTwo}\else\localframeBHRTwoDisplay\fi%
+            } \\
           \else
-            IP2 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRTwo}} \\
+            IP2 & \multicolumn{4}{c|}{%
+              \ifx\localframeBHRTwoDisplay\empty\BHRdisplay{\localframeBHRTwo}\else\localframeBHRTwoDisplay\fi%
+            } \\
           \fi
           \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
-            \cellcolor{highlightyellow}IP3 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRThree}} \\
+            \cellcolor{highlightyellow}IP3 & \multicolumn{4}{c|}{%
+              \ifx\localframeBHRThreeDisplay\empty\BHRdisplay{\localframeBHRThree}\else\localframeBHRThreeDisplay\fi%
+            } \\
           \else
-            IP3 & \multicolumn{4}{c|}{\BHRdisplay{\localframeBHRThree}} \\
+            IP3 & \multicolumn{4}{c|}{%
+              \ifx\localframeBHRThreeDisplay\empty\BHRdisplay{\localframeBHRThree}\else\localframeBHRThreeDisplay\fi%
+            } \\
           \fi
           \bottomrule
       \end{tabular}
@@ -1136,7 +1142,11 @@ if (...)
     \end{columns}
     \vspace{0.5em}
     \centering
-    \textcolor{blue}{\small \localframeDesc}
+    % Only show description if not empty
+    \ifx\localframeDesc\empty
+    \else
+      \textcolor{blue}{\small \localframeDesc}
+    \fi
   \end{frame}
 }
 
@@ -1538,8 +1548,12 @@ if (...)
 
 \section{Local History Branch Predictor}
 
-% Local History Predictor Frames
-% Slide 1: Initial prediction at IP1
+%===========================================
+% Local History Branch Predictor - 7 Steps, 3 Slides Each
+%===========================================
+
+% STEP 1: First branch at IP1 (Bne r3, r0, IF) - NOT TAKEN
+% Step 1a: Prediction
 \localFrameKV{
     ip={IP1},
     outcome={Not Taken},
@@ -1553,12 +1567,12 @@ if (...)
     states2={},
     states3={},
     active={1},
-    description={Step 1: Prediction at IP1 - using BHR=0000, predicts Taken but was Not Taken}
+    step={1},
+    action={Prediction},
+    description={Using BHR=0000, index 0, state=WT predicts Taken. Actual outcome: Not Taken (misprediction)}
   }
 
-% Slide 2: Misprediction, update BHR1 and state
-% NOTE: For BHR highlighting, manually edit the BHR table in the frame to use \BHRbit{value}{highlight}
-% Example: \BHRbit{0}{1} for bit 0 with yellow bg + red text
+% Step 1b: State update
 \localFrameKV{
     ip={IP1},
     outcome={},
@@ -1568,16 +1582,38 @@ if (...)
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
-    states1={0:WNT:1},
+    states1={0:WNT:2},
     states2={},
     states3={},
     active={1},
-    step={2},
-    action={State update},
-    description={Step 2: Misprediction - update state}
+    step={1},
+    action={State Update},
+    description={Misprediction: State at index 0 transitions from WT to WNT (highlighted in yellow with red text)}
   }
 
-% Slide 3: Move to IP2
+% Step 1c: BHR update
+% LSB (rightmost bit) highlighted with yellow bg + red text
+\localFrameKV{
+    ip={IP1},
+    outcome={},
+    r1={100},
+    r2={2},
+    r3={0},
+    bhr1={0}{0}{0}{0},
+    bhr1display={\BHRbit{0}{0} | \BHRbit{0}{0} | \BHRbit{0}{0} | \BHRbit{0}{1}},
+    bhr2={0}{0}{0}{0},
+    bhr3={0}{0}{0}{0},
+    states1={0:WNT:0},
+    states2={},
+    states3={},
+    active={1},
+    step={1},
+    action={BHR Update},
+    description={BHR1 shifts left, LSB set to 0 (Not Taken). BHR: 0000 stays 0000}
+  }
+
+% STEP 2: Branch at IP2 (Bne r2, r5, L2) - TAKEN
+% Step 2a: Prediction
 \localFrameKV{
     ip={IP2},
     outcome={Taken},
@@ -1588,10 +1624,12 @@ if (...)
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
     states1={0:WNT:0},
-    states2={},
+    states2={0:WT:0},
     states3={},
     active={2},
-    description={Step 3: Prediction at IP2}
+    step={2},
+    action={Prediction},
+    description={Using BHR=0000, index 0, state=WT predicts Taken. Actual outcome: Taken (correct)}
   }
 
 % Slide 4: Correct prediction at IP2, update BHR2 and state
