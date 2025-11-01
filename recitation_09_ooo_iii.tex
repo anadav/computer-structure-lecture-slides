@@ -425,7 +425,7 @@ The load address calculation is dispatched to the AGU when the source register R
     robData={N/A},
     robDst={R3},
     lbV={1},
-    lbAddr={\newentry{V(R2+50)}},
+    lbAddr={\newentry{R2+50}},
     lbBC={0},
     agu={\removedentry{R2+50}},
     arrowDTLB=1
@@ -433,7 +433,7 @@ The load address calculation is dispatched to the AGU when the source register R
 \end{center}
 \vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The AGU computes the virtual address and updates the Load Buffer with V(R2+50). The address is then pipelined to the dTLB for translation.
+The AGU computes the virtual address and updates the Load Buffer with R2+50. The address is then pipelined to the dTLB for translation.
 \end{tcolorbox}
 \end{frame}
 
@@ -449,7 +449,7 @@ The AGU computes the virtual address and updates the Load Buffer with V(R2+50). 
     robData={N/A},
     robDst={R3},
     lbV={1},
-    lbAddr={V(R2+50)},
+    lbAddr={R2+50},
     lbBC={0},
     arrowCache=1
 ]
@@ -472,7 +472,7 @@ The Load Buffer checks for memory hazards with prior stores. If no blocking cond
     robData={\newentry{data}},
     robDst={R3},
     lbV={1},
-    lbAddr={V(R2+50)},
+    lbAddr={R2+50},
     lbBC={0},
     arrowCache=1
 ]
@@ -495,7 +495,7 @@ The Data Cache returns the requested data. The result is sent to the RS (for for
     robData={\removedentry{data}},
     robDst={\removedentry{R3}},
     lbV={\removedentry{1}},
-    lbAddr={\removedentry{V(R2+50)}},
+    lbAddr={\removedentry{R2+50}},
     lbBC={\removedentry{0}},
     retire={\newentry{R3$\leftarrow$data}}
 ]
@@ -599,7 +599,7 @@ Store instruction \texttt{MEM(R2+50)$\leftarrow$R3} is waiting in the Instructio
 \begin{center}
 \LoadLifecycleDiagram[
     robOp={\newentry{St}},
-    robValid={\newentry{0}},
+    robValid={\newentry{1}},
     robRdy={\newentry{0}},
     robData={\newentry{N/A}},
     robDst={\newentry{N/A}},
@@ -624,7 +624,7 @@ The store is allocated with one ROB entry, two RS entries (STA and STD micro-ops
 \begin{center}
 \LoadLifecycleDiagram[
     robOp={St},
-    robValid={0},
+    robValid={1},
     robRdy={0},
     robData={N/A},
     robDst={N/A},
@@ -649,13 +649,13 @@ The STA (Store Address) micro-op dispatches to the AGU when source register R2 i
 \begin{center}
 \LoadLifecycleDiagram[
     robOp={St},
-    robValid={0},
+    robValid={1},
     robRdy={0},
     robData={N/A},
     robDst={N/A},
     rs2={STD: RF0},
     sb1v={1},
-    sb1addr={\newentry{V(R2+50)}},
+    sb1addr={\newentry{R2+50}},
     sb1data={Not Vld},
     sb1snr={},
     agu={\removedentry{R2+50}},
@@ -674,14 +674,14 @@ The AGU computes the virtual address and updates the Store Buffer. The address i
 \begin{center}
 \LoadLifecycleDiagram[
     robOp={St},
-    robValid={0},
+    robValid={1},
     robRdy={0},
     robData={N/A},
     robDst={N/A},
     rs2={\removedentry{STD: RF0}},
     sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={\newentry{V(RF0)}},
+    sb1addr={R2+50},
+    sb1data={\newentry{RF0}},
     sb1snr={}
 ]
 \end{center}
@@ -697,13 +697,13 @@ The STD (Store Data) micro-op dispatches when the data source RF0 is ready. The 
 \begin{center}
 \LoadLifecycleDiagram[
     robOp={St},
-    robValid={\newentry{1}},
-    robRdy={0},
+    robValid={1},
+    robRdy={\newentry{1}},
     robData={N/A},
     robDst={N/A},
     sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={V(RF0)},
+    sb1addr={R2+50},
+    sb1data={RF0},
     sb1snr={}
 ]
 \end{center}
@@ -720,12 +720,12 @@ Once both address and data are available, the Store Buffer updates the ROB entry
 \LoadLifecycleDiagram[
     robOp={\removedentry{St}},
     robValid={\removedentry{1}},
-    robRdy={\removedentry{0}},
+    robRdy={\removedentry{1}},
     robData={\removedentry{N/A}},
     robDst={\removedentry{N/A}},
     sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={V(RF0)},
+    sb1addr={R2+50},
+    sb1data={RF0},
     sb1snr={\newentry{1}},
     retire={\newentry{Commit Store}}
 ]
@@ -742,8 +742,8 @@ The store retires in-order when all previous instructions have retired. The ROB 
 \begin{center}
 \LoadLifecycleDiagram[
     sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={V(RF0)},
+    sb1addr={R2+50},
+    sb1data={RF0},
     sb1snr={1},
     arrowStoreCache=1
 ]
@@ -760,8 +760,8 @@ After retirement, the Store Buffer initiates a write to the Data Cache. Only sen
 \begin{center}
 \LoadLifecycleDiagram[
     sb1v={\removedentry{1}},
-    sb1addr={\removedentry{V(R2+50)}},
-    sb1data={\removedentry{V(RF0)}},
+    sb1addr={\removedentry{R2+50}},
+    sb1data={\removedentry{RF0}},
     sb1snr={\removedentry{1}}
 ]
 \end{center}
