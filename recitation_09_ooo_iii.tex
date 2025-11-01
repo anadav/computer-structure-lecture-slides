@@ -99,6 +99,7 @@
         % Arrow flags (independent control)
         arrowDTLB = 0,
         arrowCache = 0,
+        arrowStoreCache = 0,
     },
     rat0/.estore in = \ratZero,
     rat1/.estore in = \ratOne,
@@ -130,6 +131,7 @@
     retirebox/.estore in = \retireBoxContent,
     arrowDTLB/.estore in = \arrowDTLB,
     arrowCache/.estore in = \arrowCache,
+    arrowStoreCache/.estore in = \arrowStoreCache,
 }
 
 % Macro for creating load lifecycle diagram using matrix of nodes
@@ -236,12 +238,12 @@
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        right=0.5cm of rs.north east,
+        right=1.0cm of rs.north east,
         anchor=north west,
         nodes={cell, align=center},
         row 1/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.6cm}},
-        column 2/.append style={nodes={text width=1.0cm}},
+        column 2/.append style={nodes={text width=1.3cm}},
         column 3/.append style={nodes={text width=0.5cm}},
         ampersand replacement=\&] (loadbuf) {
     V \& Addr \& BC \\
@@ -341,6 +343,7 @@
 % Draw green arrows based on flags
 \ifnum\arrowDTLB=1 \draw[greenarrow] (agu.east) -- (dtlb.west); \fi
 \ifnum\arrowCache=1 \draw[greenarrow] (loadbuf.east) -- (dcache.west); \fi
+\ifnum\arrowStoreCache=1 \draw[greenarrow] (storebuf.east) -| (dcache.north); \fi
 
 \end{tikzpicture}%
 }
@@ -353,7 +356,7 @@
 \begin{center}
 \LoadLifecycleDiagram[
     iq1={\newentry{R3$\leftarrow$MEM(R2+50)}},
-    lbAddr={Invalid},
+    lbAddr={Not Vld},
     robDst={}
 ]
 \end{center}
@@ -377,7 +380,7 @@ Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction
     iq1={\removedentry{R3$\leftarrow$MEM(R2+50)}},
     rs1={\newentry{RF0$\leftarrow$MEM(R2+50)}},
     lbV={\newentry{1}},
-    lbAddr={\newentry{Invalid}},
+    lbAddr={\newentry{Not Vld}},
     lbBC={\newentry{0}}
 ]
 \end{center}
@@ -399,7 +402,7 @@ The load is allocated with one entry in the ROB, one in the RS, and one in the L
     robData={X},
     rs1={\removedentry{RF0$\leftarrow$MEM(R2+50)}},
     lbV={1},
-    lbAddr={Invalid},
+    lbAddr={Not Vld},
     lbBC={0},
     agu={\newentry{R2+50}}
 ]
@@ -603,7 +606,7 @@ Store instruction \texttt{MEM(R2+50)$\leftarrow$R3} is waiting in the Instructio
     sb1v={\newentry{1}},
     sb1addr={\newentry{Not Vld}},
     sb1data={\newentry{Not Vld}},
-    sb1snr={\newentry{}}
+    sb1snr={}
 ]
 \end{center}
 \vspace{-2mm}
@@ -739,7 +742,7 @@ The store retires in-order when all previous instructions have retired. The ROB 
     sb1addr={V(R2+50)},
     sb1data={V(RF0)},
     sb1snr={1},
-    arrowCache=1
+    arrowStoreCache=1
 ]
 \end{center}
 \vspace{-2mm}
