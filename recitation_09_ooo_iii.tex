@@ -90,7 +90,13 @@
 % Define colors for the load lifecycle diagrams
 \definecolor{lightblue}{RGB}{200,230,250}
 \definecolor{lightyellow}{RGB}{255,250,200}
-\definecolor{lightcyan}{RGB}{200,255,255}
+\definecolor{lightcyan}{RGB}{230,255,255}
+\definecolor{lightpink}{RGB}{255,240,245}
+\definecolor{highlightyellow}{RGB}{255,230,100}
+
+% Commands for highlighting entries
+\newcommand{\newentry}[1]{\colorbox{highlightyellow}{#1}}
+\newcommand{\removedentry}[1]{\colorbox{highlightyellow}{\sout{#1}}}
 
 % pgfkeys setup for Load Lifecycle diagram
 \pgfkeys{
@@ -104,8 +110,9 @@
         iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = {},
         % RS content (2 rows)
         rs1 = {}, rs2 = {},
-        % Store Buffer (2 data rows)
-        sb1 = {}, sb2 = {},
+        % Store Buffer (2 data rows, 4 fields each: V, Addr, Data, Snr)
+        sb1v = {}, sb1addr = {}, sb1data = {}, sb1snr = {},
+        sb2v = {}, sb2addr = {}, sb2data = {}, sb2snr = {},
         % Load Buffer (V, Addr, BC)
         lbV = {}, lbAddr = {}, lbBC = {},
         % EXE units (second row content)
@@ -129,8 +136,14 @@
     iq2/.estore in = \iqTwo,
     rs1/.estore in = \rsOne,
     rs2/.estore in = \rsTwo,
-    sb1/.estore in = \sbOne,
-    sb2/.estore in = \sbTwo,
+    sb1v/.estore in = \sbOneV,
+    sb1addr/.estore in = \sbOneAddr,
+    sb1data/.estore in = \sbOneData,
+    sb1snr/.estore in = \sbOneSnr,
+    sb2v/.estore in = \sbTwoV,
+    sb2addr/.estore in = \sbTwoAddr,
+    sb2data/.estore in = \sbTwoData,
+    sb2snr/.estore in = \sbTwoSnr,
     lbV/.estore in = \lbV,
     lbAddr/.estore in = \lbAddr,
     lbBC/.estore in = \lbBC,
@@ -148,7 +161,8 @@
 %   robOp, robValid, robRdy, robData - ROB entry fields (Phys Reg is hard-coded as RF0-RF3)
 %   iq1, iq2 - Instruction Queue entries (2 rows)
 %   rs1, rs2 - Reservation Station entries (2 rows)
-%   sb1, sb2 - Store Buffer entries
+%   sb1v, sb1addr, sb1data, sb1snr - Store Buffer row 1 (V, Addr, Data, Snr)
+%   sb2v, sb2addr, sb2data, sb2snr - Store Buffer row 2 (V, Addr, Data, Snr)
 %   lbV, lbAddr, lbBC - Load Buffer fields (Valid, Address, Blocking Conditions)
 %   alu, agu - EXE unit contents (second row; first row is hard-coded as "ALU1"/"AGU")
 %   retire - Retire stage content
@@ -266,12 +280,15 @@
         above=0.6cm of loadbuf.north,
         anchor=south,
         nodes={cell, align=center},
-        column 1/.append style={nodes={text width=0.6cm}},
-        column 2/.append style={nodes={text width=1.0cm}},
-        column 3/.append style={nodes={text width=0.5cm}},
+        row 1/.style={nodes={headerbox}},
+        column 1/.append style={nodes={text width=0.35cm}},
+        column 2/.append style={nodes={text width=0.7cm}},
+        column 3/.append style={nodes={text width=0.7cm}},
+        column 4/.append style={nodes={text width=0.35cm}},
         ampersand replacement=\&] (storebuf) {
-    \ifx\sbOne\empty{ }\else\sbOne\fi \& {} \& {} \\
-    \ifx\sbTwo\empty{ }\else\sbTwo\fi \& {} \& {} \\
+    V \& Addr \& Data \& Snr \\
+    \ifx\sbOneV\empty{ }\else\sbOneV\fi \& \ifx\sbOneAddr\empty{ }\else\sbOneAddr\fi \& \ifx\sbOneData\empty{ }\else\sbOneData\fi \& \ifx\sbOneSnr\empty{ }\else\sbOneSnr\fi \\
+    \ifx\sbTwoV\empty{ }\else\sbTwoV\fi \& \ifx\sbTwoAddr\empty{ }\else\sbTwoAddr\fi \& \ifx\sbTwoData\empty{ }\else\sbTwoData\fi \& \ifx\sbTwoSnr\empty{ }\else\sbTwoSnr\fi \\
 };
 
 % MOB label and cyan background using fit
@@ -280,8 +297,8 @@
 \node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
 \end{scope}
 
-% Data Cache (right of Load Buffer)
-\node[smallbox, right=0.5cm of loadbuf.north east, anchor=north west] (dcache) {Data\\Cache};
+% Data Cache (right of Load Buffer, aligned with data row)
+\node[smallbox, right=0.5cm of loadbuf.east, anchor=west] (dcache) {Data\\Cache};
 
 % EXE block - Individual matrices
 \matrix[matrix of nodes,
@@ -312,14 +329,14 @@
     \ifx\aguContent\empty{ }\else\aguContent\fi \\
 };
 
-% EXE label and yellow background using fit
+% EXE label and pink background using fit
 \node[labelstyle, left=0.1cm of alu1.west, anchor=east] (exelabel) {EXE};
 \begin{scope}[on background layer]
-\node[draw, fill=lightyellow, fit=(exelabel)(alu1)(dots)(agu), inner sep=2pt] (exeblock) {};
+\node[draw, fill=lightpink, fit=(exelabel)(alu1)(dots)(agu), inner sep=2pt] (exeblock) {};
 \end{scope}
 
-% dTLB (right of AGU)
-\node[smallbox, right=0.5cm of agu.north east, anchor=north west] (dtlb) {dTLB};
+% dTLB (right of AGU, aligned with second row)
+\node[smallbox, right=0.5cm of agu.east, anchor=west] (dtlb) {dTLB};
 
 % Retire (below EXE block, aligned with RS west edge)
 \matrix[matrix of nodes,
@@ -346,7 +363,7 @@
 
 % Life of a Load - Step 1: Initial State
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Initial State}
 \begin{center}
 \LoadLifecycleDiagram[
     iq1={R3$\leftarrow$MEM(R2+50)},
@@ -354,11 +371,15 @@
     arrows=0
 ]
 \end{center}
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Initial State]
+Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction Queue, ready to be allocated.
+\end{tcolorbox}
 \end{frame}
 
 % Life of a Load - Step 2: Allocation
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Allocation}
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
@@ -374,14 +395,15 @@
     arrows=1
 ]
 \end{center}
-\vspace{-3mm}
-\scriptsize
-$\bullet$ 1 entry in the ROB, RS and Load Buffer + rename in RAT
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Allocation Phase]
+The load is allocated with one entry in the ROB, one in the RS, and one in the Load Buffer. The RAT is updated to rename R3 to physical register RF0.
+\end{tcolorbox}
 \end{frame}
 
 % Life of a Load - Step 3: Dispatch
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Dispatch to AGU}
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
@@ -397,14 +419,15 @@ $\bullet$ 1 entry in the ROB, RS and Load Buffer + rename in RAT
     arrows=2
 ]
 \end{center}
-\vspace{-3mm}
-\scriptsize
-$\bullet$ Dispatch Load address calculation to AGU when source is ready -- Release RS entry
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Dispatch Phase]
+The load address calculation is dispatched to the AGU when the source register R2 is ready. The RS entry is released after dispatch.
+\end{tcolorbox}
 \end{frame}
 
 % Life of a Load - Step 4: Address Calculation
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Address Calculation}
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
@@ -419,14 +442,15 @@ $\bullet$ Dispatch Load address calculation to AGU when source is ready -- Relea
     arrows=3
 ]
 \end{center}
-\vspace{-3mm}
-\scriptsize
-$\bullet$ AGU updates the address in the Load buffer. Pipeline proceeds to dTLB
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Address Calculation Phase]
+The AGU computes the virtual address and updates the Load Buffer with V(R2+50). The address is then pipelined to the dTLB for translation.
+\end{tcolorbox}
 \end{frame}
 
 % Life of a Load - Step 5: Dispatch to DCU
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Blocking Check \& Dispatch to Cache}
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
@@ -441,14 +465,15 @@ $\bullet$ AGU updates the address in the Load buffer. Pipeline proceeds to dTLB
     arrows=4
 ]
 \end{center}
-\vspace{-3mm}
-\scriptsize
-$\bullet$ Load Buffer checks for blocking conditions and dispatches the Load to the DCU
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Blocking Check \& Dispatch Phase]
+The Load Buffer checks for memory hazards with prior stores. If no blocking conditions exist, the load is dispatched to the Data Cache (DCU).
+\end{tcolorbox}
 \end{frame}
 
 % Life of a Load - Step 6: Data Return
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Data Return}
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
@@ -463,14 +488,15 @@ $\bullet$ Load Buffer checks for blocking conditions and dispatches the Load to 
     arrows=4
 ]
 \end{center}
-\vspace{-3mm}
-\scriptsize
-$\bullet$ DCU sends the result to RS and updates the ROB with the load result
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Data Return Phase]
+The Data Cache returns the requested data. The result is sent to the RS (for forwarding to dependent instructions) and the ROB is updated with the load result (Rdy=1, Data=data).
+\end{tcolorbox}
 \end{frame}
 
 % Life of a Load - Step 7: Retire
 \begin{frame}
-\frametitle{The Life of a Load\ldots}
+\frametitle{The Life of a Load: Retire \& Release}
 \begin{center}
 \LoadLifecycleDiagram[
     iq1={R3$\leftarrow$MEM(R2+50)},
@@ -480,10 +506,28 @@ $\bullet$ DCU sends the result to RS and updates the ROB with the load result
     arrows=0
 ]
 \end{center}
-\vspace{-3mm}
-\scriptsize
-$\bullet$ Load will retire as any other instruction (when all previous instructions have retired) -- RAT updated\\
-$\bullet$ LB and ROB entry are released
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Retire \& Release Phase]
+When all previous instructions have retired, the load retires in-order. The RAT is updated to commit the architectural state. Finally, the Load Buffer and ROB entries are released for reuse.
+\end{tcolorbox}
+\end{frame}
+
+% Summary slide for Life of a Load
+\begin{frame}
+\frametitle{The Life of a Load: Summary}
+\begin{tcolorbox}[colback=green!5!white,colframe=green!75!black,title=Complete Load Lifecycle]
+A load instruction goes through the following stages in the P6 microarchitecture:
+\end{tcolorbox}
+\vspace{3mm}
+\begin{enumerate}
+    \item \textbf{Initial State:} Load waits in the Instruction Queue
+    \item \textbf{Allocation:} Allocate entries in ROB, RS, and Load Buffer; rename destination in RAT
+    \item \textbf{Dispatch to AGU:} When source operands are ready, dispatch address calculation to AGU; release RS entry
+    \item \textbf{Address Calculation:} AGU computes virtual address and updates Load Buffer; pipeline to dTLB
+    \item \textbf{Blocking Check \& Dispatch:} Load Buffer checks for memory hazards; if clear, dispatch to Data Cache
+    \item \textbf{Data Return:} Cache returns data; update ROB and forward to dependent instructions via RS
+    \item \textbf{Retire \& Release:} When all prior instructions retire, commit load; update RAT; release Load Buffer and ROB entries
+\end{enumerate}
 \end{frame}
 
 \section{Example Problem}
