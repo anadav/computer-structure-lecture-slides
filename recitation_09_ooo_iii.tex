@@ -99,21 +99,21 @@
         % RAT physical registers
         rat0 = {}, rat1 = {}, rat2 = {}, rat3 = {},
         % ROB first entry
-        robNum = { }, robValid = { }, robRdy = { }, robData = { },
-        % Instruction Queue (4 rows)
-        iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = { }, iq3 = { }, iq4 = { },
-        % RS content
-        rs = { },
+        robNum = {}, robValid = {}, robRdy = {}, robData = {},
+        % Instruction Queue (2 rows)
+        iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = {},
+        % RS content (2 rows)
+        rs1 = {}, rs2 = {},
         % Store Buffer (2 data rows)
-        sb1 = { }, sb2 = { },
+        sb1 = {}, sb2 = {},
         % Load Buffer (V, Addr, BC)
-        lbV = { }, lbAddr = { }, lbBC = { },
+        lbV = {}, lbAddr = {}, lbBC = {},
         % EXE units (second row content)
-        alu = {}, agu = { },
+        alu = {}, agu = {},
         % Retire
-        retire = { },
+        retire = {},
         % Retire box (optional box next to retire)
-        retirebox = { },
+        retirebox = {},
         % Arrow flags (0-4)
         arrows = 0,
     },
@@ -127,9 +127,8 @@
     robData/.estore in = \robData,
     iq1/.estore in = \iqOne,
     iq2/.estore in = \iqTwo,
-    iq3/.estore in = \iqThree,
-    iq4/.estore in = \iqFour,
-    rs/.estore in = \rsContent,
+    rs1/.estore in = \rsOne,
+    rs2/.estore in = \rsTwo,
     sb1/.estore in = \sbOne,
     sb2/.estore in = \sbTwo,
     lbV/.estore in = \lbV,
@@ -147,8 +146,8 @@
 % Available keys:
 %   rat0, rat1, rat2, rat3 - RAT physical register mappings
 %   robNum, robValid, robRdy, robData - ROB entry fields
-%   iq1, iq2, iq3, iq4 - Instruction Queue entries
-%   rs - Reservation Station content
+%   iq1, iq2 - Instruction Queue entries (2 rows)
+%   rs1, rs2 - Reservation Station entries (2 rows)
 %   sb1, sb2 - Store Buffer entries
 %   lbV, lbAddr, lbBC - Load Buffer fields (Valid, Address, Blocking Conditions)
 %   alu, agu - EXE unit contents (second row; first row is hard-coded as "ALU1"/"AGU")
@@ -220,7 +219,8 @@
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=2.8cm}},
         ampersand replacement=\&] (rs) {
-    \rsContent \\
+    \ifx\rsOne\empty{ }\else\rsOne\fi \\
+    \ifx\rsTwo\empty{ }\else\rsTwo\fi \\
 };
 
 % Instruction Queue (above RS label)
@@ -234,10 +234,8 @@
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=2.8cm}},
         ampersand replacement=\&] (instq) {
-    \iqOne \\
-    \iqTwo \\
-    \iqThree \\
-    \iqFour \\
+    \ifx\iqOne\empty{ }\else\iqOne\fi \\
+    \ifx\iqTwo\empty{ }\else\iqTwo\fi \\
 };
 
 % MOB (Memory Order Buffer) - Load Buffer with title above
@@ -256,7 +254,7 @@
         column 3/.append style={nodes={text width=0.5cm}},
         ampersand replacement=\&] (loadbuf) {
     V \& Addr \& BC \\
-    \lbV \& \lbAddr \& \lbBC \\
+    \ifx\lbV\empty{ }\else\lbV\fi \& \ifx\lbAddr\empty{ }\else\lbAddr\fi \& \ifx\lbBC\empty{ }\else\lbBC\fi \\
 };
 
 % Store Buffer title
@@ -274,8 +272,8 @@
         column 2/.append style={nodes={text width=1.0cm}},
         column 3/.append style={nodes={text width=0.5cm}},
         ampersand replacement=\&] (storebuf) {
-    \sbOne \& {} \& {} \\
-    \sbTwo \& {} \& {} \\
+    \ifx\sbOne\empty{ }\else\sbOne\fi \& {} \& {} \\
+    \ifx\sbTwo\empty{ }\else\sbTwo\fi \& {} \& {} \\
 };
 
 % MOB label and cyan background using fit
@@ -316,7 +314,7 @@
         column 1/.append style={nodes={text width=1.2cm}},
         ampersand replacement=\&] (agu) {
     AGU \\
-    \aguContent \\
+    \ifx\aguContent\empty{ }\else\aguContent\fi \\
 };
 
 % EXE label and yellow background using fit
@@ -336,7 +334,7 @@
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.8cm}},
         ampersand replacement=\&] (retire) {
-    \retireContent \\
+    \ifx\retireContent\empty{ }\else\retireContent\fi \\
 };
 
 % Retire box (optional box next to retire)
@@ -349,7 +347,7 @@
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.8cm}},
         ampersand replacement=\&] (retirebox) {
-    \retireBoxContent \\
+    \ifx\retireBoxContent\empty{ }\else\retireBoxContent\fi \\
 };
 
 % Draw green arrows based on flags
@@ -384,7 +382,7 @@
     robRdy={0},
     robData={X},
     iq1={R3$\leftarrow$MEM(R2+50)},
-    rs={RF0$\leftarrow$MEM(R2+50)},
+    rs1={RF0$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={Not Valid},
     lbBC={0},
