@@ -181,7 +181,7 @@
     headerbox/.style={draw, rectangle, fill=gray!10, minimum height=4.5mm, text height=1.5ex, text depth=0.25ex, font=\tiny\ttfamily, align=center},
     smallbox/.style={draw, rectangle, minimum width=1.2cm, minimum height=0.7cm, font=\scriptsize\ttfamily, align=center},
     labelstyle/.style={font=\scriptsize\bfseries\sffamily},
-    greenarrow/.style={->, very thick, green!60!black, >=stealth}
+    greenarrow/.style={->, very thick, yellow!80!orange, >=stealth}
 ]
 
 % RAT (Register Alias Table)
@@ -396,6 +396,7 @@ Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction
     robValid={\newentry{1}},
     robRdy={\newentry{0}},
     robData={\newentry{X}},
+    robDst={\newentry{R3}},
     iq1={R3$\leftarrow$MEM(R2+50)},
     rs1={\newentry{RF0$\leftarrow$MEM(R2+50)}},
     lbV={\newentry{1}},
@@ -420,10 +421,11 @@ The load is allocated with one entry in the ROB, one in the RS, and one in the L
     robRdy={0},
     robData={X},
     iq1={R3$\leftarrow$MEM(R2+50)},
+    rs1={\removedentry{RF0$\leftarrow$MEM(R2+50)}},
     lbV={1},
     lbAddr={Invalid},
     lbBC={0},
-    agu={R2+50}
+    agu={\newentry{R2+50}}
 ]
 \end{center}
 \vspace{-2mm}
@@ -444,8 +446,9 @@ The load address calculation is dispatched to the AGU when the source register R
     robData={X},
     iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
-    lbAddr={V(R2+50)},
+    lbAddr={\newentry{V(R2+50)}},
     lbBC={0},
+    agu={\removedentry{R2+50}},
     arrowDTLB=1
 ]
 \end{center}
@@ -486,8 +489,8 @@ The Load Buffer checks for memory hazards with prior stores. If no blocking cond
     rat3={RF0},
     robOp={Ld},
     robValid={1},
-    robRdy={1},
-    robData={data},
+    robRdy={\newentry{1}},
+    robData={\newentry{data}},
     iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={V(R2+50)},
@@ -497,7 +500,7 @@ The Load Buffer checks for memory hazards with prior stores. If no blocking cond
 \end{center}
 \vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The Data Cache returns the requested data. The result is sent to the RS (for forwarding to dependent instructions) and the ROB is updated with the load result (Rdy=1, Data=data).
+The Data Cache returns the requested data. The result is sent to the RS (for forwarding to dependent instructions) and the ROB is updated with the load result.
 \end{tcolorbox}
 \end{frame}
 
