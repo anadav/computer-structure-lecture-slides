@@ -99,7 +99,7 @@
         % RAT physical registers
         rat0 = {}, rat1 = {}, rat2 = {}, rat3 = {},
         % ROB first entry
-        robNum = {}, robValid = {}, robRdy = {}, robData = {},
+        robOp = {}, robPhys = {}, robValid = {}, robRdy = {}, robData = {},
         % Instruction Queue (2 rows)
         iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = {},
         % RS content (2 rows)
@@ -121,7 +121,8 @@
     rat1/.estore in = \ratOne,
     rat2/.estore in = \ratTwo,
     rat3/.estore in = \ratThree,
-    robNum/.estore in = \robNum,
+    robOp/.estore in = \robOp,
+    robPhys/.estore in = \robPhys,
     robValid/.estore in = \robValid,
     robRdy/.estore in = \robRdy,
     robData/.estore in = \robData,
@@ -145,7 +146,7 @@
 % Usage: \LoadLifecycleDiagram[key=value, ...]
 % Available keys:
 %   rat0, rat1, rat2, rat3 - RAT physical register mappings
-%   robNum, robValid, robRdy, robData - ROB entry fields
+%   robOp, robPhys, robValid, robRdy, robData - ROB entry fields
 %   iq1, iq2 - Instruction Queue entries (2 rows)
 %   rs1, rs2 - Reservation Station entries (2 rows)
 %   sb1, sb2 - Store Buffer entries
@@ -173,12 +174,12 @@
         column sep=-\pgflinewidth,
         inner sep=0pt,
         label={[labelstyle]above:RAT},
-        nodes={cell},
-        row 1/.style={nodes={headerbox, minimum height=7mm}},
-        column 1/.append style={nodes={text width=0.9cm, align=center, fill=gray!10}},
-        column 2/.append style={nodes={text width=0.9cm, align=center, minimum width=0.9cm}},
+        nodes={cell, align=center},
+        row 1/.style={nodes={headerbox}},
+        column 1/.append style={nodes={text width=0.9cm, fill=gray!10}},
+        column 2/.append style={nodes={text width=0.9cm, minimum width=0.9cm}},
         ampersand replacement=\&] (rat) {
-    |[align=center]| {\scriptsize\shortstack{Arch\\Reg}} \& |[align=center]| {\scriptsize\shortstack{Phys\\Reg}} \\
+    {\tiny\begin{tabular}{@{}c@{}}Arch\\Reg\end{tabular}} \& {\tiny\begin{tabular}{@{}c@{}}Phys\\Reg\end{tabular}} \\
     R0 \& \ifx\ratZero\empty{ }\else\ratZero\fi \\
     R1 \& \ifx\ratOne\empty{ }\else\ratOne\fi \\
     R2 \& \ifx\ratTwo\empty{ }\else\ratTwo\fi \\
@@ -198,14 +199,15 @@
         column 1/.append style={nodes={text width=0.35cm, fill=lightblue!30}},
         column 2/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         column 3/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
-        column 4/.append style={nodes={text width=0.7cm, fill=lightblue!30}},
-        column 5/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
+        column 4/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
+        column 5/.append style={nodes={text width=0.7cm, fill=lightblue!30}},
+        column 6/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         ampersand replacement=\&] (rob) {
-    \# \& Val \& Rdy \& Data \& DST \\
-    \robNum \& \robValid \& \robRdy \& \robData \& R3 \\
-    0 \& {} \& {} \& {} \& {} \\
-    0 \& {} \& {} \& {} \& {} \\
-    0 \& {} \& {} \& {} \& {} \\
+    Op \& {\tiny\begin{tabular}{@{}c@{}}Phys\\Reg\end{tabular}} \& Val \& Rdy \& Data \& DST \\
+    \ifx\robOp\empty{ }\else\robOp\fi \& \ifx\robPhys\empty{ }\else\robPhys\fi \& \robValid \& \robRdy \& \robData \& R3 \\
+    {} \& {} \& {} \& {} \& {} \& {} \\
+    {} \& {} \& {} \& {} \& {} \& {} \\
+    {} \& {} \& {} \& {} \& {} \& {} \\
 };
 
 % RS (Reservation Station)
@@ -279,11 +281,8 @@
 \node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
 \end{scope}
 
-% Data Cache
-\node[smallbox, right=0.5cm of storebuf.north east, anchor=north west] (dcache) {Data\\Cache};
-
-% dTLB (below Data Cache)
-\node[smallbox, below=0.3cm of dcache.south west, anchor=north west] (dtlb) {dTLB};
+% Data Cache (right of Load Buffer)
+\node[smallbox, right=0.5cm of loadbuf.north east, anchor=north west] (dcache) {Data\\Cache};
 
 % EXE block - Individual matrices
 \matrix[matrix of nodes,
@@ -320,6 +319,9 @@
 \node[draw, fill=lightyellow, fit=(exelabel)(alu1)(dots)(agu), inner sep=2pt] (exeblock) {};
 \end{scope}
 
+% dTLB (right of AGU)
+\node[smallbox, right=0.5cm of agu.north east, anchor=north west] (dtlb) {dTLB};
+
 % Retire (below EXE block, aligned with RS west edge)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
@@ -349,7 +351,7 @@
 \begin{center}
 \LoadLifecycleDiagram[
     iq1={R3$\leftarrow$MEM(R2+50)},
-    lbAddr={Not Valid},
+    lbAddr={Invalid},
     arrows=0
 ]
 \end{center}
@@ -361,14 +363,14 @@
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robNum={Ld},
+    robOp={Ld}, robPhys={RF0},
     robValid={1},
     robRdy={0},
     robData={X},
     iq1={R3$\leftarrow$MEM(R2+50)},
     rs1={RF0$\leftarrow$MEM(R2+50)},
     lbV={1},
-    lbAddr={Not Valid},
+    lbAddr={Invalid},
     lbBC={0},
     arrows=1
 ]
@@ -384,13 +386,13 @@ $\bullet$ 1 entry in the ROB, RS and Load Buffer + rename in RAT
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robNum={Ld},
+    robOp={Ld}, robPhys={RF0},
     robValid={1},
     robRdy={0},
     robData={X},
     iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
-    lbAddr={Not Valid},
+    lbAddr={Invalid},
     lbBC={0},
     agu={R2+50},
     arrows=2
@@ -407,7 +409,7 @@ $\bullet$ Dispatch Load address calculation to AGU when source is ready -- Relea
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robNum={Ld},
+    robOp={Ld}, robPhys={RF0},
     robValid={1},
     robRdy={0},
     robData={X},
@@ -429,7 +431,7 @@ $\bullet$ AGU updates the address in the Load buffer. Pipeline proceeds to dTLB
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robNum={Ld},
+    robOp={Ld}, robPhys={RF0},
     robValid={1},
     robRdy={0},
     robData={X},
@@ -451,7 +453,7 @@ $\bullet$ Load Buffer checks for blocking conditions and dispatches the Load to 
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robNum={Ld},
+    robOp={Ld}, robPhys={RF0},
     robValid={1},
     robRdy={1},
     robData={data},
