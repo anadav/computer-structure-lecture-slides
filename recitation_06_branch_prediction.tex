@@ -11,6 +11,7 @@
 \usepackage[siunitx, RPvoltages]{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{array}
+\usepackage{xstring}
 \usetheme{Madrid}
 
 % Custom colors
@@ -1207,13 +1208,13 @@ if (...)
   \end{tabular}
 }
 
-% Macro for labeled state table (normal)
-\newcommand{\stateTableNormal}[2]{%
-  % #1: label (e.g., "State IP1")
+% Macro for labeled state table (active - with yellow header)
+\newcommand{\stateTableActive}[2]{%
+  % #1: label (e.g., "States IP1")
   % #2: state data (same format as \stateTable)
   \begin{tabular}{|c|c|}
     \toprule
-    \multicolumn{2}{|c|}{#1} \\
+    \multicolumn{2}{|c|}{\cellcolor{highlightyellow}#1} \\
     \midrule
     \stateRow{0}{#2} \\
     \stateRow{1}{#2} \\
@@ -1235,13 +1236,13 @@ if (...)
   \end{tabular}%
 }
 
-% Macro for labeled state table (faded)
-\newcommand{\stateTableFaded}[2]{%
-  % #1: label (e.g., "State IP1")
+% Macro for labeled state table (inactive - normal header)
+\newcommand{\stateTableInactive}[2]{%
+  % #1: label (e.g., "States IP1")
   % #2: state data (same format as \stateTable)
   \begin{tabular}{|c|c|}
     \toprule
-    \multicolumn{2}{|c|}{\cellcolor{gray!30}#1} \\
+    \multicolumn{2}{|c|}{#1} \\
     \midrule
     \stateRow{0}{#2} \\
     \stateRow{1}{#2} \\
@@ -1275,22 +1276,22 @@ if (...)
     \edef\activeip{\localframeActive}%
     % Set up macro names based on active IP
     \expandafter\ifnum\activeip=1\relax
-      \let\macroOne\stateTableNormal
-      \let\macroTwo\stateTableFaded
-      \let\macroThree\stateTableFaded
+      \let\macroOne\stateTableActive
+      \let\macroTwo\stateTableInactive
+      \let\macroThree\stateTableInactive
     \else\expandafter\ifnum\activeip=2\relax
-      \let\macroOne\stateTableFaded
-      \let\macroTwo\stateTableNormal
-      \let\macroThree\stateTableFaded
+      \let\macroOne\stateTableInactive
+      \let\macroTwo\stateTableActive
+      \let\macroThree\stateTableInactive
     \else\expandafter\ifnum\activeip=3\relax
-      \let\macroOne\stateTableFaded
-      \let\macroTwo\stateTableFaded
-      \let\macroThree\stateTableNormal
+      \let\macroOne\stateTableInactive
+      \let\macroTwo\stateTableInactive
+      \let\macroThree\stateTableActive
     \else
-      % Default: all normal
-      \let\macroOne\stateTableNormal
-      \let\macroTwo\stateTableNormal
-      \let\macroThree\stateTableNormal
+      % Default: all inactive (no highlighting)
+      \let\macroOne\stateTableInactive
+      \let\macroTwo\stateTableInactive
+      \let\macroThree\stateTableInactive
     \fi\fi\fi
     % Render three tables
     \begin{minipage}[t]{0.30\textwidth}
@@ -1332,18 +1333,78 @@ if (...)
   \def\temphighlight{0}%
   % Parse the input string for this index
   \parseStateString{#1}{#2}%
-  \ifnum\temphighlight=1
+  \ifnum\temphighlight=2
+    % Yellow background + red text
+    \cellcolor{highlightyellow}\textcolor{red}{\formatState{\tempstate}}%
+  \else\ifnum\temphighlight=1
+    % Yellow background only
     \cellcolor{highlightyellow}\formatState{\tempstate}%
   \else
+    % Normal
     \formatState{\tempstate}%
+  \fi\fi
+}
+
+% Helper to parse state string - simplified hacky version
+% Format: "index:state:highlight,index:state:highlight,..."
+% highlight: 0=normal, 1=yellow bg, 2=yellow bg + red text
+\newcommand{\parseStateString}[2]{%
+  % #1 = target index to find
+  % #2 = full state string
+  % Try to find this index in the string
+  \def\targetindex{#1}%
+  \parseStateStringHelper{#2}%
+}
+
+% Hacky recursive parser - checks common patterns
+\newcommand{\parseStateStringHelper}[1]{%
+  % Just do pattern matching for specific entries
+  % This is hacky but avoids complex parsing
+  \parseStateEntry{0}{#1}%
+  \parseStateEntry{1}{#1}%
+  \parseStateEntry{2}{#1}%
+  \parseStateEntry{3}{#1}%
+  \parseStateEntry{4}{#1}%
+  \parseStateEntry{5}{#1}%
+  \parseStateEntry{6}{#1}%
+  \parseStateEntry{7}{#1}%
+  \parseStateEntry{8}{#1}%
+  \parseStateEntry{9}{#1}%
+  \parseStateEntry{10}{#1}%
+  \parseStateEntry{11}{#1}%
+  \parseStateEntry{12}{#1}%
+  \parseStateEntry{13}{#1}%
+  \parseStateEntry{14}{#1}%
+  \parseStateEntry{15}{#1}%
+}
+
+% Check if specific index appears in string
+\newcommand{\parseStateEntry}[2]{%
+  % #1 = index to check, #2 = full string
+  % Check if this matches our target
+  \ifnum#1=\targetindex\relax
+    % Try to extract state from string - look for patterns like "N:STATE:H"
+    \extractStateValue{#1}{#2}%
   \fi
 }
 
-% Helper to parse state string - simplified version
-\newcommand{\parseStateString}[2]{%
-  % This is a simplified implementation
-  % In practice, you'd parse #2 to find if #1 appears
-  % For now, using manual specification in frames
+% Extract state value - hacky string matching
+\newcommand{\extractStateValue}[2]{%
+  % #1 = index, #2 = full string
+  % Use IfSubStr to check if this index appears
+  % For simplicity, manually check common patterns
+  \IfSubStr{#2}{#1:WT:0}{\def\tempstate{WT}\def\temphighlight{0}}{}%
+  \IfSubStr{#2}{#1:WT:1}{\def\tempstate{WT}\def\temphighlight{1}}{}%
+  \IfSubStr{#2}{#1:WT:2}{\def\tempstate{WT}\def\temphighlight{2}}{}%
+  \IfSubStr{#2}{#1:WNT:0}{\def\tempstate{WNT}\def\temphighlight{0}}{}%
+  \IfSubStr{#2}{#1:WNT:1}{\def\tempstate{WNT}\def\temphighlight{1}}{}%
+  \IfSubStr{#2}{#1:WNT:2}{\def\tempstate{WNT}\def\temphighlight{2}}{}%
+  \IfSubStr{#2}{#1:ST:0}{\def\tempstate{ST}\def\temphighlight{0}}{}%
+  \IfSubStr{#2}{#1:ST:1}{\def\tempstate{ST}\def\temphighlight{1}}{}%
+  \IfSubStr{#2}{#1:ST:2}{\def\tempstate{ST}\def\temphighlight{2}}{}%
+  \IfSubStr{#2}{#1:SNT:0}{\def\tempstate{SNT}\def\temphighlight{0}}{}%
+  \IfSubStr{#2}{#1:SNT:1}{\def\tempstate{SNT}\def\temphighlight{1}}{}%
+  \IfSubStr{#2}{#1:SNT:2}{\def\tempstate{SNT}\def\temphighlight{2}}{}%
 }
 
 % Advanced macro for complete state specification
@@ -1404,11 +1465,11 @@ if (...)
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
-    states1={0:WT:0},
+    states1={0:WT:1},
     states2={},
     states3={},
     active={1},
-    description={Step 1: Prediction at IP1}
+    description={Step 1: Prediction at IP1 - using BHR=0000, predicts Taken but was Not Taken}
   }
 
 % Slide 2: Misprediction, update BHR1 and state
