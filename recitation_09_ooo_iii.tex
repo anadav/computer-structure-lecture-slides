@@ -261,8 +261,8 @@
         nodes={cell, align=center},
         row 1/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.35cm}},
-        column 2/.append style={nodes={text width=0.7cm}},
-        column 3/.append style={nodes={text width=0.7cm}},
+        column 2/.append style={nodes={text width=1.2cm}},
+        column 3/.append style={nodes={text width=1.2cm}},
         column 4/.append style={nodes={text width=0.35cm}},
         ampersand replacement=\&] (storebuf) {
     V \& Addr \& Data \& Snr \\
@@ -345,266 +345,7 @@
 \end{tikzpicture}%
 }
 
-\begin{frame}{The Life of a Load}
-\begin{itemize}
-    \item \textbf{Allocation:} 1 entry in ROB, RS, and Load Buffer + RAT rename
-    \item \textbf{Dispatch:} Address calculation to AGU when source ready $\rightarrow$ Release RS
-    \item \textbf{Address Calculation:} AGU updates Load Buffer, pipeline to dTLB
-    \item \textbf{Blocking Check:} Load Buffer checks for hazards, dispatches to DCU
-    \item \textbf{Data Return:} DCU sends result to RS and updates ROB
-    \item \textbf{Retire:} When all previous instructions retired $\rightarrow$ Update RAT
-    \item \textbf{Release:} LB and ROB entries freed
-\end{itemize}
-\end{frame}
-
-% Life of a Store - Step 1: Initial State
-\begin{frame}
-\frametitle{The Life of a Store: Initial State}
-\begin{center}
-\LoadLifecycleDiagram[
-    iq1={\newentry{MEM(R2+50)$\leftarrow$R3}},
-    robDst={}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-Store instruction \texttt{MEM(R2+50)$\leftarrow$R3} is waiting in the Instruction Queue, ready to be allocated.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 2: Allocation
-\begin{frame}
-\frametitle{The Life of a Store: Allocation}
-\begin{center}
-\LoadLifecycleDiagram[
-    robOp={\newentry{St}},
-    robValid={\newentry{0}},
-    robRdy={\newentry{0}},
-    robData={\newentry{X}},
-    robDst={\newentry{X}},
-    iq1={\removedentry{MEM(R2+50)$\leftarrow$R3}},
-    rs1={\newentry{STA: R2+50}},
-    rs2={\newentry{STD: RF0}},
-    sb1v={\newentry{1}},
-    sb1addr={\newentry{Not Vld}},
-    sb1data={\newentry{Not Vld}},
-    sb1snr={\newentry{}}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The store is allocated with one ROB entry, two RS entries (STA and STD micro-ops), and one Store Buffer entry.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 3: Dispatch STA to AGU
-\begin{frame}
-\frametitle{The Life of a Store: Dispatch STA to AGU}
-\begin{center}
-\LoadLifecycleDiagram[
-    robOp={St},
-    robValid={0},
-    robRdy={0},
-    robData={X},
-    robDst={X},
-    rs1={\removedentry{STA: R2+50}},
-    rs2={STD: RF0},
-    sb1v={1},
-    sb1addr={Not Vld},
-    sb1data={Not Vld},
-    sb1snr={},
-    agu={\newentry{R2+50}}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The STA (Store Address) micro-op dispatches to the AGU when source register R2 is ready. The RS entry is released after dispatch.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 4: Address Calculation
-\begin{frame}
-\frametitle{The Life of a Store: Address Calculation}
-\begin{center}
-\LoadLifecycleDiagram[
-    robOp={St},
-    robValid={0},
-    robRdy={0},
-    robData={X},
-    robDst={X},
-    rs2={STD: RF0},
-    sb1v={1},
-    sb1addr={\newentry{V(R2+50)}},
-    sb1data={Not Vld},
-    sb1snr={},
-    agu={\removedentry{R2+50}},
-    arrowDTLB=1
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The AGU computes the virtual address and updates the Store Buffer. The address is pipelined to the dTLB for translation and made available to dependent loads.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 5: Dispatch STD
-\begin{frame}
-\frametitle{The Life of a Store: Dispatch STD}
-\begin{center}
-\LoadLifecycleDiagram[
-    robOp={St},
-    robValid={0},
-    robRdy={0},
-    robData={X},
-    robDst={X},
-    rs2={\removedentry{STD: RF0}},
-    sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={\newentry{V(RF0)}},
-    sb1snr={}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The STD (Store Data) micro-op dispatches when the data source RF0 is ready. The Store Buffer is updated with the data value, which can now be forwarded to dependent loads.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 6: Mark Ready
-\begin{frame}
-\frametitle{The Life of a Store: Mark Ready}
-\begin{center}
-\LoadLifecycleDiagram[
-    robOp={St},
-    robValid={\newentry{1}},
-    robRdy={0},
-    robData={X},
-    robDst={X},
-    sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={V(RF0)},
-    sb1snr={}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-Once both address and data are available, the Store Buffer updates the ROB entry's Valid field to 1, indicating the store is ready to retire.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 7: Retire & Mark Senior
-\begin{frame}
-\frametitle{The Life of a Store: Retire \& Mark Senior}
-\begin{center}
-\LoadLifecycleDiagram[
-    robOp={\removedentry{St}},
-    robValid={\removedentry{1}},
-    robRdy={\removedentry{0}},
-    robData={\removedentry{X}},
-    robDst={\removedentry{X}},
-    sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={V(RF0)},
-    sb1snr={\newentry{1}},
-    retire={\newentry{Commit Store}}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-The store retires in-order when all previous instructions have retired. The ROB entry is released, and the store is marked as a Senior Store in the Store Buffer (Snr=1).
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 8: Write to Cache
-\begin{frame}
-\frametitle{The Life of a Store: Write to Cache}
-\begin{center}
-\LoadLifecycleDiagram[
-    sb1v={1},
-    sb1addr={V(R2+50)},
-    sb1data={V(RF0)},
-    sb1snr={1},
-    arrowCache=1
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-After retirement, the Store Buffer initiates a write to the Data Cache. Only senior (committed) stores write to memory.
-\end{tcolorbox}
-\end{frame}
-
-% Life of a Store - Step 9: Release
-\begin{frame}
-\frametitle{The Life of a Store: Release}
-\begin{center}
-\LoadLifecycleDiagram[
-    sb1v={\removedentry{1}},
-    sb1addr={\removedentry{V(R2+50)}},
-    sb1data={\removedentry{V(RF0)}},
-    sb1snr={\removedentry{1}}
-]
-\end{center}
-\vspace{-2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
-When the cache write completes, the Store Buffer entry is freed and available for reuse.
-\end{tcolorbox}
-\end{frame}
-
-% Summary slide for Life of a Store
-\begin{frame}
-\frametitle{The Life of a Store: Summary}
-\small
-\begin{multicols}{2}
-\begin{enumerate}
-    \item \textbf{Allocation}
-    \vspace{-2mm}
-    \begin{itemize}
-        \item 1 ROB entry
-        \item 2 RS entries (STA, STD)
-        \item 1 Store Buffer entry
-    \end{itemize}
-
-    \item \textbf{STA Dispatch \& Calc}
-    \vspace{-2mm}
-    \begin{itemize}
-        \item Dispatch to AGU when ready
-        \item Compute virtual address
-        \item Update Store Buffer
-        \item Translate via dTLB
-    \end{itemize}
-
-    \item \textbf{STD Dispatch}
-    \vspace{-2mm}
-    \begin{itemize}
-        \item Dispatch when data ready
-        \item Update Store Buffer
-        \item Enable forwarding to loads
-    \end{itemize}
-
-    \item \textbf{Mark Ready}
-    \vspace{-2mm}
-    \begin{itemize}
-        \item Update ROB Valid=1
-        \item Store ready to retire
-    \end{itemize}
-
-    \item \textbf{Retire}
-    \vspace{-2mm}
-    \begin{itemize}
-        \item In-order retirement
-        \item Release ROB entry
-        \item Mark as Senior Store
-    \end{itemize}
-
-    \item \textbf{Write \& Release}
-    \vspace{-2mm}
-    \begin{itemize}
-        \item Write to Data Cache
-        \item Release Store Buffer entry
-    \end{itemize}
-\end{enumerate}
-\end{multicols}
-\end{frame}
+\subsection{The Life of a Load}
 
 % Life of a Load - Step 1: Initial State
 \begin{frame}
@@ -823,6 +564,265 @@ When all previous instructions have retired, the load retires in-order. The RAT 
         \item Commit load
         \item Update RAT
         \item Release Load Buffer and ROB entries
+    \end{itemize}
+\end{enumerate}
+\end{column}
+\end{columns}
+\end{frame}
+
+\subsection{The Life of a Store}
+
+% Life of a Store - Step 1: Initial State
+\begin{frame}
+\frametitle{The Life of a Store: Initial State}
+\begin{center}
+\LoadLifecycleDiagram[
+    iq1={\newentry{MEM(R2+50)$\leftarrow$R3}},
+    robDst={}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+Store instruction \texttt{MEM(R2+50)$\leftarrow$R3} is waiting in the Instruction Queue, ready to be allocated.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 2: Allocation
+\begin{frame}
+\frametitle{The Life of a Store: Allocation}
+\begin{center}
+\LoadLifecycleDiagram[
+    robOp={\newentry{St}},
+    robValid={\newentry{0}},
+    robRdy={\newentry{0}},
+    robData={\newentry{X}},
+    robDst={\newentry{X}},
+    iq1={\removedentry{MEM(R2+50)$\leftarrow$R3}},
+    rs1={\newentry{STA: R2+50}},
+    rs2={\newentry{STD: RF0}},
+    sb1v={\newentry{1}},
+    sb1addr={\newentry{Not Vld}},
+    sb1data={\newentry{Not Vld}},
+    sb1snr={\newentry{}}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+The store is allocated with one ROB entry, two RS entries (STA and STD micro-ops), and one Store Buffer entry.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 3: Dispatch STA to AGU
+\begin{frame}
+\frametitle{The Life of a Store: Dispatch STA to AGU}
+\begin{center}
+\LoadLifecycleDiagram[
+    robOp={St},
+    robValid={0},
+    robRdy={0},
+    robData={X},
+    robDst={X},
+    rs1={\removedentry{STA: R2+50}},
+    rs2={STD: RF0},
+    sb1v={1},
+    sb1addr={Not Vld},
+    sb1data={Not Vld},
+    sb1snr={},
+    agu={\newentry{R2+50}}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+The STA (Store Address) micro-op dispatches to the AGU when source register R2 is ready. The RS entry is released after dispatch.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 4: Address Calculation
+\begin{frame}
+\frametitle{The Life of a Store: Address Calculation}
+\begin{center}
+\LoadLifecycleDiagram[
+    robOp={St},
+    robValid={0},
+    robRdy={0},
+    robData={X},
+    robDst={X},
+    rs2={STD: RF0},
+    sb1v={1},
+    sb1addr={\newentry{V(R2+50)}},
+    sb1data={Not Vld},
+    sb1snr={},
+    agu={\removedentry{R2+50}},
+    arrowDTLB=1
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+The AGU computes the virtual address and updates the Store Buffer. The address is pipelined to the dTLB for translation and made available to dependent loads.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 5: Dispatch STD
+\begin{frame}
+\frametitle{The Life of a Store: Dispatch STD}
+\begin{center}
+\LoadLifecycleDiagram[
+    robOp={St},
+    robValid={0},
+    robRdy={0},
+    robData={X},
+    robDst={X},
+    rs2={\removedentry{STD: RF0}},
+    sb1v={1},
+    sb1addr={V(R2+50)},
+    sb1data={\newentry{V(RF0)}},
+    sb1snr={}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+The STD (Store Data) micro-op dispatches when the data source RF0 is ready. The Store Buffer is updated with the data value, which can now be forwarded to dependent loads.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 6: Mark Ready
+\begin{frame}
+\frametitle{The Life of a Store: Mark Ready}
+\begin{center}
+\LoadLifecycleDiagram[
+    robOp={St},
+    robValid={\newentry{1}},
+    robRdy={0},
+    robData={X},
+    robDst={X},
+    sb1v={1},
+    sb1addr={V(R2+50)},
+    sb1data={V(RF0)},
+    sb1snr={}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+Once both address and data are available, the Store Buffer updates the ROB entry's Valid field to 1, indicating the store is ready to retire.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 7: Retire & Mark Senior
+\begin{frame}
+\frametitle{The Life of a Store: Retire \& Mark Senior}
+\begin{center}
+\LoadLifecycleDiagram[
+    robOp={\removedentry{St}},
+    robValid={\removedentry{1}},
+    robRdy={\removedentry{0}},
+    robData={\removedentry{X}},
+    robDst={\removedentry{X}},
+    sb1v={1},
+    sb1addr={V(R2+50)},
+    sb1data={V(RF0)},
+    sb1snr={\newentry{1}},
+    retire={\newentry{Commit Store}}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+The store retires in-order when all previous instructions have retired. The ROB entry is released, and the store is marked as a Senior Store in the Store Buffer (Snr=1).
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 8: Write to Cache
+\begin{frame}
+\frametitle{The Life of a Store: Write to Cache}
+\begin{center}
+\LoadLifecycleDiagram[
+    sb1v={1},
+    sb1addr={V(R2+50)},
+    sb1data={V(RF0)},
+    sb1snr={1},
+    arrowCache=1
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+After retirement, the Store Buffer initiates a write to the Data Cache. Only senior (committed) stores write to memory.
+\end{tcolorbox}
+\end{frame}
+
+% Life of a Store - Step 9: Release
+\begin{frame}
+\frametitle{The Life of a Store: Release}
+\begin{center}
+\LoadLifecycleDiagram[
+    sb1v={\removedentry{1}},
+    sb1addr={\removedentry{V(R2+50)}},
+    sb1data={\removedentry{V(RF0)}},
+    sb1snr={\removedentry{1}}
+]
+\end{center}
+\vspace{-2mm}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+When the cache write completes, the Store Buffer entry is freed and available for reuse.
+\end{tcolorbox}
+\end{frame}
+
+% Summary slide for Life of a Store
+\begin{frame}
+\frametitle{The Life of a Store: Summary}
+\small
+\vspace{-6mm}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\begin{enumerate}
+    \item \textbf{Allocation}
+    \vspace{-2mm}
+    \begin{itemize}
+        \item 1 ROB entry
+        \item 2 RS entries (STA, STD)
+        \item 1 Store Buffer entry
+    \end{itemize}
+
+    \item \textbf{STA Dispatch \& Calc}
+    \vspace{-2mm}
+    \begin{itemize}
+        \item Dispatch to AGU when ready
+        \item Compute virtual address
+        \item Update Store Buffer
+        \item Translate via dTLB
+    \end{itemize}
+
+    \item \textbf{STD Dispatch}
+    \vspace{-2mm}
+    \begin{itemize}
+        \item Dispatch when data ready
+        \item Update Store Buffer
+        \item Enable forwarding to loads
+    \end{itemize}
+\end{enumerate}
+\end{column}
+
+\begin{column}{0.52\textwidth}
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{Mark Ready}
+    \vspace{-2mm}
+    \begin{itemize}
+        \item Update ROB Valid=1
+        \item Store ready to retire
+    \end{itemize}
+
+    \item \textbf{Retire}
+    \vspace{-2mm}
+    \begin{itemize}
+        \item In-order retirement
+        \item Release ROB entry
+        \item Mark as Senior Store
+    \end{itemize}
+
+    \item \textbf{Write \& Release}
+    \vspace{-2mm}
+    \begin{itemize}
+        \item Write to Data Cache
+        \item Release Store Buffer entry
     \end{itemize}
 \end{enumerate}
 \end{column}
