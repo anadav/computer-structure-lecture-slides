@@ -600,12 +600,14 @@
 % Simple BHR bit formatter with highlighting
 % Takes individual bit and highlight values (NOT lists)
 \newcommand{\BHRbit}[2]{%
-  % #1 = bit value (0 or 1), #2 = highlight flag (0 or 1)
+  % #1 = bit value (0 or 1), #2 = highlight flag (0=none, 1=yellow+red, 2=yellow only)
   \ifnum#2=1\relax
     \cellcolor{highlightyellow}\textcolor{red}{#1}%
+  \else\ifnum#2=2\relax
+    \cellcolor{highlightyellow}#1%
   \else
     #1%
-  \fi
+  \fi\fi
 }
 
 % Note: BHR highlighting must be done manually per slide
@@ -635,11 +637,26 @@
   \fi
   \ifx\localframeBHROneDisplay\empty
     \BHRdisplay{\localframeBHROne}%
-    \gdef\rowOneBitOne{\bhrBitOne}%
-    \gdef\rowOneBitTwo{\bhrBitTwo}%
-    \gdef\rowOneBitThree{\bhrBitThree}%
-    \gdef\rowOneBitFour{\bhrBitFour}%
+    \ifnum\localframeBHRRowHighlight=1
+      \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
+        \gdef\rowOneBitOne{\cellcolor{highlightyellow}\bhrBitOne}%
+        \gdef\rowOneBitTwo{\cellcolor{highlightyellow}\bhrBitTwo}%
+        \gdef\rowOneBitThree{\cellcolor{highlightyellow}\bhrBitThree}%
+        \gdef\rowOneBitFour{\cellcolor{highlightyellow}\bhrBitFour}%
+      \else
+        \gdef\rowOneBitOne{\bhrBitOne}%
+        \gdef\rowOneBitTwo{\bhrBitTwo}%
+        \gdef\rowOneBitThree{\bhrBitThree}%
+        \gdef\rowOneBitFour{\bhrBitFour}%
+      \fi
+    \else
+      \gdef\rowOneBitOne{\bhrBitOne}%
+      \gdef\rowOneBitTwo{\bhrBitTwo}%
+      \gdef\rowOneBitThree{\bhrBitThree}%
+      \gdef\rowOneBitFour{\bhrBitFour}%
+    \fi
   \else
+    % Custom display - bits already handle their own coloring via \BHRbit
     \expandafter\extractCustomBHR\expandafter{\localframeBHROneDisplay}%
     \gdef\rowOneBitOne{\bhrBitOne}%
     \gdef\rowOneBitTwo{\bhrBitTwo}%
@@ -655,10 +672,24 @@
   \fi
   \ifx\localframeBHRTwoDisplay\empty
     \BHRdisplay{\localframeBHRTwo}%
-    \gdef\rowTwoBitOne{\bhrBitOne}%
-    \gdef\rowTwoBitTwo{\bhrBitTwo}%
-    \gdef\rowTwoBitThree{\bhrBitThree}%
-    \gdef\rowTwoBitFour{\bhrBitFour}%
+    \ifnum\localframeBHRRowHighlight=1
+      \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
+        \gdef\rowTwoBitOne{\cellcolor{highlightyellow}\bhrBitOne}%
+        \gdef\rowTwoBitTwo{\cellcolor{highlightyellow}\bhrBitTwo}%
+        \gdef\rowTwoBitThree{\cellcolor{highlightyellow}\bhrBitThree}%
+        \gdef\rowTwoBitFour{\cellcolor{highlightyellow}\bhrBitFour}%
+      \else
+        \gdef\rowTwoBitOne{\bhrBitOne}%
+        \gdef\rowTwoBitTwo{\bhrBitTwo}%
+        \gdef\rowTwoBitThree{\bhrBitThree}%
+        \gdef\rowTwoBitFour{\bhrBitFour}%
+      \fi
+    \else
+      \gdef\rowTwoBitOne{\bhrBitOne}%
+      \gdef\rowTwoBitTwo{\bhrBitTwo}%
+      \gdef\rowTwoBitThree{\bhrBitThree}%
+      \gdef\rowTwoBitFour{\bhrBitFour}%
+    \fi
   \else
     \expandafter\extractCustomBHR\expandafter{\localframeBHRTwoDisplay}%
     \gdef\rowTwoBitOne{\bhrBitOne}%
@@ -675,10 +706,24 @@
   \fi
   \ifx\localframeBHRThreeDisplay\empty
     \BHRdisplay{\localframeBHRThree}%
-    \gdef\rowThreeBitOne{\bhrBitOne}%
-    \gdef\rowThreeBitTwo{\bhrBitTwo}%
-    \gdef\rowThreeBitThree{\bhrBitThree}%
-    \gdef\rowThreeBitFour{\bhrBitFour}%
+    \ifnum\localframeBHRRowHighlight=1
+      \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
+        \gdef\rowThreeBitOne{\cellcolor{highlightyellow}\bhrBitOne}%
+        \gdef\rowThreeBitTwo{\cellcolor{highlightyellow}\bhrBitTwo}%
+        \gdef\rowThreeBitThree{\cellcolor{highlightyellow}\bhrBitThree}%
+        \gdef\rowThreeBitFour{\cellcolor{highlightyellow}\bhrBitFour}%
+      \else
+        \gdef\rowThreeBitOne{\bhrBitOne}%
+        \gdef\rowThreeBitTwo{\bhrBitTwo}%
+        \gdef\rowThreeBitThree{\bhrBitThree}%
+        \gdef\rowThreeBitFour{\bhrBitFour}%
+      \fi
+    \else
+      \gdef\rowThreeBitOne{\bhrBitOne}%
+      \gdef\rowThreeBitTwo{\bhrBitTwo}%
+      \gdef\rowThreeBitThree{\bhrBitThree}%
+      \gdef\rowThreeBitFour{\bhrBitFour}%
+    \fi
   \else
     \expandafter\extractCustomBHR\expandafter{\localframeBHRThreeDisplay}%
     \gdef\rowThreeBitOne{\bhrBitOne}%
@@ -703,6 +748,7 @@
   bhr1display/.code={\def\localframeBHROneDisplay{#1}},
   bhr2display/.code={\def\localframeBHRTwoDisplay{#1}},
   bhr3display/.code={\def\localframeBHRThreeDisplay{#1}},
+  bhrrowhighlight/.store in=\localframeBHRRowHighlight,
   r1/.store in=\localframeROne,
   r2/.store in=\localframeRTwo,
   r3/.store in=\localframeRThree,
@@ -1108,6 +1154,8 @@ if (...)
   \def\localframeBHROneDisplay{}%
   \def\localframeBHRTwoDisplay{}%
   \def\localframeBHRThreeDisplay{}%
+  % Initialize BHR row highlight (0 = no, 1 = yes)
+  \def\localframeBHRRowHighlight{0}%
   % Initialize new three-table variables
   \def\localframeStatesOne{}%
   \def\localframeStatesTwo{}%
@@ -1617,7 +1665,7 @@ if (...)
 % Step 1a: Prediction
 \localFrameKV{
     ip={IP1},
-    outcome={Not Taken},
+    outcome={},
     r1={100},
     r2={2},
     r3={0},
@@ -1630,19 +1678,20 @@ if (...)
     active={1},
     step={1},
     action={Prediction},
-    description={Using BHR=0000, index 0, state=WT predicts Taken. Actual outcome: Not Taken (misprediction)}
+    description={Using BHR=0000, index 0, state=WT predicts Taken}
   }
 
 % Step 1b: State update
 \localFrameKV{
     ip={IP1},
-    outcome={},
+    outcome={Not Taken},
     r1={100},
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
     states1={0:WNT:2},
     states2={},
     states3={},
@@ -1653,18 +1702,18 @@ if (...)
   }
 
 % Step 1c: BHR update
-% LSB (rightmost bit) highlighted with yellow bg + red text
+% Entire IP1 row highlighted yellow, LSB also has red text
 \localFrameKV{
     ip={IP1},
-    outcome={},
+    outcome={Not Taken},
     r1={100},
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
-    bhr1display={{\BHRbit{0}{0}}{\BHRbit{0}{0}}{\BHRbit{0}{0}}{\BHRbit{0}{1}}},
+    bhr1display={{\BHRbit{0}{2}}{\BHRbit{0}{2}}{\BHRbit{0}{2}}{\BHRbit{0}{1}}},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
-    states1={0:WNT:0},
+    states1={0:WNT:1},
     states2={},
     states3={},
     active={1},
