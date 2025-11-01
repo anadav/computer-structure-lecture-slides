@@ -569,43 +569,6 @@ L2: ADDI R4, R0, 23        ; R4 = 23
 
 \section{Execution Analysis}
 
-\begin{frame}{OOO Execution Pipeline}
-\begin{figure}
-\centering
-\begin{tikzpicture}[scale=0.8, transform shape]
-    % Define styles
-    \tikzstyle{block} = [rectangle, draw, fill=lightblue, 
-                          text width=2cm, text centered, 
-                          minimum height=1cm]
-    \tikzstyle{arrow} = [thick,->,>=stealth]
-    
-    % Create blocks
-    \node[block] (fetch) {Fetch\\(2~inst\slash cycle)};
-    \node[block, right=of fetch] (idq) {IDQ};
-    \node[block, right=of idq] (decode) {Decode\\(2~inst\slash cycle)};
-    \node[block, right=of decode] (rat) {RAT};
-    
-    \node[block, below=of rat] (rs) {RS};
-    \node[block, right=of rs] (exec) {Execute};
-    \node[block, left=of rs] (mob) {MOB};
-    
-    \node[block, below=of exec] (rob) {ROB};
-    \node[block, right=of rob] (retire) {Retire};
-    
-    % Draw arrows
-    \draw[arrow] (fetch) -- (idq);
-    \draw[arrow] (idq) -- (decode);
-    \draw[arrow] (decode) -- (rat);
-    \draw[arrow] (rat) -- (rs);
-    \draw[arrow] (rat) -- (mob);
-    \draw[arrow] (rs) -- (exec);
-    \draw[arrow] (mob) -- (exec);
-    \draw[arrow] (exec) -- (rob);
-    \draw[arrow] (rob) -- (retire);
-\end{tikzpicture}
-\end{figure}
-\end{frame}
-
 \begin{frame}{Execution Timeline - Second Loop Iteration}
 \begin{block}{Question}
 Show the system state when completing the fetch of instruction L1 for the second time.
