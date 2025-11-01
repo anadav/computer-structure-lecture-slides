@@ -174,11 +174,11 @@
         inner sep=0pt,
         label={[labelstyle]above:RAT},
         nodes={cell},
-        row 1/.style={nodes={headerbox}},
+        row 1/.style={nodes={headerbox, minimum height=7mm}},
         column 1/.append style={nodes={text width=0.9cm, align=center, fill=gray!10}},
         column 2/.append style={nodes={text width=0.9cm, align=center, minimum width=0.9cm}},
         ampersand replacement=\&] (rat) {
-    Arch \& Phys \\
+    |[align=center]| {\scriptsize\shortstack{Arch\\Reg}} \& |[align=center]| {\scriptsize\shortstack{Phys\\Reg}} \\
     R0 \& \ifx\ratZero\empty{ }\else\ratZero\fi \\
     R1 \& \ifx\ratOne\empty{ }\else\ratOne\fi \\
     R2 \& \ifx\ratTwo\empty{ }\else\ratTwo\fi \\
@@ -262,7 +262,7 @@
         column sep=-\pgflinewidth,
         inner sep=0pt,
         label={[labelstyle]above:Store Buffer},
-        above=0.3cm of loadbuf.north,
+        above=0.6cm of loadbuf.north,
         anchor=south,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=0.6cm}},
@@ -274,7 +274,7 @@
 };
 
 % MOB label and cyan background using fit
-\node[labelstyle, above=0.1cm of storebuf.north] (moblabel) {MOB};
+\node[labelstyle, above=0.3cm of storebuf.north] (moblabel) {MOB};
 \begin{scope}[on background layer]
 \node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
 \end{scope}
@@ -290,8 +290,8 @@
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        below=0.7cm of rs.south west,
-        anchor=north west,
+        below=0.7cm of rs.south,
+        anchor=north,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.2cm}},
         ampersand replacement=\&] (alu1) {
@@ -320,31 +320,18 @@
 \node[draw, fill=lightyellow, fit=(exelabel)(alu1)(dots)(agu), inner sep=2pt] (exeblock) {};
 \end{scope}
 
-% Retire (below EXE block, anchored to south east)
+% Retire (below EXE block, aligned with RS west edge)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
         label={[labelstyle]left:Retire},
-        below=0.4cm of exeblock.south east,
-        anchor=north east,
+        below=0.4cm of exeblock.south west,
+        anchor=north west,
         nodes={cell, align=center},
         column 1/.append style={nodes={text width=1.8cm}},
         ampersand replacement=\&] (retire) {
     \ifx\retireContent\empty{ }\else\retireContent\fi \\
-};
-
-% Retire box (optional box next to retire)
-\matrix[matrix of nodes,
-        row sep=-\pgflinewidth,
-        column sep=-\pgflinewidth,
-        inner sep=0pt,
-        right=0.3cm of retire.north east,
-        anchor=north west,
-        nodes={cell, align=center},
-        column 1/.append style={nodes={text width=1.8cm}},
-        ampersand replacement=\&] (retirebox) {
-    \ifx\retireBoxContent\empty{ }\else\retireBoxContent\fi \\
 };
 
 % Draw green arrows based on flags
