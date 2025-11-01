@@ -298,7 +298,7 @@
 \end{scope}
 
 % Data Cache (right of Load Buffer, aligned with data row)
-\node[smallbox, right=0.5cm of loadbuf.east, anchor=west] (dcache) {Data\\Cache};
+\node[smallbox, right=1.2cm of loadbuf.east, anchor=west] (dcache) {Data\\Cache};
 
 % EXE block - Individual matrices
 \matrix[matrix of nodes,
@@ -308,6 +308,7 @@
         below=0.7cm of rs.south,
         anchor=north,
         nodes={cell, align=center},
+        row 1/.style={nodes={fill=gray!10}},
         column 1/.append style={nodes={text width=1.2cm}},
         ampersand replacement=\&] (alu1) {
     ALU1 \\
@@ -323,6 +324,7 @@
         right=0.25cm of dots,
         anchor=west,
         nodes={cell, align=center},
+        row 1/.style={nodes={fill=gray!10}},
         column 1/.append style={nodes={text width=1.2cm}},
         ampersand replacement=\&] (agu) {
     AGU \\
@@ -336,7 +338,7 @@
 \end{scope}
 
 % dTLB (right of AGU, aligned with second row)
-\node[smallbox, right=0.5cm of agu.east, anchor=west] (dtlb) {dTLB};
+\node[smallbox, right=1.2cm of agu.east, anchor=west] (dtlb) {dTLB};
 
 % Retire (below EXE block, aligned with RS west edge)
 \matrix[matrix of nodes,
@@ -372,7 +374,7 @@
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Initial State]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction Queue, ready to be allocated.
 \end{tcolorbox}
 \end{frame}
@@ -396,7 +398,7 @@ Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Allocation Phase]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The load is allocated with one entry in the ROB, one in the RS, and one in the Load Buffer. The RAT is updated to rename R3 to physical register RF0.
 \end{tcolorbox}
 \end{frame}
@@ -420,7 +422,7 @@ The load is allocated with one entry in the ROB, one in the RS, and one in the L
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Dispatch Phase]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The load address calculation is dispatched to the AGU when the source register R2 is ready. The RS entry is released after dispatch.
 \end{tcolorbox}
 \end{frame}
@@ -443,7 +445,7 @@ The load address calculation is dispatched to the AGU when the source register R
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Address Calculation Phase]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The AGU computes the virtual address and updates the Load Buffer with V(R2+50). The address is then pipelined to the dTLB for translation.
 \end{tcolorbox}
 \end{frame}
@@ -466,7 +468,7 @@ The AGU computes the virtual address and updates the Load Buffer with V(R2+50). 
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Blocking Check \& Dispatch Phase]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The Load Buffer checks for memory hazards with prior stores. If no blocking conditions exist, the load is dispatched to the Data Cache (DCU).
 \end{tcolorbox}
 \end{frame}
@@ -489,7 +491,7 @@ The Load Buffer checks for memory hazards with prior stores. If no blocking cond
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Data Return Phase]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The Data Cache returns the requested data. The result is sent to the RS (for forwarding to dependent instructions) and the ROB is updated with the load result (Rdy=1, Data=data).
 \end{tcolorbox}
 \end{frame}
@@ -507,7 +509,7 @@ The Data Cache returns the requested data. The result is sent to the RS (for for
 ]
 \end{center}
 \vspace{2mm}
-\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Retire \& Release Phase]
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 When all previous instructions have retired, the load retires in-order. The RAT is updated to commit the architectural state. Finally, the Load Buffer and ROB entries are released for reuse.
 \end{tcolorbox}
 \end{frame}
