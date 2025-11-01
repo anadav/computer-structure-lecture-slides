@@ -584,11 +584,15 @@
 % Now uses text with | delimiters for consistency
 \newcommand{\BHRdisplay}[1]{%
   % #1 contains {b1}{b2}{b3}{b4}
-  % We need to extract these values
+  % We need to extract these values and store them individually
   \expandafter\BHRdisplayHelper#1%
 }
 \newcommand{\BHRdisplayHelper}[4]{%
-  #1 & #2 & #3 & #4%
+  % Store each bit separately to avoid & in macro expansion
+  \gdef\bhrBitOne{#1}%
+  \gdef\bhrBitTwo{#2}%
+  \gdef\bhrBitThree{#3}%
+  \gdef\bhrBitFour{#4}%
 }
 
 % (Removed old BHRdisplayH and BHRtextH definitions)
@@ -605,8 +609,84 @@
 }
 
 % Note: BHR highlighting must be done manually per slide
-% Use \BHRbit{value}{highlight} directly in the table for slides needing highlighting
-% Example: \BHRbit{0}{1} | \BHRbit{0}{0} | \BHRbit{0}{0} | \BHRbit{0}{0}
+% For custom BHR display with highlighting, use format:
+% bhr1display={{bit1}{bit2}{bit3}{bit4}}
+% where each bit can be \BHRbit{value}{highlight}
+% Example: bhr1display={{\BHRbit{0}{1}}{\BHRbit{0}{0}}{\BHRbit{0}{0}}{\BHRbit{0}{0}}}
+
+% Helper to extract 4 values from custom display
+\newcommand{\extractCustomBHR}[1]{%
+  % #1 contains {{b1}{b2}{b3}{b4}}
+  \expandafter\extractCustomBHRhelper#1%
+}
+\newcommand{\extractCustomBHRhelper}[4]{%
+  \gdef\bhrBitOne{#1}%
+  \gdef\bhrBitTwo{#2}%
+  \gdef\bhrBitThree{#3}%
+  \gdef\bhrBitFour{#4}%
+}
+
+% Helper macros to build BHR table rows (handles conditionals outside tabular)
+\newcommand{\buildBHRrowOne}{%
+  \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
+    \gdef\rowOneIPpart{\cellcolor{highlightyellow}IP1}%
+  \else
+    \gdef\rowOneIPpart{IP1}%
+  \fi
+  \ifx\localframeBHROneDisplay\empty
+    \BHRdisplay{\localframeBHROne}%
+    \gdef\rowOneBitOne{\bhrBitOne}%
+    \gdef\rowOneBitTwo{\bhrBitTwo}%
+    \gdef\rowOneBitThree{\bhrBitThree}%
+    \gdef\rowOneBitFour{\bhrBitFour}%
+  \else
+    \expandafter\extractCustomBHR\expandafter{\localframeBHROneDisplay}%
+    \gdef\rowOneBitOne{\bhrBitOne}%
+    \gdef\rowOneBitTwo{\bhrBitTwo}%
+    \gdef\rowOneBitThree{\bhrBitThree}%
+    \gdef\rowOneBitFour{\bhrBitFour}%
+  \fi
+}
+\newcommand{\buildBHRrowTwo}{%
+  \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
+    \gdef\rowTwoIPpart{\cellcolor{highlightyellow}IP2}%
+  \else
+    \gdef\rowTwoIPpart{IP2}%
+  \fi
+  \ifx\localframeBHRTwoDisplay\empty
+    \BHRdisplay{\localframeBHRTwo}%
+    \gdef\rowTwoBitOne{\bhrBitOne}%
+    \gdef\rowTwoBitTwo{\bhrBitTwo}%
+    \gdef\rowTwoBitThree{\bhrBitThree}%
+    \gdef\rowTwoBitFour{\bhrBitFour}%
+  \else
+    \expandafter\extractCustomBHR\expandafter{\localframeBHRTwoDisplay}%
+    \gdef\rowTwoBitOne{\bhrBitOne}%
+    \gdef\rowTwoBitTwo{\bhrBitTwo}%
+    \gdef\rowTwoBitThree{\bhrBitThree}%
+    \gdef\rowTwoBitFour{\bhrBitFour}%
+  \fi
+}
+\newcommand{\buildBHRrowThree}{%
+  \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
+    \gdef\rowThreeIPpart{\cellcolor{highlightyellow}IP3}%
+  \else
+    \gdef\rowThreeIPpart{IP3}%
+  \fi
+  \ifx\localframeBHRThreeDisplay\empty
+    \BHRdisplay{\localframeBHRThree}%
+    \gdef\rowThreeBitOne{\bhrBitOne}%
+    \gdef\rowThreeBitTwo{\bhrBitTwo}%
+    \gdef\rowThreeBitThree{\bhrBitThree}%
+    \gdef\rowThreeBitFour{\bhrBitFour}%
+  \else
+    \expandafter\extractCustomBHR\expandafter{\localframeBHRThreeDisplay}%
+    \gdef\rowThreeBitOne{\bhrBitOne}%
+    \gdef\rowThreeBitTwo{\bhrBitTwo}%
+    \gdef\rowThreeBitThree{\bhrBitThree}%
+    \gdef\rowThreeBitFour{\bhrBitFour}%
+  \fi
+}
 
 % Setup pgfkeys for local frame parameters
 \pgfkeys{
@@ -1087,28 +1167,17 @@ if (...)
       \centering
 
       \footnotesize
+      % Build row contents outside tabular to avoid & in conditionals
+      \buildBHRrowOne
+      \buildBHRrowTwo
+      \buildBHRrowThree
       \begin{tabular}{|c|c|c|c|c|}
           \toprule
           tag & \multicolumn{4}{c|}{BHRs} \\
           \midrule
-          \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
-            \cellcolor{highlightyellow}IP1
-          \else
-            IP1
-          \fi
-           & \ifx\localframeBHROneDisplay\empty\BHRdisplay{\localframeBHROne}\else\localframeBHROneDisplay\fi \\
-          \ifnum\pdfstrcmp{\localframeIP}{IP2}=0
-            \cellcolor{highlightyellow}IP2
-          \else
-            IP2
-          \fi
-           & \ifx\localframeBHRTwoDisplay\empty\BHRdisplay{\localframeBHRTwo}\else\localframeBHRTwoDisplay\fi \\
-          \ifnum\pdfstrcmp{\localframeIP}{IP3}=0
-            \cellcolor{highlightyellow}IP3
-          \else
-            IP3
-          \fi
-           & \ifx\localframeBHRThreeDisplay\empty\BHRdisplay{\localframeBHRThree}\else\localframeBHRThreeDisplay\fi \\
+          \rowOneIPpart & \rowOneBitOne & \rowOneBitTwo & \rowOneBitThree & \rowOneBitFour \\
+          \rowTwoIPpart & \rowTwoBitOne & \rowTwoBitTwo & \rowTwoBitThree & \rowTwoBitFour \\
+          \rowThreeIPpart & \rowThreeBitOne & \rowThreeBitTwo & \rowThreeBitThree & \rowThreeBitFour \\
           \bottomrule
       \end{tabular}
       
@@ -1592,7 +1661,7 @@ if (...)
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
-    bhr1display={\BHRbit{0}{0} & \BHRbit{0}{0} & \BHRbit{0}{0} & \BHRbit{0}{1}},
+    bhr1display={{\BHRbit{0}{0}}{\BHRbit{0}{0}}{\BHRbit{0}{0}}{\BHRbit{0}{1}}},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
     states1={0:WNT:0},
