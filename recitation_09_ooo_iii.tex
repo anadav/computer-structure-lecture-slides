@@ -121,8 +121,9 @@
         retire = {},
         % Retire box (optional box next to retire)
         retirebox = {},
-        % Arrow flags (0-4)
-        arrows = 0,
+        % Arrow flags (independent control)
+        arrowDTLB = 0,
+        arrowCache = 0,
     },
     rat0/.estore in = \ratZero,
     rat1/.estore in = \ratOne,
@@ -151,7 +152,8 @@
     agu/.estore in = \aguContent,
     retire/.estore in = \retireContent,
     retirebox/.estore in = \retireBoxContent,
-    arrows/.estore in = \arrowFlags,
+    arrowDTLB/.estore in = \arrowDTLB,
+    arrowCache/.estore in = \arrowCache,
 }
 
 % Macro for creating load lifecycle diagram using matrix of nodes
@@ -258,7 +260,6 @@
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        label={[labelstyle]above:Load Buffer},
         right=0.5cm of rs.north east,
         anchor=north west,
         nodes={cell, align=center},
@@ -271,12 +272,14 @@
     \ifx\lbV\empty{ }\else\lbV\fi \& \ifx\lbAddr\empty{ }\else\lbAddr\fi \& \ifx\lbBC\empty{ }\else\lbBC\fi \\
 };
 
+% Load Buffer label
+\node[labelstyle, above=0.05cm of loadbuf.north] (loadbuflabel) {Load Buffer};
+
 % Store Buffer (above Load Buffer, matching its width)
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        label={[labelstyle]above:Store Buffer},
         above=0.6cm of loadbuf.north,
         anchor=south,
         nodes={cell, align=center},
@@ -291,11 +294,16 @@
     \ifx\sbTwoV\empty{ }\else\sbTwoV\fi \& \ifx\sbTwoAddr\empty{ }\else\sbTwoAddr\fi \& \ifx\sbTwoData\empty{ }\else\sbTwoData\fi \& \ifx\sbTwoSnr\empty{ }\else\sbTwoSnr\fi \\
 };
 
-% MOB label and cyan background using fit
-\node[labelstyle, above=0.3cm of storebuf.north] (moblabel) {MOB};
+% Store Buffer label
+\node[labelstyle, above=0.05cm of storebuf.north] (storebuflabel) {Store Buffer};
+
+% MOB cyan background using fit (includes Store Buffer label and Load Buffer label)
 \begin{scope}[on background layer]
-\node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
+\node[draw, fill=lightcyan, fit=(storebuflabel)(storebuf)(loadbuflabel)(loadbuf), inner sep=2pt] (mobbox) {};
 \end{scope}
+
+% MOB label positioned above the cyan box
+\node[labelstyle, above=0.15cm of mobbox.north] (moblabel) {MOB};
 
 % Data Cache (right of Load Buffer, aligned with data row)
 \node[smallbox, right=1.2cm of loadbuf.east, anchor=west] (dcache) {Data\\Cache};
@@ -355,10 +363,8 @@
 };
 
 % Draw green arrows based on flags
-\ifnum\arrowFlags>0 \draw[greenarrow] (rat.east) -- ++(0.25,0); \fi
-\ifnum\arrowFlags>1 \draw[greenarrow] (agu.north) -- (rs.south); \fi
-\ifnum\arrowFlags>2 \draw[greenarrow] (agu.east) -- (dtlb.west); \fi
-\ifnum\arrowFlags>3 \draw[greenarrow] (loadbuf.east) -- (dcache.west); \fi
+\ifnum\arrowDTLB=1 \draw[greenarrow] (agu.east) -- (dtlb.west); \fi
+\ifnum\arrowCache=1 \draw[greenarrow] (loadbuf.east) -- (dcache.west); \fi
 
 \end{tikzpicture}%
 }
@@ -369,11 +375,10 @@
 \begin{center}
 \LoadLifecycleDiagram[
     iq1={R3$\leftarrow$MEM(R2+50)},
-    lbAddr={Invalid},
-    arrows=0
+    lbAddr={Invalid}
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction Queue, ready to be allocated.
 \end{tcolorbox}
@@ -393,11 +398,10 @@ Load instruction \texttt{R3$\leftarrow$MEM(R2+50)} is waiting in the Instruction
     rs1={RF0$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={Invalid},
-    lbBC={0},
-    arrows=1
+    lbBC={0}
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The load is allocated with one entry in the ROB, one in the RS, and one in the Load Buffer. The RAT is updated to rename R3 to physical register RF0.
 \end{tcolorbox}
@@ -417,11 +421,10 @@ The load is allocated with one entry in the ROB, one in the RS, and one in the L
     lbV={1},
     lbAddr={Invalid},
     lbBC={0},
-    agu={R2+50},
-    arrows=2
+    agu={R2+50}
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The load address calculation is dispatched to the AGU when the source register R2 is ready. The RS entry is released after dispatch.
 \end{tcolorbox}
@@ -441,10 +444,10 @@ The load address calculation is dispatched to the AGU when the source register R
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    arrows=3
+    arrowDTLB=1
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The AGU computes the virtual address and updates the Load Buffer with V(R2+50). The address is then pipelined to the dTLB for translation.
 \end{tcolorbox}
@@ -464,10 +467,10 @@ The AGU computes the virtual address and updates the Load Buffer with V(R2+50). 
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    arrows=4
+    arrowCache=1
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The Load Buffer checks for memory hazards with prior stores. If no blocking conditions exist, the load is dispatched to the Data Cache (DCU).
 \end{tcolorbox}
@@ -487,10 +490,10 @@ The Load Buffer checks for memory hazards with prior stores. If no blocking cond
     lbV={1},
     lbAddr={V(R2+50)},
     lbBC={0},
-    arrows=4
+    arrowCache=1
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 The Data Cache returns the requested data. The result is sent to the RS (for forwarding to dependent instructions) and the ROB is updated with the load result (Rdy=1, Data=data).
 \end{tcolorbox}
@@ -504,11 +507,10 @@ The Data Cache returns the requested data. The result is sent to the RS (for for
     iq1={R3$\leftarrow$MEM(R2+50)},
     lbV={1},
     lbAddr={V(R2+50)},
-    lbBC={0},
-    arrows=0
+    lbBC={0}
 ]
 \end{center}
-\vspace{2mm}
+\vspace{-2mm}
 \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
 When all previous instructions have retired, the load retires in-order. The RAT is updated to commit the architectural state. Finally, the Load Buffer and ROB entries are released for reuse.
 \end{tcolorbox}
