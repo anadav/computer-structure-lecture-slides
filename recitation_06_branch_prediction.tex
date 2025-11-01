@@ -534,12 +534,43 @@
   \fi
 }
 
-% Macro for BHR display as boxes
+% Macro for BHR display as boxes (no highlighting)
 \newcommand{\BHRbox}[4]{%
   \begin{tikzpicture}[baseline=(current bounding box.center)]
     \foreach \bit [count=\i] in {#1,#2,#3,#4} {
       \node[draw, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (\i*0.7,0) {\footnotesize\bit};
     }
+  \end{tikzpicture}
+}
+
+% Macro for BHR display with highlighting (8 parameters)
+% Parameters: b1, b2, b3, b4, h1, h2, h3, h4
+\newcommand{\BHRboxH}[8]{%
+  \begin{tikzpicture}[baseline=(current bounding box.center)]
+    % Bit 1
+    \ifnum#5=1\relax
+      \node[draw, fill=highlightyellow, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (0.7,0) {\footnotesize\textcolor{red}{#1}};
+    \else
+      \node[draw, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (0.7,0) {\footnotesize#1};
+    \fi
+    % Bit 2
+    \ifnum#6=1\relax
+      \node[draw, fill=highlightyellow, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (1.4,0) {\footnotesize\textcolor{red}{#2}};
+    \else
+      \node[draw, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (1.4,0) {\footnotesize#2};
+    \fi
+    % Bit 3
+    \ifnum#7=1\relax
+      \node[draw, fill=highlightyellow, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (2.1,0) {\footnotesize\textcolor{red}{#3}};
+    \else
+      \node[draw, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (2.1,0) {\footnotesize#3};
+    \fi
+    % Bit 4
+    \ifnum#8=1\relax
+      \node[draw, fill=highlightyellow, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (2.8,0) {\footnotesize\textcolor{red}{#4}};
+    \else
+      \node[draw, minimum width=6mm, minimum height=5mm, inner sep=1pt] at (2.8,0) {\footnotesize#4};
+    \fi
   \end{tikzpicture}
 }
 
@@ -549,7 +580,7 @@
   \BHRbox{#1}{#2}{#3}{#4}%
 }
 
-% Helper for pgfkeys stored BHR
+% Helper for pgfkeys stored BHR (no highlighting)
 \newcommand{\BHRdisplay}[1]{%
   % #1 contains {b1}{b2}{b3}{b4}
   % We need to extract these values
@@ -557,6 +588,36 @@
 }
 \newcommand{\BHRdisplayHelper}[4]{%
   \BHRbox{#1}{#2}{#3}{#4}%
+}
+
+% NEW: Display BHR with highlight using explicit expansion
+% Must be called with BOTH parameters already expanded
+\newcommand{\BHRdisplayH}[8]{%
+  \BHRboxH{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}%
+}
+
+% Simple text-based BHR display for use in tables (no TikZ)
+\newcommand{\BHRtextH}[8]{%
+  % #1-#4 = BHR bit values
+  % #5-#8 = Highlight flags (1 = highlight)
+  \ifnum#5=1\relax\cellcolor{highlightyellow}\textcolor{red}{#1}\else#1\fi%
+  \,|\,%
+  \ifnum#6=1\relax\cellcolor{highlightyellow}\textcolor{red}{#2}\else#2\fi%
+  \,|\,%
+  \ifnum#7=1\relax\cellcolor{highlightyellow}\textcolor{red}{#3}\else#3\fi%
+  \,|\,%
+  \ifnum#8=1\relax\cellcolor{highlightyellow}\textcolor{red}{#4}\else#4\fi%
+}
+
+% Simple BHR bit formatter with highlighting
+% Takes individual bit and highlight values (NOT lists)
+\newcommand{\BHRbit}[2]{%
+  % #1 = bit value (0 or 1), #2 = highlight flag (0 or 1)
+  \ifnum#2=1\relax
+    \cellcolor{highlightyellow}\textcolor{red}{#1}%
+  \else
+    #1%
+  \fi
 }
 
 % Setup pgfkeys for local frame parameters
@@ -568,6 +629,9 @@
   bhr1/.code={\def\localframeBHROne{#1}},
   bhr2/.code={\def\localframeBHRTwo{#1}},
   bhr3/.code={\def\localframeBHRThree{#1}},
+  bhr1h/.code={\def\localframeBHROneHighlight{#1}},
+  bhr2h/.code={\def\localframeBHRTwoHighlight{#1}},
+  bhr3h/.code={\def\localframeBHRThreeHighlight{#1}},
   r1/.store in=\localframeROne,
   r2/.store in=\localframeRTwo,
   r3/.store in=\localframeRThree,
@@ -577,6 +641,8 @@
   states3/.store in=\localframeStatesThree,
   active/.store in=\localframeActive,
   description/.store in=\localframeDesc,
+  step/.store in=\localframeStep,
+  action/.store in=\localframeAction,
   % Set defaults - don't set BHR defaults, they cause issues
   ip={},
   outcome={},
@@ -590,6 +656,8 @@
   % Don't set states1, states2, states3 defaults here - they are set in the macro initialization
   active={0},
   description={},
+  step={},
+  action={},
 }
 %==========================================
 % Slide: 2-Level Branch Prediction
@@ -961,15 +1029,31 @@ if (...)
   \def\localframeBHROne{{0}{0}{0}{0}}%
   \def\localframeBHRTwo{{0}{0}{0}{0}}%
   \def\localframeBHRThree{{0}{0}{0}{0}}%
+  % Initialize BHR highlight variables to defaults
+  \def\localframeBHROneHighlight{{0}{0}{0}{0}}%
+  \def\localframeBHRTwoHighlight{{0}{0}{0}{0}}%
+  \def\localframeBHRThreeHighlight{{0}{0}{0}{0}}%
   % Initialize new three-table variables
   \def\localframeStatesOne{}%
   \def\localframeStatesTwo{}%
   \def\localframeStatesThree{}%
   \def\localframeActive{0}%
   \def\localframeUseThreeTables{0}%
+  % Initialize step/action variables
+  \def\localframeStep{}%
+  \def\localframeAction{}%
   \pgfkeys{/localframe/.cd,#1}%
   \begin{frame}
-    \frametitle{Local History Branch Predictor}
+    % Generate frame title based on step and action
+    \ifx\localframeStep\empty
+      \frametitle{Local History Branch Predictor}
+    \else
+      \ifx\localframeAction\empty
+        \frametitle{Local History Branch Predictor - Step \localframeStep}
+      \else
+        \frametitle{Local History Branch Predictor - Step \localframeStep: \localframeAction}
+      \fi
+    \fi
     \begin{columns}[T]
       \column{0.30\textwidth}
       \begin{tcolorbox}[colback=gray!5, colframe=gray!50, boxrule=0.5pt, left=2pt, right=2pt, top=2pt, bottom=2pt]
@@ -1473,6 +1557,8 @@ if (...)
   }
 
 % Slide 2: Misprediction, update BHR1 and state
+% NOTE: For BHR highlighting, manually edit the BHR table in the frame to use \BHRbit{value}{highlight}
+% Example: \BHRbit{0}{1} for bit 0 with yellow bg + red text
 \localFrameKV{
     ip={IP1},
     outcome={},
@@ -1486,6 +1572,8 @@ if (...)
     states2={},
     states3={},
     active={1},
+    step={2},
+    action={State update},
     description={Step 2: Misprediction - update state}
   }
 
