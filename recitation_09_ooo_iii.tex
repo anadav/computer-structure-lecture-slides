@@ -519,61 +519,62 @@ When all previous instructions have retired, the load retires in-order. The RAT 
 % Summary slide for Life of a Load
 \begin{frame}
 \frametitle{The Life of a Load: Summary}
-%\small
+\small
+\vspace{-4mm}
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{1. Initial State}
-\begin{itemize}
-    \item Load waits in Instruction Queue
-\end{itemize}
-\vspace{1mm}
+\begin{column}{0.52\textwidth}
+\begin{enumerate}
+    \item \textbf{Initial State}
+    \begin{itemize}
+        \item Load waits in Instruction Queue
+    \end{itemize}
 
-\textbf{2. Allocation}
-\begin{itemize}
-    \item Allocate ROB, RS, Load Buffer entries
-    \item Rename destination in RAT
-\end{itemize}
-\vspace{1mm}
+    \item \textbf{Allocation}
+    \begin{itemize}
+        \item Allocate ROB, RS, Load Buffer entries
+        \item Rename destination in RAT
+    \end{itemize}
 
-\textbf{3. Dispatch to AGU}
-\begin{itemize}
-    \item Wait for source operands ready
-    \item Dispatch address calc to AGU
-    \item Release RS entry
-\end{itemize}
-\vspace{1mm}
+    \item \textbf{Dispatch to AGU}
+    \begin{itemize}
+        \item Wait for source operands ready
+        \item Dispatch address calc to AGU
+        \item Release RS entry
+    \end{itemize}
 
-\textbf{4. Address Calculation}
-\begin{itemize}
-    \item AGU computes virtual address
-    \item Update Load Buffer
-    \item Pipeline to dTLB
-\end{itemize}
+    \item \textbf{Address Calculation}
+    \begin{itemize}
+        \item AGU computes virtual address
+        \item Update Load Buffer
+        \item Pipeline to dTLB
+    \end{itemize}
+\end{enumerate}
 \end{column}
 
-\begin{column}{0.48\textwidth}
-\textbf{5. Blocking Check \& Dispatch}
-\begin{itemize}
-    \item Check memory hazards
-    \item If clear, dispatch to Data Cache
-\end{itemize}
-\vspace{1mm}
+\begin{column}{0.52\textwidth}
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \textbf{Blocking Check \& Dispatch}
+    \begin{itemize}
+        \item Check memory hazards
+        \item If clear, dispatch to Data Cache
+    \end{itemize}
 
-\textbf{6. Data Return}
-\begin{itemize}
-    \item Cache returns data
-    \item Update ROB
-    \item Forward to dependent inst. via RS
-\end{itemize}
-\vspace{1mm}
+    \item \textbf{Data Return}
+    \begin{itemize}
+        \item Cache returns data
+        \item Update ROB
+        \item Forward to dependent inst. via RS
+    \end{itemize}
 
-\textbf{7. Retire \& Release}
-\begin{itemize}
-    \item Wait for all prior inst. to retire
-    \item Commit load
-    \item Update RAT
-    \item Release Load Buffer and ROB entries
-\end{itemize}
+    \item \textbf{Retire \& Release}
+    \begin{itemize}
+        \item Wait for all prior inst. to retire
+        \item Commit load
+        \item Update RAT
+        \item Release Load Buffer and ROB entries
+    \end{itemize}
+\end{enumerate}
 \end{column}
 \end{columns}
 \end{frame}
