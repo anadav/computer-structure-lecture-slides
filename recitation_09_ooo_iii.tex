@@ -99,7 +99,7 @@
         % RAT physical registers
         rat0 = {}, rat1 = {}, rat2 = {}, rat3 = {},
         % ROB first entry
-        robOp = {}, robPhys = {}, robValid = {}, robRdy = {}, robData = {},
+        robOp = {}, robValid = {}, robRdy = {}, robData = {},
         % Instruction Queue (2 rows)
         iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = {},
         % RS content (2 rows)
@@ -122,7 +122,6 @@
     rat2/.estore in = \ratTwo,
     rat3/.estore in = \ratThree,
     robOp/.estore in = \robOp,
-    robPhys/.estore in = \robPhys,
     robValid/.estore in = \robValid,
     robRdy/.estore in = \robRdy,
     robData/.estore in = \robData,
@@ -146,7 +145,7 @@
 % Usage: \LoadLifecycleDiagram[key=value, ...]
 % Available keys:
 %   rat0, rat1, rat2, rat3 - RAT physical register mappings
-%   robOp, robPhys, robValid, robRdy, robData - ROB entry fields
+%   robOp, robValid, robRdy, robData - ROB entry fields (Phys Reg is hard-coded as RF0-RF3)
 %   iq1, iq2 - Instruction Queue entries (2 rows)
 %   rs1, rs2 - Reservation Station entries (2 rows)
 %   sb1, sb2 - Store Buffer entries
@@ -195,19 +194,19 @@
         right=0.7cm of rat.north east,
         anchor=north west,
         nodes={cell, align=center},
-        row 1/.style={nodes={headerbox}},
-        column 1/.append style={nodes={text width=0.35cm, fill=lightblue!30}},
-        column 2/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
+        row 1/.style={nodes={headerbox, minimum height=6mm}},
+        column 1/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
+        column 2/.append style={nodes={text width=0.35cm, fill=lightblue!30}},
         column 3/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         column 4/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         column 5/.append style={nodes={text width=0.7cm, fill=lightblue!30}},
         column 6/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         ampersand replacement=\&] (rob) {
-    Op \& {\tiny\begin{tabular}{@{}c@{}}Phys\\Reg\end{tabular}} \& Val \& Rdy \& Data \& DST \\
-    \ifx\robOp\empty{ }\else\robOp\fi \& \ifx\robPhys\empty{ }\else\robPhys\fi \& \robValid \& \robRdy \& \robData \& R3 \\
-    {} \& {} \& {} \& {} \& {} \& {} \\
-    {} \& {} \& {} \& {} \& {} \& {} \\
-    {} \& {} \& {} \& {} \& {} \& {} \\
+    {\tiny\begin{tabular}{@{}c@{}}Phys\\Reg\end{tabular}} \& Op \& Val \& Rdy \& Data \& DST \\
+    RF0 \& \ifx\robOp\empty{ }\else\robOp\fi \& \robValid \& \robRdy \& \robData \& R3 \\
+    RF1 \& {} \& {} \& {} \& {} \& {} \\
+    RF2 \& {} \& {} \& {} \& {} \& {} \\
+    RF3 \& {} \& {} \& {} \& {} \& {} \\
 };
 
 % RS (Reservation Station)
@@ -363,7 +362,7 @@
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robOp={Ld}, robPhys={RF0},
+    robOp={Ld},
     robValid={1},
     robRdy={0},
     robData={X},
@@ -386,7 +385,7 @@ $\bullet$ 1 entry in the ROB, RS and Load Buffer + rename in RAT
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robOp={Ld}, robPhys={RF0},
+    robOp={Ld},
     robValid={1},
     robRdy={0},
     robData={X},
@@ -409,7 +408,7 @@ $\bullet$ Dispatch Load address calculation to AGU when source is ready -- Relea
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robOp={Ld}, robPhys={RF0},
+    robOp={Ld},
     robValid={1},
     robRdy={0},
     robData={X},
@@ -431,7 +430,7 @@ $\bullet$ AGU updates the address in the Load buffer. Pipeline proceeds to dTLB
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robOp={Ld}, robPhys={RF0},
+    robOp={Ld},
     robValid={1},
     robRdy={0},
     robData={X},
@@ -453,7 +452,7 @@ $\bullet$ Load Buffer checks for blocking conditions and dispatches the Load to 
 \begin{center}
 \LoadLifecycleDiagram[
     rat3={RF0},
-    robOp={Ld}, robPhys={RF0},
+    robOp={Ld},
     robValid={1},
     robRdy={1},
     robData={data},
