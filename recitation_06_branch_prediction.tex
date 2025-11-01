@@ -1394,6 +1394,7 @@ if (...)
 \section{Local History Branch Predictor}
 
 % Local History Predictor Frames
+% Slide 1: Initial prediction at IP1
 \localFrameKV{
     ip={IP1},
     outcome={Not Taken},
@@ -1407,37 +1408,229 @@ if (...)
     states2={},
     states3={},
     active={1},
-    description={Initial state - IP1 active (others not yet used)}
+    description={Step 1: Prediction at IP1}
   }
 
-% localFrameKV call removed - causes brace errors even with BHR commented
+% Slide 2: Misprediction, update BHR1 and state
+\localFrameKV{
+    ip={IP1},
+    outcome={},
+    r1={100},
+    r2={2},
+    r3={0},
+    bhr1={0}{0}{0}{0},
+    bhr2={0}{0}{0}{0},
+    bhr3={0}{0}{0}{0},
+    states1={0:WNT:1},
+    states2={},
+    states3={},
+    active={1},
+    description={Step 2: Misprediction - update state}
+  }
 
-% Comment out to isolate the error source
-% \localFrame{Not Taken}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{100}{2}{0}{0:WNT:1}{Misprediction (predicted taken, was not taken)}
+% Slide 3: Move to IP2
+\localFrameKV{
+    ip={IP2},
+    outcome={Taken},
+    r1={100},
+    r2={3},
+    r3={0},
+    bhr1={0}{0}{0}{0},
+    bhr2={0}{0}{0}{0},
+    bhr3={0}{0}{0}{0},
+    states1={0:WNT:0},
+    states2={},
+    states3={},
+    active={2},
+    description={Step 3: Prediction at IP2}
+  }
 
-% \localFrame{Taken}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{{0}{0}{0}{0}}{100}{3}{0}{0:WT:1}{State update}
+% Slide 4: Correct prediction at IP2, update BHR2 and state
+\localFrameKV{
+    ip={IP2},
+    outcome={},
+    r1={100},
+    r2={3},
+    r3={0},
+    bhr1={0}{0}{0}{0},
+    bhr2={0}{0}{0}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:WNT:0},
+    states2={0:ST:1},
+    states3={},
+    active={2},
+    description={Step 4: Correct prediction - update state}
+  }
 
-\localFrame{Taken}{{0}{0}{0}{0}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{3}{0}{0:ST:1}{Correct prediction}
+% Slide 5: Back to IP1
+\localFrameKV{
+    ip={IP1},
+    outcome={Taken},
+    r1={100},
+    r2={3},
+    r3={1},
+    bhr1={0}{0}{0}{0},
+    bhr2={0}{0}{0}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:WNT:0},
+    states2={0:ST:0},
+    states3={},
+    active={1},
+    description={Step 5: Prediction at IP1}
+  }
 
-\localFrame{Taken}{{0}{0}{0}{0}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{3}{1}{0:WNT:0}{State update}
+% Slide 6: Misprediction at IP1, update
+\localFrameKV{
+    ip={IP1},
+    outcome={},
+    r1={100},
+    r2={3},
+    r3={1},
+    bhr1={0}{0}{0}{1},
+    bhr2={0}{0}{0}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:WT:1},
+    states2={0:ST:0},
+    states3={},
+    active={1},
+    description={Step 6: Misprediction - update state}
+  }
 
-\localFrame{Taken}{{0}{0}{0}{1}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{3}{1}{0:WT:1}{Misprediction}
+% Slide 7: IP2 again
+\localFrameKV{
+    ip={IP2},
+    outcome={Taken},
+    r1={100},
+    r2={4},
+    r3={1},
+    bhr1={0}{0}{0}{1},
+    bhr2={0}{0}{0}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:WT:0},
+    states2={0:ST:0},
+    states3={},
+    active={2},
+    description={Step 7: Correct prediction at IP2}
+  }
 
-\localFrame{Taken}{{0}{0}{0}{1}}{{0}{0}{0}{1}}{{0}{0}{0}{0}}{100}{4}{1}{0:ST:1}{Correct prediction}
+% Slide 8: Update IP2
+\localFrameKV{
+    ip={IP2},
+    outcome={},
+    r1={100},
+    r2={4},
+    r3={1},
+    bhr1={0}{0}{0}{1},
+    bhr2={0}{0}{1}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:ST:0},
+    states2={0:ST:0,1:ST:1},
+    states3={},
+    active={2},
+    description={Step 8: Correct prediction - update state}
+  }
 
-\localFrame{Taken}{{0}{0}{0}{1}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{4}{1}{0:ST:1}{Correct prediction}
+% Slide 9: IP1 again
+\localFrameKV{
+    ip={IP1},
+    outcome={Not Taken},
+    r1={100},
+    r2={4},
+    r3={0},
+    bhr1={0}{0}{0}{1},
+    bhr2={0}{0}{1}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:ST:0},
+    states2={0:ST:0,1:ST:0},
+    states3={},
+    active={1},
+    description={Step 9: Prediction at IP1}
+  }
 
-\localFrame{Not Taken}{{0}{0}{0}{1}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{4}{0}{0:ST:0}{State update}
+% Slide 10: Misprediction at IP1
+\localFrameKV{
+    ip={IP1},
+    outcome={},
+    r1={100},
+    r2={4},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{0}{1}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:ST:0,1:WNT:1},
+    states2={0:ST:0,1:ST:0},
+    states3={},
+    active={1},
+    description={Step 10: Misprediction - update state}
+  }
 
-\localFrame{Not Taken}{{0}{0}{1}{0}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{4}{0}{0:WNT:1}{Misprediction}
+% Slide 11: IP2 again
+\localFrameKV{
+    ip={IP2},
+    outcome={Not Taken},
+    r1={100},
+    r2={5},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{0}{1}{1},
+    bhr3={0}{0}{0}{0},
+    states1={0:ST:0,1:WNT:0},
+    states2={0:ST:0,1:ST:0},
+    states3={},
+    active={2},
+    description={Step 11: Prediction at IP2}
+  }
 
-\localFrame{Not Taken}{{0}{0}{1}{0}}{{0}{0}{1}{1}}{{0}{0}{0}{0}}{100}{5}{0}{0:ST:1,3:ST:0}{State update}
+% Slide 12: Misprediction at IP2
+\localFrameKV{
+    ip={IP2},
+    outcome={},
+    r1={100},
+    r2={5},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{1}{1}{0},
+    bhr3={0}{0}{0}{0},
+    states1={0:ST:0,1:WNT:0},
+    states2={0:ST:0,1:ST:0,3:WNT:1},
+    states3={},
+    active={2},
+    description={Step 12: Misprediction - update state}
+  }
 
-\localFrame{Not Taken}{{0}{0}{1}{0}}{{0}{1}{1}{0}}{{0}{0}{0}{0}}{100}{5}{0}{3:WNT:1}{Misprediction}
+% Slide 13: IP3 now (first time!)
+\localFrameKV{
+    ip={IP3},
+    outcome={Taken},
+    r1={99},
+    r2={5},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{1}{1}{0},
+    bhr3={0}{0}{0}{0},
+    states1={0:ST:0,1:WNT:0},
+    states2={0:ST:0,1:ST:0,3:WNT:0},
+    states3={},
+    active={3},
+    description={Step 13: Prediction at IP3}
+  }
 
-\localFrame{Taken}{{0}{0}{1}{0}}{{0}{1}{1}{0}}{{0}{0}{0}{0}}{99}{5}{0}{0:ST:0}{State update}
-
-\localFrame{Taken}{{0}{0}{1}{0}}{{0}{1}{1}{0}}{{0}{0}{0}{1}}{99}{5}{0}{0:ST:1}{Correct prediction}
+% Slide 14: Correct prediction at IP3
+\localFrameKV{
+    ip={IP3},
+    outcome={},
+    r1={99},
+    r2={5},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{1}{1}{0},
+    bhr3={0}{0}{0}{1},
+    states1={0:ST:0,1:WNT:0},
+    states2={0:ST:0,1:ST:0,3:WNT:0},
+    states3={0:ST:1},
+    active={3},
+    description={Step 14: Correct prediction - update state}
+  }
 
 % Transition slide
 \begin{frame}
