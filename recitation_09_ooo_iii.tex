@@ -14,7 +14,8 @@
 \usepackage{listings}
 \usepackage{pgfkeys}
 \usepackage{adjustbox}
-\usepackage[normalem]{ulem} 
+\usepackage[normalem]{ulem}
+\usepackage{xparse}
 \usetheme{Madrid}
 
 \title{Out-of-Order Execution: Part III}
@@ -91,16 +92,64 @@
 \definecolor{lightyellow}{RGB}{255,250,200}
 \definecolor{lightcyan}{RGB}{200,255,255}
 
+% pgfkeys setup for Load Lifecycle diagram
+\pgfkeys{
+    /LoadLife/.is family, /LoadLife,
+    default/.style = {
+        % RAT physical registers
+        rat0 = {}, rat1 = {}, rat2 = {}, rat3 = {},
+        % ROB first entry
+        robNum = { }, robValid = { }, robRdy = { }, robData = { },
+        % Instruction Queue (4 rows)
+        iq1 = {R3$\leftarrow$MEM(R2+50)}, iq2 = { }, iq3 = { }, iq4 = { },
+        % RS content
+        rs = { },
+        % Store Buffer (2 data rows)
+        sb1 = { }, sb2 = { },
+        % Load Buffer (V, Addr, BC)
+        lbV = { }, lbAddr = { }, lbBC = { },
+        % EXE units
+        alu = {ALU1}, agu = {AGU},
+        % Retire
+        retire = { },
+        % Arrow flags (0-4)
+        arrows = 0,
+    },
+    rat0/.estore in = \ratZero,
+    rat1/.estore in = \ratOne,
+    rat2/.estore in = \ratTwo,
+    rat3/.estore in = \ratThree,
+    robNum/.estore in = \robNum,
+    robValid/.estore in = \robValid,
+    robRdy/.estore in = \robRdy,
+    robData/.estore in = \robData,
+    iq1/.estore in = \iqOne,
+    iq2/.estore in = \iqTwo,
+    iq3/.estore in = \iqThree,
+    iq4/.estore in = \iqFour,
+    rs/.estore in = \rsContent,
+    sb1/.estore in = \sbOne,
+    sb2/.estore in = \sbTwo,
+    lbV/.estore in = \lbV,
+    lbAddr/.estore in = \lbAddr,
+    lbBC/.estore in = \lbBC,
+    alu/.estore in = \aluContent,
+    agu/.estore in = \aguContent,
+    retire/.estore in = \retireContent,
+    arrows/.estore in = \arrowFlags,
+}
+
 % Macro for creating load lifecycle diagram using matrix of nodes
-\newcommand{\LoadLifecycleDiagram}[9]{%
-% #1-4: RAT R0-R3 phys regs, #5-8: ROB first row data, #9: arrow flags
+\newcommand{\LoadLifecycleDiagram}[1][]{%
+    % Set defaults and process keys
+    \pgfkeys{/LoadLife,default,#1}%
 \begin{tikzpicture}[
-    scale=0.75,
+    scale=0.7,
     every node/.style={transform shape},
-    cell/.style={draw, rectangle, minimum height=4.5mm, font=\tiny},
-    headerbox/.style={draw, rectangle, fill=gray!20, font=\scriptsize\bfseries, minimum height=5mm, align=center},
-    execbox/.style={draw, rectangle, fill=lightyellow, minimum width=1.2cm, minimum height=0.9cm, font=\scriptsize, align=center},
-    smallbox/.style={draw, rectangle, minimum width=1.2cm, minimum height=0.7cm, font=\scriptsize, align=center},
+    cell/.style={draw, rectangle, minimum height=4.5mm, text height=1.5ex, text depth=0.25ex, font=\tiny\ttfamily},
+    headerbox/.style={draw, rectangle, fill=gray!10, minimum height=4.5mm, text height=1.5ex, text depth=0.25ex, font=\tiny\ttfamily, align=center},
+    smallbox/.style={draw, rectangle, minimum width=1.2cm, minimum height=0.7cm, font=\scriptsize\ttfamily, align=center},
+    labelstyle/.style={font=\scriptsize\bfseries\sffamily},
     greenarrow/.style={->, very thick, green!60!black, >=stealth}
 ]
 
@@ -109,17 +158,17 @@
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        label={[font=\scriptsize\bfseries]above:RAT},
+        label={[labelstyle]above:RAT},
         nodes={cell},
+        row 1/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.9cm, align=center, fill=gray!10}},
-        column 2/.append style={nodes={text width=0.9cm, align=center}},
+        column 2/.append style={nodes={text width=0.9cm, align=center, minimum width=0.9cm}},
         ampersand replacement=\&] (rat) {
-    \scriptsize Arch \& \scriptsize Phys \\
-    \scriptsize Reg. \& \scriptsize Reg. \\
-    R0 \& #1 \\
-    R1 \& #2 \\
-    R2 \& #3 \\
-    R3 \& #4 \\
+    Arch \& Phys \\
+    R0 \& \ratZero \\
+    R1 \& \ratOne \\
+    R2 \& \ratTwo \\
+    R3 \& \ratThree \\
 };
 
 % ROB (Reorder Buffer)
@@ -127,68 +176,157 @@
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        label={[font=\scriptsize\bfseries]above:ROB},
+        label={[labelstyle]above:ROB},
         right=0.7cm of rat.north east,
         anchor=north west,
         nodes={cell, align=center},
+        row 1/.style={nodes={headerbox}},
         column 1/.append style={nodes={text width=0.35cm, fill=lightblue!30}},
         column 2/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         column 3/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         column 4/.append style={nodes={text width=0.7cm, fill=lightblue!30}},
         column 5/.append style={nodes={text width=0.5cm, fill=lightblue!30}},
         ampersand replacement=\&] (rob) {
-    |[fill=gray!10]| \# \& |[fill=gray!10]| Val \& |[fill=gray!10]| Rdy \& |[fill=gray!10]| Data \& |[fill=gray!10]| DST \\
-    {} \& |[fill=gray!10]| id \& {} \& {} \& {} \\
-    #5 \& #6 \& #7 \& #8 \& R3 \\
-    0 \& \& \& \& \\
-    0 \& \& \& \& \\
-    0 \& \& \& \& \\
+    \# \& Val \& Rdy \& Data \& DST \\
+    {} \& id \& {} \& {} \& {} \\
+    \robNum \& \robValid \& \robRdy \& \robData \& R3 \\
+    0 \& {} \& {} \& {} \& {} \\
+    0 \& {} \& {} \& {} \& {} \\
+    0 \& {} \& {} \& {} \& {} \\
 };
 
-% Instruction Queue
-\node[headerbox, above=0.25cm of rob.north, text width=3.2cm] (instq) {Instruction Q};
-\node[cell, below=0pt of instq, text width=3.2cm, minimum height=6mm, align=center, font=\scriptsize] {R3$\leftarrow$MEM(R2+50)};
-
 % RS (Reservation Station)
-\node[headerbox, below right=0.25cm and 0.4cm of rob.north east, anchor=north west, text width=2.8cm] (rshdr) {RS};
-\node[cell, below=0pt of rshdr, text width=2.8cm, minimum height=6mm, align=center, font=\scriptsize] (rs) {};
-
-% MOB (Memory Order Buffer)
-\node[headerbox, right=0.4cm of rshdr.north east, anchor=north west, text width=2.2cm, fill=lightcyan!20] (mobhdr) {Store Buffer};
-\node[headerbox, below=0pt of mobhdr, text width=2.2cm, fill=lightcyan!20] (mobhdr2) {Load Buffer};
 \matrix[matrix of nodes,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         inner sep=0pt,
-        below=0pt of mobhdr2,
-        anchor=north,
+        label={[labelstyle]above:RS},
+        below right=0.25cm and 0.5cm of rob.north east,
+        anchor=north west,
         nodes={cell, align=center},
-        column 1/.append style={nodes={text width=0.35cm, fill=lightcyan!40}},
-        column 2/.append style={nodes={text width=1.3cm, fill=lightcyan!40}},
-        column 3/.append style={nodes={text width=0.35cm, fill=lightcyan!40}},
-        ampersand replacement=\&] (mob) {
-    V \& Addr. \& BC \\
+        column 1/.append style={nodes={text width=2.8cm}},
+        ampersand replacement=\&] (rs) {
+    \rsContent \\
 };
 
+% Instruction Queue (above RS label)
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        label={[labelstyle]above:Instruction Q},
+        above=0.6cm of rs.north,
+        anchor=south,
+        nodes={cell, align=center},
+        column 1/.append style={nodes={text width=2.8cm}},
+        ampersand replacement=\&] (instq) {
+    \iqOne \\
+    \iqTwo \\
+    \iqThree \\
+    \iqFour \\
+};
+
+% MOB (Memory Order Buffer) - Load Buffer first to establish width
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        right=0.5cm of rs.north east,
+        anchor=north west,
+        nodes={cell, align=center},
+        row 1/.style={nodes={headerbox}},
+        row 2/.style={nodes={headerbox}},
+        column 1/.append style={nodes={text width=0.6cm}},
+        column 2/.append style={nodes={text width=1.0cm}},
+        column 3/.append style={nodes={text width=0.5cm}},
+        ampersand replacement=\&] (loadbuf) {
+    |[text width=2.1cm]| Load Buffer \& {} \& {} \\
+    V \& Addr \& BC \\
+    \lbV \& \lbAddr \& \lbBC \\
+};
+
+% Store Buffer (above Load Buffer, matching its width)
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        above=0pt of loadbuf.north,
+        anchor=south,
+        nodes={cell, align=center},
+        row 1/.style={nodes={headerbox}},
+        column 1/.append style={nodes={text width=0.6cm}},
+        column 2/.append style={nodes={text width=1.0cm}},
+        column 3/.append style={nodes={text width=0.5cm}},
+        ampersand replacement=\&] (storebuf) {
+    |[text width=2.1cm]| Store Buffer \& {} \& {} \\
+    \sbOne \& {} \& {} \\
+    \sbTwo \& {} \& {} \\
+};
+
+% MOB label and cyan background using fit
+\node[labelstyle, above=0.1cm of storebuf.north] (moblabel) {MOB};
+\begin{scope}[on background layer]
+\node[draw, fill=lightcyan, fit=(moblabel)(storebuf)(loadbuf), inner sep=2pt] {};
+\end{scope}
+
 % Data Cache
-\node[smallbox, right=0.4cm of mob.north east, anchor=north west] (dcache) {Data\\Cache};
+\node[smallbox, right=0.5cm of storebuf.north east, anchor=north west] (dcache) {Data\\Cache};
 
-% EXE block
-\node[execbox, below=0.7cm of rs.south west, anchor=north west] (alu1) {ALU1};
+% dTLB (below Data Cache)
+\node[smallbox, below=0.3cm of dcache.south west, anchor=north west] (dtlb) {dTLB};
+
+% EXE block - Individual matrices
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        below=0.7cm of rs.south west,
+        anchor=north west,
+        nodes={cell, align=center},
+        column 1/.append style={nodes={text width=1.2cm}},
+        ampersand replacement=\&] (alu1) {
+    \aluContent \\
+};
+
 \node[font=\large, right=0.25cm of alu1] (dots) {$\bullet\bullet\bullet$};
-\node[execbox, right=0.25cm of dots] (agu) {AGU};
 
-% dTLB
-\node[smallbox, right=0.4cm of agu] (dtlb) {dTLB};
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        right=0.25cm of dots,
+        anchor=west,
+        nodes={cell, align=center},
+        column 1/.append style={nodes={text width=1.2cm}},
+        ampersand replacement=\&] (agu) {
+    \aguContent \\
+};
 
-% Retire
-\node[headerbox, below=0.4cm of alu1.south, text width=1.8cm] (retire) {Retire};
+% EXE label and yellow background using fit
+\node[labelstyle, left=0.1cm of alu1.west, anchor=east] (exelabel) {EXE};
+\begin{scope}[on background layer]
+\node[draw, fill=lightyellow, fit=(exelabel)(alu1)(dots)(agu), inner sep=2pt] (exeblock) {};
+\end{scope}
+
+% Retire (below EXE block)
+\matrix[matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        inner sep=0pt,
+        label={[labelstyle]above:Retire},
+        below=0.4cm of exeblock.south west,
+        anchor=north west,
+        nodes={cell, align=center},
+        column 1/.append style={nodes={text width=1.8cm}},
+        ampersand replacement=\&] (retire) {
+    \retireContent \\
+};
 
 % Draw green arrows based on flags
-\ifnum#9>1 \draw[greenarrow] (rat.east) -- ++(0.25,0); \fi
-\ifnum#9>2 \draw[greenarrow] (agu.north) -- (rs.south); \fi
-\ifnum#9>3 \draw[greenarrow] (agu.east) -- (dtlb.west); \fi
-\ifnum#9>4 \draw[greenarrow] (mob.east) -- (dcache.west); \fi
+\ifnum\arrowFlags>0 \draw[greenarrow] (rat.east) -- ++(0.25,0); \fi
+\ifnum\arrowFlags>1 \draw[greenarrow] (agu.north) -- (rs.south); \fi
+\ifnum\arrowFlags>2 \draw[greenarrow] (agu.east) -- (dtlb.west); \fi
+\ifnum\arrowFlags>3 \draw[greenarrow] (loadbuf.east) -- (dcache.west); \fi
 
 \end{tikzpicture}%
 }
@@ -197,9 +335,13 @@
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3}%RAT R0-R3
-    {}{}{}{}%ROB entry (empty)
-    {0}%arrow flags
+\LoadLifecycleDiagram[
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    lbAddr={Not Valid},
+    alu={ALU1},
+    agu={AGU},
+    arrows=0
+]
 \end{center}
 \end{frame}
 
@@ -207,9 +349,21 @@
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3 \textcolor{green!60!black}{RF0}}%RAT R0-R3
-    {Ld}{1}{0}{X}%ROB entry
-    {2}%arrow flags
+\LoadLifecycleDiagram[
+    rat3={RF0},
+    robNum={Ld},
+    robValid={1},
+    robRdy={0},
+    robData={X},
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    rs={RF0$\leftarrow$MEM(R2+50)},
+    lbV={1},
+    lbAddr={Not Valid},
+    lbBC={0},
+    alu={ALU1},
+    agu={AGU},
+    arrows=1
+]
 \end{center}
 \vspace{-3mm}
 \scriptsize
@@ -220,9 +374,20 @@ $\bullet$ 1 entry in the ROB, RS and Load Buffer + rename in RAT
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3 \textcolor{green!60!black}{RF0}}%RAT R0-R3
-    {Ld}{1}{0}{X}%ROB entry
-    {3}%arrow flags
+\LoadLifecycleDiagram[
+    rat3={RF0},
+    robNum={Ld},
+    robValid={1},
+    robRdy={0},
+    robData={X},
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    lbV={1},
+    lbAddr={Not Valid},
+    lbBC={0},
+    alu={ALU1},
+    agu={R2+50},
+    arrows=2
+]
 \end{center}
 \vspace{-3mm}
 \scriptsize
@@ -233,9 +398,20 @@ $\bullet$ Dispatch Load address calculation to AGU when source is ready -- Relea
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3 \textcolor{green!60!black}{RF0}}%RAT R0-R3
-    {Ld}{1}{0}{X}%ROB entry
-    {4}%arrow flags
+\LoadLifecycleDiagram[
+    rat3={RF0},
+    robNum={Ld},
+    robValid={1},
+    robRdy={0},
+    robData={X},
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    lbV={1},
+    lbAddr={V(R2+50)},
+    lbBC={0},
+    alu={ALU1},
+    agu={AGU},
+    arrows=3
+]
 \end{center}
 \vspace{-3mm}
 \scriptsize
@@ -246,9 +422,20 @@ $\bullet$ AGU updates the address in the Load buffer. Pipeline proceeds to dTLB
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3 \textcolor{green!60!black}{RF0}}%RAT R0-R3
-    {Ld}{1}{0}{X}%ROB entry
-    {5}%arrow flags
+\LoadLifecycleDiagram[
+    rat3={RF0},
+    robNum={Ld},
+    robValid={1},
+    robRdy={0},
+    robData={X},
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    lbV={1},
+    lbAddr={V(R2+50)},
+    lbBC={0},
+    alu={ALU1},
+    agu={AGU},
+    arrows=4
+]
 \end{center}
 \vspace{-3mm}
 \scriptsize
@@ -259,9 +446,20 @@ $\bullet$ Load Buffer checks for blocking conditions and dispatches the Load to 
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3 \textcolor{green!60!black}{RF0}}%RAT R0-R3
-    {Ld}{1}{1}{data}%ROB entry
-    {5}%arrow flags
+\LoadLifecycleDiagram[
+    rat3={RF0},
+    robNum={Ld},
+    robValid={1},
+    robRdy={1},
+    robData={data},
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    lbV={1},
+    lbAddr={V(R2+50)},
+    lbBC={0},
+    alu={ALU1},
+    agu={AGU},
+    arrows=4
+]
 \end{center}
 \vspace{-3mm}
 \scriptsize
@@ -272,9 +470,15 @@ $\bullet$ DCU sends the result to RS and updates the ROB with the load result
 \begin{frame}
 \frametitle{The Life of a Load\ldots}
 \begin{center}
-\LoadLifecycleDiagram{R0}{R1}{R2}{R3}%RAT R0-R3
-    {}{}{}{}%ROB entry (cleared)
-    {0}%arrow flags
+\LoadLifecycleDiagram[
+    iq1={R3$\leftarrow$MEM(R2+50)},
+    lbV={1},
+    lbAddr={V(R2+50)},
+    lbBC={0},
+    alu={ALU1},
+    agu={AGU},
+    arrows=0
+]
 \end{center}
 \vspace{-3mm}
 \scriptsize
