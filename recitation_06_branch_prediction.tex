@@ -1752,6 +1752,27 @@ if (...)
 % Step 2a: Prediction
 \localFrameKV{
     ip={IP2},
+    outcome={},
+    prediction={Taken},
+    r1={100},
+    r2={3},
+    r3={0},
+    bhr1={0}{0}{0}{0},
+    bhr2={0}{0}{0}{0},
+    bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
+    states1={0:WNT:0},
+    states2={0:WT:1},
+    states3={},
+    active={2},
+    step={2},
+    action={Prediction},
+    description={Using BHR=0000, index 0, state=WT predicts Taken}
+  }
+
+% Step 2b: State update
+\localFrameKV{
+    ip={IP2},
     outcome={Taken},
     r1={100},
     r2={3},
@@ -1759,33 +1780,56 @@ if (...)
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
     states1={0:WNT:0},
-    states2={0:WT:0},
+    states2={0:ST:2},
     states3={},
     active={2},
     step={2},
-    action={Prediction},
-    description={Using BHR=0000, index 0, state=WT predicts Taken. Actual outcome: Taken (correct)}
+    action={State Update},
+    description={Actual outcome: Taken. State at index 0 transitions from WT to ST}
   }
 
-% Slide 4: Correct prediction at IP2, update BHR2 and state
+% Step 2c: BHR update
 \localFrameKV{
     ip={IP2},
-    outcome={},
+    outcome={Taken},
     r1={100},
     r2={3},
     r3={0},
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{1},
     bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
+    bhrredbit={4},
     states1={0:WNT:0},
     states2={0:ST:1},
     states3={},
     active={2},
-    description={Step 4: Correct prediction - update state}
+    step={2},
+    action={BHR Update},
+    description={BHR2 shifts left, LSB set to 1 (Taken). BHR: 0000 becomes 0001}
   }
 
-% Slide 5: Back to IP1
+% ===== Step 3: IP1 second branch (TAKEN) =====
+% Step 3a: Prediction
+\localFrameKV{
+    ip={IP1},
+    prediction={Not Taken},
+    r1={100},
+    r2={3},
+    r3={1},
+    bhr1={0}{0}{0}{0},
+    bhr2={0}{0}{0}{1},
+    bhrrowhighlight={1},
+    states1={0:WNT:1},
+    states2={0:ST:0},
+    step={3},
+    action={Prediction},
+    description={Using BHR=0000, index 0, state=WNT predicts Not Taken}
+  }
+
+% Step 3b: State update
 \localFrameKV{
     ip={IP1},
     outcome={Taken},
@@ -1794,32 +1838,51 @@ if (...)
     r3={1},
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{1},
-    bhr3={0}{0}{0}{0},
-    states1={0:WNT:0},
+    bhrrowhighlight={1},
+    states1={0:WT:2},
     states2={0:ST:0},
-    states3={},
-    active={1},
-    description={Step 5: Prediction at IP1}
+    step={3},
+    action={State Update},
+    description={Actual outcome: Taken. State at index 0 transitions from WNT to WT}
   }
 
-% Slide 6: Misprediction at IP1, update
+% Step 3c: BHR update
 \localFrameKV{
     ip={IP1},
-    outcome={},
+    outcome={Taken},
     r1={100},
     r2={3},
     r3={1},
     bhr1={0}{0}{0}{1},
     bhr2={0}{0}{0}{1},
-    bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
+    bhrredbit={4},
     states1={0:WT:1},
     states2={0:ST:0},
-    states3={},
-    active={1},
-    description={Step 6: Misprediction - update state}
+    step={3},
+    action={BHR Update},
+    description={BHR1 shifts left, LSB set to 1 (Taken). BHR: 0000 becomes 0001}
   }
 
-% Slide 7: IP2 again
+% ===== Step 4: IP2 second branch (TAKEN) =====
+% Step 4a: Prediction
+\localFrameKV{
+    ip={IP2},
+    prediction={Taken},
+    r1={100},
+    r2={4},
+    r3={1},
+    bhr1={0}{0}{0}{1},
+    bhr2={0}{0}{0}{1},
+    bhrrowhighlight={1},
+    states1={0:WT:0},
+    states2={0:ST:1,1:WT:0},
+    step={4},
+    action={Prediction},
+    description={Using BHR=0001, index 1, state=WT predicts Taken}
+  }
+
+% Step 4b: State update
 \localFrameKV{
     ip={IP2},
     outcome={Taken},
@@ -1828,32 +1891,51 @@ if (...)
     r3={1},
     bhr1={0}{0}{0}{1},
     bhr2={0}{0}{0}{1},
-    bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
     states1={0:WT:0},
-    states2={0:ST:0},
-    states3={},
-    active={2},
-    description={Step 7: Correct prediction at IP2}
+    states2={0:ST:0,1:ST:2},
+    step={4},
+    action={State Update},
+    description={Actual outcome: Taken. State at index 1 transitions from WT to ST}
   }
 
-% Slide 8: Update IP2
+% Step 4c: BHR update
 \localFrameKV{
     ip={IP2},
-    outcome={},
+    outcome={Taken},
     r1={100},
     r2={4},
     r3={1},
     bhr1={0}{0}{0}{1},
     bhr2={0}{0}{1}{1},
-    bhr3={0}{0}{0}{0},
-    states1={0:ST:0},
+    bhrrowhighlight={1},
+    bhrredbit={4},
+    states1={0:WT:0},
     states2={0:ST:0,1:ST:1},
-    states3={},
-    active={2},
-    description={Step 8: Correct prediction - update state}
+    step={4},
+    action={BHR Update},
+    description={BHR2 shifts left, LSB set to 1 (Taken). BHR: 0001 becomes 0011}
   }
 
-% Slide 9: IP1 again
+% ===== Step 5: IP1 third branch (NOT TAKEN) =====
+% Step 5a: Prediction
+\localFrameKV{
+    ip={IP1},
+    prediction={Taken},
+    r1={100},
+    r2={4},
+    r3={0},
+    bhr1={0}{0}{0}{1},
+    bhr2={0}{0}{1}{1},
+    bhrrowhighlight={1},
+    states1={0:WT:0,1:ST:1},
+    states2={0:ST:0,1:ST:0},
+    step={5},
+    action={Prediction},
+    description={Using BHR=0001, index 1, state=ST predicts Taken}
+  }
+
+% Step 5b: State update
 \localFrameKV{
     ip={IP1},
     outcome={Not Taken},
@@ -1862,32 +1944,51 @@ if (...)
     r3={0},
     bhr1={0}{0}{0}{1},
     bhr2={0}{0}{1}{1},
-    bhr3={0}{0}{0}{0},
-    states1={0:ST:0},
+    bhrrowhighlight={1},
+    states1={0:WT:0,1:WT:2},
     states2={0:ST:0,1:ST:0},
-    states3={},
-    active={1},
-    description={Step 9: Prediction at IP1}
+    step={5},
+    action={State Update},
+    description={Actual outcome: Not Taken. State at index 1 transitions from ST to WT}
   }
 
-% Slide 10: Misprediction at IP1
+% Step 5c: BHR update
 \localFrameKV{
     ip={IP1},
-    outcome={},
+    outcome={Not Taken},
     r1={100},
     r2={4},
     r3={0},
     bhr1={0}{0}{1}{0},
     bhr2={0}{0}{1}{1},
-    bhr3={0}{0}{0}{0},
-    states1={0:ST:0,1:WNT:1},
+    bhrrowhighlight={1},
+    bhrredbit={4},
+    states1={0:WT:0,1:WT:1},
     states2={0:ST:0,1:ST:0},
-    states3={},
-    active={1},
-    description={Step 10: Misprediction - update state}
+    step={5},
+    action={BHR Update},
+    description={BHR1 shifts left, LSB set to 0 (Not Taken). BHR: 0001 becomes 0010}
   }
 
-% Slide 11: IP2 again
+% ===== Step 6: IP2 third branch (NOT TAKEN) =====
+% Step 6a: Prediction
+\localFrameKV{
+    ip={IP2},
+    prediction={Taken},
+    r1={100},
+    r2={5},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{0}{1}{1},
+    bhrrowhighlight={1},
+    states1={0:WT:0,1:WT:0},
+    states2={0:ST:0,1:ST:1,3:WT:0},
+    step={6},
+    action={Prediction},
+    description={Using BHR=0011, index 3, state=WT predicts Taken}
+  }
+
+% Step 6b: State update
 \localFrameKV{
     ip={IP2},
     outcome={Not Taken},
@@ -1896,32 +1997,53 @@ if (...)
     r3={0},
     bhr1={0}{0}{1}{0},
     bhr2={0}{0}{1}{1},
-    bhr3={0}{0}{0}{0},
-    states1={0:ST:0,1:WNT:0},
-    states2={0:ST:0,1:ST:0},
-    states3={},
-    active={2},
-    description={Step 11: Prediction at IP2}
+    bhrrowhighlight={1},
+    states1={0:WT:0,1:WT:0},
+    states2={0:ST:0,1:ST:0,3:WNT:2},
+    step={6},
+    action={State Update},
+    description={Actual outcome: Not Taken. State at index 3 transitions from WT to WNT}
   }
 
-% Slide 12: Misprediction at IP2
+% Step 6c: BHR update
 \localFrameKV{
     ip={IP2},
-    outcome={},
+    outcome={Not Taken},
     r1={100},
     r2={5},
     r3={0},
     bhr1={0}{0}{1}{0},
     bhr2={0}{1}{1}{0},
-    bhr3={0}{0}{0}{0},
-    states1={0:ST:0,1:WNT:0},
+    bhrrowhighlight={1},
+    bhrredbit={4},
+    states1={0:WT:0,1:WT:0},
     states2={0:ST:0,1:ST:0,3:WNT:1},
-    states3={},
-    active={2},
-    description={Step 12: Misprediction - update state}
+    step={6},
+    action={BHR Update},
+    description={BHR2 shifts left, LSB set to 0 (Not Taken). BHR: 0011 becomes 0110}
   }
 
-% Slide 13: IP3 now (first time!)
+% ===== Step 7: IP3 first branch (TAKEN) =====
+% Step 7a: Prediction
+\localFrameKV{
+    ip={IP3},
+    prediction={Taken},
+    r1={99},
+    r2={5},
+    r3={0},
+    bhr1={0}{0}{1}{0},
+    bhr2={0}{1}{1}{0},
+    bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
+    states1={0:WT:0,1:WT:0},
+    states2={0:ST:0,1:ST:0,3:WNT:0},
+    states3={0:WT:1},
+    step={7},
+    action={Prediction},
+    description={Using BHR=0000, index 0, state=WT predicts Taken}
+  }
+
+% Step 7b: State update
 \localFrameKV{
     ip={IP3},
     outcome={Taken},
@@ -1931,28 +2053,33 @@ if (...)
     bhr1={0}{0}{1}{0},
     bhr2={0}{1}{1}{0},
     bhr3={0}{0}{0}{0},
-    states1={0:ST:0,1:WNT:0},
+    bhrrowhighlight={1},
+    states1={0:WT:0,1:WT:0},
     states2={0:ST:0,1:ST:0,3:WNT:0},
-    states3={},
-    active={3},
-    description={Step 13: Prediction at IP3}
+    states3={0:ST:2},
+    step={7},
+    action={State Update},
+    description={Actual outcome: Taken. State at index 0 transitions from WT to ST}
   }
 
-% Slide 14: Correct prediction at IP3
+% Step 7c: BHR update
 \localFrameKV{
     ip={IP3},
-    outcome={},
+    outcome={Taken},
     r1={99},
     r2={5},
     r3={0},
     bhr1={0}{0}{1}{0},
     bhr2={0}{1}{1}{0},
     bhr3={0}{0}{0}{1},
-    states1={0:ST:0,1:WNT:0},
+    bhrrowhighlight={1},
+    bhrredbit={4},
+    states1={0:WT:0,1:WT:0},
     states2={0:ST:0,1:ST:0,3:WNT:0},
     states3={0:ST:1},
-    active={3},
-    description={Step 14: Correct prediction - update state}
+    step={7},
+    action={BHR Update},
+    description={BHR3 shifts left, LSB set to 1 (Taken). BHR: 0000 becomes 0001}
   }
 
 % Transition slide
