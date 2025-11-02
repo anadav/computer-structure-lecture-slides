@@ -601,13 +601,16 @@
 % Takes individual bit and highlight values (NOT lists)
 \newcommand{\BHRbit}[2]{%
   % #1 = bit value (0 or 1), #2 = highlight flag (0=none, 1=yellow+red, 2=yellow only)
-  \ifnum#2=1\relax
-    \cellcolor{highlightyellow}\textcolor{red}{#1}%
-  \else\ifnum#2=2\relax
-    \cellcolor{highlightyellow}#1%
-  \else
+  \ifcase#2
+    % case 0: no highlighting
     #1%
-  \fi\fi
+  \or
+    % case 1: yellow background + red text
+    \cellcolor{highlightyellow}\textcolor{red}{#1}%
+  \or
+    % case 2: yellow background only
+    \cellcolor{highlightyellow}#1%
+  \fi
 }
 
 % Note: BHR highlighting must be done manually per slide
@@ -1522,6 +1525,16 @@ if (...)
   \fi\fi\fi\fi%
 }
 
+% Helper to format state without color (for highlighted cells)
+\newcommand{\formatStatePlain}[1]{%
+  \ifnum\pdfstrcmp{#1}{ST}=0\textbf{#1}%
+  \else\ifnum\pdfstrcmp{#1}{WT}=0#1%
+  \else\ifnum\pdfstrcmp{#1}{WNT}=0#1%
+  \else\ifnum\pdfstrcmp{#1}{SNT}=0\textbf{#1}%
+  \else #1%
+  \fi\fi\fi\fi%
+}
+
 % Helper to get state for specific index
 \newcommand{\stateRow}[2]{%
   % #1: index, #2: full state string
@@ -1538,12 +1551,12 @@ if (...)
   \parseStateString{#1}{#2}%
   \ifnum\temphighlight=2
     % Yellow background + red text
-    \cellcolor{highlightyellow}\textcolor{red}{\formatState{\tempstate}}%
+    \cellcolor{highlightyellow}\textcolor{red}{\formatStatePlain{\tempstate}}%
   \else\ifnum\temphighlight=1
-    % Yellow background only
-    \cellcolor{highlightyellow}\formatState{\tempstate}%
+    % Yellow background only (no color text)
+    \cellcolor{highlightyellow}\formatStatePlain{\tempstate}%
   \else
-    % Normal
+    % Normal (with default colors)
     \formatState{\tempstate}%
   \fi\fi
 }
@@ -1702,7 +1715,8 @@ if (...)
   }
 
 % Step 1c: BHR update
-% Entire IP1 row highlighted yellow, LSB also has red text
+% Entire IP1 BHR row highlighted yellow, LSB also has red text
+% State should NOT be highlighted
 \localFrameKV{
     ip={IP1},
     outcome={Not Taken},
@@ -1710,10 +1724,11 @@ if (...)
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
-    bhr1display={{\BHRbit{0}{2}}{\BHRbit{0}{2}}{\BHRbit{0}{2}}{\BHRbit{0}{1}}},
+    bhrrowhighlight={1},
+    bhr1={0}{0}{0}{\textcolor{incorrectred}{0}},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
-    states1={0:WNT:1},
+    states1={0:WNT:0},
     states2={},
     states3={},
     active={1},
