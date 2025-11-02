@@ -923,6 +923,14 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Slide 13: Question 2 Setup
 \begin{frame}{Question 2: TLB and PMH Behavior}
+% Define colors for different page table levels
+\definecolor{signcolor}{RGB}{128,128,128}
+\definecolor{pml4color}{RGB}{255,128,0}
+\definecolor{pdpcolor}{RGB}{51,153,255}
+\definecolor{dircolor}{RGB}{0,204,102}
+\definecolor{tablecolor}{RGB}{255,255,0}
+\definecolor{offsetcolor}{RGB}{204,0,204}
+
 \textbf{System Configuration:}
 \begin{itemize}
     \item Processor \textbf{similar} to x86-64 (custom configuration)
@@ -940,11 +948,11 @@ Note: No Table cache needed as TLB stores complete translations
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\textbf{Address} & \textbf{Memory Accesses} & \textbf{Explanation} \\
+\textbf{Virtual Address} & \textbf{Memory Accesses} & \textbf{Explanation} \\
 \hline
-0x0000022334455666 & ? & \\
-0x0000022334455777 & ? & \\
-0x0000022884455777 & ? & \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{666} & ? & \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & ? & \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{88}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & ? & \\
 \hline
 \end{tabular}
 \end{center}
@@ -952,16 +960,24 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Slide 14: Question 2 Solution
 \begin{frame}{Question 2 (TLB and PMH Behavior): Solution}
+% Define colors for different page table levels
+\definecolor{signcolor}{RGB}{128,128,128}
+\definecolor{pml4color}{RGB}{255,128,0}
+\definecolor{pdpcolor}{RGB}{51,153,255}
+\definecolor{dircolor}{RGB}{0,204,102}
+\definecolor{tablecolor}{RGB}{255,255,0}
+\definecolor{offsetcolor}{RGB}{204,0,204}
+
 \begin{center}
 \begin{tabular}{|l|c|p{6cm}|}
 \hline
-\textbf{Address} & \textbf{Accesses} & \textbf{Explanation} \\
+\textbf{Virtual Address} & \textbf{Accesses} & \textbf{Explanation} \\
 \hline
-0x0000022334455666 & 4 & Need to access memory for each of the 4 translation tables \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{666} & 4 & Need to access memory for each of the 4 translation tables \\
 \hline
-0x0000022334455777 & 0 & Same page as above $\Rightarrow$ TLB hit $\Rightarrow$ No memory access \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & 0 & Same page as above $\Rightarrow$ TLB hit $\Rightarrow$ No memory access \\
 \hline
-0x0000022884455777 & 3 & Hit in PML4 cache, then miss in PDP. Need to access memory 3 times: PDP, DIR, PTE \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{88}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & 3 & Hit in PML4 cache, then miss in PDP. Need to access memory 3 times: PDP, DIR, PTE \\
 \hline
 \end{tabular}
 \end{center}
