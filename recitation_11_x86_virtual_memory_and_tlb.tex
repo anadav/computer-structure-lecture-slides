@@ -1022,17 +1022,20 @@ Note: No Table cache needed as TLB stores complete translations
 % Define Y level for address boxes
 \def\addry{3.8}
 
-% VPN box (translated part) - bits 47:12, shifted up by half its height
-\node[addrbox, fill=green!30, minimum width=3.5cm, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
-\node[bitlabel] at (vpn.south west) {47};
-\node[bitlabel] at (vpn.south east) {13};
-
 % Set box - bits 13:6 (overlaps with VPN at bits 13:12)
 \node[addrbox, fill=cyan!40, minimum width=1.5cm, anchor=south west] (set) at (3.3, \addry) {Set};
 \node[bitlabel, anchor=north west] (bit13) at ([xshift=-1mm]set.south west) {13};
 \node[bitlabel, right=-2.5mm of bit13] (bit12) {12};
 \node[bitlabel, right=-2.5mm of bit12] (bit11) {11};
 \node[bitlabel, anchor=north east] at (set.south east) {6};
+
+% VPN box (translated part) - bits 47:12, shifted up by half its height
+% Width extends from x=0 to bit12.east x-coordinate
+\node[addrbox, fill=green!30, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
+\path let \p1 = (vpn.south west), \p2 = (bit11.west) in
+  node[addrbox, fill=green!30, minimum width={veclen(\x2-\x1,0)}, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
+\node[bitlabel] at (vpn.south west) {47};
+\node[bitlabel] at (vpn.south east) {13};
 
 % Offset box - bits 5:0
 \node[addrbox, fill=yellow!30, minimum width=1cm, anchor=south west] (offset) at (4.8, \addry) {Offset};
