@@ -239,234 +239,19 @@
 \titlepage
 \end{frame}
 
-% Slide 2: X86 Paging Introduction
-\begin{frame}{X86 Paging}
+% Slide 2: x86-64 Paging Introduction
+\begin{frame}{x86-64 Paging}
 \begin{itemize}
-    \item For 32-bit addressing with 4KB page size, a full page table would require 4MB
-    \item Most processes use only a small amount of memory
-    \item The overhead of 4MB per process is expensive and unnecessary
-    \item In X86, there are multiple levels of translation tables organized in a tree structure
+    \item For 48-bit addressing with 4KB page size, a flat page table would require 512GB per process
+    \item Most processes use only a small fraction of the virtual address space
+    \item Multi-level hierarchical page tables solve this problem
+    \item x86-64 uses 4-level translation tables organized in a tree structure
     \item We allocate translation tables dynamically, only when actually needed
+    \item Each level has 512 entries (9 bits), requiring only 4KB per table
 \end{itemize}
 \end{frame}
 
-% Slide 3: 32-bit Mode Page Mapping
-\begin{frame}{32-bit Mode: 4KB / 4MB Page Mapping}
-\begin{itemize}
-    \item 2-level hierarchical mapping: Page Directories and Page Tables
-    \item 4KB aligned pages
-    \item PDE (Page Directory Entry) contains:
-    \begin{itemize}
-        \item Present bit (0 = page fault)
-        \item Page size (4KB or 4MB)
-        \item CR4.PSE=1 $\Rightarrow$ both 4MB \& 4KB pages supported
-        \item Separate TLBs for different page sizes
-    \end{itemize}
-\end{itemize}
-
-\vspace{0.5em}
-\textbf{Linear Address Space breakdown:}
-
-\vspace{0.3em}
-\textbf{4KB Page:} \vmaddressbreakdown{0}{0}{0}{10}{10}{12}
-
-\vspace{0.3em}
-\textbf{4MB Page:} \vmaddressbreakdown{0}{0}{0}{10}{0}{22}
-\end{frame}
-
-% Slide 4: PDE and PTE Format
-\begin{frame}{32-bit Mode: PDE and PTE Format}
-\centering
-\textbf{Page Directory Entry (PDE) - 4KB page table}\\[0.5em]
-
-\begin{tikzpicture}[scale=0.26, font=\tiny]
-  \def\boxheight{4}
-
-  % Define key coordinates (32-bit format)
-  \coordinate (origin) at (0,0);
-  \coordinate (topright) at (32,\boxheight);
-
-  \draw[very thick] (origin) rectangle (topright);
-
-  % Define field boundaries from MSB (31) to LSB (0)
-  \coordinate (b31) at (0,0);
-  \coordinate (b12) at ($(b31) + (20,0)$);  % PFA: 20 bits (31-12)
-  \coordinate (b9) at ($(b12) + (3,0)$);    % AVAIL: 3 bits (11-9)
-  \coordinate (b8) at ($(b9) + (1,0)$);     % G: 1 bit (8)
-  \coordinate (b7) at ($(b8) + (1,0)$);     % PS: 1 bit (7)
-  \coordinate (b6) at ($(b7) + (1,0)$);     % 0: 1 bit (6)
-  \coordinate (b5) at ($(b6) + (1,0)$);     % A: 1 bit (5)
-  \coordinate (b4) at ($(b5) + (1,0)$);     % PCD: 1 bit (4)
-  \coordinate (b3) at ($(b4) + (1,0)$);     % PWT: 1 bit (3)
-  \coordinate (b2) at ($(b3) + (1,0)$);     % U/S: 1 bit (2)
-  \coordinate (b1) at ($(b2) + (1,0)$);     % R/W: 1 bit (1)
-  \coordinate (b0) at ($(b1) + (1,0)$);     % P: 1 bit (0)
-
-  % Page Frame Address (31-12)
-  \fill[fieldpurple!30] (b31) rectangle ($(b12) + (0,\boxheight)$);
-  \draw[thick] (b12) -- ($(b12) + (0,\boxheight)$);
-  \node at ($(b31)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address};
-  \node[below] (b31lbl) at ($(b31) + (1,-0.3)$) {31};
-  \node[below] (b12lbl) at ($(b12) + (-1,-0.3)$) {12};
-
-  % AVAIL (11-9)
-  \fill[fieldgray!30] (b12) rectangle ($(b9) + (0,\boxheight)$);
-  \draw[thick] (b9) -- ($(b9) + (0,\boxheight)$);
-  \node at ($(b12)!0.5!(b9) + (0,\boxheight/2)$) {AVL};
-  \node[below] at ($(b12)!0.5!(b9) + (0,-0.3)$) {11-9};
-
-  % G (8)
-  \fill[fieldcyan!30] (b9) rectangle ($(b8) + (0,\boxheight)$);
-  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
-  \node at ($(b9)!0.5!(b8) + (0,\boxheight/2)$) {G};
-  \node[below] at ($(b9)!0.5!(b8) + (0,-0.3)$) {8};
-
-  % PS (7)
-  \fill[fieldcyan!30] (b8) rectangle ($(b7) + (0,\boxheight)$);
-  \draw[thick] (b7) -- ($(b7) + (0,\boxheight)$);
-  \node[align=center] at ($(b8)!0.5!(b7) + (0,\boxheight/2)$) {P\\S};
-  \node[below] at ($(b8)!0.5!(b7) + (0,-0.3)$) {7};
-
-  % 0 (6)
-  \fill[fieldgray!30] (b7) rectangle ($(b6) + (0,\boxheight)$);
-  \draw[thick] (b6) -- ($(b6) + (0,\boxheight)$);
-  \node at ($(b7)!0.5!(b6) + (0,\boxheight/2)$) {0};
-  \node[below] at ($(b7)!0.5!(b6) + (0,-0.3)$) {6};
-
-  % A (5)
-  \fill[fieldgreen!30] (b6) rectangle ($(b5) + (0,\boxheight)$);
-  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
-  \node at ($(b6)!0.5!(b5) + (0,\boxheight/2)$) {A};
-  \node[below] at ($(b6)!0.5!(b5) + (0,-0.3)$) {5};
-
-  % PCD (4)
-  \fill[fieldorange!30] (b5) rectangle ($(b4) + (0,\boxheight)$);
-  \draw[thick] (b4) -- ($(b4) + (0,\boxheight)$);
-  \node[align=center] at ($(b5)!0.5!(b4) + (0,\boxheight/2)$) {P\\C\\D};
-  \node[below] at ($(b5)!0.5!(b4) + (0,-0.3)$) {4};
-
-  % PWT (3)
-  \fill[fieldorange!30] (b4) rectangle ($(b3) + (0,\boxheight)$);
-  \draw[thick] (b3) -- ($(b3) + (0,\boxheight)$);
-  \node[align=center] at ($(b4)!0.5!(b3) + (0,\boxheight/2)$) {P\\W\\T};
-  \node[below] at ($(b4)!0.5!(b3) + (0,-0.3)$) {3};
-
-  % U/S (2)
-  \fill[fieldblue!30] (b3) rectangle ($(b2) + (0,\boxheight)$);
-  \draw[thick] (b2) -- ($(b2) + (0,\boxheight)$);
-  \node[align=center] at ($(b3)!0.5!(b2) + (0,\boxheight/2)$) {U\\/\\S};
-  \node[below] at ($(b3)!0.5!(b2) + (0,-0.3)$) {2};
-
-  % R/W (1)
-  \fill[fieldblue!30] (b2) rectangle ($(b1) + (0,\boxheight)$);
-  \draw[thick] (b1) -- ($(b1) + (0,\boxheight)$);
-  \node[align=center] at ($(b2)!0.5!(b1) + (0,\boxheight/2)$) {R\\/\\W};
-  \node[below] at ($(b2)!0.5!(b1) + (0,-0.3)$) {1};
-
-  % P (0)
-  \fill[fieldblue!30] (b1) rectangle ($(b0) + (0,\boxheight)$);
-  \node at ($(b1)!0.5!(b0) + (0,\boxheight/2)$) {P};
-  \node[below] at ($(b1)!0.5!(b0) + (0,-0.3)$) {0};
-\end{tikzpicture}
-
-\vspace{0.8em}
-\textbf{Page Table Entry (PTE)}\\[0.5em]
-
-\begin{tikzpicture}[scale=0.26, font=\tiny]
-  \def\boxheight{4}
-
-  \coordinate (origin) at (0,0);
-  \coordinate (topright) at (32,\boxheight);
-  \draw[very thick] (origin) rectangle (topright);
-
-  % Define field boundaries from MSB (31) to LSB (0)
-  \coordinate (b31) at (0,0);
-  \coordinate (b12) at ($(b31) + (20,0)$);  % PFA: 20 bits (31-12)
-  \coordinate (b9) at ($(b12) + (3,0)$);    % AVAIL: 3 bits (11-9)
-  \coordinate (b8) at ($(b9) + (1,0)$);     % G: 1 bit (8)
-  \coordinate (b7) at ($(b8) + (1,0)$);     % PAT: 1 bit (7)
-  \coordinate (b6) at ($(b7) + (1,0)$);     % D: 1 bit (6)
-  \coordinate (b5) at ($(b6) + (1,0)$);     % A: 1 bit (5)
-  \coordinate (b4) at ($(b5) + (1,0)$);     % PCD: 1 bit (4)
-  \coordinate (b3) at ($(b4) + (1,0)$);     % PWT: 1 bit (3)
-  \coordinate (b2) at ($(b3) + (1,0)$);     % U/S: 1 bit (2)
-  \coordinate (b1) at ($(b2) + (1,0)$);     % R/W: 1 bit (1)
-  \coordinate (b0) at ($(b1) + (1,0)$);     % P: 1 bit (0)
-
-  % Page Frame Address (31-12)
-  \fill[fieldpurple!30] (b31) rectangle ($(b12) + (0,\boxheight)$);
-  \draw[thick] (b12) -- ($(b12) + (0,\boxheight)$);
-  \node at ($(b31)!0.5!(b12) + (0,\boxheight/2)$) {Page Frame Address};
-  \node[below] at ($(b31) + (1,-0.3)$) {31};
-  \node[below] at ($(b12) + (-1,-0.3)$) {12};
-
-  % AVAIL (11-9)
-  \fill[fieldgray!30] (b12) rectangle ($(b9) + (0,\boxheight)$);
-  \draw[thick] (b9) -- ($(b9) + (0,\boxheight)$);
-  \node at ($(b12)!0.5!(b9) + (0,\boxheight/2)$) {AVL};
-  \node[below] at ($(b12)!0.5!(b9) + (0,-0.3)$) {11-9};
-
-  % G (8)
-  \fill[fieldcyan!30] (b9) rectangle ($(b8) + (0,\boxheight)$);
-  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
-  \node at ($(b9)!0.5!(b8) + (0,\boxheight/2)$) {G};
-  \node[below] at ($(b9)!0.5!(b8) + (0,-0.3)$) {8};
-
-  % PAT (7)
-  \fill[fieldorange!30] (b8) rectangle ($(b7) + (0,\boxheight)$);
-  \draw[thick] (b7) -- ($(b7) + (0,\boxheight)$);
-  \node[align=center] at ($(b8)!0.5!(b7) + (0,\boxheight/2)$) {P\\A\\T};
-  \node[below] at ($(b8)!0.5!(b7) + (0,-0.3)$) {7};
-
-  % D (6)
-  \fill[fieldgreen!30] (b7) rectangle ($(b6) + (0,\boxheight)$);
-  \draw[thick] (b6) -- ($(b6) + (0,\boxheight)$);
-  \node at ($(b7)!0.5!(b6) + (0,\boxheight/2)$) {D};
-  \node[below] at ($(b7)!0.5!(b6) + (0,-0.3)$) {6};
-
-  % A (5)
-  \fill[fieldgreen!30] (b6) rectangle ($(b5) + (0,\boxheight)$);
-  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
-  \node at ($(b6)!0.5!(b5) + (0,\boxheight/2)$) {A};
-  \node[below] at ($(b6)!0.5!(b5) + (0,-0.3)$) {5};
-
-  % PCD (4)
-  \fill[fieldorange!30] (b5) rectangle ($(b4) + (0,\boxheight)$);
-  \draw[thick] (b4) -- ($(b4) + (0,\boxheight)$);
-  \node[align=center] at ($(b5)!0.5!(b4) + (0,\boxheight/2)$) {P\\C\\D};
-  \node[below] at ($(b5)!0.5!(b4) + (0,-0.3)$) {4};
-
-  % PWT (3)
-  \fill[fieldorange!30] (b4) rectangle ($(b3) + (0,\boxheight)$);
-  \draw[thick] (b3) -- ($(b3) + (0,\boxheight)$);
-  \node[align=center] at ($(b4)!0.5!(b3) + (0,\boxheight/2)$) {P\\W\\T};
-  \node[below] at ($(b4)!0.5!(b3) + (0,-0.3)$) {3};
-
-  % U/S (2)
-  \fill[fieldblue!30] (b3) rectangle ($(b2) + (0,\boxheight)$);
-  \draw[thick] (b2) -- ($(b2) + (0,\boxheight)$);
-  \node[align=center] at ($(b3)!0.5!(b2) + (0,\boxheight/2)$) {U\\/\\S};
-  \node[below] at ($(b3)!0.5!(b2) + (0,-0.3)$) {2};
-
-  % R/W (1)
-  \fill[fieldblue!30] (b2) rectangle ($(b1) + (0,\boxheight)$);
-  \draw[thick] (b1) -- ($(b1) + (0,\boxheight)$);
-  \node[align=center] at ($(b2)!0.5!(b1) + (0,\boxheight/2)$) {R\\/\\W};
-  \node[below] at ($(b2)!0.5!(b1) + (0,-0.3)$) {1};
-
-  % P (0)
-  \fill[fieldblue!30] (b1) rectangle ($(b0) + (0,\boxheight)$);
-  \node at ($(b1)!0.5!(b0) + (0,\boxheight/2)$) {P};
-  \node[below] at ($(b1)!0.5!(b0) + (0,-0.3)$) {0};
-\end{tikzpicture}
-
-\vspace{1em}
-\small
-Key: P=Present, W=Writable, U=User/Supervisor, PWT=Write-Through,\\
-PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
-\end{frame}
-
-% Slide 5: Intel 64-bit PTE Format  
+% Slide 3: Intel 64-bit PTE Format  
 \begin{frame}{Intel 64-bit Page Table Entry (PTE)}
 \centering
 \textbf{64-bit Mode PTE Format}\\[0.5em]
@@ -673,14 +458,19 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
     \item 4-level hierarchy: PML4, PDP, DIR, TABLE
     \item 512 entries per table (9 bits addressing)
     \item 48 bits of virtual address space (256 TB)
-    \item 40 bits of physical address space (1 TB)
+    \item 40-52 bits of physical address space (1 TB - 4 PB)
+    \item \textbf{Extension:} 5-level paging (LA57) supports 57-bit virtual addresses (128 PB)
+    \begin{itemize}
+        \item Adds PML5 level above PML4
+        \item Optional feature, not widely used yet
+    \end{itemize}
 \end{itemize}
 
 \vspace{1em}
 \textbf{Linear Address breakdown (4KB page):} \vmaddressbreakdown{16}{9}{9}{9}{9}{12}
 \end{frame}
 
-% Slide 6: Large Pages in 64-bit Mode
+% Slide 5: Large Pages in 64-bit Mode
 \begin{frame}{Large Pages in 64-bit Mode}
 \textbf{2MB Page Mapping:}
 \begin{itemize}
@@ -696,9 +486,9 @@ PCD=Cache Disable, A=Accessed, D=Dirty, G=Global, PAT=Page Attribute Table
 \end{itemize}
 \end{frame}
 
-% Slide 7: Question 1 Setup
+% Slide 6: Question 1 Setup
 \begin{frame}{Question 1}
-Core similar to X86 in 64-bit mode:
+Core similar to x86 in 64-bit mode:
 \begin{itemize}
     \item Support Small Pages (PTE) and Large Pages (DIR)
     \item Page table size = small page size
@@ -783,7 +573,7 @@ Core similar to X86 in 64-bit mode:
 \end{enumerate}
 \end{frame}
 
-% Slide 8: Question 1 Solution
+% Slide 7: Question 1 Solution
 \begin{frame}{Question 1: Solution (a)}
 \begin{enumerate}
     \item \textbf{Small page size}
@@ -823,7 +613,7 @@ Core similar to X86 in 64-bit mode:
 \end{enumerate}
 \end{frame}
 
-% Slide 9: TLB Introduction
+% Slide 8: TLB Introduction
 \begin{frame}{Translation Lookaside Buffer (TLB)}
 \begin{columns}[T]
 \begin{column}{0.6\textwidth}
@@ -880,7 +670,7 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{columns}
 \end{frame}
 
-% Slide 10: STLB - Secondary TLB
+% Slide 9: STLB - Secondary TLB
 \begin{frame}{STLB - Secondary TLB}
 \begin{itemize}
     \item PMH can access STLB instead of performing page walk
@@ -912,7 +702,7 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{center}
 \end{frame}
 
-% Slide 11: Virtual Memory and Cache
+% Slide 10: Virtual Memory and Cache
 \begin{frame}{Virtual Memory and Cache}
 \begin{center}
 \begin{tikzpicture}[
@@ -967,7 +757,7 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{itemize}
 \end{frame}
 
-% Slide 12: Page Walk and PMH
+% Slide 11: Page Walk and PMH
 \begin{frame}{Page Walk Process}
 \textbf{PMH (Page Miss Handler) Operation:}
 \begin{itemize}
@@ -1096,11 +886,11 @@ Note: No Table cache needed as TLB stores complete translations
 \end{frame}
 
 
-% Slide 13: Question 2 Setup
+% Slide 12: Question 2 Setup
 \begin{frame}{Question 2}
 \textbf{System Configuration:}
 \begin{itemize}
-    \item Processor similar to X86-64
+    \item Processor similar to x86-64
     \item 4KB pages
     \item TLB present (Hit: immediate translation, Miss: Page Walk required)
     \item PMH contains cache for each translation table level
@@ -1122,7 +912,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{center}
 \end{frame}
 
-% Slide 14: Question 2 Solution
+% Slide 13: Question 2 Solution
 \begin{frame}{Question 2 - Solution}
 \begin{center}
 \begin{tabular}{|l|c|p{6cm}|}
@@ -1139,7 +929,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{center}
 \end{frame}
 
-% Slide 15: Cache Design Question
+% Slide 14: Cache Design Question
 \begin{frame}{Question 2: Cache Design}
 \textbf{System Configuration:}
 \begin{itemize}
@@ -1163,7 +953,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{itemize}
 \end{frame}
 
-% Slide 16: Virtual Aliasing Problem
+% Slide 15: Virtual Aliasing Problem
 \begin{frame}{Virtual Aliasing Problem}
 \textbf{Problem:} Two virtual pages mapping to same physical page
 
@@ -1191,11 +981,11 @@ Example:
 \end{itemize}
 \end{frame}
 
-% Slide 17: Question 3 Setup
+% Slide 16: Question 3 Setup
 \begin{frame}{Question 3}
 \textbf{System Configuration:}
 \begin{itemize}
-    \item Core similar to X86 in 64-bit mode
+    \item Core similar to x86 in 64-bit mode
     \item Entry size in all page tables: 8 bytes
     \item PMH caches at all levels:
     \begin{itemize}
@@ -1218,7 +1008,7 @@ Example:
 \end{enumerate}
 \end{frame}
 
-% Slide 18: Question 3 Solution Part 1
+% Slide 17: Question 3 Solution Part 1
 \begin{frame}{Question 3 - Solution Part 1}
 \textbf{1. Large page size:}
 \begin{itemize}
@@ -1237,7 +1027,7 @@ Example:
 \end{itemize}
 \end{frame}
 
-% Slide 19: Question 3 Memory Access Analysis
+% Slide 18: Question 3 Memory Access Analysis
 \begin{frame}{Question 3 - Memory Access Analysis}
 \footnotesize
 % Define colors for different page table levels
@@ -1284,7 +1074,7 @@ Example:
 % Final slide: Summary
 \begin{frame}{Summary}
 \begin{itemize}
-    \item \textbf{x86 Virtual Memory Hierarchy}
+    \item \textbf{x86-64 Virtual Memory Hierarchy}
     \begin{itemize}
         \item Multi-level page tables: PML4 $\rightarrow$ PDP $\rightarrow$ DIR $\rightarrow$ TABLE
         \item Efficient memory usage through dynamic allocation
