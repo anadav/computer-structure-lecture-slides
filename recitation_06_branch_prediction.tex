@@ -642,10 +642,27 @@
     \BHRdisplay{\localframeBHROne}%
     \ifnum\localframeBHRRowHighlight=1
       \ifnum\pdfstrcmp{\localframeIP}{IP1}=0
-        \gdef\rowOneBitOne{\cellcolor{highlightyellow}\bhrBitOne}%
-        \gdef\rowOneBitTwo{\cellcolor{highlightyellow}\bhrBitTwo}%
-        \gdef\rowOneBitThree{\cellcolor{highlightyellow}\bhrBitThree}%
-        \gdef\rowOneBitFour{\cellcolor{highlightyellow}\bhrBitFour}%
+        % Apply yellow to all bits, red text to specified bit
+        \ifnum\localframeBHRRedBit=1
+          \gdef\rowOneBitOne{\cellcolor{highlightyellow}\textcolor{red}{\bhrBitOne}}%
+        \else
+          \gdef\rowOneBitOne{\cellcolor{highlightyellow}\bhrBitOne}%
+        \fi
+        \ifnum\localframeBHRRedBit=2
+          \gdef\rowOneBitTwo{\cellcolor{highlightyellow}\textcolor{red}{\bhrBitTwo}}%
+        \else
+          \gdef\rowOneBitTwo{\cellcolor{highlightyellow}\bhrBitTwo}%
+        \fi
+        \ifnum\localframeBHRRedBit=3
+          \gdef\rowOneBitThree{\cellcolor{highlightyellow}\textcolor{red}{\bhrBitThree}}%
+        \else
+          \gdef\rowOneBitThree{\cellcolor{highlightyellow}\bhrBitThree}%
+        \fi
+        \ifnum\localframeBHRRedBit=4
+          \gdef\rowOneBitFour{\cellcolor{highlightyellow}\textcolor{red}{\bhrBitFour}}%
+        \else
+          \gdef\rowOneBitFour{\cellcolor{highlightyellow}\bhrBitFour}%
+        \fi
       \else
         \gdef\rowOneBitOne{\bhrBitOne}%
         \gdef\rowOneBitTwo{\bhrBitTwo}%
@@ -752,6 +769,7 @@
   bhr2display/.code={\def\localframeBHRTwoDisplay{#1}},
   bhr3display/.code={\def\localframeBHRThreeDisplay{#1}},
   bhrrowhighlight/.store in=\localframeBHRRowHighlight,
+  bhrredbit/.store in=\localframeBHRRedBit,
   r1/.store in=\localframeROne,
   r2/.store in=\localframeRTwo,
   r3/.store in=\localframeRThree,
@@ -1159,6 +1177,8 @@ if (...)
   \def\localframeBHRThreeDisplay{}%
   % Initialize BHR row highlight (0 = no, 1 = yes)
   \def\localframeBHRRowHighlight{0}%
+  % Initialize BHR red bit (0=none, 1-4=bit position to make red)
+  \def\localframeBHRRedBit{0}%
   % Initialize new three-table variables
   \def\localframeStatesOne{}%
   \def\localframeStatesTwo{}%
@@ -1515,18 +1535,8 @@ if (...)
   \fi
 }
 
-% Helper to format state with color
+% Helper to format state - just bold for strong states, no colors
 \newcommand{\formatState}[1]{%
-  \ifnum\pdfstrcmp{#1}{ST}=0\textcolor{correctgreen}{\textbf{#1}}%
-  \else\ifnum\pdfstrcmp{#1}{WT}=0#1%
-  \else\ifnum\pdfstrcmp{#1}{WNT}=0\textcolor{incorrectred}{#1}%
-  \else\ifnum\pdfstrcmp{#1}{SNT}=0\textcolor{incorrectred}{\textbf{#1}}%
-  \else #1%
-  \fi\fi\fi\fi%
-}
-
-% Helper to format state without color (for highlighted cells)
-\newcommand{\formatStatePlain}[1]{%
   \ifnum\pdfstrcmp{#1}{ST}=0\textbf{#1}%
   \else\ifnum\pdfstrcmp{#1}{WT}=0#1%
   \else\ifnum\pdfstrcmp{#1}{WNT}=0#1%
@@ -1551,12 +1561,12 @@ if (...)
   \parseStateString{#1}{#2}%
   \ifnum\temphighlight=2
     % Yellow background + red text
-    \cellcolor{highlightyellow}\textcolor{red}{\formatStatePlain{\tempstate}}%
+    \cellcolor{highlightyellow}\textcolor{red}{\formatState{\tempstate}}%
   \else\ifnum\temphighlight=1
-    % Yellow background only (no color text)
-    \cellcolor{highlightyellow}\formatStatePlain{\tempstate}%
+    % Yellow background only
+    \cellcolor{highlightyellow}\formatState{\tempstate}%
   \else
-    % Normal (with default colors)
+    % Normal
     \formatState{\tempstate}%
   \fi\fi
 }
@@ -1724,10 +1734,10 @@ if (...)
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
-    bhrrowhighlight={1},
-    bhr1={0}{0}{0}{\textcolor{incorrectred}{0}},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
+    bhrredbit={4},
     states1={0:WNT:0},
     states2={},
     states3={},
