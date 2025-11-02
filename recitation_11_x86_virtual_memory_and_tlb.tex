@@ -7,7 +7,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, shapes.arrows}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -1005,6 +1005,98 @@ Note: No Table cache needed as TLB stores complete translations
     \item Solution: Use untranslated bits [13:12] for set lookup
     \item Must compare entire PFN with tag due to aliasing possibility
 \end{itemize}
+\end{frame}
+
+% Slide 15b: Cache Access Diagram
+\begin{frame}{Question 2 (cont.): Read Access}
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    addrbox/.style={draw, very thick, minimum height=0.8cm, anchor=west},
+    mylabel/.style={font=\footnotesize},
+    bitlabel/.style={font=\tiny, anchor=north},
+    myarrow/.style={->, >=stealth, very thick},
+    comparator/.style={circle, draw, thick, minimum size=0.8cm, font=\small}
+]
+
+% Define Y level for address boxes
+\def\addry{3.8}
+
+% VPN box (translated part) - bits 47:12, shifted up by half its height
+\node[addrbox, fill=green!30, minimum width=3.5cm, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
+\node[bitlabel] at (vpn.south west) {47};
+\node[bitlabel] at (vpn.south east) {13};
+
+% Set box - bits 13:6 (overlaps with VPN at bits 13:12)
+\node[addrbox, fill=cyan!40, minimum width=1.5cm, anchor=south west] (set) at (3.3, \addry) {Set};
+\node[bitlabel] at (set.south west) {12};
+\node[bitlabel, anchor=north east] at (set.south east) {6};
+
+% Offset box - bits 5:0
+\node[addrbox, fill=yellow!30, minimum width=1cm, anchor=south west] (offset) at (4.8, \addry) {Offset};
+\node[bitlabel, anchor=north west] at (offset.south west) {5};
+\node[bitlabel] at (offset.south east) {0};
+
+% Labels above address boxes
+\node[mylabel, above=0.1cm of vpn] (translated) {\textit{Translated}};
+\node[mylabel] at (translated -| set.east) {\textit{Not Translated}};
+
+% Dashed line showing 12/11 boundary
+\draw[dashed, thick] ($(set.south west) + (0.2cm, 0)$) -- ++(0, -0.3cm);
+\node[bitlabel] at ($(set.south west) + (0.2cm, -0.3cm)$) {11};
+
+% TLB arrow (using single arrow shape)
+\node[single arrow, fill=magenta!70, minimum height=1.2cm, minimum width=0.6cm,
+      single arrow head extend=0.1cm, rotate=270] at (1.75, 2.5) {};
+
+% PFN box (output from TLB)
+\node[addrbox, fill=orange!70, minimum width=3cm] (pfn) at (0, 1.2) {PFN};
+\node[bitlabel] at (pfn.south west) {40};
+\node[bitlabel] at (pfn.south east) {13};
+\node[mylabel, above] at ($(pfn.north east) + (0.3cm, 0)$) {13 12};
+
+% Cache ways
+\node[draw, thick, minimum width=1.5cm, minimum height=2.5cm, anchor=north west]
+     (way0) at (5, 2) {};
+\node[mylabel, anchor=north] at (way0.south) {Way 0};
+
+\node[draw, thick, minimum width=1.5cm, minimum height=2.5cm, anchor=north west]
+     (way1) at (7, 2) {};
+\node[mylabel, anchor=north] at (way1.south) {Way 1};
+
+% Tag fields in cache ways
+\node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
+      anchor=north] (tag0) at ($(way0.north) + (0, -0.1cm)$) {};
+\node[mylabel, font=\tiny, align=center] at (tag0.center) {Tag\\{}[40:12]};
+
+\node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
+      anchor=north] (tag1) at ($(way1.north) + (0, -0.1cm)$) {};
+\node[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[40:12]};
+
+% Set index arrow
+\coordinate (midway) at ($(way0.north)!0.5!(way1.north)$);
+\draw[myarrow, cyan!70] ($(set.south) + (0, -0.5cm)$) -- ($(midway) + (0, 0.3cm)$);
+
+% PFN to comparators connection
+\node[comparator] (comp0) at ($(way0.south) + (0, -0.8cm)$) {=};
+\node[comparator] (comp1) at ($(way1.south) + (0, -0.8cm)$) {=};
+
+% Arrows from PFN to comparators
+\draw[myarrow] (pfn.south) -- ++(0, -0.3cm) -| (comp0.north);
+\draw[myarrow] (pfn.south) -- ++(0, -0.3cm) -| (comp1.north);
+
+% Arrows from tags to comparators
+\draw[myarrow] (tag0.south) -- (comp0.north);
+\draw[myarrow] (tag1.south) -- (comp1.north);
+
+% Tag match labels
+\node[mylabel, red, anchor=north, align=center] at (comp0.south) {Tag\\Match};
+\node[mylabel, red, anchor=north, align=center] at (comp1.south) {Tag\\Match};
+
+% PFN bits label
+\node[mylabel] at ($(pfn.south) + (-0.2cm, -0.3cm)$) {40:12};
+
+\end{tikzpicture}
 \end{frame}
 
 % Slide 16: Virtual Aliasing Problem
