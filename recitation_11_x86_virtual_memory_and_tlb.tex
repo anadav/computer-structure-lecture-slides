@@ -1016,7 +1016,8 @@ Note: No Table cache needed as TLB stores complete translations
     mylabel/.style={font=\footnotesize},
     bitlabel/.style={font=\tiny, anchor=north},
     myarrow/.style={->, >=stealth, very thick},
-    comparator/.style={circle, draw, thick, minimum size=0.6cm, font=\small}
+    comparator/.style={circle, draw, thick, minimum size=0.6cm, font=\small, inner sep=1pt},
+    waylabel/.style={font=\tiny}
 ]
 
 % Define Y level for address boxes
@@ -1024,7 +1025,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Set box - bits 13:6 (overlaps with VPN at bits 13:12)
 \node[addrbox, fill=cyan!40, minimum width=1.5cm, anchor=south west] (set) at (3.3, \addry) {Set};
-\node[bitlabel, anchor=north west] (bit13) at ([xshift=-1mm]set.south west) {13};
+\node[bitlabel, anchor=north west] (bit13) at ([xshift=-1.5mm]set.south west) {13};
 \node[bitlabel, right=-2.5mm of bit13] (bit12) {12};
 \node[bitlabel, right=-2.5mm of bit12] (bit11) {11};
 \node[bitlabel, anchor=north east] at (set.south east) {6};
@@ -1054,25 +1055,25 @@ Note: No Table cache needed as TLB stores complete translations
   \fill[yellow!15] (vpn.east |- translated.north) rectangle (offset.east |- bit13.south);
 \end{scope}
 
-% TLB arrow (using single arrow shape)
-\node[single arrow, fill=magenta!70, minimum height=1.2cm, minimum width=0.6cm,
-      single arrow head extend=0.1cm, rotate=270] at (1.75, 2.5) {};
-
 % PFN box (output from TLB) - bits [40:13], so add left margin for bit 40
 \path let \p1 = (vpn.east) in
   node[addrbox, fill=orange!70, minimum width={veclen(\x1,0)-0.3cm}, anchor=south west] (pfn) at (0.3, 1.2) {PFN};
-\node[bitlabel, anchor=south west] at (pfn.north west) {40};
-\node[bitlabel, anchor=south east] at (pfn.north east) {13};
-\node[bitlabel, anchor=south west, right=0mm of pfn.north east] {12};
+
+% TLB arrow (using single arrow shape) - positioned to end slightly above PFN.north
+\node[single arrow, fill=magenta!70, minimum height=1.0cm, minimum width=0.6cm,
+      single arrow head extend=0.1cm, rotate=270, anchor=tip] at ($(pfn.north) + (0, 0.15cm)$) {};
+\node[bitlabel, anchor=south west] at ([xshift=-2mm]pfn.north west) {40};
+\node[bitlabel, anchor=south] at (pfn.north -| bit12) {12};
+\node[bitlabel, anchor=south] at (pfn.north -| bit13) {13};
 
 % Cache ways - moved higher
 \node[draw, thick, minimum width=1.5cm, minimum height=2.5cm, anchor=north west]
      (way0) at (5, 3.2) {};
-\node[mylabel] at (way0.center) {Way 0};
+\node[waylabel, anchor=south] at (way0.south) {Way 0};
 
 \node[draw, thick, minimum width=1.5cm, minimum height=2.5cm, anchor=north west]
      (way1) at (7, 3.2) {};
-\node[mylabel] at (way1.center) {Way 1};
+\node[waylabel, anchor=south] at (way1.south) {Way 1};
 
 % Tag fields in cache ways
 \node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
@@ -1083,29 +1084,32 @@ Note: No Table cache needed as TLB stores complete translations
       anchor=north] (tag1) at ($(way1.north) + (0, -0.1cm)$) {};
 \node[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[40:12]};
 
-% Set index arrow
-\coordinate (midway) at ($(way0.north)!0.5!(way1.north)$);
-\draw[myarrow, cyan!70] ($(set.south) + (0, -0.5cm)$) -- ($(midway) + (0, 0.3cm)$);
+% Set index arrow - from set.south to tag0.west using |-
+\draw[myarrow, cyan!70] (set.south) |- (tag0.west);
 
 % PFN to comparators connection - positioned relative to cache way boxes (tag arrays)
-% Way 0 comparator lower than way 1
-\node[comparator] (comp0) at ([xshift=0.5cm, yshift=-0.6cm]way0.south east) {=};
-\node[comparator] (comp1) at ([xshift=0.5cm, yshift=-0.3cm]way1.south east) {=};
+% Way 0 comparator lower than way 1, moved slightly left
+\node[comparator] (comp0) at ([xshift=0.3cm, yshift=-0.6cm]way0.south east) {=};
+\node[comparator] (comp1) at ([xshift=0.3cm, yshift=-0.3cm]way1.south east) {=};
 
 % Arrows from PFN to comparators with horizontal connector
 \draw[myarrow] (pfn.south) |- (comp0.west);
 \draw[myarrow] (pfn.south) |- (comp1.west);
 
-% PFN bits label on horizontal connector
-\node[mylabel, below] at (pfn.south) {40:12};
+% PFN bits label on horizontal connector - smaller font, on the right
+\node[bitlabel, anchor=west] at ($(pfn.south) + (0.2cm, -0.3cm)$) {40:12};
 
 % Arrows from tags to comparators using -| routing from tag east
 \draw[myarrow] (tag0.east) -| (comp0.north);
 \draw[myarrow] (tag1.east) -| (comp1.north);
 
-% Tag match labels
-\node[mylabel, red, anchor=north, align=center] at (comp0.south) {Tag\\Match};
-\node[mylabel, red, anchor=north, align=center] at (comp1.south) {Tag\\Match};
+% Tag match labels - left aligned, anchored to comparator south
+\node[waylabel, red, anchor=north east, align=left] (match0) at (comp0.south) {Tag Match};
+\node[waylabel, red, anchor=north east, align=left] (match1) at (comp1.south) {Tag Match};
+
+% Red arrows from comparators to Tag Match labels
+\draw[->, >=stealth, thick, red] (comp0.south) -- (match0.south east);
+\draw[->, >=stealth, thick, red] (comp1.south) -- (match1.south east);
 
 \end{tikzpicture}
 \end{frame}
