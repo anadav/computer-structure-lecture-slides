@@ -239,6 +239,12 @@
 \titlepage
 \end{frame}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{x86-64 Paging}
+
 % Slide 2: x86-64 Paging Introduction
 \begin{frame}{x86-64 Paging}
 \begin{itemize}
@@ -486,8 +492,10 @@
 \end{itemize}
 \end{frame}
 
+\section{Question 1: Page Table Sizing}
+
 % Slide 6: Question 1 Setup
-\begin{frame}{Question 1}
+\begin{frame}{Question 1: Page Table Sizing}
 Core similar to x86 in 64-bit mode:
 \begin{itemize}
     \item Support Small Pages (PTE) and Large Pages (DIR)
@@ -574,7 +582,7 @@ Core similar to x86 in 64-bit mode:
 \end{frame}
 
 % Slide 7: Question 1 Solution
-\begin{frame}{Question 1: Solution (a)}
+\begin{frame}{Question 1 (Page Table Sizing): Solution (a)}
 \begin{enumerate}
     \item \textbf{Small page size}
     \begin{itemize}
@@ -589,7 +597,7 @@ Core similar to x86 in 64-bit mode:
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{Question 1: Solution (b)}
+\begin{frame}{Question 1 (Page Table Sizing): Solution (b)}
 \begin{enumerate}
     \setcounter{enumi}{2}
     \item \textbf{Values of N1, N2, N3, N4}
@@ -613,7 +621,36 @@ Core similar to x86 in 64-bit mode:
 \end{enumerate}
 \end{frame}
 
-% Slide 8: TLB Introduction
+\section{Virtual Address Translation}
+
+% Slide 8: Translation Overview
+\begin{frame}{Virtual Address Translation Flow}
+\textbf{Translation Process:}
+\begin{enumerate}
+    \item \textbf{L1 TLB (iTLB/dTLB):} First-level cache for translations
+    \begin{itemize}
+        \item Separate instruction and data TLBs
+        \item Fast access, small capacity
+    \end{itemize}
+    \item \textbf{L2 TLB (STLB):} Second-level unified TLB
+    \begin{itemize}
+        \item Shared between instruction and data
+        \item Larger capacity, higher latency
+    \end{itemize}
+    \item \textbf{PMH Caches:} Page Miss Handler caches
+    \begin{itemize}
+        \item PML4, PDP, DIR caches
+        \item Cache individual page table levels
+    \end{itemize}
+    \item \textbf{Page Walk:} Full memory hierarchy walk
+    \begin{itemize}
+        \item Access page tables from memory
+        \item Highest latency
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+% Slide 9: TLB Introduction
 \begin{frame}{Translation Lookaside Buffer (TLB)}
 \begin{columns}[T]
 \begin{column}{0.6\textwidth}
@@ -623,7 +660,8 @@ Core similar to x86 in 64-bit mode:
     \item TLB caches recently used PTEs
     \begin{itemize}
         \item Speed up translation
-        \item Typically 128-256 entries
+        \item Separate L1 instruction TLB (iTLB) and data TLB (dTLB)
+        \item Typically 64-128 entries per L1 TLB
         \item 4-8 way associative
     \end{itemize}
     \item \textbf{TLB Indexing:}
@@ -670,39 +708,34 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{columns}
 \end{frame}
 
-% Slide 9: STLB - Secondary TLB
+% Slide 10: STLB - Secondary TLB
 \begin{frame}{STLB - Secondary TLB}
 \begin{itemize}
-    \item PMH can access STLB instead of performing page walk
-    \item After TLB miss, look in STLB. The STLB is much larger than TLB, so it has higher hit rate but also higher access latency
-    \item If hit on STLB, copy PTE to TLB
-    \item STLB contains memory references from both I-cache and D-cache, allowing data and code pages to be shared
-    \item Like TLB, uses VPN for lookup to STLB
-    \item On STLB hit, translation is used
-    \item On STLB miss, PMH performs page walk
+    \item Second-level TLB (L2 TLB) shared between instruction and data paths
+    \item Checked on L1 TLB miss before performing full page walk
+    \item On STLB hit: PTE copied to appropriate L1 TLB (iTLB or dTLB)
+    \item On STLB miss: PMH performs full page walk
 \end{itemize}
 
 \vspace{1em}
-\textbf{TLB Hierarchy:}
 \begin{center}
-\begin{tikzpicture}[node distance=1.5cm, auto]
-    \node[draw, rectangle] (va) {Virtual Address};
-    \node[draw, rectangle, below=of va] (tlb) {TLB};
-    \node[draw, rectangle, below=of tlb] (stlb) {STLB};
-    \node[draw, rectangle, below=of stlb] (pmh) {PMH/Page Walk};
-    \node[draw, rectangle, right=of tlb, xshift=1cm] (pa) {Physical Address};
-    
-    \draw[->, thick] (va) -- (tlb);
-    \draw[->, thick] (tlb) -- node[left] {miss} (stlb);
-    \draw[->, thick] (stlb) -- node[left] {miss} (pmh);
-    \draw[->, thick] (tlb) -- node[above] {hit} (pa);
-    \draw[->, thick] (stlb.east) -- ++(0.5,0) |- node[near end, above] {hit} (pa);
-    \draw[->, thick] (pmh.east) -- ++(1,0) |- (pa);
-\end{tikzpicture}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Property} & \textbf{L1 TLB} & \textbf{L2 TLB (STLB)} \\
+\hline
+Entries & 64-128 & 1024-2048 \\
+\hline
+Accessed & First & Second (on L1 miss) \\
+\hline
+Latency & Low & Higher \\
+\hline
+Coverage & Separate iTLB/dTLB & Unified (both I\&D) \\
+\hline
+\end{tabular}
 \end{center}
 \end{frame}
 
-% Slide 10: Virtual Memory and Cache
+% Slide 11: Virtual Memory and Cache
 \begin{frame}{Virtual Memory and Cache}
 \begin{center}
 \begin{tikzpicture}[
@@ -757,7 +790,7 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{itemize}
 \end{frame}
 
-% Slide 11: Page Walk and PMH
+% Slide 12: Page Walk and PMH
 \begin{frame}{Page Walk Process}
 \textbf{PMH (Page Miss Handler) Operation:}
 \begin{itemize}
@@ -886,8 +919,10 @@ Note: No Table cache needed as TLB stores complete translations
 \end{frame}
 
 
-% Slide 12: Question 2 Setup
-\begin{frame}{Question 2}
+\section{Question 2: TLB and PMH Behavior}
+
+% Slide 13: Question 2 Setup
+\begin{frame}{Question 2: TLB and PMH Behavior}
 \textbf{System Configuration:}
 \begin{itemize}
     \item Processor similar to x86-64
@@ -897,7 +932,10 @@ Note: No Table cache needed as TLB stores complete translations
     \item All caches and TLB empty on reset
 \end{itemize}
 
-\vspace{1em}
+\vspace{0.5em}
+\textbf{Address format:} \vmaddressbreakdown{16}{9}{9}{9}{9}{12}
+
+\vspace{0.5em}
 \textbf{Memory Access Sequence:}
 \begin{center}
 \begin{tabular}{|l|c|l|}
@@ -912,8 +950,8 @@ Note: No Table cache needed as TLB stores complete translations
 \end{center}
 \end{frame}
 
-% Slide 13: Question 2 Solution
-\begin{frame}{Question 2 - Solution}
+% Slide 14: Question 2 Solution
+\begin{frame}{Question 2 (TLB and PMH Behavior): Solution}
 \begin{center}
 \begin{tabular}{|l|c|p{6cm}|}
 \hline
@@ -929,8 +967,8 @@ Note: No Table cache needed as TLB stores complete translations
 \end{center}
 \end{frame}
 
-% Slide 14: Cache Design Question
-\begin{frame}{Question 2: Cache Design}
+% Slide 15: Cache Design Question
+\begin{frame}{Question 2 (cont.): Virtually-Indexed Cache}
 \textbf{System Configuration:}
 \begin{itemize}
     \item Virtual address: 48 bits
@@ -953,8 +991,8 @@ Note: No Table cache needed as TLB stores complete translations
 \end{itemize}
 \end{frame}
 
-% Slide 15: Virtual Aliasing Problem
-\begin{frame}{Virtual Aliasing Problem}
+% Slide 16: Virtual Aliasing Problem
+\begin{frame}{Question 2 (cont.): Virtual Aliasing}
 \textbf{Problem:} Two virtual pages mapping to same physical page
 
 \vspace{1em}
@@ -981,8 +1019,10 @@ Example:
 \end{itemize}
 \end{frame}
 
-% Slide 16: Question 3 Setup
-\begin{frame}{Question 3}
+\section{Question 3: Translation Latency}
+
+% Slide 17: Question 3 Setup
+\begin{frame}{Question 3: Translation Latency}
 \textbf{System Configuration:}
 \begin{itemize}
     \item Core similar to x86 in 64-bit mode
@@ -1008,8 +1048,8 @@ Example:
 \end{enumerate}
 \end{frame}
 
-% Slide 17: Question 3 Solution Part 1
-\begin{frame}{Question 3 - Solution Part 1}
+% Slide 18: Question 3 Solution Part 1
+\begin{frame}{Question 3 (Translation Latency): Solution Part 1}
 \textbf{1. Large page size:}
 \begin{itemize}
     \item Large pages pointed by DIR
@@ -1027,8 +1067,8 @@ Example:
 \end{itemize}
 \end{frame}
 
-% Slide 18: Question 3 Memory Access Analysis
-\begin{frame}{Question 3 - Memory Access Analysis}
+% Slide 19: Question 3 Memory Access Analysis
+\begin{frame}{Question 3 (Translation Latency): Memory Access Analysis}
 \footnotesize
 % Define colors for different page table levels
 \definecolor{signcolor}{RGB}{128,128,128}
