@@ -928,7 +928,7 @@ Note: No Table cache needed as TLB stores complete translations
 \definecolor{pml4color}{RGB}{255,128,0}
 \definecolor{pdpcolor}{RGB}{51,153,255}
 \definecolor{dircolor}{RGB}{0,204,102}
-\definecolor{tablecolor}{RGB}{255,255,0}
+\definecolor{tablecolor}{RGB}{153,76,0}
 \definecolor{offsetcolor}{RGB}{204,0,204}
 
 \textbf{System Configuration:}
@@ -965,7 +965,7 @@ Note: No Table cache needed as TLB stores complete translations
 \definecolor{pml4color}{RGB}{255,128,0}
 \definecolor{pdpcolor}{RGB}{51,153,255}
 \definecolor{dircolor}{RGB}{0,204,102}
-\definecolor{tablecolor}{RGB}{255,255,0}
+\definecolor{tablecolor}{RGB}{153,76,0}
 \definecolor{offsetcolor}{RGB}{204,0,204}
 
 \begin{center}
@@ -1054,7 +1054,7 @@ Example:
 \end{itemize}
 
 \vspace{0.1em}
-\textbf{Address format:} \vmaddressbreakdown{8}{20}{12}{12}{0}{12}
+\textbf{Address format:} \vmaddressbreakdown{8}{8}{12}{12}{12}{12}
 
 \vspace{0.1em}
 \textbf{Questions:}
@@ -1091,6 +1091,7 @@ Example:
 \definecolor{pml4color}{RGB}{255,128,0}
 \definecolor{pdpcolor}{RGB}{51,153,255}
 \definecolor{dircolor}{RGB}{0,204,102}
+\definecolor{tablecolor}{RGB}{153,76,0}
 \definecolor{offsetcolor}{RGB}{204,0,204}
 
 \begin{center}
@@ -1098,19 +1099,19 @@ Example:
 \hline
 \textbf{Virtual Address} & \textbf{Cycles} & \textbf{Comment} \\
 \hline
-\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{567}\textcolor{dircolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<2->{401} & \onslide<2->{Miss at each level: 1 + 4 $\times$ 100 = 401 cycles} \\
+\textcolor{signcolor}{0xFF}\textcolor{pml4color}{81}\textcolor{pdpcolor}{234}\textcolor{dircolor}{567}\textcolor{tablecolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<2->{401} & \onslide<2->{Miss at each level: 1 + 4 $\times$ 100 = 401 cycles} \\
 \hline
-\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<3->{202} & \onslide<3->{(PML4, PDP, DIR, TLB) = (H,H,M,M)}\\
+\textcolor{signcolor}{0xFF}\textcolor{pml4color}{81}\textcolor{pdpcolor}{234}\textcolor{dircolor}{067}\textcolor{tablecolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<3->{202} & \onslide<3->{(PML4, PDP, DIR, TLB) = (H,H,M,M)}\\
 & & \onslide<3->{1 cycle + PDP read 1 cycle}\\
 & & \onslide<3->{DIR miss: 100 cycles, PTE miss: 100 cycles} \\
 \hline
-\textcolor{signcolor}{0xFF80}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<4->{401} & \onslide<4->{PMH cache miss in all levels: 1 + 4 $\times$ 100 = 401} \\
+\textcolor{signcolor}{0xFF}\textcolor{pml4color}{80}\textcolor{pdpcolor}{234}\textcolor{dircolor}{067}\textcolor{tablecolor}{89A}\textcolor{offsetcolor}{BCD} & \onslide<4->{401} & \onslide<4->{PMH cache miss in all levels: 1 + 4 $\times$ 100 = 401} \\
 \hline
-\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{09A}\textcolor{offsetcolor}{BCD} & \onslide<5->{302} & \onslide<5->{(PML4, PDP, DIR, TLB) = (H,M,M,M)}\\
+\textcolor{signcolor}{0xFF}\textcolor{pml4color}{81}\textcolor{pdpcolor}{234}\textcolor{dircolor}{067}\textcolor{tablecolor}{09A}\textcolor{offsetcolor}{BCD} & \onslide<5->{302} & \onslide<5->{(PML4, PDP, DIR, TLB) = (H,M,M,M)}\\
 & & \onslide<5->{Entry 234 replaced by access 3 (same set)}\\
 & & \onslide<5->{2 + 3 $\times$ 100 = 302 cycles} \\
 \hline
-\textcolor{signcolor}{0xFF81}\textcolor{pml4color}{234}\textcolor{pdpcolor}{067}\textcolor{dircolor}{09A}\textcolor{offsetcolor}{0CD} & \onslide<6->{2} & \onslide<6->{Hit in TLB - 2 cycles} \\
+\textcolor{signcolor}{0xFF}\textcolor{pml4color}{81}\textcolor{pdpcolor}{234}\textcolor{dircolor}{067}\textcolor{tablecolor}{09A}\textcolor{offsetcolor}{0CD} & \onslide<6->{2} & \onslide<6->{Hit in TLB - 2 cycles} \\
 \hline
 \end{tabular}
 \end{center}
@@ -1118,11 +1119,12 @@ Example:
 \vspace{0.5em}
 \onslide<7->{
 \small
-\textbf{Color Legend:} 
-\textcolor{signcolor}{Sign}, 
-\textcolor{pml4color}{PML4}, 
-\textcolor{pdpcolor}{PDP}, 
-\textcolor{dircolor}{DIR}, 
+\textbf{Color Legend:}
+\textcolor{signcolor}{Sign},
+\textcolor{pml4color}{PML4},
+\textcolor{pdpcolor}{PDP},
+\textcolor{dircolor}{DIR},
+\textcolor{tablecolor}{TABLE},
 \textcolor{offsetcolor}{Offset}
 }
 \end{frame}
