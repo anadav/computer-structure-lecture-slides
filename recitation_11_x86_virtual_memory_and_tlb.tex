@@ -1017,7 +1017,9 @@ Note: No Table cache needed as TLB stores complete translations
     bitlabel/.style={font=\tiny, anchor=north},
     myarrow/.style={->, >=stealth, very thick},
     comparator/.style={circle, draw, thick, minimum size=0.6cm, font=\small, inner sep=1pt},
-    waylabel/.style={font=\tiny}
+    waylabel/.style={font=\tiny},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    blue_connector/.style={circle, fill=cyan!70, inner sep=1.2pt}
 ]
 
 % Define Y level for address boxes
@@ -1078,23 +1080,42 @@ Note: No Table cache needed as TLB stores complete translations
 % Tag fields in cache ways
 \node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
       anchor=north] (tag0) at ($(way0.north) + (0, -0.1cm)$) {};
-\node[mylabel, font=\tiny, align=center] at (tag0.center) {Tag\\{}[40:12]};
+\node[mylabel, font=\tiny, align=center] at (tag0.center) {Tag\\{}[\textbf{40}:12]};
 
 \node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
       anchor=north] (tag1) at ($(way1.north) + (0, -0.1cm)$) {};
-\node[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[40:12]};
+\node[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[\textbf{40}:12]};
 
-% Set index arrow - from set.south to tag0.west using |-
-\draw[myarrow, cyan!70] (set.south) |- (tag0.west);
+% Set index routing with blue connector
+\coordinate (set_branch) at ($(set.south) + (0, -0.4cm)$);
+
+% Arrow from set to branch point
+\draw[myarrow, cyan!70] (set.south) -- (set_branch);
+
+% Blue connector circle at branch point
+\node[blue_connector] at (set_branch) {};
+
+% Arrow from branch to tag0 west
+\draw[myarrow, cyan!70] (set_branch) |- (tag0.west);
+
+% Arrow from branch through way0 northeast corner to tag1 west
+\coordinate (via_way0) at ($(way0.north east) + (0.3cm, 0.3cm)$);
+\draw[myarrow, cyan!70] (set_branch) -- (via_way0) |- (tag1.west);
 
 % PFN to comparators connection - positioned relative to cache way boxes (tag arrays)
 % Way 0 comparator lower than way 1, moved slightly left
-\node[comparator] (comp0) at ([xshift=0.3cm, yshift=-0.6cm]way0.south east) {=};
+\node[comparator] (comp0) at ([xshift=0.3cm, yshift=-0.9cm]way0.south east) {=};
 \node[comparator] (comp1) at ([xshift=0.3cm, yshift=-0.3cm]way1.south east) {=};
 
+% Branch point coordinate for PFN to comparators
+\coordinate (pfn_branch) at (pfn |- comp1);
+
 % Arrows from PFN to comparators with horizontal connector
-\draw[myarrow] (pfn.south) |- (comp0.west);
-\draw[myarrow] (pfn.south) |- (comp1.west);
+\draw[myarrow] (pfn.south) -- (pfn_branch) |- (comp0.west);
+\draw[myarrow] (pfn_branch) |- (comp1.west);
+
+% Data connector circle at branch point
+\node[data_connector] at (pfn_branch) {};
 
 % PFN bits label on horizontal connector - smaller font, on the right
 \node[bitlabel, anchor=west] at ($(pfn.south) + (0.2cm, -0.3cm)$) {40:12};
