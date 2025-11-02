@@ -7,7 +7,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, shapes.arrows}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, shapes.arrows, backgrounds}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -1037,13 +1037,22 @@ Note: No Table cache needed as TLB stores complete translations
 \node[bitlabel, anchor=north west] at ([xshift=-2mm]vpn.south west) {47};
 
 % Offset box - bits 5:0
-\node[addrbox, fill=yellow!30, minimum width=1cm, anchor=south west] (offset) at (4.8, \addry) {Offset};
+\node[addrbox, fill=pink!30, minimum width=1cm, anchor=south west] (offset) at (4.8, \addry) {Offset};
 \node[bitlabel, anchor=north west] at (offset.south west) {5};
 \node[bitlabel] at (offset.south east) {0};
 
 % Labels above address boxes
 \node[mylabel, above=0.1cm of vpn] (translated) {\textit{Translated}};
 \node[mylabel] at (translated -| set.east) {\textit{Not Translated}};
+
+% Background rectangles (drawn on background layer so they appear behind)
+\begin{scope}[on background layer]
+  % Translated section background (VPN.west to VPN.east, translated.north to bit13.south)
+  \fill[blue!10] (vpn.west |- translated.north) rectangle (vpn.east |- bit13.south);
+
+  % Not Translated section background (VPN.east to offset.east, same vertical extent)
+  \fill[yellow!15] (vpn.east |- translated.north) rectangle (offset.east |- bit13.south);
+\end{scope}
 
 % TLB arrow (using single arrow shape)
 \node[single arrow, fill=magenta!70, minimum height=1.2cm, minimum width=0.6cm,
