@@ -1029,7 +1029,9 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Set box - bits 13:6 (overlaps with VPN at bits 13:12)
 \node[addrbox, fill=cyan!40, minimum width=1.5cm, anchor=south west] (set) at (3.3, \addry) {Set};
-\node[bitlabel] at (set.south west) {12};
+\node[bitlabel, anchor=north west] (bit13) at ([xshift=-1mm]set.south west) {13};
+\node[bitlabel, right=-2.5mm of bit13] (bit12) {12};
+\node[bitlabel, right=-2.5mm of bit12] (bit11) {11};
 \node[bitlabel, anchor=north east] at (set.south east) {6};
 
 % Offset box - bits 5:0
@@ -1040,10 +1042,6 @@ Note: No Table cache needed as TLB stores complete translations
 % Labels above address boxes
 \node[mylabel, above=0.1cm of vpn] (translated) {\textit{Translated}};
 \node[mylabel] at (translated -| set.east) {\textit{Not Translated}};
-
-% Dashed line showing 12/11 boundary
-\draw[dashed, thick] ($(set.south west) + (0.2cm, 0)$) -- ++(0, -0.3cm);
-\node[bitlabel] at ($(set.south west) + (0.2cm, -0.3cm)$) {11};
 
 % TLB arrow (using single arrow shape)
 \node[single arrow, fill=magenta!70, minimum height=1.2cm, minimum width=0.6cm,
