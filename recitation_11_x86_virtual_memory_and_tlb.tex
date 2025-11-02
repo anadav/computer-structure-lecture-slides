@@ -1089,23 +1089,23 @@ Note: No Table cache needed as TLB stores complete translations
 % Set index routing with blue connector
 \coordinate (set_branch) at ($(set.south) + (0, -0.4cm)$);
 
-% Arrow from set to branch point
-\draw[myarrow, cyan!70] (set.south) -- (set_branch);
+% Blue connector circle at branch point (draw before arrows so no arrow goes into it)
+\node[blue_connector] (set_conn) at (set_branch) {};
 
-% Blue connector circle at branch point
-\node[blue_connector] at (set_branch) {};
+% Line from set to branch point (no arrow)
+\draw[cyan!70, very thick] (set.south) -- (set_branch);
 
 % Arrow from branch to tag0 west
 \draw[myarrow, cyan!70] (set_branch) |- (tag0.west);
 
-% Arrow from branch through way0 northeast corner to tag1 west
-\coordinate (via_way0) at ($(way0.north east) + (0.3cm, 0.3cm)$);
-\draw[myarrow, cyan!70] (set_branch) -- (via_way0) |- (tag1.west);
+% Arrow from branch to tag1 west via intermediate point
+\coordinate (via_point) at ($(set_conn -| tag0.east) + (0.3cm, 0)$);
+\draw[myarrow, cyan!70] (set_branch) -- (via_point) |- (tag1.west);
 
 % PFN to comparators connection - positioned relative to cache way boxes (tag arrays)
 % Way 0 comparator lower than way 1, moved slightly left
-\node[comparator] (comp0) at ([xshift=0.3cm, yshift=-0.9cm]way0.south east) {=};
-\node[comparator] (comp1) at ([xshift=0.3cm, yshift=-0.3cm]way1.south east) {=};
+\node[comparator] (comp0) at ([xshift=0.1cm, yshift=-0.9cm]way0.south east) {=};
+\node[comparator] (comp1) at ([xshift=0.1cm, yshift=-0.3cm]way1.south east) {=};
 
 % Branch point coordinate for PFN to comparators
 \coordinate (pfn_branch) at (pfn |- comp1);
