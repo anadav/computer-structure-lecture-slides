@@ -759,6 +759,7 @@
   ip/.store in=\localframeIP,
   ip/.default={},
   outcome/.store in=\localframeOutcome,
+  prediction/.store in=\localframePrediction,
   bhr1/.code={\def\localframeBHROne{#1}},
   bhr2/.code={\def\localframeBHRTwo{#1}},
   bhr3/.code={\def\localframeBHRThree{#1}},
@@ -1271,6 +1272,11 @@ if (...)
 
       \vspace{0.5em}
       \centering
+      % Show prediction label if provided
+      \ifx\localframePrediction\empty
+      \else
+        \colorbox{highlightyellow}{\textit{Predicted: \localframePrediction}}
+      \fi
     \end{columns}
     \vspace{0.5em}
     \centering
@@ -1535,15 +1541,8 @@ if (...)
   \fi
 }
 
-% Helper to format state - just bold for strong states, no colors
-\newcommand{\formatState}[1]{%
-  \ifnum\pdfstrcmp{#1}{ST}=0\textbf{#1}%
-  \else\ifnum\pdfstrcmp{#1}{WT}=0#1%
-  \else\ifnum\pdfstrcmp{#1}{WNT}=0#1%
-  \else\ifnum\pdfstrcmp{#1}{SNT}=0\textbf{#1}%
-  \else #1%
-  \fi\fi\fi\fi%
-}
+% Helper to format state - no colors, no bold
+\newcommand{\formatState}[1]{#1}
 
 % Helper to get state for specific index
 \newcommand{\stateRow}[2]{%
@@ -1689,12 +1688,14 @@ if (...)
 \localFrameKV{
     ip={IP1},
     outcome={},
+    prediction={Taken},
     r1={100},
     r2={2},
     r3={0},
     bhr1={0}{0}{0}{0},
     bhr2={0}{0}{0}{0},
     bhr3={0}{0}{0}{0},
+    bhrrowhighlight={1},
     states1={0:WT:1},
     states2={},
     states3={},
@@ -1721,12 +1722,12 @@ if (...)
     active={1},
     step={1},
     action={State Update},
-    description={Misprediction: State at index 0 transitions from WT to WNT (highlighted in yellow with red text)}
+    description={Actual outcome: Not Taken. State at index 0 transitions from WT to WNT}
   }
 
 % Step 1c: BHR update
 % Entire IP1 BHR row highlighted yellow, LSB also has red text
-% State should NOT be highlighted
+% State highlighted with yellow only (no red text)
 \localFrameKV{
     ip={IP1},
     outcome={Not Taken},
@@ -1738,7 +1739,7 @@ if (...)
     bhr3={0}{0}{0}{0},
     bhrrowhighlight={1},
     bhrredbit={4},
-    states1={0:WNT:0},
+    states1={0:WNT:1},
     states2={},
     states3={},
     active={1},
