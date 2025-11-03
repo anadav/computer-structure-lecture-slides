@@ -1222,8 +1222,8 @@ Note: No Table cache needed as TLB stores complete translations
 ]
 
 % VA for address A
-\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2.5) {\texttt{0000...00}\textcolor{red}{\textbf{00}}};
-\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {\texttt{0000 0000 0000}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2.5) {00\textcolor{brown}{00}...00\textcolor{red}{\textbf{00}}};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {0000 0000 0000};
 \node[font=\footnotesize, left=2mm of vaA_vpn] {VA:};
 
 % Field labels above VA
@@ -1241,8 +1241,8 @@ Note: No Table cache needed as TLB stores complete translations
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_bit13) -- (vaA_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vaA_set_label) {Set: [13:6] = 0};
 
 % PA for address A - positioned relative to VA with same width alignment
-\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (paA_offset) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {\texttt{0000 0000 0000}};
-\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (paA_pfn) at (paA_offset.west) {\texttt{0...0000}};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (paA_offset) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {0000 0000 0000};
+\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (paA_pfn) at (paA_offset.west) {0...0000};
 \coordinate (vaA_label_pos) at (vaA_vpn.west);
 \node[font=\footnotesize] at (vaA_label_pos |- paA_pfn) {PA:};
 
@@ -1255,8 +1255,8 @@ Note: No Table cache needed as TLB stores complete translations
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (paA_pfn.south west) -- (paA_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 0};
 
 % VB for address B
-\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2.5) {\texttt{00\textcolor{brown}{11}...00\textcolor{red}{00}}};
-\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {\texttt{0000 0000 0000}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2.5) {00\textcolor{brown}{11}...00\textcolor{red}{\textbf{00}}};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {0000 0000 0000};
 \node[font=\footnotesize, left=2mm of vbB_vpn] {VB:};
 
 % Field labels above VB
@@ -1274,8 +1274,8 @@ Note: No Table cache needed as TLB stores complete translations
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vbB_bit13) -- (vbB_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vbB_set_label) {Set: [13:6] = 0};
 
 % PB for address B - positioned relative to VB with same width alignment
-\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (pbB_offset) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {\texttt{0000 0000 0000}};
-\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {\texttt{0...0011}};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (pbB_offset) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {0000 0000 0000};
+\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {0...0011};
 \coordinate (vbB_label_pos) at (vbB_vpn.west);
 \node[font=\footnotesize] at (vbB_label_pos |- pbB_pfn) {PB:};
 
@@ -1292,8 +1292,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 \begin{itemize}
     \item Same VA bits [13:6] $\Rightarrow$ same cache set
-    \item Different PA bits [13:12] $\Rightarrow$ different physical addresses
-    \item Would cause \textcolor{red}{false cache hit}!
+    \item Different PA bits [13:12] $\Rightarrow$ different physical addresses $\rightarrow$ \textcolor{red}{false cache hit}!
 \end{itemize}
 
 \vspace{0.3em}
