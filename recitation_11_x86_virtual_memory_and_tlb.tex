@@ -998,21 +998,33 @@ Note: No Table cache needed as TLB stores complete translations
 \textbf{Question:} How can we access this cache before getting the physical address?
 
 \vspace{1em}
-\textbf{Analysis:}
+\textbf{Cache Parameters:}
 \begin{itemize}
     \item 64B lines $\Rightarrow$ 6 offset bits [5:0]
     \item $\frac{32\text{KB}}{(2\text{ ways} \times 64\text{B})}$ = 256 sets $\Rightarrow$ 8 set bits [13:6]
-    \item 12 bits [11:0] are not translated (page offset)
-    \item We lack 2 bits [13:12] for complete set address
-    \item Solution: Use untranslated bits [13:12] for set lookup
-    \item Must compare entire PFN with tag due to aliasing possibility
 \end{itemize}
 \end{frame}
 
-% Slide 15b: Cache Access Diagram
-\begin{frame}{Question 3 (cont.): Read Access}
+% Slide 15b: Cache Access Solution with Diagram
+\begin{frame}{Question 3: Cache Access Solution}
+
+\begin{columns}[T]
+% Left column - Analysis with progressive reveal
+\begin{column}{0.42\textwidth}
+\textbf{Analysis:}
+\begin{itemize}
+    \item<1-> 12 bits [11:0] are not translated (page offset)
+    \item<2-> We lack 2 bits [13:12] for complete set address
+    \item<2-> \textbf{Solution:} Use untranslated VA bits [13:12] for set lookup (VIPT)
+    \item<3-> \textbf{Key:} Tag must include \alert<3->{\textbf{PA bits [13:12]}} to detect aliasing!
+\end{itemize}
+\end{column}
+
+% Right column - TikZ diagram with progressive reveal
+\begin{column}{0.56\textwidth}
 \centering
 \begin{tikzpicture}[
+    scale=0.85, transform shape,
     font=\small,
     addrbox/.style={draw, very thick, minimum height=0.8cm, anchor=west},
     mylabel/.style={font=\footnotesize},
@@ -1050,16 +1062,19 @@ Note: No Table cache needed as TLB stores complete translations
 \node[mylabel, above=0.1cm of vpn] (translated) {\textit{Translated}};
 \node[mylabel] at (translated -| set.east) {\textit{Not Translated}};
 
-% Background rectangles (drawn on background layer so they appear behind)
+% Background rectangles (drawn on background layer so they appear behind) - Overlay 1
 \begin{scope}[on background layer]
+  \visible<1->{
   % Translated section background (VPN.west to VPN.east, translated.north to bit13.south)
   \fill[blue!10] (vpn.west |- translated.north) rectangle (vpn.east |- bit13.south);
 
   % Not Translated section background (VPN.east to offset.east, same vertical extent)
   \fill[yellow!15] (vpn.east |- translated.north) rectangle (offset.east |- bit13.south);
+  }
 \end{scope}
 
-% PFN box (output from TLB) - bits [40:13], so add left margin for bit 40
+% PFN box (output from TLB) - bits [40:13], so add left margin for bit 40 - Overlay 2
+\visible<2->{
 \path let \p1 = (vpn.east) in
   node[addrbox, fill=orange!70, minimum width={veclen(\x1,0)-0.3cm}, anchor=south west] (pfn) at (0.3, 1.2) {PFN};
 
@@ -1069,7 +1084,10 @@ Note: No Table cache needed as TLB stores complete translations
 \node[bitlabel, anchor=south west] at ([xshift=-2mm]pfn.north west) {40};
 \node[bitlabel, anchor=south] at (pfn.north -| bit12) {12};
 \node[bitlabel, anchor=south] at (pfn.north -| bit13) {13};
+}
 
+% Cache ways and set indexing - Overlay 2-
+\visible<2->{
 % Cache ways - moved higher
 \node[draw, thick, minimum width=1.5cm, minimum height=2.5cm, anchor=north west]
      (way0) at (5, 3.2) {};
@@ -1082,11 +1100,13 @@ Note: No Table cache needed as TLB stores complete translations
 % Tag fields in cache ways
 \node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
       anchor=north] (tag0) at ($(way0.north) + (0, -0.1cm)$) {};
-\node[mylabel, font=\tiny, align=center] at (tag0.center) {Tag\\{}[\textbf{40}:12]};
+\node<-2>[mylabel, font=\tiny, align=center] at (tag0.center) {Tag\\{}[?:12]};
+\node<3->[mylabel, font=\tiny, align=center] at (tag0.center) {Tag\\{}[\textbf{40}:12]};
 
 \node[draw, thick, fill=orange!70, minimum width=1.4cm, minimum height=0.6cm,
       anchor=north] (tag1) at ($(way1.north) + (0, -0.1cm)$) {};
-\node[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[\textbf{40}:12]};
+\node<-2>[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[?:12]};
+\node<3->[mylabel, font=\tiny, align=center] at (tag1.center) {Tag\\{}[\textbf{40}:12]};
 
 % Set index routing with blue connector
 \coordinate (set_branch) at ($(set.south) + (0, -0.4cm)$);
@@ -1103,7 +1123,10 @@ Note: No Table cache needed as TLB stores complete translations
 % Arrow from branch to tag1 west via intermediate point
 \coordinate (via_point) at ($(set_conn -| tag0.east) + (0.3cm, 0)$);
 \draw[myarrow, cyan!70] (set_branch) -- (via_point) |- (tag1.west);
+}
 
+% PFN to comparators and tag matching - Overlay 3
+\visible<3->{
 % PFN to comparators connection - positioned relative to cache way boxes (tag arrays)
 % Way 0 comparator lower than way 1, moved slightly left
 \node[comparator] (comp0) at ([xshift=0.1cm, yshift=-0.9cm]way0.south east) {=};
@@ -1133,8 +1156,12 @@ Note: No Table cache needed as TLB stores complete translations
 % Red arrows from comparators to Tag Match labels
 \draw[->, >=stealth, thick, red] (comp0.south) -- (match0.south east);
 \draw[->, >=stealth, thick, red] (comp1.south) -- (match1.south east);
+}
 
 \end{tikzpicture}
+\end{column}
+\end{columns}
+
 \end{frame}
 
 % Slide 16: Virtual Aliasing Problem
