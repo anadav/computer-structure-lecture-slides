@@ -1226,8 +1226,8 @@ Note: No Table cache needed as TLB stores complete translations
 \node[font=\footnotesize, left=2mm of vaA_vpn] {VA:};
 
 % Field labels above VA
-\node[mylabel, above=1mm of vaA_vpn] (vaA_vpn_label) {VPN};
-\node[mylabel, above=1mm of vaA_offset] (vaA_offset_label) {Offset};
+\node[mylabel, anchor=south] (vaA_vpn_label) at (vaA_vpn.north) {VPN};
+\node[mylabel, anchor=south] (vaA_offset_label) at (vaA_offset.north) {Offset};
 
 % Title above field labels
 \node[anchor=south, font=\small\bfseries] at ($(vaA_vpn_label.north)!0.5!(vaA_offset_label.north)$) {Write Virtual Address A};
@@ -1246,7 +1246,10 @@ Note: No Table cache needed as TLB stores complete translations
 \node[font=\footnotesize] at (vaA_label_pos |- paA_pfn) {PA:};
 
 % PFN label above PA
-\node[mylabel, above=1mm of paA_pfn] {PFN};
+\node[mylabel, anchor=south] (paA_pfn_label) at (paA_pfn.north) {PFN};
+
+% Arrow from VPN to PFN
+\draw[myarrow] (vaA_vpn.south) -- (vaA_vpn.south |- paA_pfn_label.north);
 
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (paA_pfn.south west) -- (paA_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 0};
 
@@ -1256,8 +1259,8 @@ Note: No Table cache needed as TLB stores complete translations
 \node[font=\footnotesize, left=2mm of vbB_vpn] {VB:};
 
 % Field labels above VB
-\node[mylabel, above=1mm of vbB_vpn] (vbB_vpn_label) {VPN};
-\node[mylabel, above=1mm of vbB_offset] (vbB_offset_label) {Offset};
+\node[mylabel, anchor=south] (vbB_vpn_label) at (vbB_vpn.north) {VPN};
+\node[mylabel, anchor=south] (vbB_offset_label) at (vbB_offset.north) {Offset};
 
 % Title above field labels
 \node[anchor=south, font=\small\bfseries] at ($(vbB_vpn_label.north)!0.5!(vbB_offset_label.north)$) {Read Virtual Address B};
@@ -1272,7 +1275,14 @@ Note: No Table cache needed as TLB stores complete translations
 % PB for address B - positioned relative to VB with same width alignment
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (pbB_offset) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {\texttt{0000 0000 0000}};
 \node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {\texttt{0...0011}};
-\node[font=\footnotesize, left=2mm of pbB_pfn] {PB:};
+\coordinate (vbB_label_pos) at (vbB_vpn.west);
+\node[font=\footnotesize] at (vbB_label_pos |- pbB_pfn) {PB:};
+
+% PFN label above PB
+\node[mylabel, anchor=south] (pbB_pfn_label) at (pbB_pfn.north) {PFN};
+
+% Arrow from VPN to PFN
+\draw[myarrow] (vbB_vpn.south) -- (vbB_vpn.south |- pbB_pfn_label.north);
 
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (pbB_pfn.south west) -- (pbB_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 3};
 \node[font=\scriptsize, red, below=8mm of pbB_pfn] {(0 if we don't take [13:12])};
