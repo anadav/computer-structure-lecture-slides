@@ -1301,7 +1301,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Slide 17: Virtual Aliasing Problem
 \begin{frame}{Question 3: Virtual Aliasing}
-\textbf{Problem:} Two virtual pages mapping to same physical page
+\textbf{Problem:} Two virtual pages mapping to same physical page, violating cache coherence.
 
 \vspace{0.5em}
 
@@ -1326,7 +1326,7 @@ Note: No Table cache needed as TLB stores complete translations
 \coordinate (vaA_bit6) at ($(vaA_offset.south west) + (1.55cm, 0)$);
 
 % Brace and label for Set
-\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_bit13) -- (vaA_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vaA_set_label) {Set: [13:6] = 1};
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_bit13) -- (vaA_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vaA_set_label) {Set: [13:6] = 128};
 
 % Virtual Address B (top right)
 \node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2) {0000...00\textcolor{red}{\textbf{00}}};
@@ -1343,30 +1343,25 @@ Note: No Table cache needed as TLB stores complete translations
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vbB_bit13) -- (vbB_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vbB_set_label) {Set: [13:6] = 0};
 
 % Single Physical Address (centered below both)
-\node[addrbox, fill=orange!70, minimum width=2.5cm] (pa_pfn) at ($(vaA_vpn)!0.5!(vbB_vpn) + (0, -3.5)$) {0...0000};
+\node[addrbox, fill=orange!70, minimum width=2.5cm] (pa_pfn) at ($(vaA_vpn)!0.5!(vbB_vpn) + (0, -2.5)$) {0...0000};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (pa_offset) at (pa_pfn.east) {0000 0000 0000};
 \node[font=\footnotesize, left=2mm of pa_pfn] {P:};
 \node[mylabel, anchor=south] (pa_pfn_label) at (pa_pfn.north) {PFN};
 \node[mylabel, anchor=south] at (pa_offset.north) {Disp.};
 
 % Arrows from both VPNs to the single PFN label with stepped route
-\draw[myarrow, red, thick] (vaA_set_label.south) -- ++(0,-0.3) -| (pa_pfn_label.north);
-\draw[myarrow, red, thick] (vbB_set_label.south) -- ++(0,-0.3) -| (pa_pfn_label.north);
+\draw[myarrow, red, thick] (vaA_vpn.south) -- ++(0,-0.6) -| (pa_pfn_label.north);
+\draw[myarrow, red, thick] (vbB_vpn.south) -- ++(0,-0.6) -| (pa_pfn_label.north);
+
+% Labels for the diagram
+\node[font=\scriptsize, red, anchor=north] at (vbB_set_label.south) {different cache sets};
+\node[font=\scriptsize, red] at ($(pa_pfn) + (0, -0.6)$) {same address};
 
 \end{tikzpicture}
 \end{center}
 
 \vspace{0.5em}
-Bits [13:12] differ (01 vs 00) but map to same physical page
 
-\vspace{1em}
-\textbf{Consequence:}
-\begin{itemize}
-    \item Same data may exist in two different cache sets
-    \item Violates cache coherency
-\end{itemize}
-
-\vspace{1em}
 \textbf{Solution:}
 \begin{itemize}
     \item Check 4 possible sets when allocating new entry
