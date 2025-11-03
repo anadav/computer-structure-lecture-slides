@@ -269,7 +269,7 @@ Parameter & Large Core & Small Core \\
 Area & 4 mm² & 2 mm² \\
 Width & 4-wide & 2-wide \\
 IPC & 2 & 1 \\
-Leakage Power & \multicolumn{2}{c}{0.5W} \\
+Leakage Power & ? & 0.5W \\
 Dynamic Capacitance & 1500 pF & 500 pF \\
 Threads & 1 & 1 \\
 \bottomrule
@@ -279,6 +279,9 @@ Threads & 1 & 1 \\
 \begin{block}{Key Assumption}
 Leakage is approximately proportional to area
 \end{block}
+
+\textbf{Calculate large core leakage:}
+$$\text{Leakage}_{\text{big core}} = \frac{\text{area}_{\text{big core}}}{\text{area}_{\text{small core}}} \times \text{Leakage}_{\text{small core}} = \frac{4}{2} \times 0.5\text{W} = 1\text{W}$$
 \end{frame}
 
 \begin{frame}{Voltage-Frequency Operating Points}
@@ -303,6 +306,8 @@ Voltage (V) & Large Core Freq (GHz) & Small Core Freq (GHz) \\
 \end{table}
 \end{frame}
 
+\subsection{Single Thread Performance}
+
 \begin{frame}{Single Thread Performance (4W Budget)}
 \textbf{Question:} Which processor for best single-thread performance at 4W?
 
@@ -325,6 +330,8 @@ $$Power = Leakage + CV^2f$$
 \alert{Result: Large core provides better performance}
 \end{frame}
 
+\subsection{Multi-Thread Performance}
+
 \begin{frame}{Multi-Thread Performance (2W per Core)}
 \textbf{Question:} Two large cores or two small cores for best 2-way MT performance?
 
@@ -345,8 +352,8 @@ $$Power = Leakage + CV^2f$$
 \alert{Result: Two small cores provide better performance}
 \end{frame}
 
-\begin{frame}{Question 2}
-\textbf{Question:} For a system with two large cores or two small cores, which configuration provides best 2-way Multi-Thread performance?
+\begin{frame}{Power Table Analysis (2W per Core)}
+\textbf{Question:} Given a 2W power budget per core, which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
 \begin{columns}
 \column{0.65\textwidth}
 \scriptsize
@@ -354,12 +361,12 @@ $$Power = Leakage + CV^2f$$
 \node[anchor=north west] at (0,0) {
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
-\makecell{$P_{tot}$ \\ Large \\ Core \\ (W)} & 
-\makecell{$P_{tot}$ \\ Small \\ Core \\ (W)} & 
-\makecell{$P_{act}$ \\ Large \\ Core \\ (W)} & 
-\makecell{$P_{act}$ \\ Small \\ Core \\ (W)} & 
-\makecell{Freq \\ Large \\ Core \\ (GHz)} & 
-\makecell{Freq \\ Small \\ Core \\ (GHz)} & 
+\makecell{$P_{tot}$ \\ Large \\ Core \\ (W)} &
+\makecell{$P_{tot}$ \\ Small \\ Core \\ (W)} &
+\makecell{$P_{act}$ \\ Large \\ Core \\ (W)} &
+\makecell{$P_{act}$ \\ Small \\ Core \\ (W)} &
+\makecell{Freq \\ Large \\ Core \\ (GHz)} &
+\makecell{Freq \\ Small \\ Core \\ (GHz)} &
 \makecell{Voltage \\ (V)} \\
 \hline
 1.38 & 0.68 & 0.38 & 0.18 & 0.7 & 1 & 0.6 \\
@@ -375,36 +382,40 @@ $$Power = Leakage + CV^2f$$
 \end{tabular}
 };
 
-% Circle for large core power
-\draw[red, thick] ([xshift=-1mm]pic cs:lg1) ellipse (3mm and 3mm);
-% Circle for large core frequency  
-\draw[red, thick] ([xshift=-1mm]pic cs:lgf1) ellipse (3mm and 3mm);
+\pause
+
+% Oval for large core power (wider)
+\draw[red, thick] ([xshift=-1mm]pic cs:lg1) ellipse (5mm and 3mm);
+% Oval for large core frequency (wider)
+\draw[red, thick] ([xshift=-1mm]pic cs:lgf1) ellipse (5mm and 3mm);
 % Arrow connecting them
 \draw[red, thick, <-] ([xshift=-1mm]pic cs:lg2) -- ([xshift=-2mm]pic cs:lgf1);
 
-% Circle for small core power
-\draw[red, thick] ([xshift=-1mm]pic cs:sm1) ellipse (3mm and 3mm);
-% Circle for small core frequency
-\draw[red, thick] ([xshift=-1mm]pic cs:smf1) ellipse (3mm and 3mm);
+% Oval for small core power (wider)
+\draw[red, thick] ([xshift=-1mm]pic cs:sm1) ellipse (5mm and 3mm);
+% Oval for small core frequency (wider)
+\draw[red, thick] ([xshift=-1mm]pic cs:smf1) ellipse (5mm and 3mm);
 % Arrow connecting them
 \draw[red, thick, <-] ([xshift=-1mm]pic cs:sm2) -- ([xshift=-2mm]pic cs:smf1);
 \end{tikzpicture}
 
 \column{0.35\textwidth}
-\textbf{Power constraint:}
-\begin{itemize}
-    \item Per core: $\leq$ 2W
-\end{itemize}
+\pause
+\textbf{Answer:}
 
 \textbf{Small cores:}
 \begin{itemize}
     \item Run at 3 GHz
+    \item Perf: $2 \times 3 \times 1 = 6$ G inst/sec
 \end{itemize}
 
 \textbf{Large cores:}
 \begin{itemize}
     \item Run at 1.35 GHz
+    \item Perf: $2 \times 1.35 \times 2 = 5.4$ G inst/sec
 \end{itemize}
+
+\alert{Result: Two small cores are better}
 \end{columns}
 \end{frame}
 
