@@ -1165,34 +1165,35 @@ Note: No Table cache needed as TLB stores complete translations
 \end{frame}
 
 % Slide 16: Virtual Aliasing Example
-\begin{frame}{Question 3 (cont.): Aliasing Example}
+\begin{frame}{Question 3 (cont.): What if we didn't use [13:12] for tag?}
 
+% Address breakdown diagram at the top
+\begin{center}
 \begin{tikzpicture}[
     font=\small,
     addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west},
     mylabel/.style={font=\footnotesize},
-    bitlabel/.style={font=\tiny, anchor=north},
-    myarrow/.style={->, >=stealth, very thick}
+    bitlabel/.style={font=\tiny, anchor=north}
 ]
 
-% Define Y level for address boxes at top
-\def\addry{4.5}
+% Define Y level for address boxes
+\def\addry{1.2}
 
 % Set box - bits 13:6
-\node[addrbox, fill=cyan!40, minimum width=1.5cm, anchor=south west] (set) at (3.3, \addry) {Set};
+\node[addrbox, fill=cyan!40, minimum width=1.2cm, anchor=south west] (set) at (2.5, \addry) {Set};
 \node[bitlabel, anchor=north west] (bit13) at ([xshift=-1.5mm]set.south west) {13};
 \node[bitlabel, right=-2.5mm of bit13] (bit12) {12};
 \node[bitlabel, right=-2.5mm of bit12] (bit11) {11};
 \node[bitlabel, anchor=north east] at (set.south east) {6};
 
 % VPN box - shifted up by half its height
-\node[addrbox, fill=green!30, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
+\node[addrbox, fill=green!30, anchor=south west, yshift=0.3cm] (vpn) at (0, \addry) {VPN};
 \path let \p1 = (vpn.south west), \p2 = (bit11.west) in
-  node[addrbox, fill=green!30, minimum width={veclen(\x2-\x1,0)}, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
+  node[addrbox, fill=green!30, minimum width={veclen(\x2-\x1,0)}, anchor=south west, yshift=0.3cm] (vpn) at (0, \addry) {VPN};
 \node[bitlabel, anchor=north west] at ([xshift=-2mm]vpn.south west) {47};
 
 % Offset box
-\node[addrbox, fill=pink!30, minimum width=1cm, anchor=south west] (offset) at (4.8, \addry) {Offset};
+\node[addrbox, fill=pink!30, minimum width=0.8cm, anchor=south west] (offset) at (3.7, \addry) {Offset};
 \node[bitlabel, anchor=north west] at (offset.south west) {5};
 \node[bitlabel] at (offset.south east) {0};
 
@@ -1206,51 +1207,81 @@ Note: No Table cache needed as TLB stores complete translations
   \fill[yellow!15] (vpn.east |- translated.north) rectangle (offset.east |- bit13.south);
 \end{scope}
 
-% Write Virtual Address A
-\node[anchor=north west, font=\small\bfseries] at (0, 3.2) {Write Virtual Address A};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{tikzpicture}[
+    font=\small,
+    addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west},
+    mylabel/.style={font=\footnotesize},
+    bitlabel/.style={font=\tiny, anchor=north},
+    myarrow/.style={->, >=stealth, very thick}
+]
 
 % VA for address A
-\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2.5) {\texttt{0000...0000}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2.5) {\texttt{0000...00}\textcolor{red}{\textbf{00}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {\texttt{0000 0000 0000}};
 \node[font=\footnotesize, left=2mm of vaA_vpn] {VA:};
 
-% Arrow
-\draw[myarrow] ($(vaA_vpn.east)!0.5!(vaA_offset.west)$) -- ++(0, -0.5) node[midway, right] {};
+% Title and field labels above VA
+\node[anchor=south, font=\small\bfseries] at ($(vaA_vpn.north)!0.5!(vaA_offset.north)$) {Write Virtual Address A};
+\node[mylabel, above=1mm of vaA_vpn] {VPN};
+\node[mylabel, above=1mm of vaA_offset] {OFFSET};
 
-% PA for address A
-\node[addrbox, fill=green!20, minimum width=2cm] (paA_pfn) at (0, 1.5) {\texttt{0...0000}};
+% Markers for braces - positioned at bits 13 and 6
+\coordinate (vaA_bit13) at ($(vaA_vpn.south east) + (-0.25cm, 0)$);
+\coordinate (vaA_bit6) at ($(vaA_offset.south west) + (1.55cm, 0)$);
+
+% Braces and labels for A - positioned at exact bit boundaries
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_bit13) -- (vaA_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vaA_set_label) {Set: [13:6] = 0};
+
+% PA for address A - positioned relative to set label using at with yshift
+\node[addrbox, fill=green!20, minimum width=2cm, anchor=north east] (paA_pfn) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {\texttt{0...0000}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (paA_offset) at (paA_pfn.east) {\texttt{0000 0000 0000}};
 \node[font=\footnotesize, left=2mm of paA_pfn] {PA:};
 
-% Braces and labels for A
-\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_offset.south west) -- (vaA_offset.south east) node[midway, below=3pt, font=\scriptsize, blue] {Set: [13:6] = 0};
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (paA_pfn.south west) -- (paA_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 0};
 
-% Read Virtual Address B
-\node[anchor=north west, font=\small\bfseries] at (6.5, 3.2) {Read Virtual Address B};
-
 % VB for address B
-\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (6.5, 2.5) {\texttt{0011...0000}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (6.5, 2.5) {\texttt{0011...00}\textcolor{red}{\textbf{00}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {\texttt{0000 0000 0000}};
 \node[font=\footnotesize, left=2mm of vbB_vpn] {VB:};
 
-% Arrow
-\draw[myarrow] ($(vbB_vpn.east)!0.5!(vbB_offset.west)$) -- ++(0, -0.5) node[midway, right] {};
+% Title and field labels above VB
+\node[anchor=south, font=\small\bfseries] at ($(vbB_vpn.north)!0.5!(vbB_offset.north)$) {Read Virtual Address B};
+\node[mylabel, above=1mm of vbB_vpn] {VPN};
+\node[mylabel, above=1mm of vbB_offset] {OFFSET};
 
-% PB for address B
-\node[addrbox, fill=green!20, minimum width=2cm] (pbB_pfn) at (6.5, 1.5) {\texttt{0...0011}};
+% Markers for braces - positioned at bits 13 and 6
+\coordinate (vbB_bit13) at ($(vbB_vpn.south east) + (-0.25cm, 0)$);
+\coordinate (vbB_bit6) at ($(vbB_offset.south west) + (1.55cm, 0)$);
+
+% Braces and labels for B - positioned at exact bit boundaries
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vbB_bit13) -- (vbB_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vbB_set_label) {Set: [13:6] = 0};
+
+% PB for address B - positioned relative to set label using at with yshift
+\node[addrbox, fill=green!20, minimum width=2cm, anchor=north east] (pbB_pfn) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {\texttt{0...0011}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (pbB_offset) at (pbB_pfn.east) {\texttt{0000 0000 0000}};
 \node[font=\footnotesize, left=2mm of pbB_pfn] {PB:};
 
-% Braces and labels for B
-\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vbB_offset.south west) -- (vbB_offset.south east) node[midway, below=3pt, font=\scriptsize, blue] {Set: [13:6] = 0};
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (pbB_pfn.south west) -- (pbB_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 3};
 \node[font=\scriptsize, red, below=8mm of pbB_pfn] {(0 if we don't take [13:12])};
 
 \end{tikzpicture}
 
+\vspace{0.5em}
+
+\textbf{Problem without PA bits [13:12] in tag:}
+\begin{itemize}
+    \item Same VA bits [13:6] $\Rightarrow$ same cache set
+    \item Different PA bits [13:12] $\Rightarrow$ different physical addresses
+    \item Would cause \textcolor{red}{false cache hit}!
+\end{itemize}
+
 \vspace{0.3em}
-\textbf{Problem:} Both addresses use the same set (0), but have different physical addresses (Tag 0 vs Tag 3). Without including PA bits [13:12] in the tag, we would incorrectly get a cache hit!
+\textbf{Solution:} Include PA bits [13:12] in tag comparison to distinguish addresses that differ only in these bits.
 
 \end{frame}
 
