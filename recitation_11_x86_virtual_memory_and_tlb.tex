@@ -1222,9 +1222,9 @@ Note: No Table cache needed as TLB stores complete translations
 ]
 
 % VA for address A
-\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2.5) {00\textcolor{brown}{00}...00\textcolor{red}{\textbf{00}}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2.5) {0000...00\textcolor{red}{\textbf{00}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {0000 0000 0000};
-\node[font=\footnotesize, left=2mm of vaA_vpn] {VA:};
+\node[font=\footnotesize, left=2mm of vaA_vpn] (vaA_label) {VA:};
 
 % Field labels above VA
 \node[mylabel, anchor=south] (vaA_vpn_label) at (vaA_vpn.north) {VPN};
@@ -1243,8 +1243,7 @@ Note: No Table cache needed as TLB stores complete translations
 % PA for address A - positioned relative to VA with same width alignment
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (paA_offset) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {0000 0000 0000};
 \node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (paA_pfn) at (paA_offset.west) {0...0000};
-\coordinate (vaA_label_pos) at (vaA_vpn.west);
-\node[font=\footnotesize] at (vaA_label_pos |- paA_pfn) {PA:};
+\node[font=\footnotesize] at (vaA_label |- paA_pfn) {PA:};
 
 % PFN label above PA
 \node[mylabel, anchor=south] (paA_pfn_label) at (paA_pfn.north) {PFN};
@@ -1255,9 +1254,9 @@ Note: No Table cache needed as TLB stores complete translations
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (paA_pfn.south west) -- (paA_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 0};
 
 % VB for address B
-\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2.5) {00\textcolor{brown}{11}...00\textcolor{red}{\textbf{00}}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2.5) {0011...00\textcolor{red}{\textbf{00}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {0000 0000 0000};
-\node[font=\footnotesize, left=2mm of vbB_vpn] {VB:};
+\node[font=\footnotesize, left=2mm of vbB_vpn] (vbB_label) {VB:};
 
 % Field labels above VB
 \node[mylabel, anchor=south] (vbB_vpn_label) at (vbB_vpn.north) {VPN};
@@ -1276,8 +1275,7 @@ Note: No Table cache needed as TLB stores complete translations
 % PB for address B - positioned relative to VB with same width alignment
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (pbB_offset) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {0000 0000 0000};
 \node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {0...0011};
-\coordinate (vbB_label_pos) at (vbB_vpn.west);
-\node[font=\footnotesize] at (vbB_label_pos |- pbB_pfn) {PB:};
+\node[font=\footnotesize] at (vbB_label |- pbB_pfn) {PB:};
 
 % PFN label above PB
 \node[mylabel, anchor=south] (pbB_pfn_label) at (pbB_pfn.north) {PFN};
@@ -1304,13 +1302,47 @@ Note: No Table cache needed as TLB stores complete translations
 \begin{frame}{Question 3: Virtual Aliasing}
 \textbf{Problem:} Two virtual pages mapping to same physical page
 
-\vspace{1em}
-Example:
-\begin{itemize}
-    \item VPN xxxx01 $\rightarrow$ PFN zzzz
-    \item VPN yyyy00 $\rightarrow$ PFN zzzz
-    \item Bits [13:12] differ (01 vs 00)
-\end{itemize}
+\vspace{0.5em}
+
+\begin{center}
+\begin{tikzpicture}[
+    scale=0.85, transform shape,
+    font=\small,
+    addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west, font=\ttfamily},
+    mylabel/.style={font=\footnotesize},
+    myarrow/.style={->, >=stealth, very thick}
+]
+
+% Virtual Address A (top left)
+\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2) {xxxx...01};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {0000 0000 0000};
+\node[font=\footnotesize, left=2mm of vaA_vpn] (vaA_label) {VA:};
+\node[mylabel, anchor=south] at (vaA_vpn.north) {VPN};
+\node[mylabel, anchor=south] at (vaA_offset.north) {Disp.};
+
+% Virtual Address B (top right)
+\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2) {yyyy...00};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {0000 0000 0000};
+\node[font=\footnotesize, left=2mm of vbB_vpn] (vbB_label) {VB:};
+\node[mylabel, anchor=south] at (vbB_vpn.north) {VPN};
+\node[mylabel, anchor=south] at (vbB_offset.north) {Disp.};
+
+% Single Physical Address (centered below both)
+\node[addrbox, fill=orange!30, minimum width=2.5cm] (pa_pfn) at ($(vaA_vpn)!0.5!(vbB_vpn) + (0, -2.5)$) {zzzz};
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (pa_offset) at (pa_pfn.east) {0000 0000 0000};
+\node[font=\footnotesize, left=2mm of pa_pfn] {P:};
+\node[mylabel, anchor=south] (pa_pfn_label) at (pa_pfn.north) {PFN};
+\node[mylabel, anchor=south] at (pa_offset.north) {Disp.};
+
+% Arrows from both VPNs to the single PFN label with stepped route
+\draw[myarrow, red, thick] (vaA_vpn.south) -- ++(0,-0.5) -| (pa_pfn_label.north);
+\draw[myarrow, red, thick] (vbB_vpn.south) -- ++(0,-0.5) -| (pa_pfn_label.north);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+Bits [13:12] differ (01 vs 00) but map to same physical page
 
 \vspace{1em}
 \textbf{Consequence:}
