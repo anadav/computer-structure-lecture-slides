@@ -1225,45 +1225,53 @@ Note: No Table cache needed as TLB stores complete translations
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {\texttt{0000 0000 0000}};
 \node[font=\footnotesize, left=2mm of vaA_vpn] {VA:};
 
-% Title and field labels above VA
-\node[anchor=south, font=\small\bfseries] at ($(vaA_vpn.north)!0.5!(vaA_offset.north)$) {Write Virtual Address A};
-\node[mylabel, above=1mm of vaA_vpn] {VPN};
-\node[mylabel, above=1mm of vaA_offset] {OFFSET};
+% Field labels above VA
+\node[mylabel, above=1mm of vaA_vpn] (vaA_vpn_label) {VPN};
+\node[mylabel, above=1mm of vaA_offset] (vaA_offset_label) {Offset};
+
+% Title above field labels
+\node[anchor=south, font=\small\bfseries] at ($(vaA_vpn_label.north)!0.5!(vaA_offset_label.north)$) {Write Virtual Address A};
 
 % Markers for braces - positioned at bits 13 and 6
-\coordinate (vaA_bit13) at ($(vaA_vpn.south east) + (-0.25cm, 0)$);
+\coordinate (vaA_bit13) at ($(vaA_vpn.south east) + (-0.5cm, 0)$);
 \coordinate (vaA_bit6) at ($(vaA_offset.south west) + (1.55cm, 0)$);
 
 % Braces and labels for A - positioned at exact bit boundaries
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_bit13) -- (vaA_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vaA_set_label) {Set: [13:6] = 0};
 
-% PA for address A - positioned relative to set label using at with yshift
-\node[addrbox, fill=green!20, minimum width=2cm, anchor=north east] (paA_pfn) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {\texttt{0...0000}};
-\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (paA_offset) at (paA_pfn.east) {\texttt{0000 0000 0000}};
-\node[font=\footnotesize, left=2mm of paA_pfn] {PA:};
+% PA for address A - positioned relative to VA with same width alignment
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (paA_offset) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {\texttt{0000 0000 0000}};
+\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (paA_pfn) at (paA_offset.west) {\texttt{0...0000}};
+\coordinate (vaA_label_pos) at (vaA_vpn.west);
+\node[font=\footnotesize] at (vaA_label_pos |- paA_pfn) {PA:};
+
+% PFN label above PA
+\node[mylabel, above=1mm of paA_pfn] {PFN};
 
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (paA_pfn.south west) -- (paA_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 0};
 
 % VB for address B
-\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (6.5, 2.5) {\texttt{0011...00}\textcolor{red}{\textbf{00}}};
+\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2.5) {\texttt{0011...00}\textcolor{red}{\textbf{00}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {\texttt{0000 0000 0000}};
 \node[font=\footnotesize, left=2mm of vbB_vpn] {VB:};
 
-% Title and field labels above VB
-\node[anchor=south, font=\small\bfseries] at ($(vbB_vpn.north)!0.5!(vbB_offset.north)$) {Read Virtual Address B};
-\node[mylabel, above=1mm of vbB_vpn] {VPN};
-\node[mylabel, above=1mm of vbB_offset] {OFFSET};
+% Field labels above VB
+\node[mylabel, above=1mm of vbB_vpn] (vbB_vpn_label) {VPN};
+\node[mylabel, above=1mm of vbB_offset] (vbB_offset_label) {Offset};
+
+% Title above field labels
+\node[anchor=south, font=\small\bfseries] at ($(vbB_vpn_label.north)!0.5!(vbB_offset_label.north)$) {Read Virtual Address B};
 
 % Markers for braces - positioned at bits 13 and 6
-\coordinate (vbB_bit13) at ($(vbB_vpn.south east) + (-0.25cm, 0)$);
+\coordinate (vbB_bit13) at ($(vbB_vpn.south east) + (-0.5cm, 0)$);
 \coordinate (vbB_bit6) at ($(vbB_offset.south west) + (1.55cm, 0)$);
 
 % Braces and labels for B - positioned at exact bit boundaries
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vbB_bit13) -- (vbB_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vbB_set_label) {Set: [13:6] = 0};
 
-% PB for address B - positioned relative to set label using at with yshift
-\node[addrbox, fill=green!20, minimum width=2cm, anchor=north east] (pbB_pfn) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {\texttt{0...0011}};
-\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (pbB_offset) at (pbB_pfn.east) {\texttt{0000 0000 0000}};
+% PB for address B - positioned relative to VB with same width alignment
+\node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (pbB_offset) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {\texttt{0000 0000 0000}};
+\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {\texttt{0...0011}};
 \node[font=\footnotesize, left=2mm of pbB_pfn] {PB:};
 
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}] (pbB_pfn.south west) -- (pbB_pfn.south east) node[midway, below=3pt, font=\scriptsize, green!50!black] {Tag: 3};
