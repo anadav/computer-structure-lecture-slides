@@ -1214,9 +1214,10 @@ Note: No Table cache needed as TLB stores complete translations
 \vspace{0.1em}
 
 \begin{tikzpicture}[
+    scale=0.85, transform shape,
     font=\small,
-    addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west},
-    mylabel/.style={font=\footnotesize},
+    addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west, font=\ttfamily},
+    mylabel/.style={font=\footnotesize, text height=1.5ex, text depth=.25ex},
     bitlabel/.style={font=\tiny, anchor=north},
     myarrow/.style={->, >=stealth, very thick}
 ]
@@ -1242,7 +1243,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % PA for address A - positioned relative to VA with same width alignment
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (paA_offset) at ([yshift=-0.5cm]vaA_set_label.south -| vaA_offset.east) {0000 0000 0000};
-\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (paA_pfn) at (paA_offset.west) {0...0000};
+\node[addrbox, fill=orange!70, minimum width=2cm, anchor=east] (paA_pfn) at (paA_offset.west) {0...0000};
 \node[font=\footnotesize] at (vaA_label |- paA_pfn) {PA:};
 
 % PFN label above PA
@@ -1274,7 +1275,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % PB for address B - positioned relative to VB with same width alignment
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=north east] (pbB_offset) at ([yshift=-0.5cm]vbB_set_label.south -| vbB_offset.east) {0000 0000 0000};
-\node[addrbox, fill=green!20, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {0...0011};
+\node[addrbox, fill=orange!70, minimum width=2cm, anchor=east] (pbB_pfn) at (pbB_offset.west) {0...0011};
 \node[font=\footnotesize] at (vbB_label |- pbB_pfn) {PB:};
 
 % PFN label above PB
@@ -1309,34 +1310,48 @@ Note: No Table cache needed as TLB stores complete translations
     scale=0.85, transform shape,
     font=\small,
     addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west, font=\ttfamily},
-    mylabel/.style={font=\footnotesize},
+    mylabel/.style={font=\footnotesize, text height=1.5ex, text depth=.25ex},
     myarrow/.style={->, >=stealth, very thick}
 ]
 
 % Virtual Address A (top left)
-\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2) {xxxx...01};
+\node[addrbox, fill=green!20, minimum width=2cm] (vaA_vpn) at (0, 2) {0000...00\textcolor{red}{\textbf{01}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vaA_offset) at (vaA_vpn.east) {0000 0000 0000};
 \node[font=\footnotesize, left=2mm of vaA_vpn] (vaA_label) {VA:};
 \node[mylabel, anchor=south] at (vaA_vpn.north) {VPN};
 \node[mylabel, anchor=south] at (vaA_offset.north) {Disp.};
 
+% Markers for braces - positioned at bits 13 and 6
+\coordinate (vaA_bit13) at ($(vaA_vpn.south east) + (-0.5cm, 0)$);
+\coordinate (vaA_bit6) at ($(vaA_offset.south west) + (1.55cm, 0)$);
+
+% Brace and label for Set
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vaA_bit13) -- (vaA_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vaA_set_label) {Set: [13:6] = 1};
+
 % Virtual Address B (top right)
-\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2) {yyyy...00};
+\node[addrbox, fill=green!20, minimum width=2cm] (vbB_vpn) at (7.5, 2) {0000...00\textcolor{red}{\textbf{00}}};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (vbB_offset) at (vbB_vpn.east) {0000 0000 0000};
 \node[font=\footnotesize, left=2mm of vbB_vpn] (vbB_label) {VB:};
 \node[mylabel, anchor=south] at (vbB_vpn.north) {VPN};
 \node[mylabel, anchor=south] at (vbB_offset.north) {Disp.};
 
+% Markers for braces - positioned at bits 13 and 6
+\coordinate (vbB_bit13) at ($(vbB_vpn.south east) + (-0.5cm, 0)$);
+\coordinate (vbB_bit6) at ($(vbB_offset.south west) + (1.55cm, 0)$);
+
+% Brace and label for Set
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}] (vbB_bit13) -- (vbB_bit6) node[midway, below=3pt, font=\scriptsize, blue] (vbB_set_label) {Set: [13:6] = 0};
+
 % Single Physical Address (centered below both)
-\node[addrbox, fill=orange!30, minimum width=2.5cm] (pa_pfn) at ($(vaA_vpn)!0.5!(vbB_vpn) + (0, -2.5)$) {zzzz};
+\node[addrbox, fill=orange!70, minimum width=2.5cm] (pa_pfn) at ($(vaA_vpn)!0.5!(vbB_vpn) + (0, -3.5)$) {0...0000};
 \node[addrbox, fill=cyan!20, minimum width=2.5cm, anchor=west] (pa_offset) at (pa_pfn.east) {0000 0000 0000};
 \node[font=\footnotesize, left=2mm of pa_pfn] {P:};
 \node[mylabel, anchor=south] (pa_pfn_label) at (pa_pfn.north) {PFN};
 \node[mylabel, anchor=south] at (pa_offset.north) {Disp.};
 
 % Arrows from both VPNs to the single PFN label with stepped route
-\draw[myarrow, red, thick] (vaA_vpn.south) -- ++(0,-0.5) -| (pa_pfn_label.north);
-\draw[myarrow, red, thick] (vbB_vpn.south) -- ++(0,-0.5) -| (pa_pfn_label.north);
+\draw[myarrow, red, thick] (vaA_set_label.south) -- ++(0,-0.3) -| (pa_pfn_label.north);
+\draw[myarrow, red, thick] (vbB_set_label.south) -- ++(0,-0.3) -| (pa_pfn_label.north);
 
 \end{tikzpicture}
 \end{center}
