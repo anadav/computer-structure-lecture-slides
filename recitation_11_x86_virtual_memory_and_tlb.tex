@@ -212,14 +212,14 @@
         \pgfmathtruncatemacro{\currentbit}{\fldend - 1}
     \fi
 
-    % Field 6: OFFSET (always present)
+    % Field 6: DISPLACEMENT (always present)
     \ifnum#6>0
         \pgfmathtruncatemacro{\fldstart}{\currentbit}
         \pgfmathtruncatemacro{\fldend}{\currentbit - #6 + 1}
         \pgfmathsetmacro{\fldwidth}{#6 * \bitwidth}
 
         \node[section, fill=red!40, minimum width=\fldwidth cm] (f) at (\xpos + \fldwidth/2, 0) {};
-        \node[sectionlabel, align=center] at (f.center) {OFFSET};
+        \node[sectionlabel, align=center] at (f.center) {DISP.};
         \node[bitnumber, anchor=north west, xshift=0.3mm] at (f.south west) {\fldstart};
         \node[bitnumber, anchor=north east, xshift=-0.3mm] at (f.south east) {\fldend};
     \fi
@@ -562,10 +562,10 @@ Core similar to x86 in 64-bit mode:
 \node[bitnumber, anchor=north east] at (f5.south east) {12};
 \pgfmathsetmacro{\xpos}{\xpos + \fldwidth}
 
-% OFFSET
+% DISPLACEMENT
 \pgfmathsetmacro{\fldwidth}{\offsetbits * \bitwidth}
 \node[section, fill=red!40, minimum width=\fldwidth cm] (f6) at (\xpos + \fldwidth/2, 0) {};
-\node[sectionlabel, align=center] at (f6.center) {OFFSET};
+\node[sectionlabel, align=center] at (f6.center) {DISP.};
 \node[bitnumber, anchor=north west] at (f6.south west) {11};
 \node[bitnumber, anchor=north east] at (f6.south east) {0};
 \end{tikzpicture}
@@ -586,7 +586,7 @@ Core similar to x86 in 64-bit mode:
 \begin{enumerate}
     \item \textbf{Small page size}
     \begin{itemize}
-        \item[] 12 bits in offset field $\Rightarrow 2^{12}$ = 4KB
+        \item[] 12 bits in displacement field $\Rightarrow 2^{12}$ = 4KB
     \end{itemize}
     \item \textbf{Entries per Page Table}
     \begin{itemize}
@@ -615,7 +615,7 @@ Core similar to x86 in 64-bit mode:
 
     \item \textbf{Large page size}
     \begin{itemize}
-        \item Large pages pointed by DIR, offset is [19:0]
+        \item Large pages pointed by DIR, displacement is [19:0]
         \item Size = $2^{20}$ = 1MB
     \end{itemize}
 \end{enumerate}
@@ -671,14 +671,14 @@ Core similar to x86 in 64-bit mode:
     \draw[thick] (0,0) rectangle (4,0.5);
     \draw[thick] (2.5,0) -- (2.5,0.5);
     \node at (1.25,0.25) {\small Virtual Page Number};
-    \node at (3.25,0.25) {\small Offset};
-    
+    \node at (3.25,0.25) {\small Disp.};
+
     \draw[thick] (0,-0.8) rectangle (4,-0.3);
     \draw[thick] (1.5,-0.8) -- (1.5,-0.3);
     \draw[thick] (2.5,-0.8) -- (2.5,-0.3);
     \node at (0.75,-0.55) {\small Tag};
     \node at (2,-0.55) {\small Set};
-    \node at (3.25,-0.55) {\small Offset};
+    \node at (3.25,-0.55) {\small Disp.};
 \end{tikzpicture}
 
 \textbf{On TLB miss:}\\
@@ -1013,7 +1013,7 @@ Note: No Table cache needed as TLB stores complete translations
 \begin{column}{0.42\textwidth}
 \textbf{Analysis:}
 \begin{itemize}
-    \item<1-> 12 bits [11:0] are not translated (page offset)
+    \item<1-> 12 bits [11:0] are not translated (page displacement)
     \item<2-> We lack 2 bits [13:12] for complete set address
     \item<2-> \textbf{Solution:} Use untranslated VA bits [13:12] for set lookup (VIPT)
     \item<3-> \textbf{Key:} Tag must include \alert<3->{\textbf{PA bits [13:12]}} to detect aliasing!
@@ -1053,7 +1053,7 @@ Note: No Table cache needed as TLB stores complete translations
   node[addrbox, fill=green!30, minimum width={veclen(\x2-\x1,0)}, anchor=south west, yshift=0.4cm] (vpn) at (0, \addry) {VPN};
 \node[bitlabel, anchor=north west] at ([xshift=-2mm]vpn.south west) {47};
 
-% Offset box - bits 5:0
+% Offset box - bits 5:0 (cache line offset)
 \node[addrbox, fill=pink!30, minimum width=1cm, anchor=south west] (offset) at (4.8, \addry) {Offset};
 \node[bitlabel, anchor=north west] at (offset.south west) {5};
 \node[bitlabel] at (offset.south east) {0};
@@ -1170,6 +1170,7 @@ Note: No Table cache needed as TLB stores complete translations
 % Address breakdown diagram at the top
 \begin{center}
 \begin{tikzpicture}[
+    scale=0.85, transform shape,
     font=\small,
     addrbox/.style={draw, very thick, minimum height=0.6cm, anchor=west},
     mylabel/.style={font=\footnotesize},
@@ -1192,7 +1193,7 @@ Note: No Table cache needed as TLB stores complete translations
   node[addrbox, fill=green!30, minimum width={veclen(\x2-\x1,0)}, anchor=south west, yshift=0.3cm] (vpn) at (0, \addry) {VPN};
 \node[bitlabel, anchor=north west] at ([xshift=-2mm]vpn.south west) {47};
 
-% Offset box
+% Offset box (cache line offset)
 \node[addrbox, fill=pink!30, minimum width=0.8cm, anchor=south west] (offset) at (3.7, \addry) {Offset};
 \node[bitlabel, anchor=north west] at (offset.south west) {5};
 \node[bitlabel] at (offset.south east) {0};
@@ -1227,7 +1228,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Field labels above VA
 \node[mylabel, anchor=south] (vaA_vpn_label) at (vaA_vpn.north) {VPN};
-\node[mylabel, anchor=south] (vaA_offset_label) at (vaA_offset.north) {Offset};
+\node[mylabel, anchor=south] (vaA_offset_label) at (vaA_offset.north) {Disp.};
 
 % Title above field labels
 \node[anchor=south, font=\small\bfseries] at ($(vaA_vpn_label.north)!0.5!(vaA_offset_label.north)$) {Write Virtual Address A};
@@ -1260,7 +1261,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % Field labels above VB
 \node[mylabel, anchor=south] (vbB_vpn_label) at (vbB_vpn.north) {VPN};
-\node[mylabel, anchor=south] (vbB_offset_label) at (vbB_offset.north) {Offset};
+\node[mylabel, anchor=south] (vbB_offset_label) at (vbB_offset.north) {Disp.};
 
 % Title above field labels
 \node[anchor=south, font=\small\bfseries] at ($(vbB_vpn_label.north)!0.5!(vbB_offset_label.north)$) {Read Virtual Address B};
@@ -1365,14 +1366,14 @@ Example:
 \textbf{1. Large page size:}
 \begin{itemize}
     \item Large pages pointed by DIR
-    \item Offset bits: [23:0]
+    \item Displacement bits: [23:0]
     \item Size = $2^{24}$ = 16MB
 \end{itemize}
 
 \vspace{1em}
 \textbf{2. Entries per table:}
 \begin{itemize}
-    \item TABLE: $2^{12}$ bits offset $\Rightarrow 2^{12}$ entries
+    \item TABLE: $2^{12}$ bits displacement $\Rightarrow 2^{12}$ entries
     \item DIR: $2^{12}$ bits $\Rightarrow 2^{12}$ entries  
     \item PDP: $2^{12}$ bits $\Rightarrow 2^{12}$ entries
     \item PML4: $2^{8}$ bits $\Rightarrow 2^{8}$ = 256 entries
@@ -1421,7 +1422,7 @@ Example:
 \textcolor{pdpcolor}{PDP},
 \textcolor{dircolor}{DIR},
 \textcolor{tablecolor}{TABLE},
-\textcolor{offsetcolor}{Offset}
+\textcolor{offsetcolor}{Disp.}
 }
 \end{frame}
 
