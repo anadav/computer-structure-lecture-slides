@@ -359,26 +359,87 @@ $$= \frac{4\text{ mm}^2}{2\text{ mm}^2} \times 0.5\text{W} = 1\text{W}$$
 \end{columns}
 \end{frame}
 
-\begin{frame}{Q5: Single Thread Performance (4W Budget)}
+\begin{frame}{Q5: Frequency Calculation (4W Budget)}
+\textbf{Second, we compute the maximum frequency given the 4W power budget:}
+
+\begin{columns}[t]
+\column{0.35\textwidth}
+\vspace{-3mm}
+\begin{table}
+\centering
+\tiny
+\begin{tabular}{lcc}
+\toprule
+Parameter & Small & Large \\
+\midrule
+Leakage & 0.5W & 1W \\
+Cap. & 500 pF & 1500 pF \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{1mm}
+
+\begin{table}
+\centering
+\tiny
+\begin{tabular}{ccc}
+\toprule
+V (V) & Large & Small \\
+\midrule
+0.6 & 0.7 & 1.0 \\
+0.65 & 1.0 & 1.25 \\
+0.7 & 1.35 & 1.5 \\
+0.75 & 1.75 & 1.75 \\
+0.8 & 2.25 & 2.0 \\
+\rowcolor{yellow!30} 0.85 & 2.5 & 2.25 \\
+0.9 & 3.0 & 2.5 \\
+0.95 & 3.5 & 2.75 \\
+\rowcolor{yellow!30} 1.0 & 4.0 & 3.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\column{0.65\textwidth}
+\vspace{-3mm}
+\begin{alertblock}{Power Equation}
+$$P = \text{Leakage} + C \cdot V^2 \cdot f$$
+\end{alertblock}
+
+\textbf{Small core:}
+$4W \geq 0.5 + 500\text{pF} \cdot V^2 \cdot f$\par
+From table: $V = 1$V, $f = 3$GHz\par
+\vspace{-4mm}
+$$P = 0.5 + 500 \cdot 1^2 \cdot 3 = 2\text{W} < 4\text{W} \checkmark$$
+
+\textbf{Large core:}
+$4W \geq 1 + 1500\text{pF} \cdot V^2 \cdot f$\par
+From table: $V = 0.85$V, $f = 2.5$GHz\par
+\vspace{-4mm}
+$$P = 1 + 1500 \cdot 0.85^2 \cdot 2.5 = 3.7\text{W} < 4\text{W} \checkmark$$
+\end{columns}
+\end{frame}
+
+\begin{frame}{Q5: Performance Comparison}
 \textbf{Question:} Which processor for best single-thread performance at 4W?
 
-\begin{block}{Power Equation}
-$$Power = Leakage + CV^2f$$
+\textbf{Finally, we compare the performance:}
+
+\begin{block}{Performance Metric}
+$$\text{Performance} \propto \text{IPC} \times \text{Frequency}$$
 \end{block}
 
-\textbf{Analysis:}
+\textbf{Results:}
 \begin{itemize}
-    \item Small core: Can run at 3 GHz within 4W
-    \item Large core: Can run at 2.5 GHz within 4W
+    \item \textbf{Small core:} IPC = 1, Frequency = 3 GHz
+    $$\text{Performance} = 1 \times 3 = 3 \text{ G inst/sec}$$
+
+    \item \textbf{Large core:} IPC = 2, Frequency = 2.5 GHz
+    $$\text{Performance} = 2 \times 2.5 = 5 \text{ G inst/sec}$$
 \end{itemize}
 
-\textbf{Performance (approx. $\propto$ F × IPC):}
-\begin{itemize}
-    \item Small: $1 \times 3 = 3$ G inst/sec
-    \item Large: $2 \times 2.5 = 5$ G inst/sec
-\end{itemize}
-
-\alert{Result: Large core provides better performance}
+\vspace{0.5cm}
+\alert{Result: Large core provides better performance (5 vs 3 G inst/sec)}
 \end{frame}
 
 \subsection{Question 6: Multi-Thread Performance}
