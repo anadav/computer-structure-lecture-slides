@@ -103,6 +103,12 @@
 
 \frame{\titlepage}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Branch Prediction Review}
+
 %==========================================
 % Slide: Branch Prediction Overview
 \begin{frame}
@@ -1084,10 +1090,12 @@ if (...)
 
 %==========================================
 % Slide: Local BHR Table and Size Calculation
-\begin{frame}
-  \frametitle{Local BHR Table and Size (Question)}
+\section{Question 1: Local BHR Table and Size}
 
-  \textbf{Example:} Calculate predictor size for the following configuration:
+\begin{frame}
+  \frametitle{Q1a: Local BHR Table and Size}
+
+  Calculate predictor size for the following configuration:
 
   \vspace{0.3em}
   \begin{columns}[t]
@@ -1194,6 +1202,34 @@ if (...)
       };
     \end{tikzpicture}
   \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Q1b: Local BHR Predictor State}
+
+  Given the code above and a local history branch predictor:
+
+  \vspace{0.3em}
+  \begin{itemize}
+    \item History length: 4 bits
+    \item 2-bit counters (Weakly/Strongly Taken/Not Taken)
+    \item Each branch instruction has its own BHR and state table
+    \item All predictors initialized to Weakly Taken (WT)
+  \end{itemize}
+
+  \vspace{0.5em}
+  \textbf{Question:} What is the state of the predictor when we return to L1 for the second time?
+
+  \vspace{0.3em}
+  \small
+  Specifically: BHR values and counter states for each branch instruction (IP1, IP2, IP3).
+
+  \pause
+  \vspace{0.3em}
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50, title=Answer]
+    \footnotesize
+    We'll trace through the execution step-by-step in the following slides to determine the final state.
+  \end{tcolorbox}
 \end{frame}
 
 % New local frame macro using pgfkeys
@@ -1711,8 +1747,6 @@ if (...)
   \end{tabular}
 }
 
-\section{Local History Branch Predictor}
-
 %===========================================
 % Local History Branch Predictor - 7 Steps, 3 Slides Each
 %===========================================
@@ -2161,8 +2195,10 @@ if (...)
   }
 
 % Transition slide
+\section{Question 2: Global BHR Predictor}
+
 \begin{frame}
-  \frametitle{Global History Predictor}
+  \frametitle{Q2a: Global History Predictor Size}
   \begin{center}
     \Large Now switching to \textbf{Global BHR}
   \end{center}
@@ -2191,6 +2227,35 @@ if (...)
     \centering
     \textbf{Predictor size} = $4 + 2 \times 2^4 = 4 + 32 = \textbf{36 bits}$\\[0.3em]
     \textcolor{correctgreen}{vs. 66 Kbits for local history/state arrays!}
+  \end{tcolorbox}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Q2b: Global BHR Predictor State}
+
+  Using the same code as before with a global history branch predictor:
+
+  \vspace{0.3em}
+  \begin{itemize}
+    \item History length: 4 bits
+    \item 2-bit counters (Weakly/Strongly Taken/Not Taken)
+    \item Single shared BHR for all branches
+    \item Single shared state table indexed by BHR
+    \item All counters initialized to Weakly Taken (WT)
+  \end{itemize}
+
+  \vspace{0.5em}
+  \textbf{Question:} What is the state of the global predictor when we return to L1 for the second time?
+
+  \vspace{0.3em}
+  \small
+  Specifically: Global BHR value and the relevant counter states in the global state table.
+
+  \pause
+  \vspace{0.3em}
+  \begin{tcolorbox}[colback=blue!10, colframe=blue!50, title=Answer (to be updated)]
+    \footnotesize
+    We'll trace through the execution step-by-step in the following slides to determine the final state.
   \end{tcolorbox}
 \end{frame}
 
