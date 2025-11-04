@@ -626,6 +626,12 @@ Loop1 & 2 & 2 & & & & & \\
 
 \frame{\titlepage}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Review: Pipeline Basics}
+
 \begin{frame}{Basic Pipeline Processor}
 \centering
 \pipelineprocessor[true]{false}{false}  % Show stage labels, no forwarding, no HDU
@@ -674,7 +680,9 @@ Loop1 & 2 & 2 & & & & & \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{RAW Data Hazard - Read After Write}
+\section{Review: Data Hazards}
+
+\begin{frame}{Review: RAW Data Hazard - Read After Write}
 \centering
 \pipelineprocessor[true]{false}{false}
 
@@ -696,7 +704,7 @@ Loop1 & 2 & 2 & & & & & \\
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Understanding RAW Data Hazards}
+\begin{frame}{Review: Understanding RAW Data Hazards}
 \textbf{What is a RAW (Read After Write) Hazard?}
 
 A data hazard occurs when an instruction depends on the result of a previous instruction that hasn't completed yet.
@@ -727,7 +735,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{Solution: Stalling to Resolve Data Hazard}
+\begin{frame}{Review: Solution - Stalling to Resolve Data Hazard}
 \centering
 \pipelineprocessor[true]{false}{false}
 
@@ -758,7 +766,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Forwarding: MEM to EX}
+\begin{frame}{Review: Forwarding - MEM to EX}
 \centering
 \pipelineprocessor[true]{true}{false}
 
@@ -783,7 +791,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Forwarding: WB to EX}
+\begin{frame}{Review: Forwarding - WB to EX}
 \centering
 \pipelineprocessor[true]{true}{false}
 
@@ -808,7 +816,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Forwarding Unit: Inputs \& Outputs}
+\begin{frame}{Review: Forwarding Unit - Inputs \& Outputs}
 \textbf{Inputs:}
 \begin{itemize}
     \item \textbf{ID/EX.Rs, ID/EX.Rt:} Source register numbers in EX stage
@@ -830,7 +838,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Forwarding Unit: Logic}
+\begin{frame}[fragile]{Review: Forwarding Unit - Logic}
 \small
 \textbf{ForwardA Logic} (similar for ForwardB using Rt instead of Rs):
 
@@ -858,19 +866,21 @@ else
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Pipeline Processor with Hazard Detection (No Forwarding)}
+\begin{frame}{Review: Pipeline Processor with Hazard Detection (No Forwarding)}
 \centering
 \pipelineprocessor[false]{false}{true}  % No stage labels, no forwarding, show HDU
 \end{frame}
 
-\begin{frame}{Pipeline Processor with Hazard Detection and Forwarding}
+\begin{frame}{Review: Pipeline Processor with Hazard Detection and Forwarding}
 \centering
 \pipelineprocessor[false]{true}{true}  % No stage labels, show forwarding and HDU
 \end{frame}
 
 
 
-\begin{frame}{Control Hazards Solutions - Branch Target Buffer (BTB)}
+\section{Review: Control Hazards}
+
+\begin{frame}{Review: Branch Target Buffer (BTB)}
 \textbf{Direction Prediction (Taken/Not Taken):}
 \begin{columns}
 \column{0.5\textwidth}
@@ -904,7 +914,7 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \end{tcolorbox}
 \end{frame}
 
-\begin{frame}{Enhanced Prediction with 2-bit State Machine}
+\begin{frame}{Review: Enhanced Prediction with 2-bit State Machine}
 \textbf{More reliable prediction using 4-state machine:}
 
 \begin{center}
@@ -945,7 +955,7 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Branch Target Buffer (BTB) Structure - Overview}
+\begin{frame}{Review: BTB Structure - Overview}
 \begin{columns}
 \column{0.5\textwidth}
 \centering
@@ -970,7 +980,7 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \end{columns}
 \end{frame}
 
-\begin{frame}{BTB Structure - Components}
+\begin{frame}{Review: BTB Structure - Components}
 \begin{columns}
 \column{0.5\textwidth}
 \centering
@@ -1003,7 +1013,9 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 
 
 
-\begin{frame}[fragile]{Question: Branch Prediction}
+\section{Question 1: Branch Prediction}
+
+\begin{frame}[fragile]{Q1: Branch Prediction}
 \begin{columns}
 \column{0.4\textwidth}
 \begin{lstlisting}[language={[x86masm]Assembler}]
@@ -1035,7 +1047,7 @@ loop2:
 \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Example: Branch Prediction Analysis}
+\begin{frame}[fragile]{Q1: Branch Prediction Analysis}
 % Top half with program and state machine
 \begin{columns}
 \column{0.3\textwidth}
@@ -1065,8 +1077,9 @@ loop2:
 \predictiontable
 \end{frame}
 
+\section{Question 2: Clock Cycles Wasted in Branch Prediction}
 
-\begin{frame}{Pipeline Integration with BTB}
+\begin{frame}{Q2: How Many Cycles Wasted for Correct vs. Misprediction?}
 \textbf{Assumptions:}
 \begin{itemize}
     \item BTB lookup performed in ID stage
@@ -1184,7 +1197,7 @@ loop2:
 \textbf{Question:} How many clock cycles are wasted for correct prediction vs. misprediction?
 \end{frame}
 
-\begin{frame}{Pipeline Timing Analysis - Correct Predictions}
+\begin{frame}{Q2: Pipeline Timing Analysis - Correct Predictions}
 %\textbf{Branch Prediction: When We Get It Right}
 \scriptsize
 \vspace{0.3cm}
@@ -1253,7 +1266,7 @@ target & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID & \cellco
 \end{frame}
 
 % Second frame for mispredictions
-\begin{frame}{Pipeline Timing Analysis - Mispredictions}
+\begin{frame}{Q2: Pipeline Timing Analysis - Mispredictions}
 %\textbf{Branch Prediction: When We Get It Wrong}
 \scriptsize
 \vspace{0.1cm}
@@ -1325,9 +1338,10 @@ next (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID
 
 \end{frame}
 
-\begin{frame}{Optimization: Avoiding Stalls on Correct Prediction}
+\begin{frame}{Q2: Optimization - Avoiding Stalls on Correct Prediction}
 \textbf{Problem:} One cycle stall even on correct "Taken" prediction
 
+\pause
 \textbf{Solution 1: Store Previous Instruction Address}
 \begin{itemize}
     \item Store address of instruction BEFORE the branch in BTB
@@ -1336,6 +1350,7 @@ next (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID
     \item Achieves optimal timing (no stall on correct prediction)
 \end{itemize}
 
+\pause
 \textbf{Challenge:} Programs may reach branch from different locations
 
 \vspace{0.1cm}
@@ -1358,12 +1373,16 @@ next (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID
 \end{center}
 \vspace{0.1cm}
 
+\pause
 \textbf{Solution 2:} Store target instruction itself in BTB (saves IF stage)
 
+\pause
 \textbf{Solution 3:} Move BTB lookup to IF stage with specialized hardware
 \end{frame}
 
-\begin{frame}[fragile]{Exam Question}
+\section{Question 3: Calculating Loop Iterations and State Machine Design}
+
+\begin{frame}[fragile]{Q3a: BTB and Pipeline Timing}
 \begin{columns}
 \column{0.5\textwidth}
 \begin{lstlisting}[language={[x86masm]Assembler}]
@@ -1397,7 +1416,7 @@ place1:
 \textbf{Answer:} 7 cycles (7 instructions in the iteration)
 \end{frame}
 
-\begin{frame}{Exam Question: Analysis}
+\begin{frame}{Q3b: Finding Number of Executions}
 \textbf{\ding{193}} If the entire code takes 33 cycles, how many times was LD executed?
 
 \textbf{Analysis:}
@@ -1418,7 +1437,7 @@ $$2 \times \text{\#iterations} \geq \text{\#mispredictions}$$
 $\Rightarrow$ LD executed \textbf{3 times}
 \end{frame}
 
-\begin{frame}{Question: State Machine Configuration}
+\begin{frame}{Q3c: State Machine Configuration}
 \textbf{\ding{194}} Design a state machine that produces 4 mispredictions in 6 branch executions (3~iterations)
 
 \pause
