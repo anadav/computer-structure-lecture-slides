@@ -128,7 +128,9 @@ Increases utilization/throughput by reducing impact of dependencies
 
 \section{Performance Analysis}
 
-\begin{frame}{Switch-on-Event Analysis}
+\subsection{Question 1: Switch-on-Event Analysis}
+
+\begin{frame}{Q1: Switch-on-Event Analysis}
 \begin{columns}
 \column{0.5\textwidth}
 \textbf{Given Parameters:}
@@ -182,7 +184,12 @@ $$IPC_{max} = CPI_{ideal}^{-1}$$
 $$N_1 = 1 + \frac{Q}{M \cdot CPI_i}$$
 \end{frame}
 
-\begin{frame}{IPC vs Number of Threads}
+\subsection{Question 2: IPC vs Number of Threads}
+
+\begin{frame}{Q2: IPC vs Number of Threads}
+\textbf{Question:} Draw a graph of IPC as a function of number of threads (N)
+
+\pause
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
     \draw[->] (0,0) -- (8,0) node[right] {N = Threads};
@@ -204,7 +211,9 @@ $$N_1 = 1 + \frac{Q}{M \cdot CPI_i}$$
 
 \section{Cache Impact}
 
-\begin{frame}{L1 Cache Addition}
+\subsection{Question 3: L1 Cache Addition}
+
+\begin{frame}{Q3: L1 Cache Addition}
 \textbf{Improvement Proposal:} Add L1 cache with 0 cycles access time
 
 \begin{block}{Modified IPC with Cache}
@@ -225,7 +234,9 @@ $$CPI\left(\frac{N_1}{2}\right) = \left(CPI_i + Q \cdot \frac{k}{M}\right) \cdot
 \alert{Result: $k = 0.5$ (50\% miss rate) $\Rightarrow$ 50\% hit rate required}
 \end{frame}
 
-\begin{frame}{Cache Design Impact}
+\subsection{Question 4: Cache Design Impact}
+
+\begin{frame}{Q4: Cache Design Impact}
 \textbf{How will cache addition affect the CPU?}
 
 \begin{columns}
@@ -257,40 +268,41 @@ Cache control logic needed
 
 \section{Power/Performance Trade-offs}
 
-\begin{frame}{Power/Performance Analysis}
-\textbf{Two Processor Options:}
+\subsection{Question 5: Single Thread Performance}
 
+\begin{frame}{Q5: Power/Performance Analysis}
+\textbf{Question:} Which processor provides best single-thread performance at 4W?
+
+\begin{columns}[t]
+\column{0.48\textwidth}
+\textbf{Two Processor Options:}
+\vspace{-2mm}
 \begin{table}
 \centering
+\scriptsize
 \begin{tabular}{lcc}
 \toprule
-Parameter & Large Core & Small Core \\
+Parameter & Small & Large \\
 \midrule
-Area & 4 mm² & 2 mm² \\
-Width & 4-wide & 2-wide \\
-IPC & 2 & 1 \\
-Leakage Power & ? & 0.5W \\
-Dynamic Capacitance & 1500 pF & 500 pF \\
+Area & 2 mm² & 4 mm² \\
+Width & 2-wide & 4-wide \\
+IPC & 1 & 2 \\
+Leakage & 0.5W & \textcolor{red}{\textbf{?}} \\
+Cap. & 500 pF & 1500 pF \\
 Threads & 1 & 1 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{block}{Key Assumption}
-Leakage is approximately proportional to area
-\end{block}
-
-\textbf{Calculate large core leakage:}
-$$\text{Leakage}_{\text{big core}} = \frac{\text{area}_{\text{big core}}}{\text{area}_{\text{small core}}} \times \text{Leakage}_{\text{small core}} = \frac{4}{2} \times 0.5\text{W} = 1\text{W}$$
-\end{frame}
-
-\begin{frame}{Voltage-Frequency Operating Points}
+\column{0.48\textwidth}
+\textbf{Voltage-Frequency Points:}
+\vspace{-2mm}
 \begin{table}
 \centering
-\small
+\scriptsize
 \begin{tabular}{ccc}
 \toprule
-Voltage (V) & Large Core Freq (GHz) & Small Core Freq (GHz) \\
+V (V) & Large & Small \\
 \midrule
 0.6 & 0.7 & 1.0 \\
 0.65 & 1.0 & 1.25 \\
@@ -304,11 +316,50 @@ Voltage (V) & Large Core Freq (GHz) & Small Core Freq (GHz) \\
 \bottomrule
 \end{tabular}
 \end{table}
+\end{columns}
+
+\begin{block}{Key Assumption}
+Leakage is approximately proportional to area
+\end{block}
 \end{frame}
 
-\subsection{Single Thread Performance}
+\begin{frame}{Q5: Leakage Power Calculation}
+\textbf{Question:} Which processor provides best single-thread performance at 4W?
 
-\begin{frame}{Single Thread Performance (4W Budget)}
+\textbf{First, we compute the leakage power for the large core:}
+
+\begin{columns}
+\column{0.5\textwidth}
+\begin{table}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Parameter & Small & Large \\
+\midrule
+\rowcolor{yellow!30} Area & 2 mm² & 4 mm² \\
+Width & 2-wide & 4-wide \\
+IPC & 1 & 2 \\
+\rowcolor{yellow!30} Leakage & 0.5W & \textcolor{red}{\textbf{?}} \\
+Cap. & 500 pF & 1500 pF \\
+Threads & 1 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\column{0.5\textwidth}
+\begin{alertblock}{General Formula}
+$$\text{Leakage} \propto \text{Area}$$
+\end{alertblock}
+
+\textbf{For this question:}
+$$\text{Leakage}_{\text{large}} = \frac{\text{area}_{\text{large}}}{\text{area}_{\text{small}}} \times \text{Leakage}_{\text{small}}$$
+
+$$= \frac{4\text{ mm}^2}{2\text{ mm}^2} \times 0.5\text{W} = 1\text{W}$$
+\end{columns}
+\end{frame}
+
+\begin{frame}{Q5: Single Thread Performance (4W Budget)}
 \textbf{Question:} Which processor for best single-thread performance at 4W?
 
 \begin{block}{Power Equation}
@@ -330,9 +381,9 @@ $$Power = Leakage + CV^2f$$
 \alert{Result: Large core provides better performance}
 \end{frame}
 
-\subsection{Multi-Thread Performance}
+\subsection{Question 6: Multi-Thread Performance}
 
-\begin{frame}{Multi-Thread Performance (2W per Core)}
+\begin{frame}{Q6: Multi-Thread Performance (2W per Core)}
 \textbf{Question:} Two large cores or two small cores for best 2-way MT performance?
 
 \textbf{Power constraint:} 2W per core
@@ -352,7 +403,9 @@ $$Power = Leakage + CV^2f$$
 \alert{Result: Two small cores provide better performance}
 \end{frame}
 
-\begin{frame}{Power Table Analysis (2W per Core)}
+\subsection{Question 7: Power Table Analysis}
+
+\begin{frame}{Q7: Power Table Analysis (2W per Core)}
 \textbf{Question:} Given a 2W power budget per core, which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
 \vspace{3mm}
 \begin{columns}[t]
