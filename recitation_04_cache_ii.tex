@@ -104,9 +104,9 @@
 \end{center}
 \end{frame}
 
-\section{Cache Hierarchy Operation}
+\section{Question 1: Cache Hierarchy Events}
 
-\begin{frame}{Question 1: Cache Hierarchy Events}
+\begin{frame}{Q1: Cache Hierarchy Events}
 A computer system has a memory hierarchy with three cache levels (L1, L2, L3).
 
 When the CPU reads from address \texttt{m}, it triggers a sequence of events across the cache hierarchy.
@@ -127,7 +127,7 @@ When the CPU reads from address \texttt{m}, it triggers a sequence of events acr
 Events are shown in order: L1 → L2 → L3
 \end{frame}
 
-\begin{frame}{Question 1: Analysis}
+\begin{frame}{Q1: Analysis}
 \begin{table}
 \centering
 \small
@@ -433,7 +433,9 @@ What happens when we need to write to data not in cache?
 \end{center}
 \end{frame}
 
-\begin{frame}{Question 2: Cache Hierarchy Usefulness}
+\section{Question 2: Cache Hierarchy Usefulness}
+
+\begin{frame}{Q2: Cache Hierarchy Usefulness}
 \textbf{Given:} A system with L2 cache where the inclusion principle is maintained.
 
 \textbf{Question:} For each case below, is L2 useful?
@@ -511,7 +513,7 @@ What happens when we need to write to data not in cache?
 \end{columns}
 \end{frame}
 
-\begin{frame}{Question 2: Continued}
+\begin{frame}{Q2: Continued}
 \begin{enumerate}
 \setcounter{enumi}{1}
 \item Access time for both cache levels is identical. L2 is larger than L1.
@@ -554,13 +556,15 @@ All caches work according to:
 \begin{frame}{Inclusion Principle - Process Flow}
 \small
 Process from discovering need for line replacement in L3 until stabilization:
-
+\vspace{-0.3cm}
 \begin{enumerate}
+    \setlength{\itemsep}{0pt}
     \item L1 identifies read miss and requests data from L2
     \item L2 identifies read miss and requests data from L3
     \item L3 identifies read miss and selects line for replacement
     \item \textbf{Snoops:}
     \begin{itemize}
+        \setlength{\itemsep}{0pt}
         \item L3 snoops to L2 to check if copy exists
         \item If copy in L2, L2 snoops to L1
         \item If copy in L1 is modified (M), write it to L2
@@ -699,7 +703,9 @@ Process from discovering need for line replacement in L3 until stabilization:
 \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Question 3: Write Miss Policy Deduction}
+\section{Question 3: Write Miss Policy Deduction}
+
+\begin{frame}{Q3: Write Miss Policy Deduction}
 \textbf{Given:}
 \begin{itemize}
     \item 3-level cache hierarchy with inclusion principle
@@ -720,9 +726,9 @@ Process from discovering need for line replacement in L3 until stabilization:
 }
 \end{frame}
 
-\section{Performance Analysis}
+\section{Question 4: Performance Analysis}
 
-\begin{frame}{Question 4: Cache Configuration}
+\begin{frame}{Q4: Cache Configuration}
 Given a processor with two cache levels:
 \begin{itemize}
     \item Address size: 32 bits
@@ -735,7 +741,7 @@ Given a processor with two cache levels:
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Question 4: Program}
+\begin{frame}[fragile]{Q4: Program}
 Consider the following program:
 
 \begin{tcolorbox}[
@@ -788,7 +794,7 @@ for (int i = 0; i < 2; i++) {
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Question 4a: L1 Hit Rate}
+\begin{frame}{Q4a: L1 Hit Rate}
 \textbf{Analysis:}
 \begin{itemize}
     \item We traverse the array twice
@@ -806,7 +812,7 @@ For the second iteration:
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Question 4b: L2 Hit Rate}
+\begin{frame}{Q4b: L2 Hit Rate}
 \textbf{L2 Hit Rate} is defined as the percentage of memory access requests to L2 where a hit occurs (only considering requests where there was a miss in L1).
 
 \begin{itemize}
@@ -818,7 +824,7 @@ For the second iteration:
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Question 4c: Adding L3 Cache}
+\begin{frame}{Q4c: Adding L3 Cache}
 Adding an L3 cache of 8MB size. L3 access time is about half of memory access time.
 
 \textbf{Question:} How will adding L3 affect program performance (assuming it starts empty)?
@@ -836,9 +842,9 @@ Adding an L3 cache of 8MB size. L3 access time is about half of memory access ti
 }
 \end{frame}
 
-\section{Prefetching}
+\section{Question 5: Prefetching}
 
-\begin{frame}[fragile]{Question 5: Prefetching}
+\begin{frame}[fragile]{Q5: Prefetching}
 Program for calculating average grades:
 
 \vspace{0.3cm}
@@ -890,7 +896,7 @@ average = sum / NUM_STUDENTS;
 Design a hardware prefetch system to improve L1 hit rate.
 \end{frame}
 
-\begin{frame}{Question 5: Solution}
+\begin{frame}{Q5: Solution}
 \textbf{Prefetch System Design:}
 
 \begin{itemize}
@@ -911,7 +917,7 @@ Design a hardware prefetch system to improve L1 hit rate.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Question 5: Prefetch Timing Diagram}
+\begin{frame}{Q5: Prefetch Timing Diagram}
 \vspace{-0.2cm}
 \begin{itemize}
     \item \textbf{Key insight:} Prefetch requests (yellow) are issued 32 cycles before data is needed
