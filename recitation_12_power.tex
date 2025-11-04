@@ -424,9 +424,7 @@ $$P = \colorbox{green!25}{1} + \colorbox{green!40!cyan!30}{1500} \cdot \colorbox
 \end{frame}
 
 \begin{frame}{Q5: Performance Comparison}
-\textbf{Question:} Which processor for best single-thread performance at 4W?
-
-\textbf{Finally, we compare the performance using IPC (given per core in the question):}
+\textbf{Finally, we compare the performance:}
 
 \begin{block}{Performance Metric}
 $$\text{Performance} \propto \text{IPC} \times \text{Frequency}$$
@@ -448,33 +446,11 @@ $$\text{Performance} \propto \text{IPC} \times \text{Frequency}$$
 
 \subsection{Question 6: Multi-Thread Performance}
 
-\begin{frame}{Q6: Multi-Thread Performance (2W per Core)}
-\textbf{Question:} Two large cores or two small cores for best 2-way MT performance?
-
-\textbf{Power constraint:} 2W per core
-
-\textbf{Operating Points:}
-\begin{itemize}
-    \item Small cores: 3 GHz each
-    \item Large cores: 1.35 GHz each
-\end{itemize}
-
-\textbf{Performance (approx. $\propto$ N × F × IPC):}
-\begin{itemize}
-    \item 2 Small: $2 \times 3 \times 1 = 6$ G inst/sec
-    \item 2 Large: $2 \times 1.35 \times 2 = 5.4$ G inst/sec
-\end{itemize}
-
-\alert{Result: Two small cores provide better performance}
-\end{frame}
-
-\subsection{Question 7: Power Table Analysis}
-
-\begin{frame}{Q7: Power Table Analysis (2W per Core)}
-\textbf{Question:} Given a 2W power budget per core, which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
+\begin{frame}{Q6: Power Table Analysis (2W per Core)}
+\textbf{Question:} Given a 2W power budget per core (and the table below), which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
 \vspace{3mm}
 \begin{columns}[t]
-\column{0.6\textwidth}
+\column{0.65\textwidth}
 \scriptsize
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
@@ -488,54 +464,48 @@ $$\text{Performance} \propto \text{IPC} \times \text{Frequency}$$
 \hline
 0.6 & 0.7 & 1 & 0.38 & 0.18 & 1.38 & 0.68 \\
 0.65 & 1 & 1.25 & 0.63 & 0.26 & 1.63 & 0.76 \\
-0.7 & \tikzmark{lgf1}1.35\tikzmark{lgf2} & 1.5 & 0.99 & 0.37 & \tikzmark{lg1}1.99\tikzmark{lg2} & 0.87 \\
+0.7 & \only<2->{\cellcolor{cyan!40}}1.35 & 1.5 & 0.99 & 0.37 & \only<2->{\cellcolor{green!40}}1.99 & 0.87 \\
 0.75 & 1.75 & 1.75 & 1.48 & 0.49 & 2.48 & 0.99 \\
 0.8 & 2.25 & 2 & 2.16 & 0.64 & 3.16 & 1.14 \\
 0.85 & 2.5 & 2.25 & 2.71 & 0.81 & 3.71 & 1.31 \\
 0.9 & 3 & 2.5 & 3.65 & 1.01 & 4.65 & 1.51 \\
 0.95 & 3.5 & 2.75 & 4.74 & 1.24 & 5.74 & 1.74 \\
-1 & 4 & \tikzmark{smf1}3\tikzmark{smf2} & 6.00 & 1.50 & 7.00 & \tikzmark{sm1}2.00\tikzmark{sm2} \\
+1 & 4 & \only<2->{\cellcolor{yellow!50}}3 & 6.00 & 1.50 & 7.00 & \only<2->{\cellcolor{orange!50}}2.00 \\
 \hline
 \end{tabular}
 
-\pause
+\column{0.35\textwidth}
 
-\begin{tikzpicture}[remember picture, overlay]
-% Oval for large core frequency (wider)
-\draw[red, thick] ([xshift=2mm, yshift=1mm]pic cs:lgf1) ellipse (4mm and 2mm);
-% Oval for large core power (wider)
-\draw[red, thick] ([xshift=2mm, yshift=1mm]pic cs:lg1) ellipse (4mm and 2mm);
-% Arrow connecting them - from east of frequency to west of power
-\draw[red, thick, ->] ([xshift=6mm, yshift=1mm]pic cs:lgf1) -- ([xshift=-4mm,yshift=1mm]pic cs:lg1);
-
-% Oval for small core frequency (wider)
-\draw[red, thick] ([xshift=2mm,yshift=1mm]pic cs:smf1) ellipse (4mm and 2mm);
-% Oval for small core power (wider)
-\draw[red, thick] ([xshift=2mm,yshift=1mm]pic cs:sm1) ellipse (4mm and 2mm);
-% Arrow connecting them - from east of frequency to west of power
-\draw[red, thick, ->] ([xshift=6mm, yshift=1mm]pic cs:smf1) -- ([xshift=-4mm, yshift=1mm]pic cs:sm1);
-\end{tikzpicture}
-
-\column{0.4\textwidth}
-\pause
-
-\vspace{-2.3cm}
 \textbf{Answer:}
 
-\textbf{Small cores:}
-\begin{itemize}
-    \item Run at 3 GHz
-    \item Perf: $2 \times 3 \times 1 = 6$ G inst/sec
-\end{itemize}
+\only<1>{Finding frequencies that fit within the 2W power budget per core}
 
-\textbf{Large cores:}
-\begin{itemize}
-    \item Run at 1.35 GHz
-    \item Perf: $2 \times 1.35 \times 2 = 5.4$ G inst/sec
-\end{itemize}
-
-\alert{Two small cores are better}
+\only<2->{
+\textbf{Large cores:} 1.35 GHz \\
+\textbf{Small cores:} 3 GHz
+}
 \end{columns}
+\end{frame}
+
+\begin{frame}{Q6: Performance Calculation}
+\textbf{Question:} Given a 2W power budget per core, which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
+
+\vspace{5mm}
+
+\begin{block}{Performance Formula}
+$$\text{Performance} = N \times F \times \text{IPC}$$
+where $N$ = number of cores, $F$ = frequency, IPC = instructions per cycle
+\end{block}
+
+\vspace{5mm}
+
+\textbf{Two Small cores:} $\text{Performance} = 2 \times 3\text{ GHz} \times 1 = 6 \text{ G inst/sec}$
+
+\textbf{Two Large cores:} $\text{Performance} = 2 \times 1.35\text{ GHz} \times 2 = 5.4 \text{ G inst/sec}$
+
+\vspace{5mm}
+
+\alert{Result: Two small cores provide better performance (6 vs 5.4 G inst/sec)}
 \end{frame}
 
 \begin{frame}{Power Curve Characteristics}
