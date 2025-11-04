@@ -152,8 +152,10 @@ Increases utilization/throughput by reducing impact of dependencies
 \end{columns}
 \end{frame}
 
-\begin{frame}{IPC Equation Development}
+\begin{frame}{Q1a: IPC Equation Development}
 \textbf{Question:} Develop an equation for IPC as a function of running threads (N)
+
+\vspace{3mm}
 
 \begin{block}{CPI per Thread}
 $$CPI_{Thread} = CPI_i + \frac{Q}{M}$$
@@ -171,17 +173,40 @@ $$IPC = \frac{N}{CPI_i + \frac{Q}{M}}$$
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Performance Optimization}
-\textbf{Best Achievable Performance:}
+\begin{frame}{Q1b: Best Achievable Performance}
+\textbf{Question:} What is the best achievable performance?
+
+\vspace{3mm}
+
+\textbf{Maximum IPC when memory latencies are fully hidden:}
 \begin{itemize}
-    \item Maximum IPC when memory latencies are fully hidden
     \item Achieved when: No memory accesses OR all latencies masked by other threads
 \end{itemize}
 
-$$IPC_{max} = CPI_{ideal}^{-1}$$
+\begin{alertblock}{Maximum IPC}
+$$IPC_{Max} = IPC_{ideal}$$
+\end{alertblock}
+\end{frame}
 
-\textbf{Minimum Threads for Maximum Performance:}
-$$N_1 = 1 + \frac{Q}{M \cdot CPI_i}$$
+\begin{frame}{Q1c: Minimum Threads for Maximum Performance}
+\textbf{Question:} How many threads are needed to achieve maximum performance?
+
+\vspace{3mm}
+
+Starting from the IPC equation:
+\vspace{-8mm}
+$$IPC = \frac{N}{CPI_i + \frac{Q}{M}}$$
+
+For maximum performance, $IPC = IPC_{ideal} = \frac{1}{CPI_i}$:
+$$\frac{1}{CPI_i} = \frac{N1}{CPI_i + \frac{Q}{M}}$$
+
+Solving for $N1$:
+\vspace{-3mm}
+$$CPI_i + \frac{Q}{M} = N1 \cdot CPI_i$$
+
+\begin{alertblock}{Minimum Threads}
+$$N1 = 1 + \frac{Q}{M \cdot CPI_i}$$
+\end{alertblock}
 \end{frame}
 
 \subsection{Question 2: IPC vs Number of Threads}
@@ -211,9 +236,9 @@ $$N_1 = 1 + \frac{Q}{M \cdot CPI_i}$$
 
 \section{Cache Impact}
 
-\subsection{Question 3: L1 Cache Addition}
+\subsection{Question 3: Cache Analysis}
 
-\begin{frame}{Q3: L1 Cache Addition}
+\begin{frame}{Q3a: L1 Cache Addition}
 \textbf{Improvement Proposal:} Add L1 cache with 0 cycles access time
 
 \begin{block}{Modified IPC with Cache}
@@ -234,9 +259,7 @@ $$CPI\left(\frac{N_1}{2}\right) = \left(CPI_i + Q \cdot \frac{k}{M}\right) \cdot
 \alert{Result: $k = 0.5$ (50\% miss rate) $\Rightarrow$ 50\% hit rate required}
 \end{frame}
 
-\subsection{Question 4: Cache Design Impact}
-
-\begin{frame}{Q4: Cache Design Impact}
+\begin{frame}{Q3b: Cache Design Impact}
 \textbf{How will cache addition affect the CPU?}
 
 \begin{columns}
@@ -268,9 +291,9 @@ Cache control logic needed
 
 \section{Power/Performance Trade-offs}
 
-\subsection{Question 5: Single Thread Performance}
+\subsection{Question 4: Single Thread Performance}
 
-\begin{frame}{Q5: Power/Performance Analysis}
+\begin{frame}{Q4: Power/Performance Analysis}
 \textbf{Question:} Which processor provides best single-thread performance at 4W?
 
 \begin{columns}[t]
@@ -323,7 +346,7 @@ Leakage is approximately proportional to area
 \end{block}
 \end{frame}
 
-\begin{frame}{Q5: Leakage Power Calculation}
+\begin{frame}{Q4: Leakage Power Calculation}
 \textbf{Question:} Which processor provides best single-thread performance at 4W?
 
 \textbf{First, we compute the leakage power for the large core:}
@@ -359,7 +382,7 @@ $$= \frac{4\text{ mm}^2}{2\text{ mm}^2} \times 0.5\text{W} = 1\text{W}$$
 \end{columns}
 \end{frame}
 
-\begin{frame}{Q5: Frequency Calculation (4W Budget)}
+\begin{frame}{Q4: Frequency Calculation (4W Budget)}
 \textbf{Second, we compute the maximum frequency given the 4W power budget:}
 
 \begin{columns}[t]
@@ -423,7 +446,7 @@ $$P = \colorbox{green!25}{1} + \colorbox{green!40!cyan!30}{1500} \cdot \colorbox
 \end{columns}
 \end{frame}
 
-\begin{frame}{Q5: Performance Comparison}
+\begin{frame}{Q4: Performance Comparison}
 \textbf{Finally, we compare the performance:}
 
 \begin{block}{Performance Metric}
@@ -444,9 +467,9 @@ $$\text{Performance} \propto \text{IPC} \times \text{Frequency}$$
 \alert{Result: Large core provides better performance (5 vs 3 G inst/sec)}
 \end{frame}
 
-\subsection{Question 6: Multi-Thread Performance}
+\subsection{Question 5: Multi-Thread Performance}
 
-\begin{frame}{Q6: Power Table Analysis (2W per Core)}
+\begin{frame}{Q5: Power Table Analysis (2W per Core)}
 \textbf{Question:} Given a 2W power budget per core (and the table below), which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
 \vspace{3mm}
 \begin{columns}[t]
@@ -487,7 +510,7 @@ $$\text{Performance} \propto \text{IPC} \times \text{Frequency}$$
 \end{columns}
 \end{frame}
 
-\begin{frame}{Q6: Performance Calculation}
+\begin{frame}{Q5: Performance Calculation}
 \textbf{Question:} Given a 2W power budget per core, which configuration provides best 2-way Multi-Thread performance: two large cores or two small cores?
 
 \vspace{5mm}
