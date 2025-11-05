@@ -279,14 +279,14 @@
     |[cell]| \scriptsize RB4 \& |[cell]| \scriptsize \robFourOne  \& |[cell]| \scriptsize \robFourTwo \\
     };
     %
-    % Instruction Queue - positioned right of RAT (5 rows)
+    % IDQueue - positioned right of RAT (5 rows)
     \matrix[matrix of nodes,
             row sep=-\pgflinewidth,
             column sep=-\pgflinewidth,
             right=3cm of rat.north east,
             anchor=north west,
             nodes={cell, font=\scriptsize, text width=3cm, align=left, minimum height=3mm, text height=1ex, text depth=0.25ex},
-            label={above:\textbf{Instruction Q}}] (instq) {
+            label={above:\textbf{IDQ}}] (instq) {
         \instQOne \\
         \instQTwo \\
         \instQThree \\
@@ -978,38 +978,49 @@
         \end{itemize}
     \end{block}
 
-    \begin{alertblock}{Key Structures}
+    \begin{block}{Key Structures}
         \begin{itemize}
             \item \textbf{RAT:} Maps architectural registers to physical registers (ROB entries)
             \item \textbf{ROB:} Circular buffer maintaining program order (RB0-RB4)
+            \item \textbf{IDQ:} Instruction Decode Queue holding fetched instructions
             \item \textbf{RS:} Holds decoded instructions waiting for operands
             \item \textbf{MOB:} Manages memory operations in order
         \end{itemize}
-    \end{alertblock}
+    \end{block}
 \end{frame}
 
-\begin{frame}{Example Program}
-    \begin{exampleblock}{Program Listing}
-        {\ttfamily\small
-        \begin{tabular}{ll}
-        (1) & DIV R2, R4, R3 \\
-        (2) & LD R3, R4(50) \\
-        (3) & DIV R1, R2, R3 \\
-        (4) & ADD R2, R4, R3 \\
-        (5) & SUB R3, R2, R3 \\
-        \end{tabular}
-        }
-    \end{exampleblock}
+\begin{frame}{Example: Out-of-Order Execution}
+    \textbf{Question:} How many cycles will it take to execute the following program using out-of-order execution?
 
-    \vspace{0.3cm}
-    \begin{block}{Execution Latencies}
-        \begin{itemize}
-            \item \textbf{DIV:} 4 cycles
-            \item \textbf{LD:} 2 cycles
-            \item \textbf{ADD/SUB:} 1 cycle
-        \end{itemize}
-    \end{block}
+    \textit{Assume all instructions have already been decoded and are in the IDQ.}
 
+    \vspace{0.4cm}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \textbf{Program:}
+
+            {\ttfamily\small
+            \begin{tabular}{ll}
+            (1) & DIV R2, R4, R3 \\
+            (2) & LD R3, R4(50) \\
+            (3) & DIV R1, R2, R3 \\
+            (4) & ADD R2, R4, R3 \\
+            (5) & SUB R3, R2, R3 \\
+            \end{tabular}
+            }
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \textbf{Latencies:}
+
+            \begin{itemize}
+                \item \textbf{DIV:} 4 cycles
+                \item \textbf{LD:} 2 cycles
+                \item \textbf{ADD/SUB:} 1 cycle
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.4cm}
     \begin{alertblock}{Observation}
         Instructions (1) and (2) are independent and can execute in parallel. Instruction (3) depends on both (1) and (2).
     \end{alertblock}
