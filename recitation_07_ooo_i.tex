@@ -285,7 +285,7 @@
             column sep=-\pgflinewidth,
             right=3cm of rat.north east,
             anchor=north west,
-            nodes={cell, font=\scriptsize, text width=3cm, align=left, minimum height=4mm, text height=1ex, text depth=0.25ex},
+            nodes={cell, font=\scriptsize, text width=3cm, align=left, minimum height=3mm, text height=1ex, text depth=0.25ex},
             label={above:\textbf{Instruction Q}}] (instq) {
         \instQOne \\
         \instQTwo \\
@@ -299,7 +299,7 @@
             row sep=-\pgflinewidth,
             below=0.8cm of instq.south west,
             anchor=north west,
-            nodes={cell, font=\tiny, text width=2.5cm, align=left},
+            nodes={cell, font=\tiny\ttfamily, text width=2.5cm, align=left},
             label={above:\textbf{RS}}] (rs) {
         \rsOne \\
         \rsTwo \\
@@ -307,7 +307,7 @@
     };
     %
     % MOB (Memory Order Buffer) - positioned right of RS
-    \node[cell, right=0.5cm of rs.north east, anchor=north west, font=\tiny, text width=2cm, align=left] (mob) {\mobOne};
+    \node[cell, right=0.5cm of rs.north east, anchor=north west, font=\tiny\ttfamily, text width=2cm, align=left] (mob) {\mobOne};
     \node[above=0.1cm of mob, font=\small] {\textbf{MOB}};
     %
     % Execute block with internal rows (no borders)
@@ -1015,6 +1015,29 @@
     \end{alertblock}
 \end{frame}
 
+\begin{frame}{Notation for Cycle-by-Cycle Walkthrough}
+    \begin{block}{Execution Status Notation}
+        In the \textbf{Execute} section, we show operations currently being executed with their \textbf{remaining cycle count} in parentheses.
+
+        \vspace{0.3cm}
+        \textbf{Example:} RB0$\leftarrow$R4/R3 (3)
+        \begin{itemize}
+            \item This means ROB entry RB0 is executing the DIV operation R4/R3
+            \item There are \textbf{3 cycles remaining} until this operation completes
+            \item Next cycle, this will show (2), then (1), then complete
+        \end{itemize}
+    \end{block}
+
+    \vspace{0.2cm}
+    \begin{exampleblock}{Operation Latencies (Reminder)}
+        \begin{itemize}
+            \item DIV: 4 cycles → shows (4), (3), (2), (1)
+            \item LD: 2 cycles → shows (2), (1)
+            \item ADD/SUB: 1 cycle → shows (1)
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
 \begin{frame}{Cycle 1: Initial State}
     \centering
     \OOODiagram[
@@ -1036,8 +1059,8 @@
     \centering
     \OOODiagram[
         R1={}, R2={\newentrya{RB0}}, R3={}, R4={},
-        rob01={\newentrya{R2=R4/R3}}, rob02={\newentrya{INV}},
-        rs1={\newentrya{RB0=R4/R3}},
+        rob01={\newentrya{R2$\leftarrow$R4/R3}}, rob02={\newentrya{INV}},
+        rs1={\newentrya{RB0$\leftarrow$R4/R3}},
         instq1={\newentrya{\sout{DIV R2,R4,R3}}}, instq2={LD R3,R4(50)}, instq3={DIV R1,R2,R3}, instq4={ADD R2,R4,R3}, instq5={SUB R3,R2,R3}
     ]
 
@@ -1047,7 +1070,7 @@
             \item \textbf{Decode:} DIV R2,R4,R3
             \item \textbf{RAT:} R2 $\rightarrow$ RB0 (new mapping)
             \item \textbf{ROB:} Allocate RB0 for DIV instruction
-            \item \textbf{RS:} Add entry RB0=R4/R3 (operands ready)
+            \item \textbf{RS:} Add entry RB0$\leftarrow$R4/R3 (operands ready)
         \end{itemize}
     \end{block}
 \end{frame}
@@ -1056,9 +1079,9 @@
     \centering
     \OOODiagram[
         R1={}, R2={\oldentry{RB0}}, R3={\newentryb{RB1}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\newentryb{R3=LD R4(50)}}, rob12={\newentryb{INV}},
-        rs1={\oldentry{RB0=R4/R3}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\newentryb{R3$\leftarrow$LD R4(50)}}, rob12={\newentryb{INV}},
+        rs1={\oldentry{RB0$\leftarrow$R4/R3}},
         mob1={\newentryb{RB1=R4(50)}},
         instq1={\oldentry{\sout{DIV R2,R4,R3}}}, instq2={\newentryb{\sout{LD R3,R4(50)}}}, instq3={DIV R1,R2,R3}, instq4={ADD R2,R4,R3}, instq5={SUB R3,R2,R3}
     ]
@@ -1078,9 +1101,9 @@
     \centering
     \OOODiagram[
         R1={}, R2={\oldentry{RB0}}, R3={\oldentry{RB1}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        exec1={\newentrya{RB0$\leftarrow$R4/R3 (1)}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        exec1={\newentrya{RB0$\leftarrow$R4/R3 (4)}},
         exec2={\newentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={DIV R1,R2,R3}, instq2={ADD R2,R4,R3}, instq3={SUB R3,R2,R3}, instq4={}, instq5={}
     ]
@@ -1100,11 +1123,11 @@
     \centering
     \OOODiagram[
         R1={\newentrya{RB2}}, R2={\oldentry{RB0}}, R3={\oldentry{RB1}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        rob21={\newentrya{R1=RB0/RB1}}, rob22={\newentrya{INV}},
-        rs2={\newentrya{RB2=RB0/RB1}},
-        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (1)}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        rob21={\newentrya{R1$\leftarrow$RB0/RB1}}, rob22={\newentrya{INV}},
+        rs2={\newentrya{RB2$\leftarrow$RB0/RB1}},
+        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (4)}},
         exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={\oldentry{\sout{LD R3,R4(50)}}}, instq2={\newentrya{\sout{DIV R1,R2,R3}}}, instq3={ADD R2,R4,R3}, instq4={SUB R3,R2,R3}, instq5={}
     ]
@@ -1124,13 +1147,13 @@
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\newentryb{RB3}}, R3={\oldentry{RB1}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        rob21={\oldentry{R1=RB0/RB1}}, rob22={\oldentry{INV}},
-        rob31={\newentryb{R2=R4+RB1}}, rob32={\newentryb{INV}},
-        rs2={\oldentry{RB2=RB0/RB1}},
-        rs3={\newentryb{RB3=R4+RB1}},
-        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (1)}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\newentryb{R2$\leftarrow$R4+RB1}}, rob32={\newentryb{INV}},
+        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
+        rs3={\newentryb{RB3$\leftarrow$R4+RB1}},
+        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (4)}},
         exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={\oldentry{\sout{DIV R1,R2,R3}}}, instq2={\newentryb{\sout{ADD R2,R4,R3}}}, instq3={SUB R3,R2,R3}, instq4={}, instq5={}
     ]
@@ -1149,15 +1172,15 @@
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\newentrya{RB4}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        rob21={\oldentry{R1=RB0/RB1}}, rob22={\oldentry{INV}},
-        rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{INV}},
-        rob41={\newentrya{R3=RB3-RB1}}, rob42={\newentrya{INV}},
-        rs2={\oldentry{RB2=RB0/RB1}},
-        rs3={\oldentry{RB3=R4+RB1}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{INV}},
+        rob41={\newentrya{R3$\leftarrow$RB3-RB1}}, rob42={\newentrya{INV}},
+        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
+        rs3={\oldentry{RB3$\leftarrow$R4+RB1}},
         exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
-        exec2={\oldentry{RB1$\leftarrow$MEM(R4+50) (2)}},
+        exec2={\oldentry{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={\oldentry{\sout{ADD R2,R4,R3}}}, instq2={\newentrya{\sout{SUB R3,R2,R3}}}, instq3={}, instq4={}, instq5={}
     ]
 
@@ -1176,14 +1199,14 @@
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        rob21={\oldentry{R1=RB0/RB1}}, rob22={\oldentry{INV}},
-        rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{INV}},
-        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
-        rs2={\oldentry{RB2=RB0/RB1}},
-        rs3={\srcentrya{RB3=R4+RB1}},
-        exec1={\oldentry{RB0$\leftarrow$R4/R3 (3)}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{INV}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
+        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
+        rs3={\srcentrya{RB3$\leftarrow$R4+RB1}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
         exec2={\newentrya{RB3$\leftarrow$R4+RB1 (1)}},
         ret1={\newentrya{RB1=V}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
@@ -1204,13 +1227,13 @@
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{OK}},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{OK}},
-        rob21={\oldentry{R1=RB0/RB1}}, rob22={\oldentry{INV}},
-        rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{OK}},
-        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
-        rs2={\srcentrya{RB2=RB0/RB1}},
-        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 (1)}},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{OK}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{OK}},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
+        rs2={\srcentrya{RB2$\leftarrow$RB0/RB1}},
+        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 (4)}},
         ret1={\oldentry{RB1=V}},
         ret2={\newentryb{RB3=V}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
@@ -1231,11 +1254,11 @@
     \centering
     \OOODiagram[
         R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob11={\srcentrya{R3=LD R4(50)}}, rob12={\srcentrya{OK}},
-        rob21={\srcentryb{R1=RB0/RB1}}, rob22={\srcentryb{INV}},
-        rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{OK}},
-        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
-        rs2={\oldentry{RB2=RB0/RB1}},
+        rob11={\srcentrya{R3$\leftarrow$LD R4(50)}}, rob12={\srcentrya{OK}},
+        rob21={\srcentryb{R1$\leftarrow$RB0/RB1}}, rob22={\srcentryb{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
+        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
         exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
@@ -1254,11 +1277,11 @@
     \centering
     \OOODiagram[
         R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob21={\srcentrya{R1=RB0/RB1}}, rob22={\srcentrya{INV}},
-        rob31={\srcentryb{R2=R4+RB1}}, rob32={\srcentryb{OK}},
-        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
-        rs2={\oldentry{RB2=RB0/RB1}},
-        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (3)}},
+        rob21={\srcentrya{R1$\leftarrow$RB0/RB1}}, rob22={\srcentrya{INV}},
+        rob31={\srcentryb{R2$\leftarrow$R4+RB1}}, rob32={\srcentryb{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
+        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
 
@@ -1276,9 +1299,9 @@
     \centering
     \OOODiagram[
         R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob21={\srcentrya{R1=RB0/RB1}}, rob22={\srcentrya{OK}},
-        rob31={\srcentryb{R2=R4+RB1}}, rob32={\srcentryb{OK}},
-        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
+        rob21={\srcentrya{R1$\leftarrow$RB0/RB1}}, rob22={\srcentrya{OK}},
+        rob31={\srcentryb{R2$\leftarrow$R4+RB1}}, rob32={\srcentryb{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         exec2={\newentryb{RB4$\leftarrow$RB3-RB1 (1)}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
@@ -1298,7 +1321,7 @@
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{OK}},
         ret1={\newentrya{RB4=V}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
