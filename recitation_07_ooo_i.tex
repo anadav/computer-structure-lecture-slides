@@ -1051,24 +1051,7 @@
     \end{exampleblock}
 \end{frame}
 
-\begin{frame}{Cycle 1: Initial State}
-    \centering
-    \OOODiagram[
-        R1={}, R2={}, R3={}, R4={},
-        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={LD R3,R4(50)}, instq5={DIV R2,R4,R3}
-    ]
-
-    \vspace{0.3cm}
-    \begin{block}{State}
-        \begin{itemize}
-            \item All structures empty
-            \item Instruction queue loaded with program
-            \item Ready to fetch first instruction
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}{Cycle 2: Decode First Instruction}
+\begin{frame}{Cycle 1: Decode}
     \centering
     \OOODiagram[
         R1={}, R2={\newentrya{RB0}}, R3={}, R4={},
@@ -1088,7 +1071,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 2: Fetch Second Instruction}
+\begin{frame}{Cycle 2: Decode}
     \centering
     \OOODiagram[
         R1={}, R2={\oldentry{RB0}}, R3={\newentryb{RB1}}, R4={},
@@ -1102,7 +1085,7 @@
     \vspace{0.3cm}
     \begin{block}{Actions}
         \begin{itemize}
-            \item \textbf{Fetch:} LD R3,R4(50)
+            \item \textbf{Decode:} LD R3,R4(50)
             \item \textbf{RAT:} R3 $\rightarrow$ RB1
             \item \textbf{ROB:} Allocate RB1 for LD
             \item \textbf{MOB:} Add memory load entry RB1=R4(50)
@@ -1110,7 +1093,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 3: Execution Starts}
+\begin{frame}{Cycle 3: Execute}
     \centering
     \OOODiagram[
         R1={}, R2={\oldentry{RB0}}, R3={\oldentry{RB1}}, R4={},
@@ -1132,7 +1115,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 3: Decode Third Instruction}
+\begin{frame}{Cycle 3: Decode}
     \centering
     \OOODiagram[
         R1={\newentrya{RB2}}, R2={\oldentry{RB0}}, R3={\oldentry{RB1}}, R4={},
@@ -1156,7 +1139,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 3: Fetch Fourth Instruction}
+\begin{frame}{Cycle 4: Decode}
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\newentryb{RB3}}, R3={\oldentry{RB1}}, R4={},
@@ -1174,14 +1157,14 @@
     \vspace{0.3cm}
     \begin{block}{Actions}
         \begin{itemize}
-            \item \textbf{Fetch:} ADD R2,R4,R3
+            \item \textbf{Decode:} ADD R2,R4,R3
             \item \textbf{RAT:} R2 $\rightarrow$ RB3 (new mapping, old RB0 in ROB)
             \item \textbf{RS:} RB3=R4+P1 (waiting for RB1)
         \end{itemize}
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 4: Execution Continues}
+\begin{frame}{Cycle 4: Execute}
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\newentrya{RB4}}, R4={},
@@ -1208,7 +1191,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 5: LD Completes, Unblocks Dependents}
+\begin{frame}{Cycle 5: Decode}
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
@@ -1236,7 +1219,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 6: First DIV Completes}
+\begin{frame}{Cycle 6: Execute}
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
@@ -1263,7 +1246,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 7: Retire RB0}
+\begin{frame}{Cycle 7: Retire}
     \centering
     \OOODiagram[
         R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
@@ -1286,7 +1269,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 8: Retire RB1}
+\begin{frame}{Cycle 8: Retire}
     \centering
     \OOODiagram[
         R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
@@ -1308,7 +1291,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 9: Second DIV Completes}
+\begin{frame}{Cycle 9: Execute}
     \centering
     \OOODiagram[
         R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
@@ -1330,7 +1313,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 10: Retire RB2 and RB3}
+\begin{frame}{Cycle 10: Retire}
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
@@ -1349,7 +1332,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Cycle 11: Retire RB4 - Program Complete}
+\begin{frame}{Cycle 11: Retire}
     \centering
     \OOODiagram[
         R1={\srcentrya{}}, R2={\srcentryb{}}, R3={\oldentry{}}, R4={},
