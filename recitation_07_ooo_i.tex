@@ -268,7 +268,7 @@
             nodes in empty cells,
             nodes={cell, align=left},
             column 1/.append style={nodes={text width=0.5cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
-            column 2/.append style={nodes={text width=2cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
+            column 2/.append style={nodes={text width=3.2cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
             column 3/.append style={nodes={text width=0.6cm, minimum height=4mm, text height=1ex, text depth=0.25ex}},
             ampersand replacement=\&
         ] (rob) {
@@ -1080,8 +1080,8 @@
         R1={}, R2={\oldentry{RB0}}, R3={\oldentry{RB1}}, R4={},
         rob01={\oldentry{R2=R4/R3}}, rob02={\oldentry{INV}},
         rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        exec1={\newentrya{RB0 (1/4)}},
-        exec2={\newentryb{RB1 (1/2)}},
+        exec1={\newentrya{RB0$\leftarrow$R4/R3 (1)}},
+        exec2={\newentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={DIV R1,R2,R3}, instq2={ADD R2,R4,R3}, instq3={SUB R3,R2,R3}, instq4={}, instq5={}
     ]
 
@@ -1104,8 +1104,8 @@
         rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
         rob21={\newentrya{R1=RB0/RB1}}, rob22={\newentrya{INV}},
         rs2={\newentrya{RB2=RB0/RB1}},
-        exec1={\srcentrya{RB0 (1/4)}},
-        exec2={\srcentryb{RB1 (1/2)}},
+        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (1)}},
+        exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={\oldentry{\sout{LD R3,R4(50)}}}, instq2={\newentrya{\sout{DIV R1,R2,R3}}}, instq3={ADD R2,R4,R3}, instq4={SUB R3,R2,R3}, instq5={}
     ]
 
@@ -1130,8 +1130,8 @@
         rob31={\newentryb{R2=R4+RB1}}, rob32={\newentryb{INV}},
         rs2={\oldentry{RB2=RB0/RB1}},
         rs3={\newentryb{RB3=R4+RB1}},
-        exec1={\srcentrya{RB0 (1/4)}},
-        exec2={\srcentryb{RB1 (1/2)}},
+        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (1)}},
+        exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
         instq1={\oldentry{\sout{DIV R1,R2,R3}}}, instq2={\newentryb{\sout{ADD R2,R4,R3}}}, instq3={SUB R3,R2,R3}, instq4={}, instq5={}
     ]
 
@@ -1156,8 +1156,8 @@
         rob41={\newentrya{R3=RB3-RB1}}, rob42={\newentrya{INV}},
         rs2={\oldentry{RB2=RB0/RB1}},
         rs3={\oldentry{RB3=R4+RB1}},
-        exec1={\oldentry{RB0 (2/4)}},
-        exec2={\oldentry{RB1 (2/2)}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
+        exec2={\oldentry{RB1$\leftarrow$MEM(R4+50) (2)}},
         instq1={\oldentry{\sout{ADD R2,R4,R3}}}, instq2={\newentrya{\sout{SUB R3,R2,R3}}}, instq3={}, instq4={}, instq5={}
     ]
 
@@ -1182,9 +1182,9 @@
         rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{INV}},
         rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\oldentry{RB2=RB0/RB1}},
-        rs3={\srcentrya{RB3=R4+V1}},
-        exec1={\oldentry{RB0 (3/4)}},
-        exec2={\newentrya{RB3 (1/1)}},
+        rs3={\srcentrya{RB3=R4+RB1}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 (3)}},
+        exec2={\newentrya{RB3$\leftarrow$R4+RB1 (1)}},
         ret1={\newentrya{RB1=V}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
@@ -1193,7 +1193,7 @@
     \begin{block}{Actions}
         \begin{itemize}
             \item \textbf{Complete:} RB1 (LD) writes value to ROB
-            \item \textbf{Unblock:} RB3 can now execute (R4+V1 ready)
+            \item \textbf{Unblock:} RB3 can now execute (R4+RB1 ready)
             \item \textbf{Execute:} RB0 at 3/4, RB3 starts (1/1)
             \item \textbf{Retire:} RB0 not done yet, so RB1 waits
         \end{itemize}
@@ -1209,8 +1209,8 @@
         rob21={\oldentry{R1=RB0/RB1}}, rob22={\oldentry{INV}},
         rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{OK}},
         rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
-        rs2={\srcentrya{RB2=V0/V1}},
-        exec1={\newentrya{RB2 (1/4)}},
+        rs2={\srcentrya{RB2=RB0/RB1}},
+        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 (1)}},
         ret1={\oldentry{RB1=V}},
         ret2={\newentryb{RB3=V}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
@@ -1220,7 +1220,7 @@
     \begin{block}{Actions}
         \begin{itemize}
             \item \textbf{Complete:} RB0 (DIV) and RB3 (ADD) write values
-            \item \textbf{Unblock:} RB2 can now execute (V0/V1 ready)
+            \item \textbf{Unblock:} RB2 can now execute (RB0/RB1 ready)
             \item \textbf{Execute:} RB2 starts (1/4)
             \item \textbf{Retire:} Still waiting to retire RB0
         \end{itemize}
@@ -1230,15 +1230,13 @@
 \begin{frame}{Cycle 7: Retire RB0}
     \centering
     \OOODiagram[
-        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob11={\oldentry{R3=LD R4(50)}}, rob12={\oldentry{INV}},
-        rob21={\oldentry{DIV}}, rob22={\oldentry{V0,V1}},
-        rob31={\oldentry{ADD}}, rob32={\oldentry{R4,V1}},
-        rob41={\oldentry{SUB}}, rob42={\oldentry{V3,V1}},
-        rs2={\oldentry{RB2=V0/V1}},
-        exec1={\oldentry{RB2 (2/4)}},
-        ret1={\oldentry{RB1=V}},
-        ret2={\oldentry{RB3=V}},
+        R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob11={\srcentrya{R3=LD R4(50)}}, rob12={\srcentrya{OK}},
+        rob21={\srcentryb{R1=RB0/RB1}}, rob22={\srcentryb{INV}},
+        rob31={\oldentry{R2=R4+RB1}}, rob32={\oldentry{OK}},
+        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
+        rs2={\oldentry{RB2=RB0/RB1}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
 
@@ -1255,13 +1253,12 @@
 \begin{frame}{Cycle 8: Retire RB1}
     \centering
     \OOODiagram[
-        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob21={\oldentry{DIV}}, rob22={\oldentry{V0,V1}},
-        rob31={\oldentry{ADD}}, rob32={\oldentry{R4,V1}},
-        rob41={\oldentry{SUB}}, rob42={\oldentry{V3,V1}},
-        rs2={\oldentry{RB2=V0/V1}},
-        exec1={\oldentry{RB2 (3/4)}},
-        ret2={\oldentry{RB3=V}},
+        R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob21={\srcentrya{R1=RB0/RB1}}, rob22={\srcentrya{INV}},
+        rob31={\srcentryb{R2=R4+RB1}}, rob32={\srcentryb{OK}},
+        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
+        rs2={\oldentry{RB2=RB0/RB1}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (3)}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
 
@@ -1278,12 +1275,11 @@
 \begin{frame}{Cycle 9: Second DIV Completes}
     \centering
     \OOODiagram[
-        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob21={\oldentry{DIV}}, rob22={\oldentry{V0,V1}},
-        rob31={\oldentry{ADD}}, rob32={\oldentry{R4,V1}},
-        rob41={\oldentry{SUB}}, rob42={\oldentry{V3,V1}},
-        exec2={\newentryb{RB4 (1/1)}},
-        ret2={\oldentry{RB3=V}},
+        R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob21={\srcentrya{R1=RB0/RB1}}, rob22={\srcentrya{OK}},
+        rob31={\srcentryb{R2=R4+RB1}}, rob32={\srcentryb{OK}},
+        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{INV}},
+        exec2={\newentryb{RB4$\leftarrow$RB3-RB1 (1)}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
 
@@ -1302,7 +1298,7 @@
     \centering
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob41={\oldentry{SUB}}, rob42={\oldentry{V3,V1}},
+        rob41={\oldentry{R3=RB3-RB1}}, rob42={\oldentry{OK}},
         ret1={\newentrya{RB4=V}},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
@@ -1320,7 +1316,7 @@
 \begin{frame}{Cycle 11: Retire RB4 - Program Complete}
     \centering
     \OOODiagram[
-        R1={}, R2={}, R3={}, R4={},
+        R1={\srcentrya{}}, R2={\srcentryb{}}, R3={\oldentry{}}, R4={},
         instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
     ]
 
