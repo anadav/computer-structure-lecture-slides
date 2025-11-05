@@ -1030,23 +1030,23 @@
 
 \begin{frame}{Notation for Cycle-by-Cycle Walkthrough}
     \begin{block}{Execution Status Notation}
-        In the \textbf{Execute} section, we show operations currently being executed with their \textbf{remaining cycle count} in parentheses.
+        In the \textbf{Execute} section, we show operations currently being executed with their \textbf{remaining cycle count} in brackets.
 
         \vspace{0.3cm}
-        \textbf{Example:} RB0$\leftarrow$R4/R3 (3)
+        \textbf{Example:} RB0$\leftarrow$R4/R3 [3]
         \begin{itemize}
             \item This means ROB entry RB0 is executing the DIV operation R4/R3
             \item There are \textbf{3 cycles remaining} until this operation completes
-            \item Next cycle, this will show (2), then (1), then complete
+            \item Next cycle, this will show [2], then [1], then complete
         \end{itemize}
     \end{block}
 
     \vspace{0.2cm}
     \begin{exampleblock}{Operation Latencies (Reminder)}
         \begin{itemize}
-            \item DIV: 4 cycles → shows (4), (3), (2), (1)
-            \item LD: 2 cycles → shows (2), (1)
-            \item ADD/SUB: 1 cycle → shows (1)
+            \item DIV: 4 cycles → shows [4], [3], [2], [1]
+            \item LD: 2 cycles → shows [2], [1]
+            \item ADD/SUB: 1 cycle → shows [1]
         \end{itemize}
     \end{exampleblock}
 \end{frame}
@@ -1061,36 +1061,53 @@
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Decode:} DIV R2,R4,R3
-            \item \textbf{RAT:} R2 $\rightarrow$ RB0 (new mapping)
-            \item \textbf{ROB:} Allocate RB0 for DIV instruction
-            \item \textbf{RS:} Add entry RB0$\leftarrow$R4/R3 (operands ready)
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                First instruction (DIV R2,R4,R3) is decoded. RAT maps R2→RB0, ROB allocates RB0, and RS receives the operation with operands ready.
+            \end{block}
+        };
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Cycle 2: Execute}
+    \centering
+    \OOODiagram[
+        R1={}, R2={\oldentry{RB0}}, R3={}, R4={},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        exec1={\newentrya{RB0$\leftarrow$R4/R3 [4]}},
+        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={LD R3,R4(50)}, instq5={~}
+    ]
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB0 (DIV) dispatched from RS to execution unit. DIV takes 4 cycles, shown as [4].
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 2: Decode}
     \centering
     \OOODiagram[
-        R1={}, R2={\oldentry{RB0}}, R3={\newentryb{RB1}}, R4={},
+        R1={}, R2={\oldentry{RB0}}, R3={\newentrya{RB1}}, R4={},
         rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\newentryb{R3$\leftarrow$LD R4(50)}}, rob12={\newentryb{INV}},
-        rs1={\oldentry{RB0$\leftarrow$R4/R3}},
-        mob1={\newentryb{RB1=R4(50)}},
-        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={\newentryb{\sout{LD R3,R4(50)}}}, instq5={\oldentry{\sout{DIV R2,R4,R3}}}
+        rob11={\newentrya{R3$\leftarrow$LD R4(50)}}, rob12={\newentrya{INV}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 [4]}},
+        mob1={\newentrya{RB1$\leftarrow$R4(50) [W]}},
+        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={\newentrya{\sout{LD R3,R4(50)}}}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Decode:} LD R3,R4(50)
-            \item \textbf{RAT:} R3 $\rightarrow$ RB1
-            \item \textbf{ROB:} Allocate RB1 for LD
-            \item \textbf{MOB:} Add memory load entry RB1=R4(50)
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                LD decoded: RAT maps R3→RB1, ROB allocates RB1. MOB entry created with [W] - waiting for address R4+50 to be computed.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 3: Execute}
@@ -1099,20 +1116,18 @@
         R1={}, R2={\oldentry{RB0}}, R3={\oldentry{RB1}}, R4={},
         rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
         rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
-        exec1={\newentrya{RB0$\leftarrow$R4/R3 (4)}},
-        exec2={\newentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
+        exec1={\newentrya{RB0$\leftarrow$R4/R3 [4]}},
         instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={ADD R2,R4,R3}, instq5={DIV R1,R2,R3}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Execute:} RB0 (DIV) starts - cycle 1 of 4
-            \item \textbf{Execute:} RB1 (LD) starts - cycle 1 of 2
-            \item RS and MOB entries dispatched to execution units
-            \item Both instructions execute in parallel!
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB0 starts executing (no change from previous). Address R4+50 computed instantly (ADD takes 0 cycles). LD not yet dispatched from MOB.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 3: Decode}
@@ -1123,20 +1138,46 @@
         rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
         rob21={\newentrya{R1$\leftarrow$RB0/RB1}}, rob22={\newentrya{INV}},
         rs2={\newentrya{RB2$\leftarrow$RB0/RB1}},
-        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (4)}},
-        exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 [3]}},
+        exec2={\newentrya{RB1$\leftarrow$MEM(R4+50) [2]}},
+        mob1={\newentrya{RB1$\leftarrow$R4(50) [2]}},
         instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={ADD R2,R4,R3}, instq5={\newentrya{\sout{DIV R1,R2,R3}}}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Decode:} DIV R1,R2,R3
-            \item \textbf{RAT:} R1 $\rightarrow$ RB2
-            \item \textbf{RS:} RB2=P0/RB1 (operands NOT ready - waiting!)
-            \item RB2 cannot execute until RB0 and RB1 complete
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                DIV R1 decoded - depends on RB0 and RB1, goes to RS but can't execute yet. LD now dispatched from MOB with [2] cycles. RB0 continues at [3].
+            \end{block}
+        };
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Cycle 4: Execute}
+    \centering
+    \OOODiagram[
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB1}}, R4={},
+        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{INV}},
+        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
+        rs3={\oldentry{RB3$\leftarrow$R4+RB1}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 [3]}},
+        exec2={\oldentry{RB1$\leftarrow$MEM(R4+50) [1]}},
+        mob1={\oldentry{RB1$\leftarrow$R4(50) [1]}},
+        instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={ADD R2,R4,R3}, instq5={~}
+    ]
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB0 (DIV) at [3]. RB1 (LD) completes - last cycle [1]. ROB will be marked OK after this cycle.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 4: Decode}
@@ -1144,51 +1185,23 @@
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\newentryb{RB3}}, R3={\oldentry{RB1}}, R4={},
         rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
+        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{OK}},
         rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
         rob31={\newentryb{R2$\leftarrow$R4+RB1}}, rob32={\newentryb{INV}},
         rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
         rs3={\newentryb{RB3$\leftarrow$R4+RB1}},
-        exec1={\srcentrya{RB0$\leftarrow$R4/R3 (4)}},
-        exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
-        instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={\newentryb{\sout{ADD R2,R4,R3}}}, instq5={\oldentry{\sout{DIV R1,R2,R3}}}
+        exec1={\srcentrya{RB0$\leftarrow$R4/R3 [3]}},
+        instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={\newentryb{\sout{ADD R2,R4,R3}}}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Decode:} ADD R2,R4,R3
-            \item \textbf{RAT:} R2 $\rightarrow$ RB3 (new mapping, old RB0 in ROB)
-            \item \textbf{RS:} RB3=R4+P1 (waiting for RB1)
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}{Cycle 4: Execute}
-    \centering
-    \OOODiagram[
-        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\newentrya{RB4}}, R4={},
-        rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{INV}},
-        rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
-        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
-        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{INV}},
-        rob41={\newentrya{R3$\leftarrow$RB3-RB1}}, rob42={\newentrya{INV}},
-        rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
-        rs3={\oldentry{RB3$\leftarrow$R4+RB1}},
-        exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
-        exec2={\oldentry{RB1$\leftarrow$MEM(R4+50) (1)}},
-        instq1={~}, instq2={~}, instq3={\newentrya{\sout{SUB R3,R2,R3}}}, instq4={\oldentry{\sout{ADD R2,R4,R3}}}, instq5={\oldentry{\sout{DIV R1,R2,R3}}}
-    ]
-
-    \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Decode:} SUB R3,R2,R3
-            \item \textbf{RAT:} R3 $\rightarrow$ RB4
-            \item \textbf{Execute:} RB0 at cycle 2/4, RB1 at cycle 2/2
-            \item RB1 (LD) completes this cycle!
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                ADD decoded: RAT maps R2→RB3 (old RB0 still in ROB). RS entry waits for RB1. RB1 completes, ROB marked OK. RB0 at [3].
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 5: Decode}
@@ -1202,21 +1215,20 @@
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
         rs3={\srcentrya{RB3$\leftarrow$R4+RB1}},
-        exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
-        exec2={\newentrya{RB3$\leftarrow$R4+RB1 (1)}},
+        exec1={\oldentry{RB0$\leftarrow$R4/R3 [2]}},
+        exec2={\newentrya{RB3$\leftarrow$R4+RB1 [1]}},
         ret1={\newentrya{R3$\leftarrow$RB1}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Complete:} RB1 (LD) writes value to ROB
-            \item \textbf{Unblock:} RB3 can now execute (R4+RB1 ready)
-            \item \textbf{Execute:} RB0 at 3/4, RB3 starts (1/1)
-            \item \textbf{Retire:} RB0 not done yet, so RB1 waits
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                SUB decoded (RB4). RB1 value written to ROB. RB3 now ready, dispatched to execute [1]. RB0 at [2]. RB1 ready to retire but waits for RB0.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 6: Execute}
@@ -1229,21 +1241,20 @@
         rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\srcentrya{RB2$\leftarrow$RB0/RB1}},
-        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 (4)}},
+        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 [4]}},
         ret1={\oldentry{R3$\leftarrow$RB1}},
         ret2={\newentryb{R2$\leftarrow$RB3}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Complete:} RB0 (DIV) and RB3 (ADD) write values
-            \item \textbf{Unblock:} RB2 can now execute (RB0/RB1 ready)
-            \item \textbf{Execute:} RB2 starts (1/4)
-            \item \textbf{Retire:} Still waiting to retire RB0
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB0 (DIV) and RB3 (ADD) complete, values written to ROB. RB2 now unblocked, starts executing [4]. RB0 still head of ROB, can't retire yet.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 7: Retire}
@@ -1255,18 +1266,18 @@
         rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
-        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [2]}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Retire:} RB0 commits to R2, ROB entry freed
-            \item \textbf{Execute:} RB2 continues (2/4)
-            \item RB1 and RB3 ready to retire next
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB0 retires, commits R2. ROB entry freed. RB2 continues at [3]. RB1 and RB3 ready to retire next.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 8: Retire}
@@ -1277,18 +1288,18 @@
         rob31={\srcentryb{R2$\leftarrow$R4+RB1}}, rob32={\srcentryb{OK}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
-        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [2]}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Retire:} RB1 commits to R3, ROB entry freed
-            \item \textbf{Execute:} RB2 continues (3/4)
-            \item RB3 ready to retire next
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB1 retires, commits R3. ROB entry freed. RB2 continues at [2]. RB3 ready to retire next.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 9: Execute}
@@ -1298,19 +1309,18 @@
         rob21={\srcentrya{R1$\leftarrow$RB0/RB1}}, rob22={\srcentrya{OK}},
         rob31={\srcentryb{R2$\leftarrow$R4+RB1}}, rob32={\srcentryb{OK}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
-        exec2={\newentryb{RB4$\leftarrow$RB3-RB1 (1)}},
+        exec2={\newentryb{RB4$\leftarrow$RB3-RB1 [1]}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Complete:} RB2 (DIV) completes, writes to ROB
-            \item \textbf{Unblock:} RB4 (SUB) can now execute
-            \item \textbf{Execute:} RB4 executes (1/1)
-            \item RB2 cannot retire yet (must wait for RB3)
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB2 (DIV) completes, writes to ROB. RB4 (SUB) now unblocked, starts executing [1]. RB2 can't retire yet - waits for RB3.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 10: Retire}
@@ -1323,13 +1333,13 @@
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Actions}
-        \begin{itemize}
-            \item \textbf{Retire:} RB2 commits to R1 (freed)
-            \item \textbf{Retire:} RB3 commits to R2 (freed)
-            \item RB4 (SUB) completed and ready to retire
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB2 and RB3 retire together, committing R1 and R2. ROB entries freed. RB4 (SUB) completed, ready to retire.
+            \end{block}
+        };
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Cycle 11: Retire}
@@ -1340,14 +1350,13 @@
     ]
 
     \vspace{0.3cm}
-    \begin{block}{Final State}
-        \begin{itemize}
-            \item \textbf{Retire:} RB4 commits to R3 (freed)
-            \item All instructions completed and retired
-            \item All ROB entries freed
-            \item Program execution complete!
-        \end{itemize}
-    \end{block}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB4 retires, commits R3. All instructions complete. ROB empty. RAT cleared. Program done in 11 cycles!
+            \end{block}
+        };
+    \end{tikzpicture}
 
     \begin{block}{Performance}
         Total cycles: 11 (vs. sequential execution would take much longer)
