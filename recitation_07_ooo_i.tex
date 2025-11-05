@@ -187,15 +187,15 @@
         rob31 = {}, rob32 = {},
         rob41 = {}, rob42 = {},
         % RS cells
-        rs1 = {}, rs2 = {}, rs3 = {},
+        rs1 = {~}, rs2 = {~}, rs3 = {~},
         % MOB cell
-        mob1 = {},
+        mob1 = {~},
         % Execute cells
         exec1 = {}, exec2 = {},
         % Retire cells
         ret1 = {}, ret2 = {},
         % Instruction queue (5 rows)
-        instq1 = {}, instq2 = {}, instq3 = {}, instq4 = {}, instq5 = {}
+        instq1 = {~}, instq2 = {~}, instq3 = {~}, instq4 = {~}, instq5 = {~}
     },
     % RAT mappings
     R1/.estore in = \prfOne,
@@ -299,7 +299,7 @@
             row sep=-\pgflinewidth,
             below=0.8cm of instq.south west,
             anchor=north west,
-            nodes={cell, font=\tiny\ttfamily, text width=2.5cm, align=left},
+            nodes={cell, font=\tiny\ttfamily, text width=2.5cm, align=left, minimum height=3mm},
             label={above:\textbf{RS}}] (rs) {
         \rsOne \\
         \rsTwo \\
@@ -1053,7 +1053,7 @@
     \centering
     \OOODiagram[
         R1={}, R2={}, R3={}, R4={},
-        instq1={DIV R2,R4,R3}, instq2={LD R3,R4(50)}, instq3={DIV R1,R2,R3}, instq4={ADD R2,R4,R3}, instq5={SUB R3,R2,R3}
+        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={LD R3,R4(50)}, instq5={DIV R2,R4,R3}
     ]
 
     \vspace{0.3cm}
@@ -1072,7 +1072,7 @@
         R1={}, R2={\newentrya{RB0}}, R3={}, R4={},
         rob01={\newentrya{R2$\leftarrow$R4/R3}}, rob02={\newentrya{INV}},
         rs1={\newentrya{RB0$\leftarrow$R4/R3}},
-        instq1={\newentrya{\sout{DIV R2,R4,R3}}}, instq2={LD R3,R4(50)}, instq3={DIV R1,R2,R3}, instq4={ADD R2,R4,R3}, instq5={SUB R3,R2,R3}
+        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={LD R3,R4(50)}, instq5={\newentrya{\sout{DIV R2,R4,R3}}}
     ]
 
     \vspace{0.3cm}
@@ -1094,7 +1094,7 @@
         rob11={\newentryb{R3$\leftarrow$LD R4(50)}}, rob12={\newentryb{INV}},
         rs1={\oldentry{RB0$\leftarrow$R4/R3}},
         mob1={\newentryb{RB1=R4(50)}},
-        instq1={\oldentry{\sout{DIV R2,R4,R3}}}, instq2={\newentryb{\sout{LD R3,R4(50)}}}, instq3={DIV R1,R2,R3}, instq4={ADD R2,R4,R3}, instq5={SUB R3,R2,R3}
+        instq1={SUB R3,R2,R3}, instq2={ADD R2,R4,R3}, instq3={DIV R1,R2,R3}, instq4={\newentryb{\sout{LD R3,R4(50)}}}, instq5={\oldentry{\sout{DIV R2,R4,R3}}}
     ]
 
     \vspace{0.3cm}
@@ -1116,7 +1116,7 @@
         rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{INV}},
         exec1={\newentrya{RB0$\leftarrow$R4/R3 (4)}},
         exec2={\newentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
-        instq1={DIV R1,R2,R3}, instq2={ADD R2,R4,R3}, instq3={SUB R3,R2,R3}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={ADD R2,R4,R3}, instq5={DIV R1,R2,R3}
     ]
 
     \vspace{0.3cm}
@@ -1140,7 +1140,7 @@
         rs2={\newentrya{RB2$\leftarrow$RB0/RB1}},
         exec1={\srcentrya{RB0$\leftarrow$R4/R3 (4)}},
         exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
-        instq1={\oldentry{\sout{LD R3,R4(50)}}}, instq2={\newentrya{\sout{DIV R1,R2,R3}}}, instq3={ADD R2,R4,R3}, instq4={SUB R3,R2,R3}, instq5={}
+        instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={ADD R2,R4,R3}, instq5={\newentrya{\sout{DIV R1,R2,R3}}}
     ]
 
     \vspace{0.3cm}
@@ -1166,7 +1166,7 @@
         rs3={\newentryb{RB3$\leftarrow$R4+RB1}},
         exec1={\srcentrya{RB0$\leftarrow$R4/R3 (4)}},
         exec2={\srcentryb{RB1$\leftarrow$MEM(R4+50) (1)}},
-        instq1={\oldentry{\sout{DIV R1,R2,R3}}}, instq2={\newentryb{\sout{ADD R2,R4,R3}}}, instq3={SUB R3,R2,R3}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={SUB R3,R2,R3}, instq4={\newentryb{\sout{ADD R2,R4,R3}}}, instq5={\oldentry{\sout{DIV R1,R2,R3}}}
     ]
 
     \vspace{0.3cm}
@@ -1192,7 +1192,7 @@
         rs3={\oldentry{RB3$\leftarrow$R4+RB1}},
         exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
         exec2={\oldentry{RB1$\leftarrow$MEM(R4+50) (1)}},
-        instq1={\oldentry{\sout{ADD R2,R4,R3}}}, instq2={\newentrya{\sout{SUB R3,R2,R3}}}, instq3={}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={\newentrya{\sout{SUB R3,R2,R3}}}, instq4={\oldentry{\sout{ADD R2,R4,R3}}}, instq5={\oldentry{\sout{DIV R1,R2,R3}}}
     ]
 
     \vspace{0.3cm}
@@ -1219,8 +1219,8 @@
         rs3={\srcentrya{RB3$\leftarrow$R4+RB1}},
         exec1={\oldentry{RB0$\leftarrow$R4/R3 (2)}},
         exec2={\newentrya{RB3$\leftarrow$R4+RB1 (1)}},
-        ret1={\newentrya{RB1=V}},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        ret1={\newentrya{R3$\leftarrow$RB1}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1245,9 +1245,9 @@
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\srcentrya{RB2$\leftarrow$RB0/RB1}},
         exec1={\newentrya{RB2$\leftarrow$RB0/RB1 (4)}},
-        ret1={\oldentry{RB1=V}},
-        ret2={\newentryb{RB3=V}},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        ret1={\oldentry{R3$\leftarrow$RB1}},
+        ret2={\newentryb{R2$\leftarrow$RB3}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1271,7 +1271,7 @@
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
         exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1293,7 +1293,7 @@
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         rs2={\oldentry{RB2$\leftarrow$RB0/RB1}},
         exec1={\oldentry{RB2$\leftarrow$RB0/RB1 (2)}},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1314,7 +1314,7 @@
         rob31={\srcentryb{R2$\leftarrow$R4+RB1}}, rob32={\srcentryb{OK}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
         exec2={\newentryb{RB4$\leftarrow$RB3-RB1 (1)}},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1333,8 +1333,8 @@
     \OOODiagram[
         R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{OK}},
-        ret1={\newentrya{RB4=V}},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        ret1={\newentrya{R3$\leftarrow$RB4}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1351,7 +1351,7 @@
     \centering
     \OOODiagram[
         R1={\srcentrya{}}, R2={\srcentryb{}}, R3={\oldentry{}}, R4={},
-        instq1={}, instq2={}, instq3={}, instq4={}, instq5={}
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
     \vspace{0.3cm}
@@ -1364,9 +1364,9 @@
         \end{itemize}
     \end{block}
 
-    \begin{alertblock}{Performance}
+    \begin{block}{Performance}
         Total cycles: 11 (vs. sequential execution would take much longer)
-    \end{alertblock}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Summary: OOO Execution Example}
