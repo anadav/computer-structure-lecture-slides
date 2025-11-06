@@ -1296,13 +1296,13 @@
         rob01={\oldentry{R2$\leftarrow$R4/R3}}, rob02={\oldentry{OK}},
         rob11={\oldentry{R3$\leftarrow$LD R4(50)}}, rob12={\oldentry{OK}},
         rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
-        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{INV}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
-        rs1={\oldentry{RB4$\leftarrow$\textcolor{red}{RB3}-\textcolor{red}{RB1}}},
-        rs2={\srcentrya{\sout{RB2$\leftarrow$\textcolor{red}{RB0}/\textcolor{red}{RB1}}}},
+        rs1={\oldentry{RB4$\leftarrow$\textcolor{red}{RB3}-RB1 [W]}},
+        rs2={\srcentrya{\sout{RB2$\leftarrow$RB0/RB1}}},
+        rs3={\srcentryb{\sout{RB3$\leftarrow$R4+RB1}}},
         exec1={\newentrya{RB2$\leftarrow$RB0/RB1 [4]}},
-        ret1={\oldentry{R3$\leftarrow$RB1}},
-        ret2={\newentryb{R2$\leftarrow$RB3}},
+        exec2={\newentryb{RB3$\leftarrow$R4+RB1 [1]}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
@@ -1310,7 +1310,7 @@
     \begin{tikzpicture}[remember picture, overlay]
         \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
             \begin{block}{What's Happening}
-                RB0 (DIV) and RB3 (ADD) complete, values written to ROB. RB2 now unblocked, starts executing [4]. RB0 still head of ROB, can't retire yet.
+                RB2 (DIV) and RB3 (ADD) dispatch from RS and start executing [4] and [1]. RB4 still waiting [W] on RB3. No retirement yet.
             \end{block}
         };
     \end{tikzpicture}
@@ -1319,14 +1319,17 @@
 \begin{frame}{Cycle 7: Retire}
     \centering
     \OOODiagram[
-        R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
-        rob11={\srcentrya{R3$\leftarrow$LD R4(50)}}, rob12={\srcentrya{OK}},
-        rob21={\srcentryb{R1$\leftarrow$RB0/RB1}}, rob22={\srcentryb{INV}},
-        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob01={\srcentrya{\sout{R2$\leftarrow$R4/R3}}}, rob02={\srcentrya{\sout{OK}}},
+        rob11={\srcentryb{\sout{R3$\leftarrow$LD R4(50)}}}, rob12={\srcentryb{\sout{OK}}},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{INV}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
-        rs1={\oldentry{RB4$\leftarrow$\textcolor{red}{RB3}-\textcolor{red}{RB1}}},
-        rs2={\oldentry{RB2$\leftarrow$\textcolor{red}{RB0}/\textcolor{red}{RB1}}},
-        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [2]}},
+        rs1={\oldentry{RB4$\leftarrow$\textcolor{red}{RB3}-RB1 [W]}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [4]}},
+        exec2={\oldentry{RB3$\leftarrow$R4+RB1 [1]}},
+        ret1={\newentrya{R2$\leftarrow$RB0}},
+        ret2={\newentryb{R3$\leftarrow$RB1}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
@@ -1334,7 +1337,53 @@
     \begin{tikzpicture}[remember picture, overlay]
         \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
             \begin{block}{What's Happening}
-                RB0 retires, commits R2. ROB entry freed. RB2 continues at [3]. RB1 and RB3 ready to retire next.
+                RB0 and RB1 retire, committing R2 and R3. ROB entries freed. RB2 continues [4], RB3 continues [1].
+            \end{block}
+        };
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Cycle 7: Execution Completes}
+    \centering
+    \OOODiagram[
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\newentrya{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
+        rs1={\oldentry{RB4$\leftarrow$\newentrya{RB3}-RB1}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [4]}},
+        exec2={\srcentrya{\sout{RB3$\leftarrow$R4+RB1}}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
+    ]
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB3 (ADD) completes execution. Result forwarded to RB4 in RS - RB3 dependency resolved, no longer waiting [W].
+            \end{block}
+        };
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Cycle 7: Execute}
+    \centering
+    \OOODiagram[
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
+        rs1={\srcentryb{\sout{RB4$\leftarrow$RB3-RB1}}},
+        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 [3]}},
+        exec2={\newentryb{RB4$\leftarrow$RB3-RB1 [1]}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
+    ]
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB2 (DIV) continues [3]. RB4 (SUB) dispatches from RS and starts executing [1]. Nothing to decode.
             \end{block}
         };
     \end{tikzpicture}
@@ -1343,12 +1392,54 @@
 \begin{frame}{Cycle 8: Retire}
     \centering
     \OOODiagram[
-        R1={\srcentrya{RB2}}, R2={\srcentryb{RB3}}, R3={\oldentry{RB4}}, R4={},
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
         rob21={\srcentrya{R1$\leftarrow$RB0/RB1}}, rob22={\srcentrya{INV}},
-        rob31={\srcentryb{R2$\leftarrow$R4+RB1}}, rob32={\srcentryb{OK}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
         rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{INV}},
-        rs1={\oldentry{RB4$\leftarrow$\textcolor{red}{RB3}-\textcolor{red}{RB1}}},
-        rs2={\oldentry{RB2$\leftarrow$\textcolor{red}{RB0}/\textcolor{red}{RB1}}},
+        exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [3]}},
+        exec2={\oldentry{RB4$\leftarrow$RB3-RB1 [1]}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
+    ]
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                No retirement can take place. RB2 is at the head of ROB but still INV (not complete). Despite RB3 being OK and ready, it cannot retire - must retire in-order.
+            \end{block}
+        };
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Cycle 8: Execute}
+    \centering
+    \OOODiagram[
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob21={\oldentry{R1$\leftarrow$RB0/RB1}}, rob22={\oldentry{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\newentryb{OK}},
+        exec1={\newentrya{RB2$\leftarrow$RB0/RB1 [2]}},
+        exec2={\srcentryb{\sout{RB4$\leftarrow$RB3-RB1}}},
+        instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
+    ]
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[remember picture, overlay]
+        \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
+            \begin{block}{What's Happening}
+                RB2 (DIV) continues [2]. RB4 (SUB) completes execution, writes result to ROB. Nothing to decode.
+            \end{block}
+        };
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Cycle 9: Commit}
+    \centering
+    \OOODiagram[
+        R1={\oldentry{RB2}}, R2={\oldentry{RB3}}, R3={\oldentry{RB4}}, R4={},
+        rob21={\srcentrya{R1$\leftarrow$RB0/RB1}}, rob22={\srcentrya{INV}},
+        rob31={\oldentry{R2$\leftarrow$R4+RB1}}, rob32={\oldentry{OK}},
+        rob41={\oldentry{R3$\leftarrow$RB3-RB1}}, rob42={\oldentry{OK}},
         exec1={\oldentry{RB2$\leftarrow$RB0/RB1 [2]}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
@@ -1357,7 +1448,7 @@
     \begin{tikzpicture}[remember picture, overlay]
         \node[anchor=south west, text width=5cm, font=\small] at (current page.south west) {
             \begin{block}{What's Happening}
-                RB1 retires, commits R3. ROB entry freed. RB2 continues at [2]. RB3 ready to retire next.
+                No commit can take place. RB2 is at the head of ROB but still INV (not complete). Despite RB3 and RB4 being OK and ready, they cannot commit - must commit in-order.
             \end{block}
         };
     \end{tikzpicture}
