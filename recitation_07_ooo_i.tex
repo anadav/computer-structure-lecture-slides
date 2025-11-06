@@ -148,23 +148,19 @@
     \end{tikzpicture}%
 }
 
-% Macro for ROB diagram - now takes 5 arguments for 5 rows
-\newcommand{\drawROB}[5]{%
-    \begin{tikzpicture}[scale=0.8]
+% Macro for ROB diagram
+\newcommand{\drawROB}[1]{%
+    \begin{tikzpicture}[baseline=(current bounding box.north)]
         \matrix (rob) [matrix of nodes,
-            nodes={draw, minimum width=2cm, minimum height=0.45cm, anchor=center, font=\scriptsize},
+            nodes={draw, minimum width=1.5cm, minimum height=0.45cm, anchor=center, font=\scriptsize},
             row sep=-\pgflinewidth,
             column sep=-\pgflinewidth,
+            inner sep=0pt,
             label={above:\textbf{ROB}},
             ampersand replacement=\&
             ] {
-            RB0 \& #1 \\
-            RB1 \& #2 \\
-            RB2 \& #3 \\
-            RB3 \& #4 \\
-            RBn \& #5 \\
+            #1
         };
-        \node[below=0.1cm of rob-4-2, font=\scriptsize] {$\vdots$};
     \end{tikzpicture}
 }
 
@@ -791,7 +787,14 @@
     
     \vspace{0.5cm}
     \centering
-    \drawROB{R2/R3}{R4+RB0}{R3+R3}{R3+RB2}{}
+    \drawROB{
+        RB0 \& R2/R3 \\
+        RB1 \& R4+RB0 \\
+        RB2 \& R3+R3 \\
+        RB3 \& R3+RB2 \\
+        {\scriptsize$\vdots$} \& {} \\
+        RBn \& {} \\
+    }
 \end{frame}
 
 \begin{frame}{ROB Example}
@@ -828,7 +831,23 @@
 
         \column{0.40\textwidth}
         \centering
-        \drawROB{\only<2->{R2/R3}}{\only<3->{R4+RB0}}{\only<4->{R3+R3}}{\only<5->{R3+RB2}}{}
+        \begin{tikzpicture}[baseline=(current bounding box.north)]
+            \matrix (rob) [matrix of nodes,
+                nodes={draw, minimum width=1.5cm, minimum height=0.45cm, anchor=center, font=\scriptsize},
+                row sep=-\pgflinewidth,
+                column sep=-\pgflinewidth,
+                inner sep=0pt,
+                label={above:\textbf{ROB}},
+                ampersand replacement=\&
+                ] {
+                RB0 \& \only<2->{R2/R3} \\
+                RB1 \& \only<3->{R4+RB0} \\
+                RB2 \& \only<4->{R3+R3} \\
+                RB3 \& \only<5->{R3+RB2} \\
+                : \& {} \\
+                RBn \& {} \\
+            };
+        \end{tikzpicture}
     \end{columns}
 \end{frame}
 
