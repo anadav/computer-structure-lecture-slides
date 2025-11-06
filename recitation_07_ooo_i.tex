@@ -148,22 +148,23 @@
     \end{tikzpicture}%
 }
 
-% Macro for ROB diagram
-\newcommand{\drawROB}[1]{%
+% Macro for ROB diagram - now takes 5 arguments for 5 rows
+\newcommand{\drawROB}[5]{%
     \begin{tikzpicture}[scale=0.8]
         \matrix (rob) [matrix of nodes,
-            nodes={draw, minimum width=2cm, minimum height=0.5cm, anchor=center},
+            nodes={draw, minimum width=2cm, minimum height=0.45cm, anchor=center, font=\scriptsize},
             row sep=-\pgflinewidth,
             column sep=-\pgflinewidth,
+            label={above:\textbf{ROB}},
+            ampersand replacement=\&
             ] {
-            #1
+            RB0 \& #1 \\
+            RB1 \& #2 \\
+            RB2 \& #3 \\
+            RB3 \& #4 \\
+            RBn \& #5 \\
         };
-        \node[left=0.3cm of rob-1-1] {RB0};
-        \node[left=0.3cm of rob-2-1] {RB1};
-        \node[left=0.3cm of rob-3-1] {RB2};
-        \node[left=0.3cm of rob-4-1] {RB3};
-        \node[below=0.1cm of rob-4-1] {$\vdots$};
-        \node[left=0.3cm of rob-5-1] {RBn};
+        \node[below=0.1cm of rob-4-2, font=\scriptsize] {$\vdots$};
     \end{tikzpicture}
 }
 
@@ -790,106 +791,44 @@
     
     \vspace{0.5cm}
     \centering
-    \drawROB{
-        R2/R3 \\
-        R4+RB0 \\
-        R3+R3 \\
-        R3+RB2 \\
-        {} \\
-    }
+    \drawROB{R2/R3}{R4+RB0}{R3+R3}{R3+RB2}{}
 \end{frame}
 
-\begin{frame}{ROB Example - Initial State}
-    \begin{columns}
-        \column{0.4\textwidth}
-        Instructions:
+\begin{frame}{ROB Example}
+    \begin{columns}[T]
+        \column{0.25\textwidth}
         {\ttfamily\small
-        DIV R1, R2, R3\\
-        ADD R2, R4, R1\\
-        ADD R2, R3, R3\\
-        ADD R4, R3, R2
+        DIV R1, R2, R3\only<2->{ \checkmark}\\
+        ADD R2, R4, R1\only<3->{ \checkmark}\\
+        ADD R2, R3, R3\only<4->{ \checkmark}\\
+        ADD R4, R3, R2\only<5->{ \checkmark}
         }
-        
-        \column{0.6\textwidth}
+
+        \vspace{0.5cm}
+
+        \only<5->{\textcolor{correctgreen}{\small No more False Dependencies! (but RAW still exists)}}
+
+        \column{0.35\textwidth}
         \centering
-        ROB (Cyclic Buffer):
-        
-        \drawROB{
-            {} \\
-            {} \\
-            {} \\
-            {} \\
-            {} \\
-        }
-        
-        \begin{tikzpicture}
-            \node[draw, minimum width=3cm] (renamer) at (0,-2) {Renamer};
-            \node[left=0.2cm of renamer] {Arch reg};
-            \node[right=0.2cm of renamer] {Phys reg};
+        \begin{tikzpicture}[baseline=(current bounding box.north)]
+            \matrix[matrix of nodes,
+                    nodes={draw, minimum width=1.5cm, minimum height=0.45cm, anchor=center, font=\scriptsize},
+                    column sep=-\pgflinewidth,
+                    row sep=-\pgflinewidth,
+                    inner sep=0pt,
+                    label={above:\textbf{RAT}},
+                    ampersand replacement=\&] (rat) {
+                \textbf{Arch Reg} \& \textbf{Phys Reg} \\
+                R1 \& \only<2->{RB0} \\
+                R2 \& \only<3->{RB1}\only<4->{, RB2} \\
+                R3 \& \\
+                R4 \& \only<5->{RB3} \\
+            };
         \end{tikzpicture}
-    \end{columns}
-\end{frame}
 
-\begin{frame}{ROB Example - After First Instruction}
-    \begin{columns}
-        \column{0.4\textwidth}
-        Instructions:
-        {\ttfamily\small
-        DIV R1, R2, R3  \checkmark\\
-        ADD R2, R4, R1\\
-        ADD R2, R3, R3\\
-        ADD R4, R3, R2
-        }
-
-        \column{0.6\textwidth}
+        \column{0.40\textwidth}
         \centering
-        ROB:
-
-        \drawROB{
-            R2/R3 \\
-            {} \\
-            {} \\
-            {} \\
-            {} \\
-        }
-
-        \vspace{0.2cm}
-        {\small R1 $\rightarrow$ RB0}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{ROB Example - After All Instructions}
-    \begin{columns}
-        \column{0.4\textwidth}
-        Instructions:
-        {\ttfamily\small
-        DIV R1, R2, R3  \checkmark\\
-        ADD R2, R4, R1  \checkmark\\
-        ADD R2, R3, R3  \checkmark\\
-        ADD R4, R3, R2  \checkmark
-        }
-
-        \textcolor{correctgreen}{Note: No more False Dependencies! (but RAW still exists)}
-
-        \column{0.6\textwidth}
-        \centering
-        ROB:
-
-        \drawROB{
-            R2/R3 \\
-            R4+RB0 \\
-            R3+R3 \\
-            R3+RB2 \\
-            {} \\
-        }
-
-        \vspace{0.2cm}
-        {\small
-        R1 $\rightarrow$ RB0\\
-        R2 $\rightarrow$ RB1\\
-        R2 $\rightarrow$ RB2\\
-        R4 $\rightarrow$ RB3
-        }
+        \drawROB{\only<2->{R2/R3}}{\only<3->{R4+RB0}}{\only<4->{R3+R3}}{\only<5->{R3+RB2}}{}
     \end{columns}
 \end{frame}
 
