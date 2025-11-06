@@ -195,7 +195,7 @@
         % Execute cells
         exec1 = {}, exec2 = {},
         % Retire cells
-        ret1 = {}, ret2 = {},
+        ret1 = {}, ret2 = {}, ret3 = {},
         % Instruction queue (5 rows)
         instq1 = {~}, instq2 = {~}, instq3 = {~}, instq4 = {~}, instq5 = {~}
     },
@@ -222,6 +222,7 @@
     % Retire cell contents
     ret1/.estore in = \retOne,
     ret2/.estore in = \retTwo,
+    ret3/.estore in = \retThree,
     % Instruction queue (5 rows)
     instq1/.estore in = \instQOne,
     instq2/.estore in = \instQTwo,
@@ -332,13 +333,15 @@
     \node[dashedbox, below=0.4cm of execute.south, anchor=north] (retire) {};
     \node[anchor=west] at (retire.east) {\textbf{Retire}};
     %
-    % Add internal structure to Retire (2 columns, no borders)
+    % Add internal structure to Retire (2 columns, 2 rows, no borders)
     \matrix[matrix of nodes,
             column sep=10pt,
+            row sep=2pt,
             inner sep=0pt,
             at={(retire.center)},
             ampersand replacement=\&] (retireMatrix) {
         |[cell/.style={minimum width=0cm, minimum height=0cm, draw=none}]| \scriptsize \retOne \& |[cell/.style={minimum width=0cm, minimum height=0cm, draw=none}]| \scriptsize \retTwo \\
+        |[cell/.style={minimum width=0cm, minimum height=0cm, draw=none}]| \scriptsize \retThree \& |[cell/.style={minimum width=0cm, minimum height=0cm, draw=none}]| \scriptsize ~ \\
     };
     %
     \end{tikzpicture}
@@ -1527,7 +1530,8 @@
         rob31={\srcentryb{\sout{R2$\leftarrow$R4+RB1}}}, rob32={\srcentryb{\sout{OK}}},
         rob41={\srcentryc{\sout{R3$\leftarrow$RB3-RB1}}}, rob42={\srcentryc{\sout{OK}}},
         ret1={\newentrya{R1$\leftarrow$RB2}},
-        ret2={\newentryb{R2$\leftarrow$RB3}, \newentryc{R3$\leftarrow$RB4}},
+        ret2={\newentryb{R2$\leftarrow$RB3}},
+        ret3={\newentryc{R3$\leftarrow$RB4}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
