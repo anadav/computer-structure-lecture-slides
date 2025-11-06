@@ -171,8 +171,10 @@
 \newcommand{\oldentry}[1]{~#1}
 \newcommand{\newentrya}[1]{\colorbox{highlightyellow}{#1}}
 \newcommand{\newentryb}[1]{\colorbox{highlightorange}{#1}}
+\newcommand{\newentryc}[1]{\colorbox{cyan!40}{#1}}
 \newcommand{\srcentrya}[1]{\colorbox{highlightyellow!30}{#1}}
 \newcommand{\srcentryb}[1]{\colorbox{highlightorange!30}{#1}}
+\newcommand{\srcentryc}[1]{\colorbox{cyan!15}{#1}}
 
 % PGF Keys for detailed OOO diagram configuration
 \pgfkeys{
@@ -1520,7 +1522,12 @@
 \begin{frame}{Cycle 11: Retire}
     \centering
     \OOODiagram[
-        R1={\srcentrya{}}, R2={\srcentryb{}}, R3={\oldentry{}}, R4={},
+        R1={\srcentrya{\sout{RB2}}}, R2={\srcentryb{\sout{RB3}}}, R3={\srcentryc{\sout{RB4}}}, R4={},
+        rob21={\srcentrya{\sout{R1$\leftarrow$RB0/RB1}}}, rob22={\srcentrya{\sout{OK}}},
+        rob31={\srcentryb{\sout{R2$\leftarrow$R4+RB1}}}, rob32={\srcentryb{\sout{OK}}},
+        rob41={\srcentryc{\sout{R3$\leftarrow$RB3-RB1}}}, rob42={\srcentryc{\sout{OK}}},
+        ret1={\newentrya{R1$\leftarrow$RB2}},
+        ret2={\newentryb{R2$\leftarrow$RB3} / \newentryc{R3$\leftarrow$RB4}},
         instq1={~}, instq2={~}, instq3={~}, instq4={~}, instq5={~}
     ]
 
@@ -1528,7 +1535,7 @@
     \begin{tikzpicture}[remember picture, overlay]
         \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
-                RB4 retires, commits R3. All instructions complete. ROB empty. RAT cleared. Program done in 11 cycles!
+                All 3 instructions (RB2, RB3, RB4) retire together, committing R1, R2, R3. ROB cleared. RAT cleared. Program done in 11 cycles!
             \end{block}
         };
     \end{tikzpicture}
