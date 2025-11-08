@@ -1012,21 +1012,142 @@
 
 \section{Q3: OOO Execution Trace}
 
-\begin{frame}{Q3: How Does OOO Execution Work Cycle-by-Cycle?}
-    \textbf{Question:} Trace the following program through complete out-of-order execution, showing all structures at each cycle
+\begin{frame}{Q3: OOO Execution Structures}
+    \textbf{Key Data Structures for Out-of-Order Execution:}
 
-    \begin{block}{Key Structures}
-        \begin{itemize}
-            \item \textbf{RAT:} Maps architectural registers to physical registers (ROB entries)
-            \item \textbf{ROB:} Circular buffer maintaining program order (RB0-RB4)
-            \item \textbf{IDQ:} Instruction Decode Queue holding fetched instructions
-            \item \textbf{RS:} Holds decoded instructions waiting for operands
-            \item \textbf{MOB:} Manages memory operations in order
-        \end{itemize}
-    \end{block}
+    \begin{itemize}
+        \item \textbf{RAT (Register Alias Table):} Maps architectural registers to physical registers (ROB entries)
+        \item \textbf{ROB (Re-Order Buffer):} Circular buffer maintaining program order
+        \item \textbf{RS (Reservation Station):} Holds decoded instructions waiting for operands
+        \item \textbf{MOB (Memory Order Buffer):} Manages memory operations in order
+        \item \textbf{IDQ (Instruction Decode Queue):} Holds fetched instructions
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{The Program}
+\begin{frame}{Structure Interaction}
+    \centering
+    \begin{tikzpicture}[font=\tiny]
+        % IDQ at top
+        \node[draw, fill=lightblue, minimum width=2cm, minimum height=0.8cm] (idq) at (0,5) {\textbf{IDQ}};
+
+        % RAT in middle
+        \node[draw, fill=green!20, minimum width=7cm, minimum height=2.2cm] (rat) at (0,2.8) {
+            \begin{minipage}{6.8cm}
+            \centering
+            \textbf{RAT / Alloc}
+
+            \vspace{0.1cm}
+            \scriptsize
+            \begin{tabular}{|l|c|l|}
+            \hline
+            \textbf{Dest (Arch)} & \textbf{\#phys reg} & \textbf{Source} \\
+            \hline
+            EAX & xxx & 0 (RRF) \\
+            EBX & 19 & 1 (ROB) \\
+            ECX & 23 & 1 (ROB) \\
+            \hline
+            \end{tabular}
+
+            \vspace{0.1cm}
+            \tiny
+            0: Read from RRF, 1: Read from ROB
+            \end{minipage}
+        };
+
+        % ROB on left bottom
+        \node[draw, fill=cyan!20, minimum width=3.5cm, minimum height=3cm, anchor=north] (rob) at (-4,1) {
+            \begin{minipage}{3.3cm}
+            \centering
+            \textbf{ROB}
+
+            \scriptsize Dest. (Phys Reg)
+
+            \vspace{0.1cm}
+            \tiny
+            \begin{tabular}{|c|c|c|c|c|}
+            \hline
+            \textbf{\#} & \textbf{V} & \textbf{V} & \textbf{Data} & \textbf{DST} \\
+            \hline
+            19 & V & V & 12 & EBX \\
+            23 & V & V & 33 & ECX \\
+            37 & V & I & xxx & EAX \\
+            38 & I & x & xxx & EAX \\
+            \hline
+            \end{tabular}
+
+            \vspace{0.1cm}
+            \tiny
+            (4 write ports, 1 entry per uop)
+            \end{minipage}
+        };
+
+        % RS on right bottom
+        \node[draw, fill=orange!20, minimum width=3.2cm, minimum height=3cm, anchor=north] (rs) at (3.8,1) {
+            \begin{minipage}{3cm}
+            \centering
+            \textbf{RS}
+
+            \vspace{0.1cm}
+            \tiny
+            \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+             & \textbf{v} & \textbf{src1} & \textbf{v} & \textbf{src2} & \textbf{Pdst} \\
+            \hline
+            add & 1 & 97H & 1 & 12H & 37 \\
+            sub & 0 & rob37 & 1 & 33H & 38 \\
+            \hline
+            \end{tabular}
+
+            \vspace{0.1cm}
+            \tiny
+            Arch reg: from RRF\\
+            Phys reg + valid: from ROB\\
+            Phys reg + not valid: wait
+            \end{minipage}
+        };
+
+        % RRF below ROB
+        \node[draw, fill=blue!15, minimum width=2cm, minimum height=0.7cm, anchor=north] (rrf) at (-4,-2.3) {
+            \begin{minipage}{1.8cm}
+            \centering
+            \tiny
+            \textbf{RRF:}
+            \begin{tabular}{|c|c|c|}
+            \hline
+            0 & EAX & 97H \\
+            \hline
+            \end{tabular}
+            \end{minipage}
+        };
+
+        % Arrows
+        \draw[->, thick] (idq) -- (rat);
+        \draw[->, thick] (rat.south) -- ++(-2,-0.3) -- (rob.north);
+        \draw[->, thick] (rat.south) -- ++(2,-0.3) -- (rs.north);
+
+    \end{tikzpicture}
+
+    \vspace{0.2cm}
+    \tiny
+    Instructions flow: IDQ $\rightarrow$ RAT (decode/rename) $\rightarrow$ ROB \& RS (track \& wait). Source \& dest values updated after EXE.
+\end{frame}
+
+\begin{frame}{Simplified Notation for Trace}
+    For the cycle-by-cycle trace, we'll use simplified notation:
+
+    \vspace{0.3cm}
+    \begin{itemize}
+        \item \textbf{RAT:} Show only Arch Reg $\rightarrow$ Phys Reg mapping (omit source column)
+        \item \textbf{ROB:} Show only operation and status (INV/OK), omit detailed valid bits and data values
+        \item \textbf{RS:} Show operation with dependencies (e.g., RB0$\leftarrow$R4/R3)
+        \item \textbf{Execute:} Show operation with remaining cycles in brackets
+    \end{itemize}
+
+    \vspace{0.3cm}
+    This simplification helps focus on the key concepts: \textbf{register renaming, dependency tracking, and out-of-order execution}.
+\end{frame}
+
+\begin{frame}{Q3: How Does OOO Execution Work Cycle-by-Cycle?}
     \textbf{Question:} How many cycles will it take to execute the following program using out-of-order execution?
 
     \textit{Assume all instructions have already been decoded and are in the IDQ.}
