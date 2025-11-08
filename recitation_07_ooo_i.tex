@@ -803,7 +803,9 @@
     }
 \end{frame}
 
-\begin{frame}{ROB Question - Part 1: Identify Dependencies}
+\section{Q2: ROB}
+
+\begin{frame}{Part 1: Identify Dependencies}
     \begin{columns}[T]
         \column{0.35\textwidth}
         \textbf{Given code:}
@@ -826,31 +828,47 @@
                 \centering
                 \textbf{WAW on R2}
 
-                {\ttfamily\scriptsize
-                (1) DIV R1, R2, R3\\
-                (2) ADD \textcolor{red}{R2}, R4, R1\\
-                (3) ADD \textcolor{red}{R2}, R3, R3\\
-                (4) ADD R4, R3, R2
-                }
+                \vspace{0.2cm}
 
-                \tikz[remember picture, overlay] {
-                    \draw[->, red, thick] (-0.5,-0.8) to[bend left=30] (-0.5,-1.3);
-                }
+                \begin{tikzpicture}[remember picture]
+                    \node[anchor=north west, inner sep=0pt] (code1) {
+                        \begin{minipage}{3.5cm}
+                        {\ttfamily\small
+                        (1) DIV R1, R2, R3\\
+                        (2) ADD \tikz[remember picture, baseline=(r2a.base)]{\node[inner sep=0pt] (r2a) {\textcolor{red}{R2}};}, R4, R1\\
+                        (3) ADD \tikz[remember picture, baseline=(r2b.base)]{\node[inner sep=0pt] (r2b) {\textcolor{red}{R2}};}, R3, R3\\
+                        (4) ADD R4, R3, R2
+                        }
+                        \end{minipage}
+                    };
+                \end{tikzpicture}
+
+                \begin{tikzpicture}[remember picture, overlay]
+                    \draw[->, red, very thick] (r2a.east) to[bend left=40] (r2b.east);
+                \end{tikzpicture}
 
                 \column{0.5\textwidth}
                 \centering
                 \textbf{WAR on R4}
 
-                {\ttfamily\scriptsize
-                (1) DIV R1, R2, R3\\
-                (2) ADD R2, \textcolor{blue}{R4}, R1\\
-                (3) ADD R2, R3, R3\\
-                (4) ADD \textcolor{blue}{R4}, R3, R2
-                }
+                \vspace{0.2cm}
 
-                \tikz[remember picture, overlay] {
-                    \draw[->, blue, thick] (-0.5,-0.8) to[bend left=30] (-0.5,-1.8);
-                }
+                \begin{tikzpicture}[remember picture]
+                    \node[anchor=north west, inner sep=0pt] (code2) {
+                        \begin{minipage}{3.5cm}
+                        {\ttfamily\small
+                        (1) DIV R1, R2, R3\\
+                        (2) ADD R2, \tikz[remember picture, baseline=(r4a.base)]{\node[inner sep=0pt] (r4a) {\textcolor{blue}{R4}};}, R1\\
+                        (3) ADD R2, R3, R3\\
+                        (4) ADD \tikz[remember picture, baseline=(r4b.base)]{\node[inner sep=0pt] (r4b) {\textcolor{blue}{R4}};}, R3, R2
+                        }
+                        \end{minipage}
+                    };
+                \end{tikzpicture}
+
+                \begin{tikzpicture}[remember picture, overlay]
+                    \draw[->, blue, very thick] (r4a.east) to[bend left=40] (r4b.east);
+                \end{tikzpicture}
             \end{columns}
 
             \vspace{0.3cm}
@@ -859,7 +877,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{ROB Question - Part 2: After Decode}
+\begin{frame}{Part 2: After Decode}
     \textbf{Question:} Show the RAT and ROB state after all instructions are decoded (but before execution completes)
 
     \vspace{0.3cm}
