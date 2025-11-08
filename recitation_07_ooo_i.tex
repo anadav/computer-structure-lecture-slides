@@ -718,12 +718,11 @@
     \begin{block}{The Mechanism}
         \begin{itemize}
             \item \textbf{Architectural registers:} What the program sees (R0-R31)
-            \item \textbf{Physical registers:} What the hardware uses (P0-P127)
-            \item Dynamic mapping eliminates name conflicts
+            \item \textbf{Physical registers:} What the hardware uses (more than architectural)
         \end{itemize}
     \end{block}
 
-    \vspace{0.3cm}
+    \vspace{-0.2cm}
     \textbf{Example:}
 
     {\ttfamily\small
@@ -735,11 +734,11 @@
     $\Rightarrow$ No WAR or WAW hazards—different physical registers for each write!
 
     \vspace{0cm}
-    \begin{block}{Implementation Approaches}
+    \begin{block}{Dynamic Mapping - Implementation Approaches}
         \begin{itemize}
             \item \textbf{ROB-based (Data-in-ROB):} ROB entries serve as physical registers
             \item \textbf{PRF-based (Explicit):} Separate Physical Register File
-            \item \textbf{In this course:} We focus on ROB-based implementation using \textbf{RBx} notation (RB0, RB1, ...)
+            \item \textbf{In this course:} We focus on ROB-based using \textbf{RBx} notation (RB0, RB1, ...)
         \end{itemize}
     \end{block}
 \end{frame}
@@ -976,27 +975,6 @@
     \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Summary: Out-of-Order Execution}
-    \textbf{The Journey:}
-    \begin{enumerate}
-        \item \textbf{Problem:} Long-latency operations stall the pipeline
-        \item \textbf{Solution:} Execute independent instructions out of order
-        \item \textbf{Challenge:} False dependencies (WAR, WAW)
-        \item \textbf{Solution:} Register renaming with ROB
-    \end{enumerate}
-
-    \vspace{0.5cm}
-    \textbf{Modern Processor Pipeline:}
-    \begin{itemize}
-        \item \textbf{Front-end:} In-order fetch and decode
-        \item \textbf{Execution:} Out-of-order with multiple units
-        \item \textbf{Back-end:} In-order commit (retirement)
-    \end{itemize}
-
-    \vspace{0.5cm}
-    \textbf{Bottom Line:} OOO execution dramatically improves IPC by hiding latencies and maximizing parallelism.
-\end{frame}
-
 \begin{frame}{Historical Note: IBM System/360 Model 91 (1966)}
     \begin{columns}
         \column{0.4\textwidth}
@@ -1032,17 +1010,10 @@
     \end{alertblock}
 \end{frame}
 
-\begin{frame}{Detailed OOO Execution Example}
-    \begin{block}{Goal}
-        Trace a complete out-of-order execution cycle-by-cycle, showing:
-        \begin{itemize}
-            \item Register Alias Table (RAT) updates
-            \item Reorder Buffer (ROB) allocation
-            \item Reservation Station (RS) scheduling
-            \item Memory Order Buffer (MOB) management
-            \item Execute and Retire stages
-        \end{itemize}
-    \end{block}
+\section{Q3: OOO Execution Trace}
+
+\begin{frame}{Q3: How Does OOO Execution Work Cycle-by-Cycle?}
+    \textbf{Question:} Trace the following program through complete out-of-order execution, showing all structures at each cycle
 
     \begin{block}{Key Structures}
         \begin{itemize}
@@ -1108,13 +1079,12 @@
     \end{block}
 
     \vspace{0.2cm}
-    \begin{exampleblock}{Operation Latencies (Reminder)}
-        \begin{itemize}
-            \item DIV: 4 cycles → shows [4], [3], [2], [1]
-            \item LD: 2 cycles → shows [2], [1]
-            \item ADD/SUB: 1 cycle → shows [1]
-        \end{itemize}
-    \end{exampleblock}
+    \textbf{Operation Latencies (Reminder):}
+    \begin{itemize}
+        \item DIV: 4 cycles → shows [4], [3], [2], [1]
+        \item LD: 2 cycles → shows [2], [1]
+        \item ADD/SUB: 1 cycle → shows [1]
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Cycle 1: Decode}
@@ -1609,24 +1579,34 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Summary: OOO Execution Example}
-    \textbf{Key Observations:}
-    \begin{enumerate}
-        \item \textbf{Parallel Execution:} Instructions (1) and (2) executed simultaneously
-        \item \textbf{Register Renaming:} R2 mapped to both RB0 and RB3, eliminating WAW hazard
-        \item \textbf{Out-of-Order Completion:} LD completed before first DIV
-        \item \textbf{In-Order Retirement:} Despite OOO execution, instructions retired in program order
-        \item \textbf{Dependency Handling:} RB2 waited for both RB0 and RB1; RB3 and RB4 waited for RB1
-    \end{enumerate}
+\begin{frame}{Summary: Out-of-Order Execution}
+    \textbf{The Big Picture:}
+    \begin{itemize}
+        \item \textbf{Problem:} Long-latency operations stall the pipeline
+        \item \textbf{Solution:} Execute independent instructions out of order
+        \item \textbf{Challenge:} False dependencies (WAR, WAW)
+        \item \textbf{Solution:} Register renaming with ROB eliminates false dependencies
+    \end{itemize}
 
     \vspace{0.3cm}
-    \textbf{Structures Working Together:}
+    \textbf{Modern Processor Pipeline:}
     \begin{itemize}
-        \item \textbf{RAT:} Maintained register-to-physical mappings
-        \item \textbf{ROB:} Preserved program order for retirement
-        \item \textbf{RS/MOB:} Tracked dependencies and dispatched ready instructions
+        \item \textbf{Front-end:} In-order fetch and decode
+        \item \textbf{Execution:} Out-of-order with multiple units
+        \item \textbf{Back-end:} In-order commit (retirement)
+    \end{itemize}
+
+    \vspace{0.3cm}
+    \textbf{Key Structures Working Together:}
+    \begin{itemize}
+        \item \textbf{RAT:} Arch→Phys register mappings (updated at decode)
+        \item \textbf{ROB:} Phys→Arch mappings, preserves program order (for retirement)
+        \item \textbf{RS/MOB:} Track dependencies, dispatch ready instructions
         \item \textbf{Execute:} Multiple units working in parallel
     \end{itemize}
+
+    \vspace{0.3cm}
+    \textbf{Bottom Line:} OOO execution dramatically improves IPC by hiding latencies and maximizing parallelism
 \end{frame}
 
 \end{document}
