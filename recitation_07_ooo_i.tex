@@ -13,7 +13,8 @@
 \usepackage{listings}
 \usepackage{pgfkeys}
 \usepackage{adjustbox}
-\usepackage[normalem]{ulem} 
+\usepackage[normalem]{ulem}
+\usepackage{arydshln} 
 \usetheme{Madrid}
 
 % Custom colors - consolidated
@@ -1025,14 +1026,14 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Structure Interaction}
+\begin{frame}{Structure Interaction (Intel CPUs)}
     \centering
     \begin{tikzpicture}[font=\tiny]
         % IDQ at top
-        \node[draw, fill=lightblue, minimum width=2cm, minimum height=0.8cm] (idq) at (0,5) {\textbf{IDQ}};
+        \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ}};
 
-        % RAT in middle
-        \node[draw, fill=green!20, minimum width=7cm, minimum height=2.2cm] (rat) at (0,2.8) {
+        % RAT below IDQ
+        \node[fill=green!20, inner sep=5pt, below=0.8cm of idq] (rat) {
             \begin{minipage}{6.8cm}
             \centering
             \textbf{RAT / Alloc}
@@ -1044,7 +1045,9 @@
             \textbf{Dest (Arch)} & \textbf{\#Phys Reg} & \textbf{Location} \\
             \hline
             EAX & xxx & 0 (RRF) \\
+            \hdashline
             EBX & 19 & 1 (ROB) \\
+            \hdashline
             ECX & 23 & 1 (ROB) \\
             \hline
             \end{tabular}
@@ -1055,9 +1058,9 @@
             \end{minipage}
         };
 
-        % ROB on left bottom
-        \node[draw, fill=cyan!20, minimum width=3.8cm, minimum height=3.2cm, anchor=north] (rob) at (-4,1) {
-            \begin{minipage}{3.6cm}
+        % ROB below and left of RAT
+        \node[fill=cyan!20, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=-3.5cm] (rob) {
+            \begin{minipage}{4cm}
             \centering
             \textbf{ROB}
 
@@ -1069,8 +1072,11 @@
             \textbf{Reg} & & \textbf{Valid} & & \textbf{Reg} \\
             \hline
             19 & V & V & 12 & EBX \\
+            \hdashline
             23 & V & V & 33 & ECX \\
+            \hdashline
             37 & V & I & xxx & EAX \\
+            \hdashline
             38 & I & x & xxx & EAX \\
             \hline
             \end{tabular}
@@ -1081,9 +1087,9 @@
             \end{minipage}
         };
 
-        % RS on right bottom
-        \node[draw, fill=orange!20, minimum width=3.2cm, minimum height=3cm, anchor=north] (rs) at (3.8,1) {
-            \begin{minipage}{3cm}
+        % RS below and right of RAT
+        \node[fill=orange!20, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=3.5cm] (rs) {
+            \begin{minipage}{3.5cm}
             \centering
             \textbf{RS}
 
@@ -1094,6 +1100,7 @@
              & \textbf{v} & \textbf{src1} & \textbf{v} & \textbf{src2} & \textbf{Pdst} \\
             \hline
             add & 1 & 97H & 1 & 12H & 37 \\
+            \hdashline
             sub & 0 & rob37 & 1 & 33H & 38 \\
             \hline
             \end{tabular}
@@ -1107,7 +1114,7 @@
         };
 
         % RRF below ROB
-        \node[draw, fill=blue!15, minimum width=2cm, minimum height=0.7cm, anchor=north] (rrf) at (-4,-2.3) {
+        \node[fill=blue!15, inner sep=5pt, below=0.3cm of rob.south, anchor=north] (rrf) {
             \begin{minipage}{1.8cm}
             \centering
             \tiny
@@ -1121,9 +1128,9 @@
         };
 
         % Arrows
-        \draw[->, thick] (idq) -- (rat);
-        \draw[->, thick] (rat.south) -- ++(-2,-0.3) -- (rob.north);
-        \draw[->, thick] (rat.south) -- ++(2,-0.3) -- (rs.north);
+        \draw[->, thick] (idq.south) -- (rat.north);
+        \draw[->, thick] (rat.south) ++(0,-0.3) -| (rob.north);
+        \draw[->, thick] (rat.south) ++(0,-0.3) -| (rs.north);
 
     \end{tikzpicture}
 
