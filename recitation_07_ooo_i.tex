@@ -1012,12 +1012,13 @@
 
 \section{Q3: OOO Execution Trace}
 
-\begin{frame}{Q3: OOO Execution Structures}
+\begin{frame}{OOO Execution Structures (Review)}
     \textbf{Key Data Structures for Out-of-Order Execution:}
 
     \begin{itemize}
         \item \textbf{RAT (Register Alias Table):} Maps architectural registers to physical registers (ROB entries)
-        \item \textbf{ROB (Re-Order Buffer):} Circular buffer maintaining program order
+        \item \textbf{ROB (Re-Order Buffer):} Circular buffer maintaining program order; also holds physical register values
+        \item \textbf{RRF (Retire Register File):} Holds committed architectural register values
         \item \textbf{RS (Reservation Station):} Holds decoded instructions waiting for operands
         \item \textbf{MOB (Memory Order Buffer):} Manages memory operations in order
         \item \textbf{IDQ (Instruction Decode Queue):} Holds fetched instructions
@@ -1040,7 +1041,7 @@
             \scriptsize
             \begin{tabular}{|l|c|l|}
             \hline
-            \textbf{Dest (Arch)} & \textbf{\#phys reg} & \textbf{Source} \\
+            \textbf{Dest (Arch)} & \textbf{\#Phys Reg} & \textbf{Location} \\
             \hline
             EAX & xxx & 0 (RRF) \\
             EBX & 19 & 1 (ROB) \\
@@ -1055,18 +1056,17 @@
         };
 
         % ROB on left bottom
-        \node[draw, fill=cyan!20, minimum width=3.5cm, minimum height=3cm, anchor=north] (rob) at (-4,1) {
-            \begin{minipage}{3.3cm}
+        \node[draw, fill=cyan!20, minimum width=3.8cm, minimum height=3.2cm, anchor=north] (rob) at (-4,1) {
+            \begin{minipage}{3.6cm}
             \centering
             \textbf{ROB}
-
-            \scriptsize Dest. (Phys Reg)
 
             \vspace{0.1cm}
             \tiny
             \begin{tabular}{|c|c|c|c|c|}
             \hline
-            \textbf{\#} & \textbf{V} & \textbf{V} & \textbf{Data} & \textbf{DST} \\
+            \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Data} & \textbf{Arch} \\
+            \textbf{Reg} & & \textbf{Valid} & & \textbf{Reg} \\
             \hline
             19 & V & V & 12 & EBX \\
             23 & V & V & 33 & ECX \\
@@ -1077,7 +1077,7 @@
 
             \vspace{0.1cm}
             \tiny
-            (4 write ports, 1 entry per uop)
+            Legend: V=Valid, I=Invalid, x=Don't care
             \end{minipage}
         };
 
