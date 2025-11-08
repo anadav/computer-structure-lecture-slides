@@ -747,14 +747,14 @@
     We maintain two mappings:
 
     \begin{enumerate}
-        \item \textbf{Architectural → Physical:} (e.g., R5→RB2)
+        \item \textbf{Architectural to Physical:} (e.g., R5 to RB2)
         \begin{itemize}
             \item For resolving false dependencies
             \item Stored in \textbf{RAT} (Register Alias Table)
             \item Updated at decode stage
         \end{itemize}
 
-        \item \textbf{Physical → Architectural:} (e.g., RB2→R5)
+        \item \textbf{Physical to Architectural:} (e.g., RB2 to R5)
         \begin{itemize}
             \item For writing the value back to the intended architectural register
             \item Stored in \textbf{ROB} (Re-Order Buffer)
@@ -882,7 +882,7 @@
             \end{columns}
 
             \vspace{0.3cm}
-            \textcolor{correctgreen}{\small Note: RAW dependencies (e.g., (1)→(2) on R1) are true dependencies}
+            \textcolor{correctgreen}{\small Note: RAW dependencies (e.g., (1)$\rightarrow$(2) on R1) are true dependencies}
         }
     \end{columns}
 \end{frame}
@@ -1026,7 +1026,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Example: Out-of-Order Execution}
+\begin{frame}{The Program}
     \textbf{Question:} How many cycles will it take to execute the following program using out-of-order execution?
 
     \textit{Assume all instructions have already been decoded and are in the IDQ.}
@@ -1063,8 +1063,6 @@
     \end{alertblock}
 \end{frame}
 
-\section{Q1: OOO Execution Walkthrough}
-
 \begin{frame}{Notation for Cycle-by-Cycle Walkthrough}
     \begin{block}{Execution Status Notation}
         In the \textbf{Execute} section, we show operations currently being executed with their \textbf{remaining cycle count} in brackets.
@@ -1081,9 +1079,9 @@
     \vspace{0.2cm}
     \textbf{Operation Latencies (Reminder):}
     \begin{itemize}
-        \item DIV: 4 cycles → shows [4], [3], [2], [1]
-        \item LD: 2 cycles → shows [2], [1]
-        \item ADD/SUB: 1 cycle → shows [1]
+        \item DIV: 4 cycles $\rightarrow$ shows [4], [3], [2], [1]
+        \item LD: 2 cycles $\rightarrow$ shows [2], [1]
+        \item ADD/SUB: 1 cycle $\rightarrow$ shows [1]
     \end{itemize}
 \end{frame}
 
@@ -1098,9 +1096,9 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
-                First instruction (DIV R2,R4,R3) is decoded. RAT maps R2→RB0, ROB allocates RB0, and RS receives the operation with operands ready.
+                First instruction (DIV R2,R4,R3) is decoded. RAT maps R2 to RB0, ROB allocates RB0, and RS receives the operation with operands ready.
             \end{block}
         };
     \end{tikzpicture}
@@ -1118,7 +1116,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB0 (DIV) dispatched from RS to execution unit. DIV takes 4 cycles, shown as [4].
             \end{block}
@@ -1140,9 +1138,9 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
-                LD decoded: RAT maps R3→RB1, ROB allocates RB1. MOB entry created with [W] - waiting for address R4+50 to be computed.
+                LD decoded: RAT maps R3 to RB1, ROB allocates RB1. MOB entry created with [W] - waiting for address R4+50 to be computed.
             \end{block}
         };
     \end{tikzpicture}
@@ -1162,9 +1160,9 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
-                RB0 continues executing [4→3]. Address R4+50 computed (ADD takes 1 cycle). MOB still waiting [W] for address to complete.
+                RB0 continues executing [4$\rightarrow$3]. Address R4+50 computed (ADD takes 1 cycle). MOB still waiting [W] for address to complete.
             \end{block}
         };
     \end{tikzpicture}
@@ -1186,7 +1184,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 DIV R1 decoded - depends on RB0 and RB1, goes to RS but can't execute yet. LD now dispatched from MOB with [2] cycles. RB0 continues at [3].
             \end{block}
@@ -1212,7 +1210,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB0 (DIV) at [3]. RB1 (LD) completes - last cycle [1]. ROB will be marked OK after this cycle.
             \end{block}
@@ -1237,9 +1235,9 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
-                ADD decoded: RAT maps R2→RB3 (old RB0 still in ROB). RS entry waits for RB1. RB1 completes, ROB marked OK. RB0 at [3].
+                ADD decoded: RAT maps R2 to RB3 (old RB0 still in ROB). RS entry waits for RB1. RB1 completes, ROB marked OK. RB0 at [3].
             \end{block}
         };
     \end{tikzpicture}
@@ -1262,7 +1260,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB0 (DIV) at [1]. RS blocked: RB2 waiting [W] on RB0 and RB1 dependencies, cannot dispatch. MOB at [1]. Retirement stalled waiting for RB0 to complete.
             \end{block}
@@ -1289,7 +1287,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 SUB decoded, creates RB4 in ROB with dependencies on RB3 and RB1. RB4 enters RS waiting for RB3. RB3 dispatched to execute. RB0 at [2].
             \end{block}
@@ -1316,7 +1314,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB0 (DIV) and RB1 (LD) complete, marked OK. Forwarding: RB2 and RB3 in RS now unblocked, ready to dispatch. RB4 still waiting [W] on RB3.
             \end{block}
@@ -1343,7 +1341,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB2 (DIV) and RB3 (ADD) dispatch from RS and start executing [4] and [1]. RB4 still waiting [W] on RB3. No retirement yet.
             \end{block}
@@ -1370,7 +1368,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB0 and RB1 retire, committing R2 and R3. ROB entries freed. RB2 continues [4], RB3 continues [1].
             \end{block}
@@ -1393,7 +1391,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB3 (ADD) completes execution. Result forwarded to RB4 in RS - RB3 dependency resolved, no longer waiting [W].
             \end{block}
@@ -1416,7 +1414,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB2 (DIV) continues [3]. RB4 (SUB) dispatches from RS and starts executing [1]. Nothing to decode.
             \end{block}
@@ -1438,7 +1436,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 No retirement can take place. RB2 is at the head of ROB but still INV (not complete). Despite RB3 being OK and ready, it cannot retire - must retire in-order.
             \end{block}
@@ -1460,7 +1458,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB2 (DIV) continues [2]. RB4 (SUB) completes execution, writes result to ROB. Nothing to decode.
             \end{block}
@@ -1481,7 +1479,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 Again, no commit. RB2 still INV. Despite RB3 and RB4 being OK, must commit in-order.
             \end{block}
@@ -1502,7 +1500,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB2 (DIV) continues [1]. Nothing to decode.
             \end{block}
@@ -1523,7 +1521,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 Again, nothing to retire. RB2 still INV. Must retire in-order.
             \end{block}
@@ -1544,7 +1542,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 RB2 (DIV) completes execution, writes result to ROB. Nothing to decode.
             \end{block}
@@ -1567,7 +1565,7 @@
 
     \vspace{0.3cm}
     \begin{tikzpicture}[remember picture, overlay]
-        \node[anchor=south west, text width=6cm, font=\small, yshift=0.5cm] at (current page.south west) {
+        \node[anchor=south west, text width=6cm, font=\small, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
             \begin{block}{What's Happening}
                 All 3 instructions (RB2, RB3, RB4) retire together, committing R1, R2, R3. ROB cleared. RAT cleared. Program done in 11 cycles!
             \end{block}
@@ -1599,8 +1597,8 @@
     \vspace{0.3cm}
     \textbf{Key Structures Working Together:}
     \begin{itemize}
-        \item \textbf{RAT:} Arch→Phys register mappings (updated at decode)
-        \item \textbf{ROB:} Phys→Arch mappings, preserves program order (for retirement)
+        \item \textbf{RAT:} Arch to Phys register mappings (updated at decode)
+        \item \textbf{ROB:} Phys to Arch mappings, preserves program order (for retirement)
         \item \textbf{RS/MOB:} Track dependencies, dispatch ready instructions
         \item \textbf{Execute:} Multiple units working in parallel
     \end{itemize}
