@@ -1033,8 +1033,8 @@
         \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ}};
 
         % RAT below IDQ
-        \node[fill=green!20, inner sep=5pt, below=0.4cm of idq] (rat) {
-            \begin{minipage}{6.8cm}
+        \node[fill=green!10, inner sep=5pt, below=0.4cm of idq] (rat) {
+            \begin{minipage}{5.4cm}
             \centering
             \textbf{RAT}
 
@@ -1055,8 +1055,8 @@
         };
 
         % ROB below and left of RAT
-        \node[fill=cyan!20, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=-3.5cm] (rob) {
-            \begin{minipage}{4.4cm}
+        \node[fill=cyan!10, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=-3.5cm] (rob) {
+            \begin{minipage}{4.6cm}
             \centering
             \textbf{ROB}
 
@@ -1084,8 +1084,8 @@
         };
 
         % RS below and right of RAT
-        \node[fill=orange!20, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=3.5cm] (rs) {
-            \begin{minipage}{5cm}
+        \node[fill=orange!10, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=3.5cm] (rs) {
+            \begin{minipage}{5.5cm}
             \centering
             \textbf{RS}
 
@@ -1105,9 +1105,9 @@
             \vspace{0.1cm}
             \raggedright
             \tiny
-            \textcolor{blue!70!black}{Blue}: from RRF\\
+            \textcolor{blue!70!black}{Blue}: value from RRF\\
             \textcolor{red}{Red}: not valid, waiting\\
-            Black: from ROB
+            Black: value from ROB
             \end{minipage}
         };
 
@@ -1117,18 +1117,23 @@
             \centering
             \tiny
             \textbf{RRF:}
-            \begin{tabular}{|c|c|c|}
+            \begin{tabular}{|c|c|}
             \hline
-            0 & RAX & \textcolor{blue!70!black}{97H} \\
+            RAX & \textcolor{blue!70!black}{97H} \\
             \hline
             \end{tabular}
             \end{minipage}
         };
 
+        % Execute below RS and ROB
+        \node[draw, fill=highlightorange, inner sep=5pt, below=0.5cm of rs.south east, anchor=east] (execute) {\textbf{Execute}};
+
         % Arrows
         \draw[->, thick] (idq.south) -- (rat.north);
-        \draw[->, thick] (rat.south) ++(0,-0.3) -| (rob.north);
-        \draw[->, thick] (rat.south) ++(0,-0.3) -| (rs.north);
+        \draw[->, thick] (rat.south) -- ++(0,-0.3) -| (rob.north);
+        \draw[->, thick] (rat.south) -- ++(0,-0.3) -| (rs.north);
+        \draw[->, thick] (execute.north) -- (rs.south -| execute.north);
+        \draw[->, thick] (execute.west) -| ([xshift=3mm]rob.east) -- (rob.east);
 
     \end{tikzpicture}
 
