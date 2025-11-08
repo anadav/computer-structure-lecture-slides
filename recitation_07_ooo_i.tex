@@ -722,33 +722,44 @@
             \item Dynamic mapping eliminates name conflicts
         \end{itemize}
     \end{block}
-    
-    \begin{exampleblock}{Renaming in Action}
-        {\ttfamily\small
-        \textcolor{red}{R1} $\leftarrow$ R2+R3  $\Rightarrow$  \textcolor{correctgreen}{P17} $\leftarrow$ P5+P8\\
-        \textcolor{red}{R1} $\leftarrow$ R4+R5  $\Rightarrow$  \textcolor{correctgreen}{P23} $\leftarrow$ P11+P14
-        }
-    \end{exampleblock}
-    
-    \begin{alertblock}{Result}
-        No WAR or WAW hazards—different physical registers for each write!
-    \end{alertblock}
+
+    \vspace{0.3cm}
+    \textbf{Example:}
+
+    {\ttfamily\small
+    \textcolor{red}{R1} $\leftarrow$ R2+R3  $\Rightarrow$  \textcolor{correctgreen}{P17} $\leftarrow$ P5+P8\\
+    \textcolor{red}{R1} $\leftarrow$ R4+R5  $\Rightarrow$  \textcolor{correctgreen}{P23} $\leftarrow$ P11+P14
+    }
+
+    \vspace{0.1cm}
+    $\Rightarrow$ No WAR or WAW hazards—different physical registers for each write!
+
+    \vspace{0cm}
+    \begin{block}{Implementation Approaches}
+        \begin{itemize}
+            \item \textbf{ROB-based (Data-in-ROB):} ROB entries serve as physical registers
+            \item \textbf{PRF-based (Explicit):} Separate Physical Register File
+            \item \textbf{In this course:} We focus on ROB-based implementation using \textbf{RBx} notation (RB0, RB1, ...)
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Register Renaming - Implementation}
     We maintain two mappings:
-    
+
     \begin{enumerate}
-        \item \textbf{Architectural → Physical:} (e.g., R5→P8)
+        \item \textbf{Architectural → Physical:} (e.g., R5→RB2)
         \begin{itemize}
             \item For resolving false dependencies
-            \item Saved during decode → execution transition
+            \item Stored in \textbf{RAT} (Register Alias Table)
+            \item Updated at decode stage
         \end{itemize}
-        
-        \item \textbf{Physical → Architectural:} (e.g., P8→R5)
+
+        \item \textbf{Physical → Architectural:} (e.g., RB2→R5)
         \begin{itemize}
-            \item For saving the value back to the intended register
-            \item Saved as part of the commit stage
+            \item For writing the value back to the intended architectural register
+            \item Stored in \textbf{ROB} (Re-Order Buffer)
+            \item Used at commit/retire stage
         \end{itemize}
     \end{enumerate}
 \end{frame}
