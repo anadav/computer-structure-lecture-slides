@@ -1033,34 +1033,30 @@
         \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ}};
 
         % RAT below IDQ
-        \node[fill=green!20, inner sep=5pt, below=0.8cm of idq] (rat) {
+        \node[fill=green!20, inner sep=5pt, below=0.4cm of idq] (rat) {
             \begin{minipage}{6.8cm}
             \centering
-            \textbf{RAT / Alloc}
+            \textbf{RAT}
 
             \vspace{0.1cm}
-            \scriptsize
+            \tiny
             \begin{tabular}{|l|c|l|}
             \hline
             \textbf{Dest (Arch)} & \textbf{\#Phys Reg} & \textbf{Location} \\
             \hline
-            EAX & xxx & 0 (RRF) \\
-            \hdashline
-            EBX & 19 & 1 (ROB) \\
-            \hdashline
-            ECX & 23 & 1 (ROB) \\
+            RAX & xxx & 0 (RRF) \\
+            \hdashline[2pt/2pt]
+            RBX & 19 & 1 (ROB) \\
+            \hdashline[2pt/2pt]
+            RCX & 23 & 1 (ROB) \\
             \hline
             \end{tabular}
-
-            \vspace{0.1cm}
-            \tiny
-            0: Read from RRF, 1: Read from ROB
             \end{minipage}
         };
 
         % ROB below and left of RAT
         \node[fill=cyan!20, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=-3.5cm] (rob) {
-            \begin{minipage}{4cm}
+            \begin{minipage}{4.4cm}
             \centering
             \textbf{ROB}
 
@@ -1068,16 +1064,16 @@
             \tiny
             \begin{tabular}{|c|c|c|c|c|}
             \hline
-            \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Data} & \textbf{Arch} \\
-            \textbf{Reg} & & \textbf{Valid} & & \textbf{Reg} \\
+            \textbf{Phys} & \textbf{Alloc} & \multicolumn{2}{c|}{\textbf{Data}} & \textbf{Arch} \\
+            \textbf{Reg} & & \textbf{Valid} & \textbf{Value} & \textbf{Reg} \\
             \hline
-            19 & V & V & 12 & EBX \\
-            \hdashline
-            23 & V & V & 33 & ECX \\
-            \hdashline
-            37 & V & I & xxx & EAX \\
-            \hdashline
-            38 & I & x & xxx & EAX \\
+            19 & V & V & 12 & RBX \\
+            \hdashline[2pt/2pt]
+            23 & V & V & 33 & RCX \\
+            \hdashline[2pt/2pt]
+            37 & V & I & xxx & RAX \\
+            \hdashline[2pt/2pt]
+            38 & I & x & xxx & RAX \\
             \hline
             \end{tabular}
 
@@ -1089,7 +1085,7 @@
 
         % RS below and right of RAT
         \node[fill=orange!20, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=3.5cm] (rs) {
-            \begin{minipage}{3.5cm}
+            \begin{minipage}{5cm}
             \centering
             \textbf{RS}
 
@@ -1097,19 +1093,21 @@
             \tiny
             \begin{tabular}{|c|c|c|c|c|c|}
             \hline
-             & \textbf{v} & \textbf{src1} & \textbf{v} & \textbf{src2} & \textbf{Pdst} \\
+             & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
+             & \textbf{Valid} & \textbf{Value} & \textbf{Valid} & \textbf{Value} & \\
             \hline
-            add & 1 & 97H & 1 & 12H & 37 \\
-            \hdashline
-            sub & 0 & rob37 & 1 & 33H & 38 \\
+            add & 1 & \textcolor{blue!70!black}{97H} & 1 & 12H & 37 \\
+            \hdashline[2pt/2pt]
+            sub & \textcolor{red}{0} & rob37 & 1 & 33H & 38 \\
             \hline
             \end{tabular}
 
             \vspace{0.1cm}
+            \raggedright
             \tiny
-            Arch reg: from RRF\\
-            Phys reg + valid: from ROB\\
-            Phys reg + not valid: wait
+            \textcolor{blue!70!black}{Blue}: from RRF\\
+            \textcolor{red}{Red}: not valid, waiting\\
+            Black: from ROB
             \end{minipage}
         };
 
@@ -1121,7 +1119,7 @@
             \textbf{RRF:}
             \begin{tabular}{|c|c|c|}
             \hline
-            0 & EAX & 97H \\
+            0 & RAX & \textcolor{blue!70!black}{97H} \\
             \hline
             \end{tabular}
             \end{minipage}
