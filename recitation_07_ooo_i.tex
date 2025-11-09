@@ -1027,6 +1027,33 @@
 \end{frame}
 
 \begin{frame}{Structure Interaction (Intel CPUs)}
+    \begin{tikzpicture}[font=\tiny, remember picture, overlay]
+        % Explanation box in top left corner of page - minimal offset
+        \node[draw, fill=yellow!10, inner sep=5pt, text width=4.5cm, align=left, anchor=north west] at ([xshift=0.2cm, yshift=-1.5cm]current page.north west) {
+            \tiny
+            \only<1>{
+            \textbf{Instructions Flow:}\\[0.1cm]
+            IDQ $\rightarrow$ RAT (decode/rename) $\rightarrow$ ROB \& RS (track \& wait) $\rightarrow$ Execute\\[0.2cm]
+
+            \textbf{Physical Registers:}\\[0.05cm]
+            Phys Reg entries (ROB\#) referenced by:\\
+            - RAT: points to ROB entry\\
+            - RS.Pdst: destination ROB entry\\
+            - RS.srcX (valid=0): waiting for ROB entry
+            }
+            \only<2->{
+            \textbf{ROB Entries:}\\[0.05cm]
+            - If Alloc=I: entry not allocated, rest meaningless\\
+            - If Data Valid=I: value meaningless\\
+            - Arch Reg: for writeback at retire\\[0.2cm]
+
+            \textbf{RS Operation:}\\[0.05cm]
+            - RRF values: ready immediately\\
+            - ROB values: ready once execution unit produces result
+            }
+        };
+    \end{tikzpicture}
+
     \centering
     \begin{tikzpicture}[font=\tiny]
         % IDQ at top
@@ -1136,10 +1163,6 @@
         \draw[->, thick] (execute.west) -| ([xshift=3mm]rob.east) -- (rob.east);
 
     \end{tikzpicture}
-
-    \vspace{0.2cm}
-    \tiny
-    Instructions flow: IDQ $\rightarrow$ RAT (decode/rename) $\rightarrow$ ROB \& RS (track \& wait). Source \& dest values updated after EXE.
 \end{frame}
 
 \begin{frame}{Simplified Notation for Trace}
