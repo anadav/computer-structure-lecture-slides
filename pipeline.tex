@@ -1218,6 +1218,8 @@ then stall
     \begin{tikzpicture}[scale=0.8, node distance=0.5cm, remember picture,
         stage_label/.style={font=\footnotesize\bfseries}]
 
+        % Shift flowchart to the right
+        \begin{scope}[xshift=3cm]
         % Flowchart for BTB usage (drawn first)
         \node[draw, rectangle, fill=orange!40] (pc) {PC moves to next instruction};
         \node[draw, rectangle, fill=orange!40, below left=of pc, align=center] (imem) {Inst Mem gets PC\\and fetches new inst};
@@ -1250,12 +1252,13 @@ then stall
         \coordinate (exe_mem_y) at ([yshift=-0.3cm]branch.south);
 
         % Find leftmost element
-        \coordinate (leftmost) at (pred.west);
+        \coordinate (leftmost) at (imem.west);
+        \end{scope}
 
-        % Position labels and lines relative to flowchart
+        % Position labels and lines relative to flowchart (outside shifted scope)
         \coordinate (label_x) at ($(leftmost) + (-1.5, 0)$);
         \coordinate (line_left) at ($(label_x) + (0.5, 0)$);
-        \coordinate (line_right) at (6.5, 0);
+        \coordinate (line_right) at ($(line_left) + (13, 0)$);
 
         % Calculate midpoints for label positioning
         \coordinate (if_mid_y) at ($(if_id_y)!0.5!(id_exe_y)$);
@@ -1292,6 +1295,8 @@ then stall
     \begin{tikzpicture}[scale=0.8, node distance=0.5cm, remember picture,
         stage_label/.style={font=\footnotesize\bfseries}]
 
+        % Shift flowchart to the right
+        \begin{scope}[xshift=1cm]
         % Continuation of BTB flowchart (drawn first)
         \node[draw, diamond, fill=orange!40] (branch) {Branch?};
         \node[draw, rectangle, fill=orange!40, below left=of branch, align=center] (calc) {Calculate br\\cond \& trgt};
@@ -1319,12 +1324,13 @@ then stall
         \coordinate (end_y) at ([yshift=-0.3cm]correctinst.south);
 
         % Find leftmost element
-        \coordinate (leftmost) at (calc.west);
+        \coordinate (leftmost) at (continue2.west);
+        \end{scope}
 
-        % Position labels and lines relative to flowchart
+        % Position labels and lines relative to flowchart (outside shifted scope)
         \coordinate (label_x) at ($(leftmost) + (-1.5, 0)$);
         \coordinate (line_left) at ($(label_x) + (0.5, 0)$);
-        \coordinate (line_right) at (6.5, 0);
+        \coordinate (line_right) at ($(line_left) + (13, 0)$);
 
         % Calculate midpoints for label positioning
         \coordinate (id_mid_y) at ($(id_exe_y)!0.5!(exe_mem_y)$);
