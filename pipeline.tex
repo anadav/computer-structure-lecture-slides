@@ -1215,20 +1215,45 @@ then stall
 \begin{frame}{Using The BTB}
     \centering
     \tiny
-    \begin{tikzpicture}[scale=0.8, node distance=0.5cm]
-        % Flowchart for BTB usage
-        \node[draw, rectangle] (pc) {PC moves to next instruction};
-        \node[draw, rectangle, below left=of pc, align=center] (imem) {Inst Mem gets PC\\and fetches new inst};
-        \node[draw, rectangle, below right=of pc, align=center] (btb) {BTB gets PC\\and looks it up};
-        \node[draw, diamond, below=of btb] (hit) {BTB Hit?};
-        \node[draw, diamond, below left=of hit] (taken) {Br taken?};
-        \node[draw, rectangle, below left=of taken] (pred) {PC $\leftarrow$ pred addr};
-        \node[draw, rectangle, below right=of taken] (inc) {PC $\leftarrow$ PC + 4};
-        \node[draw, rectangle, below=of pred, align=center] (predinst) {IF/ID latch loaded\\with pred inst};
-        \node[draw, rectangle, below=of inc, align=center] (seqinst) {IF/ID latch loaded\\with seq. inst};
-        \node[draw, rectangle, align=center] (new) at (seqinst -| imem) {IF/ID latch loaded\\with new inst};
-        \node[draw, diamond, below=of new, align=center] (branch) {Branch?};
-        
+    \begin{tikzpicture}[scale=0.8, node distance=0.5cm,
+        stage_label/.style={anchor=west, font=\footnotesize\bfseries}]
+
+        % Pipeline stage lines (draw first so they're behind)
+        % Fixed width lines
+        \coordinate (line_left) at (-5.5, 0);
+        \coordinate (line_right) at (6.5, 0);
+
+        % Calculate positions for lines
+        \coordinate (temp_pc) at (0, 0);
+        \coordinate (temp_imem) at ($(temp_pc) + (-1.5, -1.5)$);
+        \coordinate (temp_predinst) at ($(temp_imem) + (-1, -3)$);
+        \coordinate (temp_branch) at ($(temp_predinst) + (1.5, -1.5)$);
+
+        % Line above IF
+        \coordinate (line_if_top) at ($(temp_pc) + (0, 0.5)$);
+        \draw[thick] (line_left |- line_if_top) -- (line_right |- line_if_top);
+
+        % Line between IF and ID
+        \coordinate (line_if_bottom) at ($(temp_predinst) + (0, -0.8)$);
+        \draw[thick] (line_left |- line_if_bottom) -- (line_right |- line_if_bottom);
+
+        % Line between ID and EXE
+        \coordinate (line_id_bottom) at ($(temp_branch) + (0, -0.8)$);
+        \draw[thick] (line_left |- line_id_bottom) -- (line_right |- line_id_bottom);
+
+        % Flowchart for BTB usage (drawn on top)
+        \node[draw, rectangle, fill=orange!40] (pc) {PC moves to next instruction};
+        \node[draw, rectangle, fill=orange!40, below left=of pc, align=center] (imem) {Inst Mem gets PC\\and fetches new inst};
+        \node[draw, rectangle, fill=orange!40, below right=of pc, align=center] (btb) {BTB gets PC\\and looks it up};
+        \node[draw, diamond, fill=orange!40, below=of btb] (hit) {BTB Hit?};
+        \node[draw, diamond, fill=orange!40, below left=of hit] (taken) {Br taken?};
+        \node[draw, rectangle, fill=orange!40, below left=of taken] (pred) {PC $\leftarrow$ pred addr};
+        \node[draw, rectangle, fill=orange!40, below right=of taken] (inc) {PC $\leftarrow$ PC + 4};
+        \node[draw, rectangle, fill=orange!40, below=of pred, align=center] (predinst) {IF/ID latch loaded\\with pred inst};
+        \node[draw, rectangle, fill=orange!40, below=of inc, align=center] (seqinst) {IF/ID latch loaded\\with seq. inst};
+        \node[draw, rectangle, fill=orange!40, align=center] (new) at (seqinst -| imem) {IF/ID latch loaded\\with new inst};
+        \node[draw, diamond, fill=orange!40, below=of new, align=center] (branch) {Branch?};
+
         \draw[->] (pc) -- (imem);
         \draw[->] (pc) -- (btb);
         \draw[->] (btb) -- (hit);
@@ -1240,6 +1265,30 @@ then stall
         \draw[->] (inc) -- (seqinst);
         \draw[->] (imem) -- (new);
         \draw[->] (new) -- (branch);
+
+        % Pipeline stage labels with arrows (drawn on top)
+        % Update line positions based on actual nodes
+        \coordinate (line_if_top) at ($(pc.north) + (0, 0.3)$);
+        \coordinate (line_if_bottom) at ($(predinst.south) + (0, -0.3)$);
+        \coordinate (line_id_bottom) at ([yshift=-0.3cm]branch.south);
+
+        % Fixed X position for all stage labels (relative to line_left)
+        \coordinate (label_x) at ($(line_left) + (-0.8, 0)$);
+
+        % IF label and arrows
+        \node[stage_label] (if_label) at (label_x |- imem.center) {IF};
+        \draw[->] (if_label.west) -- (if_label.west |- line_if_top);
+        \draw[->] (if_label.west) -- (if_label.west |- line_if_bottom);
+
+        % ID label and arrows
+        \node[stage_label] (id_label) at (label_x |- new.center) {ID};
+        \draw[->] (id_label.west) -- (id_label.west |- line_if_bottom);
+        \draw[->] (id_label.west) -- (id_label.west |- line_id_bottom);
+
+        % EXE label and arrow
+        \coordinate (exe_y) at ($(line_id_bottom) + (0, -0.5)$);
+        \node[stage_label] (exe_label) at (label_x |- exe_y) {EXE};
+        \draw[->] (exe_label.west) -- (exe_label.west |- line_id_bottom);
     \end{tikzpicture}
 \end{frame}
 
@@ -1247,22 +1296,89 @@ then stall
 \begin{frame}{Using The BTB (cont.)}
     \centering
     \tiny
-    \begin{tikzpicture}[scale=0.8, node distance=0.5cm]
-        % Continuation of BTB flowchart
-        \node[draw, diamond] (branch) {Branch?};
-        \node[draw, rectangle, below left=of branch, align=center] (calc) {Calculate br\\cond \& trgt};
-        \node[draw, rectangle, below right=of branch] (continue1) {continue};
-        \node[draw, rectangle, below=of calc] (update) {Update BTB};
-        \node[draw, diamond, below=of update, align=center] (correct) {Correct\\pred?};
-        \node[draw, rectangle, below right=of correct, align=center] (flush) {Flush pipe \&\\update PC};
-        \node[draw, rectangle, below left=of correct] (continue2) {continue};
-        
+    \begin{tikzpicture}[scale=0.8, node distance=0.5cm,
+        stage_label/.style={anchor=west, font=\footnotesize\bfseries}]
+
+        % Pipeline stage lines (draw first so they're behind)
+        % Fixed width lines
+        \coordinate (line_left) at (-5.5, 0);
+        \coordinate (line_right) at (6.5, 0);
+
+        % Calculate positions for lines
+        \coordinate (temp_branch) at (0, 0);
+        \coordinate (temp_calc) at ($(temp_branch) + (-1.5, -1.5)$);
+        \coordinate (temp_update) at ($(temp_calc) + (0, -1.5)$);
+        \coordinate (temp_correct) at ($(temp_update) + (0, -1.5)$);
+        \coordinate (temp_correctinst) at ($(temp_correct) + (1, -2.5)$);
+
+        % Line above ID
+        \coordinate (line_id_top) at ($(temp_branch) + (0, 0.5)$);
+        \draw[thick] (line_left |- line_id_top) -- (line_right |- line_id_top);
+
+        % Line between ID and EXE
+        \coordinate (line_id_bottom) at ($(temp_branch) + (0, -0.8)$);
+        \draw[thick] (line_left |- line_id_bottom) -- (line_right |- line_id_bottom);
+
+        % Line between EXE and MEM
+        \coordinate (line_exe_bottom) at ($(temp_update) + (0, -0.8)$);
+        \draw[thick] (line_left |- line_exe_bottom) -- (line_right |- line_exe_bottom);
+
+        % Line between MEM and WB
+        \coordinate (line_mem_bottom) at ($(temp_correct) + (0, -0.8)$);
+        \draw[thick] (line_left |- line_mem_bottom) -- (line_right |- line_mem_bottom);
+
+        % Line below WB
+        \coordinate (line_wb_bottom) at ($(temp_correctinst) + (0, -0.8)$);
+        \draw[thick] (line_left |- line_wb_bottom) -- (line_right |- line_wb_bottom);
+
+        % Continuation of BTB flowchart (drawn on top)
+        \node[draw, diamond, fill=orange!40] (branch) {Branch?};
+        \node[draw, rectangle, fill=orange!40, below left=of branch, align=center] (calc) {Calculate br\\cond \& trgt};
+        \node[draw, rectangle, fill=orange!40, below right=of branch] (continue1) {continue};
+        \node[draw, rectangle, fill=orange!40, below=of calc] (update) {Update BTB};
+        \node[draw, diamond, fill=orange!40, below=of update, align=center] (correct) {Correct\\pred?};
+        \node[draw, rectangle, fill=orange!40, below right=of correct, align=center] (flush) {Flush pipe \&\\update PC};
+        \node[draw, rectangle, fill=orange!40, below left=of correct] (continue2) {continue};
+        \node[draw, rectangle, fill=orange!40, below=of flush, align=center] (correctinst) {IF/ID latch loaded\\with correct inst};
+
         \draw[->] (branch) -| node[left] {yes} (calc);
         \draw[->] (branch) -| node[right] {no} (continue1);
         \draw[->] (calc) -- (update);
         \draw[->] (update) -- (correct);
         \draw[->] (correct) -| node[right] {no} (flush);
         \draw[->] (correct) -| node[left] {yes} (continue2);
+        \draw[->] (flush) -- (correctinst);
+
+        % Pipeline stage labels with arrows (drawn on top)
+        % Update line positions based on actual nodes
+        \coordinate (line_id_top) at ([yshift=0.3cm]branch.north);
+        \coordinate (line_id_bottom) at ([yshift=-0.3cm]branch.south);
+        \coordinate (line_exe_bottom) at ([yshift=-0.3cm]update.south);
+        \coordinate (line_mem_bottom) at ([yshift=-0.3cm]correct.south);
+        \coordinate (line_wb_bottom) at ([yshift=-0.3cm]correctinst.south);
+
+        % Fixed X position for all stage labels (relative to line_left)
+        \coordinate (label_x) at ($(line_left) + (-0.8, 0)$);
+
+        % ID label and arrows
+        \node[stage_label] (id_label) at (label_x |- branch.center) {ID};
+        \draw[->] (id_label.west) -- (id_label.west |- line_id_top);
+        \draw[->] (id_label.west) -- (id_label.west |- line_id_bottom);
+
+        % EXE label and arrows
+        \node[stage_label] (exe_label) at (label_x |- calc.center) {EXE};
+        \draw[->] (exe_label.west) -- (exe_label.west |- line_id_bottom);
+        \draw[->] (exe_label.west) -- (exe_label.west |- line_exe_bottom);
+
+        % MEM label and arrows
+        \node[stage_label] (mem_label) at (label_x |- correct.center) {MEM};
+        \draw[->] (mem_label.west) -- (mem_label.west |- line_exe_bottom);
+        \draw[->] (mem_label.west) -- (mem_label.west |- line_mem_bottom);
+
+        % WB label and arrows
+        \node[stage_label] (wb_label) at (label_x |- flush.center) {WB};
+        \draw[->] (wb_label.west) -- (wb_label.west |- line_mem_bottom);
+        \draw[->] (wb_label.west) -- (wb_label.west |- line_wb_bottom);
     \end{tikzpicture}
 \end{frame}
 
