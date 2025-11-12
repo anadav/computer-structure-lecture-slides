@@ -1248,7 +1248,7 @@ then stall
         % Pipeline stage labels with arrows (drawn on top)
         % Calculate boundary line positions based on actual nodes
         \coordinate (if_id_y) at ($(pc.north) + (0, 0.3)$);
-        \coordinate (id_exe_y) at ($(predinst.south) + (0, -0.3)$);
+        \coordinate (id_exe_y) at (new.center |- new.center);
         \coordinate (exe_mem_y) at ([yshift=-0.3cm]branch.south);
 
         % Find leftmost element
@@ -1318,10 +1318,13 @@ then stall
         % Pipeline stage labels with arrows (drawn on top)
         % Calculate boundary line positions based on actual nodes
         \coordinate (id_exe_y) at ([yshift=0.3cm]branch.north);
-        \coordinate (exe_mem_y) at ([yshift=-0.3cm]branch.south);
-        \coordinate (mem_wb_y) at ([yshift=-0.3cm]update.south);
-        \coordinate (wb_end_y) at ([yshift=-0.3cm]correct.south);
-        \coordinate (end_y) at ([yshift=-0.3cm]correctinst.south);
+        \coordinate (exe_mem_y) at (update.center |- update.center);
+        \coordinate (mem_wb_y) at (flush.center);
+        \coordinate (wb_end_y) at ([yshift=-0.3cm]flush.south);
+        \coordinate (end_y) at (correctinst.center |- correctinst.center);
+
+        % Add short arrow into branch from id_exe line
+        \draw[->, thick, orange!70] ([yshift=0.3cm]branch.north) -- (branch.north);
 
         % Find leftmost element
         \coordinate (leftmost) at (continue2.west);
