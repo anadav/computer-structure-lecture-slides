@@ -9,8 +9,13 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usepackage[american]{circuitikz}
+\usepackage{listings}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, backgrounds}
 \usetheme{Madrid}
+\lstset{
+    escapeinside={@}{@},
+    basicstyle=\ttfamily\small
+}
 
 \newcommand{\drawPipelineDiagram}[1][0,0]{%
     \scalebox{0.85}{%
@@ -1024,16 +1029,16 @@ then stall
             \item[$\Rightarrow$] $\text{CPI}_{\text{new}} = 1 + 0.2 \times 3 = 1.6$
         \end{itemize}
     \end{itemize}
-    
+
     \vspace{0.5cm}
     \centering
-    ($\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{avg. stall cycles / instr.}$)
-    
+    $\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{Avg. } \frac{\text{stall cycles}}{\text{instruction}}$
+
     \vspace{0.5cm}
-    \textbf{We lose 60\% of the performance}
+    \textcolor{red}{\textbf{We lose 60\% of the performance}}
 \end{frame}
 
-%% Slide: Control Hazard: Stall  
+%% Slide: Control Hazard: Stall
 \begin{frame}{Control Hazard: Stall}
     \begin{itemize}
         \item Stall pipe when branch is encountered until resolved
@@ -1045,13 +1050,13 @@ then stall
             \item[$\Rightarrow$] $\text{CPI}_{\text{new}} = 1 + 0.2 \times 3 = 1.6$
         \end{itemize}
     \end{itemize}
-    
+
     \vspace{0.5cm}
     \centering
-    ($\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{avg. stall cycles / instr.}$)
-    
+    $\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{Avg. } \frac{\text{stall cycles}}{\text{instruction}}$
+
     \vspace{0.5cm}
-    \textbf{We lose 60\% of the performance}
+    \textcolor{red}{\textbf{We lose 60\% of the performance}}
 \end{frame}
 
 %% Slide: Control Hazard: Predict Not Taken
@@ -1267,17 +1272,17 @@ then stall
 
         % IF label and arrows (positioned at midpoint between if_id_y and id_exe_y)
         \node[stage_label] (if_label) at (label_x |- if_mid_y) {IF};
-        \draw[->] (if_label.north) -- (if_label.north |- if_id_y);
-        \draw[->] (if_label.south) -- (if_label.south |- id_exe_y);
+        \draw[->] (if_label.north) -- ($(if_label.north |- if_id_y) + (0, -0.1)$);
+        \draw[->] (if_label.south) -- ($(if_label.south |- id_exe_y) + (0, 0.1)$);
 
         % ID label and arrows (positioned at midpoint between id_exe_y and exe_mem_y)
         \node[stage_label] (id_label) at (label_x |- id_mid_y) {ID};
-        \draw[->] (id_label.north) -- (id_label.north |- id_exe_y);
-        \draw[->] (id_label.south) -- (id_label.south |- exe_mem_y);
+        \draw[->] (id_label.north) -- ($(id_label.north |- id_exe_y) + (0, -0.1)$);
+        \draw[->] (id_label.south) -- ($(id_label.south |- exe_mem_y) + (0, 0.1)$);
 
         % EXE label and arrow (positioned below exe_mem_y)
         \node[stage_label] (exe_label) at (label_x |- exe_mid_y) {EXE};
-        \draw[->] (exe_label.north) -- (exe_label.north |- exe_mem_y);
+        \draw[->] (exe_label.north) -- ($(exe_label.north |- exe_mem_y) + (0, -0.1)$);
 
         % Draw horizontal lines (behind everything else by drawing them last but with background layer)
         \begin{scope}[on background layer]
@@ -1343,23 +1348,23 @@ then stall
 
         % ID label and arrows (positioned at midpoint between id_exe_y and exe_mem_y)
         \node[stage_label] (id_label) at (label_x |- id_mid_y) {ID};
-        \draw[->] (id_label.north) -- (id_label.north |- id_exe_y);
-        \draw[->] (id_label.south) -- (id_label.south |- exe_mem_y);
+        \draw[->] (id_label.north) -- ($(id_label.north |- id_exe_y) + (0, -0.1)$);
+        \draw[->] (id_label.south) -- ($(id_label.south |- exe_mem_y) + (0, 0.1)$);
 
         % EXE label and arrows (positioned at midpoint between exe_mem_y and mem_wb_y)
         \node[stage_label] (exe_label) at (label_x |- exe_mid_y) {EXE};
-        \draw[->] (exe_label.north) -- (exe_label.north |- exe_mem_y);
-        \draw[->] (exe_label.south) -- (exe_label.south |- mem_wb_y);
+        \draw[->] (exe_label.north) -- ($(exe_label.north |- exe_mem_y) + (0, -0.1)$);
+        \draw[->] (exe_label.south) -- ($(exe_label.south |- mem_wb_y) + (0, 0.1)$);
 
         % MEM label and arrows (positioned at midpoint between mem_wb_y and wb_end_y)
         \node[stage_label] (mem_label) at (label_x |- mem_mid_y) {MEM};
-        \draw[->] (mem_label.north) -- (mem_label.north |- mem_wb_y);
-        \draw[->] (mem_label.south) -- (mem_label.south |- wb_end_y);
+        \draw[->] (mem_label.north) -- ($(mem_label.north |- mem_wb_y) + (0, -0.1)$);
+        \draw[->] (mem_label.south) -- ($(mem_label.south |- wb_end_y) + (0, 0.1)$);
 
         % WB label and arrows (positioned at midpoint between wb_end_y and end_y)
         \node[stage_label] (wb_label) at (label_x |- wb_mid_y) {WB};
-        \draw[->] (wb_label.north) -- (wb_label.north |- wb_end_y);
-        \draw[->] (wb_label.south) -- (wb_label.south |- end_y);
+        \draw[->] (wb_label.north) -- ($(wb_label.north |- wb_end_y) + (0, -0.1)$);
+        \draw[->] (wb_label.south) -- ($(wb_label.south |- end_y) + (0, 0.1)$);
 
         % Draw horizontal lines (behind everything else by drawing them last but with background layer)
         \begin{scope}[on background layer]
@@ -1370,6 +1375,177 @@ then stall
             \draw[thick] (line_left |- end_y) -- (line_right |- end_y);
         \end{scope}
     \end{tikzpicture}
+\end{frame}
+
+%% Backup Slides
+
+%% Slide: Multi-Cycle Control
+\begin{frame}{Multi-Cycle Control}
+    \begin{itemize}
+        \item \textbf{Pass control signals along just like the data}
+    \end{itemize}
+
+    \vspace{0.5cm}
+    \centering
+    % TODO: Add figure for multi-cycle control
+    %\includegraphics[width=0.9\textwidth]{figures/multi_cycle_control.png}
+\end{frame}
+
+%% Slide: Five Execution Steps
+\begin{frame}{Five Execution Steps}
+    \begin{itemize}
+        \item \textbf{Instruction Fetch}
+        \begin{itemize}
+            \item Use PC to get instruction and put it in the Instruction Register.
+            \item Increment the PC by 4 and put the result back in the PC.
+            \item \texttt{IR = Memory[PC]; PC = PC + 4;}
+        \end{itemize}
+
+        \item \textbf{Instruction Decode and Register Fetch}
+        \begin{itemize}
+            \item Read registers rs and rt
+            \item Compute the branch address
+            \item \texttt{A = Reg[IR[25-21]]; B = Reg[IR[20-16]];}
+            \item \texttt{ALUOut = PC + (sign-extend(IR[15-0]) << 2);}
+            \item We aren't setting any control lines based on the instruction type
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+%% Slide: Five Execution Steps (cont.)
+\begin{frame}{Five Execution Steps (cont.)}
+    \begin{itemize}
+        \item \textbf{Execution} - ALU is performing one of three functions:
+        \begin{itemize}
+            \item \textbf{Memory Reference:} \texttt{ALUOut = A + sign-extend(IR[15-0]);}
+            \item \textbf{R-type:} \texttt{ALUOut = A op B;}
+            \item \textbf{Branch:} \texttt{if (A==B) PC = ALUOut;}
+        \end{itemize}
+
+        \item \textbf{Memory Access or R-type instruction completion}
+        \item \textbf{Write-back step}
+    \end{itemize}
+\end{frame}
+
+%% Slide: The Store Instruction
+\begin{frame}{The Store Instruction}
+    \centering
+    \Large
+    \textbf{sw} \textcolor{blue}{rt, rs, imm16}
+
+    \vspace{0.5cm}
+    \begin{tikzpicture}
+        \draw[thick] (0,0) rectangle (10,1);
+        \draw[thick] (2,0) -- (2,1);
+        \draw[thick] (4,0) -- (4,1);
+        \draw[thick] (6,0) -- (6,1);
+
+        \node at (1,0.5) {op};
+        \node at (3,0.5) {rs};
+        \node at (5,0.5) {rt};
+        \node at (8,0.5) {immediate};
+
+        \node[above] at (1,1) {\small 31};
+        \node[above] at (2,1) {\small 26};
+        \node[above] at (4,1) {\small 21};
+        \node[above] at (6,1) {\small 16};
+        \node[above] at (10,1) {\small 0};
+
+        \node[below] at (1,0) {\small 6 bits};
+        \node[below] at (3,0) {\small 5 bits};
+        \node[below] at (5,0) {\small 5 bits};
+        \node[below] at (8,0) {\small 16 bits};
+    \end{tikzpicture}
+
+    \vspace{0.5cm}
+    \begin{itemize}
+        \item \textcolor{red}{mem[PC]} \hfill Fetch the instruction from memory
+        \item \textcolor{red}{Addr $\leftarrow$ R[rs] + SignExt(imm16)}
+
+        \hfill Calculate the memory address
+        \item \textcolor{red}{Mem[Addr] $\leftarrow$ R[rt]} \hfill Store the register into memory
+        \item \textcolor{red}{PC $\leftarrow$ PC + 4} \hfill Calculate the next instruction's address
+    \end{itemize}
+
+    \vspace{0.5cm}
+    \textcolor{red}{Mem[Rs + SignExt[imm16]] $\leftarrow$ Rt} \hfill Example: \textcolor{blue}{sw rt, rs, imm16}
+\end{frame}
+
+%% Slide: RAW Hazard: SW Solution
+\begin{frame}{RAW Hazard: SW Solution}
+    \begin{itemize}
+        \item Have compiler avoid hazards by adding NOP instructions
+        \item Problem: this really slows us down!
+    \end{itemize}
+
+    \vspace{0.5cm}
+    \centering
+    % TODO: Add figure for RAW hazard SW solution
+    %\includegraphics[width=0.95\textwidth]{figures/raw_hazard_sw.png}
+\end{frame}
+
+%% Slide: Delayed Branch
+\begin{frame}[fragile]{Delayed Branch}
+    \begin{itemize}
+        \item \textbf{Define branch to take place AFTER \textit{n} following instruction}
+        \begin{itemize}
+            \item HW executes \textit{n} instructions following the branch regardless of branch is taken or not
+        \end{itemize}
+
+        \item \textbf{SW puts in the \textit{n} slots following the branch instructions that need to be executed regardless of branch resolution}
+        \begin{itemize}
+            \item Instructions that are before the branch instruction, or
+            \item Instructions from the converged path after the branch
+        \end{itemize}
+
+        \item \textbf{If cannot find independent instructions, put NOP}
+    \end{itemize}
+
+    \vspace{0.5cm}
+    \begin{columns}
+        \column{0.45\textwidth}
+        \begin{block}{Original Code}
+            \small\ttfamily
+            r3 = 23\\
+            R4 = R3+R5\\
+            If (r1==r2) goto x\\
+            R1 = R4 + R5\\
+            X: R7 = R1
+        \end{block}
+
+        \column{0.45\textwidth}
+        \begin{block}{New Code}
+            \small\ttfamily
+            If (r1==r2) goto x\\
+            \textcolor{red}{r3 = 23}\\
+            \textcolor{red}{R4 = R3 +R5}\\
+            \textcolor{red}{NOP}\\
+            R1 = R4 + R5\\
+            X: R7 = R1
+        \end{block}
+    \end{columns}
+\end{frame}
+
+%% Slide: Delayed Branch Performance
+\begin{frame}{Delayed Branch Performance}
+    \begin{itemize}
+        \item \textbf{Filling 1 delay slot is easy, 2 is hard, 3 is harder}
+        \item \textbf{Assuming we can effectively fill d\% of the delayed slots}
+
+        \vspace{0.5cm}
+        \centering
+        \Large
+        $\text{CPI}_{\text{new}} = 1 + 0.2 \times (3 \times (1-d))$
+
+        \vspace{0.5cm}
+        \normalsize
+        \item \textbf{For example, for d=0.5, we get $\text{CPI}_{\text{new}} = 1.3$}
+        \item \textbf{Mixing architecture with micro-arch}
+        \begin{itemize}
+            \item New generations requires more delay slots
+            \item Cause computability issues between generations
+        \end{itemize}
+    \end{itemize}
 \end{frame}
 
 \end{document}
