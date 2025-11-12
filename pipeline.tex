@@ -1379,6 +1379,47 @@ then stall
 
 %% Backup Slides
 
+%% Backup Slides Separator
+\begin{frame}[plain]
+    \begin{center}
+        \vfill
+        {\Huge \textbf{Backup Slides}}
+        \vfill
+    \end{center}
+\end{frame}
+
+%% Slide: Control Signals
+\begin{frame}{Control Signals}
+    \centering
+    \footnotesize
+    \renewcommand{\arraystretch}{0.9}
+    \begin{tabular}{|l|c|c|c|c|c|c|c|}
+        \hline
+        \textbf{func} & \textbf{10 0000} & \textbf{10 0010} & \multicolumn{5}{c|}{\textbf{Don't Care}} \\
+        \hline
+        \textbf{op} & \textbf{00 0000} & \textbf{00 0000} & \textbf{00 1101} & \textbf{10 0011} & \textbf{10 1011} & \textbf{00 0100} & \textbf{00 0010} \\
+        \hline
+        & \textbf{add} & \textbf{sub} & \textbf{ori} & \textbf{lw} & \textbf{sw} & \textbf{beq} & \textbf{jump} \\
+        \hline
+        \textbf{RegDst} & 1 & 1 & 0 & 0 & x & x & x \\
+        \hline
+        \textbf{ALUSrc} & 0 & 0 & 1 & 1 & 1 & 0 & x \\
+        \hline
+        \textbf{MemtoReg} & 0 & 0 & 0 & 1 & x & x & x \\
+        \hline
+        \textbf{RegWrite} & 1 & 1 & 1 & 1 & 0 & 0 & 0 \\
+        \hline
+        \textbf{MemWrite} & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+        \hline
+        \textbf{Branch} & 0 & 0 & 0 & 0 & 0 & 1 & x \\
+        \hline
+        \textbf{Jump} & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+        \hline
+        \textbf{ALUctr$\langle$2:0$\rangle$} & Add & Subtract & Or & Add & Add & Subtract & xxx \\
+        \hline
+    \end{tabular}
+\end{frame}
+
 %% Slide: Multi-Cycle Control
 \begin{frame}{Multi-Cycle Control}
     \begin{itemize}
@@ -1429,46 +1470,45 @@ then stall
 
 %% Slide: The Store Instruction
 \begin{frame}{The Store Instruction}
-    \centering
-    \Large
-    \textbf{sw} \textcolor{blue}{rt, rs, imm16}
+    \begin{center}
+    \textbf{Instruction Format:}
 
-    \vspace{0.5cm}
+    \vspace{0.3cm}
     \begin{tikzpicture}
-        \draw[thick] (0,0) rectangle (10,1);
-        \draw[thick] (2,0) -- (2,1);
-        \draw[thick] (4,0) -- (4,1);
-        \draw[thick] (6,0) -- (6,1);
+        \draw[thick] (0,0) rectangle (10,0.6);
+        \draw[thick] (2,0) -- (2,0.6);
+        \draw[thick] (4,0) -- (4,0.6);
+        \draw[thick] (6,0) -- (6,0.6);
 
-        \node at (1,0.5) {op};
-        \node at (3,0.5) {rs};
-        \node at (5,0.5) {rt};
-        \node at (8,0.5) {immediate};
+        \node at (1,0.3) {\small op};
+        \node at (3,0.3) {\small rs};
+        \node at (5,0.3) {\small rt};
+        \node at (8,0.3) {\small immediate};
 
-        \node[above] at (1,1) {\small 31};
-        \node[above] at (2,1) {\small 26};
-        \node[above] at (4,1) {\small 21};
-        \node[above] at (6,1) {\small 16};
-        \node[above] at (10,1) {\small 0};
+        \node[above, anchor=south west, inner sep=1pt] at (0,0.6) {\footnotesize 31};
+        \node[above, anchor=south, inner sep=1pt] at (2,0.6) {\footnotesize 26};
+        \node[above, anchor=south, inner sep=1pt] at (4,0.6) {\footnotesize 21};
+        \node[above, anchor=south, inner sep=1pt] at (6,0.6) {\footnotesize 16};
+        \node[above, anchor=south east, inner sep=1pt] at (10,0.6) {\footnotesize 0};
 
-        \node[below] at (1,0) {\small 6 bits};
-        \node[below] at (3,0) {\small 5 bits};
-        \node[below] at (5,0) {\small 5 bits};
-        \node[below] at (8,0) {\small 16 bits};
+        \node[below] at (1,0) {\footnotesize 6 bits};
+        \node[below] at (3,0) {\footnotesize 5 bits};
+        \node[below] at (5,0) {\footnotesize 5 bits};
+        \node[below] at (8,0) {\footnotesize 16 bits};
     \end{tikzpicture}
+    \end{center}
 
-    \vspace{0.5cm}
+    \vspace{0.3cm}
+    \textbf{Execution Steps:}
     \begin{itemize}
-        \item \textcolor{red}{mem[PC]} \hfill Fetch the instruction from memory
-        \item \textcolor{red}{Addr $\leftarrow$ R[rs] + SignExt(imm16)}
-
-        \hfill Calculate the memory address
-        \item \textcolor{red}{Mem[Addr] $\leftarrow$ R[rt]} \hfill Store the register into memory
-        \item \textcolor{red}{PC $\leftarrow$ PC + 4} \hfill Calculate the next instruction's address
+        \item Fetch instruction from memory: \texttt{mem[PC]}
+        \item Calculate address: $\text{Addr} \leftarrow \text{R[rs]} + \text{SignExt(imm16)}$
+        \item \textbf{Store:} $\textcolor{blue}{\text{Mem[Addr]} \leftarrow \text{R[rt]}}$
+        \item Update PC: $\text{PC} \leftarrow \text{PC} + 4$
     \end{itemize}
 
-    \vspace{0.5cm}
-    \textcolor{red}{Mem[Rs + SignExt[imm16]] $\leftarrow$ Rt} \hfill Example: \textcolor{blue}{sw rt, rs, imm16}
+    \vspace{0.2cm}
+    \textbf{Example:} \texttt{sw rt, rs, imm16} \quad $\Rightarrow$ \quad $\text{Mem[R[rs]} + \text{SignExt(imm16)]} \leftarrow \text{R[rt]}$
 \end{frame}
 
 %% Slide: RAW Hazard: SW Solution
@@ -1529,21 +1569,23 @@ then stall
 %% Slide: Delayed Branch Performance
 \begin{frame}{Delayed Branch Performance}
     \begin{itemize}
-        \item \textbf{Filling 1 delay slot is easy, 2 is hard, 3 is harder}
-        \item \textbf{Assuming we can effectively fill d\% of the delayed slots}
+        \item Filling \textbf{1 delay slot is easy}, \textbf{2 is hard}, \textbf{3 is harder}
+        \item Assume we can effectively fill \textbf{d\%} of the delayed slots
+    \end{itemize}
 
-        \vspace{0.5cm}
-        \centering
+    \vspace{0.5cm}
+    \begin{center}
         \Large
         $\text{CPI}_{\text{new}} = 1 + 0.2 \times (3 \times (1-d))$
+    \end{center}
+    \vspace{0.5cm}
 
-        \vspace{0.5cm}
-        \normalsize
-        \item \textbf{For example, for d=0.5, we get $\text{CPI}_{\text{new}} = 1.3$}
-        \item \textbf{Mixing architecture with micro-arch}
+    \begin{itemize}
+        \item For example, for $d=0.5$: \quad \textcolor{blue}{\textbf{$\text{CPI}_{\text{new}} = 1.3$}}
+        \item \textbf{Problem: Mixing architecture with micro-architecture}
         \begin{itemize}
-            \item New generations requires more delay slots
-            \item Cause computability issues between generations
+            \item New generations require more delay slots
+            \item Causes \textbf{compatibility issues} between generations
         \end{itemize}
     \end{itemize}
 \end{frame}
