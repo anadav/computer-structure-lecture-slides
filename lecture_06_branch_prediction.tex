@@ -2,7 +2,6 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb}
 \usepackage{array}
-\usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{colortbl}
 \usepackage{hyperref}
@@ -51,20 +50,20 @@
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Lookup BPU in parallel to I\$}
+    \item \textbf{Lookup BPU in parallel to I\$}
     \begin{itemize}
-        \item[$\triangleright$] BPU provides the predicted target and direction at fetch
+        \item BPU provides the predicted target and direction at fetch
     \end{itemize}
 \end{itemize}
 
 \vspace{0.2cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{At Execute stage}
+    \item \textbf{At Execute stage}
     \begin{itemize}
-        \item[$\triangleright$] Verify direction (T/NT) and target (if taken)
-        \item[$\triangleright$] Flush if mis-predict
-        \item[$\triangleright$] Update/allocate BPU
+        \item Verify direction (T/NT) and target (if taken)
+        \item Flush if mis-predict
+        \item Update/allocate BPU
     \end{itemize}
 \end{itemize}
 
@@ -76,7 +75,7 @@
 \label{frame:branches_performance}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Misprediction Rate (MPR) vs. Misprediction Per Instruction (MPI)}
+    \item \textbf{Misprediction Rate (MPR) vs. Misprediction Per Instruction (MPI)}
 \end{itemize}
 
 \vspace{0.3cm}
@@ -90,29 +89,29 @@ $\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hs
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\triangleright$] MPI correlates better with performance since it takes into account jumps frequency
+    \item MPI correlates better with performance since it takes into account jumps frequency
 \end{itemize}
 
 \vspace{0.2cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Assume}
+    \item \textbf{Assume}
     \begin{itemize}
-        \item[$\triangleright$] MPI = 1\% (1 flush every 100 instructions on average)
-        \item[$\triangleright$] IPC=2 \hspace{0.5cm} (2 instructions per cycle on average)
-        \item[$\triangleright$] Flush penalty of 10 cycles
+        \item MPI = 1\% (1 flush every 100 instructions on average)
+        \item IPC=2 \hspace{0.5cm} (2 instructions per cycle on average)
+        \item Flush penalty of 10 cycles
     \end{itemize}
 \end{itemize}
 
 \vspace{0.2cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{We get:}
+    \item \textbf{We get:}
     \begin{itemize}
-        \item[$\triangleright$] MPI = 1\% $\Rightarrow$ 1 flush every 100 instructions on average
-        \item[$\triangleright$] IPC=2 $\Rightarrow$ 1 flush every 50 cycles
-        \item[$\triangleright$] 10 cycles flush penalty every 50 cycles
-        \item[$\triangleright$] 20\% in performance
+        \item MPI = 1\% $\Rightarrow$ 1 flush every 100 instructions on average
+        \item IPC=2 $\Rightarrow$ 1 flush every 50 cycles
+        \item 10 cycles flush penalty every 50 cycles
+        \item 20\% in performance
     \end{itemize}
 \end{itemize}
 
@@ -250,25 +249,25 @@ $\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hs
 \begin{columns}[T]
 \begin{column}{0.58\textwidth}
 \begin{itemize}
-    \item[$\diamond$] \textbf{The TA is accessed using the branch address (branch IP)}
+    \item \textbf{The TA is accessed using the branch address (branch IP)}
     \begin{itemize}
-        \item[$\triangleright$] Implemented as an $n$-way set associative cache
+        \item Implemented as an $n$-way set associative cache
     \end{itemize}
 \end{itemize}
 
 \vspace{0.15cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{The TA predicts the following}
+    \item \textbf{The TA predicts the following}
     \begin{itemize}
-        \item[$\triangleright$] Instruction is a branch
-        \item[$\triangleright$] Predicted target
-        \item[$\triangleright$] Branch type
+        \item Instruction is a branch
+        \item Predicted target
+        \item Branch type
         \begin{itemize}
-            \item[$\circ$] Conditional: jump to target if predict taken
-            \item[$\circ$] Unconditional direct: take target
-            \item[$\circ$] Unconditional Indirect: if ITA hits, use its target
-            \item[$\circ$] Return: get target from Return Stack Buffer
+            \item Conditional: jump to target if predict taken
+            \item Unconditional direct: take target
+            \item Unconditional Indirect: if ITA hits, use its target
+            \item Return: get target from Return Stack Buffer
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -276,17 +275,17 @@ $\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hs
 \vspace{0.15cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{The TA is allocated/updated at Decode / EXE}
+    \item \textbf{The TA is allocated/updated at Decode / EXE}
 \end{itemize}
 
 \vspace{0.15cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Tags are usually partial}
+    \item \textbf{Tags are usually partial}
     \begin{itemize}
-        \item[$\triangleright$] Trade-off space, can get false hits
-        \item[$\triangleright$] Few branches aliased to same entry
-        \item[$\triangleright$] No \textit{correctness}, only \textit{performance}
+        \item Trade-off space, can get false hits
+        \item Few branches aliased to same entry
+        \item No \textit{correctness}, only \textit{performance}
     \end{itemize}
 \end{itemize}
 \end{column}
@@ -484,7 +483,7 @@ $\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hs
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \small\textbf{2-bit predictor avoids a double mistake in loops / glitches from the pattern}
+    \item \small\textbf{2-bit predictor avoids a double mistake in loops / glitches from the pattern}
 \end{itemize}
 
 \vspace{0.1cm}
@@ -506,12 +505,10 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 \textcolor{red}{0} 0
 
 %\vspace{-0.3cm}
 
-% Indent bullet points and allow more horizontal space
-\setlist[itemize]{left=0.5em, rightmargin=0.5em}
 \begin{itemize}
-    \item[$\diamond$] \textbf{A 2-bit counter avoids the double mistake in glitches}
+    \item \textbf{A 2-bit counter avoids the double mistake in glitches}
     \begin{itemize}
-        \item[$\circ$] Need "more evidence" to change prediction
+        \item Need "more evidence" to change prediction
     \end{itemize}
 \end{itemize}
 
@@ -559,20 +556,20 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 \textcolor{red}{0} 0
 \vspace{0.1cm}
 
 \begin{itemize}
-    \item[$\circ$] Initial state: weakly-taken (most branches are taken)
+    \item Initial state: weakly-taken (most branches are taken)
 \end{itemize}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Update (at execution)}
+    \item \textbf{Update (at execution)}
     \begin{itemize}
-        \item[$\circ$] Branch was actually taken: increment counter (saturate at 11)
-        \item[$\circ$] Branch was actually not-taken: decrement counter (saturate at 00)
+        \item Branch was actually taken: increment counter (saturate at 11)
+        \item Branch was actually not-taken: decrement counter (saturate at 00)
     \end{itemize}
 \end{itemize}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Predict according to m.s.bit of counter (0=NT, 1=taken)}
-    \item[$\diamond$] \textbf{Does not predict well branches with patterns like 010101...}
+    \item \textbf{Predict according to m.s.bit of counter (0=NT, 1=taken)}
+    \item \textbf{Does not predict well branches with patterns like 010101...}
 \end{itemize}
 
 \end{frame}
@@ -586,7 +583,7 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 \textcolor{red}{0} 0
 
 % Br1 prediction with tabular and vertical arrows
 \begin{itemize}
-\item[$\diamond$] \textbf{Br1 prediction}
+\item \textbf{Br1 prediction}
 \end{itemize}
 \begin{tikzpicture}[baseline=(current bounding box.center),every node/.style={anchor=base}]
     % Table for alignment
@@ -609,7 +606,7 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 \textcolor{red}{0} 0
 \vspace{0.2cm}
 % Br2 prediction with tabular and vertical arrows
 \begin{itemize}
-\item[$\diamond$] \textbf{Br2 prediction}
+\item \textbf{Br2 prediction}
 \end{itemize}
 \begin{tikzpicture}[baseline=(current bounding box.center),every node/.style={anchor=base}]
     % Table for alignment
@@ -632,7 +629,7 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 \textcolor{red}{0} 0
 \vspace{0.2cm}
 % Br3 prediction with tabular and vertical arrows
 \begin{itemize}
-\item[$\diamond$] \textbf{Br3 prediction}
+\item \textbf{Br3 prediction}
 \end{itemize}
 \begin{tikzpicture}[baseline=(current bounding box.center),every node/.style={anchor=base}]
     % Table for alignment
@@ -743,7 +740,7 @@ br3: JNZ n, Loop
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Problem: 1-bit predictor has a double mistake in loops}
+    \item \textbf{Problem: 1-bit predictor has a double mistake in loops}
 \end{itemize}
 
 \vspace{0.1cm}
@@ -763,20 +760,20 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \label{frame:2level_prediction}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Save branch direction history in a Branch History Register}
+    \item \textbf{Save branch direction history in a Branch History Register}
     \begin{itemize}
-        \item[$\triangleright$] A shift-register that saves the last $n$ outcomes of the branch
-        \item[$\triangleright$] History points to an array of $2^n$ bits
-        \item[$\triangleright$] Bit pointed by a history specifies the predicted branch direction following that history
+        \item A shift-register that saves the last $n$ outcomes of the branch
+        \item History points to an array of $2^n$ bits
+        \item Bit pointed by a history specifies the predicted branch direction following that history
     \end{itemize}
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Example: predicting the pattern 0001 0001 0001 ...}
+    \item \textbf{Example: predicting the pattern 0001 0001 0001 ...}
     \begin{itemize}
-        \item[$\triangleright$] History length $n=3$
+        \item History length $n=3$
     \end{itemize}
 \end{itemize}
 
@@ -805,35 +802,35 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \label{frame:shortest_history}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{What is the shortest history needed to perfectly predict the pattern 10011 10011 ... in steady state?}
+    \item \textbf{What is the shortest history needed to perfectly predict the pattern 10011 10011 ... in steady state?}
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\triangleright$] \textbf{A history of length 3 predicts correctly:}
+    \item \textbf{A history of length 3 predicts correctly:}
     \begin{itemize}
-        \item[$\circ$] \colorbox{lightblue!30}{100}11 10011 \hspace{0.3cm} 100 $\Rightarrow$ 1
-        \item[$\circ$] 1\colorbox{lightblue!30}{001}1 10011 \hspace{0.3cm} 001 $\Rightarrow$ 1
-        \item[$\circ$] 10\colorbox{lightblue!30}{011} 10011 \hspace{0.3cm} 011 $\Rightarrow$ 1
-        \item[$\circ$] 100\colorbox{lightblue!30}{11 1}0011 \hspace{0.3cm} 111 $\Rightarrow$ 0
-        \item[$\circ$] 10011 \colorbox{lightblue!30}{1 10}011 \hspace{0.3cm} 110 $\Rightarrow$ 0
+        \item \colorbox{lightblue!30}{100}11 10011 \hspace{0.3cm} 100 $\Rightarrow$ 1
+        \item 1\colorbox{lightblue!30}{001}1 10011 \hspace{0.3cm} 001 $\Rightarrow$ 1
+        \item 10\colorbox{lightblue!30}{011} 10011 \hspace{0.3cm} 011 $\Rightarrow$ 1
+        \item 100\colorbox{lightblue!30}{11 1}0011 \hspace{0.3cm} 111 $\Rightarrow$ 0
+        \item 10011 \colorbox{lightblue!30}{1 10}011 \hspace{0.3cm} 110 $\Rightarrow$ 0
     \end{itemize}
-    \item[$\circ$] Either no sub-pattern appears more than once, or whenever the sub-pattern appears it points to the same value
+    \item Either no sub-pattern appears more than once, or whenever the sub-pattern appears it points to the same value
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\triangleright$] \textbf{A history of length 2 is wrong twice per iteration}
+    \item \textbf{A history of length 2 is wrong twice per iteration}
     \begin{itemize}
-        \item[$\circ$] \colorbox{lightblue!30}{10}011 10011 \hspace{0.3cm} 10 $\Rightarrow$ 0
-        \item[$\circ$] 1\colorbox{lightblue!30}{00}11 10011 \hspace{0.3cm} 00 $\Rightarrow$ 1
-        \item[$\circ$] 10\colorbox{lightblue!30}{01}1 10011 \hspace{0.3cm} 01 $\Rightarrow$ 1
-        \item[$\circ$] 100\colorbox{lightblue!30}{11} 10011 \hspace{0.3cm} 11 $\Rightarrow$ \textcolor{red}{1}
-        \item[$\circ$] 10011 \colorbox{lightblue!30}{1 1}0011 \hspace{0.3cm} 11 $\Rightarrow$ \textcolor{red}{0}
+        \item \colorbox{lightblue!30}{10}011 10011 \hspace{0.3cm} 10 $\Rightarrow$ 0
+        \item 1\colorbox{lightblue!30}{00}11 10011 \hspace{0.3cm} 00 $\Rightarrow$ 1
+        \item 10\colorbox{lightblue!30}{01}1 10011 \hspace{0.3cm} 01 $\Rightarrow$ 1
+        \item 100\colorbox{lightblue!30}{11} 10011 \hspace{0.3cm} 11 $\Rightarrow$ \textcolor{red}{1}
+        \item 10011 \colorbox{lightblue!30}{1 1}0011 \hspace{0.3cm} 11 $\Rightarrow$ \textcolor{red}{0}
     \end{itemize}
-    \item[$\circ$] A sub-pattern appears more than once, and it points to different values
+    \item A sub-pattern appears more than once, and it points to different values
 \end{itemize}
 
 \end{frame}
@@ -844,10 +841,10 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \label{frame:local_history}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Use 2-bit saturating counters instead of 1 bit to record outcome}
+    \item \textbf{Use 2-bit saturating counters instead of 1 bit to record outcome}
     \begin{itemize}
-        \item[$\triangleright$] Avoid a double mistake in case two history sub-patterns point to the same value, or in case of a pattern glitch
-        \item[$\circ$] Example: 00001 00001 00001 01001 00001 00001
+        \item Avoid a double mistake in case two history sub-patterns point to the same value, or in case of a pattern glitch
+        \item Example: 00001 00001 00001 01001 00001 00001
     \end{itemize}
 \end{itemize}
 
@@ -884,10 +881,10 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{The longer the history}
+    \item \textbf{The longer the history}
     \begin{itemize}
-        \item[$\triangleright$] Warm-Up is longer
-        \item[$\triangleright$] Counter array becomes very big (and sparse)
+        \item Warm-Up is longer
+        \item Counter array becomes very big (and sparse)
     \end{itemize}
 \end{itemize}
 
@@ -899,13 +896,13 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \label{frame:speculative_history_1}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Deep pipeline $\Rightarrow$ many cycles between fetch and branch resolution}
+    \item \textbf{Deep pipeline $\Rightarrow$ many cycles between fetch and branch resolution}
     \begin{itemize}
-        \item[$\triangleright$] If history is updated only at resolution (branch execute)
+        \item If history is updated only at resolution (branch execute)
         \begin{itemize}
-            \item[$\circ$] Future occurrences of the same branch may be fetched before history is updated, and predicted with a stale history
+            \item Future occurrences of the same branch may be fetched before history is updated, and predicted with a stale history
         \end{itemize}
-        \item[$\triangleright$] Update history speculatively according to prediction
+        \item Update history speculatively according to prediction
     \end{itemize}
 \end{itemize}
 
@@ -936,7 +933,7 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\triangleright$] \textbf{As long as the prediction of previous branches is correct, the history used for predicting the next branch is correct as well}
+    \item \textbf{As long as the prediction of previous branches is correct, the history used for predicting the next branch is correct as well}
 \end{itemize}
 
 \end{frame}
@@ -947,17 +944,17 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \label{frame:speculative_history_2}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{If a branch is mispredicted}
+    \item \textbf{If a branch is mispredicted}
     \begin{itemize}
-        \item[$\triangleright$] History continues to be updated until the bad branch gets to execution
-        \item[$\triangleright$] Branches following it use a wrong history for their prediction
+        \item History continues to be updated until the bad branch gets to execution
+        \item Branches following it use a wrong history for their prediction
         \begin{itemize}
-            \item[$\circ$] But this does not matter, as they will be anyhow flushed
+            \item But this does not matter, as they will be anyhow flushed
         \end{itemize}
-        \item[$\triangleright$] Need to recover the branch history to its value before the bad branch
+        \item Need to recover the branch history to its value before the bad branch
         \begin{itemize}
-            \item[$\circ$] Maintain a non-speculative copy of the history, updated at execute
-            \item[$\circ$] In case of misprediction, copy non-speculative history into speculative history
+            \item Maintain a non-speculative copy of the history, updated at execute
+            \item In case of misprediction, copy non-speculative history into speculative history
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -977,15 +974,15 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 \label{frame:speculative_history_3}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{The counter array is not updated speculatively}
+    \item \textbf{The counter array is not updated speculatively}
     \begin{itemize}
-        \item[$\triangleright$] Prediction can change only on a misprediction
+        \item Prediction can change only on a misprediction
         \begin{itemize}
-            \item[$\circ$] state $01\rightarrow10$ or $10\rightarrow01$
+            \item state $01\rightarrow10$ or $10\rightarrow01$
         \end{itemize}
-        \item[$\triangleright$] The counter array is too big to be recovered following misprediction
+        \item The counter array is too big to be recovered following misprediction
         \begin{itemize}
-            \item[$\circ$] Too expensive to maintain both speculative and non-speculative copies of the counter array
+            \item Too expensive to maintain both speculative and non-speculative copies of the counter array
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -1024,12 +1021,12 @@ size=1024 $\times$ (8 + 6 + 2$\times$$2^6$) = 142Kbit
 \label{frame:local_shared}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Using a single counter array shared by all BHR's}
+    \item \textbf{Using a single counter array shared by all BHR's}
     \begin{itemize}
-        \item[$\triangleright$] All BHR's index the same array
-        \item[$\triangleright$] Branches with similar patterns interfere with each other
+        \item All BHR's index the same array
+        \item Branches with similar patterns interfere with each other
         \begin{itemize}
-            \item[$\circ$] Interference can be either constructive or destructive
+            \item Interference can be either constructive or destructive
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -1055,11 +1052,11 @@ Example: \#BHRs = 1024; tag\_size=8; history\_size=6 $\Rightarrow$ size=1024 $\t
 \label{frame:lselect}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{\textit{Lselect} reduces inter-branch-interference in the counter array}
+    \item \textbf{\textit{Lselect} reduces inter-branch-interference in the counter array}
     \begin{itemize}
-        \item[$\triangleright$] The counter array index is a concatenation of the jump history and $m$ l.s.bits of the jump IP
-        \item[$\triangleright$] Counter array size becomes $2^m$ times bigger
-        \item[$\triangleright$] All Branches with the same $m$ IP l.s.bits interfere with each other
+        \item The counter array index is a concatenation of the jump history and $m$ l.s.bits of the jump IP
+        \item Counter array size becomes $2^m$ times bigger
+        \item All Branches with the same $m$ IP l.s.bits interfere with each other
     \end{itemize}
 \end{itemize}
 
@@ -1104,7 +1101,7 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:global_predictor}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{The behavior of some branches is highly correlated}
+    \item \textbf{The behavior of some branches is highly correlated}
 \end{itemize}
 
 \vspace{0.2cm}
@@ -1118,9 +1115,9 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Using a single Global History Register (\textit{GHR}) for all branches}
+    \item \textbf{Using a single Global History Register (\textit{GHR}) for all branches}
     \begin{itemize}
-        \item[$\triangleright$] The prediction of the 2$^{nd}$ \textit{if} is influenced by the direction of the 1$^{st}$ \textit{if}
+        \item The prediction of the 2$^{nd}$ \textit{if} is influenced by the direction of the 1$^{st}$ \textit{if}
     \end{itemize}
 \end{itemize}
 
@@ -1147,10 +1144,10 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{History interference between non-correlated might hurt prediction}
-    \item[$\diamond$] \textbf{With only a single history, can afford a long history}
+    \item \textbf{History interference between non-correlated might hurt prediction}
+    \item \textbf{With only a single history, can afford a long history}
     \begin{itemize}
-        \item[$\triangleright$] The predictor size: history\_size + 2$\times$$2^{\text{history\_size}}$
+        \item The predictor size: history\_size + 2$\times$$2^{\text{history\_size}}$
     \end{itemize}
 \end{itemize}
 
@@ -1162,7 +1159,7 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:gshare}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{\textit{Gshare} combines global history information with the branch IP}
+    \item \textbf{\textit{Gshare} combines global history information with the branch IP}
 \end{itemize}
 
 \vspace{0.3cm}
@@ -1196,11 +1193,11 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\triangleright$] \textbf{The counter accessed is a function of the global history and of the specific branch being predicted / updated:}
+    \item \textbf{The counter accessed is a function of the global history and of the specific branch being predicted / updated:}
     \begin{itemize}
-        \item[$\circ$] Following this history, for this specific branch, the branch is taken/NT
+        \item Following this history, for this specific branch, the branch is taken/NT
     \end{itemize}
-    \item[$\triangleright$] \textbf{This turns to be extremely accurate and space-efficient}
+    \item \textbf{This turns to be extremely accurate and space-efficient}
 \end{itemize}
 
 \end{frame}
@@ -1211,18 +1208,18 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:why_gshare}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Updating a single history with all branches' outcomes might look like a mess, but ...}
+    \item \textbf{Updating a single history with all branches' outcomes might look like a mess, but ...}
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{The numbers of branches active in the program at a given moment is usually small}
+    \item \textbf{The numbers of branches active in the program at a given moment is usually small}
     \begin{itemize}
-        \item[$\triangleright$] E.g., in case of short loop with no if statements in the loop body
+        \item E.g., in case of short loop with no if statements in the loop body
         \begin{itemize}
-            \item[$\circ$] There is only one branch in the loop (the loop's branch)
-            \item[$\circ$] Gshare behaves just like local history
+            \item There is only one branch in the loop (the loop's branch)
+            \item Gshare behaves just like local history
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -1230,10 +1227,10 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Assume 2 branches are active simultaneously: A and B}
+    \item \textbf{Assume 2 branches are active simultaneously: A and B}
     \begin{itemize}
-        \item[$\triangleright$] Some of the bits in the GHR are for A, and some for B
-        \item[$\triangleright$] Due to the XOR with their IP's, A and B update different counters
+        \item Some of the bits in the GHR are for A, and some for B
+        \item Due to the XOR with their IP's, A and B update different counters
     \end{itemize}
 \end{itemize}
 
@@ -1245,11 +1242,11 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:chooser}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{A chooser selects between 2 predictors for each branch}
+    \item \textbf{A chooser selects between 2 predictors for each branch}
     \begin{itemize}
-        \item[$\triangleright$] Use the predictor that was more correct in the past
-        \item[$\triangleright$] The chooser array is an array of 2-bit saturating counters, indexed by the Branch IP (similar to the Bimodal array)
-        \item[$\triangleright$] Updated by which predictor is more correct
+        \item Use the predictor that was more correct in the past
+        \item The chooser array is an array of 2-bit saturating counters, indexed by the Branch IP (similar to the Bimodal array)
+        \item Updated by which predictor is more correct
     \end{itemize}
 \end{itemize}
 
@@ -1278,20 +1275,20 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:indirect_target_1}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Indirect branch targets: target given in a register}
+    \item \textbf{Indirect branch targets: target given in a register}
     \begin{itemize}
-        \item[$\triangleright$] Can have many targets: e.g., a case statement
-        \item[$\triangleright$] Resolved at execution $\Rightarrow$ high misprediction penalty
-        \item[$\triangleright$] Used in object-oriented code (C++, Java)
+        \item Can have many targets: e.g., a case statement
+        \item Resolved at execution $\Rightarrow$ high misprediction penalty
+        \item Used in object-oriented code (C++, Java)
     \end{itemize}
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{A history-based indirect branch target predictor}
+    \item \textbf{A history-based indirect branch target predictor}
     \begin{itemize}
-        \item[$\triangleright$] Uses the same global history used for conditional jumps
+        \item Uses the same global history used for conditional jumps
     \end{itemize}
 \end{itemize}
 
@@ -1326,7 +1323,7 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\triangleright$] Each Jump takes multiple entries $\Rightarrow$ more expensive than TA $\Rightarrow$ should only be used for jumps with multiple targets
+    \item Each Jump takes multiple entries $\Rightarrow$ more expensive than TA $\Rightarrow$ should only be used for jumps with multiple targets
 \end{itemize}
 
 \end{frame}
@@ -1337,28 +1334,28 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:indirect_target_2}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Initially allocate indirect branch only in the Target Array (TA)}
+    \item \textbf{Initially allocate indirect branch only in the Target Array (TA)}
     \begin{itemize}
-        \item[$\triangleright$] Many indirect branches have only one target
+        \item Many indirect branches have only one target
     \end{itemize}
 \end{itemize}
 
 \vspace{0.2cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{If the TA mis-predicts for an indirect jump}
+    \item \textbf{If the TA mis-predicts for an indirect jump}
     \begin{itemize}
-        \item[$\triangleright$] Allocate an iTA entry with the current target
-        \item[$\triangleright$] Indexed by IP $\oplus$ Global History
+        \item Allocate an iTA entry with the current target
+        \item Indexed by IP $\oplus$ Global History
     \end{itemize}
 \end{itemize}
 
 \vspace{0.2cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Prediction from the iTA is used if}
+    \item \textbf{Prediction from the iTA is used if}
     \begin{itemize}
-        \item[$\triangleright$] TA indicates an indirect jump and iTA hits
+        \item TA indicates an indirect jump and iTA hits
     \end{itemize}
 \end{itemize}
 
@@ -1377,25 +1374,25 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:rsb}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{A return instruction is a special case of an indirect branch}
+    \item \textbf{A return instruction is a special case of an indirect branch}
     \begin{itemize}
-        \item[$\triangleright$] Each times it jumps to a different target
-        \item[$\triangleright$] The target is determined by the location of the corresponding Call instruction
+        \item Each times it jumps to a different target
+        \item The target is determined by the location of the corresponding Call instruction
     \end{itemize}
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{Maintain a small stack of targets at fetch time}
+    \item \textbf{Maintain a small stack of targets at fetch time}
     \begin{itemize}
-        \item[$\triangleright$] When the Target Array predicts a Call
+        \item When the Target Array predicts a Call
         \begin{itemize}
-            \item[$\circ$] Push the address of the instruction which follows the Call into the stack (this is the predicted Return address)
+            \item Push the address of the instruction which follows the Call into the stack (this is the predicted Return address)
         \end{itemize}
-        \item[$\triangleright$] When the Target Array predicts a Return
+        \item When the Target Array predicts a Return
         \begin{itemize}
-            \item[$\circ$] Pop a target from the stack and use it as the Return address
+            \item Pop a target from the stack and use it as the Return address
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -1416,12 +1413,12 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:intel_predictors}
 
 \begin{itemize}
-    \item[$\diamond$] \textbf{486} \hspace{1cm} Statically predict Not Taken
-    \item[$\diamond$] \textbf{Pentium\textsuperscript{\textregistered}} \hspace{1cm} 2-bit saturating counters
-    \item[$\diamond$] \textbf{Pentium\textsuperscript{\textregistered} II}
+    \item \textbf{486} \hspace{1cm} Statically predict Not Taken
+    \item \textbf{Pentium\textsuperscript{\textregistered}} \hspace{1cm} 2-bit saturating counters
+    \item \textbf{Pentium\textsuperscript{\textregistered} II}
     \begin{itemize}
-        \item[$\triangleright$] 2-level, local histories, per-set counters
-        \item[$\triangleright$] 4-way set associative: 512 entries in 128 sets
+        \item 2-level, local histories, per-set counters
+        \item 4-way set associative: 512 entries in 128 sets
     \end{itemize}
 \end{itemize}
 
@@ -1447,13 +1444,13 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item[$\diamond$] New entry on the Local stage is allocated on a global stage mis-prediction
-    \item[$\diamond$] Chooser state-machines: 2 bit each:
+    \item New entry on the Local stage is allocated on a global stage mis-prediction
+    \item Chooser state-machines: 2 bit each:
     \begin{itemize}
-        \item[$\triangleright$] one bit saves last time global correct/wrong
-        \item[$\triangleright$] and the other bit saves for the local correct/wrong
+        \item one bit saves last time global correct/wrong
+        \item and the other bit saves for the local correct/wrong
     \end{itemize}
-    \item[$\diamond$] Chooses Local only if local was correct and global was wrong
+    \item Chooses Local only if local was correct and global was wrong
 \end{itemize}
 
 \end{frame}
