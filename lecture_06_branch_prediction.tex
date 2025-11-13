@@ -1586,9 +1586,14 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 ]
 
     % Code boxes on the left
-    \node[codebox, fill=mainfill] (main) at (0,0) {main:\\~~...\\~~call~~func1\tikzmark{call1}\\~~...\\~~ret};
-    \node[codebox, fill=func1fill, below=0.5cm of main] (func1) {func1:\\~~...\\~~call~~func2\tikzmark{call2}\\~~...\\~~ret};
-    \node[codebox, fill=func2fill, below=0.5cm of func1] (func2) {func2:\\~~...\\~~ret\tikzmark{ret2}};
+    \node[codebox, fill=mainfill] (main) at (0,0) {main:\\~~...\\~~call~~func1\\~~...\\~~ret};
+    \node[codebox, fill=func1fill, below=0.5cm of main] (func1) {func1:\\~~...\\~~call~~func2\\~~...\\~~ret};
+    \node[codebox, fill=func2fill, below=0.5cm of func1] (func2) {func2:\\~~...\\~~ret};
+
+    % Invisible marker nodes for arrows
+    \coordinate (call1) at ([xshift=1.3cm, yshift=-0.3cm]main.west);
+    \coordinate (call2) at ([xshift=1.3cm, yshift=-0.3cm]func1.west);
+    \coordinate (ret2) at ([xshift=1.3cm, yshift=-0.65cm]func2.west);
 
     % Stack on the right using matrix
     \node[label, right=5cm of main.north east, anchor=south] (stack_label) {Stack};
@@ -1629,21 +1634,19 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 
     % Arrows showing the flow
     % Arrow 1: Load from stack - from ret instruction in func2
-    \draw[arrow] ([xshift=0.1cm]pic cs:ret2) -- ++(3,0) |- (stack_matrix-2-1.west)
+    \draw[arrow] (ret2) -- ++(3,0) |- (stack_matrix-2-1.west)
         node[near end, above, align=center, font=\scriptsize, text=black] {Load\\from\\stack};
 
     % Arrow 2: Consult for prediction - from ret instruction in func2
-    \draw[arrow] ([xshift=0.1cm]pic cs:ret2) -- ++(3,0) |- (rsb_matrix-1-1.west)
+    \draw[arrow] (ret2) -- ++(3,0) |- (rsb_matrix-1-1.west)
         node[near end, above, align=center, font=\scriptsize, text=black] {Consult\\for prediction};
+
+    % Labels for return addresses
+    \node[font=\scriptsize, text=black, fill=func1fill, inner sep=2pt, anchor=east] at ([xshift=-0.2cm]call1 -| main.west) {retaddr1};
+    \node[font=\scriptsize, text=black, fill=func2fill, inner sep=2pt, anchor=east] at ([xshift=-0.2cm]call2 -| main.west) {retaddr2};
 
 \end{tikzpicture}
 \end{center}
-
-% Labels for return addresses aligned with tikzmarks
-\begin{tikzpicture}[remember picture, overlay]
-    \node[font=\scriptsize, text=black, fill=func1fill, inner sep=2pt] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call1) {retaddr1};
-    \node[font=\scriptsize, text=black, fill=func2fill, inner sep=2pt] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call2) {retaddr2};
-\end{tikzpicture}
 
 \vspace{0.3cm}
 
