@@ -1572,7 +1572,8 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
     \node[font=\normalsize, text=myblue, anchor=east] (ghr) at (branch_ip.east |- xor) {Global history};
 
     % AND gate rotated 90 degrees - smaller, anchored at output pin above MUX top pin
-    \node[and port, rotate=-90, scale=0.6, anchor=out] at ([yshift=0.5cm]mux.tpin 1) (and_gate) {};
+    \node[and port, rotate=-90, xscale=0.4, yscale=0.6, anchor=out, circuitikz/ieeestd ports/pin length=0,
+          logic gate input sep=0pt] at ([yshift=0.5cm]mux.tpin 1) (and_gate) {};
 
     % Output
     \node[font=\normalsize, text=mypurple, right=2cm of mux.rpin 1] (pred_target) {Predicted Target};
@@ -1599,25 +1600,20 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 
     % Target Array outputs (3 rpins: rpin 1 = TA hit, rpin 2 = type=indirect, rpin 3 = target)
     % rpin 1: TA hit to HIT
-    \draw[arrow] (ta.rpin 1) |- (hit_out.west);
-    \node[signal, anchor=south, above=0.2cm of ta.rpin 1] {TA hit};
+    \draw[arrow] (ta.rpin 1) |- (hit_out.west) node[signal, pos=0.15, above] {TA hit};
 
     % rpin 2: type = indirect to AND gate input 1
-    \draw[arrow] (ta.rpin 2) -- (and_gate.in 1);
-    \node[signal, anchor=south, above=0.1cm of ta.rpin 2] {type = indirect};
+    \draw[arrow] (ta.rpin 2) -- (and_gate.in 1) node[signal, midway, above] {type = indirect};
 
     % rpin 3: Target to MUX lpin 1
-    \draw[arrow] (ta.rpin 3) -- ++(1,0) coordinate (ta_target_corner) |- (mux.lpin 1);
-    \node[signal, anchor=south, above=0.1cm of ta_target_corner] {Target};
+    \draw[arrow] (ta.rpin 3) -- ++(1,0) coordinate (ta_target_corner) |- (mux.lpin 1) node[signal, pos=0.15, above] {Target};
 
     % Indirect Target Predictor outputs (3 rpins: rpin 1 = Target, rpin 2 = iTA hit, rpin 3 unused)
     % rpin 1: Target to MUX lpin 2
-    \draw[arrow] (itp.rpin 1) -- ++(1,0) coordinate (itp_target_corner) |- (mux.lpin 2);
-    \node[signal, anchor=south, above=0.1cm of itp_target_corner] {Target};
+    \draw[arrow] (itp.rpin 1) -- ++(1,0) coordinate (itp_target_corner) |- (mux.lpin 2) node[signal, pos=0.15, above] {Target};
 
     % rpin 2: iTA hit to AND gate input 2 with complex routing
-    \draw[arrow] (itp.rpin 2) -| ([xshift=1cm]mux.east) |- ([xshift=1cm,yshift=5mm]and_gate.east) -| (and_gate.in 2);
-    \node[signal, anchor=south, above=0.1cm of itp.rpin 2] {iTA hit};
+    \draw[arrow] (itp.rpin 2) -| ([xshift=1cm]mux.east) |- ([xshift=1cm,yshift=5mm]and_gate.east) -| (and_gate.in 2) node[signal, pos=0.05, above] {iTA hit};
 
     % AND gate output to MUX top pin
     \draw[arrow] (and_gate.out) -- (mux.tpin 1);
