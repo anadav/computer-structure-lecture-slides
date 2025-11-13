@@ -1532,6 +1532,104 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 
 \end{frame}
 
+% NEW SLIDE - Work in progress for iTA diagram with mux-style boxes
+\begin{frame}
+\frametitle{iTA Allocation (Work in Progress)}
+\label{frame:ita_work}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9,
+    arrow/.style={-latex, thick, draw=black!70},
+    signal/.style={font=\scriptsize},
+    data_connector/.style={circle, fill=black, inner sep=1.2pt}
+]
+
+    % Branch IP input (anchor point)
+    \node[font=\normalsize, text=myblue] (branch_ip) at (0,0) {Branch IP};
+
+    % Connector for Branch IP
+    \node[data_connector, right=1.2cm of branch_ip] (conn_ip) {};
+
+    % Target Array as muxdemux - wider and shorter (Lh=Rh, slightly wider)
+    \node[muxdemux, muxdemux def={Lh=2.5, Rh=2.5, NL=1, NR=3, w=4.5},
+          external pins width=0, fill=green!20, anchor=lpin 1, right=1.5cm of conn_ip] (ta) {};
+    \node at (ta.center) [font=\small] {Target Array};
+
+    % Main MUX for output selection - now with top pin, positioned lower
+    \node[muxdemux, muxdemux def={Lh=3, Rh=2, NL=2, NB=0, NR=1, w=1.8, NT=1},
+          external pins width=0, fill=yellow!20, right=3cm of ta.east, yshift=-1cm] (mux) {};
+    \node at (mux.center) [font=\scriptsize] {MUX};
+
+    % Indirect Target Predictor - wider and shorter, positioned using |- relative to TA and MUX
+    \node[muxdemux, muxdemux def={Lh=2.5, Rh=2.5, NL=1, NR=3, w=4.5},
+          external pins width=0, fill=green!20, anchor=rpin 1] (itp) at (ta.east |- mux.lpin 2) {};
+    \node at (itp.center) [font=\small, align=center] {Indirect Target\\Predictor};
+
+    % XOR gate positioned using |- with conn_ip x-axis and itp y-axis
+    \node[circle, draw=black!80, line width=1pt, minimum size=0.7cm, fill=white] (xor) at (conn_ip |- itp.lpin 1) {$\oplus$};
+
+    % Global history input - positioned using |- with branch_ip.east x-axis and xor y-axis, anchored east
+    \node[font=\normalsize, text=myblue, anchor=east] (ghr) at (branch_ip.east |- xor) {Global history};
+
+    % AND gate rotated 90 degrees - smaller, anchored at output pin above MUX top pin
+    \node[and port, rotate=-90, scale=0.6, anchor=out] at ([yshift=0.5cm]mux.tpin 1) (and_gate) {};
+
+    % Output
+    \node[font=\normalsize, text=mypurple, right=2cm of mux.rpin 1] (pred_target) {Predicted Target};
+
+    % HIT output from TA - positioned at intersection of ta.rpin 1 y-coordinate and pred_target.west x-coordinate
+    \coordinate (hit_pos) at (pred_target.west |- ta.rpin 1);
+    \node[font=\normalsize, text=black, anchor=west] (hit_out) at (hit_pos) {HIT};
+
+    % Draw connections
+    % Branch IP to connector
+    \draw[thick, draw=black!70] (branch_ip) -- (conn_ip);
+
+    % Branch IP to Target Array
+    \draw[arrow] (conn_ip) -- (ta.lpin 1);
+
+    % Branch IP to XOR gate - goes to xor.north
+    \draw[arrow] (conn_ip) -- (xor.north);
+
+    % Global history to XOR gate
+    \draw[arrow] (ghr) -- (xor.west);
+
+    % XOR to Indirect Target Predictor
+    \draw[arrow] (xor.east) -- (itp.lpin 1);
+
+    % Target Array outputs (3 rpins: rpin 1 = TA hit, rpin 2 = type=indirect, rpin 3 = target)
+    % rpin 1: TA hit to HIT
+    \draw[arrow] (ta.rpin 1) |- (hit_out.west);
+    \node[signal, anchor=south, above=0.2cm of ta.rpin 1] {TA hit};
+
+    % rpin 2: type = indirect to AND gate input 1
+    \draw[arrow] (ta.rpin 2) -- (and_gate.in 1);
+    \node[signal, anchor=south, above=0.1cm of ta.rpin 2] {type = indirect};
+
+    % rpin 3: Target to MUX lpin 1
+    \draw[arrow] (ta.rpin 3) -- ++(1,0) coordinate (ta_target_corner) |- (mux.lpin 1);
+    \node[signal, anchor=south, above=0.1cm of ta_target_corner] {Target};
+
+    % Indirect Target Predictor outputs (3 rpins: rpin 1 = Target, rpin 2 = iTA hit, rpin 3 unused)
+    % rpin 1: Target to MUX lpin 2
+    \draw[arrow] (itp.rpin 1) -- ++(1,0) coordinate (itp_target_corner) |- (mux.lpin 2);
+    \node[signal, anchor=south, above=0.1cm of itp_target_corner] {Target};
+
+    % rpin 2: iTA hit to AND gate input 2 with complex routing
+    \draw[arrow] (itp.rpin 2) -| ([xshift=1cm]mux.east) |- ([xshift=1cm,yshift=5mm]and_gate.east) -| (and_gate.in 2);
+    \node[signal, anchor=south, above=0.1cm of itp.rpin 2] {iTA hit};
+
+    % AND gate output to MUX top pin
+    \draw[arrow] (and_gate.out) -- (mux.tpin 1);
+
+    % MUX to Predicted Target
+    \draw[arrow] (mux.rpin 1) -- (pred_target.west);
+
+\end{tikzpicture}
+\end{center}
+
+\end{frame}
+
 % Return Stack Buffer
 \begin{frame}
 \frametitle{Return Stack Buffer}
