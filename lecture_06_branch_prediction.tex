@@ -1572,6 +1572,11 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \frametitle{Return Stack Buffer Operation}
 \label{frame:rsb_operation}
 
+% Define colors for each function
+\definecolor{mainfill}{RGB}{200,230,200}
+\definecolor{func1fill}{RGB}{255,220,220}
+\definecolor{func2fill}{RGB}{220,220,255}
+
 \begin{center}
 \begin{tikzpicture}[scale=0.85,
     remember picture,
@@ -1579,11 +1584,6 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
     arrow/.style={-latex, thick, draw=black!70},
     label/.style={font=\scriptsize, text=black}
 ]
-
-    % Define colors for each function
-    \definecolor{mainfill}{RGB}{200,230,200}
-    \definecolor{func1fill}{RGB}{255,220,220}
-    \definecolor{func2fill}{RGB}{220,220,255}
 
     % Code boxes on the left
     \node[codebox, fill=mainfill] (main) at (0,0) {main:\\~~...\\~~call~~func1\tikzmark{call1}\\~~...\\~~ret};
@@ -1593,7 +1593,7 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
     % Stack on the right using matrix
     \node[label, right=5cm of main.north east, anchor=south] (stack_label) {Stack};
 
-    \matrix[matrix of nodes, below=0.01cm of stack_label, anchor=north,
+    \matrix[matrix of nodes, below=-0.05cm of stack_label, anchor=north,
             nodes={draw=black!80, line width=0.5pt, minimum width=2.5cm, minimum height=0.5cm,
                    font=\scriptsize, anchor=center},
             row sep=0pt, column sep=0pt] (stack_matrix) {
@@ -1618,7 +1618,7 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
     % RSB below the stack using matrix
     \node[label, below=0.5cm of stack_matrix, anchor=north] (rsb_label) {RSB};
 
-    \matrix[matrix of nodes, below=0.01cm of rsb_label, anchor=north,
+    \matrix[matrix of nodes, below=-0.05cm of rsb_label, anchor=north,
             nodes={draw=black!80, line width=0.5pt, minimum width=2.5cm, minimum height=0.5cm,
                    font=\scriptsize, anchor=center},
             row sep=0pt, column sep=0pt] (rsb_matrix) {
@@ -1629,20 +1629,20 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 
     % Arrows showing the flow
     % Arrow 1: Load from stack - from ret instruction in func2
-    \draw[arrow, myblue] ([xshift=0.1cm]pic cs:ret2) -- ++(1.2,0) coordinate (mid1) |- (stack_matrix-2-1.west);
-    \node[label, myblue, above right, align=center] at (mid1) {(1) Load\\from\\stack};
+    \draw[arrow] ([xshift=0.1cm]pic cs:ret2) -- ++(3,0) coordinate (mid1) |- (stack_matrix-2-1.west);
+    \node[label, above right, align=center] at (mid1) {(1) Load\\from\\stack};
 
     % Arrow 2: Consult for prediction - from ret instruction in func2
-    \draw[arrow, mygreen] ([xshift=0.1cm]pic cs:ret2) -- ++(0.8,0) coordinate (mid2) |- (rsb_matrix-1-1.west);
-    \node[label, mygreen, below, align=center] at ([yshift=-0.3cm]mid2) {(2) Consult\\for prediction};
+    \draw[arrow] ([xshift=0.1cm]pic cs:ret2) -- ++(3,0) coordinate (mid2) |- (rsb_matrix-1-1.west);
+    \node[label, below, align=center] at ([yshift=-0.3cm]mid2) {(2) Consult\\for prediction};
 
 \end{tikzpicture}
 \end{center}
 
 % Labels for return addresses aligned with tikzmarks
 \begin{tikzpicture}[remember picture, overlay]
-    \node[font=\scriptsize, text=black] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call1) {retaddr1};
-    \node[font=\scriptsize, text=black] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call2) {retaddr2};
+    \node[font=\scriptsize, text=black, fill=func1fill, inner sep=2pt] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call1) {retaddr1};
+    \node[font=\scriptsize, text=black, fill=func2fill, inner sep=2pt] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call2) {retaddr2};
 \end{tikzpicture}
 
 \vspace{0.3cm}
