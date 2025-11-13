@@ -1121,6 +1121,180 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \end{frame}
 
 
+\begin{frame}{Example: Page Table Hierarchy}
+\begin{tikzpicture}[scale=0.58, transform shape,
+    % Table styles for different levels
+    pml4table/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=yellow!40},
+    pdptable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=red!30},
+    dirtable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=blue!20},
+    pagetable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=blue!40},
+    page/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=orange!40},
+    % Entry styles for each level (smaller boxes with thick border)
+    pml4entry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.5cm, fill=yellow!40},
+    pdpentry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.5cm, fill=red!30},
+    direntry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.5cm, fill=blue!20},
+    pageentry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.5cm, fill=blue!40},
+    pageoffset/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.5cm, fill=orange!40},
+    arrow/.style={->, thick, black}
+]
+
+% Top: Virtual Address breakdown
+\draw[thick] (0,10.5) rectangle (13.5,11.3);
+
+% Address field colors
+\fill[green!20] (0,10.5) rectangle (2.5,11.3);
+\fill[yellow!40] (2.5,10.5) rectangle (4.5,11.3);
+\fill[red!30] (4.5,10.5) rectangle (6.5,11.3);
+\fill[blue!20] (6.5,10.5) rectangle (8.5,11.3);
+\fill[blue!40] (8.5,10.5) rectangle (10.5,11.3);
+\fill[orange!40] (10.5,10.5) rectangle (13.5,11.3);
+
+% Field separators
+\draw[thick] (2.5,10.5) -- (2.5,11.3);
+\draw[thick] (4.5,10.5) -- (4.5,11.3);
+\draw[thick] (6.5,10.5) -- (6.5,11.3);
+\draw[thick] (8.5,10.5) -- (8.5,11.3);
+\draw[thick] (10.5,10.5) -- (10.5,11.3);
+
+% Field labels above
+\node[above, font=\scriptsize] at (0,11.3) {63};
+\node[above, font=\scriptsize] at (2.5,11.3) {43};
+\node[above, font=\scriptsize] at (4.4,11.3) {36 35};
+\node[above, font=\scriptsize] at (6.4,11.3) {28 27};
+\node[above, font=\scriptsize] at (8.4,11.3) {20 19};
+\node[above, font=\scriptsize] at (10.4,11.3) {12 11};
+\node[above, font=\scriptsize] at (13.5,11.3) {0};
+
+% Field names inside
+\node[font=\scriptsize] at (1.25,10.9) {sign ext.};
+\node[font=\scriptsize] at (3.5,10.9) {PML4};
+\node[font=\scriptsize] at (5.5,10.9) {PDP};
+\node[font=\scriptsize] at (7.5,10.9) {DIR};
+\node[font=\scriptsize] at (9.5,10.9) {TABLE};
+\node[font=\scriptsize] at (12,10.9) {OFFSET};
+
+% Note about 8 bits
+\node[font=\tiny, text width=2.2cm, align=left, red] at (-1.8,10.5) {8 bits instead of\\ 9 for example\\ purposes only};
+
+% Vertical alignment of tables (from left to right)
+% PML4 Table
+\node[pml4table] (pml4base) at (1,5) {};
+\node[font=\scriptsize] at (1,6) {PML4};
+\node[font=\scriptsize] at (1,5.6) {Table};
+\node[pml4entry] (pml4d3) at (1,4.3) {\scriptsize D3};
+\node[pml4entry] (pml471) at (1,2.7) {\scriptsize 71};
+
+% CR3 register pointing to PML4
+\node[rectangle, draw=black, thick, fill=gray!20, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize, anchor=east] (cr3) at ([xshift=-3mm]pml4base.south west) {CR3};
+\draw[arrow] (cr3) -- (pml4base.south);
+
+% Address calculation label
+\node[font=\scriptsize, rectangle, draw=black, thick, fill=yellow!20, align=center] at (-1.5,1) {Address=\\ CR3+D3$\times$8};
+
+% PDP Table (2 instances: one from D3=82,46)
+\node[pdptable] (pdp82base) at (4,6) {};
+\node[font=\scriptsize] at (4,7.3) {PDP};
+\node[font=\scriptsize] at (4,6.9) {Table};
+\node[pdpentry] (pdp82) at (4,5.6) {\scriptsize 82};
+\node[pdpentry] (pdp46) at (4,2.5) {\scriptsize 46};
+
+% Page Dir instances
+\node[dirtable] (dirffbase) at (7,7) {};
+\node[font=\scriptsize] at (7,8.2) {Page};
+\node[font=\scriptsize] at (7,7.8) {Dir};
+\node[direntry] (dirff) at (7,6.8) {\scriptsize FF};
+\node[direntry] (dir28) at (7,5) {\scriptsize 28};
+
+\node[dirtable] (dirb5base) at (7,2.5) {};
+\node[direntry] (dirb5) at (7,2.2) {\scriptsize B5};
+
+% Page Table instances
+\node[pagetable] (pte2base) at (10,8) {};
+\node[font=\scriptsize] at (10,9.3) {Page};
+\node[font=\scriptsize] at (10,8.9) {Table};
+\node[pageentry] (ptee2) at (10,7.7) {\scriptsize E2};
+\node[pageentry] (pte68) at (10,6) {\scriptsize 68};
+
+\node[pagetable] (pte49base) at (10,3.5) {};
+\node[pageentry] (pte49) at (10,3.3) {\scriptsize 49};
+\node[pageentry] (pte54) at (10,1.5) {\scriptsize 54};
+
+% 4KB Pages with offsets
+\node[page] (pageb25base) at (13,8.8) {};
+\node[font=\scriptsize] at (13,9.9) {4KB};
+\node[font=\scriptsize] at (13,9.5) {Page};
+\node[pageoffset] (pageb25) at (13,8.5) {\scriptsize B25};
+\node[pageoffset] (page349) at (13,7.7) {\scriptsize 349};
+
+\node[page] (page937base) at (13,5.8) {};
+\node[pageoffset] (page937) at (13,5.6) {\scriptsize 937};
+
+\node[page] (pagec00base) at (13,3.5) {};
+\node[pageoffset] (pagec00) at (13,3.3) {\scriptsize C00};
+
+\node[page] (page622base) at (13,1.2) {};
+\node[pageoffset] (page622) at (13,1) {\scriptsize 622};
+
+% Arrows connecting the hierarchy
+% PML4[D3] -> PDP
+\draw[arrow] (pml4d3.east) -| (pdp82base.south);
+% PML4[71] -> PDP[46] (dashed to show it's the same PDP table, different entry)
+\draw[arrow] (pml471.east) -| (pdp46.west);
+
+% PDP[82] -> Dir[FF,28]
+\draw[arrow] (pdp82.east) -| (dirffbase.south);
+% PDP[46] -> Dir[B5]
+\draw[arrow] (pdp46.east) -| (dirb5base.south);
+
+% Dir[FF] -> PT[E2,68]
+\draw[arrow] (dirff.east) -| (pte2base.south);
+% Dir[28] -> PT[49,54]
+\draw[arrow] (dir28.east) -| (pte49base.south);
+% Dir[B5] -> same PT[49,54]
+\draw[arrow] (dirb5.east) -| (pte54.west);
+
+% PT[E2] -> Page[B25,349]
+\draw[arrow] (ptee2.east) -| (pageb25base.south);
+% PT[68] -> Page[937]
+\draw[arrow] (pte68.east) -| (page937base.south);
+% PT[49] -> Page[C00]
+\draw[arrow] (pte49.east) -| (pagec00base.south);
+% PT[54] -> Page[622]
+\draw[arrow] (pte54.east) -| (page622base.south);
+
+% Right side: Complete virtual addresses (color-coded)
+\node[font=\scriptsize, anchor=west, text width=4.5cm] at (16,8.5) {
+\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{FF} \textcolor{blue!40!black}{E2} \textcolor{orange!60!black}{B25}
+};
+\node[font=\scriptsize, anchor=west, text width=4.5cm] at (16,7.7) {
+\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{FF} \textcolor{blue!40!black}{E2} \textcolor{orange!60!black}{349}
+};
+\node[font=\scriptsize, anchor=west, text width=4.5cm] at (16,5.6) {
+\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{FF} \textcolor{blue!40!black}{68} \textcolor{orange!60!black}{937}
+};
+\node[font=\scriptsize, anchor=west, text width=4.5cm] at (16,3.3) {
+\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{28} \textcolor{blue!40!black}{49} \textcolor{orange!60!black}{C00}
+};
+\node[font=\scriptsize, anchor=west, text width=4.5cm] at (16,1) {
+\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{71} \textcolor{red!40!black}{46} \textcolor{blue!20!black}{B5} \textcolor{blue!40!black}{54} \textcolor{orange!60!black}{622}
+};
+
+% Labels at top right
+\node[font=\tiny, anchor=west] at (15.5,10) {PML4 PDP DIR PTE offset};
+
+% Bottom left: Note about OS dynamic allocation
+\node[font=\scriptsize, text width=4cm, align=left] at (-1.5,5) {
+This example shows\\
+how the OS dynamically\\
+allocates page tables in\\
+the page table hierarchy,\\
+as more addresses are\\
+requested by a process
+};
+
+\end{tikzpicture}
+\end{frame}
+
 
 \begin{frame}{TLBs}
 \textbf{The most recently used PDEs and PTEs are cached in TLBs}
