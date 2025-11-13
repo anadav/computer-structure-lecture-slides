@@ -10,6 +10,7 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix}
+\usepackage[siunitx, RPvoltages]{circuitikz}
 \usepackage{tcolorbox}
 
 % Define colors
@@ -1246,31 +1247,113 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \frametitle{Chooser}
 \label{frame:chooser}
 
+\begin{center}
+\begin{tikzpicture}[
+    box/.style={draw=black!80, line width=1pt, minimum height=1cm, minimum width=2.5cm, fill=lightblue!15, rounded corners=2pt, font=\small},
+    arrow/.style={-latex, thick, draw=black!70},
+    data_connector/.style={circle, fill=black, inner sep=1.2pt}
+]
+
+    % MUX using circuitikz muxdemux
+    \node[muxdemux, muxdemux def={Lh=4, Rh=2, NL=2, NB=1, w=2},
+          external pins width=0, fill=yellow!20, anchor=lpin 2] (mux) {};
+
+    % Bimodal or Local box
+    \node[box, align=center, left=0.8cm of mux.lpin 1, anchor=east] (bimodal) {Bimodal\\or Local};
+
+    % Branch IP input
+    \node[font=\normalsize, text=myblue, left=1cm of bimodal.west] (branch_ip) {Branch IP};
+
+    % Connector for Branch IP
+    \node[data_connector, right=0.6cm of branch_ip.east] (conn) {};
+
+    % Global box
+    \node[box, left=0.8cm of mux.lpin 2] (global) {Global};
+
+    % Chooser array - drawn with loop and dashed lines, closer to global
+    \coordinate (array_start) at ([yshift=-0.3cm]global.south);
+
+    % Draw array box outline - smaller
+    \draw[draw=black!80, line width=1pt, fill=lightblue!8]
+      ([xshift=-0.4cm]array_start) rectangle ++(0.8cm, -1.9cm)
+      node[pos=0.5] (chooser_center) {};
+
+    % Draw dashed lines to show array elements - aligned properly
+    \foreach \i in {1,2,3,4} {
+      \draw[dashed, black!40] ([xshift=-0.4cm, yshift=-\i*0.38cm]array_start) -- ++(0.8cm, 0);
+    }
+
+    % Highlight one element in the middle - aligned with dashed lines
+    \draw[draw=myorange, line width=1.5pt, fill=myorange!20]
+      ([xshift=-0.38cm, yshift=-1.14cm]array_start) rectangle ++(0.76cm, -0.36cm)
+      coordinate[pos=1] (highlight_se);
+
+    % Label for chooser array - BELOW the array
+    \node[below=0.8cm of chooser_center.south, font=\scriptsize, text=black, align=center, anchor=north]
+      {Chooser Array\\[-1pt]\tiny (2-bit sat. counters)};
+
+    % Store chooser position for connections
+    \coordinate (chooser_west) at ([xshift=-0.4cm, yshift=-1.32cm]array_start);
+    \coordinate (chooser_east) at ([xshift=0.4cm, yshift=-1.32cm]array_start);
+
+    % Label for MUX
+    \node at (mux.center) [font=\small] {MUX};
+
+    % Prediction output
+    \node[right=1cm of mux.rpin 1, font=\normalsize, text=myblue] (prediction) {Prediction};
+
+    % Arrows - Branch IP to all three components
+    \draw[thick, draw=black!70] (branch_ip) -- (conn);
+    \draw[arrow] (conn) |- (bimodal.west);
+    \node[data_connector] (conn2) at (conn |- global.west) {};
+    \draw[thick, draw=black!70] (conn) -- (conn2);
+    \draw[arrow] (conn2) -- (global.west);
+    \draw[arrow] (conn) |- (chooser_west);
+
+    % Arrows - from predictors to MUX
+    \draw[arrow] (bimodal.east) -- ++(0.3, 0) |- (mux.lpin 1);
+    \draw[arrow] (global.east) -- ++(0.3, 0) |- (mux.lpin 2);
+
+    % Arrow - Chooser to MUX control (bottom pin)
+    \draw[arrow] (chooser_east) -| (mux.bpin 1);
+
+    % Arrow - MUX to Prediction
+    \draw[arrow] (mux.rpin 1) -- (prediction);
+
+    % Add update explanation right below the highlighted box
+    \node[anchor=north west, font=\scriptsize, text=black!70, align=left] (update_text)
+      at ([xshift=1cm, yshift=-0.3cm]highlight_se) {
+      Update: +1 if Bimodal/Local correct\\
+      \phantom{Update: }-1 if Global correct
+    };
+
+    % Arrow from text to highlighted box
+    \draw[-latex, draw=black!50, thin] (update_text.north west) -- (highlight_se);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.1cm}
+
 \begin{itemize}
-    \item \textbf{A chooser selects between 2 predictors for each branch}
+    \item \textbf{Chooser selects between two predictors}
     \begin{itemize}
-        \item Use the predictor that was more correct in the past
-        \item The chooser array is an array of 2-bit saturating counters, indexed by the Branch IP (similar to the Bimodal array)
-        \item Updated by which predictor is more correct
+        \item Array of 2-bit saturating counters indexed by \textcolor{myblue}{Branch IP}
+        \item Each counter tracks which predictor performs better for that branch
+        \item MUX selects the prediction from the better predictor
     \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
-
-\begin{center}
-% TODO: Add chooser diagram
-\textcolor{red}{[PLACEHOLDER: Chooser diagram showing Global, Bimodal, and Chooser array]}
-\end{center}
-
 \vspace{0.2cm}
 
-\begin{center}
-{\small
-+1 if Bimodal correct and Global wrong
-
--1 if Bimodal wrong and Global correct
-}
-\end{center}
+\begin{itemize}
+    \item \textbf{Counter update policy (at execution):}
+    \begin{itemize}
+        \item \textcolor{mygreen}{Increment}: if Bimodal/Local correct \textit{and} Global wrong
+        \item \textcolor{red}{Decrement}: if Global correct \textit{and} Bimodal/Local wrong
+        \item No change if both correct or both wrong
+    \end{itemize}
+\end{itemize}
 
 \end{frame}
 
