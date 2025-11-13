@@ -181,7 +181,7 @@
 \end{center}
 
 \begin{itemize}
-  \item $t_{\text{mem}}/t_{\text{cache}}$ ratio increases $\Rightarrow$ hit-rate is more important
+  \item $\frac{t_{\text{mem}}}{t_{\text{cache}}}$ ratio increases $\Rightarrow$ hit-rate is more important
 \end{itemize}
 \end{frame}
 
@@ -322,25 +322,24 @@
 \begin{itemize}
   \item \textbf{Cache hit}
   \begin{itemize}
-    \item[\textcolor{green}{$\checkmark$}] Block is mapped to the cache —
+    \item Block is mapped to the cache —
     return data according to block's offset
   \end{itemize}
-  
+
   \vspace{0.4cm}
-  
+
   \item \textbf{Cache miss}
   \begin{itemize}
-    \item[\textcolor{green}{$\checkmark$}] Block is not mapped to the cache
-    \item[$\Rightarrow$] do a cache line fill
+    \item Block is not mapped to the cache
+    \item Do a cache line fill
     \begin{itemize}
-      \item[\textcolor{green}{$\bullet$}] Fetch block into fill buffer
-      \item[\textcolor{green}{$\bullet$}] may require few bus cycle
-      \item[\textcolor{green}{$\bullet$}] Write fill buffer into cache
+      \item Fetch block into fill buffer
+      \item May require few bus cycles
+      \item Write fill buffer into cache
     \end{itemize}
-    \item[\textcolor{green}{$\checkmark$}] May need to evict another block
-    from the cache
+    \item May need to evict another block from the cache
     \begin{itemize}
-      \item[\textcolor{green}{$\bullet$}] Make room for the new block
+      \item Make room for the new block
     \end{itemize}
   \end{itemize}
 \end{itemize}
@@ -909,7 +908,7 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \begin{itemize}
   \item Larger lines exploit spatial locality but may fetch unused data $\rightarrow$ more evictions
   \item Larger lines increase \textbf{miss penalty}; ``critical word first'' helps
-  \item $t_{\text{avg}} = t_{hit}\cdot(1-\text{MR}) + t_{miss}\cdot \text{MR}$
+  \item $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{itemize}
 \end{frame}
 
@@ -1928,6 +1927,66 @@ Modified  & Yes & Yes  & No\\
 \end{center}
 \end{frame}
 
+\begin{frame}{Memory Models}
+\begin{itemize}
+  \item \textbf{What is a memory model?}
+  \begin{itemize}
+    \item Defines the ordering guarantees and visibility of memory operations
+    \item Specifies which memory operation reorderings are allowed by the architecture
+    \item Contract between hardware and software
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \item \textbf{Why do we need memory models?}
+  \begin{itemize}
+    \item Modern processors reorder instructions for performance (out-of-order execution)
+    \item Caches and write buffers affect when stores become visible to other processors
+    \item Without a clear model, multi-threaded programs would be impossible to reason about
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \item \textbf{Memory model spectrum}
+  \begin{itemize}
+    \item \textbf{Sequential Consistency (SC)}: All operations appear in program order (strongest, slowest)
+    \item \textbf{Total Store Order (TSO)}: x86 model — allows some reordering for performance
+    \item \textbf{Relaxed Models}: ARM, RISC-V — allow more reordering (weakest, fastest)
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Happens-Before Relation}
+\begin{itemize}
+  \item \textbf{Happens-before ($\rightarrow$) is a partial order on memory operations}
+  \begin{itemize}
+    \item If operation $A$ happens-before operation $B$ (written $A \rightarrow B$), then:
+    \begin{itemize}
+      \item The effects of $A$ are visible to $B$
+      \item $A$ cannot be reordered after $B$
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \item \textbf{Sources of happens-before relations}
+  \begin{itemize}
+    \item \textbf{Program order}: Within a single thread, if instruction $I_1$ comes before $I_2$ in program order, and the memory model preserves that order, then $I_1 \rightarrow I_2$
+    \item \textbf{Synchronization}: Acquiring a lock happens-before releasing it
+    \item \textbf{Transitivity}: If $A \rightarrow B$ and $B \rightarrow C$, then $A \rightarrow C$
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \item \textbf{Key insight}
+  \begin{itemize}
+    \item Memory models specify which program-order pairs create happens-before
+    \item If there's no happens-before relation, operations may be reordered
+    \item Violations occur when observed behavior contradicts happens-before
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
 \begin{frame}{x86 Memory Ordering: Rules}
 \begin{enumerate}
   \item Loads are not reordered with other loads.
@@ -1939,9 +1998,11 @@ Modified  & Yes & Yes  & No\\
 \end{enumerate}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Examples (1)}
-\textbf{Loads and stores keep their own order}\\[3pt]
-Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed.
+\begin{frame}[fragile]{x86 Ordering: Loads and Stores Keep Their Own Order}
+\begin{itemize}
+  \item I.e., loads are seen in program order, and stores are seen in program order
+\end{itemize}
+Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed.\\[2pt]
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Processor 0}
@@ -1956,11 +2017,20 @@ r1 <- Load [Y]   // L1
 r2 <- Load [X]   // L2
 \end{lstlisting}
 \end{columns}
+
+\vspace{0.2cm}
+\textbf{Happens-before analysis:}
+\begin{itemize}
+  \item On P0: $\text{S1} \rightarrow \text{S2}$ (stores in program order)
+  \item On P1: $\text{L1} \rightarrow \text{L2}$ (loads in program order)
+  \item If L1 reads S2's value (r1=1), then S2 happened, so S1 must have happened too
+  \item Since $\text{L1} \rightarrow \text{L2}$, L2 must see S1's effect $\Rightarrow$ r2=1
+  \item Therefore r1=1, r2=0 violates happens-before
+\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Examples (2)}
-\textbf{Stores are not reordered with older loads}\\[3pt]
-Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed.
+\begin{frame}[fragile]{x86 Ordering: Stores Not Reordered with Older Loads}
+Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed.\\[2pt]
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Processor 0}
@@ -1975,11 +2045,22 @@ r2 <- Load [Y]   // L2
 Store [X] <- 1   // S2
 \end{lstlisting}
 \end{columns}
+
+\vspace{0.2cm}
+\textbf{Happens-before analysis:}
+\begin{itemize}
+  \item On P0: $\text{L1} \rightarrow \text{S1}$ (store not reordered before load)
+  \item On P1: $\text{L2} \rightarrow \text{S2}$ (store not reordered before load)
+  \item If r1=1, then L1 observed S2, meaning S2 happened
+  \item Since $\text{L2} \rightarrow \text{S2}$, L2 happened before S2
+  \item Since $\text{L1} \rightarrow \text{S1}$, S1 happens after L1 observed S2
+  \item Therefore, L2 should observe S1 (r2=1 or see S1 happen later)
+  \item But if both r1=1 and r2=1, there's a cycle: impossible!
+\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Examples (3)}
-\textbf{Loads may reorder with older stores to different locations}\\[3pt]
-Initial: \texttt{x=y=0}. Outcome \texttt{r1=0, r2=0} is \textbf{allowed}.
+\begin{frame}[fragile]{x86 Ordering: Loads May Reorder with Older Stores to Different Locations}
+Initial: \texttt{x=y=0}. Outcome \texttt{r1=0, r2=0} is \textbf{allowed}.\\[2pt]
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Processor 0}
@@ -1994,30 +2075,52 @@ Store [Y] <- 1   // S2
 r2 <- Load [X]   // L2
 \end{lstlisting}
 \end{columns}
+
+\vspace{0.2cm}
+\textbf{Happens-before analysis:}
+\begin{itemize}
+  \item On P0: S1 and L1 access \emph{different} locations $\Rightarrow$ \textbf{no} happens-before!
+  \item On P1: S2 and L2 access \emph{different} locations $\Rightarrow$ \textbf{no} happens-before!
+  \item Without happens-before, loads can execute before stores
+  \item Possible execution: L1 and L2 both execute first (see 0), then S1 and S2
+  \item This outcome (r1=0, r2=0) is allowed because no happens-before is violated
+\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Examples (4)}
-\textbf{Causality / transitive visibility}\\[3pt]
-Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allowed.
+\begin{frame}[fragile]{x86 Ordering: Causality and Transitive Visibility}
+Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allowed.\\[2pt]
 \begin{columns}[T]
 \column{0.32\textwidth}
-\textbf{P0}
+\textbf{Processor 0}
 \begin{lstlisting}[basicstyle=\ttfamily\small]
 Store [X] <- 1   // S1
 \end{lstlisting}
 \column{0.32\textwidth}
-\textbf{P1}
+\textbf{Processor 1}
 \begin{lstlisting}[basicstyle=\ttfamily\small]
 r1 <- Load [X]   // L1
 Store [Y] <- 1   // S2
 r2 <- Load [Y]   // L2
 \end{lstlisting}
 \column{0.32\textwidth}
-\textbf{P2}
+\textbf{Processor 2}
 \begin{lstlisting}[basicstyle=\ttfamily\small]
 r3 <- Load [X]   // L3
 \end{lstlisting}
 \end{columns}
+
+\vspace{0.1cm}
+{\small
+\textbf{Happens-before analysis (transitivity):}
+\begin{itemize}
+  \item If r1=1: L1 observed S1 $\Rightarrow$ $\text{S1} \rightarrow \text{L1}$
+  \item On P1: $\text{L1} \rightarrow \text{S2} \rightarrow \text{L2}$ (program order)
+  \item If r2=1: L2 observed S2 $\Rightarrow$ $\text{S2} \rightarrow \text{L2}$
+  \item By transitivity: $\text{S1} \rightarrow \text{L1} \rightarrow \text{S2} \rightarrow \text{L2}$
+  \item Since L2 observed S2, and S2 happened after S1, any subsequent load must see S1
+  \item Therefore L3 must see S1 $\Rightarrow$ r3=1 (r3=0 violates transitivity)
+\end{itemize}
+}
 \end{frame}
 
 \end{document}
