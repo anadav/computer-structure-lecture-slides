@@ -9,7 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix, shapes.gates.logic.US}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix, shapes.gates.logic.US, decorations.pathreplacing}
 \usepackage[siunitx, RPvoltages]{circuitikz}
 \usepackage{tcolorbox}
 
@@ -1563,6 +1563,92 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
             \item Pop a target from the stack and use it as the Return address
         \end{itemize}
     \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+% RSB Operation Illustration
+\begin{frame}
+\frametitle{Return Stack Buffer Operation}
+\label{frame:rsb_operation}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85,
+    remember picture,
+    codebox/.style={draw=black!80, line width=1pt, minimum width=3cm, minimum height=1.2cm, font=\footnotesize\ttfamily, text width=2.8cm, align=left},
+    arrow/.style={-latex, thick, draw=black!70},
+    label/.style={font=\scriptsize, text=black}
+]
+
+    % Define colors for each function
+    \definecolor{mainfill}{RGB}{200,230,200}
+    \definecolor{func1fill}{RGB}{255,220,220}
+    \definecolor{func2fill}{RGB}{220,220,255}
+
+    % Code boxes on the left
+    \node[codebox, fill=mainfill] (main) at (0,0) {main:\\~~...\\~~call~~func1\tikzmark{call1}\\~~...\\~~ret};
+    \node[codebox, fill=func1fill, below=0.5cm of main] (func1) {func1:\\~~...\\~~call~~func2\tikzmark{call2}\\~~...\\~~ret};
+    \node[codebox, fill=func2fill, below=0.5cm of func1] (func2) {func2:\\~~...\\~~ret\tikzmark{ret2}};
+
+    % Stack on the right using matrix
+    \node[label, right=5cm of main.north east, anchor=south] (stack_label) {Stack};
+
+    \matrix[matrix of nodes, below=0.01cm of stack_label, anchor=north,
+            nodes={draw=black!80, line width=0.5pt, minimum width=2.5cm, minimum height=0.5cm,
+                   font=\scriptsize, anchor=center},
+            row sep=0pt, column sep=0pt] (stack_matrix) {
+        |[fill=func2fill]| ... \\
+        |[fill=func2fill]| retaddr2 \\
+        |[fill=func2fill]| Arguments \\
+        |[fill=func1fill]| ... \\
+        |[fill=func1fill]| retaddr1 \\
+        |[fill=func1fill]| Arguments \\
+        |[fill=mainfill]| ... \\
+    };
+
+    % Frame braces and labels
+    \draw[thick, decoration={brace, amplitude=5pt}, decorate]
+        ([xshift=0.25cm]stack_matrix-1-1.north east) -- ([xshift=0.25cm]stack_matrix-3-1.south east)
+        node[midway, right=0.15cm, font=\tiny, align=left] {Frame\\of func2};
+
+    \draw[thick, decoration={brace, amplitude=5pt}, decorate]
+        ([xshift=0.25cm]stack_matrix-4-1.north east) -- ([xshift=0.25cm]stack_matrix-6-1.south east)
+        node[midway, right=0.15cm, font=\tiny, align=left] {Frame\\of func1};
+
+    % RSB below the stack using matrix
+    \node[label, below=0.5cm of stack_matrix, anchor=north] (rsb_label) {RSB};
+
+    \matrix[matrix of nodes, below=0.01cm of rsb_label, anchor=north,
+            nodes={draw=black!80, line width=0.5pt, minimum width=2.5cm, minimum height=0.5cm,
+                   font=\scriptsize, anchor=center},
+            row sep=0pt, column sep=0pt] (rsb_matrix) {
+        |[fill=func2fill]| retaddr2 \\
+        |[fill=func1fill]| retaddr1 \\
+        |[fill=green!15]| ... \\
+    };
+
+    % Arrows showing the flow
+    % Arrow 1: Load from stack - from ret instruction in func2
+    \draw[arrow, myblue] ([xshift=0.1cm]pic cs:ret2) -- ++(1.2,0) coordinate (mid1) |- (stack_matrix-2-1.west);
+    \node[label, myblue, above right, align=center] at (mid1) {(1) Load\\from\\stack};
+
+    % Arrow 2: Consult for prediction - from ret instruction in func2
+    \draw[arrow, mygreen] ([xshift=0.1cm]pic cs:ret2) -- ++(0.8,0) coordinate (mid2) |- (rsb_matrix-1-1.west);
+    \node[label, mygreen, below, align=center] at ([yshift=-0.3cm]mid2) {(2) Consult\\for prediction};
+
+\end{tikzpicture}
+\end{center}
+
+% Labels for return addresses aligned with tikzmarks
+\begin{tikzpicture}[remember picture, overlay]
+    \node[font=\scriptsize, text=black] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call1) {retaddr1};
+    \node[font=\scriptsize, text=black] at ([xshift=-3.2cm, yshift=-0.15cm]pic cs:call2) {retaddr2};
+\end{tikzpicture}
+
+\vspace{0.3cm}
+
+\begin{itemize}
+    \item \textbf{At return: processor loads from stack (slow) while consulting RSB for prediction (fast)}
 \end{itemize}
 
 \end{frame}
