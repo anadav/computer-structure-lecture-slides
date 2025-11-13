@@ -1122,7 +1122,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 
 
 \begin{frame}{Example: Page Table Hierarchy}
-\begin{tikzpicture}[scale=0.58, transform shape,
+\begin{tikzpicture}[scale=0.6, transform shape,
     % Table styles for different levels
     pml4table/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=yellow!40},
     pdptable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.8cm, fill=red!30},
@@ -1180,8 +1180,8 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % PML4 Table
 \node[pml4table] (pml4base) at (1,5) {};
 \node[font=\scriptsize, anchor=south] at (pml4base.north) {PML4 Table};
-\node[pml4entry] (pml4d3) at (1,4.3) {\scriptsize D3};
-\node[pml4entry] (pml471) at (1,2.7) {\scriptsize 71};
+\node[pml4entry] (pml4d3) at (1,4.3) {};
+\node[pml4entry] (pml471) at (1,2.7) {};
 
 % CR3 register pointing to PML4
 \node[rectangle, draw=black, thick, fill=gray!20, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize, anchor=east] (cr3) at ([xshift=-3mm]pml4base.south west) {CR3};
@@ -1193,49 +1193,69 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 % PDP Table (2 instances: one from D3=82,46)
 \node[pdptable] (pdp82base) at (4,6) {};
 \node[font=\scriptsize, anchor=south] at (pdp82base.north) {PDP Table};
-\node[pdpentry] (pdp82) at (4,5.6) {\scriptsize 82};
-\node[pdpentry] (pdp46) at (4,2.5) {\scriptsize 46};
+\node[pdpentry] (pdp82) at (4,5.6) {};
+\node[pdpentry] (pdp46) at (4,2.5) {};
 
 % Page Dir instances
 \node[dirtable] (dirffbase) at (7,7) {};
 \node[font=\scriptsize, anchor=south] at (dirffbase.north) {Page Dir};
-\node[direntry] (dirff) at (7,6.8) {\scriptsize FF};
-\node[direntry] (dir28) at (7,5) {\scriptsize 28};
+\node[direntry] (dirff) at (7,6.8) {};
+\node[direntry] (dir28) at (7,5) {};
 
 \node[dirtable] (dirb5base) at (7,2.5) {};
-\node[direntry] (dirb5) at (7,2.2) {\scriptsize B5};
+\node[direntry] (dirb5) at (7,2.2) {};
 
 % Page Table instances
 \node[pagetable] (pte2base) at (10,8) {};
 \node[font=\scriptsize, anchor=south] at (pte2base.north) {Page Table};
-\node[pageentry] (ptee2) at (10,7.7) {\scriptsize E2};
-\node[pageentry] (pte68) at (10,6) {\scriptsize 68};
+\node[pageentry] (ptee2) at (10,7.7) {};
+\node[pageentry] (pte68) at (10,6) {};
 
 \node[pagetable] (pte49base) at (10,3.5) {};
-\node[pageentry] (pte49) at (10,3.3) {\scriptsize 49};
-\node[pageentry] (pte54) at (10,1.5) {\scriptsize 54};
+\node[pageentry] (pte49) at (10,3.3) {};
+\node[pageentry] (pte54) at (10,1.5) {};
 
 % 4KB Pages with offsets
 \node[page] (pageb25base) at (13,8.8) {};
 \node[font=\scriptsize, anchor=south] at (pageb25base.north) {4KB Page};
-\node[pageoffset] (pageb25) at (13,8.5) {\scriptsize B25};
-\node[pageoffset] (page349) at (13,7.7) {\scriptsize 349};
+\node[pageoffset] (pageb25) at (13,8.5) {};
+\node[pageoffset] (page349) at (13,7.7) {};
 
 \node[page] (page937base) at (13,5.8) {};
-\node[pageoffset] (page937) at (13,5.6) {\scriptsize 937};
+\node[pageoffset] (page937) at (13,5.6) {};
 
 \node[page] (pagec00base) at (13,3.5) {};
-\node[pageoffset] (pagec00) at (13,3.3) {\scriptsize C00};
+\node[pageoffset] (pagec00) at (13,3.3) {};
 
 \node[page] (page622base) at (13,1.2) {};
-\node[pageoffset] (page622) at (13,1) {\scriptsize 622};
+\node[pageoffset] (page622) at (13,1) {};
 
 % Paths from address fields to table entries
-\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-5mm]pml4d3.west) -- (pml4d3.west);
-\draw[arrow] (pdplabel) -- ++(0, -0.8) -| ([xshift=-5mm]pdp82.west) -- (pdp82.west);
-\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-5mm]dirff.west) -- (dirff.west);
-\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-5mm]ptee2.west) -- (ptee2.west);
-\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-5mm]pageb25.west) -- (pageb25.west);
+% PML4 entries
+\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml4d3.west) -- (pml4d3.west) node[near end, above, font=\tiny] {D3};
+\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml471.west) -- (pml471.west) node[near end, above, font=\tiny] {71};
+
+% PDP entries
+\draw[arrow] (pdplabel) -- ++(0, -0.8) -| ([xshift=-10mm]pdp82.west) -- (pdp82.west) node[near end, above, font=\tiny] {82};
+\draw[arrow] (pdplabel) -- ++(0, -0.8) -| ([xshift=-10mm]pdp46.west) -- (pdp46.west) node[near end, above, font=\tiny] {46};
+
+% DIR entries
+\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-10mm]dirff.west) -- (dirff.west) node[near end, above, font=\tiny] {FF};
+\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-10mm]dir28.west) -- (dir28.west) node[near end, above, font=\tiny] {28};
+\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-10mm]dirb5.west) -- (dirb5.west) node[near end, above, font=\tiny] {B5};
+
+% TABLE entries
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]ptee2.west) -- (ptee2.west) node[near end, above, font=\tiny] {E2};
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte68.west) -- (pte68.west) node[near end, above, font=\tiny] {68};
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte49.west) -- (pte49.west) node[near end, above, font=\tiny] {49};
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte54.west) -- (pte54.west) node[near end, above, font=\tiny] {54};
+
+% OFFSET entries
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pageb25.west) -- (pageb25.west) node[near end, above, font=\tiny] {B25};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page349.west) -- (page349.west) node[near end, above, font=\tiny] {349};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page937.west) -- (page937.west) node[near end, above, font=\tiny] {937};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pagec00.west) -- (pagec00.west) node[near end, above, font=\tiny] {C00};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page622.west) -- (page622.west) node[near end, above, font=\tiny] {622};
 
 % Arrows connecting the hierarchy
 % PML4[D3] -> PDP
