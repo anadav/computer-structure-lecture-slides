@@ -1240,13 +1240,13 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml471.west) -- (pml471.west) node[entrytag] {71};
 
 % PDP entries
-\draw[arrow] (pdplabel) -- ++(0, -0.8) -| ([xshift=-10mm]pdp82.west) -- (pdp82.west) node[entrytag] {82};
-\draw[arrow] (pdplabel) -- ++(0, -0.8) -| ([xshift=-10mm]pdp46.west) -- (pdp46.west) node[entrytag] {46};
+\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp82.west) -- (pdp82.west) node[entrytag] {82};
+\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp46.west) -- (pdp46.west) node[entrytag] {46};
 
 % DIR entries
-\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-10mm]dirff.west) -- (dirff.west) node[entrytag] {FF};
-\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-10mm]dir28.west) -- (dir28.west) node[entrytag] {28};
-\draw[arrow] (dirlabel) -- ++(0, -0.8) -| ([xshift=-10mm]dirb5.west) -- (dirb5.west) node[entrytag] {B5};
+\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirff.west) -- (dirff.west) node[entrytag] {FF};
+\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dir28.west) -- (dir28.west) node[entrytag] {28};
+\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirb5.west) -- (dirb5.west) node[entrytag] {B5};
 
 % TABLE entries
 \draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]ptee2.west) -- (ptee2.west) node[entrytag] {E2};
@@ -1280,7 +1280,7 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \draw[arrow] (dirb5.east) -- ++(0.3, 0) |- (pte54base.south west);
 
 % PT[E2] -> Page[B25,349]
-\draw[arrow] (ptee2.east) -- ++(0.3, 0) |- (pageb25base.south west);
+\draw[arrow] (ptee2.east) -- ++(0.5, 0) |- (pageb25base.south west);
 % PT[68] -> Page[937]
 \draw[arrow] (pte68.east) -- ++(0.3, 0) |- (page937base.south west);
 % PT[49] -> Page[C00]
@@ -1289,28 +1289,63 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \draw[arrow] (pte54.east) -- ++(0.3, 0) |- (page622base.south west);
 
 % Right side: Complete virtual addresses (color-coded) - positioned relative to page entries
-\node[font=\small\ttfamily, anchor=west] (addr1) at ([xshift=7mm]pageb25.west) {
-\textcolor{green!40!black}{00000} \tikzmark{pml4start}\textcolor{yellow!40!black}{D3}\tikzmark{pml4end} \tikzmark{pdpstart}\textcolor{red!40!black}{82}\tikzmark{pdpend} \tikzmark{dirstart}\textcolor{blue!20!black}{FF}\tikzmark{dirend} \tikzmark{ptestart}\textcolor{blue!40!black}{E2}\tikzmark{pteend} \tikzmark{offsetstart}\textcolor{orange!60!black}{B25}\tikzmark{offsetend}
-};
-\node[font=\small\ttfamily, anchor=west] at ([xshift=7mm]page349.west) {
-\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{FF} \textcolor{blue!40!black}{E2} \textcolor{orange!60!black}{349}
-};
-\node[font=\small\ttfamily, anchor=west] at ([xshift=7mm]page937.west) {
-\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{FF} \textcolor{blue!40!black}{68} \textcolor{orange!60!black}{937}
-};
-\node[font=\small\ttfamily, anchor=west] at ([xshift=7mm]pagec00.west) {
-\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{D3} \textcolor{red!40!black}{82} \textcolor{blue!20!black}{28} \textcolor{blue!40!black}{49} \textcolor{orange!60!black}{C00}
-};
-\node[font=\small\ttfamily, anchor=west] at ([xshift=7mm]page622.west) {
-\textcolor{green!40!black}{00000} \textcolor{yellow!40!black}{71} \textcolor{red!40!black}{46} \textcolor{blue!20!black}{B5} \textcolor{blue!40!black}{54} \textcolor{orange!60!black}{622}
+% First address with labels (2-row matrix)
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, row sep=0.5pt, ampersand replacement=\&] (addr1) at ([xshift=7mm,yshift=-3mm]pageb25.south east) {
+    |[font=\fontsize{4pt}{5pt}\selectfont]| {} \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=yellow!40!black]| PML4 \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=red!40!black]| PDP \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=blue!20!black]| DIR \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=blue!40!black]| PTE \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=orange!60!black]| offset \\
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| FF \&
+    |[text=blue!40!black]| E2 \&
+    |[text=orange!60!black]| B25 \\
 };
 
-% Field labels above the first address using tikzmarks
-\node[font=\scriptsize, text=yellow!40!black] at ($(pic cs:pml4start)!0.5!(pic cs:pml4end)+(0,0.3)$) {PML4};
-\node[font=\scriptsize, text=red!40!black] at ($(pic cs:pdpstart)!0.5!(pic cs:pdpend)+(0,0.3)$) {PDP};
-\node[font=\scriptsize, text=blue!20!black] at ($(pic cs:dirstart)!0.5!(pic cs:dirend)+(0,0.3)$) {DIR};
-\node[font=\scriptsize, text=blue!40!black] at ($(pic cs:ptestart)!0.5!(pic cs:pteend)+(0,0.3)$) {PTE};
-\node[font=\scriptsize, text=orange!60!black] at ($(pic cs:offsetstart)!0.5!(pic cs:offsetend)+(0,0.3)$) {offset};
+% Other addresses (single-row matrices)
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]page349.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| FF \&
+    |[text=blue!40!black]| E2 \&
+    |[text=orange!60!black]| 349 \\
+};
+
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]page937.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| FF \&
+    |[text=blue!40!black]| 68 \&
+    |[text=orange!60!black]| 937 \\
+};
+
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]pagec00.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| 28 \&
+    |[text=blue!40!black]| 49 \&
+    |[text=orange!60!black]| C00 \\
+};
+
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]page622.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| 71 \&
+    |[text=red!40!black]| 46 \&
+    |[text=blue!20!black]| B5 \&
+    |[text=blue!40!black]| 54 \&
+    |[text=orange!60!black]| 622 \\
+};
 
 % Note about 8 bits
 \node[font=\scriptsize, draw=black, thick, fill=red!10, align=center, text width=2.5cm,
