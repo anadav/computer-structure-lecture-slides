@@ -10,7 +10,7 @@
 \usepackage{bytefield}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit}
 \usepackage{tcolorbox}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
@@ -1081,144 +1081,147 @@
 
 \begin{frame}{A Superscalar OOO Machine}
   \begin{center}
-    \colorbox{gray!20}{\textbf{In-order}}
-    
-    \vspace{0.3cm}
-    \begin{tikzpicture}[scale=1,
-      block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=0.8cm},
-      rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm}]
-      
-      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
-      \node[rename] (rename) at (3,0) {rename};
-      
-      % Multiple arrows from fetch to rename
-      \foreach \y in {-0.1, 0, 0.1} {
-        \draw[->, thick] (fetch.east) -- ++(0.2,\y) -- (rename.west);
-      }
-      
-      % Annotations
-      \node[text width=4cm, below] at (0,-0.8) {\small Fetch and decode instructions in parallel but in order};
-      \node[text width=3.5cm, below] at (3,-0.8) {\small 
-        Rename sources to physical registers\\
-        Allocate a physical register to the destination\\
-        Update the mapping};
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{A Superscalar OOO Machine}
-  \begin{center}
-    \colorbox{gray!20}{\textbf{In-order}}
-    
-    \vspace{0.3cm}
-    \begin{tikzpicture}[scale=0.9,
-      block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=0.8cm},
-      rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm},
-      pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=0.8cm}]
-      
-      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
-      \node[rename] (rename) at (2.5,0) {rename};
-      \node[pool] (rob) at (5.5,0.8) {ROB};
-      \node[pool] (rs) at (5.5,-0.8) {RS};
-      
-      % Arrows
-      \foreach \y in {-0.1, 0, 0.1} {
-        \draw[->, thick] (fetch.east) -- ++(0.1,\y) -- (rename.west);
-      }
-      
-      \draw[->, thick] (rename.east) -- ++(0.3,0) -- ++(0,0.8) -- (rob.west);
-      \draw[->, thick] (rename.east) -- ++(0.3,0) -- ++(0,-0.8) -- (rs.west);
-      
-      % Annotations
-      \node[text width=3cm, right] at (6.5,0.8) {\small \textbf{Reorder Buffer (ROB)} \\ Pool of instructions waiting for retirement};
-      \node[text width=3cm, right] at (6.5,-0.8) {\small \textbf{Reservation Stations (RS)} \\ Pool of instructions waiting for execution \\ Maintains per inst. sources ready/not-ready status};
-      
-      \node[below] at (3.5,-1.5) {\small Allocate instructions in RS and in ROB};
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{A Superscalar OOO Machine}
-  \begin{center}
     \begin{tikzpicture}[scale=0.8,
-      block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=0.8cm},
-      rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm},
-      pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=0.8cm},
-      exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=0.8cm}]
-      
-      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
-      \node[rename] (rename) at (2.5,0) {rename};
-      \node[pool] (rob) at (5.5,1) {ROB};
-      \node[pool] (rs) at (5.5,-1) {RS};
-      \node[exe] (execute) at (5.5,-3) {Execute};
-      
-      % Arrows
-      \foreach \y in {-0.1, 0, 0.1} {
-        \draw[->, thick] (fetch.east) -- ++(0.1,\y) -- (rename.west);
-      }
-      
-      \draw[->, thick] (rename.east) -- ++(0.3,0) -- ++(0,1) -- (rob.west);
-      \draw[->, thick] (rename.east) -- ++(0.3,0) -- ++(0,-1) -- (rs.west);
-      
-      % Bidirectional arrows between RS and Execute
-      \draw[<->, thick] (rs.south) -- (execute.north);
-      \draw[->, thick] (execute.east) -- ++(0.5,0) -- ++(0,4) -- ++(-1,0) -- (rob.east);
-      
-      % Annotations
-      \node[text width=3.5cm, left] at (-1,-2) {\small Track which instructions are ready: have all sources ready\\
-        Dispatch ready instruction to execution ports in FIFO order\\
-        The RS handles only register dependencies -- it does not handle memory dependencies};
-      
-      \node[text width=2.5cm, right] at (7,-3) {\small Write back value and mark more sources as ready\\
-        Send "exe done" indication to ROB and reclaim RS entry};
-      
-      \node[below] at (5.5,-4) {\colorbox{gray!20}{\textbf{Out-Of-Order}}};
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{A Superscalar OOO Machine}
-  \begin{center}
-    \begin{tikzpicture}[scale=0.8,
+      node distance=1cm,
       block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=0.8cm},
       rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm},
       pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=0.8cm},
       exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=0.8cm},
-      retire/.style={rectangle, draw, fill=yellow!30, minimum width=1.5cm, minimum height=0.8cm}]
-      
+      retire/.style={rectangle, draw, fill=yellow!30, minimum width=1.5cm, minimum height=0.8cm},
+      calloutbox/.style={rectangle callout, draw, fill=white, thick, align=left,
+                         minimum width=3cm, minimum height=1cm, font=\small}]
+
+      % Stage 1: Fetch & Decode + rename
       \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
-      \node[rename] (rename) at (2.5,0) {rename};
-      \node[pool] (rob) at (5.5,0) {ROB};
-      \node[pool] (rs) at (5.5,-1.5) {RS};
-      \node[exe] (execute) at (5.5,-3) {Execute};
-      \node[retire] (retire) at (8.5,0) {Retire (commit)};
-      
-      % Arrows
-      \foreach \y in {-0.1, 0, 0.1} {
-        \draw[->, thick] (fetch.east) -- ++(0.1,\y) -- (rename.west);
+      \node[rename, right=of fetch] (rename) {rename};
+
+      % Stage 2: Add ROB and RS
+      \onslide<2->{
+        \node[pool, right=of rename] (rs) {RS};
+        \node[pool, above=of rs] (rob) {ROB};
       }
-      
-      \draw[->, thick] (rename.east) -- (rob.west);
-      \draw[->, thick] (rename.east) -- ++(0.3,0) -- ++(0,-1.5) -- (rs.west);
-      
-      % Bidirectional arrows between RS and Execute
-      \draw[<->, thick] (rs.south) -- (execute.north);
-      \draw[->, thick] (execute.east) -- ++(0.8,0) -- ++(0,3) -- (rob.south);
-      
-      % ROB to Retire
-      \foreach \y in {-0.1, 0, 0.1} {
-        \draw[->, thick] (rob.east) -- ++(0.1,\y) -- (retire.west);
+
+      % Stage 3: Add Execute
+      \onslide<3->{
+        \node[exe, below=2cm of rs] (execute) {Execute};
+        \node[below=of execute] {\textbf{Out-of-order}};
       }
-      
-      % Annotations
-      \node[text width=3cm, above] at (8.5,0.8) {\colorbox{gray!20}{\textbf{In-order}}};
-      \node[text width=3cm, below] at (8.5,-0.8) {\small Commit instructions in parallel but in-order\\
-        Handle faults/exceptions\\
-        Reclaim ROB entry and physical register};
+
+      % Stage 4: Add Retire
+      \onslide<4->{
+        \node[retire,align=center, right=of rs] (retire) {Retire\\(commit)};
+        \node[above=of retire] {\textbf{In-order}};
+      }
+
+      % In-order label for initial stages
+      \onslide<1-3>{
+        \node[below=of retire] (inorder) {\textbf{In-order}};
+      }
+
+      % Fit background for in-order section
+      \onslide<1>{
+        \node[draw=gray, fill=gray!10, fit=(fetch) (rename) (inorder), inner sep=8pt, rounded corners] (bg1) {};
+      }
+      \onslide<2-3>{
+        \node[draw=gray, fill=gray!10, fit=(fetch) (rename) (rob) (rs) (inorder), inner sep=8pt, rounded corners] (bg2) {};
+      }
+
+      % Redraw nodes on top to ensure they're visible
+      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
+      \node[rename, right=of fetch] (rename) {rename};
+      \onslide<2->{
+        \node[pool, right=of rename] (rs) {RS};
+        \node[pool, above=of rs] (rob) {ROB};
+      }
+      \onslide<3->{
+        \node[exe, below=of rs] (execute) {Execute};
+      }
+      \onslide<4->{
+        \node[retire,align=center, right=2cm of rs] (retire) {Retire\\(commit)};
+      }
+      \onslide<1-3>{
+        \node[below=of retire] (inorder) {\textbf{In-order}};
+      }
+
+      % Arrows - Stage 1
+      \foreach \y in {-2mm, 0, 2mm} {
+        \draw[->, thick] ([yshift=\y]fetch.east) -- ([yshift=\y]rename.west);
+      }
+
+      % Arrows - Stage 2
+      \onslide<2->{
+        \foreach \y in {-2mm, 0, 2mm} {
+          \draw[->, thick] ([yshift=\y]rename.east) -- ([yshift=\y]rs.west);
+        }
+        \draw[->, thick] (rename.east) -- ++(0.3,0) -- ++(0,1.2) -- (rob.west);
+      }
+
+      % Arrows - Stage 3
+      \onslide<3->{
+        \draw[<->, thick] (rs.south) -- (execute.north);
+        \draw[->, thick] (execute.east) -- ++(0.8,0) -- ++(0,3.7) -- (rob.south);
+      }
+
+      % Arrows - Stage 4
+      \onslide<4->{
+        \foreach \y in {-2mm, 0, 2mm} {
+          \draw[->, thick] ([yshift=\y]rob.east) -- ([yshift=\y]retire.west);
+        }
+      }
+
+      % Callout annotations - Stage 1
+      \onslide<1>{
+        \node[calloutbox, below=2cm of fetch, callout absolute pointer={(fetch.south)}]
+          (fetch_call)
+          {Fetch and decode instructions in parallel but in order};
+
+        \node[calloutbox, below=2cm of rename, callout absolute pointer={(rename.south)}]
+          (rename_call)
+          {Rename sources to physical registers\\
+          Allocate a physical register to the destination\\
+          Update the mapping};
+      }
+
+      % Callout annotations - Stage 2
+      \onslide<2>{
+        \node[calloutbox, above=1cm of rob, callout absolute pointer={(rob.north)}]
+          (rob_call)
+          {\textbf{Reorder Buffer (ROB)}\\Pool of instructions waiting for retirement};
+
+        \node[calloutbox, below=1cm of rs, callout absolute pointer={(rs.south)}]
+          (rs_call)
+          {\textbf{Reservation Stations (RS)}\\Pool of instructions waiting for execution\\Maintains per inst. sources ready/not-ready status};
+
+        \node[calloutbox, below=1cm of rename, callout absolute pointer={(rename.south)}]
+          (rename_call2)
+          {Allocate instructions in RS and in ROB};
+      }
+
+      % Callout annotations - Stage 3
+      \onslide<3>{
+        \node[calloutbox, left=1cm of rs, callout absolute pointer={(rs.west)}, font=\tiny]
+          (rs_call3)
+          {Track which instructions are ready: have all sources ready\\
+          Dispatch ready instruction to execution ports in FIFO order\\
+          The RS handles only register dependencies -- it does not handle memory dependencies};
+
+        \node[calloutbox, below=1cm of execute, callout absolute pointer={(execute.south)}]
+          (execute_call)
+          {Write back value and mark more sources as ready\\
+          Send "exe done" indication to ROB and reclaim RS entry};
+      }
+
+      % Callout annotations - Stage 4
+      \onslide<4>{
+        \node[calloutbox, below=1cm of retire, callout absolute pointer={(retire.south)}]
+          (retire_call)
+          {Commit instructions in parallel but in-order\\
+          Handle faults/exceptions\\
+          Reclaim ROB entry and physical register};
+      }
     \end{tikzpicture}
   \end{center}
 \end{frame}
-
 
 \begin{frame}{Large ROB and RS are Important}
   \begin{itemize}
