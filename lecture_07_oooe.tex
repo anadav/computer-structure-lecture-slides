@@ -1110,7 +1110,7 @@
       % Stage 4: Add Retire
       \onslide<4->{
         \node[retire,align=center, right=of rob] (retire) {Retire\\(commit)};
-        \node[above=0.1cm of retire.north] (inorder2) {\textbf{In-order}};
+        \node[below=0.1cm of retire.south] (inorder2) {\textbf{In-order}};
       }
 
       % In-order label for initial stages
@@ -1124,6 +1124,9 @@
       }
       \onslide<3>{
         \node[draw=gray, fill=gray!10, fit=(rs) (execute) (outoforder), inner sep=8pt, rounded corners] (bg2) {};
+      }
+      \onslide<4>{
+        \node[draw=gray, fill=gray!10, fit=(retire) (inorder2), inner sep=8pt, rounded corners] (bg3) {};
       }
 
       % Redraw nodes on top to ensure they're visible
@@ -1141,7 +1144,7 @@
       }
       \onslide<4->{
         \node[retire,align=center, right=of rob] (retire) {Retire\\(commit)};
-        \node[above=0.1cm of retire.north] (inorder2) {\textbf{In-order}};
+        \node[below=0.1cm of retire.south] (inorder2) {\textbf{In-order}};
       }
       \onslide<1-2>{
         \node at ($(fetch)!0.5!(rename)+(0,3)$)  (inorder) {\textbf{In-order}};
@@ -1226,8 +1229,8 @@
 
       % Callout annotations - Stage 4
       \onslide<4>{
-        \node[calloutbox, anchor=north west, callout absolute pointer={(retire.south)}]
-          at ([yshift=-5mm,xshift=-1cm]retire.south) (retire_call)
+        \node[calloutbox, anchor=north west, callout absolute pointer={($(rob.south)!0.5!(retire.south)$)}]
+          at ([yshift=-1cm,xshift=3mm]rs.east) (retire_call)
           {Commit instructions in parallel but in-order\\
           Handle faults/exceptions\\
           Reclaim ROB entry and physical register};
