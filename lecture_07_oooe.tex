@@ -1305,44 +1305,66 @@
     \end{column}
     \begin{column}{0.35\textwidth}
       \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-          % Draw white background for all entries (all stages)
+        \begin{tikzpicture}[scale=0.8,
+          rob entry/.style={draw, minimum width=2cm, minimum height=0.35cm, inner sep=0, anchor=north west},
+          rob empty/.style={rob entry, fill=white},
+          rob allocated/.style={rob entry, fill=green!30},
+          rob executed/.style={rob entry, fill=red!30},
+          rob faulting/.style={rob entry, fill=red!30},
+          rob handler/.style={rob entry, fill=purple!30}
+        ]
+          % Draw white background for all entries (all stages) with names
           \foreach \i in {-2,-1,0,...,16} {
-            \draw[fill=white] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+            \node[rob empty] (entry\i) at (0,-\i*0.4+0.35) {};
           }
 
           % Stage 1: All allocated (green)
           \only<1>{
             \foreach \i in {0,...,14} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+            % Labels: retire points to first allocated, alloc points to first empty
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
           % Stage 2: Some executed (red at top)
           \only<2>{
             \foreach \i in {0,1,2} {
-              \draw[fill=red!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
             }
             \foreach \i in {3,...,14} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+            % Labels: retire points to first allocated, alloc points to first empty
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
           % Stage 3: More executed scattered
           \only<3>{
             \foreach \i in {0,1,2,4,5,7,8,9} {
-              \draw[fill=red!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
             }
             \foreach \i in {3,6,10,11,12,13,14} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+            % Labels: retire points to first allocated, alloc points to first empty
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
-
-          % Labels (shown on all stages)
-          \draw[->,thick] (-0.5,-0.2) -- (0,-0.2) node[left] at (-0.5,-0.2) {retire};
-          \node[right] at (2.1,-0.2) {oldest};
-          \draw[->,thick] (-0.5,-5.6) -- (0,-5.6) node[left] at (-0.5,-5.6) {alloc};
-          \node[right] at (2.1,-5.6) {youngest};
         \end{tikzpicture}
       \end{center}
     \end{column}
@@ -1379,59 +1401,89 @@
     \end{column}
     \begin{column}{0.35\textwidth}
       \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-          % Draw white background for all entries (all stages)
+        \begin{tikzpicture}[scale=0.8,
+          rob entry/.style={draw, minimum width=2cm, minimum height=0.35cm, inner sep=0, anchor=north west},
+          rob empty/.style={rob entry, fill=white},
+          rob allocated/.style={rob entry, fill=green!30},
+          rob executed/.style={rob entry, fill=red!30},
+          rob faulting/.style={rob entry, fill=red!30},
+          rob handler/.style={rob entry, fill=purple!30}
+        ]
+          % Draw white background for all entries (all stages) with names
           \foreach \i in {-2,-1,0,...,16} {
-            \draw[fill=white] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+            \node[rob empty] (entry\i) at (0,-\i*0.4+0.35) {};
           }
 
           % Stage 1: Faulting instruction marked in middle
           \only<1>{
             \foreach \i in {0,1,4,5,7,8,9} {
-              \draw[fill=red!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
             }
             \foreach \i in {3,6,10,11,12,13,14} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
             % Faulting instruction
-            \draw[fill=orange!50] (0,-2*0.4) rectangle (2,-2*0.4+0.35);
+            \node[rob faulting] at (0,-2*0.4+0.35) {};
+            % Labels: retire points to first allocated, alloc points to first empty
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
           % Stage 2: Faulting instruction at retire
           \only<2>{
-            \draw[fill=orange!50] (0,-0*0.4) rectangle (2,-0*0.4+0.35);
+            \node[rob faulting] at (0,-0*0.4+0.35) {};
             \foreach \i in {1,4,5,7,8,9} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
             \foreach \i in {3,6,10,11,12,13,14} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+            % Labels: retire points to first allocated, alloc points to first empty
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
           % Stage 3: Empty ROB after flush (all white, already drawn)
+          \only<3>{
+            % Labels: ROB is empty, both retire and alloc point to first entry
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry0.west, anchor=east, yshift=-0.4cm] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry0.west);
+          }
 
           % Stage 4: Fault handling code and re-fetch
           \only<4>{
             % Fault handling code
             \foreach \i in {0,1,2,3} {
-              \draw[fill=purple!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob handler] at (0,-\i*0.4+0.35) {};
             }
-            \node[font=\tiny,align=center] at (1,-0.6) {Fault\\Handling\\Code};
+            \node[font=\tiny,align=center] at (entry1.center) {Fault\\Handling\\Code};
             % Faulting instruction
-            \draw[fill=orange!50] (0,-4*0.4) rectangle (2,-4*0.4+0.35);
-            \node[font=\tiny,right] at (2.1,-4*0.4+0.15) {The faulting};
-            \node[font=\tiny,right] at (2.1,-4*0.4-0.1) {instruction};
+            \node[rob faulting] at (0,-4*0.4+0.35) {};
+            \node[font=\tiny,right] at (entry4.east) {The faulting};
+            \node[font=\tiny,right] at ([yshift=-0.25cm]entry4.east) {instruction};
             % Subsequent instructions
             \foreach \i in {5,...,14} {
-              \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+            % Labels: retire points to first allocated, alloc points to first empty
+            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
-
-          % Labels (shown on all stages)
-          \draw[->,thick] (-0.5,-0.2) -- (0,-0.2) node[left] at (-0.5,-0.2) {retire};
-          \node[right] at (2.1,-0.2) {oldest};
-          \draw[->,thick] (-0.5,-5.6) -- (0,-5.6) node[left] at (-0.5,-5.6) {alloc};
-          \node[right] at (2.1,-5.6) {youngest};
         \end{tikzpicture}
       \end{center}
     \end{column}
