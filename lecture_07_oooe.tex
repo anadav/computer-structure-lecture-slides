@@ -1083,13 +1083,13 @@
   \begin{center}
     \begin{tikzpicture}[scale=0.8,
       node distance=1cm,
-      block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=0.8cm},
-      rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=0.8cm},
-      pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=0.8cm},
-      exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=0.8cm},
-      retire/.style={rectangle, draw, fill=yellow!30, minimum width=1.5cm, minimum height=0.8cm},
+      block/.style={rectangle, draw, fill=yellow!30, minimum width=2cm, minimum height=1cm},
+      rename/.style={rectangle, draw, fill=pink!30, minimum width=1.5cm, minimum height=1cm},
+      pool/.style={rectangle, draw, fill=green!30, minimum width=1.5cm, minimum height=1cm},
+      exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=1cm},
+      retire/.style={rectangle, draw, fill=yellow!30, minimum width=1.5cm, minimum height=1cm},
       calloutbox/.style={rectangle callout, draw, fill=white, thick, align=left,
-                         text width=3cm, minimum height=1cm, font=\tiny}]
+                         text width=5cm, minimum height=1cm, font=\footnotesize}]
 
       % Stage 1: Fetch & Decode + rename
       \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
@@ -1102,28 +1102,28 @@
       }
 
       % Stage 3: Add Execute
-      \onslide<3->{
+      \onslide<3>{
         \node[exe, below=of rs] (execute) {Execute};
-        \node[below=of execute] {\textbf{Out-of-order}};
+        \node[below=0.3cm of execute.south] (outoforder) {\textbf{Out-of-order}};
       }
 
       % Stage 4: Add Retire
       \onslide<4->{
         \node[retire,align=center, right=of rob] (retire) {Retire\\(commit)};
-        \node[above=of retire] {\textbf{In-order}};
+        \node[above=0.1cm of retire.north] (inorder2) {\textbf{In-order}};
       }
 
       % In-order label for initial stages
-      \onslide<1-3>{
+      \onslide<1-2>{
         \node at ($(fetch)!0.5!(rename)+(0,3)$)  (inorder) {\textbf{In-order}};
       }
 
       % Fit background for in-order section
-      \onslide<1>{
+      \onslide<1-2>{
         \node[draw=gray, fill=gray!10, fit=(fetch) (rename) (inorder), inner sep=8pt, rounded corners] (bg1) {};
       }
-      \onslide<2-3>{
-        \node[draw=gray, fill=gray!10, fit=(fetch) (rename) (rob) (rs) (inorder), inner sep=8pt, rounded corners] (bg2) {};
+      \onslide<3>{
+        \node[draw=gray, fill=gray!10, fit=(rs) (execute) (outoforder), inner sep=8pt, rounded corners] (bg2) {};
       }
 
       % Redraw nodes on top to ensure they're visible
@@ -1136,10 +1136,14 @@
       \onslide<3->{
         \node[exe, below=of rs] (execute) {Execute};
       }
+      \onslide<3>{
+        \node[below=0.3cm of execute.south] (outoforder) {\textbf{Out-of-order}};
+      }
       \onslide<4->{
         \node[retire,align=center, right=of rob] (retire) {Retire\\(commit)};
+        \node[above=0.1cm of retire.north] (inorder2) {\textbf{In-order}};
       }
-      \onslide<1-3>{
+      \onslide<1-2>{
         \node at ($(fetch)!0.5!(rename)+(0,3)$)  (inorder) {\textbf{In-order}};
       }
 
@@ -1178,7 +1182,7 @@
         }
       }
 
-      % Callout annotations - Stage 1
+      % Callout annotations - Stage  right1
       \onslide<1>{
         \node[calloutbox, above=0.5cm of fetch, callout absolute pointer={(fetch.north)}]
           (fetch_call)
@@ -1193,11 +1197,11 @@
 
       % Callout annotations - Stage 2
       \onslide<2>{
-        \node[calloutbox, above=1cm of rob, callout absolute pointer={(rob.north)}]
+        \node[calloutbox, right=1cm of rob, callout absolute pointer={(rob.east)}]
           (rob_call)
           {\textbf{Reorder Buffer (ROB)}\\Pool of instructions waiting for retirement};
 
-        \node[calloutbox, below=1cm of rs, callout absolute pointer={(rs.south)}]
+        \node[calloutbox, below right=1cm of rs, callout absolute pointer={(rs.east)}]
           (rs_call)
           {\textbf{Reservation Stations (RS)}\\Pool of instructions waiting for execution\\Maintains per inst. sources ready/not-ready status};
 
@@ -1208,13 +1212,13 @@
 
       % Callout annotations - Stage 3
       \onslide<3>{
-        \node[calloutbox, left=1cm of rs, callout absolute pointer={(rs.west)}, font=\tiny]
+        \node[calloutbox, below left=0.5cm of rs, callout absolute pointer={(rs.west)}]
           (rs_call3)
           {Track which instructions are ready: have all sources ready\\
           Dispatch ready instruction to execution ports in FIFO order\\
           The RS handles only register dependencies -- it does not handle memory dependencies};
 
-        \node[calloutbox, below=1cm of execute, callout absolute pointer={(execute.south)}]
+        \node[calloutbox, right=of execute, callout absolute pointer={(execute.east)}]
           (execute_call)
           {Write back value and mark more sources as ready\\
           Send "exe done" indication to ROB and reclaim RS entry};
@@ -1222,8 +1226,8 @@
 
       % Callout annotations - Stage 4
       \onslide<4>{
-        \node[calloutbox, below=1cm of retire, callout absolute pointer={(retire.south)}]
-          (retire_call)
+        \node[calloutbox, anchor=north west, callout absolute pointer={(retire.south)}]
+          at ([yshift=-5mm,xshift=-1cm]retire.south) (retire_call)
           {Commit instructions in parallel but in-order\\
           Handle faults/exceptions\\
           Reclaim ROB entry and physical register};
