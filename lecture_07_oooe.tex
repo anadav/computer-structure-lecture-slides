@@ -1089,7 +1089,9 @@
       exe/.style={rectangle, draw, fill=purple!30, minimum width=1.5cm, minimum height=1cm},
       retire/.style={rectangle, draw, fill=yellow!30, minimum width=1.5cm, minimum height=1cm},
       calloutbox/.style={rectangle callout, draw, fill=white, thick, align=left,
-                         text width=5cm, minimum height=1cm, font=\footnotesize}]
+                         text width=5cm, minimum height=1cm, font=\footnotesize},
+      widecalloutbox/.style={calloutbox, text width=6cm},
+      verywidecalloutbox/.style={calloutbox, text width=7cm}]
 
       % Stage 1: Fetch & Decode + rename
       \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
@@ -1191,7 +1193,7 @@
           (fetch_call)
           {Fetch and decode instructions in parallel but in order};
 
-        \node[calloutbox, below=of rename, callout absolute pointer={(rename.south)}]
+        \node[verywidecalloutbox, below=of rename, callout absolute pointer={(rename.south)}]
           (rename_call)
           {$\bullet$ Rename sources to physical registers\\
           $\bullet$ Allocate a physical register to the destination\\
@@ -1204,36 +1206,37 @@
           (rob_call)
           {\textbf{Reorder Buffer (ROB)}\\Pool of instructions waiting for retirement};
 
-        \node[calloutbox, below right=1cm of rs, callout absolute pointer={(rs.east)}]
-          (rs_call)
-          {\textbf{Reservation Stations (RS)}\\Pool of instructions waiting for execution\\Maintains per inst. sources ready/not-ready status};
+        \node[verywidecalloutbox, anchor=north west, callout absolute pointer={(rs.south)}]
+          at ([yshift=-8mm]rs.south) (rs_call)
+          {\textbf{Reservation Stations (RS)}\\$\bullet$ Pool of instructions waiting for execution\\$\bullet$ Maintains per inst. sources ready/not-ready status};
 
-        \node[calloutbox, below=1cm of rename, callout absolute pointer={(rename.south)}]
-          (rename_call2)
+        \node[widecalloutbox, anchor=north, callout absolute pointer={($(rename.south)!0.5!(rs.south)+(0,1mm)$)}]
+          at ([yshift=-5mm, xshift=-1cm]rename.south) (rename_call2)
           {Allocate instructions in RS and in ROB};
       }
 
       % Callout annotations - Stage 3
       \onslide<3>{
-        \node[calloutbox, below left=0.5cm of rs, callout absolute pointer={(rs.west)}]
+        \node[verywidecalloutbox, below left=0.1cm of rs, callout absolute pointer={(rs.west)}]
           (rs_call3)
-          {Track which instructions are ready: have all sources ready\\
-          Dispatch ready instruction to execution ports in FIFO order\\
-          The RS handles only register dependencies -- it does not handle memory dependencies};
+          {$\bullet$ Track which instructions are ready: have all sources ready\\
+          $\bullet$ Dispatch ready instruction to execution ports in FIFO order\\
+          $\bullet$ The RS handles only register dependencies \\
+          $\bullet$ It does not handle memory dependencies};
 
         \node[calloutbox, right=of execute, callout absolute pointer={(execute.east)}]
           (execute_call)
-          {Write back value and mark more sources as ready\\
-          Send "exe done" indication to ROB and reclaim RS entry};
+          {$\bullet$ Write back value and mark more sources as ready\\
+          $\bullet$ Send "exe done" indication to ROB and reclaim RS entry};
       }
 
       % Callout annotations - Stage 4
       \onslide<4>{
         \node[calloutbox, anchor=north west, callout absolute pointer={($(rob.south)!0.5!(retire.south)$)}]
           at ([yshift=-1cm,xshift=3mm]rs.east) (retire_call)
-          {Commit instructions in parallel but in-order\\
-          Handle faults/exceptions\\
-          Reclaim ROB entry and physical register};
+          {$\bullet$ Commit instructions in parallel but in-order\\
+          $\bullet$ Handle faults/exceptions\\
+          $\bullet$ Reclaim ROB entry and physical register};
       }
     \end{tikzpicture}
   \end{center}
@@ -1243,31 +1246,51 @@
   \begin{itemize}
     \item \textbf{A Large RS}
     \begin{itemize}
-      \item Increase the window in which looking for independent instructions
-      \begin{itemize}
-        \item Exposes more parallelism potential
-      \end{itemize}
+      \item Increases the window in which we look for independent instructions
+      \item Exposes more parallelism potential
     \end{itemize}
-    
+
+    \vspace{0.5cm}
+
     \item \textbf{Large ROB}
     \begin{itemize}
       \item The ROB is a superset of the RS $\Rightarrow$ ROB size $\geq$ RS size
-      \item Allows for covering long latency operations (cache miss, divide)
-    \end{itemize}
-    
-    \item \textbf{Example}
-    \begin{itemize}
-      \item Assume there is a Load that misses the L1 cache and hits the L2 cache
-      \begin{itemize}
-        \item Data takes $\sim$10 cycles to return $\Rightarrow$ $\sim$30 new instrs get into pipeline
-      \end{itemize}
-      \item Instructions following the Load cannot commit $\Rightarrow$ pile up in the ROB
-      \item Instructions independent of the load are executed, and leave the RS
-      \begin{itemize}
-        \item As long as the ROB is not full, we can keep fetching, renaming, and executing instructions
-      \end{itemize}
+      \item Allows covering long latency operations (cache miss, divide)
     \end{itemize}
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Large ROB and RS -- Example}
+  \textbf{Scenario:} A Load misses the L1 cache and hits the L2 cache
+
+  \vspace{0.1cm}
+
+  \begin{itemize}
+    \item Data takes $\sim$10 cycles to return
+    \begin{itemize}
+      \item With 3 instructions fetched per cycle $\Rightarrow$ $\sim$30 new instructions get into pipeline during this time
+    \end{itemize}
+
+    \vspace{0.3cm}
+
+    \item Instructions following the Load cannot commit
+    \begin{itemize}
+      \item $\Rightarrow$ They pile up in the ROB
+    \end{itemize}
+
+    \vspace{0.3cm}
+
+    \item Instructions \emph{independent} of the Load are executed and leave the RS
+    \begin{itemize}
+      \item As long as the ROB is not full, we can keep fetching, renaming, and executing instructions
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \begin{alertblock}{Key Point}
+    Large ROB and RS allow the processor to continue making progress despite long-latency operations
+  \end{alertblock}
 \end{frame}
 
 \begin{frame}{Out Of Order Execution Summary}
