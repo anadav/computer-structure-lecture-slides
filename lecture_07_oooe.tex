@@ -773,10 +773,10 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Write-After-Read Dependency}
+\begin{frame}{WAR False Dependency}
   \begin{columns}
     \begin{column}{0.5\textwidth}
-      \textbf{Example Code:} \\
+      \textbf{Example Code (reordered):} \\
       \begin{tabular}{lll}
         (3) & & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
         (1) & & \texttt{\textcolor{blue}{r1} $\leftarrow$ r9/17} \\
@@ -785,30 +785,34 @@
         (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{r1}} \\
         (5) & & \texttt{jcc L2} \\
         (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
-        (8) & & \texttt{\textcolor{blue}{r3} $\leftarrow$ 2} \\
-        (7) & & \texttt{r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1}} \\
+        (8) & & \texttt{\textcolor{blue}{r3\tikzmark{r3write}} $\leftarrow$ 2} \\
+        (7) & & \texttt{r4 $\leftarrow$ \textcolor{red}{\tikzmark{r3read}r3}+\textcolor{green}{r1}} \\
       \end{tabular}
     \end{column}
-    
+
     \begin{column}{0.5\textwidth}
-      \begin{block}{WAR Issue}
-        If inst (8) is executed before inst (7), inst (7) gets a wrong value of r3.
-        
-        \vspace{0.3cm}
-        
-        Called \alert{write-after-read false dependency}.
-        
-        \vspace{0.3cm}
-        
-        \alert{Write-After-Read (WAR) is a \emph{false dependency}}
-        
-        Not a real data dependency, but an artifact of OOO execution
-      \end{block}
-      
-      % Arrow showing dependency
+      % Arrow showing dependency using tikzmark and callout
       \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, thick, red, dashed] (-2.5,-0.4) -- (-4,-1.2);
+        \draw[->, thick, blue] ([xshift=1mm, yshift=0mm]pic cs:r3write) -- ([xshift=-1mm, yshift=3mm]pic cs:r3read);
+
+        % Callout for specific example positioned relative to r3read
+        \node[rectangle callout, draw=red, fill=red!10, thick, align=left, text width=4.5cm,
+              font=\small, anchor=west, callout absolute pointer={([xshift=5mm, yshift=2mm]pic cs:r3read)}]
+          at ([xshift=4cm, yshift=4.5cm]pic cs:r3read)
+          {Instruction (7) must read \textcolor{red}{r3} before instruction (8) overwrites it};
       \end{tikzpicture}
+
+      \vspace{3cm}
+
+      \pause
+
+      \begin{alertblock}{Write-After-Read (WAR)}
+        \alert{WAR is a \emph{false dependency}}
+
+        \vspace{0.2cm}
+
+        Not a real data dependency, but an artifact of OOO execution when a write happens before a read of the old value.
+      \end{alertblock}
     \end{column}
   \end{columns}
 \end{frame}
