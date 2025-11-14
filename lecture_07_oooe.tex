@@ -329,18 +329,21 @@
       \node[block] (retire) at (8,0) {Retire (commit)};
       
       % Arrows with multiple lines
-      \draw[->, thick, yshift=4mm] (fetch.east) -- (pool.west);
-      \draw[->, thick, yshift=0] (fetch.east) -- (pool.west);
-      \draw[->, thick, yshift=-4mm] (fetch.east) -- (pool.west);
+      \draw[->, thick] ([yshift=2mm]fetch.east) -- ([yshift=2mm]pool.west);
+      \draw[->, thick] (fetch.east) -- (pool.west);
+      \draw[->, thick] ([yshift=-2mm]fetch.east) -- ([yshift=-2mm]pool.west);
 
-      \foreach \y in {-0.2, 0, 0.2} {
-        \draw[->, thick] (pool.east) -- ++(0.3,\y) -- (retire.west);
+      \foreach \y in {-2mm, 0, 2mm} {
+        \draw[->, thick] ([yshift=\y]pool.east) -- ([yshift=\y]retire.west);
       }
       
       % Bidirectional connection pool-execute
-      \draw[<->, thick, bend right=20] (pool.south) to (exec.north);
-      \draw[<->, thick, bend left=20] (pool.south) to (exec.north);
-      
+      \foreach \x in {-6mm, -4mm, -2mm} {
+        \draw[->, thick, bend right=20] ([xshift=\x]pool.south) to ([xshift=\x]exec.north);
+      }
+      \foreach \x in {6mm, 4mm, 2mm} {
+        \draw[<-, thick, bend left=20] ([xshift=\x]pool.south) to ([xshift=\x]exec.north);
+      }
       % Labels
       \node[above] at (fetch.north) {\textbf{In-order}};
       \node[above] at (retire.north) {\textbf{In-order}};
