@@ -1,13 +1,27 @@
 \documentclass[aspectratio=169,12pt]{beamer}
 \usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb}
 \usepackage{booktabs}
 \usepackage{colortbl}
 \usepackage{hyperref}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{bytefield}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usepackage{tcolorbox}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+
 \usetheme{Madrid}
+\usecolortheme{default}
+
+% Custom colors
+\definecolor{mygreen}{RGB}{0,128,0}
+\definecolor{myblue}{RGB}{0,0,255}
+\definecolor{myred}{RGB}{255,0,0}
 
 % Define colors for registers
 \definecolor{r1color}{RGB}{255,0,0}
@@ -19,23 +33,27 @@
 \definecolor{r7color}{RGB}{0,0,0}
 \definecolor{r8color}{RGB}{0,128,0}
 
-% Show slide number as "current/total" in the footer
+% Custom footer with course number
 \setbeamertemplate{footline}{%
   \leavevmode\hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
-    \usebeamerfont{author in head/foot}\insertframenumber/\inserttotalframenumber
+    \usebeamerfont{author in head/foot}236267 \hfill \insertframenumber/\inserttotalframenumber
   \end{beamercolorbox}}%
   \vskip0pt%
 }
 \setbeamertemplate{navigation symbols}{}
 
-\title{Computer Structure -- Out-Of-Order Execution}
-\author{Based on slides by Lihu Rappoport}
+\title{Computer Structure}
+\subtitle{236267}
+\author{Lihu Rappoport}
 \date{}
 
 \begin{document}
 
-\begin{frame}
-  \titlepage
+\frame{\titlepage}
+
+% Table of Contents
+\begin{frame}{Outline}
+\tableofcontents
 \end{frame}
 
 \begin{frame}{What's Next}
@@ -297,7 +315,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{OOOE -- General Scheme}
+\begin{frame}{OOOE: General Scheme}
   \begin{center}
     \begin{tikzpicture}[scale=1.2,
       block/.style={rectangle, draw, fill=yellow!30, minimum width=2.5cm, minimum height=1cm},
@@ -311,8 +329,11 @@
       \node[block] (retire) at (8,0) {Retire (commit)};
       
       % Arrows with multiple lines
+      \draw[->, thick, yshift=4mm] (fetch.east) -- (pool.west);
+      \draw[->, thick, yshift=0] (fetch.east) -- (pool.west);
+      \draw[->, thick, yshift=-4mm] (fetch.east) -- (pool.west);
+
       \foreach \y in {-0.2, 0, 0.2} {
-        \draw[->, thick] (fetch.east) -- ++(0.3,\y) -- (pool.west);
         \draw[->, thick] (pool.east) -- ++(0.3,\y) -- (retire.west);
       }
       
@@ -654,8 +675,11 @@
       \node[block] (retire) at (8,0) {Retire (commit)};
       
       % Arrows with multiple lines
+      \draw[->, thick, yshift=4mm] (fetch.east) -- (pool.west);
+      \draw[->, thick, yshift=0] (fetch.east) -- (pool.west);
+      \draw[->, thick, yshift=-4mm] (fetch.east) -- (pool.west);
+
       \foreach \y in {-0.2, 0, 0.2} {
-        \draw[->, thick] (fetch.east) -- ++(0.3,\y) -- (pool.west);
         \draw[->, thick] (pool.east) -- ++(0.3,\y) -- (retire.west);
       }
       
