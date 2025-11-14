@@ -317,16 +317,17 @@
 
 \begin{frame}{OOOE: General Scheme}
   \begin{center}
-    \begin{tikzpicture}[scale=1.2,
+    \begin{tikzpicture}[scale=1.2, every node/.style={font=\small},
+      fetchblock/.style={rectangle, draw, fill=cyan!20, minimum width=2.5cm, minimum height=1cm},
       block/.style={rectangle, draw, fill=yellow!30, minimum width=2.5cm, minimum height=1cm},
-      pool/.style={cylinder, draw, fill=green!30, minimum width=2cm, minimum height=1.5cm, shape border rotate=90, aspect=0.25},
+      pool/.style={rectangle, draw, fill=green!30, minimum width=2.5cm, minimum height=1cm},
       exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=1cm}]
-      
+
       % Blocks
-      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
+      \node[fetchblock,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
       \node[pool] (pool) at (4,0) {Instruction pool};
-      \node[exe] (exec) at (4,-2.5) {Execute};
-      \node[block] (retire) at (8,0) {Retire (commit)};
+      \node[exe] (exec) at (4,-1.8) {Execute};
+      \node[block,align=center] (retire) at (8,0) {Retire\\(commit)};
       
       % Arrows with multiple lines
       \draw[->, thick] ([yshift=2mm]fetch.east) -- ([yshift=2mm]pool.west);
@@ -664,64 +665,6 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{OOOE -- General Scheme}
-  \begin{center}
-    \begin{tikzpicture}[scale=1.2,
-      block/.style={rectangle, draw, fill=yellow!30, minimum width=2.5cm, minimum height=1cm},
-      pool/.style={cylinder, draw, fill=green!30, minimum width=2cm, minimum height=1.5cm, shape border rotate=90, aspect=0.25},
-      exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=1cm}]
-      
-      % Blocks
-      \node[block,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
-      \node[pool] (pool) at (4,0) {Instruction pool};
-      \node[exe] (exec) at (4,-2.5) {Execute};
-      \node[block] (retire) at (8,0) {Retire (commit)};
-      
-      % Arrows with multiple lines
-      \draw[->, thick, yshift=4mm] (fetch.east) -- (pool.west);
-      \draw[->, thick, yshift=0] (fetch.east) -- (pool.west);
-      \draw[->, thick, yshift=-4mm] (fetch.east) -- (pool.west);
-
-      \foreach \y in {-0.2, 0, 0.2} {
-        \draw[->, thick] (pool.east) -- ++(0.3,\y) -- (retire.west);
-      }
-      
-      % Bidirectional connection pool-execute
-      \draw[<->, thick, bend right=20] (pool.south) to (exec.north);
-      \draw[<->, thick, bend left=20] (pool.south) to (exec.north);
-      
-      % Labels
-      \node[above] at (fetch.north) {\textbf{In-order}};
-      \node[above] at (retire.north) {\textbf{In-order}};
-      \node[below] at (exec.south) {\textbf{Out-of-order}};
-    \end{tikzpicture}
-  \end{center}
-  
-  \vspace{0.5cm}
-  
-  \begin{itemize}
-    \item \textbf{Fetch \& decode instructions in parallel but in-order}
-    \begin{itemize}
-      \item Fill the Instruction Pool
-    \end{itemize}
-    
-    \item \textbf{Execute ready instructions from the instructions pool}
-    \begin{itemize}
-      \item All source data ready + needed execution resources available
-    \end{itemize}
-    
-    \item \textbf{Once an instruction is executed}
-    \begin{itemize}
-      \item Signal all dependent instructions that data is ready
-    \end{itemize}
-    
-    \item \textbf{Commit instructions in parallel but in-order}
-    \begin{itemize}
-      \item State change (memory, register) and fault/exception handling
-    \end{itemize}
-  \end{itemize}
-\end{frame}
-
 \begin{frame}{Write-After-Write Dependency}
   \begin{columns}
     \begin{column}{0.5\textwidth}
@@ -752,37 +695,38 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Write-After-Write Dependency}
+\begin{frame}{Handling Write-After-Write Dependency}
   \begin{columns}
     \begin{column}{0.5\textwidth}
       \textbf{Example Code (reordered):} \\
       \begin{tabular}{lll}
-        (3) & & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
-        (1) & & \texttt{\textcolor{blue}{r1} $\leftarrow$ r9/17} \\
+        (3) & & \texttt{\textcolor{orange}{r1\tikzmark{r1dest}} $\leftarrow$ 23} \\
+        (1) & & \texttt{\textcolor{blue}{r1\tikzmark{r1blue}} $\leftarrow$ r9/17} \\
         (2) & & \texttt{r2 $\leftarrow$ r2+\textcolor{blue}{r1}} \\
         & & \\
-        (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{r1}} \\
+        (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{\tikzmark{r1use}r1}} \\
         (5) & & \texttt{jcc L2} \\
         (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
         (7) & & \texttt{r4 $\leftarrow$ r3+\textcolor{green}{r1}} \\
         (8) & & \texttt{r3 $\leftarrow$ 2} \\
       \end{tabular}
     \end{column}
-    
+
     \begin{column}{0.5\textwidth}
       \begin{block}{Correct Dependency}
         Inst (4) should use the value of \textcolor{orange}{r1} produced by inst (3), even if inst (1) is executed after inst (3).
-        
+
         \vspace{0.3cm}
-        
+
         \alert{Write-After-Write (WAW) is a \emph{false dependency}}
-        
+
         Not a real data dependency, but an artifact of OOO execution
       \end{block}
-      
-      % Arrow showing dependency
+
+      % Arrow showing dependency using tikzmark
       \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, thick, orange, dashed] (-4.5,1.8) -- (-2.8,0.8);
+        \draw[->, thick, orange, dashed] ([xshift=0mm, yshift=1mm]pic cs:r1dest) to[out=0, in=90] ([xshift=2mm, yshift=3mm]pic cs:r1use);
+        \draw[->, thick, blue] ([xshift=0mm, yshift=1mm]pic cs:r1blue) -- ([xshift=0mm, yshift=3mm]pic cs:r1use);
       \end{tikzpicture}
     \end{column}
   \end{columns}
