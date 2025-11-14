@@ -10,7 +10,7 @@
 \usepackage{bytefield}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts}
 \usepackage{tcolorbox}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
@@ -695,7 +695,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Handling Write-After-Write Dependency}
+\begin{frame}{WAW False Dependency}
   \begin{columns}
     \begin{column}{0.5\textwidth}
       \textbf{Example Code (reordered):} \\
@@ -713,21 +713,29 @@
     \end{column}
 
     \begin{column}{0.5\textwidth}
-      \begin{block}{Correct Dependency}
-        Inst (4) should use the value of \textcolor{orange}{r1} produced by inst (3), even if inst (1) is executed after inst (3).
-
-        \vspace{0.3cm}
-
-        \alert{Write-After-Write (WAW) is a \emph{false dependency}}
-
-        Not a real data dependency, but an artifact of OOO execution
-      \end{block}
-
-      % Arrow showing dependency using tikzmark
+      % Arrow showing dependency using tikzmark and callout
       \begin{tikzpicture}[overlay, remember picture]
         \draw[->, thick, orange, dashed] ([xshift=0mm, yshift=1mm]pic cs:r1dest) to[out=0, in=90] ([xshift=2mm, yshift=3mm]pic cs:r1use);
         \draw[->, thick, blue] ([xshift=0mm, yshift=1mm]pic cs:r1blue) -- ([xshift=0mm, yshift=3mm]pic cs:r1use);
+
+        % Callout for specific example positioned relative to r1dest
+        \node[rectangle callout, draw=orange, fill=orange!10, thick, align=left, text width=4.5cm,
+              font=\small, anchor=west, callout absolute pointer={([xshift=5mm, yshift=2mm]pic cs:r1use)}]
+          at ([xshift=3.5cm, yshift=1.3cm]pic cs:r1use)
+          {Instruction (4) must use \textcolor{orange}{r1} from instruction (3), not from instruction (1)};
       \end{tikzpicture}
+
+      \vspace{3cm}
+
+      \pause
+
+      \begin{alertblock}{Write-After-Write (WAW)}
+        \alert{WAW is a \emph{false dependency}}
+
+        \vspace{0.2cm}
+
+        Not a real data dependency, but an artifact of OOO execution when multiple writes target the same register.
+      \end{alertblock}
     \end{column}
   \end{columns}
 \end{frame}
