@@ -1186,13 +1186,13 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \node[pml4entry] (pml4d3) at ($(pml4base.south)!0.78!(pml4base.north)$) {}; % D3 = 211/255, reduced by 15%
 \node[pml4entry] (pml471) at ($(pml4base.south)!0.44!(pml4base.north)$) {}; % 71 = 113/255
 
-% CR3 register pointing to PML4
-\node[rectangle, draw=black, thick, fill=gray!20, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize, anchor=east] (cr3) at ([xshift=-3mm]pml4base.south west) {CR3};
+% PTBR register pointing to PML4
+\node[rectangle, draw=black, thick, fill=gray!20, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize, anchor=east] (cr3) at ([xshift=-3mm]pml4base.south west) {PTBR};
 \draw[arrow] (cr3) -- (pml4base.south west);
 
 % Address calculation label
 \node[font=\scriptsize, draw=black, thick, fill=yellow!20, align=center,
-      rectangle callout, callout absolute pointer={(cr3.east)}] at (-1.5,1.5) {Address=\\ CR3+D3$\times$8};
+      rectangle callout, callout absolute pointer={(cr3.east)}] at (-1.5,1.5) {Address=\\ PTBR+D3$\times$8};
 
 % PDP Table (2 instances)
 \node[pdptable] (pdp82base) at (4,6.5) {};
@@ -2358,18 +2358,20 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Page Directory Base Address}
-\textbf{The physical address of the page directory is stored in CR3 register}
+\begin{frame}{Page Table Base Register (PTBR)}
+\textbf{The physical address of the root page table is stored in a special register}
 \begin{itemize}
-\item Also called the page directory base register (PDBR)
+\item Called the Page Table Base Register (PTBR)
+\item In x86-64: CR3 register points to the PML4 table
+\item Each process has its own PTBR value
 \end{itemize}
 
-\textbf{PDBR is typically loaded with a new as part of a task switch}
+\textbf{PTBR is loaded as part of a context switch}
 
 \textbf{OS must ensure that}
 \begin{itemize}
-\item The page directory indicated by the PDBR image in a task's TSS (task state segment) is present in physical memory before the task is dispatched
-\item The page directory must also remain in memory as long as the task is active
+\item The root page table pointed to by PTBR is present in physical memory before the process is dispatched
+\item The page table hierarchy remains in memory while the process is active
 \end{itemize}
 \end{frame}
 
