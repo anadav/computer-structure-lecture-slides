@@ -1312,6 +1312,7 @@
           rob allocated/.style={rob entry, fill=green!30},
           rob new/.style={rob entry, fill=green!50},
           rob executed/.style={rob entry, fill=red!30},
+          rob executed redder/.style={rob entry, fill=red!60},
           rob faulting/.style={rob entry, fill=red!30},
           rob handler/.style={rob entry, fill=purple!30}
         ]
@@ -1385,18 +1386,46 @@
             \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
-          % Stage 3: More executed scattered
+          % Stage 3: Retirement - top three entries retired (faded)
           \only<3>{
-            \foreach \i in {0,1,2,4,5,7,8,9} {
+            % Top entry is "redder" executed
+            \node[rob executed redder] at (0,-0*0.4+0.35) {};
+            % Entries 1 and 2 are executed
+            \foreach \i in {1,2} {
               \node[rob executed] at (0,-\i*0.4+0.35) {};
             }
+            % Other executed entries
+            \foreach \i in {4,5,7,8,9} {
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
+            }
+            % Allocated entries
             \foreach \i in {3,6,10,11,12,13,14} {
               \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
-            % Labels: retire points to first allocated, alloc points to first empty
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+
+            % Fade the top three entries (retired)
+            \foreach \i in {0,1,2} {
+              \node[rob entry, fill=white, opacity=0.4] at (0,-\i*0.4+0.35) {};
+            }
+
+            % "Executed" label on top entry
+            \node[fill=red!60, inner sep=2pt, font=\tiny] at (entry0.center) {executed};
+
+            % Faded previous state (old retire position)
+            \node[left=0.5cm of entry0.west, anchor=east, opacity=0.4] (retire_old) {retire};
+            \draw[->,thick, opacity=0.4] (retire_old) -- (entry0.west);
+            \node[right=0.1cm of entry0.east, anchor=west, opacity=0.4] (oldest_old) {oldest};
+
+            % Current state (new retire position at entry 3)
+            \node[left=0.5cm of entry3.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry3.west);
+            \node[right=0.1cm of entry3.east, anchor=west] (oldest) {oldest};
+
+            % Dashed arrows from old positions to new positions
+            \draw[->,dashed,thick] (retire_old.south) -- (retire.north);
+            \draw[->,dashed,thick] (oldest_old.south) -- (oldest.north);
+
+            % Alloc and youngest unchanged
             \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
             \draw[->,thick] (alloc) -- (entry15.west);
             \node[right=0.1cm of entry14.east, anchor=west] {youngest};
