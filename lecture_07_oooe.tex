@@ -1277,30 +1277,27 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{The ROB}
+\begin{frame}{The Reorder Buffer (ROB)}
   \vspace{-0.5cm}
   \begin{columns}
     \begin{column}{0.65\textwidth}
       \begin{itemize}
-        \item \textbf{The Reorder Buffer (ROB)}
+        \item<1-> Instructions allocated in-order
+
+        \item<2-> After instruction executes (OOO):
         \begin{itemize}
-          \item<1-> Instructions allocated in-order
+          \item Mark as \emph{executed} $\Rightarrow$ ready to retire
+        \end{itemize}
 
-          \item<2-> After instruction executes (OOO):
-          \begin{itemize}
-            \item Mark as \emph{executed} $\Rightarrow$ ready to retire
-          \end{itemize}
-
-          \item<3-> Executed instruction retires once all prior instructions retire
-          \begin{itemize}
-            \item Oldest ready instructions retire in-order
-          \end{itemize}
-          \item<3-> Upon retirement:
-          \begin{itemize}
-            \item Copy value from phy reg to arch reg
-            \item If arch reg still mapped to instruction's phy reg $\Rightarrow$ map arch reg to ARF
-            \item Reclaim ROB entry
-          \end{itemize}
+        \item<3-> Executed instruction retires once all prior instructions retire
+        \begin{itemize}
+          \item Oldest ready instructions retire in-order
+        \end{itemize}
+        \item<3-> Upon retirement:
+        \begin{itemize}
+          \item Copy value from phy reg to arch reg
+          \item If arch reg still mapped to instruction's phy reg $\Rightarrow$ map arch reg to ARF
+          \item Reclaim ROB entry
         \end{itemize}
       \end{itemize}
     \end{column}
