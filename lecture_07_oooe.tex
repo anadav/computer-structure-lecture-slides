@@ -1537,32 +1537,91 @@
             \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
-          % Stage 3: Faulting instruction at retire
+          % Stage 3: Entry 3 retired, faulting instruction now at retire
           \only<3>{
-            \node[rob faulting] at (0,-0*0.4+0.35) {};
-            \foreach \i in {1,4,5,7,8,9} {
+            % Entry 3 is regular red (executed)
+            \node[rob executed] at (0,-3*0.4+0.35) {};
+            % Faulting instruction at entry 4
+            \node[rob faulting] at (0,-4*0.4+0.35) {};
+            % Other executed entries
+            \foreach \i in {5,7,8,9} {
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
+            }
+            % Other allocated entries
+            \foreach \i in {6,10,11,12,13,14} {
               \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
-            \foreach \i in {3,6,10,11,12,13,14} {
-              \node[rob allocated] at (0,-\i*0.4+0.35) {};
-            }
-            % Labels: retire points to first allocated, alloc points to first empty
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+
+            % Fade entry 3 (retired)
+            \node[rob entry, fill=white, opacity=0.4] at (0,-3*0.4+0.35) {};
+
+            % "Retired" label on entry 3
+            \node[fill=white, inner sep=0pt, font=\tiny, opacity=0.7] at (entry3.center) {retired};
+
+            % "Exception" label on the faulting instruction
+            \node[inner sep=0pt, font=\tiny] at (entry4.center) {exception};
+
+            % Faded previous state (old retire position at entry 3)
+            \node[left=0.5cm of entry3.west, anchor=east, opacity=0.4] (retire_old) {retire};
+            \draw[->,thick, opacity=0.4] (retire_old) -- (entry3.west);
+            \node[right=0.1cm of entry3.east, anchor=west, opacity=0.4] (oldest_old) {oldest};
+
+            % Current state (new retire position at entry 4 - the faulting instruction)
+            \node[left=0.5cm of entry4.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry4.west);
+            \node[right=0.1cm of entry4.east, anchor=west] (oldest) {oldest};
+
+            % Curved dashed arrows from old positions to new positions
+            \draw[->,dashed,thick] (retire_old.west) to[out=180,in=180] (retire.west);
+            \draw[->,dashed,thick] (oldest_old.east) to[out=0,in=0] (oldest.east);
+
+            % Alloc and youngest unchanged
             \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
             \draw[->,thick] (alloc) -- (entry15.west);
             \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
-          % Stage 4: Empty ROB after flush (all white, already drawn)
+          % Stage 4: Flush begins - entries faded, alloc moves to faulting instruction
           \only<4>{
-            % Labels: ROB is empty, both retire and alloc point to first entry
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
-            \node[left=0.5cm of entry0.west, anchor=east, yshift=-0.4cm] (alloc) {alloc};
-            \draw[->,thick] (alloc) -- (entry0.west);
+            % Entry 3 is empty (retired, not shown)
+            % Faulting instruction at entry 4
+            \node[rob faulting] at (0,-4*0.4+0.35) {};
+            % Other executed entries
+            \foreach \i in {5,7,8,9} {
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
+            }
+            % Other allocated entries
+            \foreach \i in {6,10,11,12,13,14} {
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
+            }
+
+            % Fade all entries (being flushed)
+            \foreach \i in {4,5,6,7,8,9,10,11,12,13,14} {
+              \node[rob entry, fill=white, opacity=0.5] at (0,-\i*0.4+0.35) {};
+            }
+
+            % "Exception" label on the faulting instruction (faded)
+            \node[inner sep=0pt, font=\tiny, opacity=0.5] at (entry4.center) {exception};
+
+            % "Flushed" label rotated 45 degrees in the middle of flushed entries
+            \node[rotate=45, font=\small, opacity=0.6] at (entry9.center) {flushed};
+
+            % retire stays at entry 4
+            \node[left=0.5cm of entry4.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry4.west);
+            \node[right=0.1cm of entry4.east, anchor=west] (oldest) {oldest};
+
+            % Faded old alloc at entry 15
+            \node[left=0.5cm of entry15.west, anchor=east, opacity=0.4] (alloc_old) {alloc};
+            \draw[->,thick, opacity=0.4] (alloc_old) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west, opacity=0.4] (youngest_old) {youngest};
+
+            % New alloc at entry 4 (same as retire)
+            \node[left=0.5cm of entry4.west, anchor=east, yshift=-0.5cm] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry4.west);
+
+            % Dashed arrow from old alloc to new alloc
+            \draw[->,dashed,thick] (alloc_old.north) -- (alloc.south);
           }
 
           % Stage 5: Fault handling code and re-fetch
