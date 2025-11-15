@@ -1310,6 +1310,7 @@
           rob entry/.style={draw, minimum width=2cm, minimum height=0.35cm, inner sep=0, anchor=north west},
           rob empty/.style={rob entry, fill=white},
           rob allocated/.style={rob entry, fill=green!30},
+          rob new/.style={rob entry, fill=green!50},
           rob executed/.style={rob entry, fill=red!30},
           rob faulting/.style={rob entry, fill=red!30},
           rob handler/.style={rob entry, fill=purple!30}
@@ -1324,16 +1325,37 @@
 
           % Stage 1: All allocated (green)
           \only<1>{
-            \foreach \i in {0,...,14} {
+            \foreach \i in {0,...,11} {
               \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+            % New entries (12, 13, 14) with special green
+            \foreach \i in {12,13,14} {
+              \node[rob new] at (0,-\i*0.4+0.35) {};
+            }
+
             % Labels: retire points to first allocated, alloc points to first empty
             \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
             \draw[->,thick] (retire) -- (entry0.west);
             \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+
+            % Faded previous state
+            \node[left=0.5cm of entry12.west, anchor=east, opacity=0.4] (alloc_old) {alloc};
+            \draw[->,thick, opacity=0.4] (alloc_old) -- (entry12.west);
+            \node[right=0.1cm of entry11.east, anchor=west, opacity=0.4] (youngest_old) {youngest};
+
+            % Current state
             \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
             \draw[->,thick] (alloc) -- (entry15.west);
-            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
+            \node[right=0.1cm of entry14.east, anchor=west] (youngest) {youngest};
+
+            % "New entries" label inside the ROB
+            \node[fill=green!50, inner sep=2pt, font=\tiny, align=center] at (entry13.center) {new\\entries};
+
+            % Straight dashed arrow from old alloc to new alloc
+            \draw[->,dashed,thick] (alloc_old.south) -- (alloc.north);
+
+            % Straight dashed arrow from old youngest to new youngest
+            \draw[->,dashed,thick] (youngest_old.south) -- (youngest.north);
           }
 
           % Stage 2: Some executed (red at top)
