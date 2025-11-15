@@ -1433,7 +1433,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Faults And Exceptions}
+\begin{frame}{Faults and Exceptions}
   \vspace{-0.5cm}
   \begin{columns}
     \begin{column}{0.65\textwidth}
@@ -1445,15 +1445,16 @@
             \item Divide by 0, page fault, ...
           \end{itemize}
 
-          \item<2-> Older instructions retire first
-          \item<2-> When faulting instruction retires -- handle fault
+          \item<2-> Instructions older than the fault retire first
 
-          \item<3-> When faulting instruction retires:
+          \item<3-> When faulting instruction retires -- handle fault
+
+          \item<4-> When faulting instruction retires:
           \begin{itemize}
             \item Flush ROB and pipeline
           \end{itemize}
 
-          \item<4-> When faulting instruction retires:
+          \item<5-> When faulting instruction retires:
           \begin{itemize}
             \item Flush ROB and pipeline
             \item Initiate fault handling code
@@ -1469,7 +1470,8 @@
           rob empty/.style={rob entry, fill=white},
           rob allocated/.style={rob entry, fill=green!30},
           rob executed/.style={rob entry, fill=red!30},
-          rob faulting/.style={rob entry, fill=red!30},
+          rob executed redder/.style={rob entry, fill=red!60},
+          rob faulting/.style={rob entry, fill=orange!60},
           rob handler/.style={rob entry, fill=purple!30}
         ]
           % Draw white background for all entries (all stages) with names
@@ -1480,27 +1482,63 @@
           % ROB label
           \node[above=0.1cm of entry-2.north, font=\small] {ROB};
 
-          % Stage 1: Faulting instruction marked in middle
+          % Stage 1: ROB state with faulting instruction (top 3 retired/empty)
           \only<1>{
-            \foreach \i in {0,1,4,5,7,8,9} {
+            % Top 3 entries are empty (already white from background)
+            % Entry 3 is allocated
+            \node[rob allocated] at (0,-3*0.4+0.35) {};
+            % Faulting instruction at entry 4
+            \node[rob faulting] at (0,-4*0.4+0.35) {};
+            % Other executed entries
+            \foreach \i in {5,7,8,9} {
               \node[rob executed] at (0,-\i*0.4+0.35) {};
             }
-            \foreach \i in {3,6,10,11,12,13,14} {
+            % Other allocated entries
+            \foreach \i in {6,10,11,12,13,14} {
               \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
-            % Faulting instruction
-            \node[rob faulting] at (0,-2*0.4+0.35) {};
-            % Labels: retire points to first allocated, alloc points to first empty
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+
+            % "Exception" label on the faulting instruction
+            \node[inner sep=0pt, font=\tiny] at (entry4.center) {exception};
+
+            % Labels: retire points to entry 3
+            \node[left=0.5cm of entry3.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry3.west);
+            \node[right=0.1cm of entry3.east, anchor=west] {oldest};
             \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
             \draw[->,thick] (alloc) -- (entry15.west);
             \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
-          % Stage 2: Faulting instruction at retire
+          % Stage 2: Entry 3 retired (older than fault)
           \only<2>{
+            % Entry 3 is now redder (retired/committed)
+            \node[rob executed redder] at (0,-3*0.4+0.35) {};
+            % Faulting instruction at entry 4
+            \node[rob faulting] at (0,-4*0.4+0.35) {};
+            % Other executed entries
+            \foreach \i in {5,7,8,9} {
+              \node[rob executed] at (0,-\i*0.4+0.35) {};
+            }
+            % Other allocated entries
+            \foreach \i in {6,10,11,12,13,14} {
+              \node[rob allocated] at (0,-\i*0.4+0.35) {};
+            }
+
+            % "Exception" label on the faulting instruction
+            \node[inner sep=0pt, font=\tiny] at (entry4.center) {exception};
+
+            % Labels: retire still at entry 3 (but now retired)
+            \node[left=0.5cm of entry3.west, anchor=east] (retire) {retire};
+            \draw[->,thick] (retire) -- (entry3.west);
+            \node[right=0.1cm of entry3.east, anchor=west] {oldest};
+            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
+            \draw[->,thick] (alloc) -- (entry15.west);
+            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
+          }
+
+          % Stage 3: Faulting instruction at retire
+          \only<3>{
             \node[rob faulting] at (0,-0*0.4+0.35) {};
             \foreach \i in {1,4,5,7,8,9} {
               \node[rob allocated] at (0,-\i*0.4+0.35) {};
@@ -1517,8 +1555,8 @@
             \node[right=0.1cm of entry14.east, anchor=west] {youngest};
           }
 
-          % Stage 3: Empty ROB after flush (all white, already drawn)
-          \only<3>{
+          % Stage 4: Empty ROB after flush (all white, already drawn)
+          \only<4>{
             % Labels: ROB is empty, both retire and alloc point to first entry
             \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
             \draw[->,thick] (retire) -- (entry0.west);
@@ -1527,8 +1565,8 @@
             \draw[->,thick] (alloc) -- (entry0.west);
           }
 
-          % Stage 4: Fault handling code and re-fetch
-          \only<4>{
+          % Stage 5: Fault handling code and re-fetch
+          \only<5>{
             % Fault handling code
             \foreach \i in {0,1,2,3} {
               \node[rob handler] at (0,-\i*0.4+0.35) {};
