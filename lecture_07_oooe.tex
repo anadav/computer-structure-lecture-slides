@@ -1358,14 +1358,24 @@
             \draw[->,dashed,thick] (youngest_old.south) -- (youngest.north);
           }
 
-          % Stage 2: Some executed (red at top)
+          % Stage 2: Some executed (same as stage 3 but not the top one)
           \only<2>{
-            \foreach \i in {0,1,2} {
+            % Entry 0 is still allocated (green)
+            \node[rob allocated] at (0,-0*0.4+0.35) {};
+            % Executed entries (same pattern as stage 3, excluding entry 0)
+            \foreach \i in {1,2,4,5,7,8,9} {
               \node[rob executed] at (0,-\i*0.4+0.35) {};
             }
-            \foreach \i in {3,...,14} {
+            % Other allocated entries
+            \foreach \i in {3,6,10,11,12,13,14} {
               \node[rob allocated] at (0,-\i*0.4+0.35) {};
             }
+
+            % "Executed" labels inside the ROB for the three groups
+            \node[fill=red!30, inner sep=2pt, font=\tiny] at ($(entry1)!0.5!(entry2)$) {executed};
+            \node[fill=red!30, inner sep=2pt, font=\tiny] at ($(entry4)!0.5!(entry5)$) {executed};
+            \node[fill=red!30, inner sep=2pt, font=\tiny] at (entry8.center) {executed};
+
             % Labels: retire points to first allocated, alloc points to first empty
             \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
             \draw[->,thick] (retire) -- (entry0.west);
