@@ -1412,5 +1412,213 @@ Often 20-30\% improvement!
 \end{columns}
 \end{frame}
 
+\section{PCIe Architecture}
+
+% Slide: PCIe Overview
+\begin{frame}{PCIe: PCI Express}
+\textbf{PCIe is a layered protocol}
+
+\begin{itemize}
+\item \textbf{Compatible with the PCI addressing model}
+  \begin{itemize}
+  \item All existing applications and drivers operate unchanged
+  \end{itemize}
+
+\vspace{0.3cm}
+\item \textbf{Software layers} generate read and write requests
+
+\vspace{0.3cm}
+\item \textbf{Hardware layers} process and transmit data:
+  \begin{itemize}
+  \item \textcolor{blue}{Transaction Layer}: Splits data to packets
+  \item \textcolor{green!60!black}{Data Link Layer}: Ensures data integrity (adds sequence numbers and CRC)
+  \item \textcolor{orange}{Physical Layer}: Transmits the packets (connector, voltage levels, etc.)
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\begin{alertblock}{Key Benefit}
+Layered design ensures reliable delivery of packets across the PCIe link
+\end{alertblock}
+\end{frame}
+
+% Slide: PCIe Layer Architecture with Diagram
+\begin{frame}{PCIe Layer Architecture}
+\begin{center}
+\begin{tikzpicture}[scale=0.9,
+    box/.style={draw, thick, minimum height=1cm, align=center, font=\footnotesize},
+    layer/.style={draw=none, align=center, font=\footnotesize}
+]
+
+% Top level - Original packet
+\node[box, fill=gray!20, minimum width=1.5cm] (header) at (0,0) {Header};
+\node[box, fill=white, minimum width=3cm, anchor=west] (data) at (header.east) {Data};
+
+% Transaction Layer label - right of Data
+\node[layer, anchor=west] (translayer) at ([xshift=1.5cm]data.east) {\textbf{Transaction Layer}};
+
+% Dashed line separator below
+\draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]header.south west) -- ([yshift=-3mm]translayer.east |- header.south);
+
+% T-Layer Packet - below data with yshift=-6mm
+\node[box, fill=blue!20, minimum width=2.5cm, anchor=north west] (tlpacket) at ([yshift=-6mm]data.south west) {T-Layer Packet};
+
+% Packet Sequence Number - left of T-Layer Packet, wider and exactly 2 rows
+\node[box, fill=green!20, minimum width=2.8cm, anchor=east] (pseq) at (tlpacket.west) {Packet Sequence\\Number};
+
+% CRC - right of T-Layer Packet, adjacent
+\node[box, fill=red!20, minimum width=1cm, anchor=west] (crc1) at (tlpacket.east) {CRC};
+
+% Link Layer label - positioned at CRC -| translayer.west, anchored west
+\node[layer, anchor=west] (linklayer) at (crc1.east -| translayer.west) {\textbf{Link Layer}};
+
+% Dashed line separator below
+\draw[dashed, thick, blue] ([yshift=-0.5cm]pseq.south west) -- ([yshift=-0.5cm]linklayer.south east);
+\node[draw, circle, fill=teal!60, inner sep=2pt] at ([yshift=-0.5cm]linklayer.south east) {};
+
+% L-Layer Packet - below T-Layer Packet with yshift=-6mm
+\node[box, fill=green!20, minimum width=4.5cm, anchor=north west] (llpacket) at ([yshift=-6mm]tlpacket.south west) {L-Layer Packet};
+
+% Frame boxes - left and right of L-Layer Packet, touching
+\node[box, fill=orange!30, minimum width=1cm, anchor=east] (frame1) at (llpacket.west) {Frame};
+\node[box, fill=orange!30, minimum width=1cm, anchor=west] (frame2) at (llpacket.east) {Frame};
+
+% Physical Layer label - positioned similarly
+\node[layer, anchor=west] (physlayer) at (frame2.east -| translayer.west) {\textbf{Physical Layer}};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+\footnotesize
+Data flows top-to-bottom (TX) and bottom-to-top (RX) through the layers
+\end{frame}
+
+% Slide: Physical Layer
+\begin{frame}{PCIe Physical Layer}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item \textbf{Transmits packets} received from the Data Link Layer
+\item \textbf{Connector definition}: Physical form factor and pinout
+\item \textbf{Electrical specifications}: Voltage levels, timing, signaling
+\item \textbf{Serialization/Deserialization}: Converts parallel data to serial transmission
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Key Features:}
+\begin{itemize}
+\item Point-to-point serial links (lanes)
+\item Multiple lanes can be aggregated: x1, x4, x8, x16
+\item High-speed differential signaling
+\item Supports multiple generations (PCIe 3.0: 8 GT/s, PCIe 4.0: 16 GT/s, PCIe 5.0: 32 GT/s)
+\end{itemize}
+
+\vspace{0.3cm}
+\begin{alertblock}{Physical Layer Goal}
+Reliable transmission of bits across the physical medium
+\end{alertblock}
+\end{frame}
+
+% Slide: Data Link Layer
+\begin{frame}{PCIe Data Link Layer}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item \textbf{Ensure data integrity}: Adds sequence number and CRC to each transaction layer packet
+\item \textbf{Credit-based flow control protocol}
+\item \textbf{Automatic retry} of corrupted packets detected by CRC checking
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Flow Control:}
+\begin{itemize}
+\item Packets only transmitted when receiver has buffer space available
+\item \textcolor{green!60!black}{Eliminates packet retries due to buffer overflow}
+\item \textcolor{green!60!black}{Saves bus bandwidth} (no wasted transmission attempts)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Error Handling:}
+\begin{itemize}
+\item CRC checks data integrity
+\item NAK (Negative Acknowledgment) triggers automatic retransmission
+\item Transparent to upper layers
+\end{itemize}
+\end{frame}
+
+% Slide: Transaction Layer
+\begin{frame}{PCIe Transaction Layer}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item \textbf{Receives} read and write requests from the software layer
+\item \textbf{Creates} request packets for transmission to the link layer
+\item \textbf{Receives} response packets from the link layer
+\item \textbf{Matches} responses with original requests using unique identifiers
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Packet Format Features:}
+\begin{itemize}
+\item Supports 32-bit and extended 64-bit memory addressing
+\item Packet attributes for optimization:
+  \begin{itemize}
+  \item ``no-snoop'': Skip cache coherency checks
+  \item ``relaxed-ordering'': Allow out-of-order completion
+  \item ``priority'': QoS support
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Some request packets require a response packet}
+\end{frame}
+
+% Slide: PCIe Address Spaces
+\begin{frame}{PCIe Address Spaces and Message Space}
+\textbf{PCIe supports four address spaces:}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Three PCI address spaces:}
+\begin{enumerate}
+\item \textbf{Memory Space}
+  \begin{itemize}
+  \item 32-bit or 64-bit addressing
+  \item DMA access
+  \end{itemize}
+\item \textbf{I/O Space}
+  \begin{itemize}
+  \item Legacy support
+  \item 32-bit addressing
+  \end{itemize}
+\item \textbf{Configuration Space}
+  \begin{itemize}
+  \item Device enumeration
+  \item Capability discovery
+  \end{itemize}
+\end{enumerate}
+
+\column{0.5\textwidth}
+\textbf{Message Space:}
+\begin{itemize}
+\item Virtual wires mechanism
+\item Eliminates hard-wired sideband signals used in PCI
+\item Examples:
+  \begin{itemize}
+  \item Interrupts (MSI/MSI-X)
+  \item Power management requests
+  \item Reset signals
+  \item Error reporting
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Message Signaled Interrupt (MSI)}
+\begin{itemize}
+\item Propagates system interrupts via memory writes
+\item More efficient than legacy INTx
+\end{itemize}
+\end{columns}
+\end{frame}
+
 
 \end{document}
