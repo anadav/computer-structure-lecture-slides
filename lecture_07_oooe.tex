@@ -1433,7 +1433,27 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Faults and Exceptions}
+\begin{frame}{Faults and Exceptions -- Architecture (Reminder)}
+  \begin{itemize}
+    \item \textbf{Exception}: Event during instruction execution (divide by 0, page fault, etc.)
+
+    \item \textbf{Types}$^*$:
+    \begin{itemize}
+      \item \textbf{Fault}: Potentially recoverable $\Rightarrow$ return to faulting instruction
+      \item \textbf{Trap}: Intentional (e.g., breakpoint) $\Rightarrow$ return to next instruction
+      \item \textbf{Abort}: Unrecoverable $\Rightarrow$ terminate
+    \end{itemize}
+
+    \item \textbf{Handling}: CPU transfers control to handler, save/restore state
+
+    \item \textbf{Priority \& Nesting}: Higher priority exceptions can interrupt handlers
+  \end{itemize}
+
+  \vfill
+  {\tiny $^*$Non-Intel terminology (based on intent/recoverability)}
+\end{frame}
+
+\begin{frame}{Faults and Exceptions -- Microarchitecture}
   \vspace{-0.5cm}
   \begin{columns}
     \begin{column}{0.65\textwidth}
@@ -1442,23 +1462,17 @@
         \begin{itemize}
           \item<1-> At EXE: mark faulting instruction
           \begin{itemize}
-            \item Divide by 0, page fault, ...
+            \item E.g., divide by 0, page fault
           \end{itemize}
 
-          \item<2-> Instructions older than the fault retire first
+          \item<2-> Instructions older than fault retire first
 
-          \item<3-> When faulting instruction retires -- handle fault
+          \item<3-> Faulting instruction reaches retire $\Rightarrow$ handle fault
 
-          \item<4-> When faulting instruction retires:
+          \item<4-> Fault handling:
           \begin{itemize}
             \item Flush ROB and pipeline
-          \end{itemize}
-
-          \item<5-> When faulting instruction retires:
-          \begin{itemize}
-            \item Flush ROB and pipeline
-            \item Initiate fault handling code
-            \item Re-fetch faulting and subsequent instructions
+            \item Transfer control to fault handler
           \end{itemize}
         \end{itemize}
       \end{itemize}
@@ -1623,34 +1637,29 @@
             % Dashed arrow from old alloc to new alloc
             \draw[->,dashed,thick] (alloc_old.north) -- (alloc.south);
           }
-
-          % Stage 5: Fault handling code and re-fetch
-          \only<5>{
-            % Fault handling code
-            \foreach \i in {0,1,2,3} {
-              \node[rob handler] at (0,-\i*0.4+0.35) {};
-            }
-            \node[font=\tiny,align=center] at (entry1.center) {Fault\\Handling\\Code};
-            % Faulting instruction
-            \node[rob faulting] at (0,-4*0.4+0.35) {};
-            \node[font=\tiny,right] at (entry4.east) {The faulting};
-            \node[font=\tiny,right] at ([yshift=-0.25cm]entry4.east) {instruction};
-            % Subsequent instructions
-            \foreach \i in {5,...,14} {
-              \node[rob allocated] at (0,-\i*0.4+0.35) {};
-            }
-            % Labels: retire points to first allocated, alloc points to first empty
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
-            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
-            \draw[->,thick] (alloc) -- (entry15.west);
-            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
-          }
         \end{tikzpicture}
       \end{center}
     \end{column}
   \end{columns}
+\end{frame}
+
+\begin{frame}{Interrupts -- Architecture (Reminder)}
+  \begin{itemize}
+    \item \textbf{Purpose}: Handle asynchronous external events (I/O, timers, etc.)
+
+    \item \textbf{Key characteristics}:
+    \begin{itemize}
+      \item \textbf{Asynchronous}: Not tied to any instruction
+      \item Transfer control to handler, save/restore state (similar to exceptions)
+      \item Return to next instruction
+    \end{itemize}
+
+    \item \textbf{Interrupt masking}:
+    \begin{itemize}
+      \item Can be masked/enabled via processor flags
+      \item CPU automatically masks interrupts during handler entry
+    \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Interrupts}
