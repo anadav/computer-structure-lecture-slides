@@ -1445,34 +1445,30 @@
 \end{frame}
 
 \begin{frame}{Getting the Value of a Source Register}
-  \textbf{Assume:} instruction X with architectural destination register Rj is allocated a physical register PRi (i.e., the instruction is allocated in ROB entry i)
+  \textbf{Assume:} Instruction X writes arch register Rj, allocated physical register PRi (ROB entry i)
 
-  \vspace{0.3cm}
+  \vspace{0.2cm}
 
   \begin{itemize}
-    \item \textbf{When instruction X finishes its execution}
+    \item \textbf{On Execution (X completes):}
     \begin{itemize}
-      \item Write the result to PRi
-      \item Match PRi against the physical sources of each instruction in the RS, and write the value of PRi to all matching sources in the RS
+      \item Write result to PRi
+      \item Broadcast PRi value to all matching sources in RS
     \end{itemize}
 
-    \vspace{0.2cm}
-
-    \item \textbf{As long as no subsequent instruction has Rj as architectural destination register, and as long as instruction X does not retire, Rj remains mapped to PRi}
+    \item \textbf{While Pending (Rj$\rightarrow$PRi mapping active):}
     \begin{itemize}
-      \item For subsequent instructions allocated to the RS that have Rj as architectural source, their source is mapped to PRi, and they get the value of PRi from instruction X ROB entry
-      \item This value is written as the source data in the RS upon allocation (and marked data valid)
+      \item Subsequent instructions reading Rj use PRi as source
+      \item Get value from ROB entry i (marked valid if ready)
     \end{itemize}
 
-    \vspace{0.2cm}
-
-    \item \textbf{When instruction X commits}
+    \item \textbf{On Retirement (X commits):}
     \begin{itemize}
-      \item Copy the value from the physical register, PRi, to the architectural register Rj in the ARF
-      \item If the current mapping of the instruction's architectural destination register, Rj, is still the physical register allocated to the instruction, PRi:
+      \item Copy PRi value to ARF(Rj)
+      \item If Rj still maps to PRi:
       \begin{itemize}
-        \item Set Rj's mapping to be architectural -- mapped to Rj in the ARF (Arch register file)
-        \item As long as there is no subsequent instruction write to Rj, subsequent instructions that use Rj as source get the value of Rj from the ARF
+        \item Update RAT: Rj $\rightarrow$ ARF
+        \item Future reads of Rj source from ARF until next write
       \end{itemize}
     \end{itemize}
   \end{itemize}
