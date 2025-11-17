@@ -1451,8 +1451,8 @@ Layered design ensures reliable delivery of packets across the PCIe link
 ]
 
 % Top level - Original packet
-\node[box, fill=gray!20, minimum width=1.5cm] (header) at (0,0) {Header};
-\node[box, fill=white, minimum width=3cm, anchor=west] (data) at (header.east) {Data};
+\node[box, fill=blue!10, minimum width=1.5cm] (header) at (0,0) {Header};
+\node[box, fill=blue!5, minimum width=3cm, anchor=west] (data) at (header.east) {Data};
 
 
 
@@ -1518,7 +1518,7 @@ Data flows top-to-bottom (TX) and bottom-to-top (RX) through the layers
 \item Point-to-point serial links (lanes)
 \item Multiple lanes can be aggregated: x1, x4, x8, x16
 \item High-speed differential signaling
-\item Supports multiple generations (PCIe 3.0: 8 GT/s, PCIe 4.0: 16 GT/s, PCIe 5.0: 32 GT/s)
+\item Supports multiple generations (PCIe 4.0: 16 GT/s, PCIe 5.0: 32 GT/s)
 \end{itemize}
 
 \vspace{0.3cm}
@@ -1581,7 +1581,7 @@ Reliable transmission of bits across the physical medium
 
 % Slide: PCIe Address Spaces
 \begin{frame}{PCIe Address Spaces and Message Space}
-\textbf{PCIe supports four address spaces:}
+\textbf{PCIe supports three address spaces + Message Space:}
 
 \vspace{0.3cm}
 \begin{columns}[T]
@@ -1606,7 +1606,7 @@ Reliable transmission of bits across the physical medium
 \end{enumerate}
 
 \column{0.5\textwidth}
-\textbf{Message Space:}
+\textbf{Message Space} (not an address space):
 \begin{itemize}
 \item Virtual wires mechanism
 \item Eliminates hard-wired sideband signals used in PCI
@@ -1626,6 +1626,271 @@ Reliable transmission of bits across the physical medium
 \item More efficient than legacy INTx
 \end{itemize}
 \end{columns}
+\end{frame}
+
+\section{System Boot Process}
+
+% Slide: Boot Process Overview
+\begin{frame}{System Boot Process Overview}
+\textbf{Upon computer power-on, a sequence of events occurs:}
+
+\begin{enumerate}
+\item \textbf{CPU Reset}
+  \begin{itemize}
+  \item CPU wakes up and exits reset sequence
+  \item Jumps to firmware entry point
+  \end{itemize}
+
+\vspace{0.2cm}
+\item \textbf{Firmware Initialization} (UEFI/BIOS)
+  \begin{itemize}
+  \item Power-On Self-Test (POST)
+  \item Hardware enumeration and initialization
+  \end{itemize}
+
+\vspace{0.2cm}
+\item \textbf{Boot Loader}
+  \begin{itemize}
+  \item Firmware locates and loads boot loader
+  \item Boot loader prepares system for OS
+  \end{itemize}
+
+\vspace{0.2cm}
+\item \textbf{Operating System Load}
+  \begin{itemize}
+  \item OS kernel loaded into memory
+  \item Device drivers and system services initialized
+  \end{itemize}
+\end{enumerate}
+\end{frame}
+
+% Slide: UEFI
+\begin{frame}{UEFI: Modern Firmware Interface}
+\textbf{UEFI (Unified Extensible Firmware Interface)}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Key Features:}
+\begin{itemize}
+\item Modular architecture
+\item Supports GPT partitions
+\item Secure Boot capability
+\item 64-bit addressing
+\item Network boot support
+\item Faster boot times
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item Hardware initialization
+\item POST execution
+\item Boot device selection
+\item Load boot loader
+\item \textcolor{blue!70!black}{Provide hardware info to OS}
+\end{itemize}
+\end{columns}
+
+\vspace{0.5cm}
+\begin{block}{Hardware Discovery}
+UEFI prepares hardware description tables for the operating system to discover available devices and their configuration
+\end{block}
+\end{frame}
+
+% Slide: POST and Hardware Initialization
+\begin{frame}{Power-On Self-Test (POST) and Initialization}
+\textbf{Firmware performs POST to verify hardware:}
+
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Hardware Tests:}
+\begin{itemize}
+\item CPU functionality
+\item Memory (DRAM) test
+\item Chipset registers
+\item Storage controllers
+\item Keyboard/input devices
+\item Serial/parallel ports
+\item Display adapter
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Initialization Tasks:}
+\begin{itemize}
+\item Initialize power management
+\item Configure PCIe devices
+\item Set up interrupt controllers
+\item Initialize memory controller
+\item Apply CPU microcode patches
+\item Read system configuration
+\item Display system summary
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{alertblock}{Microcode Updates}
+Firmware may contain CPU microcode patches to fix hardware bugs before OS loads
+\end{alertblock}
+\end{frame}
+
+% Slide: Boot Device Selection and OS Load
+\begin{frame}{Boot Device Selection and OS Loading}
+\textbf{After POST completes:}
+
+\vspace{0.3cm}
+\textbf{1. Boot Device Selection}
+\begin{itemize}
+\item Firmware searches for bootable devices in priority order
+\item Common boot order: NVMe/SSD, USB, Network (PXE), DVD
+\item UEFI looks for EFI System Partition (ESP) with boot loaders
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. Boot Loader Execution}
+\begin{itemize}
+\item Firmware loads and executes boot loader (e.g., GRUB, Windows Boot Manager)
+\item Boot loader reads configuration and presents OS selection menu
+\item Loads OS kernel into memory
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{3. Operating System Initialization}
+\begin{itemize}
+\item OS kernel takes control from boot loader
+\item Loads device drivers and system services
+\item Mounts file systems
+\item Starts user-space processes
+\end{itemize}
+\end{frame}
+
+% New section: Device Discovery
+\section{Hardware Discovery}
+
+% Slide: Device Discovery Overview
+\begin{frame}{Hardware Discovery: How OS Learns About Hardware}
+\textbf{Problem:} OS needs to know what hardware is present
+\begin{itemize}
+\item Which devices are available?
+\item Where are they located (addresses)?
+\item What are their capabilities?
+\item How to configure them?
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Two main approaches:}
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{ACPI (x86)}
+Advanced Configuration and Power Interface\\
+\textcolor{blue!70!black}{Tables in memory}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{Device Tree (ARM/Embedded)}
+Flattened Device Tree (FDT)\\
+\textcolor{green!60!black}{Data structure describing hardware}
+\end{block}
+\end{columns}
+\end{frame}
+
+% Slide: ACPI
+\begin{frame}{ACPI: x86 Hardware Discovery}
+\textbf{ACPI (Advanced Configuration and Power Interface)}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{What it provides:}
+\begin{itemize}
+\item CPU topology and features
+\item Memory map
+\item Interrupt routing (APIC/IOAPIC)
+\item PCIe configuration
+\item Power management info
+\item Thermal management
+\item Device configuration
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{How it works:}
+\begin{itemize}
+\item Firmware creates ACPI tables
+\item Tables stored in memory
+\item Pointer passed to OS
+\item OS parses tables at boot
+\item Dynamic discovery via ACPI methods
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{alertblock}{ACPI Tables}
+Examples: MADT (interrupts), SRAT (NUMA), DSDT (device description), MCFG (PCIe config)
+\end{alertblock}
+\end{frame}
+
+% Slide: Device Tree
+\begin{frame}{Device Tree: ARM/Embedded Hardware Discovery}
+\textbf{Device Tree (Flattened Device Tree - FDT)}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{What it provides:}
+\begin{itemize}
+\item CPU cores and clusters
+\item Memory regions
+\item Bus topology
+\item Device addresses
+\item Interrupt connections
+\item Clock sources
+\item Pin configurations
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{How it works:}
+\begin{itemize}
+\item Tree structure describing HW
+\item Compiled from .dts source
+\item Bootloader passes to kernel
+\item OS traverses tree at boot
+\item Static description
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{alertblock}{Device Tree Blob (DTB)}
+Binary representation of hardware topology, typically loaded from flash or passed by bootloader
+\end{alertblock}
+\end{frame}
+
+% Slide: ACPI vs Device Tree Comparison
+\begin{frame}{ACPI vs Device Tree: Key Differences}
+\begin{center}
+\begin{tabular}{|p{2.8cm}|p{4.8cm}|p{4.8cm}|}
+\hline
+\textbf{Aspect} & \textbf{ACPI (x86)} & \textbf{Device Tree (ARM)} \\
+\hline
+\textbf{Architecture} & x86/x86\_64 primarily & ARM, RISC-V, embedded \\
+\hline
+\textbf{Discovery} & Dynamic + Static tables & Mostly static tree \\
+\hline
+\textbf{Complexity} & Complex, many features & Simpler, HW description \\
+\hline
+\textbf{Power Mgmt} & Extensive ACPI power states & Often separate driver \\
+\hline
+\textbf{Hotplug} & Well supported & Limited support \\
+\hline
+\textbf{Source} & Created by firmware & Pre-compiled or firmware \\
+\hline
+\textbf{Standardization} & ACPI spec by UEFI Forum & Open standard by Linaro \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Both solve the same problem:} Tell the OS what hardware exists and how to use it
 \end{frame}
 
 
