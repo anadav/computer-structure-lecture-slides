@@ -10,6 +10,7 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usepackage{tikz-timing}
 \usepackage{tcolorbox}
 
 \usetheme{Madrid}
@@ -31,20 +32,6 @@
         \draw[thick] (0,0) -- (0,0.08);
         \draw[thick] (0,0) -- (0.05,-0.03);
     \end{scope}
-}
-
-% Hexagon macro for bus timing diagrams
-% Parameters: center_x, center_y, width, height, slant, fill_color, text
-\newcommand{\bushex}[7]{
-  \draw[very thick, fill=#6]
-    (#1-#3/2-#5, #2) --
-    (#1-#3/2, #2+#4) --
-    (#1+#3/2, #2+#4) --
-    (#1+#3/2+#5, #2) --
-    (#1+#3/2, #2-#4) --
-    (#1-#3/2, #2-#4) --
-    cycle;
-  \node[font=\scriptsize] at (#1, #2) {#7};
 }
 
 \begin{document}
@@ -1364,78 +1351,27 @@ Often 20-30\% improvement!
 \item Saves RAS, RAS to CAS delay, and Row pre-charge
 \end{itemize}
 
-\vspace{-0.3cm}
+\vspace{-0.1cm}
 \begin{center}
-\begin{tikzpicture}[
-    scale=0.85,
-    % Timing diagram styles
-    signal/.style={very thick},
-    timing/.style={|-|, thick, >=stealth},
-    label/.style={font=\small}
+\begin{tikztimingtable}[
+  timing/slope=0.1,
+  timing/coldist=0.8cm,
+  xscale=1.15,
+  timing/rowdist=1.1cm,
+  timing/name/.style={font=\small}
 ]
-
-% Helper coordinates
-\def\unit{0.8}  % time unit width
-\def\high{0.6}  % signal high level
-\def\low{0}     % signal low level
-\def\hexw{0.35} % hexagon body width
-\def\hexh{0.22} % hexagon half-height
-\def\hexs{0.15} % hexagon slant
-
-% RAS# signal (active low)
-\draw[signal] (0,3.5) -- (0.5*\unit,3.5) -- (0.5*\unit,3.5-\high) -- (3.5*\unit,3.5-\high) -- (3.5*\unit,3.5)
-              -- (6.5*\unit,3.5) -- (6.5*\unit,3.5-\high) -- (9.5*\unit,3.5-\high) -- (9.5*\unit,3.5) -- (10.5*\unit,3.5);
-\node[left, label] at (0,3.5-\high/2) {RAS\#};
-
-% CAS# signal (active low)
-\draw[signal] (0,2.5) -- (1.5*\unit,2.5) -- (1.5*\unit,2.5-\high) -- (2*\unit,2.5-\high) -- (2*\unit,2.5)
-              -- (2.5*\unit,2.5) -- (2.5*\unit,2.5-\high) -- (3*\unit,2.5-\high) -- (3*\unit,2.5)
-              -- (3.5*\unit,2.5) -- (3.5*\unit,2.5-\high) -- (4*\unit,2.5-\high) -- (4*\unit,2.5)
-              -- (7.5*\unit,2.5) -- (7.5*\unit,2.5-\high) -- (8*\unit,2.5-\high) -- (8*\unit,2.5)
-              -- (8.5*\unit,2.5) -- (8.5*\unit,2.5-\high) -- (9*\unit,2.5-\high) -- (9*\unit,2.5)
-              -- (9.5*\unit,2.5) -- (9.5*\unit,2.5-\high) -- (10*\unit,2.5-\high) -- (10*\unit,2.5) -- (10.5*\unit,2.5);
-\node[left, label] at (0,2.5-\high/2) {CAS\#};
-
-% Address signal (hexagon bus style)
-\draw[signal] (0,1.5) -- (0.5*\unit-\hexw/2-\hexs,1.5);
-\bushex{\unit}{1.5}{\hexw}{\hexh}{\hexs}{purple!30}{Row}
-\bushex{1.75*\unit}{1.5}{\hexw}{\hexh}{\hexs}{blue!30}{Col}
-\bushex{2.75*\unit}{1.5}{\hexw}{\hexh}{\hexs}{red!30}{Col}
-\bushex{3.75*\unit}{1.5}{\hexw}{\hexh}{\hexs}{orange!30}{Col}
-\bushex{5.25*\unit}{1.5}{1.8}{\hexh}{\hexs}{gray!20}{X}
-\bushex{7*\unit}{1.5}{\hexw}{\hexh}{\hexs}{purple!30}{Row}
-\bushex{7.75*\unit}{1.5}{\hexw}{\hexh}{\hexs}{blue!30}{Col}
-\bushex{8.75*\unit}{1.5}{\hexw}{\hexh}{\hexs}{red!30}{Col}
-\bushex{9.75*\unit}{1.5}{\hexw}{\hexh}{\hexs}{orange!30}{Col}
-\draw[signal] (10*\unit+\hexw/2+\hexs,1.5) -- (10.5*\unit,1.5);
-
-\node[left, label] at (0,1.5) {Addr};
-
-% Data signal (hexagon bus style)
-\draw[signal] (0,0.5) -- (2.2*\unit,0.5);
-\bushex{2.4*\unit}{0.5}{0.3}{0.22}{\hexs}{blue!50}{\textcolor{white}{\textbf{Data}}}
-\draw[signal] (2.6*\unit+\hexs,0.5) -- (3.2*\unit-\hexs,0.5);
-\bushex{3.4*\unit}{0.5}{0.3}{0.22}{\hexs}{red!50}{\textcolor{white}{\textbf{Data}}}
-\draw[signal] (3.6*\unit+\hexs,0.5) -- (4.2*\unit-\hexs,0.5);
-\bushex{4.4*\unit}{0.5}{0.3}{0.22}{\hexs}{orange!50}{\textcolor{white}{\textbf{Data}}}
-\draw[signal] (4.6*\unit+\hexs,0.5) -- (8.2*\unit-\hexs,0.5);
-\bushex{8.4*\unit}{0.5}{0.3}{0.22}{\hexs}{blue!50}{\textcolor{white}{\textbf{Data}}}
-\draw[signal] (8.6*\unit+\hexs,0.5) -- (9.2*\unit-\hexs,0.5);
-\bushex{9.4*\unit}{0.5}{0.3}{0.22}{\hexs}{red!50}{\textcolor{white}{\textbf{Data}}}
-\draw[signal] (9.6*\unit+\hexs,0.5) -- (10.2*\unit-\hexs,0.5);
-\bushex{10.4*\unit}{0.5}{0.3}{0.22}{\hexs}{orange!50}{\textcolor{white}{\textbf{Data}}}
-
-\node[left, label] at (0,0.5) {Data};
-
-% Timing annotations
-% tRCD
-\draw[timing, <->] (0.5*\unit, 4.2) -- node[above, font=\scriptsize] {tRCD} (1.5*\unit, 4.2);
-% tRP
-\draw[timing, <->] (3.5*\unit, 4.2) -- node[above, font=\scriptsize] {tRP} (6.5*\unit, 4.2);
-% CL
-\draw[timing, <->] (1.5*\unit, -0.2) -- node[below, font=\scriptsize] {CL} (2.2*\unit, -0.2);
-
-\end{tikzpicture}
+  RAS\# & H L 6L H 6L H 2L H \\
+  CAS\# & 3H L H L H L H 7H L H L H L H 2H \\
+  Addr  & U 2D{Row} D{Col} D{Col} D{Col} 5D{X} 2D{Row} D{Col} D{Col} D{Col} U \\
+  Data  & 6U 2D{\textcolor{red}{Data}} 2D{Data} 2D{Data} 8U 2D{Data} 2D{Data} 2D{Data} \\
+  \extracode
+    % Timing annotations
+    \begin{scope}[>=stealth]
+      \draw[<->] (0.8,5.3) -- node[above,font=\scriptsize] {tRCD} (2.4,5.3);
+      \draw[<->] (5.6,5.3) -- node[above,font=\scriptsize] {tRP} (10.4,5.3);
+      \draw[<->] (2.4,-0.7) -- node[below,font=\scriptsize] {CL} (4.8,-0.7);
+    \end{scope}
+\end{tikztimingtable}
 \end{center}
 
 \vspace{-0.3cm}
