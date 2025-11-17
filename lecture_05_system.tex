@@ -1360,10 +1360,10 @@ Often 20-30\% improvement!
   timing/rowdist=0.65cm,
   timing/name/.style={font=\small}
 ]
-  RAS\# & 2H L 9L 6H 12L \\
-  CAS\# & 5H L 2H L 2H L H 8H L 2H L 2H L 2H \\
-  Addr  & U 2D{Row} U 1.5D{\colorbox{blue!30}{Col}} 1.5U 1.5D{\colorbox{red!30}{Col}} 1.5U 1.5D{\colorbox{orange!30}{Col}} 5.5U 2D{Row} U 1.5D{\colorbox{green!30}{Col}} 1.5U 1.5D{\colorbox{purple!30}{Col}} 1.5U 1.5D{\colorbox{cyan!30}{Col}} 2.5U \\
-  Data  & 6U 2D{\colorbox{blue!30}{Data}} U 2D{\colorbox{red!30}{Data}} U 2D{\colorbox{orange!30}{Data}} 8U 2D{\colorbox{green!30}{Data}} U 2D{\colorbox{purple!30}{Data}} U 2D{\colorbox{cyan!30}{Data}} \\
+  RAS\# & 2H L 9L 6H 12.5L \\
+  CAS\# & 5H L 2H L 2H L H 8H L 2H L 2H L 2.5H \\
+  Addr  & U 1.5D{Row} 1.5U 1.5D{\colorbox{blue!30}{Col}} 1.5U 1.5D{\colorbox{red!30}{Col}} 1.5U 1.5D{\colorbox{orange!30}{Col}} 6U 1.5D{Row} 1.5U 1.5D{\colorbox{green!30}{Col}} 1.5U 1.5D{\colorbox{purple!30}{Col}} 1.5U 1.5D{\colorbox{cyan!30}{Col}} 2.5U \\
+  Data  & 6U 2D{\colorbox{blue!30}{Data}} U 2D{\colorbox{red!30}{Data}} U 2D{\colorbox{orange!30}{Data}} 8.5U 2D{\colorbox{green!30}{Data}} U 2D{\colorbox{purple!30}{Data}} U 2D{\colorbox{cyan!30}{Data}} \\
   \extracode
     % Timing annotations
     \begin{scope}[>=stealth]
@@ -1444,6 +1444,235 @@ Often 20-30\% improvement!
 \begin{block}{Key Advantage}
 Bank interleaving: while accessing one bank, another prepares its row $\rightarrow$ higher throughput
 \end{block}
+\end{frame}
+
+% Slide: SDRAM Timing
+\begin{frame}{SDRAM Timing}
+\vspace{-0.2cm}
+\begin{center}
+\begin{tikztimingtable}[
+  timing/slope=0.15,
+  timing/coldist=0.35cm,
+  xscale=1.7,
+  timing/rowdist=0.6cm,
+  timing/name/.style={font=\small}
+]
+  clock & H L H L H L H L H L H L H L H L H L H L H L H L H \\
+  cmd   & U 2D{ACT} 2D{NOP} 2D{RD} 2D{RD+PC} 2D{ACT} 2D{NOP} 2D{ACT} 2D{NOP} 2D{RD} 2D{RD} 2D{NOP} 2D{NOP} \\
+  \\
+  Bank  & U 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{blue!30}{Bank 1}} 2U 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{blue!30}{Bank 1}} 2U 2U \\
+  Addr  & U 2D{\textcolor{red}{Row i}} 2U 2D{\textcolor{cyan}{Col j }} 2D{\textcolor{cyan}{Col k }} 2D{\textcolor{red}{Row l }} 2U 2D{\textcolor{red}{Row m}} 2U 2D{\textcolor{cyan}{Col q }} 2D{\textcolor{blue!30}{Col n }} 2U 2U \\
+  \\
+  Data  & 11U 2D{\textcolor{cyan!50}{Data j}} 2D{\textcolor{cyan!50}{Data k}} 4U 2D{\textcolor{blue!50}{Data n}} 2D{\textcolor{cyan!50}{Data q}} 2U \\
+  \extracode
+    % Timing annotations
+    \begin{scope}[>=stealth, font=\scriptsize]
+      % tRCD
+      \draw[<->,thick] (0,3.8) -- node[above] {tRCD$>$20ns} (4*0.75,3.8);
+      % tRC
+      \draw[<->,thick] (0,4.3) -- node[above] {tRC$>$70ns} (8*0.75,4.3);
+      % tRRD
+      \draw[<->,thick] (8*0.75,3.8) -- node[above] {tRRD$>$20ns} (12*0.75,3.8);
+      % CL=2
+      \draw[<->,thick] (4*0.75,-0.6) -- node[below] {CL=2} (10*0.75,-0.6);
+    \end{scope}
+\end{tikztimingtable}
+\end{center}
+
+\vspace{-0.3cm}
+\textbf{Key timing parameters:}
+\begin{itemize}
+\item \textbf{tRCD}: ACTIVE to READ/WRITE gap = $\lceil$tRCD(MIN) / clock period$\rceil$
+\item \textbf{tRC}: Successive ACTIVE to different row in same bank
+\item \textbf{tRRD}: Successive ACTIVE commands to different banks
+\end{itemize}
+\end{frame}
+
+% Slide: DDR-SDRAM
+\begin{frame}{DDR-SDRAM}
+\textbf{2n-prefetch architecture - doubles data rate}
+
+\vspace{0.2cm}
+\begin{columns}[T]
+\column{0.58\textwidth}
+\textbf{How it works:}
+\begin{itemize}
+\item Internal DRAM cells clocked same speed as SDR SDRAM
+\item Internal data bus is 2$\times$ width of external bus
+\item Data capture twice per clock cycle:
+  \begin{itemize}
+  \item Lower half sampled at clock rise
+  \item Upper half sampled at clock fall
+  \end{itemize}
+\item 200MHz clock $\rightarrow$ 400M transfers/sec
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Power:} 2.5V (vs. 3.3V in SDRAM)
+
+\column{0.38\textwidth}
+\vspace{0.2cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.75, transform shape]
+  % SDRAM Array
+  \node[draw, thick, minimum width=2.5cm, minimum height=1.5cm, fill=blue!10, align=center] (array) at (0,0) {SDRAM\\Array};
+
+  % Two multiplexers
+  \node[draw, thick, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=0.6cm, fill=green!20] (mux1) at (3,0.4) {0:n-1};
+  \node[draw, thick, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=0.6cm, fill=green!20] (mux2) at (3,-0.4) {n:2n-1};
+
+  % Internal bus
+  \draw[->, very thick] (array.east) -- node[above, font=\tiny] {0:2n-1} (1.5,0);
+  \draw[->, thick] (1.5,0.4) -- (mux1.west);
+  \draw[->, thick] (1.5,-0.4) -- (mux2.west);
+
+  % Output
+  \draw[->, very thick] (mux1.east) -- (4.5,0.4);
+  \draw[->, very thick] (mux2.east) -- (4.5,-0.4);
+  \draw[->, very thick] (4.5,0) -- node[above, font=\small] {0:n-1} (5.5,0);
+  \node[right, font=\scriptsize] at (5.5,0.4) {400M};
+  \node[right, font=\scriptsize] at (5.5,0) {xfer/sec};
+
+  % Clock label
+  \node[below, font=\tiny] at (0,-1.2) {200MHz clock};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% Slide: DDR SDRAM Timing
+\begin{frame}{DDR SDRAM Timing}
+\vspace{-0.2cm}
+\begin{center}
+\begin{tikztimingtable}[
+  timing/slope=0.15,
+  timing/coldist=0.75cm,
+  xscale=1,
+  timing/rowdist=0.6cm,
+  timing/name/.style={font=\small}
+]
+  200MHz clock & 26C \\
+  cmd   & 2D{ACT} 4D{NOP} 2D{RD} 2D{NOP} 2D{ACT} 4D{NOP} 2D{RD} 2D{ACT} 4D{NOP} \\
+  Bank  & 2D{\colorbox{cyan!30}{Bank 0}} 4D{X} 2D{\colorbox{cyan!30}{Bank 0}} 2D{X} 2D{\colorbox{cyan!30}{Bank 0}} 4D{X} 2D{\colorbox{cyan!30}{Bank 0}} 2D{\colorbox{blue!30}{Bank 1}} 4D{X} \\
+  Addr  & 2D{\colorbox{cyan!30}{Row i}} 4D{X} 2D{\colorbox{cyan!30}{Col j}} 2D{X} 2D{\colorbox{cyan!30}{Row l}} 4D{X} 2D{\colorbox{cyan!30}{Col j}} 2D{\colorbox{blue!30}{Row m}} 4D{X} \\
+  Data  & 12U 2D{j} 2D{+1} 2D{+2} 2D{+3} 2U 2D{n} 2D{+1} 2D{+2} 2D{+3} \\
+  \extracode
+    % Timing annotations
+    \begin{scope}[>=stealth, font=\scriptsize]
+      % tRCD
+      \draw[<->,thick] (0,3.8) -- node[above] {tRCD$>$20ns} (6*0.75,3.8);
+      % tRC
+      \draw[<->,thick] (0,4.3) -- node[above] {tRC$>$70ns} (16*0.75,4.3);
+      % tRRD
+      \draw[<->,thick] (16*0.75,3.8) -- node[above] {tRRD$>$20ns} (22*0.75,3.8);
+      % CL=2
+      \draw[<->,thick] (6*0.75,-0.6) -- node[below] {CL=2} (12*0.75,-0.6);
+    \end{scope}
+\end{tikztimingtable}
+\end{center}
+
+\vspace{-0.2cm}
+\textbf{DDR burst length = 4:} Each READ transfers 4 consecutive locations
+\end{frame}
+
+% Slide: DDR2
+\begin{frame}{DDR2}
+\textbf{DDR2 doubles bandwidth with 4-bit prefetch}
+
+\vspace{0.2cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Key improvements:}
+\begin{itemize}
+\item \textbf{4-bit prefetch}: internally read/write 4$\times$ external bus width
+\item DDR2-533 cell works at same frequency as DDR266 or PC133
+\item Prefetching increases latency (trade-off)
+\item \textbf{Smaller page}: 1KB vs. 2KB
+  \begin{itemize}
+  \item Reduces activation power
+  \end{itemize}
+\item \textbf{8 banks} in 1Gb+ densities
+  \begin{itemize}
+  \item Increases random access performance
+  \end{itemize}
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Power improvements:}
+\begin{itemize}
+\item 1.8V (vs 2.5V in DDR)
+\item Significantly lower power
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Dual channel mode support}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.6, transform shape]
+  % SDRAM
+  \node[draw, thick, minimum width=1.8cm, minimum height=0.6cm, fill=blue!10] at (0,2.5) {Memory Cell};
+  \node[draw, thick, minimum width=1.2cm, minimum height=0.6cm, fill=green!20] at (2.2,2.5) {I/O Buffers};
+  \draw[->, very thick] (2.8,2.5) -- (3.5,2.5) node[right, font=\tiny] {Data Bus};
+  \node[left, font=\tiny] at (-0.9,2.2) {100 MHz};
+  \node[above, font=\small] at (0,3.1) {\textbf{SDRAM}};
+
+  % DDR I
+  \node[draw, thick, minimum width=1.8cm, minimum height=0.6cm, fill=blue!10] at (0,1.5) {Memory Cell};
+  \node[draw, thick, minimum width=1.2cm, minimum height=0.6cm, fill=green!20] at (2.2,1.5) {I/O Buffers};
+  \draw[->, very thick] (2.8,1.5) -- (3.5,1.5) node[right, font=\tiny] {Data Bus};
+  \node[left, font=\tiny] at (-0.9,1.2) {100 MHz};
+  \node[above, font=\small] at (0,2.1) {\textbf{DDR I}};
+
+  % DDR II
+  \node[draw, thick, minimum width=1.8cm, minimum height=0.6cm, fill=blue!10] at (0,0.5) {Memory Cell};
+  \node[draw, thick, minimum width=1.2cm, minimum height=0.6cm, fill=green!20] at (2.2,0.5) {I/O Buffers};
+  \draw[->, very thick] (2.8,0.5) -- (3.5,0.5) node[right, font=\tiny] {Data Bus};
+  \node[left, font=\tiny] at (-0.9,0.2) {100 MHz};
+  \node[above, font=\small] at (0,1.1) {\textbf{DDR II}};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% Slide: DDR Comparison
+\begin{frame}{DDR Comparison}
+\vspace{-0.2cm}
+\begin{center}
+\tiny
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+& \textbf{SDRAM} & \textbf{DDR} & \textbf{DDR2} & \textbf{DDR3} & \textbf{DDR4} & \textbf{DDR5} \\
+\hline
+\textbf{Introduced} & 1988 & 2000 & 2003 & 2007 & 2014 & 2021 \\
+\hline
+\textbf{Prefetch depth} & 1-Bit & 2-Bit & 4-Bit & 8-Bit & Per Bank & 16-Bit \\
+\hline
+\textbf{Internal clock (MHz)} & 100-166 & 133-200 & 133-200 & 133-200 & 133-200 & - \\
+\hline
+\textbf{Data Rate (MT/s)} & 100-166 & 266-400 & 533-800 & 1066-1600 & 2133-5100 & 3200-6400 \\
+\hline
+\textbf{Transfer Rate (GB/s)} & 0.8-1.3 & 2.1-3.2 & 4.2-6.4 & 8.5-14.9 & 17-25.6 & 38.4-51.2 \\
+\hline
+\textbf{Internal banks} & 4 & 4 & 4/8 & 8 & 16 & 32 \\
+\hline
+\textbf{Bank groups} & 1 & 1 & 1 & 1 & \textcolor{green!60!black}{4} & \textcolor{green!60!black}{4} \\
+\hline
+\textbf{Burst length} & 8 & 8 & 8 & 8 & 8 & \textcolor{blue}{16} \\
+\hline
+\textbf{Channels / DIMM} & 1 & 1 & 1 & 1 & 1 & \textcolor{blue}{2} \\
+\hline
+\textbf{Max DIMM size (GB)} & - & 1 & 4 & 16 & 64 & 256 \\
+\hline
+\textbf{Power mgmt} & On MB & On MB & On MB & On MB & On MB & \textcolor{green!60!black}{On DIMM} \\
+\hline
+\textbf{Voltage (V)} & 3.3 & 2.5-2.6 & 1.8 & 1.35-1.5 & 1.2 & 1.1 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.2cm}
+\textbf{Trends:} Higher bandwidth, lower voltage, more banks, increased prefetch depth
 \end{frame}
 
 \section{Real System Examples}
@@ -2064,32 +2293,36 @@ Binary representation of hardware topology, typically loaded from flash or passe
 
 % Slide: Flash Memory Types
 \begin{frame}{Flash Memory: SLC/MLC/TLC/QLC}
-\textbf{NAND flash stores multiple bits per cell}
+\textbf{NAND flash stores multiple bits per cell using voltage levels}
 
-\vspace{0.2cm}
+\vspace{0.15cm}
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|c|}
 \hline
-\textbf{Type} & \textbf{Bits/Cell} & \textbf{Endurance} & \textbf{Performance} & \textbf{Cost} \\
+\textbf{Type} & \textbf{Bits/Cell} & \textbf{Voltage Levels} & \textbf{Endurance} & \textbf{Performance} & \textbf{Cost} \\
 \hline
-\textbf{SLC} (Single) & 1 & \textcolor{green!60!black}{100K cycles} & \textcolor{green!60!black}{Fastest} & \textcolor{red}{Highest} \\
+\textbf{SLC} & 1 & $2^1 = 2$ & \textcolor{green!60!black}{100K} & \textcolor{green!60!black}{Fastest} & \textcolor{red}{Highest} \\
 \hline
-\textbf{MLC} (Multi) & 2 & 10K cycles & Fast & High \\
+\textbf{MLC} & 2 & $2^2 = 4$ & 10K & Fast & High \\
 \hline
-\textbf{TLC} (Triple) & 3 & 3K cycles & Medium & Medium \\
+\textbf{TLC} & 3 & $2^3 = 8$ & 3K & Medium & Medium \\
 \hline
-\textbf{QLC} (Quad) & 4 & \textcolor{red}{1K cycles} & \textcolor{red}{Slower} & \textcolor{green!60!black}{Lowest} \\
+\textbf{QLC} & 4 & $2^4 = 16$ & \textcolor{red}{1K} & \textcolor{red}{Slower} & \textcolor{green!60!black}{Lowest} \\
 \hline
 \end{tabular}
 \end{center}
 
-\vspace{0.3cm}
-\textbf{Trade-offs:}
+\vspace{0.25cm}
+\textbf{Key insight:} Voltage levels grow exponentially: $2^n$ levels for $n$ bits
 \begin{itemize}
-\item More bits per cell $\rightarrow$ higher density, lower cost
-\item More bits per cell $\rightarrow$ lower endurance, slower writes
-\item \textbf{SLC}: Enterprise, high-performance applications
-\item \textbf{TLC/QLC}: Consumer SSDs, cost-sensitive applications
+\item More levels $\rightarrow$ smaller voltage margins $\rightarrow$ harder to distinguish
+\item Smaller margins $\rightarrow$ lower endurance, slower writes, more errors
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Applications:}
+\begin{itemize}
+\item \textbf{SLC}: Enterprise, high-performance \quad \textbf{TLC/QLC}: Consumer, cost-sensitive
 \end{itemize}
 \end{frame}
 
