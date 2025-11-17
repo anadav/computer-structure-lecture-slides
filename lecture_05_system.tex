@@ -1323,22 +1323,16 @@ Often 20-30\% improvement!
 
 \end{frame}
 
-% Slide: Real System Topology
-\begin{frame}{Real System Topology: lstopo Output}
+% Slide: Real System Topology - Part 1
+\begin{frame}{Real System Topology (Part 1)}
+\begin{columns}[T]
+\column{0.46\textwidth}
 \begin{center}
-\includegraphics[width=0.95\textwidth,height=0.85\textheight,keepaspectratio]{figures/topo.png}
+\vspace{-8mm}
+\includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{figures/topo.png}
 \end{center}
 
-\vspace{0.2cm}
-\textbf{lstopo} visualizes the complete hardware topology of a system
-\end{frame}
-
-% Slide: Analyzing the Topology
-\begin{frame}{Analyzing the System Topology}
-\textbf{Key Features from the lstopo Output:}
-
-\begin{columns}[T]
-\column{0.5\textwidth}
+\column{0.54\textwidth}
 \textbf{1. Two-Socket NUMA System}
 \begin{itemize}
 \item 2 Packages (CPU sockets)
@@ -1347,16 +1341,27 @@ Often 20-30\% improvement!
 \item Total: 56 physical cores
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{0.5cm}
 \textbf{2. Hyperthreading (SMT)}
 \begin{itemize}
 \item Each core has 2 PUs (processing units)
 \item PU = hardware thread
 \item Total: 112 logical processors
-\item PU IDs interleaved (P\#0, P\#56, P\#2, P\#58...)
+\item PU IDs interleaved\\(P\#0, P\#56, P\#2, P\#58...)
 \end{itemize}
+\end{columns}
+\end{frame}
 
-\column{0.5\textwidth}
+% Slide: Real System Topology - Part 2
+\begin{frame}{Real System Topology (Part 2)}
+\begin{columns}[T]
+\column{0.46\textwidth}
+\begin{center}
+\vspace{-8mm}
+\includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{figures/topo.png}
+\end{center}
+
+\column{0.54\textwidth}
 \textbf{3. Cache Hierarchy}
 \begin{itemize}
 \item \textcolor{red}{Private} per core:
@@ -1371,7 +1376,7 @@ Often 20-30\% improvement!
   \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{0.5cm}
 \textbf{4. I/O Device Locality}
 \begin{itemize}
 \item PCI devices attached to specific packages
@@ -1379,10 +1384,10 @@ Often 20-30\% improvement!
 \item Package 1: High-speed Ethernet (mlx5)
 \item Accessing devices $\rightarrow$ prefer local memory!
 \end{itemize}
-\end{columns}
 
 \vspace{0.3cm}
-\textbf{Software Impact:} Pin network-intensive threads to cores on Package 1 for best performance with the mlx5 NIC!
+\textbf{Tip:} Pin network threads to Package 1 cores for best mlx5 performance!
+\end{columns}
 \end{frame}
 
 
