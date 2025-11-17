@@ -1388,64 +1388,61 @@ Often 20-30\% improvement!
 \end{tikztimingtable}
 \end{center}
 
-\vspace{-0.3cm}
+\vspace{-0.4cm}
 \begin{itemize}
-\item CAS-to-CAS delay: delay between two CASs within the same row
-\item tRP: Row pre-charge time - time to close current row and open new row
-\item \textbf{DRAM is not true random-access memory}
-  \begin{itemize}
-  \item Accessing multiple columns within same row is much faster than accessing different rows
-  \end{itemize}
+\item \textbf{tRP}: Row pre-charge time (close current row, open new row)
+\item \textbf{CL}: CAS latency (time from CAS to data available)
+\item \textbf{Not true random access}: same-row access $\gg$ faster than different-row
 \end{itemize}
 \end{frame}
 
 % Slide: Synchronous DRAM - SDRAM
 \begin{frame}{Synchronous DRAM -- SDRAM}
-\textbf{All signals are referenced to an external clock (100MHz-200MHz)}
+\textbf{Clock-synchronized (100-200MHz)}
 \begin{itemize}
-\item Automatically synchronizes with the timing of the CPU
+\item All signals referenced to external clock; synchronizes with CPU timing
 \end{itemize}
 
-\vspace{0.2cm}
-\textbf{4 banks -- multiple pages (rows) open simultaneously (page per bank)}
+\vspace{0.15cm}
+\textbf{4 banks -- multiple rows open simultaneously}
 \begin{itemize}
-\item Accessing columns within each one of the 4 open rows is fast
+\item One open row per bank; fast column access within 4 open rows
+\item ACTIVE to new bank can be issued while accessing current bank
 \end{itemize}
 
-\vspace{0.2cm}
-\textbf{Command driven functionality instead of signal driven}
+\vspace{0.15cm}
+\textbf{Command-driven operation}
 \begin{itemize}
-\item ACTIVE: selects both the bank and the row to be activated
-  \begin{itemize}
-  \item ACTIVE to a new bank can be issued while accessing the current bank
-  \end{itemize}
+\item ACTIVE: select bank + row
 \item READ/WRITE: select column
 \end{itemize}
 
-\vspace{0.2cm}
-\textbf{Burst oriented read and write accesses}
+\vspace{0.15cm}
+\textbf{Burst-oriented access}
 \begin{itemize}
-\item Successive column locations accessed in the given row
-\item Burst length is programmable: 1, 2, 4, 8, full-page (may end by burst terminate)
+\item Successive columns in same row; programmable length: 1, 2, 4, 8, full-page
 \end{itemize}
 \end{frame}
 
 % Slide: SDRAM Features (continued)
 \begin{frame}{SDRAM Features (continued)}
-\textbf{A user programmable Mode Register}
+\textbf{Programmable Mode Register}
 \begin{itemize}
 \item CAS latency, burst length, burst type
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Auto pre-charge:} may close row at last read/write in burst
+\vspace{0.25cm}
+\textbf{Auto pre-charge}: close row at last read/write in burst
+
+\vspace{0.25cm}
+\textbf{Auto refresh}: DRAM capacitors leak $\rightarrow$ periodic refresh needed
+\begin{itemize}
+\item Internal counters automatically generate refresh addresses
+\end{itemize}
 
 \vspace{0.3cm}
-\textbf{Auto refresh:} internal counters generate refresh address
-
-\vspace{0.5cm}
 \begin{block}{Key Advantage}
-Multiple banks allow interleaving accesses - while one bank is being accessed, another can be preparing its row, improving overall throughput
+Bank interleaving: while accessing one bank, another prepares its row $\rightarrow$ higher throughput
 \end{block}
 \end{frame}
 
