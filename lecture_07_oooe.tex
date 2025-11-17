@@ -1268,7 +1268,7 @@
   \textbf{ROB}
 
   \vspace{0.2cm}
-  \small
+  \footnotesize
   \begin{tabular}{|c|c|c|c|c|}
   \hline
   \rowcolor{cyan!20}
@@ -1352,7 +1352,7 @@
   \textbf{RS}
 
   \vspace{0.2cm}
-  \small
+  \footnotesize
   \begin{tabular}{|c|c|c|c|c|c|c|}
   \hline
   \rowcolor{orange!20}
@@ -1374,9 +1374,10 @@
 
   \vspace{0.1cm}
   \centering
-  \small
+  \footnotesize
   \begin{tabular}{|l|c|l|}
     \hline
+    \rowcolor{orange!20}
     \textbf{Operand from} & \textbf{Data valid} & \textbf{Get value from} \\
     \hline
     Architectural register & 1 & ARF \\
@@ -1396,8 +1397,8 @@
 
     \item Each cycle, executed instructions make more operands ``ready''
     \begin{itemize}
-      \item The RS arbitrates the write-back busses between the execution units
-      \item The RS monitors the write-back buses to capture data needed by awaiting instructions
+      \item RS arbitrates the write-back busses between the execution units
+      \item RS monitors the write-back buses to capture data needed by awaiting instructions
       \item Data can be bypassed directly from a write-back bus to execution unit
     \end{itemize}
 
@@ -1413,14 +1414,33 @@
   \vspace{0.3cm}
   \centering
   \begin{tikzpicture}
-    \node[draw, fill=green!20, minimum width=2cm, minimum height=1cm] (rs) {RS};
-    \node[draw, fill=blue!20, minimum width=2cm, minimum height=1cm, below=1cm of rs] (execute) {Execute};
-    \draw[->, thick, red] ([xshift=-5mm]execute.north) -- ([xshift=-5mm]rs.south);
-    \draw[->, thick, red] (execute.north) -- (rs.south);
-    \draw[->, thick, red] ([xshift=5mm]execute.north) -- ([xshift=5mm]rs.south);
-    \node[right=0.5cm of rs, align=left] {Write-Back Bus};
-    \draw[->, thick] ([yshift=2mm]rs.south) -- ([yshift=2mm]execute.north);
-    \draw[->, thick] ([yshift=-2mm]rs.south) -- ([yshift=-2mm]execute.north);
+    % RS and Execute blocks
+    \node[draw, fill=orange!20, minimum width=3cm, minimum height=0.6cm] (rs) {\textbf{RS}};
+    \node[draw, fill=highlightorange, minimum width=3cm, minimum height=0.6cm, below=0.8cm of rs] (execute) {\textbf{Execute}};
+
+    % Arrows from Execute to RS (Write-Back) with increasing xshift
+    \foreach \i in {1,2,3,4} {
+      \pgfmathsetmacro\shift{\i*2}
+      \draw[->, thick, red] ([xshift=\shift mm]execute.north) -- ([xshift=\shift mm]rs.south);
+    }
+
+    % Arrows from RS to Execute (Dispatch) with negative xshift
+    \foreach \i in {1,2,3,4} {
+      \pgfmathsetmacro\shift{-\i*2}
+      \draw[->, thick, blue] ([xshift=\shift mm]rs.south) -- ([xshift=\shift mm]execute.north);
+    }
+
+    % Curved arrows from Execute (Bypass) with positive xshift to xshift-10mm
+    \foreach \i in {1,2,3,4} {
+      \pgfmathsetmacro\startshift{\i*2}
+      \pgfmathsetmacro\endshift{\i*2-10}
+      \draw[->, thick, green!70!black, bend right=90] ([xshift=\startshift mm]execute.north) to ([xshift=\endshift mm]execute.north);
+    }
+
+    % Labels
+    \node[right=0.2cm of rs.east, align=left, font=\small] {Write-Back Bus};
+    \node[left=0.2cm of rs.west, align=right, font=\small] {Dispatch};
+    \node[above=0.1cm of execute.north east, align=left, font=\small] {Bypass};
   \end{tikzpicture}
 \end{frame}
 
@@ -1462,39 +1482,37 @@
   \begin{itemize}
     \item \textbf{Perform register allocation and renaming for $\leq$4 instructions/cyc}
 
-    \vspace{0.2cm}
-
-    \item \textbf{The Register Alias Table maps architectural registers into physical registers}
+    \item \textbf{Register Alias Table (RAT) maps architectural to physical registers}
     \begin{itemize}
-      \item For each arch register, holds the number of latest physical register that updates it
-      \item When a new instruction that writes to arch register R is allocated:
+      \item Holds the latest physical register number that updates each architectural register
+      \item When allocating an instruction writing to arch register R:
       \begin{itemize}
-        \item Map R to the physical register which is used as the instruction destination
+        \item Map R to the physical register assigned as destination
       \end{itemize}
     \end{itemize}
 
-    \vspace{0.2cm}
-
-    \item \textbf{The Allocator}
+    \item \textbf{Allocator assigns ROB/RS entries and resolves sources}
     \begin{itemize}
-      \item Assigns to each instruction an entry number in the ROB / RS
-      \item For each one of the sources (architectural registers) of the instruction:
+      \item Assigns entry number in ROB and RS
+      \item For each source (architectural register):
       \begin{itemize}
-        \item Lookup the Register Alias Table to find out the latest physical reg updating it
-        \item Write it up in the RS entry
+        \item Lookup RAT to find latest physical register
+        \item Record in RS entry
       \end{itemize}
     \end{itemize}
   \end{itemize}
 
-  \vspace{0.3cm}
+  \vspace{0.2cm}
   \centering
   \begin{minipage}{5cm}
   \centering
   \textbf{RAT}
 
   \vspace{0.2cm}
+  \small
   \begin{tabular}{|l|c|l|}
   \hline
+  \rowcolor{purple!20}
   \textbf{Arch Reg} & \textbf{Phys Reg} & \textbf{Location} \\
   \hline
   R1 & 1 & ARF \\
