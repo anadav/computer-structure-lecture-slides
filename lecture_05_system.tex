@@ -1454,14 +1454,14 @@ Layered design ensures reliable delivery of packets across the PCIe link
 \node[box, fill=gray!20, minimum width=1.5cm] (header) at (0,0) {Header};
 \node[box, fill=white, minimum width=3cm, anchor=west] (data) at (header.east) {Data};
 
-% Transaction Layer label - right of Data
-\node[layer, anchor=west] (translayer) at ([xshift=1.5cm]data.east) {\textbf{Transaction Layer}};
 
-% Dashed line separator below
-\draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]header.south west) -- ([yshift=-3mm]translayer.east |- header.south);
 
-% T-Layer Packet - below data with yshift=-6mm
-\node[box, fill=blue!20, minimum width=2.5cm, anchor=north west] (tlpacket) at ([yshift=-6mm]data.south west) {T-Layer Packet};
+% T-Layer Packet - below header, spanning from header.west to data.east
+\node[box, fill=blue!20, anchor=north west, minimum width=4.5cm] (tlpacket) at ([yshift=-6mm]header.south west) {T-Layer Packet};
+
+% Dashed lines showing T-Layer includes header and data
+\draw[dashed, thick] (header.south west) -- (tlpacket.north west);
+\draw[dashed, thick] (data.south east) -- (tlpacket.north east);
 
 % Packet Sequence Number - left of T-Layer Packet, wider and exactly 2 rows
 \node[box, fill=green!20, minimum width=2.8cm, anchor=east] (pseq) at (tlpacket.west) {Packet Sequence\\Number};
@@ -1469,21 +1469,30 @@ Layered design ensures reliable delivery of packets across the PCIe link
 % CRC - right of T-Layer Packet, adjacent
 \node[box, fill=red!20, minimum width=1cm, anchor=west] (crc1) at (tlpacket.east) {CRC};
 
-% Link Layer label - positioned at CRC -| translayer.west, anchored west
-\node[layer, anchor=west] (linklayer) at (crc1.east -| translayer.west) {\textbf{Link Layer}};
 
-% Dashed line separator below
-\draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]pseq.south west) -- ([yshift=-3mm]linklayer.east |- pseq.south);
+% L-Layer Packet - below pseq, spanning from pseq.west to crc1.east
+\node[box, fill=green!20, minimum width=8.3cm, anchor=north west] (llpacket) at ([yshift=-6mm]pseq.south west) {L-Layer Packet};
 
-% L-Layer Packet - below T-Layer Packet with yshift=-6mm
-\node[box, fill=green!20, minimum width=4.5cm, anchor=north west] (llpacket) at ([yshift=-6mm]tlpacket.south west) {L-Layer Packet};
+% Dashed lines showing L-Layer includes pseq, tlpacket, and crc1
+\draw[dashed, thick] (pseq.south west) -- (llpacket.north west);
+\draw[dashed, thick] (crc1.south east) -- (llpacket.north east);
 
 % Frame boxes - left and right of L-Layer Packet, touching
 \node[box, fill=orange!30, minimum width=1cm, anchor=east] (frame1) at (llpacket.west) {Frame};
 \node[box, fill=orange!30, minimum width=1cm, anchor=west] (frame2) at (llpacket.east) {Frame};
 
 % Physical Layer label - positioned similarly
-\node[layer, anchor=west] (physlayer) at (frame2.east -| translayer.west) {\textbf{Physical Layer}};
+\node[layer, right=of frame2] (physlayer) {\textbf{Physical Layer}};
+\node[layer, anchor=east] (linklayer) at (crc1 -| physlayer.east) {\textbf{Link Layer}};
+\node[layer, anchor=east] (translayer) at (data -| physlayer.east) {\textbf{Transaction Layer}};
+
+% Dashed line separator below
+\draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]header.south -| pseq.west) -- ([yshift=-3mm]translayer.east |- header.south);
+\draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]pseq.south west) -- ([yshift=-3mm]linklayer.east |- pseq.south);
+
+% Arrows between layers
+\draw[<->, thick] (linklayer.south) -- (physlayer.north -| linklayer);
+\draw[<->, thick] (linklayer.north) -- (translayer.south -| linklayer);
 
 \end{tikzpicture}
 \end{center}
