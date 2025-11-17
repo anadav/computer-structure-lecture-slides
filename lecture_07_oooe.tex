@@ -1247,32 +1247,34 @@
 
 \begin{frame}{The Re-order Buffer (ROB)}
   \begin{itemize}
-    \item \textbf{Holds instructions from allocation and until retirement}
+    \item \textbf{Holds instructions from allocation until retirement}
     \begin{itemize}
-      \item At the same order as in the program
+      \item Maintains program order
     \end{itemize}
 
-    \item \textbf{Provides a large physical register space for register renaming}
+    \item \textbf{Provides physical register space for register renaming}
     \begin{itemize}
-      \item One physical register per each ROB entry
-      \item Each instruction has at most one destination
+      \item One physical register per ROB entry
       \item Physical register number = ROB entry number
-      \item Buffers the execution results until retirement
-      \item \emph{Data Valid} is set after instruction executed and result written to physical reg
+      \item Each instruction has at most one destination register
+      \item Buffers execution results until retirement
     \end{itemize}
   \end{itemize}
 
   \vspace{0.3cm}
   \centering
-  \begin{minipage}{6cm}
+  \begin{minipage}{6.5cm}
   \centering
   \textbf{ROB}
 
   \vspace{0.2cm}
+  \small
   \begin{tabular}{|c|c|c|c|c|}
   \hline
+  \rowcolor{cyan!20}
   \textbf{Phys Reg} & \textbf{Alloc} & \multicolumn{2}{c|}{\textbf{Data}} & \textbf{Arch} \\
-  \textbf{(ROB)} & & \textbf{V} & \textbf{Value} & \textbf{Reg} \\
+  \rowcolor{cyan!20}
+  \textbf{(ROB\#)} & & \textbf{V} & \textbf{Value} & \textbf{Reg} \\
   \hline
   0 & 1 & 1 & 12H & R2 \\
   \hdashline[2pt/2pt]
@@ -1287,22 +1289,26 @@
   \end{tabular}
 
   \vspace{0.2cm}
-  {\footnotesize Legend: 1=Valid, 0=Invalid, x=Don't care}
+  {\footnotesize
+  \textbf{Fields:} Phys Reg=Physical register number, Alloc=Entry allocated (1/0), Data V=Data valid (1/0), Arch Reg=Destination architectural register
+  }
   \end{minipage}
 \end{frame}
 
 \begin{frame}{ARF -- Architectural Register File}
   \begin{itemize}
-    \item \textbf{Holds the Architectural Register File}
+    \item \textbf{Stores committed architectural register values}
     \begin{itemize}
-      \item Architectural Registers are numbered: 0 -- R0, 1 -- R1, \dots
+      \item Contains the architectural state visible to the program
+      \item Architectural registers: R0, R1, R2, \dots
     \end{itemize}
 
     \vspace{0.3cm}
 
-    \item \textbf{The value of an architectural register}
+    \item \textbf{Register values updated at retirement}
     \begin{itemize}
-      \item is the value written to it by the last instruction committed which writes to this register
+      \item Value = result from last committed instruction that wrote to this register
+      \item Provides values for instructions when no in-flight rename exists
     \end{itemize}
   \end{itemize}
 
@@ -1313,8 +1319,10 @@
   \textbf{ARF}
 
   \vspace{0.2cm}
+  \small
   \begin{tabular}{|c|c|}
   \hline
+  \rowcolor{blue!20}
   \textbf{Arch Reg} & \textbf{Value} \\
   \hline
   R0 & 9AH \\
@@ -1329,23 +1337,28 @@
 
 \begin{frame}{Reservation Station (RS)}
   \begin{itemize}
-    \item \textbf{Pool of all ``not yet executed'' instructions}
+    \item \textbf{Pool of instructions waiting for execution}
     \begin{itemize}
-      \item Holds the instruction's attributes and source data until it is executed
+      \item Holds instruction operation and source operands
+      \item Tracks operand readiness (valid flag)
+      \item Instructions dispatch to execution units when operands ready
     \end{itemize}
   \end{itemize}
 
   \vspace{0.3cm}
   \centering
-  \begin{minipage}{7.5cm}
+  \begin{minipage}{8cm}
   \centering
   \textbf{RS}
 
   \vspace{0.2cm}
+  \small
   \begin{tabular}{|c|c|c|c|c|c|c|}
   \hline
+  \rowcolor{orange!20}
   \textbf{Entry} & \textbf{op} & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
-  \textbf{Valid} & & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
+  \rowcolor{orange!20}
+  \textbf{Valid} & & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB\#)} \\
   \hline
   1 & add & 1 & 97H & 1 & 12H & 37 \\
   \hdashline[2pt/2pt]
@@ -1354,29 +1367,30 @@
   \end{tabular}
   \end{minipage}
 
-  \vspace{0.5cm}
+  \vspace{0.4cm}
   \begin{itemize}
-    \item \textbf{When an instruction is allocated in RS, operand values are updated}
+    \item \textbf{Operand value sourcing at allocation:}
   \end{itemize}
 
-  \vspace{0.2cm}
+  \vspace{0.1cm}
   \centering
+  \small
   \begin{tabular}{|l|c|l|}
     \hline
     \textbf{Operand from} & \textbf{Data valid} & \textbf{Get value from} \\
     \hline
-    architectural register & 1 & ARF \\
+    Architectural register & 1 & ARF \\
     \hline
-    physical register & 1 & ROB \\
+    Physical register (ready) & 1 & ROB \\
     \hline
-    & 0 & Wait for value \\
+    Physical register (not ready) & 0 & Wait for broadcast \\
     \hline
   \end{tabular}
 \end{frame}
 
 \begin{frame}{Reservation Station (RS) - Operation}
   \begin{itemize}
-    \item \textbf{The RS maintains operands status ``ready/not-ready''}
+    \item \textbf{RS maintains operands status ``ready/not-ready''}
 
     \vspace{0.3cm}
 
@@ -1514,18 +1528,18 @@
       }
       \only<2>{
       \textbf{Actions:}\\[0.05cm]
+      - \textbf{Read sources BEFORE renaming:} ARF(R1), ROB19(R2)\\
       - Allocate ROB37 for R1\\
       - Update RAT: R1 $\rightarrow$ ROB37\\
-      - Get sources: ARF(R1), ROB19(R2)\\
       - Add to RS with both operands ready\\
-      - ROB37: Alloc=V, Data Valid=I
+      - ROB37: Alloc=1, Data Valid=0
       }
       \only<3>{
       \textbf{Actions:}\\[0.05cm]
       - Allocate ROB38 for R1\\
       - Update RAT: R1 $\rightarrow$ ROB38\\
       - Get sources: ROB23(R3), ROB37(R1)\\
-      - ROB37 used as input (prev instr)\\
+      - ROB37 used as input (previous instruction)\\
       - \texttt{sub} waits in RS for ROB37
       }
     };
