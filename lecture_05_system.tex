@@ -1996,5 +1996,132 @@ Binary representation of hardware topology, typically loaded from flash or passe
 \textbf{Both solve the same problem:} Tell the OS what hardware exists and how to use it
 \end{frame}
 
+\section{Storage Media}
+
+% Slide: Storage Hierarchy
+\begin{frame}{Storage Media Hierarchy}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Storage Type} & \textbf{Typical Latency} & \textbf{Capacity} & \textbf{Volatile} \\
+\hline
+\textbf{DRAM} & 50-100 ns & GB & Yes \\
+\hline
+\textbf{NVMe SSD} & 10-100 $\mu$s & TB & No \\
+\hline
+\textbf{SATA SSD} & 50-150 $\mu$s & TB & No \\
+\hline
+\textbf{HDD} & 5-10 ms & TB & No \\
+\hline
+\textbf{Tape} & seconds & PB & No \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Key characteristics:}
+\begin{itemize}
+\item \textbf{Latency}: Access time increases dramatically down the hierarchy
+\item \textbf{Capacity}: Storage capacity increases down the hierarchy
+\item \textbf{Cost per byte}: Decreases down the hierarchy
+\item \textbf{Bandwidth}: Generally decreases down the hierarchy
+\item \textbf{Endurance}: Flash has limited write cycles (1K-100K); DRAM/HDD/Tape unlimited
+\end{itemize}
+\end{frame}
+
+% Slide: HDD vs SSD
+\begin{frame}{HDD vs SSD}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{HDD (Hard Disk Drive)}
+\begin{itemize}
+\item Mechanical spinning platters
+\item Magnetic storage
+\item Sequential read: 100-200 MB/s
+\item Random access: 5-10 ms
+\item Moving parts $\rightarrow$ fragile
+\item Cheaper per GB
+\item Limited IOPS ($\sim$100-200)
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{SSD (Solid State Drive)}
+\begin{itemize}
+\item NAND flash memory
+\item Electronic storage
+\item Sequential read: 500-7000 MB/s
+\item Random access: 10-100 $\mu$s
+\item No moving parts
+\item More expensive per GB
+\item High IOPS ($\sim$100K-1M)
+\item Write endurance limit
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\textbf{SSDs dominate modern systems} due to performance advantages
+\end{frame}
+
+% Slide: Flash Memory Types
+\begin{frame}{Flash Memory: SLC/MLC/TLC/QLC}
+\textbf{NAND flash stores multiple bits per cell}
+
+\vspace{0.2cm}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Type} & \textbf{Bits/Cell} & \textbf{Endurance} & \textbf{Performance} & \textbf{Cost} \\
+\hline
+\textbf{SLC} (Single) & 1 & \textcolor{green!60!black}{100K cycles} & \textcolor{green!60!black}{Fastest} & \textcolor{red}{Highest} \\
+\hline
+\textbf{MLC} (Multi) & 2 & 10K cycles & Fast & High \\
+\hline
+\textbf{TLC} (Triple) & 3 & 3K cycles & Medium & Medium \\
+\hline
+\textbf{QLC} (Quad) & 4 & \textcolor{red}{1K cycles} & \textcolor{red}{Slower} & \textcolor{green!60!black}{Lowest} \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+\textbf{Trade-offs:}
+\begin{itemize}
+\item More bits per cell $\rightarrow$ higher density, lower cost
+\item More bits per cell $\rightarrow$ lower endurance, slower writes
+\item \textbf{SLC}: Enterprise, high-performance applications
+\item \textbf{TLC/QLC}: Consumer SSDs, cost-sensitive applications
+\end{itemize}
+\end{frame}
+
+% Slide: NVMe vs SATA
+\begin{frame}{Storage Interfaces: NVMe vs SATA}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{SATA (Serial ATA)}
+\begin{itemize}
+\item Legacy interface for HDDs
+\item SATA III: 6 Gb/s ($\sim$600 MB/s)
+\item Single queue, 32 commands
+\item Higher latency overhead
+\item Designed for spinning disks
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{NVMe (NVM Express)}
+\begin{itemize}
+\item PCIe-based interface
+\item PCIe 4.0 x4: 64 Gb/s ($\sim$7 GB/s)
+\item 64K queues, 64K commands each
+\item Low latency, optimized for flash
+\item Parallelism for high IOPS
+\end{itemize}
+\end{columns}
+
+\vspace{0.4cm}
+\begin{block}{NVMe Advantage}
+NVMe reduces CPU overhead and latency by using PCIe directly instead of SATA controller, enabling full flash performance
+\end{block}
+\end{frame}
+
 
 \end{document}
