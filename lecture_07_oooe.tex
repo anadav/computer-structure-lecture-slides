@@ -10,10 +10,11 @@
 \usepackage{bytefield}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit, matrix}
 \usepackage{tcolorbox}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
+\usepackage{arydshln}
 
 \usetheme{Madrid}
 \usecolortheme{default}
@@ -22,6 +23,8 @@
 \definecolor{mygreen}{RGB}{0,128,0}
 \definecolor{myblue}{RGB}{0,0,255}
 \definecolor{myred}{RGB}{255,0,0}
+\definecolor{lightblue}{RGB}{200,230,250}
+\definecolor{highlightorange}{RGB}{255,200,100}
 
 % Define colors for registers
 \definecolor{r1color}{RGB}{255,0,0}
@@ -1239,6 +1242,611 @@
           $\bullet$ Reclaim ROB entry and physical register};
       }
     \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{The Re-order Buffer (ROB)}
+  \begin{itemize}
+    \item \textbf{Holds instructions from allocation and until retirement}
+    \begin{itemize}
+      \item At the same order as in the program
+    \end{itemize}
+
+    \item \textbf{Provides a large physical register space for register renaming}
+    \begin{itemize}
+      \item One physical register per each ROB entry
+      \item Each instruction has at most one destination
+      \item Physical register number = ROB entry number
+      \item Buffers the execution results until retirement
+      \item \emph{Data Valid} is set after instruction executed and result written to physical reg
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.3cm}
+  \centering
+  \begin{tikzpicture}
+    \node[font=\small] at (-2.5,0) {\textbf{ROB:}};
+    \matrix (rob) [matrix of nodes,
+      nodes={draw, minimum width=1.2cm, minimum height=0.6cm, anchor=center, font=\footnotesize},
+      row sep=-\pgflinewidth,
+      column sep=-\pgflinewidth,
+      column 1/.style={nodes={minimum width=0.8cm, fill=blue!10}},
+      column 2/.style={nodes={minimum width=0.9cm}},
+      column 3/.style={nodes={minimum width=0.9cm}},
+      column 4/.style={nodes={minimum width=1.5cm}},
+      column 5/.style={nodes={minimum width=1.5cm}},
+      ampersand replacement=\&
+      ] {
+      |[fill=blue!20]| \textbf{\#entry} \& |[fill=blue!20]| \textbf{Entry} \& |[fill=blue!20]| \textbf{Data} \& |[fill=blue!20]| \textbf{Physical Reg} \& |[fill=blue!20]| \textbf{Architectural} \\
+      \& |[fill=blue!20]| \textbf{Valid} \& |[fill=blue!20]| \textbf{Valid} \& |[fill=blue!20]| \textbf{Data} \& |[fill=blue!20]| \textbf{dest. reg} \\
+      0 \& 1 \& 1 \& 12H \& R2 \\
+      1 \& 1 \& 1 \& 33H \& R3 \\
+      2 \& 1 \& 0 \& xxx \& R8 \\
+      \dots \& \dots \& \dots \& \dots \& \dots \\
+      39 \& 0 \& 0 \& xxx \& XXX \\
+    };
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{ARF -- Architectural Register File}
+  \begin{itemize}
+    \item \textbf{Holds the Architectural Register File}
+    \begin{itemize}
+      \item Architectural Registers are numbered: 0 -- R0, 1 -- R1, \dots
+    \end{itemize}
+
+    \vspace{0.3cm}
+
+    \item \textbf{The value of an architectural register}
+    \begin{itemize}
+      \item is the value written to it by the last instruction committed which writes to this register
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.5cm}
+  \centering
+  \begin{tikzpicture}
+    \node[font=\small] at (-1.5,0) {\textbf{ARF:}};
+    \matrix (arf) [matrix of nodes,
+      nodes={draw, minimum width=1.5cm, minimum height=0.6cm, anchor=center, font=\footnotesize},
+      row sep=-\pgflinewidth,
+      column sep=-\pgflinewidth,
+      column 1/.style={nodes={fill=blue!10}},
+      ampersand replacement=\&
+      ] {
+      |[fill=blue!20]| \textbf{\#entry} \& |[fill=blue!20]| \textbf{Arch Reg Data} \\
+      0 (R0) \& 9AH \\
+      1 (R1) \& F34H \\
+      \dots \& \dots \\
+    };
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Reservation Station (RS)}
+  \begin{itemize}
+    \item \textbf{Pool of all ``not yet executed'' instructions}
+    \begin{itemize}
+      \item Holds the instruction's attributes and source data until it is executed
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.3cm}
+  \centering
+  \begin{tikzpicture}
+    \node[font=\small] at (-3.5,0.3) {\textbf{RS}};
+    \matrix (rs) [matrix of nodes,
+      nodes={draw, minimum width=1cm, minimum height=0.6cm, anchor=center, font=\footnotesize},
+      row sep=-\pgflinewidth,
+      column sep=-\pgflinewidth,
+      column 1/.style={nodes={minimum width=0.8cm}},
+      column 2/.style={nodes={minimum width=0.9cm}},
+      column 3/.style={nodes={minimum width=0.8cm}},
+      column 4/.style={nodes={minimum width=1.1cm}},
+      column 5/.style={nodes={minimum width=0.8cm}},
+      column 6/.style={nodes={minimum width=0.9cm}},
+      column 7/.style={nodes={minimum width=0.8cm}},
+      column 8/.style={nodes={minimum width=0.9cm}},
+      ampersand replacement=\&
+      ] {
+      |[fill=orange!30]| \textbf{Entry} \& |[fill=orange!30]| \textbf{opcode} \& |[fill=orange!30]| \textbf{src1} \& |[fill=orange!30]| \textbf{src1} \& |[fill=orange!30]| \textbf{src2} \& |[fill=orange!30]| \textbf{src2} \& |[fill=orange!30]| \textbf{Pdst} \\
+      |[fill=orange!30]| \textbf{valid} \& \& |[fill=orange!30]| \textbf{data} \& |[fill=orange!30]| \textbf{valid} \& |[fill=orange!30]| \textbf{data} \& |[fill=orange!30]| \textbf{valid} \& \\
+      1 \& add \& 1 \& 97H \& 1 \& 12H \& 37 \\
+      1 \& sub \& 0 \& rob37 \& 1 \& 33H \& 38 \\
+    };
+  \end{tikzpicture}
+
+  \vspace{0.5cm}
+  \begin{itemize}
+    \item \textbf{When an instruction is allocated in RS, operand values are updated}
+  \end{itemize}
+
+  \vspace{0.2cm}
+  \centering
+  \begin{tabular}{|l|c|l|}
+    \hline
+    \textbf{Operand from} & \textbf{Data valid} & \textbf{Get value from} \\
+    \hline
+    architectural register & 1 & ARF \\
+    \hline
+    physical register & 1 & ROB \\
+    \hline
+    & 0 & Wait for value \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Reservation Station (RS) - Operation}
+  \begin{itemize}
+    \item \textbf{The RS maintains operands status ``ready/not-ready''}
+
+    \vspace{0.3cm}
+
+    \item Each cycle, executed instructions make more operands ``ready''
+    \begin{itemize}
+      \item The RS arbitrates the write-back busses between the execution units
+      \item The RS monitors the write-back buses to capture data needed by awaiting instructions
+      \item Data can be bypassed directly from a write-back bus to execution unit
+    \end{itemize}
+
+    \vspace{0.3cm}
+
+    \item Instructions for which all operands are ready can be \emph{dispatched} for execution
+    \begin{itemize}
+      \item Dispatcher chooses which of the \emph{ready} instructions to execute next
+      \item Dispatches chosen instructions to Execution Units
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.3cm}
+  \centering
+  \begin{tikzpicture}
+    \node[draw, fill=green!20, minimum width=2cm, minimum height=1cm] (rs) {RS};
+    \node[draw, fill=blue!20, minimum width=2cm, minimum height=1cm, below=1cm of rs] (execute) {Execute};
+    \draw[->, thick, red] ([xshift=-5mm]execute.north) -- ([xshift=-5mm]rs.south);
+    \draw[->, thick, red] (execute.north) -- (rs.south);
+    \draw[->, thick, red] ([xshift=5mm]execute.north) -- ([xshift=5mm]rs.south);
+    \node[right=0.5cm of rs, align=left] {Write-Back Bus};
+    \draw[->, thick] ([yshift=2mm]rs.south) -- ([yshift=2mm]execute.north);
+    \draw[->, thick] ([yshift=-2mm]rs.south) -- ([yshift=-2mm]execute.north);
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Getting the Value of a Source Register}
+  \textbf{Assume:} instruction X with architectural destination register Rj is allocated a physical register PRi (i.e., the instruction is allocated in ROB entry i)
+
+  \vspace{0.3cm}
+
+  \begin{itemize}
+    \item \textbf{When instruction X finishes its execution}
+    \begin{itemize}
+      \item Write the result to PRi
+      \item Match PRi against the physical sources of each instruction in the RS, and write the value of PRi to all matching sources in the RS
+    \end{itemize}
+
+    \vspace{0.2cm}
+
+    \item \textbf{As long as no subsequent instruction has Rj as architectural destination register, and as long as instruction X does not retire, Rj remains mapped to PRi}
+    \begin{itemize}
+      \item For subsequent instructions allocated to the RS that have Rj as architectural source, their source is mapped to PRi, and they get the value of PRi from instruction X ROB entry
+      \item This value is written as the source data in the RS upon allocation (and marked data valid)
+    \end{itemize}
+
+    \vspace{0.2cm}
+
+    \item \textbf{When instruction X commits}
+    \begin{itemize}
+      \item Copy the value from the physical register, PRi, to the architectural register Rj in the ARF
+      \item If the current mapping of the instruction's architectural destination register, Rj, is still the physical register allocated to the instruction, PRi:
+      \begin{itemize}
+        \item Set Rj's mapping to be architectural -- mapped to Rj in the ARF (Arch register file)
+        \item As long as there is no subsequent instruction write to Rj, subsequent instructions that use Rj as source get the value of Rj from the ARF
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Allocation and Renaming}
+  \begin{itemize}
+    \item \textbf{Perform register allocation and renaming for $\leq$4 instructions/cyc}
+
+    \vspace{0.2cm}
+
+    \item \textbf{The Register Alias Table maps architectural registers into physical registers}
+    \begin{itemize}
+      \item For each arch register, holds the number of latest physical register that updates it
+      \item When a new instruction that writes to arch register R is allocated:
+      \begin{itemize}
+        \item Map R to the physical register which is used as the instruction destination
+      \end{itemize}
+    \end{itemize}
+
+    \vspace{0.2cm}
+
+    \item \textbf{The Allocator}
+    \begin{itemize}
+      \item Assigns to each instruction an entry number in the ROB / RS
+      \item For each one of the sources (architectural registers) of the instruction:
+      \begin{itemize}
+        \item Lookup the Register Alias Table to find out the latest physical reg updating it
+        \item Write it up in the RS entry
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.3cm}
+  \centering
+  \begin{tikzpicture}
+    \node[font=\small] at (-1.5,0) {\textbf{RAT:}};
+    \matrix (rat) [matrix of nodes,
+      nodes={draw, minimum width=1.2cm, minimum height=0.5cm, anchor=center, font=\footnotesize},
+      row sep=-\pgflinewidth,
+      column sep=-\pgflinewidth,
+      column 1/.style={nodes={fill=blue!10}},
+      ampersand replacement=\&
+      ] {
+      |[fill=blue!20]| \textbf{Arch reg} \& |[fill=blue!20]| \textbf{\#reg} \& |[fill=blue!20]| \textbf{Location} \\
+      R1 \& 1 \& ARF \\
+      R2 \& 19 \& ROB \\
+      R3 \& 23 \& ROB \\
+    };
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Register Renaming Example}
+  \begin{tikzpicture}[font=\tiny, remember picture, overlay]
+    % Explanation box in top left corner
+    \node[draw, fill=yellow!10, inner sep=5pt, text width=5.5cm, align=left, anchor=north west] at ([xshift=0.2cm, yshift=-1.5cm]current page.north west) {
+      \tiny
+      \only<1>{
+      \textbf{Step 1: First Instruction}\\[0.1cm]
+      Instruction: \texttt{add R1$\leftarrow$R2,R1}\\[0.05cm]
+      - Allocate ROB37 for R1\\
+      - Update RAT: R1 maps to ROB37\\
+      - Get sources from ARF(R1) and ROB19(R2)\\
+      - Add entry to RS with both operands ready\\
+      - ROB37 marked allocated but data invalid
+      }
+      \only<2>{
+      \textbf{Step 2: After Execution}\\[0.1cm]
+      - Instruction \texttt{add} completes execution\\
+      - ROB37 data now valid (109H = 97H + 12H)\\
+      - RS entry for \texttt{add} removed\\
+      - Instruction ready to retire
+      }
+      \only<3>{
+      \textbf{Step 3: Second Instruction}\\[0.1cm]
+      Instruction: \texttt{sub R1$\leftarrow$R3,R1}\\[0.05cm]
+      - Allocate ROB38 for R1\\
+      - Update RAT: R1 now maps to ROB38\\
+      - Get sources from ROB23(R3) and ROB37(R1)\\
+      - RS entry waits for ROB37 (valid=0)\\
+      - Shows WAW eliminated by renaming
+      }
+    };
+  \end{tikzpicture}
+
+  \centering
+  \begin{tikzpicture}[font=\tiny]
+    % IDQ at top
+    \only<1>{
+      \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ: add R1$\leftarrow$R2,R1}};
+    }
+    \only<2>{
+      \node[draw, fill=green!30, inner sep=5pt] (idq) {\textbf{Executing add...}};
+    }
+    \only<3>{
+      \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ: sub R1$\leftarrow$R3,R1}};
+    }
+
+    % RAT below IDQ
+    \node[fill=green!10, inner sep=5pt, below=0.4cm of idq] (rat) {
+      \begin{minipage}{4cm}
+      \centering
+      \textbf{RAT}
+
+      \vspace{0.1cm}
+      \tiny
+      \only<1>{
+      \begin{tabular}{|l|c|l|}
+      \hline
+      \textbf{Arch} & \textbf{Phys} & \textbf{Loc} \\
+      \hline
+      R1 & \textcolor{red}{37} & \textcolor{red}{ROB} \\
+      \hdashline[2pt/2pt]
+      R2 & 19 & ROB \\
+      \hdashline[2pt/2pt]
+      R3 & 23 & ROB \\
+      \hline
+      \end{tabular}
+      }
+      \only<2>{
+      \begin{tabular}{|l|c|l|}
+      \hline
+      \textbf{Arch} & \textbf{Phys} & \textbf{Loc} \\
+      \hline
+      R1 & 37 & ROB \\
+      \hdashline[2pt/2pt]
+      R2 & 19 & ROB \\
+      \hdashline[2pt/2pt]
+      R3 & 23 & ROB \\
+      \hline
+      \end{tabular}
+      }
+      \only<3>{
+      \begin{tabular}{|l|c|l|}
+      \hline
+      \textbf{Arch} & \textbf{Phys} & \textbf{Loc} \\
+      \hline
+      R1 & \textcolor{red}{38} & \textcolor{red}{ROB} \\
+      \hdashline[2pt/2pt]
+      R2 & 19 & ROB \\
+      \hdashline[2pt/2pt]
+      R3 & 23 & ROB \\
+      \hline
+      \end{tabular}
+      }
+      \end{minipage}
+    };
+
+    % ROB below and left of RAT
+    \node[fill=cyan!10, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=-3.5cm] (rob) {
+      \begin{minipage}{4.2cm}
+      \centering
+      \textbf{ROB}
+
+      \vspace{0.1cm}
+      \tiny
+      \only<1>{
+      \begin{tabular}{|c|c|c|c|}
+      \hline
+      \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Arch} \\
+      \textbf{Reg} & & \textbf{Valid} & \textbf{Reg} \\
+      \hline
+      19 & V & V & R2 \\
+      \hdashline[2pt/2pt]
+      23 & V & V & R3 \\
+      \hdashline[2pt/2pt]
+      \textcolor{red}{37} & \textcolor{red}{V} & \textcolor{red}{I} & \textcolor{red}{R1} \\
+      \hdashline[2pt/2pt]
+      38 & I & x & xxx \\
+      \hline
+      \end{tabular}
+      }
+      \only<2>{
+      \begin{tabular}{|c|c|c|c|}
+      \hline
+      \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Arch} \\
+      \textbf{Reg} & & \textbf{Valid} & \textbf{Reg} \\
+      \hline
+      19 & V & V & R2 \\
+      \hdashline[2pt/2pt]
+      23 & V & V & R3 \\
+      \hdashline[2pt/2pt]
+      37 & V & \textcolor{blue!70!black}{V (109H)} & R1 \\
+      \hdashline[2pt/2pt]
+      38 & I & x & xxx \\
+      \hline
+      \end{tabular}
+      }
+      \only<3>{
+      \begin{tabular}{|c|c|c|c|}
+      \hline
+      \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Arch} \\
+      \textbf{Reg} & & \textbf{Valid} & \textbf{Reg} \\
+      \hline
+      19 & V & V & R2 \\
+      \hdashline[2pt/2pt]
+      23 & V & V & R3 \\
+      \hdashline[2pt/2pt]
+      37 & V & V & R1 \\
+      \hdashline[2pt/2pt]
+      \textcolor{red}{38} & \textcolor{red}{V} & \textcolor{red}{I} & \textcolor{red}{R1} \\
+      \hline
+      \end{tabular}
+      }
+      \end{minipage}
+    };
+
+    % RS below and right of RAT
+    \node[fill=orange!10, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=3.5cm] (rs) {
+      \begin{minipage}{5cm}
+      \centering
+      \textbf{RS}
+
+      \vspace{0.1cm}
+      \tiny
+      \only<1>{
+      \begin{tabular}{|c|c|c|c|c|c|}
+      \hline
+      & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
+      \textbf{op} & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
+      \hline
+      \textcolor{red}{add} & \textcolor{red}{1} & \textcolor{red}{97H} & \textcolor{red}{1} & \textcolor{red}{12H} & \textcolor{red}{37} \\
+      \hdashline[2pt/2pt]
+      -- & -- & -- & -- & -- & -- \\
+      \hline
+      \end{tabular}
+      }
+      \only<2>{
+      \begin{tabular}{|c|c|c|c|c|c|}
+      \hline
+      & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
+      \textbf{op} & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
+      \hline
+      -- & -- & -- & -- & -- & -- \\
+      \hdashline[2pt/2pt]
+      -- & -- & -- & -- & -- & -- \\
+      \hline
+      \end{tabular}
+      }
+      \only<3>{
+      \begin{tabular}{|c|c|c|c|c|c|}
+      \hline
+      & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
+      \textbf{op} & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
+      \hline
+      -- & -- & -- & -- & -- & -- \\
+      \hdashline[2pt/2pt]
+      \textcolor{red}{sub} & \textcolor{red}{0} & \textcolor{red}{rob37} & \textcolor{red}{1} & \textcolor{red}{33H} & \textcolor{red}{38} \\
+      \hline
+      \end{tabular}
+      }
+      \end{minipage}
+    };
+
+    % ARF below ROB
+    \node[fill=blue!15, inner sep=5pt, below=0.3cm of rob.south, anchor=north] (arf) {
+      \begin{minipage}{2cm}
+      \centering
+      \tiny
+      \textbf{ARF}
+
+      \begin{tabular}{|c|c|}
+      \hline
+      R1 & 97H \\
+      \hline
+      \end{tabular}
+      \end{minipage}
+    };
+
+    % Execute below RS
+    \node[draw, fill=highlightorange, inner sep=5pt, below=0.5cm of rs.south east, anchor=east] (execute) {\textbf{Execute}};
+
+    % Arrows
+    \draw[->, thick] (idq.south) -- (rat.north);
+    \draw[->, thick] (rat.south) -- ++(0,-0.3) -| (rob.north);
+    \draw[->, thick] (rat.south) -- ++(0,-0.3) -| (rs.north);
+    \draw[->, thick] (execute.north) -- (rs.south -| execute.north);
+    \draw[->, thick] (execute.west) -| ([xshift=3mm]rob.east) -- (rob.east);
+
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Out-of-Order Core: Execution Units}
+  \begin{center}
+  \begin{tikzpicture}[font=\footnotesize,
+    port/.style={draw, fill=green!20, minimum width=1.2cm, minimum height=3cm},
+    eu/.style={draw, fill=blue!15, minimum width=1cm, minimum height=0.4cm},
+    ]
+
+    % RS
+    \node[draw, fill=purple!20, minimum width=2.5cm, minimum height=2cm] (rs) {RS};
+
+    % Ports
+    \node[port, below right=1cm and 0.5cm of rs] (port0) {};
+    \node[above, font=\scriptsize] at (port0.north) {Port 0};
+
+    \node[port, right=0.3cm of port0] (port1) {};
+    \node[above, font=\scriptsize] at (port1.north) {Port 1};
+
+    \node[port, right=0.3cm of port1] (port2) {};
+    \node[above, font=\scriptsize] at (port2.north) {Port 2};
+
+    \node[port, right=0.3cm of port2] (port34) {};
+    \node[above, font=\scriptsize] at (port34.north) {Port 3,4};
+
+    % Execution units in Port 0
+    \node[eu] at (port0.center) (ieu0) {\tiny IEU};
+    \node[eu, above=0.1cm of ieu0] (fau) {\tiny FAU};
+    \node[eu, above=0.1cm of fau] (idiv) {\tiny IDIV};
+    \node[eu, above=0.1cm of idiv] (fdiv) {\tiny FDIV};
+    \node[eu, above=0.1cm of fdiv] (fmu) {\tiny FMU};
+    \node[eu, above=0.1cm of fmu] (shf) {\tiny SHF};
+
+    % Execution units in Port 1
+    \node[eu] at (port1.center) (ieu1) {\tiny IEU};
+    \node[eu, above=0.1cm of ieu1] (jeu) {\tiny JEU};
+
+    % Execution units in Port 2
+    \node[eu] at (port2.center) (agu2) {\tiny AGU};
+    \node[right=0.1cm of agu2, font=\tiny] {Load Address};
+
+    % Execution units in Port 3,4
+    \node[eu] at (port34.center) (agu34) {\tiny AGU};
+    \node[right=0.1cm of agu34, font=\tiny] {Store Address};
+
+    % SDB and Data Cache
+    \node[draw, fill=yellow!20, minimum width=0.8cm, minimum height=0.6cm, below=0.3cm of port34] (sdb) {\tiny SDB};
+    \node[draw, fill=gray!20, minimum width=1cm, minimum height=0.6cm, right=0.2cm of sdb] (dcache) {\tiny Data \$};
+
+    % Arrows from RS to ports
+    \foreach \p in {port0, port1, port2, port34} {
+      \draw[->, thick] (rs.south) -- (\p.north);
+      \draw[<-, thick, red] ([xshift=-3mm]rs.south) -- ([xshift=-3mm]\p.north);
+    }
+
+    % Labels for bypass levels
+    \node[above left=0.2cm and 0cm of rs, align=center, font=\tiny] {2nd\\bypass\\in RS};
+    \node[above=2.5cm of port1, align=center, font=\tiny] {1st\\bypass};
+    \node[above right=0.5cm and 0.2cm of port0, align=center, font=\tiny] {internal 0-delay\\bypass within\\each EU};
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Execution Units Bypasses}
+  \begin{center}
+  \begin{tikzpicture}[font=\footnotesize,
+    port/.style={draw, fill=green!20, minimum width=1.2cm, minimum height=3cm},
+    eu/.style={draw, fill=blue!15, minimum width=1cm, minimum height=0.4cm},
+    ]
+
+    % RS
+    \node[draw, fill=purple!20, minimum width=2.5cm, minimum height=2cm] (rs) {RS};
+
+    % Ports
+    \node[port, below right=1cm and 0.5cm of rs] (port0) {};
+    \node[above, font=\scriptsize] at (port0.north) {Port 0};
+
+    \node[port, right=0.3cm of port0] (port1) {};
+    \node[above, font=\scriptsize] at (port1.north) {Port 1};
+
+    \node[port, right=0.3cm of port1] (port2) {};
+    \node[above, font=\scriptsize] at (port2.north) {Port 2};
+
+    \node[port, right=0.3cm of port2] (port34) {};
+    \node[above, font=\scriptsize] at (port34.north) {Port 3,4};
+
+    % Execution units in Port 0
+    \node[eu] at (port0.center) (ieu0) {\tiny IEU};
+    \node[eu, above=0.1cm of ieu0] (fau) {\tiny FAU};
+    \node[eu, above=0.1cm of fau] (idiv) {\tiny IDIV};
+    \node[eu, above=0.1cm of idiv] (fdiv) {\tiny FDIV};
+    \node[eu, above=0.1cm of fdiv] (fmu) {\tiny FMU};
+    \node[eu, above=0.1cm of fmu] (shf) {\tiny SHF};
+
+    % Execution units in Port 1
+    \node[eu] at (port1.center) (ieu1) {\tiny IEU};
+    \node[eu, above=0.1cm of ieu1] (jeu) {\tiny JEU};
+
+    % Execution units in Port 2
+    \node[eu] at (port2.center) (agu2) {\tiny AGU};
+
+    % Execution units in Port 3,4
+    \node[eu] at (port34.center) (agu34) {\tiny AGU};
+
+    % SDB and Data Cache
+    \node[draw, fill=yellow!20, minimum width=0.8cm, minimum height=0.6cm, below=0.3cm of port34] (sdb) {\tiny SDB};
+    \node[draw, fill=gray!20, minimum width=1cm, minimum height=0.6cm, right=0.2cm of sdb] (dcache) {\tiny Data \$};
+
+    % Arrows from RS to ports
+    \foreach \p in {port0, port1, port2, port34} {
+      \draw[->, thick] (rs.south) -- (\p.north);
+      \draw[<-, thick, red] ([xshift=-3mm]rs.south) -- ([xshift=-3mm]\p.north);
+    }
+
+    % Bypass illustrations
+    % 0-level bypass within port (red loop on port 1)
+    \draw[->, thick, red, rounded corners] ([xshift=8mm]ieu1.east) -- ++(0.3,0) -- ++(0,0.5) -- ++(-0.3,0);
+    \node[draw, fill=red!20, align=center, font=\tiny, right=1.5cm of port1] (bypass0) {0-level bypass\\within port};
+
+    % 1st-level bypass between ports (green from port 1 to port 2)
+    \draw[->, thick, green!60!black, rounded corners] ([yshift=-5mm]port1.south) -- ++(0,-0.3) -| ([yshift=-5mm]port2.south);
+    \node[draw, fill=green!20, align=center, font=\tiny, below=1cm of port2] (bypass1) {1st-level bypass\\between EUs in\\different ports};
+
+    % 2nd-level bypass through RS (blue loop back to RS)
+    \draw[->, thick, blue, rounded corners] ([xshift=-8mm]port34.north) -- ++(0,0.5) -| ([xshift=8mm]rs.south);
+    \node[draw, fill=blue!20, align=center, font=\tiny, left=1cm of rs] (bypass2) {2nd-level bypass\\through the RS};
+  \end{tikzpicture}
   \end{center}
 \end{frame}
 
