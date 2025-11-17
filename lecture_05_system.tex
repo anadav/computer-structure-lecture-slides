@@ -1163,7 +1163,7 @@ float* data = malloc(N * sizeof(float));
 \column{0.55\textwidth}
 \textbf{When NUMA Matters Most:}
 \begin{itemize}
-\item Large working sets (> L3 cache)
+\item Large working sets ($>$ L3 cache)
 \item Memory-bandwidth intensive apps
 \item Multi-socket servers
 \item Database systems
@@ -1182,16 +1182,16 @@ float* data = malloc(N * sizeof(float));
 \column{0.45\textwidth}
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
-\node[text width=5cm, draw, thick] at (0,0) {
+\node[text width=5cm, draw, thick] (rulethumb) at (0,0) {
 \textbf{Rule of Thumb:}\\[0.2cm]
 If your application:\\
-• Uses > 10GB memory\\
-• Runs on > 8 cores\\
+• Uses $>$ 10GB memory\\
+• Runs on $>$ 8 cores\\
 • Is memory-bandwidth limited\\[0.2cm]
 $\Rightarrow$ \textcolor{red}{Consider NUMA optimization}
 };
 
-\node[text width=5cm, draw, thick, fill=yellow!20] at (0,-2.5) {
+\node[text width=5cm, draw, thick, fill=yellow!20, anchor=north] at ([yshift=-0.5cm]rulethumb.south) {
 \textbf{Quick Win:}\\[0.1cm]
 \texttt{numactl --interleave=all ./app}\\[0.1cm]
 Spreads memory across all nodes\\
@@ -1323,7 +1323,67 @@ Often 20-30\% improvement!
 
 \end{frame}
 
+% Slide: Real System Topology
+\begin{frame}{Real System Topology: lstopo Output}
+\begin{center}
+\includegraphics[width=0.95\textwidth,height=0.85\textheight,keepaspectratio]{figures/topo.png}
+\end{center}
 
+\vspace{0.2cm}
+\textbf{lstopo} visualizes the complete hardware topology of a system
+\end{frame}
+
+% Slide: Analyzing the Topology
+\begin{frame}{Analyzing the System Topology}
+\textbf{Key Features from the lstopo Output:}
+
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{1. Two-Socket NUMA System}
+\begin{itemize}
+\item 2 Packages (CPU sockets)
+\item 2 NUMA nodes (125GB + 126GB)
+\item Each package: 28 cores
+\item Total: 56 physical cores
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. Hyperthreading (SMT)}
+\begin{itemize}
+\item Each core has 2 PUs (processing units)
+\item PU = hardware thread
+\item Total: 112 logical processors
+\item PU IDs interleaved (P\#0, P\#56, P\#2, P\#58...)
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{3. Cache Hierarchy}
+\begin{itemize}
+\item \textcolor{red}{Private} per core:
+  \begin{itemize}
+  \item L1i: 32KB (instruction)
+  \item L1d: 48KB (data)
+  \item L2: 2MB
+  \end{itemize}
+\item \textcolor{blue}{Shared} per package:
+  \begin{itemize}
+  \item L3: 53MB (all 28 cores)
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{4. I/O Device Locality}
+\begin{itemize}
+\item PCI devices attached to specific packages
+\item Package 0: Ethernet, VGA, SATA, RAID
+\item Package 1: High-speed Ethernet (mlx5)
+\item Accessing devices $\rightarrow$ prefer local memory!
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\textbf{Software Impact:} Pin network-intensive threads to cores on Package 1 for best performance with the mlx5 NIC!
+\end{frame}
 
 
 \end{document}
