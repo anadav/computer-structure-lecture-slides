@@ -1894,35 +1894,23 @@
 
 \begin{frame}{The Bypass Network}
   \begin{itemize}
-    \item \textbf{Assume}
+    \item \textbf{Assume:}
     \begin{itemize}
-      \item Instruction Y assigned PR19 as its destination physical register; Y takes 1 cycle to execute
-      \item Instruction X uses PR19 as a source, and its other source is an immediate value
-      \item Back-to-back 0-level bypass at the same EU
-      \item 3 cycle bypass 1-level bypass going to a different EU
+      \item Instruction Y writes PR19 (1 cycle execution)
+      \item Instruction X reads PR19 + immediate
+      \item 0-level bypass: same EU, back-to-back
+      \item 1-level bypass: different EU, 3 cycles
     \end{itemize}
 
-    \vspace{0.3cm}
-
-    \item \textbf{The RS marks instruction X as ready in the following cases}
+    \item \textbf{RS marks X ready when:}
     \begin{itemize}
-      \item Instruction Y finished execution before instruction X was allocated
-      \begin{itemize}
-        \item PR19 value is written to X's RS entry when X is allocated
-        \item Instruction X is ready at allocation
-      \end{itemize}
-      \item Instruction Y is sent to the same EU that instruction X is assigned to
-      \begin{itemize}
-        \item Instruction X is marked ready, and sent to the EU in the next cycle
-      \end{itemize}
-      \item Instruction Y is sent to a different port than instruction X is assigned to
-      \begin{itemize}
-        \item Instruction X is marked ready 3 cycles later, and sent to the EU
-      \end{itemize}
-      \item Y is sent to execution before X is allocated, but still did not finish execution
-      \begin{itemize}
-        \item When Y finishes exe and its write-back value gets to the RS, X can use it
-      \end{itemize}
+      \item \textbf{Y finished before X allocated:} PR19 value written to X's RS entry $\Rightarrow$ X ready at allocation
+
+      \item \textbf{Y and X sent to same EU:} X marked ready, dispatched next cycle (0-level bypass)
+
+      \item \textbf{Y and X sent to different EUs:} X marked ready after 3 cycles (1-level bypass)
+
+      \item \textbf{Y executing when X allocated:} X becomes ready when Y's write-back reaches RS
     \end{itemize}
   \end{itemize}
 \end{frame}
