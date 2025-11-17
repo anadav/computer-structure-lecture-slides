@@ -1264,28 +1264,31 @@
 
   \vspace{0.3cm}
   \centering
-  \begin{tikzpicture}
-    \node[font=\small] at (-2.5,0) {\textbf{ROB:}};
-    \matrix (rob) [matrix of nodes,
-      nodes={draw, minimum width=1.2cm, minimum height=0.6cm, anchor=center, font=\footnotesize},
-      row sep=-\pgflinewidth,
-      column sep=-\pgflinewidth,
-      column 1/.style={nodes={minimum width=0.8cm, fill=blue!10}},
-      column 2/.style={nodes={minimum width=0.9cm}},
-      column 3/.style={nodes={minimum width=0.9cm}},
-      column 4/.style={nodes={minimum width=1.5cm}},
-      column 5/.style={nodes={minimum width=1.5cm}},
-      ampersand replacement=\&
-      ] {
-      |[fill=blue!20]| \textbf{\#entry} \& |[fill=blue!20]| \textbf{Entry} \& |[fill=blue!20]| \textbf{Data} \& |[fill=blue!20]| \textbf{Physical Reg} \& |[fill=blue!20]| \textbf{Architectural} \\
-      \& |[fill=blue!20]| \textbf{Valid} \& |[fill=blue!20]| \textbf{Valid} \& |[fill=blue!20]| \textbf{Data} \& |[fill=blue!20]| \textbf{dest. reg} \\
-      0 \& 1 \& 1 \& 12H \& R2 \\
-      1 \& 1 \& 1 \& 33H \& R3 \\
-      2 \& 1 \& 0 \& xxx \& R8 \\
-      \dots \& \dots \& \dots \& \dots \& \dots \\
-      39 \& 0 \& 0 \& xxx \& XXX \\
-    };
-  \end{tikzpicture}
+  \begin{minipage}{6cm}
+  \centering
+  \textbf{ROB}
+
+  \vspace{0.2cm}
+  \begin{tabular}{|c|c|c|c|c|}
+  \hline
+  \textbf{Phys Reg} & \textbf{Alloc} & \multicolumn{2}{c|}{\textbf{Data}} & \textbf{Arch} \\
+  \textbf{(ROB)} & & \textbf{V} & \textbf{Value} & \textbf{Reg} \\
+  \hline
+  0 & 1 & 1 & 12H & R2 \\
+  \hdashline[2pt/2pt]
+  1 & 1 & 1 & 33H & R3 \\
+  \hdashline[2pt/2pt]
+  2 & 1 & 0 & xxx & R8 \\
+  \hdashline[2pt/2pt]
+  \dots & \dots & \dots & \dots & \dots \\
+  \hdashline[2pt/2pt]
+  39 & 0 & x & xxx & XXX \\
+  \hline
+  \end{tabular}
+
+  \vspace{0.2cm}
+  {\footnotesize Legend: 1=Valid, 0=Invalid, x=Don't care}
+  \end{minipage}
 \end{frame}
 
 \begin{frame}{ARF -- Architectural Register File}
@@ -1305,21 +1308,23 @@
 
   \vspace{0.5cm}
   \centering
-  \begin{tikzpicture}
-    \node[font=\small] at (-1.5,0) {\textbf{ARF:}};
-    \matrix (arf) [matrix of nodes,
-      nodes={draw, minimum width=1.5cm, minimum height=0.6cm, anchor=center, font=\footnotesize},
-      row sep=-\pgflinewidth,
-      column sep=-\pgflinewidth,
-      column 1/.style={nodes={fill=blue!10}},
-      ampersand replacement=\&
-      ] {
-      |[fill=blue!20]| \textbf{\#entry} \& |[fill=blue!20]| \textbf{Arch Reg Data} \\
-      0 (R0) \& 9AH \\
-      1 (R1) \& F34H \\
-      \dots \& \dots \\
-    };
-  \end{tikzpicture}
+  \begin{minipage}{4cm}
+  \centering
+  \textbf{ARF}
+
+  \vspace{0.2cm}
+  \begin{tabular}{|c|c|}
+  \hline
+  \textbf{Arch Reg} & \textbf{Value} \\
+  \hline
+  R0 & 9AH \\
+  \hdashline[2pt/2pt]
+  R1 & F34H \\
+  \hdashline[2pt/2pt]
+  \dots & \dots \\
+  \hline
+  \end{tabular}
+  \end{minipage}
 \end{frame}
 
 \begin{frame}{Reservation Station (RS)}
@@ -1332,28 +1337,22 @@
 
   \vspace{0.3cm}
   \centering
-  \begin{tikzpicture}
-    \node[font=\small] at (-3.5,0.3) {\textbf{RS}};
-    \matrix (rs) [matrix of nodes,
-      nodes={draw, minimum width=1cm, minimum height=0.6cm, anchor=center, font=\footnotesize},
-      row sep=-\pgflinewidth,
-      column sep=-\pgflinewidth,
-      column 1/.style={nodes={minimum width=0.8cm}},
-      column 2/.style={nodes={minimum width=0.9cm}},
-      column 3/.style={nodes={minimum width=0.8cm}},
-      column 4/.style={nodes={minimum width=1.1cm}},
-      column 5/.style={nodes={minimum width=0.8cm}},
-      column 6/.style={nodes={minimum width=0.9cm}},
-      column 7/.style={nodes={minimum width=0.8cm}},
-      column 8/.style={nodes={minimum width=0.9cm}},
-      ampersand replacement=\&
-      ] {
-      |[fill=orange!30]| \textbf{Entry} \& |[fill=orange!30]| \textbf{opcode} \& |[fill=orange!30]| \textbf{src1} \& |[fill=orange!30]| \textbf{src1} \& |[fill=orange!30]| \textbf{src2} \& |[fill=orange!30]| \textbf{src2} \& |[fill=orange!30]| \textbf{Pdst} \\
-      |[fill=orange!30]| \textbf{valid} \& \& |[fill=orange!30]| \textbf{data} \& |[fill=orange!30]| \textbf{valid} \& |[fill=orange!30]| \textbf{data} \& |[fill=orange!30]| \textbf{valid} \& \\
-      1 \& add \& 1 \& 97H \& 1 \& 12H \& 37 \\
-      1 \& sub \& 0 \& rob37 \& 1 \& 33H \& 38 \\
-    };
-  \end{tikzpicture}
+  \begin{minipage}{7.5cm}
+  \centering
+  \textbf{RS}
+
+  \vspace{0.2cm}
+  \begin{tabular}{|c|c|c|c|c|c|c|}
+  \hline
+  \textbf{Entry} & \textbf{op} & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
+  \textbf{Valid} & & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
+  \hline
+  1 & add & 1 & 97H & 1 & 12H & 37 \\
+  \hdashline[2pt/2pt]
+  1 & sub & 0 & rob37 & 1 & 33H & 38 \\
+  \hline
+  \end{tabular}
+  \end{minipage}
 
   \vspace{0.5cm}
   \begin{itemize}
@@ -1475,67 +1474,74 @@
 
   \vspace{0.3cm}
   \centering
-  \begin{tikzpicture}
-    \node[font=\small] at (-1.5,0) {\textbf{RAT:}};
-    \matrix (rat) [matrix of nodes,
-      nodes={draw, minimum width=1.2cm, minimum height=0.5cm, anchor=center, font=\footnotesize},
-      row sep=-\pgflinewidth,
-      column sep=-\pgflinewidth,
-      column 1/.style={nodes={fill=blue!10}},
-      ampersand replacement=\&
-      ] {
-      |[fill=blue!20]| \textbf{Arch reg} \& |[fill=blue!20]| \textbf{\#reg} \& |[fill=blue!20]| \textbf{Location} \\
-      R1 \& 1 \& ARF \\
-      R2 \& 19 \& ROB \\
-      R3 \& 23 \& ROB \\
-    };
-  \end{tikzpicture}
+  \begin{minipage}{5cm}
+  \centering
+  \textbf{RAT}
+
+  \vspace{0.2cm}
+  \begin{tabular}{|l|c|l|}
+  \hline
+  \textbf{Arch Reg} & \textbf{Phys Reg} & \textbf{Location} \\
+  \hline
+  R1 & 1 & ARF \\
+  \hdashline[2pt/2pt]
+  R2 & 19 & ROB \\
+  \hdashline[2pt/2pt]
+  R3 & 23 & ROB \\
+  \hline
+  \end{tabular}
+  \end{minipage}
 \end{frame}
 
-\begin{frame}{Register Renaming Example}
+\begin{frame}
+  \frametitle<1>{Structure Interaction}
+  \frametitle<2>{Register Renaming Example (1)}
+  \frametitle<3>{Register Renaming Example (2)}
+
   \begin{tikzpicture}[font=\tiny, remember picture, overlay]
     % Explanation box in top left corner
-    \node[draw, fill=yellow!10, inner sep=5pt, text width=5.5cm, align=left, anchor=north west] at ([xshift=0.2cm, yshift=-1.5cm]current page.north west) {
+    \node[draw, fill=yellow!10, inner sep=5pt, text width=5cm, align=left, anchor=north west] at ([xshift=0.2cm, yshift=-1.5cm]current page.north west) {
       \tiny
       \only<1>{
-      \textbf{Step 1: First Instruction}\\[0.1cm]
-      Instruction: \texttt{add R1$\leftarrow$R2,R1}\\[0.05cm]
-      - Allocate ROB37 for R1\\
-      - Update RAT: R1 maps to ROB37\\
-      - Get sources from ARF(R1) and ROB19(R2)\\
-      - Add entry to RS with both operands ready\\
-      - ROB37 marked allocated but data invalid
+      \textbf{Instructions Flow:}\\[0.1cm]
+      IDQ $\rightarrow$ RAT (decode/rename) $\rightarrow$ ROB \& RS (track \& wait) $\rightarrow$ Execute\\[0.2cm]
+
+      \textbf{Physical Registers:}\\[0.05cm]
+      ROB\# entries referenced by:\\
+      - RAT: maps arch to phys reg\\
+      - RS.Pdst: destination\\
+      - RS.srcX: source operands
       }
       \only<2>{
-      \textbf{Step 2: After Execution}\\[0.1cm]
-      - Instruction \texttt{add} completes execution\\
-      - ROB37 data now valid (109H = 97H + 12H)\\
-      - RS entry for \texttt{add} removed\\
-      - Instruction ready to retire
+      \textbf{Actions:}\\[0.05cm]
+      - Allocate ROB37 for R1\\
+      - Update RAT: R1 $\rightarrow$ ROB37\\
+      - Get sources: ARF(R1), ROB19(R2)\\
+      - Add to RS with both operands ready\\
+      - ROB37: Alloc=V, Data Valid=I
       }
       \only<3>{
-      \textbf{Step 3: Second Instruction}\\[0.1cm]
-      Instruction: \texttt{sub R1$\leftarrow$R3,R1}\\[0.05cm]
+      \textbf{Actions:}\\[0.05cm]
       - Allocate ROB38 for R1\\
-      - Update RAT: R1 now maps to ROB38\\
-      - Get sources from ROB23(R3) and ROB37(R1)\\
-      - RS entry waits for ROB37 (valid=0)\\
-      - Shows WAW eliminated by renaming
+      - Update RAT: R1 $\rightarrow$ ROB38\\
+      - Get sources: ROB23(R3), ROB37(R1)\\
+      - ROB37 used as input (prev instr)\\
+      - \texttt{sub} waits in RS for ROB37
       }
     };
   \end{tikzpicture}
 
   \centering
   \begin{tikzpicture}[font=\tiny]
-    % IDQ at top
-    \only<1>{
-      \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ: add R1$\leftarrow$R2,R1}};
-    }
+    % IDQ at top (always present)
+    \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ}};
+
+    % Instruction node on arrow from IDQ to RAT
     \only<2>{
-      \node[draw, fill=green!30, inner sep=5pt] (idq) {\textbf{Executing add...}};
+      \node[draw, fill=green!20, inner sep=3pt, font=\tiny, below right=0.02cm and 0.1cm of idq] (instr1) {\texttt{add R1$\leftarrow$R2,R1}};
     }
     \only<3>{
-      \node[draw, fill=lightblue, inner sep=5pt] (idq) {\textbf{IDQ: sub R1$\leftarrow$R3,R1}};
+      \node[draw, fill=green!20, inner sep=3pt, font=\tiny, below right=0.02cm and 0.1cm of idq] (instr2) {\texttt{sub R1$\leftarrow$R3,R1}};
     }
 
     % RAT below IDQ
@@ -1551,7 +1557,7 @@
       \hline
       \textbf{Arch} & \textbf{Phys} & \textbf{Loc} \\
       \hline
-      R1 & \textcolor{red}{37} & \textcolor{red}{ROB} \\
+      R1 & xxx & ARF \\
       \hdashline[2pt/2pt]
       R2 & 19 & ROB \\
       \hdashline[2pt/2pt]
@@ -1564,7 +1570,7 @@
       \hline
       \textbf{Arch} & \textbf{Phys} & \textbf{Loc} \\
       \hline
-      R1 & 37 & ROB \\
+      R1 & \textcolor{red}{37} & \textcolor{red}{ROB} \\
       \hdashline[2pt/2pt]
       R2 & 19 & ROB \\
       \hdashline[2pt/2pt]
@@ -1590,57 +1596,57 @@
 
     % ROB below and left of RAT
     \node[fill=cyan!10, inner sep=5pt, below=0.8cm of rat.south, anchor=north, xshift=-3.5cm] (rob) {
-      \begin{minipage}{4.2cm}
+      \begin{minipage}{4.8cm}
       \centering
       \textbf{ROB}
 
       \vspace{0.1cm}
       \tiny
       \only<1>{
-      \begin{tabular}{|c|c|c|c|}
+      \begin{tabular}{|c|c|c|c|c|}
       \hline
-      \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Arch} \\
-      \textbf{Reg} & & \textbf{Valid} & \textbf{Reg} \\
+      \textbf{Phys Reg} & \textbf{Alloc} & \multicolumn{2}{c|}{\textbf{Data}} & \textbf{Arch} \\
+      \textbf{(ROB)} & & \textbf{V} & \textbf{Value} & \textbf{Reg} \\
       \hline
-      19 & V & V & R2 \\
+      19 & 1 & 1 & 12H & R2 \\
       \hdashline[2pt/2pt]
-      23 & V & V & R3 \\
+      23 & 1 & 1 & 33H & R3 \\
       \hdashline[2pt/2pt]
-      \textcolor{red}{37} & \textcolor{red}{V} & \textcolor{red}{I} & \textcolor{red}{R1} \\
+      37 & 0 & x & xxx & xxx \\
       \hdashline[2pt/2pt]
-      38 & I & x & xxx \\
+      38 & 0 & x & xxx & xxx \\
       \hline
       \end{tabular}
       }
       \only<2>{
-      \begin{tabular}{|c|c|c|c|}
+      \begin{tabular}{|c|c|c|c|c|}
       \hline
-      \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Arch} \\
-      \textbf{Reg} & & \textbf{Valid} & \textbf{Reg} \\
+      \textbf{Phys Reg} & \textbf{Alloc} & \multicolumn{2}{c|}{\textbf{Data}} & \textbf{Arch} \\
+      \textbf{(ROB)} & & \textbf{V} & \textbf{Value} & \textbf{Reg} \\
       \hline
-      19 & V & V & R2 \\
+      19 & 1 & 1 & 12H & R2 \\
       \hdashline[2pt/2pt]
-      23 & V & V & R3 \\
+      23 & 1 & 1 & 33H & R3 \\
       \hdashline[2pt/2pt]
-      37 & V & \textcolor{blue!70!black}{V (109H)} & R1 \\
+      \textcolor{red}{37} & \textcolor{red}{1} & \textcolor{red}{0} & \textcolor{red}{xxx} & \textcolor{red}{R1} \\
       \hdashline[2pt/2pt]
-      38 & I & x & xxx \\
+      38 & 0 & x & xxx & xxx \\
       \hline
       \end{tabular}
       }
       \only<3>{
-      \begin{tabular}{|c|c|c|c|}
+      \begin{tabular}{|c|c|c|c|c|}
       \hline
-      \textbf{Phys} & \textbf{Alloc} & \textbf{Data} & \textbf{Arch} \\
-      \textbf{Reg} & & \textbf{Valid} & \textbf{Reg} \\
+      \textbf{Phys Reg} & \textbf{Alloc} & \multicolumn{2}{c|}{\textbf{Data}} & \textbf{Arch} \\
+      \textbf{(ROB)} & & \textbf{V} & \textbf{Value} & \textbf{Reg} \\
       \hline
-      19 & V & V & R2 \\
+      19 & 1 & 1 & 12H & R2 \\
       \hdashline[2pt/2pt]
-      23 & V & V & R3 \\
+      23 & 1 & 1 & 33H & R3 \\
       \hdashline[2pt/2pt]
-      37 & V & V & R1 \\
+      37 & 1 & 0 & xxx & R1 \\
       \hdashline[2pt/2pt]
-      \textcolor{red}{38} & \textcolor{red}{V} & \textcolor{red}{I} & \textcolor{red}{R1} \\
+      \textcolor{red}{38} & \textcolor{red}{1} & \textcolor{red}{0} & \textcolor{red}{xxx} & \textcolor{red}{R1} \\
       \hline
       \end{tabular}
       }
@@ -1661,7 +1667,7 @@
       & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
       \textbf{op} & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
       \hline
-      \textcolor{red}{add} & \textcolor{red}{1} & \textcolor{red}{97H} & \textcolor{red}{1} & \textcolor{red}{12H} & \textcolor{red}{37} \\
+      -- & -- & -- & -- & -- & -- \\
       \hdashline[2pt/2pt]
       -- & -- & -- & -- & -- & -- \\
       \hline
@@ -1673,7 +1679,7 @@
       & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
       \textbf{op} & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
       \hline
-      -- & -- & -- & -- & -- & -- \\
+      \textcolor{red}{add} & \textcolor{red}{1} & \textcolor{red}{97H} & \textcolor{red}{1} & \textcolor{red}{12H} & \textcolor{red}{37} \\
       \hdashline[2pt/2pt]
       -- & -- & -- & -- & -- & -- \\
       \hline
@@ -1685,7 +1691,7 @@
       & \multicolumn{2}{c|}{\textbf{src1}} & \multicolumn{2}{c|}{\textbf{src2}} & \textbf{Pdst} \\
       \textbf{op} & \textbf{V} & \textbf{Val} & \textbf{V} & \textbf{Val} & \textbf{(ROB)} \\
       \hline
-      -- & -- & -- & -- & -- & -- \\
+      add & 1 & 97H & 1 & 12H & 37 \\
       \hdashline[2pt/2pt]
       \textcolor{red}{sub} & \textcolor{red}{0} & \textcolor{red}{rob37} & \textcolor{red}{1} & \textcolor{red}{33H} & \textcolor{red}{38} \\
       \hline
@@ -1718,6 +1724,14 @@
     \draw[->, thick] (rat.south) -- ++(0,-0.3) -| (rs.north);
     \draw[->, thick] (execute.north) -- (rs.south -| execute.north);
     \draw[->, thick] (execute.west) -| ([xshift=3mm]rob.east) -- (rob.east);
+
+    % Renamed instruction node on arrow from RAT to RS (top right of arrow)
+    \only<2>{
+      \node[draw, fill=orange!20, inner sep=2pt, font=\tiny, above right=0.4cm and 0.3cm of rs.north west, anchor=south west] (renamed1) {\texttt{add ROB37$\leftarrow$ROB19,ARF1}};
+    }
+    \only<3>{
+      \node[draw, fill=orange!20, inner sep=2pt, font=\tiny, above right=0.4cm and 0.3cm of rs.north west, anchor=south west] (renamed2) {\texttt{sub ROB38$\leftarrow$ROB23,ROB37}};
+    }
 
   \end{tikzpicture}
 \end{frame}
