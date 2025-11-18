@@ -36,6 +36,9 @@
     \end{scope}
 }
 
+% Hide macro - hides content by doing nothing with it
+\newcommand{\hide}[1]{}
+
 \begin{document}
 
 \frame{\titlepage}
@@ -1611,6 +1614,7 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \end{itemize}
 \end{frame}
 
+\hide{
 % Slide: DDR2
 \begin{frame}{DDR2}
 \textbf{DDR2 doubles bandwidth with 4-bit prefetch}
@@ -1645,141 +1649,190 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 
 \vspace{0.3cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.6, transform shape]
+\begin{tikzpicture}[
+  scale=0.6,
+  transform shape,
+  mem cell/.style={draw, thick, minimum width=2.5cm, minimum height=0.7cm, fill=blue!10},
+  io buffer/.style={draw, thick, minimum width=1.8cm, minimum height=0.7cm, fill=green!20},
+  freq label/.style={font=\tiny, left},
+  title label/.style={font=\small, above}
+]
   % SDRAM
-  \node[draw, thick, minimum width=1.8cm, minimum height=0.6cm, fill=blue!10] at (0,2.5) {Memory Cell};
-  \node[draw, thick, minimum width=1.2cm, minimum height=0.6cm, fill=green!20] at (2.2,2.5) {I/O Buffers};
-  \draw[->, very thick] (2.8,2.5) -- (3.5,2.5) node[right, font=\tiny] {Data Bus};
-  \node[left, font=\tiny] at (-0.9,2.2) {100 MHz};
-  \node[above, font=\small] at (0,3.1) {\textbf{SDRAM}};
+  \node[mem cell] (sdram mem) at (0,0) {Memory Cell};
+  \node[io buffer, right=0.5cm of sdram mem] (sdram io) {I/O Buffers};
+  \draw[->, very thick] (sdram io.east) -- ++(0.8,0) node[right, font=\tiny] {Data Bus};
+  \node[freq label] at (sdram mem.west) {100 MHz};
+  \node[title label] at (sdram mem.north) {\textbf{SDRAM}};
 
   % DDR I
-  \node[draw, thick, minimum width=1.8cm, minimum height=0.6cm, fill=blue!10] at (0,1.5) {Memory Cell};
-  \node[draw, thick, minimum width=1.2cm, minimum height=0.6cm, fill=green!20] at (2.2,1.5) {I/O Buffers};
-  \draw[->, very thick] (2.8,1.5) -- (3.5,1.5) node[right, font=\tiny] {Data Bus};
-  \node[left, font=\tiny] at (-0.9,1.2) {100 MHz};
-  \node[above, font=\small] at (0,2.1) {\textbf{DDR I}};
+  \node[mem cell, below=0.5cm of sdram mem] (ddr1 mem) {Memory Cell};
+  \node[io buffer, right=0.5cm of ddr1 mem] (ddr1 io) {I/O Buffers};
+  \draw[->, very thick] (ddr1 io.east) -- ++(0.8,0) node[right, font=\tiny] {Data Bus};
+  \node[freq label] at (ddr1 mem.west) {100 MHz};
+  \node[title label] at (ddr1 mem.north) {\textbf{DDR I}};
 
   % DDR II
-  \node[draw, thick, minimum width=1.8cm, minimum height=0.6cm, fill=blue!10] at (0,0.5) {Memory Cell};
-  \node[draw, thick, minimum width=1.2cm, minimum height=0.6cm, fill=green!20] at (2.2,0.5) {I/O Buffers};
-  \draw[->, very thick] (2.8,0.5) -- (3.5,0.5) node[right, font=\tiny] {Data Bus};
-  \node[left, font=\tiny] at (-0.9,0.2) {100 MHz};
-  \node[above, font=\small] at (0,1.1) {\textbf{DDR II}};
+  \node[mem cell, below=0.5cm of ddr1 mem] (ddr2 mem) {Memory Cell};
+  \node[io buffer, right=0.5cm of ddr2 mem] (ddr2 io) {I/O Buffers};
+  \draw[->, very thick] (ddr2 io.east) -- ++(0.8,0) node[right, font=\tiny] {Data Bus};
+  \node[freq label] at (ddr2 mem.west) {100 MHz};
+  \node[title label] at (ddr2 mem.north) {\textbf{DDR II}};
 \end{tikzpicture}
 \end{center}
 \end{columns}
 \end{frame}
-
-% Slide: DDR Generation Evolution (Part 1)
-\begin{frame}{DDR Generation Evolution (Part 1)}
-
-\vspace{0.2cm}
-\begin{itemize}
-\item \textbf{SDR → DDR (2000):}
-  \begin{itemize}
-  \item 2-bit prefetch: doubles data rate (both clock edges)
-  \item Reduced power: 3.3V → 2.5V
-  \item Throughput: 266-400 MT/s (2.1-3.2 GB/s)
-  \item Clock: 133-200 MHz, CL 2-3 ($\approx$10 ns actual latency)
-  \end{itemize}
-
-\vspace{0.3cm}
-\item \textbf{DDR → DDR2 (2003):}
-  \begin{itemize}
-  \item 4-bit prefetch: doubles bandwidth
-  \item Reduced power: 1.8V
-  \item More banks (8), smaller pages (1KB)
-  \item Throughput: 533-800 MT/s (4.2-6.4 GB/s)
-  \item Clock: 266-400 MHz, CL 3-5 ($\approx$10 ns - similar to DDR!)
-  \end{itemize}
-
-\vspace{0.3cm}
-\item \textbf{DDR2 → DDR3 (2007):}
-  \begin{itemize}
-  \item 8-bit prefetch: doubles bandwidth
-  \item Reduced power: 1.5V (1.35V variant available)
-  \item Throughput: 1066-1600 MT/s (8.5-12.8 GB/s)
-  \item Clock: 533-800 MHz, CL 5-11 ($\approx$11 ns)
-  \end{itemize}
-\end{itemize}
-
-\vspace{0.2cm}
-\textbf{Key insight:} CL increases in cycles, but stays $\approx$10-15ns in absolute time
-\end{frame}
-
-% Slide: DDR Generation Evolution (Part 2)
-\begin{frame}{DDR Generation Evolution (Part 2)}
-
-\vspace{0.2cm}
-\begin{itemize}
-\item \textbf{DDR3 → DDR4 (2014):}
-  \begin{itemize}
-  \item Per-bank prefetch architecture
-  \item Reduced power: 1.2V
-  \item Bank groups (16 banks in 4 groups)
-  \item Throughput: 2133-3200 MT/s (17-25.6 GB/s)
-  \item Clock: 1066-1600 MHz, CL 12-18 ($\approx$9-11 ns)
-  \end{itemize}
-
-\vspace{0.3cm}
-\item \textbf{DDR4 → DDR5 (2021):}
-  \begin{itemize}
-  \item 16-bit prefetch (burst length 16)
-  \item Reduced power: 1.1V
-  \item Dual-channel per DIMM, 32 banks
-  \item Throughput: 3200-6400 MT/s (25.6-51.2 GB/s)
-  \item Clock: 1600-3200 MHz, CL 32-40 ($\approx$12-13 ns)
-  \end{itemize}
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Latency pattern across generations:}
-\begin{itemize}
-\item CL (in cycles): 2 → 4 → 9 → 15 → 36 \textcolor{red}{(looks terrible!)}
-\item Actual latency (ns): 10 → 10 → 11 → 10 → 12 \textcolor{blue}{(mostly flat)}
-\item Higher clocks compensate for increased CL
-\end{itemize}
-\end{frame}
+}
 
 % Slide: DDR Comparison
 \begin{frame}{DDR Comparison}
 \vspace{-0.2cm}
 \begin{center}
 \tiny
-\begin{tabular}{|l|c|c|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
-& \textbf{SDRAM} & \textbf{DDR} & \textbf{DDR2} & \textbf{DDR3} & \textbf{DDR4} & \textbf{DDR5} \\
+& \textbf{Trend} & \textbf{SDRAM} & \textbf{DDR} & \textbf{DDR2} & \textbf{DDR3} & \textbf{DDR4} & \textbf{DDR5} \\
 \hline
-\textbf{Introduced} & 1988 & 2000 & 2003 & 2007 & 2014 & 2021 \\
+\textbf{Prefetch depth} & \textcolor{green!60!black}{$\uparrow$} & 1-Bit & 2-Bit & 4-Bit & 8-Bit & Per Bank & 16-Bit \\
 \hline
-\textbf{Prefetch depth} & 1-Bit & 2-Bit & 4-Bit & 8-Bit & Per Bank & 16-Bit \\
+\textbf{Internal clock (MHz)} & $\sim$ & 100-166 & 133-200 & 133-200 & 133-200 & 133-200 & - \\
 \hline
-\textbf{Internal clock (MHz)} & 100-166 & 133-200 & 133-200 & 133-200 & 133-200 & - \\
+\textbf{Data Rate (MT/s)} & \textcolor{green!60!black}{$\uparrow$} & 100-166 & 266-400 & 533-800 & 1066-1600 & 2133-5100 & 3200-6400 \\
 \hline
-\textbf{Data Rate (MT/s)} & 100-166 & 266-400 & 533-800 & 1066-1600 & 2133-5100 & 3200-6400 \\
+\textbf{Transfer Rate (GB/s)} & \textcolor{green!60!black}{$\uparrow$} & 0.8-1.3 & 2.1-3.2 & 4.2-6.4 & 8.5-14.9 & 17-25.6 & 38.4-51.2 \\
 \hline
-\textbf{Transfer Rate (GB/s)} & 0.8-1.3 & 2.1-3.2 & 4.2-6.4 & 8.5-14.9 & 17-25.6 & 38.4-51.2 \\
+\textbf{Internal banks} & \textcolor{green!60!black}{$\uparrow$} & 4 & 4 & 4/8 & 8 & 16 & 32 \\
 \hline
-\textbf{Internal banks} & 4 & 4 & 4/8 & 8 & 16 & 32 \\
+\textbf{Voltage (V)} & \textcolor{green!60!black}{$\downarrow$} & 3.3 & 2.5-2.6 & 1.8 & 1.35-1.5 & 1.2 & 1.1 \\
 \hline
-\textbf{Bank groups} & 1 & 1 & 1 & 1 & \textcolor{green!60!black}{4} & \textcolor{green!60!black}{4} \\
+\textbf{CAS Latency (cycles)} & \textcolor{red}{$\uparrow$} & 2-3 & 2-3 & 3-5 & 5-11 & 12-18 & 32-40 \\
 \hline
-\textbf{Burst length} & 8 & 8 & 8 & 8 & 8 & \textcolor{blue}{16} \\
+\textbf{Actual Latency (ns)} & $\sim$ & $\sim$10 & $\sim$10 & $\sim$10 & $\sim$11 & $\sim$10 & $\sim$12 \\
 \hline
-\textbf{Channels / DIMM} & 1 & 1 & 1 & 1 & 1 & \textcolor{blue}{2} \\
-\hline
-\textbf{Max DIMM size (GB)} & - & 1 & 4 & 16 & 64 & 256 \\
-\hline
-\textbf{Power mgmt} & On MB & On MB & On MB & On MB & On MB & \textcolor{green!60!black}{On DIMM} \\
-\hline
-\textbf{Voltage (V)} & 3.3 & 2.5-2.6 & 1.8 & 1.35-1.5 & 1.2 & 1.1 \\
+\textbf{Max DIMM size (GB)} & \textcolor{green!60!black}{$\uparrow$} & - & 1 & 4 & 16 & 64 & 256 \\
 \hline
 \end{tabular}
 \end{center}
 
+\vspace{0.1cm}
+\textbf{Key trends:}
+\begin{itemize}
+\item \textcolor{green!60!black}{Bandwidth doubles each generation} (prefetch depth $\uparrow$, internal clock $\sim$)
+\item \textcolor{green!60!black}{Power efficiency improves} (voltage $\downarrow$)
+\item \textcolor{green!60!black}{More banks} = better parallelism for multiple requests
+\item \textcolor{red}{CAS latency $\uparrow$ in cycles}, but \textcolor{blue}{stays $\sim$10-12ns} (clocks compensate)
+\end{itemize}
+\end{frame}
+
+% Slide: DRAM Controller
+\begin{frame}{DRAM Controller}
+\textbf{What the DRAM controller does:}
+
+\vspace{0.3cm}
+\begin{itemize}
+\item \textbf{Address translation:}
+  \begin{itemize}
+  \item Splits memory address into Row and Column addresses
+  \item Routes to correct bank and chip
+  \end{itemize}
+
 \vspace{0.2cm}
-\textbf{Trends:} Higher bandwidth, lower voltage, more banks, increased prefetch depth
+\item \textbf{Timing control:}
+  \begin{itemize}
+  \item Generates RAS\# (Row Address Strobe) and CAS\# (Column Address Strobe) signals
+  \item Enforces timing constraints ($t_{\text{RCD}}$, $t_{\text{RC}}$, $t_{\text{RRD}}$, etc.)
+  \end{itemize}
+
+\vspace{0.2cm}
+\item \textbf{Refresh management:}
+  \begin{itemize}
+  \item DRAM cells lose charge over time ($\sim$64ms)
+  \item Controller periodically refreshes all rows
+  \item Refresh operations steal bandwidth from normal accesses
+  \end{itemize}
+
+\vspace{0.2cm}
+\item \textbf{Command scheduling:}
+  \begin{itemize}
+  \item Out-of-order execution to maximize bandwidth
+  \item Row buffer hit optimization (keep frequently-used rows open)
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+% Slide: DRAM Controller Channels
+\begin{frame}{DRAM Controller: Dual-Channel Architecture}
+\textbf{Modern controllers support multiple independent channels:}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.58\textwidth}
+\textbf{Each channel operates independently:}
+\begin{itemize}
+\item Separate command/address/data buses
+\item Independent scheduling and buffering
+\item Write buffer: 32 cache lines per channel
+\item Throughput: 8 bytes/cycle per channel
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Address distribution:}
+\begin{itemize}
+\item Hash function spreads addresses across channels
+\item Balances load for maximum bandwidth
+\item Reduces hotspot contention
+\end{itemize}
+
+\column{0.38\textwidth}
+\vspace{0.2cm}
+\textbf{Best practices:}
+\begin{itemize}
+\item Populate both channels equally
+\item Use matched DIMMs (same speed/capacity)
+\item More DIMMs = more open pages:
+  \begin{itemize}
+  \item Each DIMM: 4-8 banks
+  \item $n$ DIMMs = $4n$ to $8n$ open pages
+  \item Better random access performance
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Why it matters:}\\
+Unbalanced channels waste half your bandwidth!
+\end{columns}
+\end{frame}
+
+% Slide: DRAM Controller Performance
+\begin{frame}{DRAM Controller: Performance Considerations}
+\textbf{Cache line granularity:}
+\begin{itemize}
+\item All reads/writes operate on full cache lines (64 bytes)
+\item Even if you only need 1 byte, entire line is transferred
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Write buffering:}
+\begin{itemize}
+\item Writes complete when data enters controller's write buffer (not DRAM!)
+\item Buffer flushed to DRAM later $\rightarrow$ low write latency
+\item Out-of-order scheduler reorders for maximum efficiency
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Partial writes (performance killer):}
+\begin{itemize}
+\item \textbf{Problem:} Writing $<$64 bytes requires Read-Modify-Write:
+  \begin{enumerate}
+  \item Read full cache line from DRAM
+  \item Modify only the bytes you want to change
+  \item Write full cache line back to DRAM
+  \end{enumerate}
+\item \textbf{Common causes:} Non-cacheable I/O device writes, unaligned accesses
+\item \textbf{Software fix:} Buffer small writes into full cache line writes
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Takeaway:} Access memory in cache-line-sized chunks for best performance
 \end{frame}
 
 \section{Real System Examples}
