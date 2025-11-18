@@ -1764,57 +1764,54 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \begin{frame}{DRAM Controller Architecture}
 \begin{center}
 \begin{circuitikz}[
-  scale=0.9,
   transform shape,
-  box/.style={draw, thick, minimum width=2cm, minimum height=1.2cm, align=center}
+  unit/.style={muxdemux, external pins width=0, align=center, font=\small},
+  textnode/.style={above, font=\footnotesize, align=center}
 ]
   % Address decoder
-  \node[muxdemux, muxdemux def={Lh=4, Rh=4, w=3.5, NL=1, NR=1},
-        external pins width=0, align=center]
+  \node[unit, muxdemux def={Lh=3, Rh=3, w=3.5, NL=1, NR=1}]
     (decoder) at (0,0) {Address\\Decoder};
 
   % Time delay generator
-  \node[muxdemux, muxdemux def={Lh=4, Rh=4, w=3.5, NL=1, NB=1, NR=2},
-        external pins width=0,
-     right=1.8cm of decoder, align=center] (timegen) {Time\\Delay\\Generator};
+  \node[unit, muxdemux def={Lh=3, Rh=3, w=3.5, NL=1, NB=1, NR=2},
+     right=1.8cm of decoder] (timegen) {Time\\Delay\\Generator};
 
   % Address mux (using circuitikz mux)
-  \node[muxdemux, muxdemux def={Lh=4, Rh=2, w=2.5, NL=2, NT=1, NR=1},
-        external pins width=0, below=of decoder, align=center] (addrmux) {Addr\\Mux};
+  \node[unit, muxdemux def={Lh=3, Rh=1.5, w=2.5, NL=2, NT=1, NR=1},
+        below=5mm of decoder] (addrmux) {Addr\\Mux};
 
   % DRAM chip
-  \node[muxdemux, muxdemux def={Lh=4, Rh=4, w=3.5, NL=4, NR=1},
-        external pins width=0,  
-        fill=blue!10, anchor=lpin 3] at ([xshift=1.5cm]addrmux.rpin 1 -| timegen.east) (dram) {DRAM};
+  \node[unit, muxdemux def={Lh=3, Rh=3, w=3.5, NL=4, NR=1},
+        fill=blue!10, anchor=lpin 3] at ([xshift=1.8cm]addrmux.rpin 1 -| timegen.east) (dram) {DRAM};
 
   \coordinate (input) at ([xshift=-2.5cm, yshift=-1cm]decoder.west);
-  \coordinate (rw) at ([yshift=-5mm]input |- addrmux.south);
+  \coordinate (rw) at ([yshift=-3mm]input |- addrmux.south);
 
   % Address bus inputs
-  \draw[->, thick] (input) -- ++(0.5,0) |- node[above, font=\small, near end] {A[20:23]} (decoder.lpin 1);
-  \draw[->, thick] ([xshift=5mm]input) |- node[above, font=\small, near end] {A[10:19]} (addrmux.lpin 1);
-  \draw[->, thick] ([xshift=5mm]input) |- node[above, font=\small, near end] {A[0:9]} (addrmux.lpin 2);
+  \draw[->, thick] (input) -- ++(0.5,0) |- node[textnode, near end] {A[20:23]} (decoder.lpin 1);
+  \draw[->, thick] ([xshift=5mm]input) |- node[textnode, near end] {A[10:19]} (addrmux.lpin 1);
+  \draw[->, thick] ([xshift=5mm]input) |- node[textnode, near end] {A[0:9]} (addrmux.lpin 2);
 
   % Decoder to Time delay gen (Chip select)
-  \draw[->, thick] (decoder.rpin 1) -- node[above, font=\small, align=center] {Chip\\Select} (timegen.lpin 1);
+  \draw[->, thick] (decoder.rpin 1) -- node[textnode] {Chip\\Select} (timegen.lpin 1);
 
   % Time delay gen to DRAM (RAS# and CAS#)
-  \draw[->, thick] (timegen.rpin 1) -- node[above, font=\scriptsize] {RAS\#}  ++(1.2, 0) |- 
+  \draw[->, thick] (timegen.rpin 1) -- node[textnode] {RAS\#}  ++(1.4, 0) |- 
     (dram.lpin 1);
-  \draw[->, thick] (timegen.rpin 2) -- node[above, font=\scriptsize] {CAS\#}  ++(0.8, 0) |-
+  \draw[->, thick] (timegen.rpin 2) -- node[textnode] {CAS\#}  ++(1, 0) |-
     (dram.lpin 2);
 
   % Time delay gen to Address mux select
-  \draw[->, thick] (timegen.bpin 1) -- ++(0, -0.5) -| node[above, font=\scriptsize, pos=0.2] {Select} (addrmux.tpin 1);
+  \draw[->, thick] (timegen.bpin 1) -- ++(0, -0.3) -| node[textnode, pos=0.3] {Select} (addrmux.tpin 1);
 
   % Address mux to DRAM (Memory address bus)
-  \draw[->, thick] (addrmux.rpin 1) -- node[above, font=\scriptsize] {Memory Addr Bus} (dram.lpin 3);
+  \draw[->, thick] (addrmux.rpin 1) -- node[textnode] {Memory Addr Bus} (dram.lpin 3);
 
   % R/W# signal
-  \draw[->, thick] (rw) -| node[above, pos=0.1, font=\small] {R/W\#} ([xshift=-5mm]dram.lpin 4) -- (dram.lpin 4);
+  \draw[->, thick] (rw) -| node[textnode, pos=0.1] {R/W\#} ([xshift=-5mm]dram.lpin 4) -- (dram.lpin 4);
 
   % Data output
-  \draw[->, thick] (dram.rpin 1) -- node[above, font=\small] {D[0:7]} ([xshift=1.5cm]dram.rpin 1);
+  \draw[->, thick] (dram.rpin 1) -- node[textnode] {D[0:7]} ([xshift=1.5cm]dram.rpin 1);
 
 \end{circuitikz}
 \end{center}
