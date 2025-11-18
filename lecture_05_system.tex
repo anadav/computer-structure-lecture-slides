@@ -2,6 +2,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb}
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 \usepackage{booktabs}
 \usepackage{colortbl}
 \usepackage{hyperref}
@@ -1474,11 +1476,16 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
     % Timing annotations
     \begin{scope}[>=stealth, font=\scriptsize]
       % tRCD
-      \draw[<->,thick] (5.15,-3) -- node[midway, fill=white, inner sep=1pt]  {tRCD$>$20ns} (1.15,-3);
+      \draw[<->,thick] (5.15,-3) -- node[midway, fill=white, inner sep=1pt]  {$t_{RCD}>$20ns} (1.15,-3);
+      \draw (5.15,-2) -- (5.15,-3);
+      \draw (1.15,-2) -- (1.15,-4);
       % tRC
-%     \draw[<->,thick] (0,4.3) -- node[above] {tRC$>$70ns} (8*0.75,4.3);
+     \draw[<->,thick] (1.15,-4) -- node[midway, fill=white, inner sep=1pt] {$_{RC}>$70ns} (15.15,-4);
+      \draw (15.15,-2) -- (15.15,-4);
       % tRRD
-%      \draw[<->,thick] (8*0.75,3.8) -- node[above] {tRRD$>$20ns} (12*0.75,3.8);
+      \draw[<->,thick] (9.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{RRD}>$20ns} (15.15,-3);
+      \draw (9.15,-2) -- (9.15,-3);
+      % CL
       \draw[<->,thick] (9.15,-9.5) -- node[midway, fill=white, inner sep=1pt] {CL=2} (5.15,-9.5);
       \draw (5.15,-10) -- (5.15,-8);
       \draw (9.15,-9) -- (9.15,-11);
@@ -1490,9 +1497,10 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \vspace{-0.3cm}
 \textbf{Key timing parameters:}
 \begin{itemize}
-\item \textbf{tRCD}: ACTIVE to READ/WRITE gap = $\lceil\frac{\text{tRCD(MIN)}}{\text{clock period}}\rceil$
-\item \textbf{tRC}: Successive ACTIVE to different row in same bank
-\item \textbf{tRRD}: Successive ACTIVE commands to different banks
+\small
+\item $\mathbf{t_{\text{RCD}}}$: Min time from ACTIVE to READ/WRITE command = $\ceil*{\frac{t_{\text{RCD}}(\text{MIN})}{\text{clock period}}}$
+\item $\mathbf{t_{\text{RC}}}$: Min time between successive ACTIVE commands to different rows in same bank
+\item $\mathbf{t_{\text{RRD}}}$: Min time between successive ACTIVE commands to different banks
 \end{itemize}
 \end{frame}
 
