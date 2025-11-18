@@ -1784,21 +1784,21 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
   \node[unit, muxdemux def={Lh=3, Rh=3, w=3.5, NL=4, NR=1},
         fill=blue!10, anchor=lpin 3] at ([xshift=1.8cm]addrmux.rpin 1 -| timegen.east) (dram) {DRAM};
 
-  \coordinate (input) at ([xshift=-2.5cm, yshift=-1cm]decoder.west);
+  \coordinate (input) at ([xshift=-3.5cm, yshift=-1cm]decoder.west);
   \coordinate (rw) at ([yshift=-3mm]input |- addrmux.south);
 
   % Address bus inputs
-  \draw[->, thick] (input) -- ++(0.5,0) |- node[textnode, near end] {A[20:23]} (decoder.lpin 1);
-  \draw[->, thick] ([xshift=5mm]input) |- node[textnode, near end] {A[10:19]} (addrmux.lpin 1);
-  \draw[->, thick] ([xshift=5mm]input) |- node[textnode, near end] {A[0:9]} (addrmux.lpin 2);
+  \draw[->, thick] (input) -- ++(0.5,0) |- node[textnode, near end] {A[20:23] (\textcolor{red}{Chip})} (decoder.lpin 1);
+  \draw[->, thick] ([xshift=5mm]input) |- node[textnode, near end] {A[10:19] (\textcolor{green}{Row})} (addrmux.lpin 1);
+  \draw[->, thick] ([xshift=5mm]input) |- node[textnode, near end] {A[0:9] (\textcolor{blue}{Col})} (addrmux.lpin 2);
 
   % Decoder to Time delay gen (Chip select)
-  \draw[->, thick] (decoder.rpin 1) -- node[textnode] {Chip\\Select} (timegen.lpin 1);
+  \draw[->, thick] (decoder.rpin 1) -- node[textnode] {\textcolor{red}{Chip}\\\textcolor{red}{Select}} (timegen.lpin 1);
 
   % Time delay gen to DRAM (RAS# and CAS#)
-  \draw[->, thick] (timegen.rpin 1) -- node[textnode] {RAS\#}  ++(1.4, 0) |- 
+  \draw[->, thick] (timegen.rpin 1) -- node[textnode] {\textcolor{green}{RAS\#}}  ++(1.4, 0) |- 
     (dram.lpin 1);
-  \draw[->, thick] (timegen.rpin 2) -- node[textnode] {CAS\#}  ++(1, 0) |-
+  \draw[->, thick] (timegen.rpin 2) -- node[textnode] {\textcolor{blue}{CAS\#}}  ++(1, 0) |-
     (dram.lpin 2);
 
   % Time delay gen to Address mux select
