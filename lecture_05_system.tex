@@ -1392,7 +1392,7 @@ Often 20-30\% improvement!
 
 \vspace{-0.4cm}
 \begin{itemize}
-\item \textbf{tRP}: Row pre-charge time (close current row, open new row)
+\item \textbf{$t_{RP}$}: Row pre-charge time (close current row, open new row)
 \item \textbf{CL}: CAS latency (time from CAS to data available)
 \item \textbf{Not true random access}: same-row access $\gg$ faster than different-row
 \end{itemize}
@@ -1562,33 +1562,53 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \begin{center}
 \begin{tikztimingtable}[
   timing/slope=0.15,
-  timing/coldist=0.75cm,
-  xscale=1,
+  timing/coldist=0.35cm,
+  xscale=1.7,
   timing/rowdist=0.6cm,
   timing/name/.style={font=\small}
 ]
-  200MHz clock & 26C \\
-  cmd   & 2D{ACT} 4D{NOP} 2D{RD} 2D{NOP} 2D{ACT} 4D{NOP} 2D{RD} 2D{ACT} 4D{NOP} \\
-  Bank  & 2D{\colorbox{cyan!30}{Bank 0}} 4D{X} 2D{\colorbox{cyan!30}{Bank 0}} 2D{X} 2D{\colorbox{cyan!30}{Bank 0}} 4D{X} 2D{\colorbox{cyan!30}{Bank 0}} 2D{\colorbox{blue!30}{Bank 1}} 4D{X} \\
-  Addr  & 2D{\colorbox{cyan!30}{Row i}} 4D{X} 2D{\colorbox{cyan!30}{Col j}} 2D{X} 2D{\colorbox{cyan!30}{Row l}} 4D{X} 2D{\colorbox{cyan!30}{Col j}} 2D{\colorbox{blue!30}{Row m}} 4D{X} \\
-  Data  & 12U 2D{j} 2D{+1} 2D{+2} 2D{+3} 2U 2D{n} 2D{+1} 2D{+2} 2D{+3} \\
+  clock & L H L H L H L H L H L H L H L H L H L H L H L H L H\\
+  cmd   & 2D{\textcolor{cyan}{ACT}} 4U 2D{\textcolor{cyan}{RD}} 2U 2D{\textcolor{blue}{ACT}} 4U 2D{\textcolor{blue}{RD}} 2U 2D{\textcolor{cyan}{ACT}} 4U \\
+  \\
+  Bank  & 2D{\textcolor{cyan}{Bank 0}} 4U 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{blue}{Bank 1}} 4U 2D{\textcolor{blue}{Bank1}} 2U 2D{\textcolor{cyan}{Bank 0}} 4U \\
+  Addr  & 2D{\textcolor{cyan}{Row i}} 4U 2D{\textcolor{cyan}{Col j}} 2U 2D{\textcolor{blue}{Row l}} 4U 2D{\textcolor{blue}{Col j}} 2U 2D{\textcolor{cyan}{Row m}} 4U \\
+  \\
+  Data  & 12U D{\textcolor{cyan}{j}} D{\textcolor{cyan}{+1}} D{\textcolor{cyan}{+2}} D{\textcolor{cyan}{+3}} 6U D{\textcolor{cyan!50}{n}} D{\textcolor{cyan!50}{+1}} D{\textcolor{cyan!50}{+2}} D{\textcolor{cyan!50}{+3}} \\
   \extracode
+    % Vertical grid lines
+    \begin{scope}[gray!30, thin]
+      \foreach \x in {0,2,...,24} {
+        \draw[dashed] (\x+0.15,0.5) -- (\x+0.15,-12);
+      }
+    \end{scope}
     % Timing annotations
     \begin{scope}[>=stealth, font=\scriptsize]
       % tRCD
-      \draw[<->,thick] (0,3.8) -- node[above] {tRCD$>$20ns} (6*0.75,3.8);
+      \draw[<->,thick] (7.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RCD}}>20$ns} (1.15,-3);
+      \draw (7.15,-2) -- (7.15,-3);
+      \draw (1.15,-2) -- (1.15,-4);
       % tRC
-      \draw[<->,thick] (0,4.3) -- node[above] {tRC$>$70ns} (16*0.75,4.3);
+      \draw[<->,thick] (1.15,-4) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RC}}>70$ns} (21.15,-4);
+      \draw (21.15,-2) -- (21.15,-4);
       % tRRD
-      \draw[<->,thick] (16*0.75,3.8) -- node[above] {tRRD$>$20ns} (22*0.75,3.8);
-      % CL=2
-      \draw[<->,thick] (6*0.75,-0.6) -- node[below] {CL=2} (12*0.75,-0.6);
+      \draw[<->,thick] (11.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RRD}}>20$ns} (21.15,-3);
+      \draw (11.15,-2) -- (11.15,-3);
+      % CL
+      \draw[<->,thick] (12.15,-9.5) -- node[midway, fill=white, inner sep=1pt] {CL=2} (7.15,-9.5);
+      \draw (7.15,-10) -- (7.15,-8);
+      \draw (12.15,-9) -- (12.15,-11);
     \end{scope}
 \end{tikztimingtable}
 \end{center}
 
-\vspace{-0.2cm}
-\textbf{DDR burst length = 4:} Each READ transfers 4 consecutive locations
+\vspace{-0.3cm}
+\textbf{Key timing parameters:}
+\begin{itemize}
+\item $\mathbf{t_{\text{RCD}}}$: Same as SDR SDRAM
+\item $\mathbf{t_{\text{RC}}}$: Same as SDR SDRAM
+\item $\mathbf{t_{\text{RRD}}}$: Same as SDR SDRAM
+\item \textbf{Burst length = 4:} Each READ transfers 4 consecutive locations (both edges)
+\end{itemize}
 \end{frame}
 
 % Slide: DDR2
@@ -1649,6 +1669,77 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \end{tikzpicture}
 \end{center}
 \end{columns}
+\end{frame}
+
+% Slide: DDR Generation Evolution (Part 1)
+\begin{frame}{DDR Generation Evolution (Part 1)}
+
+\vspace{0.2cm}
+\begin{itemize}
+\item \textbf{SDR → DDR (2000):}
+  \begin{itemize}
+  \item 2-bit prefetch: doubles data rate (both clock edges)
+  \item Reduced power: 3.3V → 2.5V
+  \item Throughput: 266-400 MT/s (2.1-3.2 GB/s)
+  \item Clock: 133-200 MHz, CL 2-3 ($\approx$10 ns actual latency)
+  \end{itemize}
+
+\vspace{0.3cm}
+\item \textbf{DDR → DDR2 (2003):}
+  \begin{itemize}
+  \item 4-bit prefetch: doubles bandwidth
+  \item Reduced power: 1.8V
+  \item More banks (8), smaller pages (1KB)
+  \item Throughput: 533-800 MT/s (4.2-6.4 GB/s)
+  \item Clock: 266-400 MHz, CL 3-5 ($\approx$10 ns - similar to DDR!)
+  \end{itemize}
+
+\vspace{0.3cm}
+\item \textbf{DDR2 → DDR3 (2007):}
+  \begin{itemize}
+  \item 8-bit prefetch: doubles bandwidth
+  \item Reduced power: 1.5V (1.35V variant available)
+  \item Throughput: 1066-1600 MT/s (8.5-12.8 GB/s)
+  \item Clock: 533-800 MHz, CL 5-11 ($\approx$11 ns)
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Key insight:} CL increases in cycles, but stays $\approx$10-15ns in absolute time
+\end{frame}
+
+% Slide: DDR Generation Evolution (Part 2)
+\begin{frame}{DDR Generation Evolution (Part 2)}
+
+\vspace{0.2cm}
+\begin{itemize}
+\item \textbf{DDR3 → DDR4 (2014):}
+  \begin{itemize}
+  \item Per-bank prefetch architecture
+  \item Reduced power: 1.2V
+  \item Bank groups (16 banks in 4 groups)
+  \item Throughput: 2133-3200 MT/s (17-25.6 GB/s)
+  \item Clock: 1066-1600 MHz, CL 12-18 ($\approx$9-11 ns)
+  \end{itemize}
+
+\vspace{0.3cm}
+\item \textbf{DDR4 → DDR5 (2021):}
+  \begin{itemize}
+  \item 16-bit prefetch (burst length 16)
+  \item Reduced power: 1.1V
+  \item Dual-channel per DIMM, 32 banks
+  \item Throughput: 3200-6400 MT/s (25.6-51.2 GB/s)
+  \item Clock: 1600-3200 MHz, CL 32-40 ($\approx$12-13 ns)
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Latency pattern across generations:}
+\begin{itemize}
+\item CL (in cycles): 2 → 4 → 9 → 15 → 36 \textcolor{red}{(looks terrible!)}
+\item Actual latency (ns): 10 → 10 → 11 → 10 → 12 \textcolor{blue}{(mostly flat)}
+\item Higher clocks compensate for increased CL
+\end{itemize}
 \end{frame}
 
 % Slide: DDR Comparison
