@@ -1457,24 +1457,31 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
   timing/rowdist=0.6cm,
   timing/name/.style={font=\small}
 ]
-  clock & H L H L H L H L H L H L H L H L H L H L H L H L H \\
-  cmd   & U 2D{ACT} 2D{NOP} 2D{RD} 2D{RD+PC} 2D{ACT} 2D{NOP} 2D{ACT} 2D{NOP} 2D{RD} 2D{RD} 2D{NOP} 2D{NOP} \\
+  clock & L H L H L H L H L H L H L H L H L H L H L H L H L H \\
+  cmd   & 2D{\textcolor{cyan}{ACT}} 2U 2D{\textcolor{cyan}{RD}} 2D{\textcolor{cyan}{RD+PC}} 2D{\textcolor{blue}{ACT}} 2U 2D{\textcolor{blue}{RD}} 2D{\textcolor{cyan}{ACT}} 2U 2D{\textcolor{cyan}{RD}} 2D{\textcolor{blue}{RD}} 4U \\
   \\
-  Bank  & U 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{blue!30}{Bank 1}} 2U 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{blue!30}{Bank 1}} 2U 2U \\
-  Addr  & U 2D{\textcolor{red}{Row i}} 2U 2D{\textcolor{cyan}{Col j }} 2D{\textcolor{cyan}{Col k }} 2D{\textcolor{red}{Row l }} 2U 2D{\textcolor{red}{Row m}} 2U 2D{\textcolor{cyan}{Col q }} 2D{\textcolor{blue!30}{Col n }} 2U 2U \\
+  Bank  & 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{blue}{Bank 1}} 2U 2D{\textcolor{blue}{Bank 1}} 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{cyan}{Bank 0}} 2D{\textcolor{blue}{Bank 1}} 4U \\
+  Addr  & 2D{\textcolor{cyan}{Row i}} 2U 2D{\textcolor{cyan}{Col j }} 2D{\textcolor{cyan}{Col k }} 2D{\textcolor{blue}{Row m}} 2U 2D{\textcolor{blue}{Col n}} 2D{\textcolor{cyan}{Col l}} 2U 2D{\textcolor{cyan}{Col q}} 2D{\textcolor{blue}{Col n+1}} 4U \\
   \\
-  Data  & 11U 2D{\textcolor{cyan!50}{Data j}} 2D{\textcolor{cyan!50}{Data k}} 4U 2D{\textcolor{blue!50}{Data n}} 2D{\textcolor{cyan!50}{Data q}} 2U \\
+  Data  & 8U 2D{\textcolor{cyan!50}{Data j}} 2D{\textcolor{cyan!50}{Data k}} 4U 2D{\textcolor{blue}{Data n}} 4U 2D{\textcolor{cyan}{Data q}} 2D{\textcolor{blue}{Data n+1}} \\
   \extracode
+    % Vertical grid lines
+    \begin{scope}[gray!30, thin]
+      \foreach \x in {0,2,...,24} {
+        \draw[dashed] (\x+0.15,0.5) -- (\x+0.15,-12);
+      }
+    \end{scope}
     % Timing annotations
     \begin{scope}[>=stealth, font=\scriptsize]
       % tRCD
-      \draw[<->,thick] (0,3.8) -- node[above] {tRCD$>$20ns} (4*0.75,3.8);
+%      \draw[<->,thick] (0,3.8) -- node[above] {tRCD$>$20ns} (4*0.75,3.8);
       % tRC
-      \draw[<->,thick] (0,4.3) -- node[above] {tRC$>$70ns} (8*0.75,4.3);
+%      \draw[<->,thick] (0,4.3) -- node[above] {tRC$>$70ns} (8*0.75,4.3);
       % tRRD
-      \draw[<->,thick] (8*0.75,3.8) -- node[above] {tRRD$>$20ns} (12*0.75,3.8);
+%      \draw[<->,thick] (8*0.75,3.8) -- node[above] {tRRD$>$20ns} (12*0.75,3.8);
       % CL=2
-      \draw[<->,thick] (4*0.75,-0.6) -- node[below] {CL=2} (10*0.75,-0.6);
+%      \draw[<->,thick] (4*0.75,-0.6) -- node[below] {CL=2} (10*0.75,-0.6);
+
     \end{scope}
 \end{tikztimingtable}
 \end{center}
