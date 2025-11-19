@@ -31,7 +31,8 @@ svg/%.pdf: svg/%.svg
 
 # Convert figures SVG to PDF in generated directory
 $(GENDIR)/%.pdf: figures/%.svg | $(GENDIR)
-	rsvg-convert -f pdf -o $@ $<
+	rsvg-convert -f pdf -o $@.tmp $< && \
+	(pdfcrop $@.tmp $@ > /dev/null 2>&1 && rm $@.tmp || mv $@.tmp $@)
 
 $(BUILDDIR)/%.pdf: %.tex $(SVGPDFS) $(FIGPDFS) | $(BUILDDIR)
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
