@@ -27,15 +27,11 @@ $(GENDIR):
 
 # Convert SVG to PDF
 svg/%.pdf: svg/%.svg
-	inkscape --export-type=pdf --export-filename=$@ $< 2>/dev/null || \
-	rsvg-convert -f pdf -o $@ $< 2>/dev/null || \
-	(echo "Error: Neither inkscape nor rsvg-convert found. Please install one of them." && exit 1)
+	rsvg-convert -f pdf -o $@ $<
 
 # Convert figures SVG to PDF in generated directory
 $(GENDIR)/%.pdf: figures/%.svg | $(GENDIR)
-	inkscape --export-type=pdf --export-filename=$@ $< 2>/dev/null || \
-	rsvg-convert -f pdf -o $@ $< 2>/dev/null || \
-	(echo "Error: Neither inkscape nor rsvg-convert found. Please install one of them." && exit 1)
+	rsvg-convert -f pdf -o $@ $<
 
 $(BUILDDIR)/%.pdf: %.tex $(SVGPDFS) $(FIGPDFS) | $(BUILDDIR)
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
