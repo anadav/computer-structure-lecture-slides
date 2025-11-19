@@ -10,7 +10,7 @@
 \usepackage{tikz}
 \usepackage[american]{circuitikz}
 \usepackage{listings}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, backgrounds, matrix}
 \usetheme{Madrid}
 \lstset{
     escapeinside={@}{@},
@@ -256,10 +256,65 @@
     \fi\fi\fi
 }
 
-\title{Computer Structure}
-\subtitle{Pipeline}
-\author{Lihu Rappoport}
-\date{}
+\title{Pipeline}
+\author{Computer Architecture 2360267}
+\date{2025, Lecture \#2}
+
+% BTB Structure diagram macro
+\newcommand{\btbdiagram}{
+\begin{tikzpicture}[scale=0.8]
+    % BTB table as matrix
+    \matrix[matrix of nodes,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            inner sep=0pt,
+            anchor=north,
+            nodes in empty cells,
+            nodes={draw, align=center},
+            column 1/.append style={nodes={text width=1.8cm, minimum height=0.25cm}},
+            column 2/.append style={nodes={text width=1.8cm, minimum height=0.25cm}},
+            column 3/.append style={nodes={text width=1.2cm, minimum height=0.25cm}},
+            ampersand replacement=\&
+        ] (btb) {
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+        \& \& \\
+    };
+
+    \node[draw, rectangle, above=8mm of btb-1-1.north, xshift=-8mm, font=\scriptsize] (pc) {PC of instruction to fetch};
+    % Table headers positioned relative to matrix columns
+    \node[above=1mm of btb-1-1.north, text depth=0ex, font=\scriptsize] {Look up};
+    \node[above=1mm of btb-1-2.north, text depth=0ex, font=\scriptsize] {Predicted PC};
+    \node[above=1mm of btb-1-3.north, text depth=0ex, font=\scriptsize] {History};
+
+    % BTB label positioned relative to matrix left
+    \node[rotate=90, left=5mm of btb.north west, font=\tiny, anchor=north east] {$\leftarrow$ \# of entries $\rightarrow$};
+
+    % Comparator positioned relative to first column bottom
+    \node[circle, draw, inner sep=1pt, font=\tiny] (comp) at ($ (btb-8-1.south) + (0, -0.4) $) {=};
+
+    % Arrows using relative positioning
+    \draw[->] (pc) -- (btb-1-1.north -| pc);
+    \draw[->] ([xshift=2mm]pc.south west) |- (comp.west);
+    \draw[->] (btb-8-1.south) -- (comp);
+
+    \node[right=8mm of comp, font=\tiny, align=left, text=red] (no) {not predicted\\to be branch.\\ $\Rightarrow$ Proceed};
+
+    % Output logic positioned relative to comparator
+    \draw[->] (comp.east) -- node[above, font=\tiny]{no} (no);
+
+    \node[below=4mm of comp, font=\tiny, align=left, text=green] (yes) {predicted to\\be branch.\\ $\Rightarrow$ Use target};
+    \draw[->] (comp.south) -- node[left, font=\tiny]{yes} (yes);
+
+    % Prediction output from third column
+    \draw[->] ([xshift=3mm]btb-8-3.south) -- ++(0, -8mm) node[below, align=center, font=\tiny] {Branch prediction\\Taken/Not taken};
+\end{tikzpicture}
+}
 
 \begin{document}
 
@@ -1085,16 +1140,16 @@ then stall
         \draw (slow_title.south west) -- (slow_title.south east);
 
         \node[anchor=north west, font=\small\ttfamily, align=left] (slow_code) at ($(slow_title.south west) + (0, -0.1)$) {
-            LW~~~\underline{Rb},b\\
-            LW~~~\underline{\textcolor{red}{Rc}},c\\
+            LW~~~Rb,b\\
+            LW~~~\textcolor{red}{Rc},c\\
             \textcolor{blue}{Stall}\\
-            ADD~~\underline{Ra},\underline{Rb},\underline{\textcolor{red}{Rc}}\\
-            \tikzmark{slow_sw1}SW~~~\underline{a},\underline{Ra}\\
-            \tikzmark{slow_re}LW~~~\underline{Re},e\\
-            LW~~~\underline{\textcolor{red}{Rf}},f\\
+            ADD~~Ra,Rb,\textcolor{red}{Rc}\\
+            \tikzmark{slow_sw1}SW~~~a,Ra\\
+            \tikzmark{slow_re}LW~~~Re,e\\
+            LW~~~\textcolor{red}{Rf},f\\
             \textcolor{blue}{Stall}\\
-            SUB~~\underline{Rd},\underline{Re},\underline{\textcolor{red}{Rf}}\\
-            SW~~~\underline{d},\underline{Rd}
+            SUB~~Rd,Re,\textcolor{red}{Rf}\\
+            SW~~~d,Rd
         };
 
         % Fast code column
@@ -1102,14 +1157,14 @@ then stall
         \draw (fast_title.south west) -- (fast_title.south east);
 
         \node[anchor=north west, font=\small\ttfamily, align=left] (fast_code) at ($(fast_title.south west) + (0, -0.1)$) {
-            LW~~~\underline{Rb},b\\
-            LW~~~\underline{Rc},c\\
-            \tikzmark{fast_re}LW~~~\textcolor{green!60!black}{\underline{Re},e}\\
-            ADD~~\underline{Ra},\underline{Rb},\underline{Rc}\\
-            LW~~~\underline{Rf},f\\
-            \tikzmark{fast_sw1}SW~~~\textcolor{green!60!black}{\underline{a},\underline{Ra}}\\
-            SUB~~\underline{Rd},\underline{Re},\underline{Rf}\\
-            SW~~~\underline{d},\underline{Rd}
+            LW~~~Rb,b\\
+            LW~~~Rc,c\\
+            \tikzmark{fast_re}LW~~~\textcolor{green!60!black}{Re,e}\\
+            ADD~~Ra,Rb,Rc\\
+            LW~~~Rf,f\\
+            \tikzmark{fast_sw1}SW~~~\textcolor{green!60!black}{a,Ra}\\
+            SUB~~Rd,Re,Rf\\
+            SW~~~d,Rd
         };
 
         % Arrows using tikzmark
@@ -1267,56 +1322,9 @@ then stall
     \end{itemize}
     
     \vspace{0.3cm}
-    
-    \begin{tikzpicture}[scale=1]
-        % Draw the BTB table with light blue fill for data area
-        \fill[blue!15] (0,0) rectangle (7.5,2.5);
-        
-        % Draw outer border
-        \draw[thick] (0,0) rectangle (7.5,3);
-        
-        % Column dividers
-        \draw[thick] (2.5,0) -- (2.5,3);
-        \draw[thick] (5,0) -- (5,3);
-        
-        % Header row separator
-        \draw[thick] (0,2.5) -- (7.5,2.5);
-        
-        % Data row lines (4 rows shown)
-        \draw (0,2) -- (7.5,2);
-        \draw (0,1.5) -- (7.5,1.5);
-        \draw (0,1) -- (7.5,1);
-        \draw (0,0.5) -- (7.5,0.5);
-        
-        % Header text
-        \node at (1.25,2.75) {Branch IP};
-        \node at (3.75,2.75) {Target IP};
-        \node at (6.25,2.75) {History};
-        
-        % Arrow from "IP of inst in fetch" to comparison circle
-        \draw[->,thick] (-2.5,1.25) -- (-0.3,1.25);
-        \node[left] (ip) at (-2.5,1.25) {\small IP of inst in fetch};
-        
-        % Comparison circle positioned between arrow and Branch IP column
-        \draw[thick,fill=white] (1.25,-1.25) circle (0.25);
-        \node (qmark) at (1.25,-1.25) {\small ?=};
-        \draw[thick] (ip.east) -- (qmark.west);
-        
-        % Connect comparison to Branch IP column (horizontal then down)
-        \draw[thick] (0.25,1.25) -- (1.25,1.25);
-        \draw[->,thick] (1.25,1.25) -- (1.25,0) -- (1.25,-0.8);
-        
-        % Arrow from Target IP column straight down
-        \draw[->,thick] (3.75,0) -- (3.75,-0.8);
-        
-        % Arrow from History column straight down
-        \draw[->,thick] (6.25,0) -- (6.25,-0.8);
-        
-        % Output labels
-        \node[below,align=center] at (1.25,-1) {\small Inst predicted\\to be branch};
-        \node[below,align=center] at (3.75,-1) {\small Predicted\\Target};
-        \node[below,align=center] at (6.25,-1) {\small Branch predicted\\taken or not taken};
-    \end{tikzpicture}
+
+    \centering
+    \btbdiagram
     
     \vspace{0.4cm}
     
