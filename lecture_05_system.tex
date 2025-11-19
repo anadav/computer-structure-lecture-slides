@@ -1688,7 +1688,7 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \begin{frame}{DDR Comparison}
 \vspace{-0.2cm}
 \begin{center}
-\tiny
+\scriptsize
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
 & \textbf{Trend} & \textbf{SDRAM} & \textbf{DDR} & \textbf{DDR2} & \textbf{DDR3} & \textbf{DDR4} & \textbf{DDR5} \\
@@ -1721,6 +1721,31 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \item \textcolor{green!60!black}{Power efficiency improves} (voltage $\downarrow$)
 \item \textcolor{green!60!black}{More banks} = better parallelism for multiple requests
 \item \textcolor{red}{CAS latency $\uparrow$ in cycles}, but \textcolor{blue}{stays $\sim$10-12ns} (clocks compensate)
+\end{itemize}
+\end{frame}
+
+% Slide: ECC Memory
+\begin{frame}{ECC: Error Correcting Code Memory}
+\textbf{Why is ECC needed?}
+\begin{itemize}
+\item DRAM cells can experience bit flips due to:
+  \begin{itemize}
+  \item Cosmic rays, alpha particles (from packaging)
+  \item Electrical noise, voltage fluctuations
+  \item Cell leakage, manufacturing defects
+  \end{itemize}
+\item \textbf{Error rate:} 2000-6000 correctable errors per GB per year (Google study)
+\item At scale: $\sim$2\% of servers encounter ECC faults
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{What does ECC do?}
+\begin{itemize}
+\item \textbf{SECDED:} Single Error Correction, Double Error Detection
+\item Uses 8 extra bits for every 64 data bits (72-bit total)
+\item \textcolor{green!60!black}{Corrects:} 1-bit errors (automatically, transparent)
+\item \textcolor{blue}{Detects:} 2-bit errors (reports error, cannot correct)
+\item \textbf{DDR5 on-die ECC:} Additional protection inside the chip (transparent)
 \end{itemize}
 \end{frame}
 
