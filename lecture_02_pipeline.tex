@@ -859,112 +859,77 @@
 
 \begin{frame}{Pipeline Architecture}
 \begin{center}
-\begin{tikzpicture}[scale=1.2, transform shape]
-    % Define styles
-    \tikzstyle{block} = [rectangle, draw, thick, minimum width=1cm, minimum height=1cm, inner sep=2pt]
-    \tikzstyle{latch} = [rectangle, draw, thick, minimum width=0.15cm, minimum height=1.8cm, fill=gray!20]
+\begin{circuitikz}[scale=0.9, transform shape]
+    % Define circuitikz component styles
+    \tikzstyle{imem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+                              external pins width=0, fill=white, align=center]
+    \tikzstyle{regfile_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=3, NR=4, square pins=1},
+                                 external pins width=0, fill=white, align=center]
+    \tikzstyle{regfile_wb} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=0, square pins=1},
+                              external pins width=0, fill=white, align=center]
+    \tikzstyle{alu_block} = [muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+                            external pins width=0, fill=white]
+    \tikzstyle{dmem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+                              external pins width=0, fill=white, align=center]
+    \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.8cm]
     \tikzstyle{line} = [draw, thick]
-    
-    % Stage labels
-    \node[above, font=\footnotesize] at (0,1) {IF};
-    \node[above, font=\footnotesize] at (2.4,1) {ID};
-    \node[above, font=\footnotesize] at (4.8,1) {EXE};
-    \node[above, font=\footnotesize] at (7.4,1) {MEM};
-    \node[above, font=\footnotesize] at (9.8,1) {WB};
-    
-    % Single pipeline row components
-    \node[block, fill=white] (IM) at (0,0) {IM};
-    
-    % Shade right half of IM (background)
-    \fill[gray!30] (IM.north) -- (IM.north east) -- (IM.south east) -- (IM.south) -- cycle;
-    % Redraw IM border and text on top
-    \node[block, fill=none] at (0,0) {IM};
-    
-    % Latch after IM
-    \node[latch] (L1) at (1.2,0) {};
-    
-    \node[block, fill=white] (Reg1) at (2.4,0) {Reg};
-    
-    % Shade right half of first Reg (background)
-    \fill[gray!30] (Reg1.north) -- (Reg1.north east) -- (Reg1.south east) -- (Reg1.south) -- cycle;
-    % Redraw Reg1 border and text on top
-    \node[block, fill=none] at (2.4,0) {Reg};
-    
-    % Latch after Reg1
-    \node[latch] (L2) at (3.6,0) {};
-    
-    % ALU using the custom shape (with gray shading)
-    \begin{scope}[shift={(4.8,0)}, scale=1.2]
-        % Trapezoid coordinates
-        \coordinate (toptopleft) at (0, 0.8);
-        \coordinate (topbottomleft) at (0, 0.3);
-        \coordinate (left) at (0.2, 0);
-        \coordinate (bottomtopleft) at (0, -0.3);
-        \coordinate (bottombottomleft) at (0, -0.8);
-        \coordinate (topright) at (0.6, 0.4);
-        \coordinate (bottomright) at (0.6, -0.4);
-        
-        % Draw the trapezoid with gray fill
-        \fill[gray!30] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-        \draw[thick] (toptopleft) -- (topbottomleft) -- (left) -- (bottomtopleft) -- (bottombottomleft) -- (bottomright) -- (topright) -- cycle;
-        
-        % ALU connection points
-        \coordinate (alu_input1) at (0, 0.5);
-        \coordinate (alu_input2) at (0, -0.5);
-        \coordinate (alu_output) at (0.6, 0);
-    \end{scope}
-    
-    % Latch after ALU
-    \node[latch] (L3) at (6.2,0) {};
-    
-    \node[block, fill=white] (DM) at (7.4,0) {DM};
-    
-    % Shade left half of DM for read, right half for write
-    \fill[gray!30] (DM.north west) -- (DM.north) -- (DM.south) -- (DM.south west) -- cycle;
-    % Redraw DM border and text on top
-    \node[block, fill=none] at (7.4,0) {DM};
-    
-    % Latch after DM
-    \node[latch] (L4) at (8.6,0) {};
-    
-    \node[block, fill=white] (Reg2) at (9.8,0) {Reg};
-    
-    % Shade left half of last Reg (background)
-    \fill[gray!30] (Reg2.north west) -- (Reg2.north) -- (Reg2.south) -- (Reg2.south west) -- cycle;
-    % Redraw Reg2 border and text on top
-    \node[block, fill=none] at (9.8,0) {Reg};
-    
-    % Main horizontal connections
-    \draw[line] (-0.8,0) -- (IM.west);
-    \draw[line] (IM.east) -- (L1.west);
-    
-    % Two inputs to first Reg (from different sources)
-    \draw[line] ([yshift=3pt]L1.east) -- ([yshift=3pt]Reg1.west);
-    \draw[line] ([yshift=-3pt]L1.east) -- ([yshift=-3pt]Reg1.west);
-    
-    \draw[line] (Reg1.east) -- (L2.west);
-    
-    % Two inputs to ALU
-    \draw[line] ([yshift=3pt]L2.east) -- ++(0.3,0) |- (alu_input1);
-    \draw[line] ([yshift=-3pt]L2.east) -- ++(0.3,0) |- (alu_input2);
-    
-    % ALU output to next latch
-    \draw[line] (alu_output) -- (L3.west);
-    
-    % DM connections
-    \draw[line] (L3.east) -- (DM.west);
-    \draw[line] (DM.east) -- (L4.west);
-    
-    % Bypass around DM (using relative positioning)
-    \draw[line] (L3.east) -- ($(L3.east)!0.5!(DM.west)$) -- ++(0, -0.7) -|
-                ($(L4.west)!0.5!(DM.east)$) -- (L4.west);
-    
-    % Single connection to final Reg
-    \draw[line] (L4.east) -- (Reg2.west);
-    
-    \draw[line] (Reg2.east) -- ++(0.6,0);
-    
-\end{tikzpicture}
+
+    % Stage labels at top
+    \node[font=\footnotesize] at (0, 2) {IF};
+    \node[font=\footnotesize] at (2.5, 2) {ID};
+    \node[font=\footnotesize] at (5, 2) {EXE};
+    \node[font=\footnotesize] at (7.5, 2) {MEM};
+    \node[font=\footnotesize] at (10, 2) {WB};
+
+    % Instruction Memory
+    \node[imem_block] (IM) at (0,0) {IM};
+
+    % Latch L1
+    \node[latch, anchor=west] (L1) at ([xshift=3mm]IM.east) {};
+
+    % Register File (first) - anchor at lpin 2
+    \node[regfile_block, anchor=lpin 2] (Reg1) at ([xshift=3mm]L1.east) {Reg};
+
+    % Latch L2
+    \node[latch, anchor=west] (L2) at ([xshift=3mm]Reg1.east |- L1) {};
+
+    % ALU
+    \node[alu_block, anchor=west] (ALU) at ([xshift=3mm]L2.east) {};
+
+    % Latch L3
+    \node[latch, anchor=west] (L3) at ([xshift=3mm]ALU.east |- L1) {};
+
+    % Data Memory
+    \node[dmem_block, anchor=lpin 1] (DM) at ([xshift=3mm]L3.east) {DM};
+
+    % Latch L4
+    \node[latch, anchor=west] (L4) at ([xshift=3mm]DM.east |- L1) {};
+
+    % Register File (second) - only 1 lpin, no rpin
+    \node[regfile_wb, anchor=lpin 1] (Reg2) at ([xshift=3mm]L4.east) {Reg};
+
+    % Connections - using pins for clean horizontal lines
+    \draw[line] (IM.rpin 1) -- (L1.west);
+    \draw[line] (L1.east) -- (Reg1.lpin 2);
+    \draw[line] ([xshift=2mm]L1.east) |- (Reg1.lpin 1);
+
+    \draw[line] (Reg1.rpin 1) -- (L2.west |- Reg1.rpin 1);
+    \draw[line] (Reg1.rpin 4) -- (L2.west |- Reg1.rpin 4);
+
+    \draw[line] (L2.east |- ALU.lpin 1) -- (ALU.lpin 1);
+    \draw[line] (L2.east |- ALU.lpin 2) -- (ALU.lpin 2);
+
+    \draw[line] (ALU.rpin 1) -- (L3.west);
+
+    \draw[line] (L3.east) -- (DM.lpin 1);
+    \draw[line] (DM.rpin 1) -- (L4.west);
+
+    % Bypass around DM
+    \draw[line] (L3.east) -- ++(2mm, 0) coordinate (bypass_start) -| ([xshift=-1mm, yshift=-1mm]DM.south west) -| ([xshift=1mm]DM.east) -- (L4.west);
+
+    \draw[line] (L4.east) -- (Reg2.lpin 1);
+
+\end{circuitikz}
 \end{center}
 \end{frame}
 
@@ -1058,6 +1023,57 @@
     \end{itemize}
 \end{frame}
 
+% Macro for drawing a single pipeline stage sequence using pgfkeys
+\pgfkeys{
+    /pipelinestage/.is family, /pipelinestage,
+    default/.style = {
+        prefix = stage,
+        xpos = 0,
+        ypos = 0,
+        im color = white,
+        reg1 color = white,
+        dm color = white,
+        reg2 color = white
+    },
+    prefix/.estore in = \stageprefix,
+    xpos/.estore in = \stagexpos,
+    ypos/.estore in = \stageypos,
+    im color/.estore in = \imcolor,
+    reg1 color/.estore in = \regonecolor,
+    dm color/.estore in = \dmcolor,
+    reg2 color/.estore in = \regtwocolor
+}
+
+\newcommand{\drawpipelinestage}[1][]{%
+    \pgfkeys{/pipelinestage, default, #1}%
+    \begin{scope}[shift={(\stagexpos,\stageypos)}]
+        \tikzstyle{stagebox} = [rectangle, draw, thick, minimum width=0.5cm, minimum height=0.5cm, inner sep=1pt, font=\scriptsize]
+
+        % IM block
+        \node[stagebox, fill=\imcolor] (\stageprefix-im) at (0,0) {IM};
+
+        % First Reg block
+        \node[stagebox, fill=\regonecolor] (\stageprefix-reg1) at (0.7,0) {Reg};
+
+        % ALU - simple trapezoid like in Pipeline Architecture
+        \begin{scope}[shift={(1.4,0)}]
+            \coordinate (tl) at (-0.1, 0.25);
+            \coordinate (bl) at (-0.1, -0.25);
+            \coordinate (tr) at (0.1, 0.15);
+            \coordinate (br) at (0.1, -0.15);
+
+            \draw[thick, fill=white] (tl) -- (tr) -- (br) -- (bl) -- cycle;
+            \coordinate (\stageprefix-alu) at (0,0);
+        \end{scope}
+
+        % DM block
+        \node[stagebox, fill=\dmcolor] (\stageprefix-dm) at (2.1,0) {DM};
+
+        % Second Reg block
+        \node[stagebox, fill=\regtwocolor] (\stageprefix-reg2) at (2.8,0) {Reg};
+    \end{scope}
+}
+
 %% Slide: Register File Split
 \begin{frame}{Register File Split}
     \begin{itemize}
@@ -1065,13 +1081,40 @@
         \item Register file is read during second half of the cycle
         \item[$\Rightarrow$] Register file is written before it is read $\Rightarrow$ returns the correct data
     \end{itemize}
-    
+
+    \vspace{0.3cm}
     \centering
-    \begin{tikzpicture}[scale=0.8]
-        % Timeline showing register file operations
-        \draw[->] (0,0) -- (8,0) node[right] {time};
-        \draw[thick, blue] (1,0.5) -- (3,0.5) node[midway, above] {Write};
-        \draw[thick, red] (4,0.5) -- (6,0.5) node[midway, above] {Read};
+    \begin{tikzpicture}[scale=0.9, every node/.style={transform shape}]
+        % Timeline at top
+        \node[anchor=south west, font=\small] at (-1.5, 3.2) {Time (clock cycles)};
+        \draw[->, thick] (0, 3) -- (10, 3);
+        \foreach \i in {1,...,9} {
+            \node[above, font=\scriptsize] at (\i, 3) {\i};
+        }
+
+        % Program execution order label
+        \node[anchor=north, align=center, font=\small] at (-2, 2.5) {Program\\execution\\order};
+
+        % Instructions
+        \node[anchor=east, font=\small\ttfamily] at (-0.3, 2) {lw R2, 30(R1)};
+        \node[anchor=east, font=\small\ttfamily] at (-0.3, 1) {and R12, R2, R5};
+        \node[anchor=east, font=\small\ttfamily] at (-0.3, 0) {or R13, R6, R2};
+        \node[anchor=east, font=\small\ttfamily] at (-0.3, -1) {add R14, R2, R2};
+        \node[anchor=east, font=\small\ttfamily] at (-0.3, -2) {sw R15, 100(R2)};
+
+        % Draw pipeline stages using the macro in a loop
+        % Each instruction starts 0.8 units to the right and 1 unit down from previous
+        \foreach \i in {0,...,4} {
+            \pgfmathsetmacro{\xoffset}{0.5 + \i * 0.8}
+            \pgfmathsetmacro{\yoffset}{2 - \i}
+            % Highlight reg1 for instruction 1 (and) to show read dependency
+            \ifnum\i=1
+                \drawpipelinestage[prefix=i\i, xpos=\xoffset, ypos=\yoffset,
+                                  reg1 color=orange!40]
+            \else
+                \drawpipelinestage[prefix=i\i, xpos=\xoffset, ypos=\yoffset]
+            \fi
+        }
     \end{tikzpicture}
 \end{frame}
 
