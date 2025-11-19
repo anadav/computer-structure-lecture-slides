@@ -284,7 +284,7 @@
 \begin{frame}{Pipelined Car Assembly}
     \centering
     \begin{tikzpicture}[
-        stage/.style={draw, thick, minimum width=3cm, minimum height=2.8cm, align=center, font=\large\bfseries},
+        stage/.style={draw, thick, minimum width=3cm, minimum height=2.4cm, align=center, font=\large\bfseries},
         ]
 
         % Time progress bar - changes with each overlay
@@ -306,19 +306,19 @@
         \only<7>{\node[right, font=\Large\bfseries] at (5.2, 4.2) {07:00};}
 
         % Three stages (always visible)
-        \node[stage, fill=orange!40] (chassis) at (-4, 1.5) {
-            \includegraphics[width=1.2cm]{generated/noun-chassis-8091073.pdf}\\~
+        \node[stage, fill=orange!40] (chassis) at (-4, 2) {
+            \includegraphics[width=1cm]{generated/noun-chassis-8091073.pdf}\\~
         };
         \node[font=\small, anchor=south] at (chassis.south) {chassis};
         \node[font=\small, anchor=north] at (chassis.south) {1 hour};
 
-        \node[stage, fill=green!40] (engine) at (0, 1.5) {
-            \includegraphics[width=1.4cm]{generated/noun-engine-8079892.pdf}\\~
+        \node[stage, fill=green!40, right=1cm of chassis] (engine) {
+            \includegraphics[width=1.2cm]{generated/noun-engine-8079892.pdf}\\~
         };
         \node[font=\small, anchor=south] at (engine.south) {engine};
         \node[font=\small, anchor=north] at (engine.south) {2 hours};
 
-        \node[stage, fill=blue!40] (finish) at (4, 1.5) {
+        \node[stage, fill=blue!40, right=1cm of engine] (finish) {
             \includegraphics[width=1.2cm]{generated/noun-car-spray-5038977.pdf}\\~
         };
         \node[font=\small, anchor=south] at (finish.south) {finish};
@@ -350,19 +350,19 @@
             \node[below=0.8cm of chassis] (car3) {
                 \includegraphics[width=1.2cm]{generated/noun-car-24929.pdf}
             };
-            \node[below=0.05cm of car3, font=\small] {Car 3};
+            \node[below=0.05cm of car3, font=\small] (car3title) {Car 3};
 
-            \node[below=0.8cm of engine] (car2) {
+            \node at (car3 -| engine) (car2) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2302591.pdf}
             };
-            \node[below=0.05cm of car2, font=\small] {Car 2};
+            \node[font=\small] at (car3title -| car2) {Car 2};
 
-            \node[below=0.8cm of finish] (car1) {
+            \node at (car3 -| finish) (car1) {
                 \includegraphics[width=1.2cm]{generated/noun-car-4612699.pdf}
             };
-            \node[below=0.05cm of car1, font=\small] {Car 1};
+            \node[font=\small] at (car3title -| car1) {Car 1};
 
-            \node[align=center, font=\small] at (0, -3.2) {
+            \node[align=center, font=\small] at (0, -2) {
                 Car 2 waited an hour after finishing station 1\\
                 for Car 1 to finish station 2
             };
@@ -373,19 +373,19 @@
             \node[below=0.8cm of chassis] (car3) {
                 \includegraphics[width=1.2cm]{generated/noun-car-24929.pdf}
             };
-            \node[below=0.05cm of car3, font=\small] {Car 3};
+            \node[below=0.05cm of car3, font=\small] (car3title) {Car 3};
 
-            \node[below=0.8cm of engine] (car2) {
+            \node at (car3 -| engine) (car2) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2302591.pdf}
             };
-            \node[below=0.05cm of car2, font=\small] {Car 2};
+            \node[font=\small] at (car3title -| car2) {Car 2};
 
-            \node at (7, -1) (car1) {
+            \node at (6, -1) (car1) {
                 \includegraphics[width=1.2cm]{generated/noun-car-4612699.pdf}
             };
             \node[below=0.05cm of car1, font=\small] {Car 1};
 
-            \node[align=center, font=\normalsize] at (0, -3.2) {
+            \node[align=center, font=\normalsize] at (0, -2) {
                 \textbf{First car done after 4 hours}
             };
         }
@@ -395,17 +395,17 @@
             \node[below=0.8cm of chassis] (car4) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2502122.pdf}
             };
-            \node[below=0.05cm of car4, font=\small] {Car 4};
+            \node[below=0.05cm of car4, font=\small] (car4title) {Car 4};
 
-            \node[below=0.8cm of engine] (car3) {
+            \node at (car4 -| engine) (car3) {
                 \includegraphics[width=1.2cm]{generated/noun-car-24929.pdf}
             };
-            \node[below=0.05cm of car3, font=\small] {Car 3};
+            \node[font=\small] at (car4title -| car3) {Car 3};
 
-            \node[below=0.8cm of finish] (car2) {
+            \node at (car4 -| finish) (car2) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2302591.pdf}
             };
-            \node[below=0.05cm of car2, font=\small] {Car 2};
+            \node[font=\small] at (car4title -| car2) {Car 2};
         }
 
         % Overlay 6: 06:00 - Car 4 at chassis, Car 3 at engine, Car 2 done
@@ -413,19 +413,19 @@
             \node[below=0.8cm of chassis] (car4) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2502122.pdf}
             };
-            \node[below=0.05cm of car4, font=\small] {Car 4};
+            \node[below=0.05cm of car4, font=\small] (car4title) {Car 4};
 
-            \node[below=0.8cm of engine] (car3) {
+            \node at (car4 -| engine) (car3) {
                 \includegraphics[width=1.2cm]{generated/noun-car-24929.pdf}
             };
-            \node[below=0.05cm of car3, font=\small] {Car 3};
+            \node[font=\small] at (car4title -| car3) {Car 3};
 
-            \node at (7, -1) (car2) {
+            \node at (6, -1) (car2) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2302591.pdf}
             };
             \node[below=0.05cm of car2, font=\small] {Car 2};
 
-            \node[align=center, font=\small] at (0, -3.2) {
+            \node[align=center, font=\small] at (0, -2) {
                 Second car done 5 hours from starting,\\
                 2 hours after the first car is done
             };
@@ -436,19 +436,19 @@
             \node[below=0.8cm of chassis] (car5) {
                 \includegraphics[width=1.2cm]{generated/noun-car-25465.pdf}
             };
-            \node[below=0.05cm of car5, font=\small] {Car 5};
+            \node[below=0.05cm of car5, font=\small] (car5title) {Car 5};
 
-            \node[below=0.8cm of engine] (car4) {
+            \node at (car5 -| engine) (car4) {
                 \includegraphics[width=1.2cm]{generated/noun-car-2502122.pdf}
             };
-            \node[below=0.05cm of car4, font=\small] {Car 4};
+            \node[font=\small] at (car5title -| car4) {Car 4};
 
-            \node[below=0.8cm of finish] (car3) {
+            \node at (car5 -| finish) (car3) {
                 \includegraphics[width=1.2cm]{generated/noun-car-24929.pdf}
             };
-            \node[below=0.05cm of car3, font=\small] {Car 3};
+            \node[font=\small] at (car5title -| car3) {Car 3};
 
-            \node[align=left, font=\normalsize] at (0, -3.5) {
+            \node[align=left, font=\normalsize] at (0, -2) {
                 \textbf{Pipeline latency is 4 hours}\\[1mm]
                 \textbf{Pipeline throughput is one car every 2 hours}
             };
