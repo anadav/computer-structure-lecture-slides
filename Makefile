@@ -3,12 +3,15 @@
 TEXFILES := $(wildcard *.tex)
 BUILDDIR := build
 OUTPUTDIR := output
+GENDIR := generated
 PDFS := $(patsubst %.tex,$(BUILDDIR)/%.pdf,$(TEXFILES))
 OUTPUT_PDFS := $(patsubst %.tex,$(OUTPUTDIR)/%.pdf,$(TEXFILES))
 SVGFILES := $(wildcard svg/*.svg)
 SVGPDFS := $(patsubst %.svg,%.pdf,$(SVGFILES))
+FIGSVGFILES := $(wildcard figures/*.svg)
+FIGPDFS := $(patsubst figures/%.svg,$(GENDIR)/%.pdf,$(FIGSVGFILES))
 
-all: $(BUILDDIR) $(OUTPUTDIR) $(SVGPDFS) $(PDFS) $(OUTPUT_PDFS)
+all: $(BUILDDIR) $(OUTPUTDIR) $(GENDIR) $(SVGPDFS) $(FIGPDFS) $(PDFS) $(OUTPUT_PDFS)
 	@# Clean up any PDFs that might have been generated in the main directory
 	@rm -f *.pdf
 	@rm -f *.aux *.log *.nav *.out *.snm *.toc *.vrb
@@ -19,13 +22,22 @@ $(BUILDDIR):
 $(OUTPUTDIR):
 	mkdir -p $(OUTPUTDIR)
 
+$(GENDIR):
+	mkdir -p $(GENDIR)
+
 # Convert SVG to PDF
 svg/%.pdf: svg/%.svg
 	inkscape --export-type=pdf --export-filename=$@ $< 2>/dev/null || \
 	rsvg-convert -f pdf -o $@ $< 2>/dev/null || \
 	(echo "Error: Neither inkscape nor rsvg-convert found. Please install one of them." && exit 1)
 
-$(BUILDDIR)/%.pdf: %.tex $(SVGPDFS) | $(BUILDDIR)
+# Convert figures SVG to PDF in generated directory
+$(GENDIR)/%.pdf: figures/%.svg | $(GENDIR)
+	inkscape --export-type=pdf --export-filename=$@ $< 2>/dev/null || \
+	rsvg-convert -f pdf -o $@ $< 2>/dev/null || \
+	(echo "Error: Neither inkscape nor rsvg-convert found. Please install one of them." && exit 1)
+
+$(BUILDDIR)/%.pdf: %.tex $(SVGPDFS) $(FIGPDFS) | $(BUILDDIR)
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
 
@@ -40,7 +52,7 @@ $(OUTPUTDIR)/%.pdf: $(BUILDDIR)/%.pdf | $(OUTPUTDIR)
 	cp $< $@
 
 clean:
-	rm -rf $(BUILDDIR) $(OUTPUTDIR)
+	rm -rf $(BUILDDIR) $(OUTPUTDIR) $(GENDIR)
 	rm -f *.pdf *.aux *.log *.nav *.out *.snm *.toc *.vrb
 
 .PHONY: all clean
