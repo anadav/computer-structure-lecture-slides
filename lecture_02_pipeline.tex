@@ -1745,18 +1745,18 @@ then stall
         \node[latch] (ifid) at (0,0) {};
         \node[below=1mm of ifid, font=\scriptsize] {IF/ID};
 
-        \node[latch, anchor=west] (idex) at ([xshift=3cm]ifid.east) {};
+        \node[latch, anchor=west] (idex) at ([xshift=4cm]ifid.east) {};
         \node[below=1mm of idex, font=\scriptsize] {ID/EX};
 
-        \node[latch, anchor=west] (exmem) at ([xshift=3cm]idex.east) {};
+        \node[latch, anchor=west] (exmem) at ([xshift=4cm]idex.east) {};
         \node[below=1mm of exmem, font=\scriptsize] {EX/MEM};
 
-        \node[latch, anchor=west] (memwb) at ([xshift=3cm]exmem.east) {};
+        \node[latch, anchor=west] (memwb) at ([xshift=4cm]exmem.east) {};
         \node[below=1mm of memwb, font=\scriptsize] {MEM/WB};
 
         % Control unit - positioned relative to IF/ID
         \node[draw, thick, ellipse, minimum width=1.5cm, minimum height=2cm, align=center, orange,
-              anchor=south west] (control) at (ifid.north east) {Control};
+              anchor=south west] (control) at ([xshift=1.5cm]ifid.north east) {Control};
 
         % Instruction input
         \draw[->, thick] ([xshift=-2mm]control.west) -- (control.west);
@@ -1779,14 +1779,14 @@ then stall
         \draw[orange, thick, dotted] (memwb.center) -- +(0, -1.2) node[below, font=\tiny] {$\cdots$};
 
         % Arrow from IF/ID to Control unit
-        \draw[->, thick] (ifid.east) -- ++(0.3, 0) |- \node[above, font=\scriptsize] {Instruction} (control.west);
+        \draw[->, thick] (ifid.east) -- ++(0.3, 0) |- node[above, font=\scriptsize] {Instruction} (control.west);
 
         % Control signals from Control unit to ID/EX - using |- with yshift
-        \draw[->, thick, orange] (control.east) -| ([yshift=3mm]idex_wb.west);
-        \draw[->, thick, orange] (control.east) -| ([yshift=0mm]idex_m.west);
-        \draw[->, thick, orange] (control.east) -| ([yshift=-3mm]idex_ex.west);
-        \draw[->, thick, orange] (control.east) -| ([yshift=-8mm]idex.west);
-        \draw[->, thick, orange] (control.east) -| ([yshift=-12mm]idex.west);
+        \foreach \i in {-2mm, 0, 2mm} {
+            \draw[->, orange] ([yshift=\i]control |- idex_wb) -- ([yshift=\i]idex_wb.west);
+            \draw[->, orange] ([yshift=\i]control |- idex_m) -- ([yshift=\i]idex_m.west);
+            \draw[->, orange] ([yshift=\i]control |- idex_ex) -- ([yshift=\i]idex_ex.west);
+        }
 
         % WB signals propagating through stages
         \draw[->, thick, orange] (idex_wb.east) -- (exmem_wb.west);
