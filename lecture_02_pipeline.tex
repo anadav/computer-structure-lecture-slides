@@ -1125,10 +1125,10 @@
 
         % Instructions with named nodes
         \node[anchor=east, font=\small\ttfamily] (lw_inst) at (-0.3, 2) {lw R2, 30(R1)};
-        \node[anchor=east, font=\small\ttfamily] (and_inst) at (-0.3, 1) {and R12, R2, R5};
-        \node[anchor=east, font=\small\ttfamily] (or_inst) at (-0.3, 0) {or R13, R6, R2};
-        \node[anchor=east, font=\small\ttfamily] (add_inst) at (-0.3, -1) {add R14, R2, R2};
-        \node[anchor=east, font=\small\ttfamily] (sw_inst) at (-0.3, -2) {sw R15, 100(R2)};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (and_inst) at ([yshift=-2mm]lw_inst.south east) {and R12, R2, R5};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (or_inst) at ([yshift=-2mm]and_inst.south east) {or R13, R6, R2};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (add_inst) at ([yshift=-2mm]or_inst.south east) {add R14, R2, R2};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (sw_inst) at ([yshift=-2mm]add_inst.south east) {sw R15, 100(R2)};
 
         % Draw pipeline stages using the macro in a loop
         % Each instruction i starts at cycle i+1, aligned with instruction y position
@@ -1139,10 +1139,8 @@
         }
 
         % Program execution order label with arrow
-        \coordinate (arrow_start) at (-2, 2.2);
-        \coordinate (arrow_end) at (arrow_start |- sw_inst.south);
-        \node[anchor=south, align=center, font=\small] at (arrow_start) {Program\\execution\\order};
-        \draw[->, thick] (arrow_start) -- (arrow_end);
+        \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\execution\\order};
+        \draw[->, thick] (ordertext.south) -- (ordertext |- sw_inst);
     \end{circuitikz}
 \end{frame}
 
