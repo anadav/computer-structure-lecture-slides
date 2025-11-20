@@ -1713,10 +1713,93 @@ then stall
         \item \textbf{Pass control signals along just like the data}
     \end{itemize}
 
-    \vspace{0.5cm}
+    \vspace{0.2cm}
     \centering
-    % TODO: Add figure for multi-cycle control
-    %\includegraphics[width=0.9\textwidth]{figures/multi_cycle_control.png}
+    \scriptsize
+    \begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
+        \hline
+        \rowcolor{gray!20} & \multicolumn{4}{c|}{\textbf{Execution/Address Calculation}} & \multicolumn{2}{c|}{\textbf{Memory access stage}} & \multicolumn{3}{c|}{\textbf{stage control}} \\
+        \rowcolor{gray!20} & \multicolumn{4}{c|}{\textbf{stage control lines}} & \multicolumn{2}{c|}{\textbf{control lines}} & \multicolumn{3}{c|}{\textbf{lines}} \\
+        \hline
+        \rowcolor{gray!20}\textbf{Instruction} & \textbf{Reg} & \textbf{ALU} & \textbf{ALU} & \textbf{ALU} & & \textbf{Mem} & \textbf{Mem} & \textbf{Reg} & \textbf{Mem to} \\
+        \rowcolor{gray!20} & \textbf{Dst} & \textbf{Op1} & \textbf{Op0} & \textbf{Src} & \textbf{Branch} & \textbf{Read} & \textbf{Write} & \textbf{write} & \textbf{Reg} \\
+        \hline
+        R-format & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+        \hline
+        lw & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 1 \\
+        \hline
+        sw & X & 0 & 0 & 1 & 0 & 0 & 1 & 0 & X \\
+        \hline
+        beq & X & 0 & 1 & 0 & 1 & 0 & 0 & 0 & X \\
+        \hline
+    \end{tabular}
+
+    \vspace{0.3cm}
+    \begin{tikzpicture}[scale=0.6, transform shape]
+        % Styles
+        \tikzstyle{latch} = [draw, thick, minimum width=0.8cm, minimum height=3cm]
+        \tikzstyle{control_box} = [draw, thick, orange, minimum width=0.8cm, minimum height=5mm,
+                                    font=\scriptsize, align=center]
+
+        % Pipeline register latches - rectangles with labels below
+        \node[latch] (ifid) at (0,0) {};
+        \node[below=1mm of ifid, font=\scriptsize] {IF/ID};
+
+        \node[latch, anchor=west] (idex) at ([xshift=3cm]ifid.east) {};
+        \node[below=1mm of idex, font=\scriptsize] {ID/EX};
+
+        \node[latch, anchor=west] (exmem) at ([xshift=3cm]idex.east) {};
+        \node[below=1mm of exmem, font=\scriptsize] {EX/MEM};
+
+        \node[latch, anchor=west] (memwb) at ([xshift=3cm]exmem.east) {};
+        \node[below=1mm of memwb, font=\scriptsize] {MEM/WB};
+
+        % Control unit - positioned relative to IF/ID
+        \node[draw, thick, ellipse, minimum width=1.5cm, minimum height=2cm, align=center, orange,
+              anchor=south west] (control) at (ifid.north east) {Control};
+
+        % Instruction input
+        \draw[->, thick] ([xshift=-2mm]control.west) -- (control.west);
+
+        % Control signal boxes above ID/EX stage - adjacent using above=0cm of
+        \node[control_box, anchor=south] (idex_ex) at (idex.north) {EX};
+        \node[control_box, above=0cm of idex_ex] (idex_m) {M};
+        \node[control_box, above=0cm of idex_m] (idex_wb) {WB};
+
+        % Control signal boxes above EX/MEM stage - adjacent using above=0cm of
+        \node[control_box, anchor=south] (exmem_m) at (exmem.north) {M};
+        \node[control_box, above=0cm of exmem_m] (exmem_wb) {WB};
+
+        % Control signal boxes above MEM/WB stage
+        \node[control_box, anchor=south] (memwb_wb) at (memwb.north) {WB};
+
+        % Dotted lines for data in latches
+        \draw[orange, thick, dotted] (idex.center) -- +(0, -1.2) node[below, font=\tiny] {$\cdots$};
+        \draw[orange, thick, dotted] (exmem.center) -- +(0, -1.2) node[below, font=\tiny] {$\cdots$};
+        \draw[orange, thick, dotted] (memwb.center) -- +(0, -1.2) node[below, font=\tiny] {$\cdots$};
+
+        % Arrow from IF/ID to Control unit
+        \draw[->, thick] (ifid.east) -- ++(0.3, 0) |- \node[above, font=\scriptsize] {Instruction} (control.west);
+
+        % Control signals from Control unit to ID/EX - using |- with yshift
+        \draw[->, thick, orange] (control.east) -| ([yshift=3mm]idex_wb.west);
+        \draw[->, thick, orange] (control.east) -| ([yshift=0mm]idex_m.west);
+        \draw[->, thick, orange] (control.east) -| ([yshift=-3mm]idex_ex.west);
+        \draw[->, thick, orange] (control.east) -| ([yshift=-8mm]idex.west);
+        \draw[->, thick, orange] (control.east) -| ([yshift=-12mm]idex.west);
+
+        % WB signals propagating through stages
+        \draw[->, thick, orange] (idex_wb.east) -- (exmem_wb.west);
+        \draw[->, thick, orange] (exmem_wb.east) -- (memwb_wb.west);
+        \draw[->, thick, orange] (memwb_wb.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+
+        % M signals propagating through stages
+        \draw[->, thick, orange] (idex_m.east) -- (exmem_m.west);
+        \draw[->, thick, orange] (exmem_m.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+
+        % EX signals
+        \draw[->, thick, orange] (idex_ex.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+    \end{tikzpicture}
 \end{frame}
 
 %% Slide: Five Execution Steps
