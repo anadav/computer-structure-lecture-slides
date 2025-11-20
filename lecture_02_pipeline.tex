@@ -1028,19 +1028,17 @@
     /pipelinearch/.is family, /pipelinearch,
     default/.style = {
         prefix = pipe,
-        at x = 0,
-        at y = 0,
+        at = {(0,0)},
         scale = 0.5
     },
     prefix/.estore in = \pipeprefix,
-    at x/.estore in = \pipeatx,
-    at y/.estore in = \pipeaty,
+    at/.store in = \pipeat,
     scale/.estore in = \pipescale
 }
 
 \newcommand{\drawpipelinearch}[1][]{%
     \pgfkeys{/pipelinearch, default, #1}%
-    \begin{scope}[shift={(\pipeatx,\pipeaty)}, scale=\pipescale, transform shape]
+    \begin{scope}[scale=\pipescale, transform shape]
         % Define circuitikz component styles (EXACTLY as Pipeline Architecture)
         \tikzstyle{imem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
                                   external pins width=0, fill=white, align=center]
@@ -1052,11 +1050,11 @@
                                 external pins width=0, fill=white]
         \tikzstyle{dmem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
                                   external pins width=0, fill=white, align=center]
-        \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.8cm]
+        \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.4cm]
         \tikzstyle{line} = [draw, thick]
 
-        % Instruction Memory - positioned at origin (shift handles positioning)
-        \node[imem_block] (\pipeprefix-IM) at (0,0) {IM};
+        % Instruction Memory - positioned at the 'at' coordinate
+        \node[imem_block] (\pipeprefix-IM) at \pipeat {IM};
 
         % Latch L1
         \node[latch, anchor=west] (\pipeprefix-L1) at ([xshift=3mm]\pipeprefix-IM.east) {};
@@ -1120,23 +1118,21 @@
         \node[anchor=south west, font=\small] at (-1.5, 3.2) {Time (clock cycles)};
         \draw[->, thick] (0, 3) -- (10, 3);
         \foreach \i in {1,...,9} {
-            \node[above, font=\scriptsize] at (\i, 3) {\i};
+            \node[above, font=\scriptsize] at (\i, 3) (i\i) {\i};
         }
 
         % Instructions with named nodes
         \node[anchor=east, font=\small\ttfamily] (lw_inst) at (-0.3, 2) {lw R2, 30(R1)};
-        \node[anchor=east, font=\small\ttfamily, anchor=north east] (and_inst) at ([yshift=-2mm]lw_inst.south east) {and R12, R2, R5};
-        \node[anchor=east, font=\small\ttfamily, anchor=north east] (or_inst) at ([yshift=-2mm]and_inst.south east) {or R13, R6, R2};
-        \node[anchor=east, font=\small\ttfamily, anchor=north east] (add_inst) at ([yshift=-2mm]or_inst.south east) {add R14, R2, R2};
-        \node[anchor=east, font=\small\ttfamily, anchor=north east] (sw_inst) at ([yshift=-2mm]add_inst.south east) {sw R15, 100(R2)};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (and_inst) at ([yshift=-3mm]lw_inst.south east) {and R12, R2, R5};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (or_inst) at ([yshift=-3mm]and_inst.south east) {or R13, R6, R2};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (add_inst) at ([yshift=-3mm]or_inst.south east) {add R14, R2, R2};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (sw_inst) at ([yshift=-3mm]add_inst.south east) {sw R15, 100(R2)};
 
-        % Draw pipeline stages using the macro in a loop
-        % Each instruction i starts at cycle i+1, aligned with instruction y position
-        \foreach \i in {0,...,4} {
-            \pgfmathsetmacro{\cycleno}{\i + 1}
-            \pgfmathsetmacro{\ypos}{2 - \i}
-            \drawpipelinearch[prefix=i\i, at x=\cycleno, at y=\ypos, scale=0.4]
-        }
+        \drawpipelinearch[prefix=i1, at={(lw_inst -| i1)}, scale=0.58]
+        \drawpipelinearch[prefix=i1, at={(and_inst -| i2)}, scale=0.58]
+        \drawpipelinearch[prefix=i1, at={(or_inst -| i3)}, scale=0.58]
+        \drawpipelinearch[prefix=i1, at={(add_inst -| i4)}, scale=0.58]
+        \drawpipelinearch[prefix=i1, at={(sw_inst -| i5)}, scale=0.58]
 
         % Program execution order label with arrow
         \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\execution\\order};
@@ -1204,25 +1200,25 @@ then stall
 
         % Draw pipeline stages using the macro
         % lw instruction - cycle 1
-        \drawpipelinearch[prefix=lw, at x=1, at y=2, scale=0.5]
+        \drawpipelinearch[prefix=lw, at={(1,2)}, scale=0.5]
 
         % and instruction - cycle 2
-        \drawpipelinearch[prefix=and1, at x=2, at y=1, scale=0.5]
+        \drawpipelinearch[prefix=and1, at={(2,1)}, scale=0.5]
 
         % bubble - cycle 3 at row 2 (and's position)
         \node[draw, fill=gray!30, minimum width=0.5cm, minimum height=0.3cm, font=\tiny, anchor=west] at (3, 1) {bubble};
 
         % and instruction continues - cycle 4
-        \drawpipelinearch[prefix=and2, at x=4, at y=1, scale=0.5]
+        \drawpipelinearch[prefix=and2, at={(4,1)}, scale=0.5]
 
         % or instruction - cycle 3
-        \drawpipelinearch[prefix=or, at x=3, at y=0, scale=0.5]
+        \drawpipelinearch[prefix=or, at={(3,0)}, scale=0.5]
 
         % add instruction - cycle 4
-        \drawpipelinearch[prefix=add, at x=4, at y=-1, scale=0.5]
+        \drawpipelinearch[prefix=add, at={(4,-1)}, scale=0.5]
 
         % sw instruction - cycle 5
-        \drawpipelinearch[prefix=sw, at x=5, at y=-2, scale=0.5]
+        \drawpipelinearch[prefix=sw, at={(5,-2)}, scale=0.5]
     \end{circuitikz}
 \end{frame}
 
