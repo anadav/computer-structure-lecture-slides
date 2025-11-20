@@ -1023,54 +1023,85 @@
     \end{itemize}
 \end{frame}
 
-% Macro for drawing a single pipeline stage sequence using pgfkeys
+% Macro for drawing full pipeline architecture based on Pipeline Architecture slide
 \pgfkeys{
-    /pipelinestage/.is family, /pipelinestage,
+    /pipelinearch/.is family, /pipelinearch,
     default/.style = {
-        prefix = stage,
-        xpos = 0,
-        ypos = 0,
-        im color = white,
-        reg1 color = white,
-        dm color = white,
-        reg2 color = white
+        prefix = pipe,
+        at x = 0,
+        at y = 0,
+        scale = 0.5
     },
-    prefix/.estore in = \stageprefix,
-    xpos/.estore in = \stagexpos,
-    ypos/.estore in = \stageypos,
-    im color/.estore in = \imcolor,
-    reg1 color/.estore in = \regonecolor,
-    dm color/.estore in = \dmcolor,
-    reg2 color/.estore in = \regtwocolor
+    prefix/.estore in = \pipeprefix,
+    at x/.estore in = \pipeatx,
+    at y/.estore in = \pipeaty,
+    scale/.estore in = \pipescale
 }
 
-\newcommand{\drawpipelinestage}[1][]{%
-    \pgfkeys{/pipelinestage, default, #1}%
-    \begin{scope}[shift={(\stagexpos,\stageypos)}]
-        \tikzstyle{stagebox} = [rectangle, draw, thick, minimum width=0.5cm, minimum height=0.5cm, inner sep=1pt, font=\scriptsize]
+\newcommand{\drawpipelinearch}[1][]{%
+    \pgfkeys{/pipelinearch, default, #1}%
+    \begin{scope}[scale=\pipescale, transform shape]
+        % Define circuitikz component styles (EXACTLY as Pipeline Architecture)
+        \tikzstyle{imem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+                                  external pins width=0, fill=white, align=center]
+        \tikzstyle{regfile_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=3, NR=4, square pins=1},
+                                     external pins width=0, fill=white, align=center]
+        \tikzstyle{regfile_wb} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=0, square pins=1},
+                                  external pins width=0, fill=white, align=center]
+        \tikzstyle{alu_block} = [muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+                                external pins width=0, fill=white]
+        \tikzstyle{dmem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+                                  external pins width=0, fill=white, align=center]
+        \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.8cm]
+        \tikzstyle{line} = [draw, thick]
 
-        % IM block
-        \node[stagebox, fill=\imcolor] (\stageprefix-im) at (0,0) {IM};
+        % Instruction Memory - positioned at the "at" parameter
+        \node[imem_block] (\pipeprefix-IM) at (\pipeatx,\pipeaty) {IM};
 
-        % First Reg block
-        \node[stagebox, fill=\regonecolor] (\stageprefix-reg1) at (0.7,0) {Reg};
+        % Latch L1
+        \node[latch, anchor=west] (\pipeprefix-L1) at ([xshift=3mm]\pipeprefix-IM.east) {};
 
-        % ALU - simple trapezoid like in Pipeline Architecture
-        \begin{scope}[shift={(1.4,0)}]
-            \coordinate (tl) at (-0.1, 0.25);
-            \coordinate (bl) at (-0.1, -0.25);
-            \coordinate (tr) at (0.1, 0.15);
-            \coordinate (br) at (0.1, -0.15);
+        % Register File (first) - anchor at lpin 2
+        \node[regfile_block, anchor=lpin 2] (\pipeprefix-Reg1) at ([xshift=3mm]\pipeprefix-L1.east) {Reg};
 
-            \draw[thick, fill=white] (tl) -- (tr) -- (br) -- (bl) -- cycle;
-            \coordinate (\stageprefix-alu) at (0,0);
-        \end{scope}
+        % Latch L2 - aligned with L1 vertically
+        \node[latch, anchor=west] (\pipeprefix-L2) at ([xshift=3mm]\pipeprefix-Reg1.east |- \pipeprefix-L1) {};
 
-        % DM block
-        \node[stagebox, fill=\dmcolor] (\stageprefix-dm) at (2.1,0) {DM};
+        % ALU - using anchor=west like the original
+        \node[alu_block, anchor=west] (\pipeprefix-ALU) at ([xshift=3mm]\pipeprefix-L2.east) {};
 
-        % Second Reg block
-        \node[stagebox, fill=\regtwocolor] (\stageprefix-reg2) at (2.8,0) {Reg};
+        % Latch L3 - aligned with L1 vertically
+        \node[latch, anchor=west] (\pipeprefix-L3) at ([xshift=3mm]\pipeprefix-ALU.east |- \pipeprefix-L1) {};
+
+        % Data Memory
+        \node[dmem_block, anchor=lpin 1] (\pipeprefix-DM) at ([xshift=3mm]\pipeprefix-L3.east) {DM};
+
+        % Latch L4 - aligned with L1 vertically
+        \node[latch, anchor=west] (\pipeprefix-L4) at ([xshift=3mm]\pipeprefix-DM.east |- \pipeprefix-L1) {};
+
+        % Register File (second) - only 1 lpin, no rpin
+        \node[regfile_wb, anchor=lpin 1] (\pipeprefix-Reg2) at ([xshift=3mm]\pipeprefix-L4.east) {Reg};
+
+        % Connections - EXACTLY as Pipeline Architecture
+        \draw[line] (\pipeprefix-IM.rpin 1) -- (\pipeprefix-L1.west);
+        \draw[line] (\pipeprefix-L1.east) -- (\pipeprefix-Reg1.lpin 2);
+        \draw[line] ([xshift=2mm]\pipeprefix-L1.east) |- (\pipeprefix-Reg1.lpin 1);
+
+        \draw[line] (\pipeprefix-Reg1.rpin 1) -- (\pipeprefix-L2.west |- \pipeprefix-Reg1.rpin 1);
+        \draw[line] (\pipeprefix-Reg1.rpin 4) -- (\pipeprefix-L2.west |- \pipeprefix-Reg1.rpin 4);
+
+        \draw[line] (\pipeprefix-L2.east |- \pipeprefix-ALU.lpin 1) -- (\pipeprefix-ALU.lpin 1);
+        \draw[line] (\pipeprefix-L2.east |- \pipeprefix-ALU.lpin 2) -- (\pipeprefix-ALU.lpin 2);
+
+        \draw[line] (\pipeprefix-ALU.rpin 1) -- (\pipeprefix-L3.west);
+
+        \draw[line] (\pipeprefix-L3.east) -- (\pipeprefix-DM.lpin 1);
+        \draw[line] (\pipeprefix-DM.rpin 1) -- (\pipeprefix-L4.west);
+
+        % Bypass around DM - EXACTLY as Pipeline Architecture
+        \draw[line] (\pipeprefix-L3.east) -- ++(2mm, 0) coordinate (\pipeprefix-bypass_start) -| ([xshift=-1mm, yshift=-1mm]\pipeprefix-DM.south west) -| ([xshift=1mm,yshift=-3mm]\pipeprefix-DM.east) -- ([yshift=-3mm]\pipeprefix-L4.west);
+
+        \draw[line] (\pipeprefix-L4.east) -- (\pipeprefix-Reg2.lpin 1);
     \end{scope}
 }
 
@@ -1105,15 +1136,9 @@
         % Draw pipeline stages using the macro in a loop
         % Each instruction starts 0.8 units to the right and 1 unit down from previous
         \foreach \i in {0,...,4} {
-            \pgfmathsetmacro{\xoffset}{0.5 + \i * 0.8}
-            \pgfmathsetmacro{\yoffset}{2 - \i}
-            % Highlight reg1 for instruction 1 (and) to show read dependency
-            \ifnum\i=1
-                \drawpipelinestage[prefix=i\i, xpos=\xoffset, ypos=\yoffset,
-                                  reg1 color=orange!40]
-            \else
-                \drawpipelinestage[prefix=i\i, xpos=\xoffset, ypos=\yoffset]
-            \fi
+            \pgfmathsetmacro{\xoffset}{0.5 + \i * 1.2}
+            \pgfmathsetmacro{\yoffset}{2 - \i * 2}
+            \drawpipelinearch[prefix=i\i, at x=\xoffset, at y=\yoffset, scale=0.4]
         }
     \end{tikzpicture}
 \end{frame}
@@ -1146,7 +1171,7 @@ if (L2.RegWrite and (L2.opcode == lw) and
 then stall
     \end{verbatim}
     
-    \vspace{0.5cm}
+    \vspace{0.3cm}
     \begin{itemize}
         \item De-assert the enable to the L1 latch, and to the IP
         \begin{itemize}
@@ -1155,11 +1180,49 @@ then stall
         \item Issue a NOP into the L2 latch (instead of the stalled inst.)
         \item Allow the stalling instruction (lw) to move on
     \end{itemize}
-    
+
+    \vspace{0.3cm}
     \centering
-    \begin{tikzpicture}[scale=0.6]
-        \node[draw, fill=gray!30, minimum width=2cm, minimum height=1cm] {bubble};
-    \end{tikzpicture}
+    \begin{circuitikz}[scale=1, transform shape]
+        % Timeline at top
+        \node[anchor=south, font=\small] at (4.5, 2.8) {Time (clock cycles)};
+        \draw[->, thick] (0, 2.5) -- (9.5, 2.5);
+        \foreach \i in {1,...,9} {
+            \node[above, font=\scriptsize] at (\i*1, 2.5) {\i};
+        }
+
+        % Program execution order label
+        \node[anchor=north, align=center, font=\small] at (-0.8, 2.3) {Program\\execution\\order};
+
+        % Instructions
+        \node[anchor=east, font=\small\ttfamily] at (0, 2) {lw \textcolor{blue}{R2}, 30(R1)};
+        \node[anchor=east, font=\small\ttfamily] at (0, 1) {and R12,\textcolor{blue}{R2}, R5};
+        \node[anchor=east, font=\small\ttfamily] at (0, 0) {or R13,R6, \textcolor{blue}{R2}};
+        \node[anchor=east, font=\small\ttfamily] at (0, -1) {add R14,\textcolor{blue}{R2}, \textcolor{blue}{R2}};
+        \node[anchor=east, font=\small\ttfamily] at (0, -2) {sw R15,100(\textcolor{blue}{R2})};
+
+        % Draw pipeline stages using the macro
+        % lw instruction - cycle 1
+        \drawpipelinearch[prefix=lw, at x=1, at y=2, scale=0.5]
+
+        % and instruction - cycle 2
+        \drawpipelinearch[prefix=and1, at x=2, at y=1, scale=0.5]
+
+        % bubble - cycle 3 at row 2 (and's position)
+        \node[draw, fill=gray!30, minimum width=0.5cm, minimum height=0.3cm, font=\tiny, anchor=west] at (3, 1) {bubble};
+
+        % and instruction continues - cycle 4
+        \drawpipelinearch[prefix=and2, at x=4, at y=1, scale=0.5]
+
+        % or instruction - cycle 3
+        \drawpipelinearch[prefix=or, at x=3, at y=0, scale=0.5]
+
+        % add instruction - cycle 4
+        \drawpipelinearch[prefix=add, at x=4, at y=-1, scale=0.5]
+
+        % sw instruction - cycle 5
+        \drawpipelinearch[prefix=sw, at x=5, at y=-2, scale=0.5]
+    \end{circuitikz}
 \end{frame}
 
 %% Slide: Software Scheduling to Avoid Load Hazards
