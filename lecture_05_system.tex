@@ -2046,11 +2046,11 @@ Unbalanced channels waste half your bandwidth!
 %\draw[thick, gray!40] (2.5,0.8) -- (2.5,1.45) -- (4.5,1.45) -- (4.5,1.8);
 
 % Base Die (positioned relative to substrate)
-\node[base, minimum width=5.7cm, minimum height=0.8cm, anchor=south, text width=5.5cm]
-  (basedie) at ($(pbump0.north)+(2.85,0)$) {Base Die};
+\node[base, minimum width=5.7cm, minimum height=0.8cm, anchor=south west, text width=5.5cm]
+  (basedie) at (pbump0.north -| substrate.west) {Base Die};
 
 % Base Logic Die (positioned relative to Base Die, to its right)
-\node[base, fill=basecolor!80, minimum width=3.4cm, minimum height=0.8cm, anchor=west]
+\node[base, fill=basecolor!80, minimum width=3.8cm, minimum height=0.8cm, anchor=west]
   (baselogic) at ([xshift=4mm]basedie.east) {Base Logic Die};
 
 % PHY blocks
@@ -2061,7 +2061,7 @@ Unbalanced channels waste half your bandwidth!
 
 
 % HBM Stack (4 dies, positioned relative to Base Die)
-\foreach \y [count=\j from 0] in {0, 0.7, 1.4, 2.1} {
+\foreach \y [count=\j from 0] in {0, 0.8, 1.6, 2.4} {
   \node[hbm, minimum width=2.7cm, minimum height=0.6cm, anchor=south west, text width=2.5cm]
     (hbm\j) at ($(basedie.north west)+(-0.1,\y+0.1)$) {HBM DRAM\\Die};
   % TSVs (yellow bumps, positioned relative to hbm\j.east)
@@ -2070,7 +2070,7 @@ Unbalanced channels waste half your bandwidth!
   }
   % µBumps at bottom of each (positioned south of TSVs)
   \foreach \i in {0,1,2,3,4} {
-    \node[ball, minimum size=1.5mm, anchor=north] (ubump\j-\i) at (tsv\j-\i.south |- hbm\j.south) {};
+    \node[ball, minimum size=1mm, anchor=north] (ubump\j-\i) at (tsv\j-\i.south |- hbm\j.south) {};
     \draw (tsv\j-\i.south) -- (ubump\j-\i.north);
   }
 }
@@ -2095,9 +2095,9 @@ Unbalanced channels waste half your bandwidth!
 
 % Compute Dies (positioned above F2F µBumps)
 \node[compute, minimum width=3.0cm, minimum height=0.55cm, anchor=south]
-  (compute1) at (f2fbump7.north) {Compute/FPGA/Mem/RF Die};
-\node[compute, minimum width=1.7cm, minimum height=0.55cm, anchor=east]
-  (compute0) at ([xshift=-5mm]compute1.west) {Compute/FPGA/Mem/RF Die};
+  (compute1) at (f2fbump7.north -| baselogic) {Compute/FPGA/Mem Die};
+\node[compute, minimum width=1.7cm, minimum height=0.55cm, anchor=south east]
+  (compute0) at (f2fbump7.north -| basedie.east) {Compute/FPGA/Mem Die};
 
 % Interconnect lines
 \draw[gray!40] (5.0,2.2) -- (5.0,2.45) -- (8.5,2.45) -- (8.5,2.7);
