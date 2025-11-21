@@ -2064,13 +2064,13 @@ Unbalanced channels waste half your bandwidth!
 \foreach \y [count=\j from 0] in {0, 0.7, 1.4, 2.1} {
   \node[hbm, rectangle, minimum width=2.7cm, minimum height=0.6cm, text=white, font=\tiny, anchor=south west, align=left, text width=2.5cm]
     (hbm\j) at ($(basedie.north west)+(-0.1,\y+0.1)$) {HBM DRAM Die};
-  % TSVs (yellow bumps)
-  \foreach \x in {2.4,2.6,2.8,3.0,3.2} {
-    \fill[bump] (\x,{\y+0.65}) rectangle +(0.08,0.4);
+  % TSVs (yellow bumps, positioned relative to hbm\j.east)
+  \foreach \x [count=\i from 0] in {0.1,0.3,0.5,0.7,0.9} {
+    \node[bump, rectangle, minimum width=0.08cm, minimum height=0.4cm, inner sep=0pt, anchor=north] (tsv\j-\i) at ($(hbm\j.north east)+(-\x,0)$) {};
   }
-  % µBumps at bottom of each (relative to substrate)
-  \foreach \x in {2.45,2.65,2.85,3.05,3.25} {
-    \fill[ball, minimum size=1.5mm] (\x,{\y+0.6}) circle (0.75mm);
+  % µBumps at bottom of each (positioned south of TSVs)
+  \foreach \i in {0,1,2,3,4} {
+    \node[ball, inner sep=0pt, minimum size=1.5mm, anchor=north] (ubump\j-\i) at (tsv\j-\i.south) {};
   }
 }
 
