@@ -2018,6 +2018,7 @@ Unbalanced channels waste half your bandwidth!
     compute/.style={fill=blue!60!red!40, draw=blue!80!red!60},
     bump/.style={circle, fill=yellow, draw=black, minimum size=2mm},
     ball/.style={circle, fill=gray!60, draw=black!80, minimum size=3mm},
+    graybump/.style={circle, fill=gray!60, draw=black!80, inner sep=0pt, anchor=south},
     label/.style={font=\tiny},
     small label/.style={font=\scriptsize}
   ]
@@ -2044,12 +2045,12 @@ Unbalanced channels waste half your bandwidth!
 %\draw[thick, gray!40] (2.5,0.8) -- (2.5,1.45) -- (4.5,1.45) -- (4.5,1.8);
 
 % Base Die (positioned relative to substrate)
-\node[base, rectangle, minimum width=5.7cm, minimum height=0.8cm, text=white, font=\tiny, anchor=south, align=left]
+\node[base, rectangle, minimum width=5.7cm, minimum height=0.8cm, text=white, font=\tiny, anchor=south, align=left, text width=5.5cm]
   (basedie) at ($(substrate.north west)+(2.85,0)$) {Base Die};
 
 % HBM Stack (4 dies, positioned relative to substrate)
 \foreach \y/\name [count=\j from 0] in {0.65/Die, 1.35/Die, 2.05/Die, 2.75/Die} {
-  \node[hbm, rectangle, minimum width=2.7cm, minimum height=0.6cm, text=white, font=\tiny, anchor=south, align=left]
+  \node[hbm, rectangle, minimum width=2.7cm, minimum height=0.6cm, text=white, font=\tiny, anchor=south, align=left, text width=2.5cm]
     (hbm\j) at ($(substrate.north west)+(-0.65,\y)$) {HBM DRAM \name};
   % TSVs (yellow bumps)
   \foreach \x in {2.4,2.6,2.8,3.0,3.2} {
@@ -2082,8 +2083,8 @@ Unbalanced channels waste half your bandwidth!
 
 % F2F µBumps (gray circles above Base Logic Die, using calc)
 \foreach \x [count=\i from 0] in {0.3,0.6,...,4.2} {
-  \node[circle, fill=gray!60, draw=black!80, inner sep=0pt, minimum size=0.5mm, anchor=south] (f2fbump\i) at ($(baselogic.north west) + (\x,0)$) {};
-  \node[circle, fill=gray!60, draw=black!80, inner sep=0pt, minimum size=0.5mm, anchor=south] at ($(baselogic.north west) + (\x,0.06)$) {};
+  \node[graybump, minimum size=0.5mm] (f2fbump\i) at ($(baselogic.north west) + (\x,0)$) {};
+  \node[graybump, minimum size=0.5mm] at ($(baselogic.north west) + (\x,0.06)$) {};
 }
 
 % Compute Dies (positioned above F2F µBumps)
