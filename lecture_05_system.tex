@@ -2002,12 +2002,15 @@ Unbalanced channels waste half your bandwidth!
 \textbf{Adaptive} -- predict whether next access will be to same row
 \end{frame}
 
-\begin{frame}
+\begin{frame}{High Bandwidth Memory Package}
 % Define colors for mixing
 \colorlet{basecolor}{cyan!70}
 \colorlet{emibcolor}{blue!50!cyan}
 
-\begin{tikzpicture}[
+\begin{columns}[T]
+\column{0.55\textwidth}
+
+\begin{tikzpicture}[scale=0.75, every node/.style={scale=0.75},
     >=Stealth,
     thick,
     circuit/.style={rectangle, fill=green!60!black, draw=green!40!black, text=white, font=\tiny},
@@ -2067,8 +2070,8 @@ Unbalanced channels waste half your bandwidth!
 \node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south west]
   (phy1) at ([xshift=1mm, yshift=1mm]baselogic.south west) {PHY};
 
-\node[emib, fill=emibcolor!90, minimum width=3.4cm, minimum height=0.4cm, anchor=north west, align=right]
-  (emib) at (phy0.west |- substrate.north) {EMIB};
+\node[emib, fill=emibcolor!90, minimum width=3.4cm, minimum height=0.4cm, anchor=north west, align=right, text width=3.2cm]
+  (emib) at ([xshift=-2mm]phy0.west |- substrate.north) {EMIB};
 
 
 
@@ -2137,7 +2140,8 @@ Unbalanced channels waste half your bandwidth!
 
 % Annotations
 %\draw[->, thick] (-1.5,0.6) -- (0.4,0.9);
-\node[label, anchor=east] (packagetrace) at (-1.5,0.6) {\shortstack{Standard\\Package Trace}};
+\node[label, anchor=east] (packagetrace) at ([xshift=-1cm]substrate.west) {\shortstack{Standard\\Package Trace}};
+\draw[->, thick] (packagetrace.east) -- (substrate.west);
 
 %\draw[->, thick] (-1.2,1.3) -- (0.5,1.7);
 \node[label, anchor=east] (bumpslabel) at ([xshift=-1.5cm]pbump0) {Bumps};
@@ -2149,7 +2153,7 @@ Unbalanced channels waste half your bandwidth!
 }
 
 %\draw[->, thick] ([xshift=-5mm]ball0) -- ([xshift=-\ballRadius cm]ball0);
-\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=5mm]ball0) {Package\\Balls};
+\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=1mm]ball0) {Package\\Balls};
 \draw[->, thick] (packageballs.east) -- (ball0.west);
 
 %\draw[->, thick] (packageballs.east) -- (ball0.west);
@@ -2157,21 +2161,52 @@ Unbalanced channels waste half your bandwidth!
 \draw[->, thick] (tsvlabel.west) -- (tsv3-0.east);
 
 %\draw[->, thick] (4.3,4.3) -- (3.3,3.7);
-\node[label] (ubumps) at (4.5,4.5) {µBumps};
-
-%\draw[->, thick] (5.0,3.8) -- (5.1,2.9);
-\node[label] (emibannot) at (5.0,4.0) {EMIB};
+%\node[label] (ubumps) at (4.5,4.5) {µBumps};
 
 %\draw[->, thick] (3.0,5.2) -- (4.2,2.75);
 %\node[label, anchor=south] (shortwires) at (2.8,5.3) {Short Wires};
 
 %\draw[->, thick] (9.5,3.8) -- (8.0,2.9);
-\node[label] (f2fbumps) at (10,3.8) {\shortstack{F2F\\µBumps}};
+%\node[label] (f2fbumps) at (10,3.8) {\shortstack{F2F\\µBumps}};
 
 %\draw[->, thick] (10.5,2.0) -- (9.5,2.45);
-\node[label] (tsv2) at (10.7,2.0) {TSV};
 
 \end{tikzpicture}
+
+\column{0.42\textwidth}
+\only<1>{
+\textbf{Package Overview}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Circuit board with substrate
+\item Interconnect infrastructure
+\end{itemize}
+}
+\only<2>{
+\textbf{HBM Stack (3D DRAM)}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Multiple DRAM dies stacked vertically
+\item Connected via \textbf{TSVs} (Through-Silicon Vias)
+\item TSVs enable high-density 3D integration
+\end{itemize}
+}
+\only<3>{
+\textbf{Base Die \& Logic}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Base die interfaces with HBM stack
+\item Contains memory controllers
+\item Very wide bus (1024+ bits)
+\end{itemize}
+}
+\only<4>{
+\textbf{EMIB Integration}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item \textbf{EMIB:} Embedded Multi-die Interconnect Bridge
+\item High-density die-to-die connections
+\item Connects compute dies to memory
+\item Short signal paths, high bandwidth
+\end{itemize}
+}
+\end{columns}
 \end{frame}
 
 % Slide: HBM Architecture
