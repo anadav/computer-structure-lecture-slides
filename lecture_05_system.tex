@@ -2022,23 +2022,22 @@ Unbalanced channels waste half your bandwidth!
     small label/.style={font=\scriptsize}
   ]
 
-% Define positions
-\pgfmathsetmacro{\substrateY}{0.2}
+% Define dimensions
 \pgfmathsetmacro{\ballRadius}{0.15}  % 1.5mm in cm
 \pgfmathsetmacro{\boardHeight}{0.7}
 
 % Package Substrate (base layer)
 \node[substrate, rectangle, minimum width=10cm, minimum height=1.3cm, text=white, font=\tiny]
-  (substrate) at (5.5,{\substrateY+0.65}) {Package Substrate};
+  (substrate) at (5.5,0.85) {Package Substrate};
 
-% Package Balls (at bottom of substrate)
+% Package Balls (positioned at bottom of substrate, using calc)
 \foreach \x [count=\i from 0] in {0.8,1.3,...,10.2} {
-  \node[ball] (ball\i) at (\x,\substrateY) {};
+  \node[ball] (ball\i) at ($(substrate.south west) + (\x-1,0)$) {};
 }
 
 % Circuit Board (positioned below balls)
-\node[circuit, rectangle, minimum width=13.5cm, minimum height=\boardHeight cm, text=white, font=\tiny]
-  (board) at (4.75,{\substrateY-\ballRadius-\boardHeight/2}) {Circuit Board};
+%\node[circuit, rectangle, minimum width=13.5cm, minimum height=\boardHeight cm, text=white, font=\tiny]
+%  (board) at ($(substrate.south)+(4.75-5.5,-\ballRadius-\boardHeight/2)$) {Circuit Board};
 
 % Standard Package Traces
 \draw[thick, gray!40] (1.8,0.8) -- (1.8,1.3) -- (3.5,1.3) -- (3.5,1.8);
