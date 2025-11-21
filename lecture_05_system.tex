@@ -1960,76 +1960,48 @@ Unbalanced channels waste half your bandwidth!
 \textbf{Takeaway:} Access memory in cache-line-sized chunks for best performance
 \end{frame}
 
-% Slide: DRAM Scheduling Policies I
-\begin{frame}{DRAM Scheduling Policies (I)}
-\textbf{FCFS} (first come first served)
+% Slide: DRAM Scheduling Policies
+\begin{frame}{DRAM Scheduling Policies}
+\textbf{Scheduling policy:} determines order in which requests are serviced
+
+\vspace{0.4cm}
+\textbf{Prioritization considerations:}
 \begin{itemize}
-\item Oldest request first
+\item Request age (oldest first)
+\item Row buffer hit/miss status (hits first)
+\item Request type (read vs write)
+\item Request criticality (will it stall the processor?)
+\item Interference to other cores
 \end{itemize}
 
-\vspace{0.5cm}
-\textbf{FR-FCFS} (first ready, first come first served)
+\vspace{0.4cm}
+\textbf{Example: FR-FCFS} (first ready, first come first served)
 \begin{enumerate}
-\item Row-hit first
-\item Oldest first
+\item Prioritize row-buffer hits
+\item Then prioritize older requests
 \end{enumerate}
 
-\textbf{Goal:} Maximize row buffer hit rate $\rightarrow$ \textcolor{blue}{maximize DRAM throughput}
-
-\vspace{0.5cm}
-\begin{itemize}
-\item Actually, scheduling is done at the \textcolor{blue}{command level}
-  \begin{itemize}
-  \item Column commands (read/write) prioritized over row commands (activate/precharge)
-  \item Within each group, older commands prioritized over younger ones
-  \end{itemize}
-\end{itemize}
-\end{frame}
-
-% Slide: DRAM Scheduling Policies II
-\begin{frame}{DRAM Scheduling Policies (II)}
-\textbf{A scheduling policy is a request prioritization order}
-
-\vspace{0.5cm}
-\textbf{Prioritization can be based on:}
-\begin{itemize}
-\item Request age
-\item Row buffer hit/miss status
-\item Request type (prefetch, read, write)
-\item Requestor type (load miss or store miss)
-\item Request criticality
-  \begin{itemize}
-  \item Oldest miss in the core?
-  \item How many instructions in core are dependent on it?
-  \item Will it stall the processor?
-  \end{itemize}
-\item Interference caused to other cores
-\item ...
-\end{itemize}
+\vspace{0.2cm}
+\textcolor{green!60!black}{Maximizes throughput} but \textcolor{red}{can starve requests $\rightarrow$ unfairness, high tail latency}
 \end{frame}
 
 % Slide: Row Buffer Management Policies
 \begin{frame}{Row Buffer Management Policies}
-\textbf{Open row}
+\textbf{Open row} -- keep the row open after an access
 \begin{itemize}
-\item Keep the row open after an access
-\item[+] Next access might need the same row $\rightarrow$ row hit
-\item[--] Next access might need a different row $\rightarrow$ row conflict, wasted energy
+\item \textcolor{green!60!black}{Row hit if same row accessed again}
+\item \textcolor{red}{Row conflict + wasted energy if different row}
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Closed row}
+\vspace{0.4cm}
+\textbf{Closed row} -- close after access (if no pending requests need same row)
 \begin{itemize}
-\item Close the row after an access (if no other requests already in the request buffer need the same row)
-\item[+] Next access might need a different row $\rightarrow$ avoid a row conflict
-\item[--] Next access might need the same row $\rightarrow$ extra activate latency
+\item \textcolor{green!60!black}{Avoids conflict if different row accessed}
+\item \textcolor{red}{Extra activate latency if same row accessed again}
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Adaptive policies}
-\begin{itemize}
-\item Predict whether or not the next access to the bank will be to the same row
-\end{itemize}
+\vspace{0.4cm}
+\textbf{Adaptive} -- predict whether next access will be to same row
 \end{frame}
 
 \section{Real System Examples}
