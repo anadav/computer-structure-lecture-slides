@@ -1754,9 +1754,8 @@ then stall
         \node[latch, anchor=west] (memwb) at ([xshift=4cm]exmem.east) {};
         \node[below=1mm of memwb, font=\scriptsize] {MEM/WB};
 
-        % Control unit - positioned relative to IF/ID
-        \node[draw, thick, ellipse, minimum width=1.5cm, minimum height=2cm, align=center, orange,
-              anchor=south west] (control) at ([xshift=1.5cm]ifid.north east) {Control};
+        % Control unit - positioned relative to IF/ID (define as coordinate first)
+        \coordinate (control) at ([xshift=1.5cm]ifid.north east);
 
         % Instruction input
         \draw[->, thick] ([xshift=-2mm]control.west) -- (control.west);
@@ -1789,16 +1788,25 @@ then stall
         }
 
         % WB signals propagating through stages
-        \draw[->, thick, orange] (idex_wb.east) -- (exmem_wb.west);
-        \draw[->, thick, orange] (exmem_wb.east) -- (memwb_wb.west);
-        \draw[->, thick, orange] (memwb_wb.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+        \foreach \i in {-2mm, 0, 2mm} {
+            \draw[->, orange] ([yshift=\i]idex_wb.east) -- ++(2,0) -- ++(\i,0) |- ([yshift=\i]exmem_wb.west);
+            \draw[->, orange] ([yshift=\i]exmem_wb.east) -- ++(2,0) -- ++(\i,0) |- ([yshift=\i]memwb_wb.west);
+        }
+        
+        \draw[->, orange] (memwb_wb.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
 
         % M signals propagating through stages
-        \draw[->, thick, orange] (idex_m.east) -- (exmem_m.west);
-        \draw[->, thick, orange] (exmem_m.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+        \foreach \i in {-2mm, 0, 2mm} {
+            \draw[->, orange] ([yshift=\i]idex_m.east) -- ++(1.5,0) -- ++(\i,0) |- ([yshift=\i]exmem_m.west);
+        }
+        \draw[->, orange] (exmem_m.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
 
         % EX signals
-        \draw[->, thick, orange] (idex_ex.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+        \draw[->, orange] (idex_ex.east) -- +(8mm,0) node[right, font=\tiny] {$\cdots$};
+
+        % Draw control unit on top with white fill to cover lines
+        \node[draw, thick, ellipse, minimum width=1.5cm, minimum height=2cm, align=center, orange,
+              fill=white, anchor=south west] at (control) {Control};
     \end{tikzpicture}
 \end{frame}
 
