@@ -2014,6 +2014,7 @@ Unbalanced channels waste half your bandwidth!
     substrate/.style={rectangle, fill=cyan!60, draw=cyan!80!black, text=white, font=\tiny},
     hbm/.style={rectangle, fill=red!70!brown, draw=brown!50!black, text=white, font=\tiny, align=left},
     base/.style={rectangle, fill=basecolor, draw=cyan!80!black, text=white, font=\tiny, align=left},
+    phy/.style={rectangle, fill=emibcolor, draw=blue!70!black, text=white, font=\tiny},
     emib/.style={rectangle, fill=emibcolor, draw=blue!70!black, text=white, font=\tiny},
     compute/.style={rectangle, fill=blue!60!red!40, draw=blue!80!red!60, text=white, font=\tiny},
     tsv/.style={rectangle, fill=yellow, draw=black, minimum size=2mm, inner sep=0pt},
@@ -2061,10 +2062,14 @@ Unbalanced channels waste half your bandwidth!
   (baselogic) at ([xshift=4mm]basedie.east) {Base Logic Die};
 
 % PHY blocks
-\node[emib, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south east]
+\node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south east]
   (phy0) at ([xshift=-1mm, yshift=1mm]basedie.south east) {PHY};
-\node[emib, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south west]
+\node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south west]
   (phy1) at ([xshift=1mm, yshift=1mm]baselogic.south west) {PHY};
+
+\node[emib, fill=emibcolor!90, minimum width=3.4cm, minimum height=0.4cm, anchor=north west, align=right]
+  (emib) at (phy0.west |- substrate.north) {EMIB};
+
 
 
 % HBM Stack (4 dies, positioned relative to Base Die)
@@ -2135,14 +2140,21 @@ Unbalanced channels waste half your bandwidth!
 \node[label, anchor=east] (packagetrace) at (-1.5,0.6) {\shortstack{Standard\\Package Trace}};
 
 %\draw[->, thick] (-1.2,1.3) -- (0.5,1.7);
-\node[label, anchor=east] (bumps) at (-1.3,1.3) {Bumps};
+\node[label, anchor=east] (bumpslabel) at ([xshift=-1.5cm]pbump0) {Bumps};
+\draw[->, thick] (bumpslabel.east) -- (pbump0.west);
+
+\foreach \i in {0,1,...,3} {
+  \draw[very thin] (pbump\i.south) -- ++(0,-1cm) -| (ball\i.north);
+  %\draw[->, thick] ([xshift=-5mm]ball\i) -- ([xshift=-\ballRadius cm]ball\i);
+}
 
 %\draw[->, thick] ([xshift=-5mm]ball0) -- ([xshift=-\ballRadius cm]ball0);
 \node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=5mm]ball0) {Package\\Balls};
 \draw[->, thick] (packageballs.east) -- (ball0.west);
 
 %\draw[->, thick] (packageballs.east) -- (ball0.west);
-\node[label] (tsv1) at (2.7,4.7) {TSV};
+\node[label] (tsvlabel) at ([xshift=10mm]tsv3-0.east) {TSV};
+\draw[->, thick] (tsvlabel.west) -- (tsv3-0.east);
 
 %\draw[->, thick] (4.3,4.3) -- (3.3,3.7);
 \node[label] (ubumps) at (4.5,4.5) {µBumps};
@@ -2151,7 +2163,7 @@ Unbalanced channels waste half your bandwidth!
 \node[label] (emibannot) at (5.0,4.0) {EMIB};
 
 %\draw[->, thick] (3.0,5.2) -- (4.2,2.75);
-\node[label, anchor=south] (shortwires) at (2.8,5.3) {Short Wires};
+%\node[label, anchor=south] (shortwires) at (2.8,5.3) {Short Wires};
 
 %\draw[->, thick] (9.5,3.8) -- (8.0,2.9);
 \node[label] (f2fbumps) at (10,3.8) {\shortstack{F2F\\µBumps}};
