@@ -1960,6 +1960,78 @@ Unbalanced channels waste half your bandwidth!
 \textbf{Takeaway:} Access memory in cache-line-sized chunks for best performance
 \end{frame}
 
+% Slide: DRAM Scheduling Policies I
+\begin{frame}{DRAM Scheduling Policies (I)}
+\textbf{FCFS} (first come first served)
+\begin{itemize}
+\item Oldest request first
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{FR-FCFS} (first ready, first come first served)
+\begin{enumerate}
+\item Row-hit first
+\item Oldest first
+\end{enumerate}
+
+\textbf{Goal:} Maximize row buffer hit rate $\rightarrow$ \textcolor{blue}{maximize DRAM throughput}
+
+\vspace{0.5cm}
+\begin{itemize}
+\item Actually, scheduling is done at the \textcolor{blue}{command level}
+  \begin{itemize}
+  \item Column commands (read/write) prioritized over row commands (activate/precharge)
+  \item Within each group, older commands prioritized over younger ones
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+% Slide: DRAM Scheduling Policies II
+\begin{frame}{DRAM Scheduling Policies (II)}
+\textbf{A scheduling policy is a request prioritization order}
+
+\vspace{0.5cm}
+\textbf{Prioritization can be based on:}
+\begin{itemize}
+\item Request age
+\item Row buffer hit/miss status
+\item Request type (prefetch, read, write)
+\item Requestor type (load miss or store miss)
+\item Request criticality
+  \begin{itemize}
+  \item Oldest miss in the core?
+  \item How many instructions in core are dependent on it?
+  \item Will it stall the processor?
+  \end{itemize}
+\item Interference caused to other cores
+\item ...
+\end{itemize}
+\end{frame}
+
+% Slide: Row Buffer Management Policies
+\begin{frame}{Row Buffer Management Policies}
+\textbf{Open row}
+\begin{itemize}
+\item Keep the row open after an access
+\item[+] Next access might need the same row $\rightarrow$ row hit
+\item[--] Next access might need a different row $\rightarrow$ row conflict, wasted energy
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Closed row}
+\begin{itemize}
+\item Close the row after an access (if no other requests already in the request buffer need the same row)
+\item[+] Next access might need a different row $\rightarrow$ avoid a row conflict
+\item[--] Next access might need the same row $\rightarrow$ extra activate latency
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Adaptive policies}
+\begin{itemize}
+\item Predict whether or not the next access to the bank will be to the same row
+\end{itemize}
+\end{frame}
+
 \section{Real System Examples}
 
 % Slide: Real System Topology - Part 1
@@ -2099,9 +2171,9 @@ Layered design ensures reliable delivery of packets across the PCIe link
 \node[box, fill=orange!30, minimum width=1cm, anchor=west] (frame2) at (llpacket.east) {Frame};
 
 % Physical Layer label - positioned similarly
-\node[layer, right=of frame2] (physlayer) {\textbf{Physical Layer}};
-\node[layer, anchor=east] (linklayer) at (crc1 -| physlayer.east) {\textbf{Link Layer}};
-\node[layer, anchor=east] (translayer) at (data -| physlayer.east) {\textbf{Transaction Layer}};
+\node[layer, right=of frame2] (physlayer) {\textbf{\textcolor{orange}{Physical Layer}}};
+\node[layer, anchor=east] (linklayer) at (crc1 -| physlayer.east) {\textbf{\textcolor{green!60!black}{Data Link Layer}}};
+\node[layer, anchor=east] (translayer) at (data -| physlayer.east) {\textbf{\textcolor{blue}{Transaction Layer}}};
 
 % Dashed line separator below
 \draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]header.south -| pseq.west) -- ([yshift=-3mm]translayer.east |- header.south);
