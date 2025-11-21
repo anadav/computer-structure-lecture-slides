@@ -2018,6 +2018,8 @@ Unbalanced channels waste half your bandwidth!
     compute/.style={rectangle, fill=blue!60!red!40, draw=blue!80!red!60, text=white, font=\tiny},
     tsv/.style={rectangle, fill=yellow, draw=black, minimum size=2mm, inner sep=0pt},
     ball/.style={circle, fill=gray!60, draw=black!80, minimum size=3mm, inner sep=0pt},
+    bump/.style={ball, fill=gray!60, draw=black!80, minimum size=1mm},
+    ubump/.style={bump, fill=gray!60, draw=black!80, minimum size=0.5mm},
     graybump/.style={circle, fill=gray!60, draw=black!80, inner sep=0pt, anchor=south},
     label/.style={font=\tiny},
     small label/.style={font=\scriptsize}
@@ -2027,30 +2029,35 @@ Unbalanced channels waste half your bandwidth!
 \node[substrate, minimum width=10cm, minimum height=1.3cm]
   (substrate) at (5.5,0.85) {Package Substrate};
 
-% Package Balls (positioned at bottom of substrate, using calc)
-\foreach \x [count=\i from 0] in {0.8,1.3,...,10.2} {
-  \node[ball, anchor=north] (ball\i) at ($(substrate.south west) + (\x-0.2,0)$) {};
+% Package Balls (positioned at bottom of substrate)
+\foreach \i in {0,1,...,19} {
+  \node[ball, anchor=north] (ball\i) at ([xshift=2mm + \i * 5mm]substrate.south west) {};
 }
 
-% Package Bumps (positioned at top of substrate, using calc)
-\foreach \x [count=\i from 0] in {0.8,1.3,...,10.2} {
-  \node[ball, anchor=south, minimum size=1mm] (pbump\i) at ($(substrate.north west) + (\x-0.2,0)$) {};
+% Package Bumps (positioned at top of substrate)
+\foreach \i in {0,1,...,6} {
+  \node[bump, anchor=south] (pbump\i) at ([xshift=2mm + \i * 4mm]substrate.north west) {};
+}
+
+% Basic Logic Die Bumps (positioned above substrate)
+\foreach \i in {0,1,...,11} {
+  \node[bump, anchor=south] (blbump\i) at ([xshift=-2mm - \i * 4mm]substrate.north east) {};
 }
 
 % Circuit Board (positioned below balls, relative to ball1)
 \node[circuit, minimum width=13.5cm, minimum height=0.7cm, anchor=north]
-  (board) at ($(ball1.south)+(3.45,0)$) {Circuit Board};
+  (board) at ([xshift=3.5cm]ball1.south) {Circuit Board};
 
 % Standard Package Traces
 %\draw[thick, gray!40] (1.8,0.8) -- (1.8,1.3) -- (3.5,1.3) -- (3.5,1.8);
 %\draw[thick, gray!40] (2.5,0.8) -- (2.5,1.45) -- (4.5,1.45) -- (4.5,1.8);
 
 % Base Die (positioned relative to substrate)
-\node[base, minimum width=5.7cm, minimum height=0.8cm, anchor=south west, text width=5.5cm]
+\node[base, minimum width=3.8cm, minimum height=0.8cm, anchor=south west, text width=3.5cm]
   (basedie) at (pbump0.north -| substrate.west) {Base Die};
 
 % Base Logic Die (positioned relative to Base Die, to its right)
-\node[base, fill=basecolor!80, minimum width=3.8cm, minimum height=0.8cm, anchor=west]
+\node[base, fill=basecolor!80, minimum width=5.8cm, minimum height=0.8cm, anchor=west]
   (baselogic) at ([xshift=4mm]basedie.east) {Base Logic Die};
 
 % PHY blocks
@@ -2061,28 +2068,32 @@ Unbalanced channels waste half your bandwidth!
 
 
 % HBM Stack (4 dies, positioned relative to Base Die)
-\foreach \y [count=\j from 0] in {0, 0.8, 1.6, 2.4} {
+\foreach \j in {0,1,...,3} {
   \node[hbm, minimum width=2.7cm, minimum height=0.6cm, anchor=south west, text width=2.5cm]
-    (hbm\j) at ($(basedie.north west)+(-0.1,\y+0.1)$) {HBM DRAM\\Die};
+    (hbm\j) at ([xshift=1mm, yshift=\j * 8mm + 1mm]basedie.north west) {HBM DRAM\\Die};
   % TSVs (yellow bumps, positioned relative to hbm\j.east)
-  \foreach \x [count=\i from 0] in {0.1,0.3,0.5,0.7,0.9} {
-    \node[tsv, minimum width=0.08cm, minimum height=0.4cm, anchor=north] (tsv\j-\i) at ($(hbm\j.north east)+(-\x,0)$) {};
+  \foreach \i in {0,1,...,4} {
+    \node[tsv, minimum width=0.08cm, minimum height=0.4cm, anchor=north] (tsv\j-\i) at ([xshift=-1mm - \i * 2mm]hbm\j.north east) {};
   }
   % µBumps at bottom of each (positioned south of TSVs)
-  \foreach \i in {0,1,2,3,4} {
-    \node[ball, minimum size=1mm, anchor=north] (ubump\j-\i) at (tsv\j-\i.south |- hbm\j.south) {};
+  \foreach \i in {0,1,...,4} {
+    \node[bump, anchor=north] (ubump\j-\i) at (tsv\j-\i.south |- hbm\j.south) {};
     \draw (tsv\j-\i.south) -- (ubump\j-\i.north);
   }
 }
 
 % Base Die TSVs and bumps (below HBM µBumps)
-\foreach \i in {0,1,2,3,4} {
+\foreach \i in {0,1,...,4} {
   % TSV in Base Die
   \node[tsv, minimum width=0.08cm, minimum height=0.3cm, anchor=north] (basetsv\i) at (ubump0-\i.south) {};
   % Bump at bottom of Base Die TSV
-  \node[ball, minimum size=0.8mm, anchor=north] (basebump\i) at ([xshift=-2mm * \i]phy0.east |- basedie.south) {};
+  \node[bump, anchor=north] (basebump0\i) at ([xshift=-2mm * \i]phy0.east |- basedie.south) {};
   % Wiring between HBM bump and Base Die TSV
-  \draw[very thin, white] (basetsv\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (basebump\i.north);
+  \draw[very thin, white] (basetsv\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (basebump0\i.north);
+  % Bump at bottom of Base Logic Die TSV
+  \node[bump, anchor=north] (baselbump1\i) at ([xshift=2mm * \i]phy1.west |- baselogic.south) {};
+  % Wiring between Base Logic Die TSV and Base
+  \draw[very thin, white] (basebump0\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (baselbump1\i.north);
 }
 
 % EMIB section
@@ -2098,26 +2109,26 @@ Unbalanced channels waste half your bandwidth!
 
 
 % F2F µBumps (gray circles above Base Logic Die, using calc)
-\foreach \i in {0,1,...,10} {
-  \node[graybump, minimum size=0.5mm] (f2fbump0-\i) at ([xshift=-1mm - \i * 3mm]basedie.north east) {};
-  \node[graybump, minimum size=0.5mm] (f2fbump1-\i) at ([xshift=4mm + \i * 3mm]baselogic.north west) {};
+\foreach \i in {0,1,...,8} {
+  \node[graybump, minimum size=0.5mm] (f2fbump0-\i) at ([xshift=-2mm - \i * 3mm]baselogic.north east) {};
+  \node[graybump, minimum size=0.5mm] (f2fbump1-\i) at ([xshift=2mm + \i * 3mm]baselogic.north west) {};
   %\node[graybump, minimum size=0.5mm] at ($(baselogic.north west) + (\x,0.06)$) {};
 }
 
 % Compute Dies (positioned above F2F µBumps)
-\node[compute, minimum width=3.0cm, minimum height=0.55cm, anchor=south]
-  (compute1) at (f2fbump1-7.north -| baselogic) {Compute/FPGA/Mem Die};
-\node[compute, minimum width=1.7cm, minimum height=0.55cm, anchor=south east]
-  (compute0) at (f2fbump1-7.north -| basedie.east) {Compute/FPGA/Mem Die};
+\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south west]
+  (compute1) at (f2fbump1-7.north -| baselogic.west) {Compute/FPGA/Mem\\Die};
+\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south east]
+  (compute0) at (f2fbump1-7.north -| baselogic.east) {Compute/FPGA/Mem\\Die};
 
 % Interconnect lines
-\draw[gray!40] (5.0,2.2) -- (5.0,2.45) -- (8.5,2.45) -- (8.5,2.7);
-\draw[gray!40] (6.0,2.2) -- (6.0,2.55) -- (9.0,2.55) -- (9.0,2.7);
+%\draw[gray!40] (5.0,2.2) -- (5.0,2.45) -- (8.5,2.45) -- (8.5,2.7);
+%\draw[gray!40] (6.0,2.2) -- (6.0,2.55) -- (9.0,2.55) -- (9.0,2.7);
 
 % µBumps between EMIB and dies (positioned relative to base dies)
-\foreach \x [count=\i from 0] in {3.3,3.6,3.9,4.2} {
-  \node[graybump, minimum size=1mm] (emibump\i) at ($(basedie.north west) + (\x,0)$) {};
-}
+%\foreach \i in {0,1,...,3} {
+%  \node[graybump, minimum size=1mm] (emibump\i) at ([xshift=33mm + \i * 3mm]basedie.north west) {};
+%}
 
 % Annotations
 %\draw[->, thick] (-1.5,0.6) -- (0.4,0.9);
@@ -2127,7 +2138,8 @@ Unbalanced channels waste half your bandwidth!
 \node[label, anchor=east] (bumps) at (-1.3,1.3) {Bumps};
 
 %\draw[->, thick] ([xshift=-5mm]ball0) -- ([xshift=-\ballRadius cm]ball0);
-\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm]ball0) {Package\\Balls};
+\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=5mm]ball0) {Package\\Balls};
+\draw[->, thick] (packageballs.east) -- (ball0.west);
 
 %\draw[->, thick] (packageballs.east) -- (ball0.west);
 \node[label] (tsv1) at (2.7,4.7) {TSV};
