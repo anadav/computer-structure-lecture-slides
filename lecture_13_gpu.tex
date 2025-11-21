@@ -433,10 +433,9 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 \draw[->, thick] (icache.east) -- (scheduler.west);
 
 % Instruction register (muxdemux)
-\node[muxdemux, muxdemux def={Rh=1, w=8, NT=1, NB=16, square pins=1},
-      external pins width=0, fill=yellow!20]
-    (ireg) at ([yshift=-1.5cm]scheduler.south) {};
-\node[font=\tiny] at (ireg.center) {instruction register};
+\node[muxdemux, muxdemux def={Rh=1, Lh=1, w=8, NT=1, NB=16, square pins=1},
+      external pins width=0, fill=yellow!20, font=\tiny]
+    (ireg) at ([yshift=-1.5cm]scheduler.south) {instruction register};
 
 % Arrow from scheduler to instruction register
 \draw[->, thick] (scheduler.south) -- (ireg.tpin 1);
@@ -459,16 +458,11 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
     % Load/store unit
     \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-2.5cm]lane\i-box.north) {Load/store unit};
 
-    % ALU (trapezoid) - positioned relative to lane box
-    \fill[cyan!30] ([xshift=-0.22cm, yshift=-1.3cm]lane\i-box.center) --
-                   ([xshift=0.22cm, yshift=-1.3cm]lane\i-box.center) --
-                   ([xshift=0.28cm, yshift=-1.15cm]lane\i-box.center) --
-                   ([xshift=0.28cm, yshift=-1.05cm]lane\i-box.center) --
-                   ([xshift=0.22cm, yshift=-0.9cm]lane\i-box.center) --
-                   ([xshift=-0.22cm, yshift=-0.9cm]lane\i-box.center) --
-                   ([xshift=-0.28cm, yshift=-1.05cm]lane\i-box.center) --
-                   ([xshift=-0.28cm, yshift=-1.15cm]lane\i-box.center) -- cycle;
-    \node[font=\fontsize{4}{5}\selectfont] at ([yshift=-1.1cm]lane\i-box.center) {ALU};
+    % ALU (muxdemux with inset for trapezoid shape)
+    \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+          external pins width=0, fill=cyan!30, scale=0.35]
+        (lane\i-alu) at ([yshift=-1.1cm]lane\i-box.center) {};
+    \node[font=\fontsize{4}{5}\selectfont] at (lane\i-alu.center) {ALU};
 
     % Arrow from instruction register bottom pin to lane
     \pgfmathtruncatemacro{\pinnum}{\i+1}
