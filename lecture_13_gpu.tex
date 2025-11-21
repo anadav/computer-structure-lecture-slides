@@ -387,23 +387,23 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 
 \begin{frame}[fragile]{SM Architecture \& Warp Scheduling}
 \begin{center}
-\scalebox{0.7}{
 \begin{tikzpicture}[
     every node/.style={font=\tiny},
-    box/.style={draw, fill=#1, minimum height=1cm},
+    box/.style={draw, fill=#1, minimum height=1cm, align=center},
     box/.default=gray!20
 ]
 
+\vspace{-0.2cm}
 % Instruction cache
-\node[box, minimum width=2cm, minimum height=1.2cm] (icache) at (0,0) {instruction cache};
+\node[box, minimum width=2cm, minimum height=1.2cm] (icache) at (0,0) {instruction\\cache};
 
 % Warp scheduler box
-\node[box=blue!20, minimum width=8cm, minimum height=3cm, anchor=north west]
-    (scheduler) at ([xshift=1cm]icache.north east) {};
+\node[box=blue!20, minimum width=7cm, minimum height=3cm, anchor=west]
+    (scheduler) at ([xshift=1cm]icache.east) {};
 \node[anchor=north, font=\small\itshape] at (scheduler.north) {warp scheduler};
 
 % Scoreboard label and table in minipage
-\node[anchor=north west, yshift=-0.3cm] at ([xshift=3cm]scheduler.north west) {
+\node[anchor=north west, yshift=-0.3cm] at (scheduler.north west) {
 \begin{minipage}{6cm}
 \textbf{\small scoreboard}
 
@@ -434,8 +434,8 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 
 % Instruction register (muxdemux)
 \node[muxdemux, muxdemux def={Rh=1, Lh=1, w=8, NT=1, NB=16, square pins=1},
-      external pins width=0, fill=yellow!20, font=\tiny]
-    (ireg) at ([yshift=-1.5cm]scheduler.south) {instruction register};
+      external pins width=0, fill=yellow!20, font=\scriptsize]
+    (ireg) at ([yshift=-5mm]scheduler.south) {instruction register};
 
 % Arrow from scheduler to instruction register
 \draw[->, thick] (scheduler.south) -- (ireg.tpin 1);
@@ -458,21 +458,23 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
         (lane\i-box) at (lane\i) {};
 
     % Registers section
-    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-0.6cm]lane\i-box.north) {Registers};
-    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-1cm]lane\i-box.north) {1K×32};
+%    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-1cm]lane\i-box.north) {1K×32};
 
     % Load/store unit
-    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-2.5cm]lane\i-box.north) {Load/store unit};
+%    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-2.5cm]lane\i-box.north) {Load/store unit};
 
     % ALU (muxdemux with inset for trapezoid shape)
-    \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
-          external pins width=0, fill=cyan!30, scale=0.35]
-        (lane\i-alu) at ([yshift=-1.1cm]lane\i-box.center) {};
-    \node[font=\fontsize{4}{5}\selectfont] at (lane\i-alu.center) {ALU};
+    \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
+          external pins width=0, fill=cyan!30, rotate=270]
+        (lane\i-alu) at ([yshift=-0.6cm]lane\i-box.north) {};
+    \node[box, anchor=north] at ([yshift=-0.1cm]lane\i-alu.east) (reg\i) {Regs\\1K$\times$32};
+    \node[box, anchor=north] at ([yshift=-0.1cm]reg\i.south) (lsu\i) {load\\store\\unit};
+
+    %\node[font=\fontsize{4}{5}\selectfont] at (lane\i-alu.center) {ALU};
 
     % Arrow from instruction register bottom pin to lane
     \pgfmathtruncatemacro{\pinnum}{\i+1}
-    \draw[->, thin] (ireg.bpin \pinnum) -- (lane\i-box.north);
+    \draw[->, thin] (ireg.bpin \pinnum) -- ++(0, -0.2) -| (lane\i-box.north);
 }
 
 % Label for lanes - positioned to the right of all threads
@@ -509,7 +511,7 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
     {On recent GPUs:\\32 lanes\\2K regs.};
 
 \end{tikzpicture}
-}
+
 \end{center}
 \end{frame}
 
