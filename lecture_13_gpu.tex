@@ -440,15 +440,21 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 % Arrow from scheduler to instruction register
 \draw[->, thick] (scheduler.south) -- (ireg.tpin 1);
 
-% SIMD lanes container
-\coordinate (lanes-start) at ([yshift=-0.5cm]ireg.south);
+% SIMD lanes - calculate dimensions for centering
+\pgfmathsetmacro{\lanewidth}{1.1}      % Lane width in cm (1.8x of original 0.6cm)
+\pgfmathsetmacro{\lanespacing}{1.26}   % Spacing between lane centers (1.8x of original 0.7cm)
+\pgfmathsetmacro{\numlanesminus}{15}   % Number of lanes minus 1 (for spacing calculation)
+\pgfmathsetmacro{\lanesoffset}{\numlanesminus*\lanespacing/2}  % Offset so lane centers are symmetric around ireg center
+
+% SIMD lanes container - offset to center under instruction register
+\coordinate (lanes-start) at ([xshift=-\lanesoffset cm, yshift=-0.5cm]ireg.south);
 
 % SIMD lanes using foreach
 \foreach \i in {0,...,15} {
-    \coordinate (lane\i) at ([xshift=\i*0.7cm]lanes-start);
+    \coordinate (lane\i) at ([xshift=\i*\lanespacing cm]lanes-start);
 
     % Lane container as node
-    \node[box=green!20, minimum width=0.6cm, minimum height=4cm, anchor=north, inner sep=0]
+    \node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
         (lane\i-box) at (lane\i) {};
 
     % Registers section
@@ -469,8 +475,8 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
     \draw[->, thin] (ireg.bpin \pinnum) -- (lane\i-box.north);
 }
 
-% Label for lanes
-\node[anchor=west, font=\small, align=center] at ([xshift=0.5cm]lanes-start)
+% Label for lanes - positioned to the right of all threads
+\node[anchor=west, font=\small, align=center] at ([xshift=0.5cm]lane15-box.east)
     {(Thread Processors)\\SIMD Lanes};
 
 % Address coalescing unit
