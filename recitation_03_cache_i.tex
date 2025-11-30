@@ -469,7 +469,8 @@ Each set has 2 possible locations\\
     offsetbox/.style={rectangle, draw, fill=orange!30, minimum width=2cm, minimum height=0.6cm, font=\footnotesize},
     cellstyle/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.35cm, 
                      text depth=0.1cm, text height=0.2cm, font=\tiny},
-    tagcell/.style={cellstyle, fill=green!20},
+    tagcell/.style={cellstyle, fill=green!30},
+    offsetcell/.style={cellstyle, fill=orange!30, minimum width=2mm},
     titlecell/.style={cellstyle, font=\tiny},
     decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
                    external pins width=0, fill=cyan!20},
@@ -536,6 +537,8 @@ Each set has 2 possible locations\\
         \node[below=0cm of data0_\prev.south, anchor=north] (data0_\i) {};
     \fi
 }
+% Draw orange box for line offset only on first data line
+\node[offsetcell, anchor=east] at ([xshift=-1mm]data0_1.east) (thedata0) {};
 \end{scope}
 
 % Way 0 comparator - using muxdemux rotated 90 degrees
@@ -574,6 +577,7 @@ Each set has 2 possible locations\\
         \node[below=0cm of data1_\prev.south, anchor=north] (data1_\i) {};
     \fi
 }
+\node[offsetcell, anchor=east] at ([xshift=-1mm]data1_1.east) (thedata1) {};
 \end{scope}
 
 % Way 1 comparator - using muxdemux rotated 90 degrees
@@ -620,8 +624,8 @@ Each set has 2 possible locations\\
 % Arrows from offset to data arrays with junction - initial line has no arrow
 \draw (offset.south) -- ++(0,-0.7) coordinate (offsetjunction);
 \node[junction] at (offsetjunction) {};
-\draw[arrow] (offsetjunction) -| (data0_0.north);
-\draw[arrow] (offsetjunction) -| (data1_0.north);
+\draw[arrow] (offsetjunction) -| (thedata0.north);
+\draw[arrow] (offsetjunction) -| (thedata1.north);
 
 % Decoder to tag arrays - straight horizontal lines
 \foreach \i in {0,...,3} {
