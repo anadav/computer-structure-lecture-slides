@@ -1501,9 +1501,9 @@ for (int i=0; i<1024; i++)
 % OR gate - positioned between comparators
 \node[orgatestyle, rotate=180] at ($(comp0)!0.5!(comp1) + (0,-1.5)$) (orgate) {};
 
-% MUX - using muxdemux, rotated 90 degrees, positioned relative to data arrays
-\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, NL=2, NB=1, w=0.8},
-      external pins width=0, fill=gray!20, rotate=270,anchor=lpin 1] at ([yshift=-1.5cm]data1_3.south) (mux) {};
+% MUX - using muxdemux, rotated 270 degrees, positioned relative to data arrays
+\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, NL=2, NB=2, NR=1, w=0.8},
+      external pins width=0, fill=gray!20, rotate=270,anchor=lpin 1] at ([yshift=-1cm]data1_3.south) (mux) {};
 
 % Output labels
 \node[below=2mm of orgate.east] (hitmiss) {Hit/Miss};
@@ -1560,7 +1560,8 @@ for (int i=0; i<1024; i++)
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select (using comp1 output)
-\draw[arrow] (comp1.rpin 1) |- (mux.bpin 1);
+\draw[arrow] (comp0.rpin 1) |- (mux.bpin 1);
+\draw[arrow] (comp1.rpin 1) |- (mux.bpin 2);
 
 % MUX to data out
 \draw[arrow] (mux.rpin 1) -- (dataout.north);
