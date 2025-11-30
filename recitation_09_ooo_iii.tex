@@ -881,7 +881,7 @@ When the cache write completes, the Store Buffer entry is freed and available fo
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Load/Store Execution Details}
+\begin{frame}{Load Execution Details}
 \textbf{Load Execution:}
 \begin{itemize}
     \item Dispatched when address calculation sources are ready
@@ -892,9 +892,11 @@ When the cache write completes, the Store Buffer entry is freed and available fo
     \end{itemize}
     \item \textbf{Cycle 3:} Data from L1 (if hit) or forwarding from MOB
     \item \textbf{Cycle 10:} Data from L2 (if L1 miss, no forwarding)
-    \item If dependency check fails: Load \textbf{blocked}, re-dispatched when condition clears (restart from cycle 1)
+    \item If dependency check fails: Load \textbf{blocked}, re-dispatched when condition clears (restart from cycle 2, skip address calculation)
 \end{itemize}
+\end{frame}
 
+\begin{frame}{Store Execution and Commit}
 \textbf{Store Execution:}
 \begin{itemize}
     \item Address calculation: 1 cycle, written to MOB
@@ -1044,6 +1046,24 @@ When the cache write completes, the Store Buffer entry is freed and available fo
     \node[label] at (n13.south |- load2) (l13) {Memory\\checks};
     \node[label] at (n14.south |- load2) (l14) {L1 miss};
     \node[label] at (n21.south |- load2) (l21) {L2 Hit};
+\end{tikzpicture}
+}
+
+% Explanation box for slide 17 - bottom right position
+\onslide<17>{
+\begin{tikzpicture}[remember picture, overlay]
+    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, rounded corners=3mm, font=\small, text width=9cm, align=center, anchor=south east]
+        at ([yshift=0.3cm, xshift=-0.3cm]current page.south east)
+        {Memory dependency: Load waits for data from previous store};
+\end{tikzpicture}
+}
+
+% Explanation box for slide 19 - bottom right position
+\onslide<19>{
+\begin{tikzpicture}[remember picture, overlay]
+    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, rounded corners=3mm, font=\small, text width=9cm, align=center, anchor=south east]
+        at ([yshift=0.3cm, xshift=-0.3cm]current page.south east)
+        {No match with prior stores (60, 50, 130); blocked until 25, re-checks 26, L1 hit 27};
 \end{tikzpicture}
 }
 
