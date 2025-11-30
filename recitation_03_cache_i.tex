@@ -484,7 +484,9 @@ Each set has 2 possible locations\\
     orgatestyle/.style={or gate US, draw, logic gate inputs=nn, anchor=center,
                        minimum width=0.5cm, minimum height=0.5cm, rotate=270},
     % Junction dot style
-    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt}
+    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt},
+    % Data connector dot style
+    data_connector/.style={circle, fill, inner sep=1.2pt}
 }
 
 \begin{frame}[fragile]{2-Way Set Associative Organization}
@@ -521,8 +523,7 @@ Each set has 2 possible locations\\
 \end{scope}
 
 % Way 0 decoder (demux) - aligned with first tag box using rpin 1, further left
-\node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
-      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag0_0.west) + (-0.5,0)$) (decoder0) {};
+\node[decoder, anchor=rpin 1] at ($(tag0_0.west) + (-0.5,0)$) (decoder0) {};
 \node[font=\small, anchor=east] at ([xshift=-5mm]decoder0.lpin 1) {Set\#};
 
 % Way 0 Data array - using for loop, positioned relative to tag array
@@ -560,8 +561,7 @@ Each set has 2 possible locations\\
 \end{scope}
 
 % Way 1 decoder (demux) - aligned with first tag box using rpin 1, further left
-\node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
-      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag1_0.west) + (-0.5,0)$) (decoder1) {};
+\node[decoder, anchor=rpin 1] at ($(tag1_0.west) + (-0.5,0)$) (decoder1) {};
 \node[font=\small, anchor=east] at ([xshift=-5mm]decoder1.lpin 1) {Set\#};
 
 % Way 1 Data array - using for loop, positioned relative to tag array
@@ -658,7 +658,7 @@ Each set has 2 possible locations\\
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select (using comp1 output)
-\draw[arrow] (comp0.rpin 1) |- (mux.bpin 2);
+\draw[arrow] (comp0.rpin 1) -- (comp0.rpin 1 |- mux.bpin 2)  node[data_connector] {} -- (mux.bpin 2);
 \draw[arrow] (comp1.rpin 1) |- (mux.bpin 1);
 
 % MUX to data out
@@ -1375,8 +1375,8 @@ for (int i=0; i<1024; i++)
                      text depth=0.1cm, text height=0.2cm, font=\tiny},
     tagcell/.style={cellstyle, fill=green!20},
     titlecell/.style={cellstyle, font=\tiny},
-    decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0}, 
-                   draw, fill=green!30, font=\tiny},
+    decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
+                   external pins width=0, fill=cyan!20},
     % Comparator as downward-pointing pentagon
     comparator/.style={regular polygon, regular polygon sides=5, draw, fill=green!30, 
                       minimum width=1cm, minimum height=1cm, rotate=180},
@@ -1385,10 +1385,12 @@ for (int i=0; i<1024; i++)
     arrow/.style={->, >=stealth, thick},
     dasharrow/.style={dashed, ->, >=stealth},
     % OR gate with custom sizing (rotated 90 degrees counter-clockwise)
-    orgatestyle/.style={or gate US, draw, logic gate inputs=nn, anchor=center, 
+    orgatestyle/.style={or gate US, draw, logic gate inputs=nn, anchor=center,
                        minimum width=1cm, minimum height=0.8cm, rotate=90},
     % Junction dot style
-    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt}
+    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt},
+    % Data connector dot style
+    data_connector/.style={circle, fill, inner sep=1.2pt}
 }
 
 \begin{frame}[fragile]{Cache Architecture}
@@ -1424,8 +1426,7 @@ for (int i=0; i<1024; i++)
 \end{scope}
 
 % Way 0 decoder (demux) - aligned with first tag box using rpin 1, further left
-\node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
-      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag0_0.west) + (-0.5,0)$) (decoder0) {};
+\node[decoder, anchor=rpin 1] at ($(tag0_0.west) + (-0.5,0)$) (decoder0) {};
 \node[font=\small, anchor=east] at ([xshift=-5mm]decoder0.lpin 1) {Set\#};
 
 % Way 0 Data array - using for loop, positioned relative to tag array
@@ -1463,8 +1464,7 @@ for (int i=0; i<1024; i++)
 \end{scope}
 
 % Way 1 decoder (demux) - aligned with first tag box using rpin 1, further left
-\node[muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
-      external pins width=0, fill=cyan!20, anchor=rpin 1] at ($(tag1_0.west) + (-0.5,0)$) (decoder1) {};
+\node[decoder, anchor=rpin 1] at ($(tag1_0.west) + (-0.5,0)$) (decoder1) {};
 \node[font=\small, anchor=east] at ([xshift=-5mm]decoder1.lpin 1) {Set\#};
 
 % Way 1 Data array - using for loop, positioned relative to tag array
