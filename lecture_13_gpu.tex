@@ -432,66 +432,93 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 % Arrow from instruction cache to scheduler
 \draw[->, thick] (icache.east) -- (scheduler.west);
 
-% Instruction register (muxdemux)
-\node[muxdemux, muxdemux def={Rh=1, Lh=1, w=8, NT=1, NB=16, square pins=1},
-      external pins width=0, fill=yellow!20, font=\scriptsize]
-    (ireg) at ([yshift=-5mm]scheduler.south) {instruction register};
+% Instruction register (muxdemux) - positioned to the right
+\node[muxdemux, muxdemux def={Rh=1, Lh=1, w=2.5, NT=1, NB=32, square pins=1},
+      external pins width=0, fill=yellow!20, font=\tiny, rotate=90, anchor=lpin 1]
+    (ireg) at ([xshift=1cm]scheduler.east) {instruction register};
 
 % Arrow from scheduler to instruction register
-\draw[->, thick] (scheduler.south) -- (ireg.tpin 1);
+\draw[->, thick] (scheduler.east) -- (ireg.lpin 1);
 
-% SIMD lanes - calculate dimensions for centering
-\pgfmathsetmacro{\lanewidth}{1.1}      % Lane width in cm (1.8x of original 0.6cm)
-\pgfmathsetmacro{\lanespacing}{1.26}   % Spacing between lane centers (1.8x of original 0.7cm)
-\pgfmathsetmacro{\numlanesminus}{15}   % Number of lanes minus 1 (for spacing calculation)
-\pgfmathsetmacro{\lanesoffset}{\numlanesminus*\lanespacing/2}  % Offset so lane centers are symmetric around ireg center
-
-% SIMD lanes container - offset to center under instruction register
-\coordinate (lanes-start) at ([xshift=-\lanesoffset cm, yshift=-0.5cm]ireg.south);
-
-% SIMD lanes using foreach
-\foreach \i in {0,...,15} {
-    \coordinate (lane\i) at ([xshift=\i*\lanespacing cm]lanes-start);
-
-    % Lane container as node
-    \node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
-        (lane\i-box) at (lane\i) {};
-
-    % Registers section
-%    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-1cm]lane\i-box.north) {1K×32};
-
-    % Load/store unit
-%    \node[rotate=90, font=\fontsize{5}{6}\selectfont] at ([yshift=-2.5cm]lane\i-box.north) {Load/store unit};
-
-    % ALU (muxdemux with inset for trapezoid shape)
-    \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
-          external pins width=0, fill=cyan!30, rotate=270]
-        (lane\i-alu) at ([yshift=-0.6cm]lane\i-box.north) {};
-    \node[box, anchor=north] at ([yshift=-0.1cm]lane\i-alu.east) (reg\i) {Regs\\1K$\times$32};
-    \node[box, anchor=north] at ([yshift=-0.1cm]reg\i.south) (lsu\i) {load\\store\\unit};
-
-    %\node[font=\fontsize{4}{5}\selectfont] at (lane\i-alu.center) {ALU};
-
-    % Arrow from instruction register bottom pin to lane
-    \pgfmathtruncatemacro{\pinnum}{\i+1}
-    \draw[->, thin] (ireg.bpin \pinnum) -- ++(0, -0.2) -| (lane\i-box.north);
+% Dashed lines for unconnected bottom pins
+\foreach \i in {1,2,...,32} {
+    \ifnum\i=1\relax
+        % Skip - will connect to lane 0
+    \else\ifnum\i=2\relax
+        % Skip - will connect to lane 1
+    \else\ifnum\i=32\relax
+        % Skip - will connect to lane 31
+    \else
+        \draw[dashed, thin, gray] (ireg.bpin \i) -- ++(0, -3mm);
+    \fi\fi\fi
 }
 
-% Label for lanes - positioned to the right of all threads
-\node[anchor=west, font=\small, align=center] at ([xshift=0.5cm]lane15-box.east)
-    {(Thread Processors)\\SIMD Lanes};
+% SIMD lanes - H100 has 128 CUDA cores, 2K registers (64K 32-bit regs total)
+\pgfmathsetmacro{\lanewidth}{1.1}      % Lane width in cm
+\pgfmathsetmacro{\lanespacing}{1.5}    % Spacing between visible lanes
 
-% Address coalescing unit
+% Lane 0
+\coordinate (lane0) at ([yshift=-1cm]scheduler.south);
+\node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
+    (lane0-box) at (lane0) {};
+\node[font=\tiny, above] at (lane0-box.north) {0};
+
+% ALU, registers, and load/store for lane 0
+\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
+      external pins width=0, fill=cyan!30, rotate=270]
+    (lane0-alu) at ([yshift=-0.6cm]lane0-box.north) {};
+\node[box, anchor=north] at ([yshift=-0.1cm]lane0-alu.east) (reg0) {Regs\\2K$\times$32};
+\node[box, anchor=north] at ([yshift=-0.1cm]reg0.south) (lsu0) {load\\store\\unit};
+
+% Lane 1
+\coordinate (lane1) at ([xshift=\lanespacing cm]lane0);
+\node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
+    (lane1-box) at (lane1) {};
+\node[font=\tiny, above] at (lane1-box.north) {1};
+
+% ALU, registers, and load/store for lane 1
+\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
+      external pins width=0, fill=cyan!30, rotate=270]
+    (lane1-alu) at ([yshift=-0.6cm]lane1-box.north) {};
+\node[box, anchor=north] at ([yshift=-0.1cm]lane1-alu.east) (reg1) {Regs\\2K$\times$32};
+\node[box, anchor=north] at ([yshift=-0.1cm]reg1.south) (lsu1) {load\\store\\unit};
+
+% Dots indicator
+\node[font=\Large] at ([xshift=\lanespacing cm]lane1) {$\cdots$};
+
+% Lane 31 (last lane in H100 warp with 32 threads)
+\coordinate (lane31) at ([xshift=2*\lanespacing cm]lane1);
+\node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
+    (lane31-box) at (lane31) {};
+\node[font=\tiny, above] at (lane31-box.north) {31};
+
+% ALU, registers, and load/store for lane 31
+\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
+      external pins width=0, fill=cyan!30, rotate=270]
+    (lane31-alu) at ([yshift=-0.6cm]lane31-box.north) {};
+\node[box, anchor=north] at ([yshift=-0.1cm]lane31-alu.east) (reg31) {Regs\\2K$\times$32};
+\node[box, anchor=north] at ([yshift=-0.1cm]reg31.south) (lsu31) {load\\store\\unit};
+
+% Arrows from instruction register to lanes
+\draw[->, thin] (ireg.bpin 1) -| (lane0-box.north);
+\draw[->, thin] (ireg.bpin 2) -| (lane1-box.north);
+\draw[->, thin] (ireg.bpin 32) -| (lane31-box.north);
+
+% Label for lanes
+\node[anchor=west, font=\small, align=center] at ([xshift=0.5cm]lane31-box.east)
+    {(Thread Processors)\\SIMD Lanes\\(32 total)};
+
+% Address coalescing unit (positioned below lane0)
 \node[box=purple!20, minimum width=4cm, minimum height=0.8cm, anchor=north]
-    (coalesce) at ([yshift=-4.5cm]lanes-start) {address coalescing unit};
+    (coalesce) at ([yshift=-0.5cm]lsu0.south) {address coalescing unit};
 
 % Interconnection network
 \node[box=purple!20, minimum width=4cm, minimum height=0.8cm, anchor=north west]
     (interconnect) at ([xshift=0.5cm]coalesce.north east) {Interconnection network};
 
-% Arrows from some lanes to coalescing unit
-\foreach \i in {0,4,8,12} {
-    \draw[->, thin] (lane\i-box.south) -- (lane\i-box.south |- coalesce.north);
+% Arrows from visible lanes to coalescing unit
+\foreach \i in {0,1,31} {
+    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- coalesce.north);
 }
 
 % Local memory
