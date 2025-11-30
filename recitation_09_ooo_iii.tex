@@ -1004,18 +1004,18 @@ When the cache write completes, the Store Buffer entry is freed and available fo
 % Store overlay for slide 13 (after row 2 appears, before row 3)
 \onslide<13>{
 \begin{tikzpicture}[remember picture, overlay,
-    node distance=6mm,
+    node distance=8mm,
     bluecircle/.style={circle, draw=blue!70, fill=blue!70, fill opacity=1, text=white,
                        minimum width=0.8cm, minimum height=0.8cm, font=\bfseries\scriptsize},
     bluerect/.style={rectangle, draw=blue!70, fill=blue!70, fill opacity=1, text=white,
                      font=\bfseries, minimum width=1.5cm, minimum height=0.8cm},
     label/.style={blue!90!black, text width=1.9cm, align=center, font=\scriptsize}
 ]
-    % Yellow background - lower and taller
-    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, minimum width=13cm, minimum height=4.8cm, rounded corners=5mm] at ([yshift=-1.8cm]current page.center) {};
+    % Yellow background - top 1cm lower
+    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, minimum width=13cm, minimum height=4cm, rounded corners=5mm] at ([yshift=-2.5cm]current page.center) {};
 
-    % Main cycle nodes - positioned lower
-    \node[bluecircle] at ([xshift=-3.5cm, yshift=-1.8cm] current page.center) (n11) {11};
+    % Main cycle nodes - positioned higher (separate row from Load boxes)
+    \node[bluecircle] at ([xshift=-3.5cm, yshift=-10mm] current page.center) (n11) {11};
     \node[bluecircle, right=of n11] (n12) {12};
     \node[bluecircle, right=of n12] (n13) {13};
     \node[bluecircle, right=of n13] (n14) {14};
@@ -1026,17 +1026,17 @@ When the cache write completes, the Store Buffer entry is freed and available fo
     % Node 21
     \node[bluecircle, right=of dots] (n21) {21};
 
-    % Instruction boxes on the left - closer to cycle nodes
-    \node[bluerect, left=8mm of n11] (load1) {Load};
+    % Instruction boxes positioned below cycle nodes
+    \node[bluerect, below=1mm of n11.south, xshift=-20mm, anchor=north] (load1) {Load};
     \node[bluerect, below=1mm of load1] (store) {Store};
     \node[bluerect, below=1mm of store] (load2) {Load};
 
     % Labels positioned relative to instruction boxes
-    \node[label, below=2mm of n11] (l11) {R2 (pb0)\\is known};
-    \node[label] at (n12.south |- store) [yshift=-2mm] (l12) {Addr. Calc:\\PB0+20};
-    \node[label] at (n13.south |- load2) [yshift=-2mm] (l13) {Memory\\checks};
-    \node[label] at (n14.south |- load2) [yshift=-2mm] (l14) {L1 miss};
-    \node[label, below=2mm of n21] (l21) {L2 Hit};
+    \node[label] at (n11.south |- load1) (l11) {R2 (pb0)\\is known};
+    \node[label] at (n12.south |- store) (l12) {Addr. Calc:\\PB0+20};
+    \node[label] at (n13.south |- load2) (l13) {Memory\\checks};
+    \node[label] at (n14.south |- load2) (l14) {L1 miss};
+    \node[label] at (n21.south |- load2) (l21) {L2 Hit};
 \end{tikzpicture}
 }
 
