@@ -1091,6 +1091,47 @@ When the cache write completes, the Store Buffer entry is freed and available fo
 }
 \end{frame}
 
+\begin{frame}{Question 2: Top-Down Analysis}
+\small
+\textbf{Additional Constraints:}
+\begin{itemize}
+    \item RS: 6 entries (freed when instruction dispatches to execution)
+    \item Stores occupy 2 RS entries (STA + STD), always allocated in same cycle
+    \item If RS full: stall until free entry
+    \item First branch mispredicts: flush at T(exe)+1, allocate correct path at T(exe)+1
+    \item Instruction queue: full until second branch, then empty
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile, label=rs-timeline-frame]
+\frametitle{Top-Down Analysis - Timeline with RS Entries}
+
+\begin{adjustbox}{width=\textwidth,center}
+\footnotesize
+\begin{tabular}{|c|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\multirow{2}[0]{*}[-3em]{\rotatebox[origin=l]{90}{Pdst}} & \multirow{2}[0]{*}[-3em]{Instruction} & \multicolumn{3}{c|}{Reg Values} & \multicolumn{2}{c|}{Mem} & \multicolumn{4}{c|}{Decode} & \multicolumn{6}{c|}{Execution Timeline} & \multirow{2}[0]{*}[-3em]{\rotatebox[origin=l]{90}{\#RS Entries}} \\
+\cline{3-17}
+ & & R1 & R2 & R3 & addr & data & \rotatebox{90}{T alloc} & src1 & src2 & Imm & \rotatebox{90}{T src1 rdy} & \rotatebox{90}{T src2 rdy} & \rotatebox{90}{T exe} & \rotatebox{90}{\tiny Load blk} & \rotatebox{90}{T data rdy} & \rotatebox{90}{T commit} & \\
+\hline
+    0 & \texttt{ld R2=[R1+30]} & 10 & 40 & 10 & 40 & 40 & 1 & R1 & - & 30 & 1 & - & 2 & {\tiny 0} & 11 & 12 & \onslide<1->{0+1=1} \\
+    1 & \texttt{st [R2+20]=R1} & - & - & - & 60 & 10 & 1 & P0 & R1 & 20 & 11 & 1 & \makecell{\tiny Std:2\\\tiny Sta:12} & - & 12 & 13 & \onslide<2->{+2=3} \\
+    2 & \texttt{ld R3=[R1+100]} & - & - & 110 & 110 & 110 & 1 & R1 & - & 100 & 1 & - & 2 & {\tiny 1} & 21 & 22 & \onslide<3->{+1=4} \\
+    3 & \texttt{st [R1+40]=R3} & - & - & - & 50 & 110 & 1 & R1 & P2 & 40 & 1 & 21 & \makecell{\tiny Std:22\\\tiny Sta:2} & - & 22 & 23 & \onslide<4->{+2=6} \\
+    4 & \texttt{add R1=R1+10} & 20 & - & - & - & - & 2 & R1 & - & 10 & 2 & - & 3 & - & - & 23 & \onslide<5->{6-4+1=3} \\
+    5 & \texttt{blt (R1<100)} & 20 & 40 & 110 & - & - & 2 & P4 & - & 100 & 3 & - & 4 & - & - & 23 & \onslide<6->{+1=4} \\
+    \hline
+    6 & \texttt{ld R2=[R1+30]} & - & 110 & - & 50 & 110 & 2 & P4 & - & 30 & 3 & - & 4 & {\tiny 1,2} & 24 & 25 & \onslide<7->{+1=5} \\
+    7 & \texttt{st [R2+20]=R1} & - & - & - & 130 & 20 & 3 & P6 & P4 & 20 & 24 & 3 & \makecell{\tiny Std:4\\\tiny Sta:25} & - & 25 & 26 & \onslide<8->{5-1+2=6} \\
+    8 & \texttt{ld R3=[R1+100]} & - & - & 120 & 120 & 120 & 4 & P4 & - & 100 & 4 & - & 5 & {\tiny 1} & 27 & 28 & \onslide<9->{6-3+1=4} \\
+    9 & \texttt{st [R1+40]=R3} & - & - & - & 60 & 120 & 4 & P8 & P4 & 40 & 27 & 4 & \makecell{\tiny Sta:5\\\tiny Std:28} & - & 28 & 29 & \onslide<10->{+2=6} \\
+    10 & \texttt{add R1=R1+10} & 30 & - & - & - & - & 5 & P4 & - & 10 & 3 & - & 4 & - & - & 23 & \onslide<11->{2+1=3} \\
+    11 & \texttt{blt (R1<100)} & 30 & 110 & 120 & - & - & 5 & P10 & - & 100 & 4 & - & 5 & - & - & 23 & \onslide<12->{+1=4} \\
+    \hline
+\end{tabular}
+\end{adjustbox}
+\end{frame}
+
 \begin{frame}{Fill the top-down table}
 
 % Second table (main table)
