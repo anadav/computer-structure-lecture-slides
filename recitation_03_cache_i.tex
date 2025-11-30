@@ -599,7 +599,7 @@ Each set has 2 possible locations\\
 
 % MUX - using muxdemux, rotated 270 degrees, positioned relative to data arrays
 \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, NL=2, NB=2, NR=1, w=0.8},
-      external pins width=0, fill=gray!20, rotate=270,anchor=lpin 1] at ([yshift=-1.2cm]data1_3.south) (mux) {};
+      external pins width=0, fill=gray!20, rotate=270,anchor=lpin 1] at ([yshift=-1.1cm]data1_3.south) (mux) {};
 
 % Output labels
 \node[below=2mm of orgate.east] (hitmiss) {Hit/Miss};
@@ -656,8 +656,8 @@ Each set has 2 possible locations\\
 \draw[arrow] (orgate.output) -- (hitmiss.north);
 
 % Comparator to MUX select (using comp1 output)
-\draw[arrow] (comp0.rpin 1) |- (mux.bpin 1);
-\draw[arrow] (comp1.rpin 1) |- (mux.bpin 2);
+\draw[arrow] (comp0.rpin 1 |- mux.bpin 1) node[data_connector] {} -- (mux.bpin 1);
+\draw[arrow] (comp1.rpin 1 |- mux.bpin 2) node[data_connector] {} -- (mux.bpin 2);
 
 % MUX to data out
 \draw[arrow] (mux.rpin 1) -- (dataout.north);
