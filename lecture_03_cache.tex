@@ -532,10 +532,98 @@
 \end{frame}
 
 \begin{frame}{Valid Bit}
+
+\begin{columns}
+\begin{column}{0.4\textwidth}
+\centering
 \begin{itemize}
   \item Cache starts empty; each line needs a \textbf{valid} bit.
   \item Valid set on fill; lines may be invalidated later.
 \end{itemize}
+
+\end{column}
+\begin{column}{0.5\textwidth}
+\centering
+\begin{tikzpicture}[
+    validbox/.style={draw, thick, minimum width=0.3cm, minimum height=0.32cm, fill=red!70, font=\tiny},
+    tagbox/.style={draw, thick, minimum width=1.2cm, minimum height=0.32cm, fill=green!20},
+    databox/.style={draw, thick, minimum width=2.8cm, minimum height=0.32cm, fill=white},
+    offsetbox/.style={draw, thick, minimum width=0.5cm, minimum height=0.32cm, fill=orange!20},
+    label/.style={font=\tiny},
+    data_connector/.style={circle, fill, inner sep=1pt},
+    scale=1, transform shape
+]
+
+% Address breakdown at top
+\node[draw, thick, fill=green!20, minimum width=4.5cm, minimum height=0.55cm, font=\tiny] (tag_field) {Tag = Block\#};
+\node[label, above=0.5mm of tag_field] (addr_title) {Address};
+\node[draw, thick, fill=orange!20, minimum width=1cm, minimum height=0.55cm, anchor=west, font=\tiny] (offset_field) at (tag_field.east) {Offset};
+\node[label, above] at (tag_field.north west) {31};
+\node[label, above] at (offset_field.west |- tag_field.north) {4};
+\node[label, above] at (offset_field.north east) {0};
+
+% Labels for columns
+\node[label, below=0.3cm of tag_field.south, xshift=0.4cm] (tag_array_label) {Tag Array};
+\node[label, below=0.3cm of offset_field.south, xshift=1.6cm] (data_array_label) {Data Array};
+
+% Create arrays using loops
+\foreach \i in {0,...,7} {
+    % Tag array
+    \ifnum\i=0
+        \node[tagbox, below=0cm of tag_array_label] (tag\i) {};
+        \node[label] at (tag\i.center) {Tag};
+        \node[validbox, left=0mm of tag\i.west] (valid\i) {V};
+    \else
+        \pgfmathtruncatemacro{\prev}{\i-1}
+        \node[tagbox, below=0cm of tag\prev] (tag\i) {};
+    \fi
+
+    % Comparators using muxdemux
+    \node[muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NB=1, w=0.4},
+          external pins width=0, fill=cyan!20, anchor=lpin 2] (comp\i) at ([xshift=0.65cm]tag\i.east) {};
+    \node[font=\fontsize{3}{3}\selectfont] at (comp\i.center) {=};
+
+    % Data array
+    \node[databox, right=1cm of comp\i] (data\i) {};
+}
+
+\node[label] at (data0.west) [anchor=west, xshift=0.5mm] {Line};
+% Orange box only on first line
+\node[offsetbox, anchor=west] at ([xshift=0.8cm]data0.west) (thedata) {};
+
+% Connect tag input to all comparators
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] ([xshift=2.5mm]tag_field.south -| tag1.east) -- ([xshift=2.5mm]tag\i.east |- comp\i.lpin 1) node[data_connector] {} -- (comp\i.lpin 1);
+}
+
+\draw[->, >=stealth, thick] (offset_field.south) -- (thedata.north);
+
+% Connect arrays
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] (tag\i.east) -- (comp\i.lpin 2);
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data\i.west);
+}
+
+% OR gate for hit/miss
+\node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
+      xscale=0.6, yscale=0.25, rotate=-90, below right=0.4cm and 0.5cm of comp7.south, anchor=out] (or_gate) {};
+
+% Connect comparators to OR gate
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (comp\i.rpin 1 -| or_gate.bin \the\numexpr\i+1\relax) node[data_connector] {} -- (or_gate.bin \the\numexpr\i+1\relax);
+}
+
+% Hit/Miss output
+\node[label, below=0.4cm of or_gate.bout, font=\tiny\bfseries] (hit_miss) {Hit/Miss};
+\draw[->, >=stealth, thick] (or_gate.bout) -- (hit_miss.north);
+
+% Data output
+\node[label, font=\tiny\bfseries, anchor=north] (data_out) at (data7.south |- hit_miss.north east) {Data};
+\draw[->, >=stealth, thick] (data7.south) -- (data_out.north);
+
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Direct-Mapped (DM) Cache}
