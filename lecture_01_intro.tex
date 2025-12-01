@@ -87,7 +87,7 @@
 
 % Slide 4: Personal Computer System
 \begin{frame}{Personal Computer System}
-\centering
+\hspace*{0cm}%
 \begin{tikzpicture}[
     icon/.style={inner sep=0pt},
     lbl/.style={font=\scriptsize\bfseries},
@@ -102,8 +102,8 @@
     \node[icon, right=2.5cm of cpu] (ram) {\includegraphics[height=1.1cm]{figures/noun-ram-7483151.png}};
     \node[lbl, above=0.02cm of ram] {Memory};
 
-    % NVMe SSD - below RAM (fast storage via CPU PCIe)
-    \node[icon, below=1cm of ram] (nvme) {\includegraphics[height=0.9cm]{figures/noun-nvme-6849180.png}};
+    % NVMe SSD - below left of CPU (fast storage via CPU PCIe)
+    \node[icon, below left=1.3cm and 2cm of cpu] (nvme) {\includegraphics[height=0.9cm]{figures/noun-nvme-6849180.png}};
     \node[lbl, below=0.02cm of nvme] {SSD (NVMe)};
 
     % GPU - left of CPU
@@ -116,24 +116,32 @@
 
     % Chipset/PCH - below CPU
     \node[icon, below=1.3cm of cpu] (pch) {\includegraphics[height=1.1cm]{figures/noun-chipset-7648727.png}};
-    \node[lbl, below=0.02cm of pch] {Chipset};
+    \node[lbl, left=0.1cm of pch] {Chipset};
 
     % HDD - below right of chipset (slow storage via SATA)
-    \node[icon, below right=0.8cm and 1.5cm of pch] (hdd) {\includegraphics[height=0.9cm]{figures/noun-hard-drive-7483169.png}};
+    \node[icon, below right=0.7cm and 1.5cm of pch] (hdd) {\includegraphics[height=0.85cm]{figures/noun-hard-drive-7483169.png}};
     \node[lbl, below=0.02cm of hdd] {HDD};
 
+    % Network card - right of chipset
+    \node[icon, right=1.8cm of pch] (nic) {\includegraphics[height=0.85cm]{figures/noun-network-card-7443121.png}};
+    \node[lbl, below=0.02cm of nic] {Network};
+
     % USB Hub - below chipset
-    \node[icon, below=1.2cm of pch] (usb) {\includegraphics[height=0.8cm]{figures/noun-usb-8182582.png}};
+    \node[icon, below=1.2cm of pch] (usb) {\includegraphics[height=0.75cm]{figures/noun-usb-8182582.png}};
     \node[lbl, below=0.02cm of usb] {USB Hub};
 
     % Keyboard - below left of USB hub
-    \node[icon, below left=0.5cm and 1.2cm of usb] (kbd) {\includegraphics[height=0.7cm]{figures/noun-keyboard-8103038.png}};
-    \node[lbl, below=0.02cm of kbd] {Keyboard};
+    \node[icon, below left=0.4cm and 0.8cm of usb] (kbd) {\includegraphics[height=0.65cm]{figures/noun-keyboard-8103038.png}};
+    \node[lbl, left=0.05cm of kbd] {Keyboard};
+
+    % Mouse - below right of USB hub
+    \node[icon, below right=0.4cm and 0.8cm of usb] (mouse) {\includegraphics[height=0.65cm]{figures/noun-mouse-8184967.png}};
+    \node[lbl, right=0.05cm of mouse] {Mouse};
 
     % Connections - CPU direct
     \draw[bus] (cpu) -- node[busname, above] {Memory Bus} (ram);
     \draw[bus] (cpu) -- node[busname, above] {PCIe} (gpu);
-    \draw[bus] (cpu) -- node[busname, right] {PCIe} (nvme);
+    \draw[bus] (cpu) -- node[busname, left, pos=0.4] {PCIe} (nvme);
     \draw[bus] (gpu) -- node[busname, above] {HDMI/DP} (display);
 
     % CPU to Chipset
@@ -141,10 +149,20 @@
 
     % Chipset to peripherals
     \draw[bus] (pch) -- node[busname, right, pos=0.5] {SATA} (hdd);
+    \draw[bus] (pch) -- node[busname, above] {PCIe} (nic);
     \draw[bus] (pch) -- node[busname, left] {USB} (usb);
 
-    % USB hub to keyboard
-    \draw[bus] (usb) -- node[busname, below, pos=0.5] {USB} (kbd);
+    % USB hub to peripherals
+    \draw[bus] (usb) -- node[busname, left, pos=0.5] {} (kbd);
+    \draw[bus] (usb) -- node[busname, right, pos=0.5] {} (mouse);
+
+\end{tikzpicture}
+
+\begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, text width=6cm, font=\scriptsize, align=left]
+        at ([xshift=0.5cm, yshift=0.3cm]current page.south east) {
+        \textit{Modern PCs are complex---and this is before discussing what's \textbf{inside} the CPU: multiple cores, caches, system agent... That will be our focus.}
+    };
 \end{tikzpicture}
 \end{frame}
 
