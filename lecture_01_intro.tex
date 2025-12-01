@@ -88,37 +88,64 @@
 % Slide 4: Personal Computer System
 \begin{frame}{Personal Computer System}
 \centering
-% Placeholder for complex system diagram
-\begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
-    % Note: This is a simplified version. Original has detailed PC architecture
-    \node[draw, rectangle, fill=blue!20, minimum width=3cm, minimum height=2cm] (cpu) at (0,0) {
-        \begin{tabular}{c}
-            Core LLC\\
-            Core LLC\\
-            Core LLC\\
-            Core LLC\\
-            Graphics
-        \end{tabular}
-    };
-    \node[draw, rectangle, fill=green!20, minimum width=2.5cm, minimum height=1.5cm, align=center] (pch) at (0,-3) {PCH\\Platform Controller Hub};
-    \node[draw, rectangle, fill=gray!20] (memory) at (4,0) {2ch DDR3};
-    \node[draw, rectangle] (display) at (-4,0) {Display};
-    \node[draw, rectangle] (pcie) at (4,-3) {PCIe Slots};
-    
-    \draw[<->] (cpu) -- node[above] {IMC} (memory);
-    \draw[<->] (cpu) -- node[left] {Display} (display);
-    \draw[<->] (cpu) -- node[left] {DMI} (pch);
-    \draw[<->] (pch) -- (pcie);
-    
-    % Peripherals
-    \node at (-3,-3) {USB};
-    \node at (-3,-3.5) {SATA};
-    \node at (-3,-4) {Audio};
-    \node at (0,-4.5) {LAN 10/100/1000};
-\end{tikzpicture}
+\begin{tikzpicture}[
+    icon/.style={inner sep=0pt},
+    lbl/.style={font=\scriptsize\bfseries},
+    bus/.style={draw, thick, <->, >=Stealth},
+    busname/.style={font=\tiny, fill=white, inner sep=1pt}
+]
+    % CPU - center top
+    \node[icon] (cpu) {\includegraphics[height=1.2cm]{figures/noun-cpu-8157304.png}};
+    \node[lbl, above=0.02cm of cpu] {CPU};
 
-\vspace{0.5cm}
-\textit{[Simplified diagram - full system architecture includes more components]}
+    % RAM - right of CPU
+    \node[icon, right=2.5cm of cpu] (ram) {\includegraphics[height=1.1cm]{figures/noun-ram-7483151.png}};
+    \node[lbl, above=0.02cm of ram] {Memory};
+
+    % NVMe SSD - below RAM (fast storage via CPU PCIe)
+    \node[icon, below=1cm of ram] (nvme) {\includegraphics[height=0.9cm]{figures/noun-nvme-6849180.png}};
+    \node[lbl, below=0.02cm of nvme] {SSD (NVMe)};
+
+    % GPU - left of CPU
+    \node[icon, left=2cm of cpu] (gpu) {\includegraphics[height=1cm]{figures/noun-graphics-card-1036913.png}};
+    \node[lbl, above=0.02cm of gpu] {Graphics Card};
+
+    % Display - left of GPU
+    \node[icon, left=1.5cm of gpu] (display) {\includegraphics[height=1.2cm]{figures/noun-computer-screen-8056981.png}};
+    \node[lbl, above=0.02cm of display] {Display};
+
+    % Chipset/PCH - below CPU
+    \node[icon, below=1.3cm of cpu] (pch) {\includegraphics[height=1.1cm]{figures/noun-chipset-7648727.png}};
+    \node[lbl, below=0.02cm of pch] {Chipset};
+
+    % HDD - below right of chipset (slow storage via SATA)
+    \node[icon, below right=0.8cm and 1.5cm of pch] (hdd) {\includegraphics[height=0.9cm]{figures/noun-hard-drive-7483169.png}};
+    \node[lbl, below=0.02cm of hdd] {HDD};
+
+    % USB Hub - below chipset
+    \node[icon, below=1.2cm of pch] (usb) {\includegraphics[height=0.8cm]{figures/noun-usb-8182582.png}};
+    \node[lbl, below=0.02cm of usb] {USB Hub};
+
+    % Keyboard - below left of USB hub
+    \node[icon, below left=0.5cm and 1.2cm of usb] (kbd) {\includegraphics[height=0.7cm]{figures/noun-keyboard-8103038.png}};
+    \node[lbl, below=0.02cm of kbd] {Keyboard};
+
+    % Connections - CPU direct
+    \draw[bus] (cpu) -- node[busname, above] {Memory Bus} (ram);
+    \draw[bus] (cpu) -- node[busname, above] {PCIe} (gpu);
+    \draw[bus] (cpu) -- node[busname, right] {PCIe} (nvme);
+    \draw[bus] (gpu) -- node[busname, above] {HDMI/DP} (display);
+
+    % CPU to Chipset
+    \draw[bus] (cpu) -- node[busname, left] {DMI} (pch);
+
+    % Chipset to peripherals
+    \draw[bus] (pch) -- node[busname, right, pos=0.5] {SATA} (hdd);
+    \draw[bus] (pch) -- node[busname, left] {USB} (usb);
+
+    % USB hub to keyboard
+    \draw[bus] (usb) -- node[busname, below, pos=0.5] {USB} (kbd);
+\end{tikzpicture}
 \end{frame}
 
 % Slide 5: Architecture & Microarchitecture
