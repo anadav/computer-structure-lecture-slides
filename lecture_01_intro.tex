@@ -455,40 +455,74 @@ $$\text{Speedup}_{overall} = 1 - 0.95 = 0.05 = 5\%$$
 
 % Slide 14: Instruction Set Design
 \begin{frame}{Instruction Set Design}
+\begin{columns}[c]
+\column{0.48\textwidth}
 \centering
-\begin{tikzpicture}[scale=0.8]
+\begin{tikzpicture}[
+    box/.style={draw, thick, minimum width=3.6cm, minimum height=0.7cm, font=\small\bfseries},
+    icon/.style={inner sep=0pt},
+    lbl/.style={font=\scriptsize, anchor=east}
+]
     % Software layer
-    \node at (0,4) {\Large software};
-    \draw[thick] (-2,3) -- (2,3);
-    \draw[thick] (-2,2.5) rectangle (2,3);
-    \node at (0,2.75) {instruction set};
-    \draw[thick] (-2,2) -- (2,2);
-    
+    \node[box, fill=blue!15] (sw) at (0,0) {Software};
+
+    % ISA layer (the contract) - two lines
+    \node[box, fill=yellow!40, minimum height=0.9cm, align=center, below=0.4cm of sw] (isa) {Instruction Set\\Architecture};
+
     % Hardware layer
-    \node at (0,0.5) {\Large hardware};
-    
-    % People
-    \node[circle,draw] (user1) at (-3,3.5) {};
-    \draw (-3,3) -- (-3,2.5);
-    \draw (-3.3,2.7) -- (-2.7,2.7);
-    \draw (-3.3,2) -- (-3,2.5) -- (-2.7,2);
-    
-    \node[circle,draw] (user2) at (3,3.5) {};
-    \draw (3,3) -- (3,2.5);
-    \draw (2.7,2.7) -- (3.3,2.7);
-    \draw (2.7,2) -- (3,2.5) -- (3.3,2);
-    
-    % Hardware person
-    \node[circle,draw] (hw) at (0,1.5) {};
-    \draw (0,1.3) -- (0,0.8);
-    \draw (-0.3,1) -- (0.3,1);
-    \draw (-0.3,0.3) -- (0,0.8) -- (0.3,0.3);
-    \draw[thick] (hw) -- (0,2);
-    
-    % Annotations
-    \node[red, align=center] at (5,3) {The ISA is what the user /\\compiler see};
-    \node[red, align=center] at (5,1) {The HW implements the\\ISA};
+    \node[box, fill=green!15, below=0.4cm of isa] (hw) {Hardware};
+
+    % Icons - positioned relative to boxes
+    \node[icon, left=0.25cm of sw] (progicon) {%
+        \includegraphics[height=0.85cm]{figures/noun-programmer-7899885.png}};
+    \node[icon, left=0.25cm of isa] (compicon) {%
+        \includegraphics[height=0.85cm]{figures/noun-compiler-5057301.png}};
+    \node[icon, left=0.25cm of hw] (cpuicon) {%
+        \includegraphics[height=0.85cm]{figures/noun-cpu-8157304.png}};
+
+    % Labels - right-aligned using |- relative positioning
+    \node[lbl] (proglbl) at ([xshift=-0.15cm]progicon.west) {Programmer};
+    \node[lbl] at (proglbl.east |- compicon) {Compiler};
+    \node[lbl] at (proglbl.east |- cpuicon) {CPU};
+
+    % Arrows icon to box
+    \draw[->, thick, blue!70] (progicon) -- (sw.west);
+    \draw[->, thick, orange!80!black] (compicon) -- (isa.west);
+    \draw[->, thick, green!50!black] (cpuicon) -- (hw.west);
+
+    % Bidirectional arrows between layers
+    \draw[<->, very thick, red!70!black] (sw.south) -- (isa.north);
+    \draw[<->, very thick, red!70!black] (isa.south) -- (hw.north);
 \end{tikzpicture}
+
+\column{0.52\textwidth}
+\small
+\textbf{The ISA is a \textcolor{red}{contract}:}
+\vspace{0.15cm}
+\begin{itemize}\setlength{\itemsep}{2pt}
+    \item \textbf{What software sees:}
+    \begin{itemize}\setlength{\itemsep}{0pt}
+        \scriptsize
+        \item Instructions \& opcodes
+        \item Registers
+        \item Addressing modes
+        \item Data types \& widths
+    \end{itemize}
+    \item \textbf{What hardware provides:}
+    \begin{itemize}\setlength{\itemsep}{0pt}
+        \scriptsize
+        \item Executes all ISA instructions
+        \item Implementation hidden
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.15cm}
+\begin{alertblock}{\small Compatibility}
+\scriptsize
+Different $\mu$Arch can support the \textbf{same} ISA\\
+$\Rightarrow$ old software runs on new CPUs
+\end{alertblock}
+\end{columns}
 \end{frame}
 
 % Slide 15: ISA Considerations
