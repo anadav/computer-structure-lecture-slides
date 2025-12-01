@@ -1260,44 +1260,42 @@ After flush, only Sta (Pdst 1) and Std (Pdst 3) remain in RS---these are from th
 }
 \end{frame}
 
-\begin{frame}{Fill the top-down table}
+\begin{frame}{Fill the Top-Down Table}
 
-% Second table (main table)
-\begin{table}
+\begin{columns}[T]
+% Left column - Table
+\begin{column}{0.72\textwidth}
 \centering
-\small
-\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{|l|c|c|c|c|c|}
 \hline
-\textbf{Cycle} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} & \textbf{10} & \textbf{11} \\
+\textbf{Cycle} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\
 \hline
-\textbf{Backend Stall} & 0 & \only<2->{} & \only<4->{} & \only<6->{} & \only<8->{} & \only<10->{1} & \only<10->{1} & \only<10->{1} & \only<10->{1} & \only<10->{0} & \only<10->{0} \\
+\textbf{Alloc Slot 0} & \only<1->{\checkmark} & \only<2->{\checkmark} & \only<3->{\checkmark} & \only<4->{\checkmark} & \only<5->{\checkmark} \\
 \hline
-\textbf{Alloc Slot 0} & & \only<2->{\checkmark} & \only<4->{\checkmark} & \only<6->{\checkmark} & \only<8->{\checkmark} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} \\
+\textbf{Alloc Slot 1} & \only<1->{\checkmark} & \only<2->{\checkmark} & & \only<4->{\checkmark} & \only<5->{\checkmark} \\
 \hline
-\textbf{Alloc Slot 1} & & \only<2->{\checkmark} & \only<4->{\checkmark} & \only<6->{\checkmark} & \only<8->{\checkmark} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} \\
+\textbf{Alloc Slot 2} & \only<1->{\checkmark} & \only<2->{\checkmark} & & & \\
 \hline
-\textbf{Alloc Slot 2} & & \only<2->{\checkmark} & \only<4->{\checkmark} & \only<6->{} & \only<8->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} \\
-\hline
-\textbf{Alloc Slot 3} & & \only<2->{\checkmark} & \only<4->{} & \only<6->{} & \only<8->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} \\
+\textbf{Alloc Slot 3} & \only<1->{\checkmark} & & & & \\
 \hline
 \hline
-\textbf{Frontend Bound} & & \only<3->{} & \only<5->{} & \only<7->{} & \only<9->{} & \only<10->{2} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \\
+\textbf{Frontend Bound} & & & & & \only<5->{2} \\
 \hline
-\textbf{Backend Bound} & & \only<3->{} & \only<5->{} & \only<7->{} & \only<9->{} & \only<10->{1} & \only<10->{3} & \only<10->{} & \only<10->{2} & \only<10->{} & \\
+\textbf{Backend Bound} & & \only<2->{1} & \only<3->{3} & \only<4->{2} & \\
 \hline
-\textbf{Retiring} & & \only<3->{4} & \only<5->{2} & \only<7->{2} & \only<9->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \only<10->{} & \\
+\textbf{Retiring} & \only<1->{4} & \only<2->{2} & & & \only<5->{2} \\
 \hline
-\textbf{Bad Speculation} & & \only<3->{} & \only<5->{1} & \only<7->{} & \only<9->{} & \only<10->{1} & \only<10->{} & \only<10->{} & \only<10->{2} & \only<10->{} & \\
+\textbf{Bad Speculation} & & \only<2->{1} & \only<3->{1} & \only<4->{2} & \\
 \hline
 \end{tabular}
-\end{table}
 
-\vspace{0.5cm}
+\vspace{4mm}
 
-% First table (summary)
-\only<11->{
-\begin{table}
-\centering
+% Summary table
+\only<6->{
+\footnotesize
 \begin{tabular}{|l|c|c|c|}
 \hline
 \textbf{Bad Speculation} & \textbf{Frontend Bound} & \textbf{Backend Bound} & \textbf{Retiring} \\
@@ -1305,8 +1303,59 @@ After flush, only Sta (Pdst 1) and Std (Pdst 3) remain in RS---these are from th
 $\frac{4}{20} = 20\%$ & $\frac{2}{20} = 10\%$ & $\frac{6}{20} = 30\%$ & $\frac{8}{20} = 40\%$ \\
 \hline
 \end{tabular}
-\end{table}
 }
+\end{column}
+
+% Right column - Explanations
+\begin{column}{0.28\textwidth}
+\scriptsize
+\only<1>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Cycle 1:} All 4 slots used for Pdst 0--3.\\[2pt]
+All on correct path $\rightarrow$ Retiring = 4
+\end{tcolorbox}
+}%
+\only<2>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Cycle 2:} 3 slots for Pdst 4--6.\\[2pt]
+Pdst 4,5 correct $\rightarrow$ Retiring = 2\\[2pt]
+Pdst 6 wrong path $\rightarrow$ Bad Spec = 1\\[2pt]
+RS nearly full $\rightarrow$ Backend = 1
+\end{tcolorbox}
+}%
+\only<3>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Cycle 3:} Only 1 slot for Pdst 7 (store).\\[2pt]
+Wrong path $\rightarrow$ Bad Spec = 1\\[2pt]
+RS full, 3 slots blocked $\rightarrow$ Backend = 3
+\end{tcolorbox}
+}%
+\only<4>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Cycle 4:} 2 slots for Pdst 8--9.\\[2pt]
+Both wrong path $\rightarrow$ Bad Spec = 2\\[2pt]
+RS still constrained $\rightarrow$ Backend = 2
+\end{tcolorbox}
+}%
+\only<5>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Cycle 5:} Flush at this cycle!\\[2pt]
+2 slots for Pdst 10--11 (correct path after recovery).\\[2pt]
+Retiring = 2\\[2pt]
+Frontend recovering $\rightarrow$ Frontend = 2
+\end{tcolorbox}
+}%
+\only<6->{%
+\begin{tcolorbox}[colback=green!20, colframe=green!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Summary:}\\[2pt]
+5 cycles $\times$ 4 slots = 20\\[2pt]
+Only 40\% of slots did useful work (Retiring).\\[2pt]
+30\% wasted on backend stalls.\\[2pt]
+20\% wasted on wrong-path instructions.
+\end{tcolorbox}
+}%
+\end{column}
+\end{columns}
 
 \end{frame}
 
