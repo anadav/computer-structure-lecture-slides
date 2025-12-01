@@ -552,7 +552,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \textbf{Solution:} TLB - a cache for recently used PTEs
 
 \begin{columns}
-\column{0.5\textwidth}
+\column{0.7\textwidth}
 \textbf{How it works:}
 \begin{itemize}
 \item Check TLB before accessing page table
@@ -561,25 +561,27 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \item Store page table in regular cache too
 \end{itemize}
 
-\column{0.5\textwidth}
+\column{0.3\textwidth}
 \begin{tikzpicture}[scale=0.7]
   \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2] (vaddr) at (0,4) {
     \nodepart{one} VPN
     \nodepart{two} Offset
   };
+  \coordinate (vpn) at ([xshift=-8mm]vaddr.south);
   
   \node[draw, rectangle, fill=correctgreen!30] (tlb) at (-2,2) {TLB};
-  \node[draw, rectangle, fill=lightblue!30, align=center] (pt) at (2,2) {Page\\Table};
+  \node[draw, rectangle, fill=lightblue!30, align=center, right=4mm of tlb] (pt) {Page\\Table};
   
   \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2] (paddr) at (0,0) {
     \nodepart{one} PFN
     \nodepart{two} Offset
   };
+  \coordinate (pfn) at ([xshift=-8mm]paddr.north);
   
-  \draw[->, thick, correctgreen] (vaddr) -- (tlb) node[midway, left] {\tiny hit};
-  \draw[->, thick, dashed, incorrectred] (vaddr) -- (pt) node[midway, right] {\tiny miss};
-  \draw[->, thick] (tlb) -- (paddr);
-  \draw[->, thick] (pt) -- (paddr);
+  \draw[->, thick, correctgreen] (vpn) -- (tlb) node[midway, left] {\tiny hit};
+  \draw[->, thick, dashed, incorrectred] (vpn) -- (pt) node[midway, right] {\tiny miss};
+  \draw[->, thick] (tlb) -- ([xshift=-1mm]pfn);
+  \draw[->, thick] (pt) -- ([xshift=1mm]pfn);
 \end{tikzpicture}
 \end{columns}
 \end{frame}
