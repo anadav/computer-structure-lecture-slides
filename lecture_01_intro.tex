@@ -9,7 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix}
 \usepackage{tcolorbox}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
@@ -576,97 +576,52 @@ $\Rightarrow$ old software runs on new CPUs
 \end{frame}
 
 % Slide 17: ISA Extensions for Reducing IC
-\begin{frame}{ISA Extensions for Reducing IC}
-\textbf{Example}
-\begin{itemize}
-    \item 128-bit packed (vector) / scalar single precision FP (4×32)
-    \item 128-bit registers (XMM0 -- XMM7)
-\end{itemize}
+\begin{frame}{ISA Extensions for Reducing IC (Instruction Count)}
+\textbf{Example:} 128-bit packed (vector) / scalar single precision FP (4$\times$32)
 
 \begin{columns}
 \column{0.5\textwidth}
 \centering
-\textbf{Packed:}\\[0.1cm]
-\begin{tikzpicture}[scale=0.7]
-    \draw[thick] (0,2) rectangle (4,2.5);
-    \foreach \x in {1,2,3} {
-        \draw (\x,2) -- (\x,2.5);
-    }
-    \node at (0.5,2.25) {\scriptsize x3};
-    \node at (1.5,2.25) {\scriptsize x2};
-    \node at (2.5,2.25) {\scriptsize x1};
-    \node at (3.5,2.25) {\scriptsize x0};
-    
-    \node at (2,1.5) {+};
-    
-    \draw[thick] (0,0.5) rectangle (4,1);
-    \foreach \x in {1,2,3} {
-        \draw (\x,0.5) -- (\x,1);
-    }
-    \node at (0.5,0.75) {\scriptsize y3};
-    \node at (1.5,0.75) {\scriptsize y2};
-    \node at (2.5,0.75) {\scriptsize y1};
-    \node at (3.5,0.75) {\scriptsize y0};
-    
-    % Double line for sum
-    \draw[thick, double, double distance=1pt] (0,-0.35) -- (4,-0.35);
-    
-    \draw[thick] (0,-1) rectangle (4,-0.5);
-    \foreach \x in {1,2,3} {
-        \draw (\x,-1) -- (\x,-0.5);
-    }
-    \node at (0.5,-0.75) {\tiny x3+y3};
-    \node at (1.5,-0.75) {\tiny x2+y2};
-    \node at (2.5,-0.75) {\tiny x1+y1};
-    \node at (3.5,-0.75) {\tiny x0+y0};
-    
-    \draw[<->] (0,3) -- (4,3) node[midway, above] {\scriptsize 128-bits};
+\begin{tikzpicture}[node distance=0.5cm,
+    reg/.style={matrix of nodes, ampersand replacement=\&,
+        nodes={draw, minimum width=0.95cm, minimum height=0.5cm, font=\scriptsize, anchor=center},
+        column sep=-\pgflinewidth,
+        column 1/.style={nodes={fill=purple!25}},
+        column 2/.style={nodes={fill=blue!20}},
+        column 3/.style={nodes={fill=green!20}},
+        column 4/.style={nodes={fill=orange!25}}}
+]
+    \matrix[reg] (X) { x3 \& x2 \& x1 \& x0 \\ };
+    \node[below of=X] (plus) {+};
+    \matrix[reg, below of=plus] (Y) { y3 \& y2 \& y1 \& y0 \\ };
+    \node[below of=Y] (eq) {=};
+    \matrix[reg, below of=eq, nodes={font=\tiny}] (R) { x3+y3 \& x2+y2 \& x1+y1 \& x0+y0 \\ };
+    \draw[<->] (X.north west) -- (X.north east) node[midway, above] {\scriptsize 128-bits};
+    \node[left=0.3cm of Y, anchor=east, align=right, font=\small\bfseries] {Packed\\(SIMD)};
 \end{tikzpicture}
 
 \column{0.5\textwidth}
 \centering
-\textbf{Scalar:}\\[0.1cm]
-\begin{tikzpicture}[scale=0.7]
-    \draw[thick] (0,2) rectangle (4,2.5);
-    \foreach \x in {1,2,3} {
-        \draw (\x,2) -- (\x,2.5);
-    }
-    \node at (0.5,2.25) {\scriptsize x3};
-    \node at (1.5,2.25) {\scriptsize x2};
-    \node at (2.5,2.25) {\scriptsize x1};
-    \node at (3.5,2.25) {\scriptsize x0};
-    
-    \node at (2,1.5) {+};
-    
-    \draw[thick] (0,0.5) rectangle (4,1);
-    \foreach \x in {1,2,3} {
-        \draw (\x,0.5) -- (\x,1);
-    }
-    \node at (0.5,0.75) {\scriptsize y3};
-    \node at (1.5,0.75) {\scriptsize y2};
-    \node at (2.5,0.75) {\scriptsize y1};
-    \node at (3.5,0.75) {\scriptsize y0};
-    
-    \draw[thick] (0,-1) rectangle (4,-0.5);
-    \foreach \x in {1,2,3} {
-        \draw (\x,-1) -- (\x,-0.5);
-    }
-    \node at (0.5,-0.75) {\scriptsize y3};
-    \node at (1.5,-0.75) {\scriptsize y2};
-    \node at (2.5,-0.75) {\scriptsize y1};
-    \node at (3.5,-0.75) {\tiny x0+y0};
-    
-    \draw[<->] (0,3) -- (4,3) node[midway, above] {\scriptsize 128-bits};
+\begin{tikzpicture}[node distance=0.5cm,
+    reg/.style={matrix of nodes, ampersand replacement=\&,
+        nodes={draw, minimum width=0.95cm, minimum height=0.5cm, font=\scriptsize, anchor=center},
+        column sep=-\pgflinewidth},
+    colored/.style={column 4/.style={nodes={fill=orange!25}}}
+]
+    \matrix[reg, colored] (X) { x3 \& x2 \& x1 \& x0 \\ };
+    \node[below of=X] (plus) {+};
+    \matrix[reg, colored, below of=plus] (Y) { y3 \& y2 \& y1 \& y0 \\ };
+    \node[below of=Y] (eq) {=};
+    \matrix[reg, colored, below of=eq] (R) { x3 \& x2 \& x1 \& |[font=\tiny]| x0+y0 \\ };
+    \draw[<->] (X.north west) -- (X.north east) node[midway, above] {\scriptsize 128-bits};
+    \node[left=0.3cm of Y, anchor=east, font=\small\bfseries] {Scalar};
 \end{tikzpicture}
 \end{columns}
 
-\vspace{0.5cm}
+\vspace{0.4cm}
 \begin{itemize}
     \item A single ``packed add'' instruction replaces 4 ``add'' instructions
-    \item In order to fully gain the performance, need also new HW
-    \begin{itemize}
-        \item execution unit that performs ``packed add'' in a single cycle
-    \end{itemize}
+    \item Requires HW support: execution unit that performs ``packed add'' in a single cycle
 \end{itemize}
 \end{frame}
 
