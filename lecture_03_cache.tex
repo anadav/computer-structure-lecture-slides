@@ -545,7 +545,7 @@
 \begin{column}{0.5\textwidth}
 \centering
 \begin{tikzpicture}[
-    validbox/.style={draw, thick, minimum width=0.3cm, minimum height=0.32cm, fill=red!70, font=\tiny},
+    validbox/.style={draw, thick, minimum width=0.3cm, minimum height=0.32cm, fill=red!90, font=\tiny, inner sep=0pt, text=white},
     tagbox/.style={draw, thick, minimum width=1.2cm, minimum height=0.32cm, fill=green!20},
     databox/.style={draw, thick, minimum width=2.8cm, minimum height=0.32cm, fill=white},
     offsetbox/.style={draw, thick, minimum width=0.5cm, minimum height=0.32cm, fill=orange!20},
@@ -563,7 +563,7 @@
 \node[label, above] at (offset_field.north east) {0};
 
 % Labels for columns
-\node[label, below=0.3cm of tag_field.south, xshift=0.4cm] (tag_array_label) {Tag Array};
+\node[label, below=0.3cm of tag_field.south, xshift=-8mm] (tag_array_label) {Tag Array};
 \node[label, below=0.3cm of offset_field.south, xshift=1.6cm] (data_array_label) {Data Array};
 
 % Create arrays using loops
@@ -572,19 +572,25 @@
     \ifnum\i=0
         \node[tagbox, below=0cm of tag_array_label] (tag\i) {};
         \node[label] at (tag\i.center) {Tag};
-        \node[validbox, left=0mm of tag\i.west] (valid\i) {V};
     \else
         \pgfmathtruncatemacro{\prev}{\i-1}
         \node[tagbox, below=0cm of tag\prev] (tag\i) {};
     \fi
 
+    \node[validbox, left=0mm of tag\i.west] (valid\i) {V};
+  
     % Comparators using muxdemux
     \node[muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NB=1, w=0.4},
           external pins width=0, fill=cyan!20, anchor=lpin 2] (comp\i) at ([xshift=0.65cm]tag\i.east) {};
+
+    \node[and port, number inputs=2, anchor=in 2, external pins width=0, fill=red!90,
+      xscale=0.2, yscale=0.2] (and_gate_\i) at ([xshift=3mm]comp\i.rpin 1) {};
+
+
     \node[font=\fontsize{3}{3}\selectfont] at (comp\i.center) {=};
 
     % Data array
-    \node[databox, right=1cm of comp\i] (data\i) {};
+    \node[databox, right=1cm of and_gate_\i.out] (data\i) {};
 }
 
 \node[label] at (data0.west) [anchor=west, xshift=0.5mm] {Line};
@@ -601,16 +607,18 @@
 % Connect arrays
 \foreach \i in {0,...,7} {
     \draw[->, >=stealth, thick] (tag\i.east) -- (comp\i.lpin 2);
-    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data\i.west);
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (and_gate_\i.in 2);
+    \draw[->, >=stealth, thick] (and_gate_\i.out) -- (data\i.west);
+    \draw[->, >=stealth, thick, color=red!90] (valid\i.east) |- (and_gate_\i.in 1);
 }
 
 % OR gate for hit/miss
 \node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
-      xscale=0.6, yscale=0.25, rotate=-90, below right=0.4cm and 0.5cm of comp7.south, anchor=out] (or_gate) {};
+      xscale=0.6, yscale=0.25, rotate=-90, below right=0.4cm and 0.5cm of and_gate_7.south, anchor=out] (or_gate) {};
 
 % Connect comparators to OR gate
 \foreach \i in {0,...,7} {
-    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (comp\i.rpin 1 -| or_gate.bin \the\numexpr\i+1\relax) node[data_connector] {} -- (or_gate.bin \the\numexpr\i+1\relax);
+    \draw[->, >=stealth, thick] (and_gate_\i.out) -- (and_gate_\i.out -| or_gate.bin \the\numexpr\i+1\relax) node[data_connector] {} -- (or_gate.bin \the\numexpr\i+1\relax);
 }
 
 % Hit/Miss output
