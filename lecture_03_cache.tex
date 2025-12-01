@@ -6,8 +6,12 @@
 \usepackage{listings}
 \usepackage{tikz}
 \usepackage{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 \usetikzlibrary{backgrounds, fit, decorations.pathreplacing}
+\usetikzlibrary{circuits.logic.US}
 
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
@@ -433,11 +437,98 @@
 \end{frame}
 
 \begin{frame}{Fully Associative (FA) Cache}
+\begin{columns}[T]
+\begin{column}{0.42\textwidth}
+\small
 \begin{itemize}
-  \item Any block can map to any line; tags of all lines are compared in parallel.
-  \item Pros: lowest conflict misses. Cons: many comparators (area/power).
-  \item On a tag match, return data using the offset.
+  \item Any block can map to any line
+  \item All tags compared in parallel
+  \item On match, return data at offset
 \end{itemize}
+\vspace{0.3cm}
+\textcolor{green!70!black}{\textbf{+}} Lowest conflict misses\\
+\textcolor{red!70!black}{\textbf{--}} Many comparators (area/power)
+\end{column}
+\begin{column}{0.58\textwidth}
+\centering
+\begin{tikzpicture}[
+    tagbox/.style={draw, thick, minimum width=1.2cm, minimum height=0.32cm, fill=green!20},
+    databox/.style={draw, thick, minimum width=2.8cm, minimum height=0.32cm, fill=white},
+    offsetbox/.style={draw, thick, minimum width=0.5cm, minimum height=0.32cm, fill=orange!20},
+    label/.style={font=\tiny},
+    data_connector/.style={circle, fill, inner sep=1pt},
+    scale=1, transform shape
+]
+
+% Address breakdown at top
+\node[draw, thick, fill=green!20, minimum width=4.5cm, minimum height=0.55cm, font=\tiny] (tag_field) {Tag = Block\#};
+\node[label, above=0.5mm of tag_field] (addr_title) {Address};
+\node[draw, thick, fill=orange!20, minimum width=1cm, minimum height=0.55cm, anchor=west, font=\tiny] (offset_field) at (tag_field.east) {Offset};
+\node[label, above] at (tag_field.north west) {31};
+\node[label, above] at (offset_field.west |- tag_field.north) {4};
+\node[label, above] at (offset_field.north east) {0};
+
+% Labels for columns
+\node[label, below=0.3cm of tag_field.south, xshift=0.4cm] (tag_array_label) {Tag Array};
+\node[label, below=0.3cm of offset_field.south, xshift=1.6cm] (data_array_label) {Data Array};
+
+% Create arrays using loops
+\foreach \i in {0,...,7} {
+    % Tag array
+    \ifnum\i=0
+        \node[tagbox, below=0cm of tag_array_label] (tag\i) {};
+        \node[label] at (tag\i.center) {Tag};
+    \else
+        \pgfmathtruncatemacro{\prev}{\i-1}
+        \node[tagbox, below=0cm of tag\prev] (tag\i) {};
+    \fi
+
+    % Comparators using muxdemux
+    \node[muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NB=1, w=0.4},
+          external pins width=0, fill=cyan!20, anchor=lpin 2] (comp\i) at ([xshift=0.65cm]tag\i.east) {};
+    \node[font=\fontsize{3}{3}\selectfont] at (comp\i.center) {=};
+
+    % Data array
+    \node[databox, right=1cm of comp\i] (data\i) {};
+}
+
+\node[label] at (data0.west) [anchor=west, xshift=0.5mm] {Line};
+% Orange box only on first line
+\node[offsetbox, anchor=west] at ([xshift=0.8cm]data0.west) (thedata) {};
+
+% Connect tag input to all comparators
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] ([xshift=2.5mm]tag_field.south -| tag1.east) -- ([xshift=2.5mm]tag\i.east |- comp\i.lpin 1) node[data_connector] {} -- (comp\i.lpin 1);
+}
+
+\draw[->, >=stealth, thick] (offset_field.south) -- (thedata.north);
+
+% Connect arrays
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] (tag\i.east) -- (comp\i.lpin 2);
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data\i.west);
+}
+
+% OR gate for hit/miss
+\node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
+      xscale=0.6, yscale=0.25, rotate=-90, below right=0.4cm and 0.5cm of comp7.south, anchor=out] (or_gate) {};
+
+% Connect comparators to OR gate
+\foreach \i in {0,...,7} {
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (comp\i.rpin 1 -| or_gate.bin \the\numexpr\i+1\relax) node[data_connector] {} -- (or_gate.bin \the\numexpr\i+1\relax);
+}
+
+% Hit/Miss output
+\node[label, below=0.4cm of or_gate.bout, font=\tiny\bfseries] (hit_miss) {Hit/Miss};
+\draw[->, >=stealth, thick] (or_gate.bout) -- (hit_miss.north);
+
+% Data output
+\node[label, font=\tiny\bfseries, anchor=north] (data_out) at (data7.south |- hit_miss.north east) {Data};
+\draw[->, >=stealth, thick] (data7.south) -- (data_out.north);
+
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Valid Bit}
@@ -905,19 +996,26 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \section{Cache Performance}
 
 \begin{frame}{Cache Line Size Trade-offs}
-\begin{columns}[T]
-\begin{column}{0.55\textwidth}
+\small
 \begin{itemize}
-  \item Larger lines exploit spatial locality but may fetch unused data $\rightarrow$ more evictions
-  \item Larger lines increase \textbf{miss penalty}; ``critical word first'' helps
-  \item $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
+  \item \textbf{Larger lines exploit spatial locality}
+  \begin{itemize}
+    \item Too big blocks: may fetch unused data
+    \item Possibly evicting useful data $\Rightarrow$ miss rate goes up
+  \end{itemize}
+  \item \textbf{Larger lines mean larger miss penalty}
+  \begin{itemize}
+    \item Takes longer to perform a cache line fill
+    \item Using critical word first reduces the issue
+  \end{itemize}
+  \item Takes longer to evict (write-back policy)
 \end{itemize}
-\end{column}
-\begin{column}{0.45\textwidth}
+\vspace{0.2cm}
 \centering
-\includegraphics[width=\textwidth]{figures/cache_line_size_tradeoff.png}
-\end{column}
-\end{columns}
+\includegraphics[height=3cm]{figures/cache_line_size_tradeoff.png}
+\vspace{0.2cm}
+
+$t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{frame}
 
 
@@ -953,11 +1051,71 @@ Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
 \end{frame}
 
 \begin{frame}{Classifying Misses: The 3Cs}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\small
 \begin{itemize}
-  \item \textbf{Compulsory}: first reference to a block $\Rightarrow$ use prefetch to mitigate
-  \item \textbf{Capacity}: working set $>$ cache size $\Rightarrow$ increase size / use stream buffers
-  \item \textbf{Conflict}: set mapping causes evictions $\Rightarrow$ use higher associativity / victim cache
+  \item \textbf{Compulsory}: first reference to a block
+  \begin{itemize}\scriptsize
+    \item Solution: prefetch
+  \end{itemize}
+  \item \textbf{Capacity}: working set $>$ cache size
+  \begin{itemize}\scriptsize
+    \item Solution: increase size, stream buffers
+  \end{itemize}
+  \item \textbf{Conflict}: set mapping causes evictions
+  \begin{itemize}\scriptsize
+    \item Solution: higher associativity, victim cache
+  \end{itemize}
 \end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.65]
+\begin{axis}[
+    xlabel={Cache Size (KB)},
+    ylabel={Miss Rate},
+    xmode=log,
+    log basis x=2,
+    xmin=16, xmax=2048,
+    ymin=0, ymax=0.14,
+    xtick={16,32,64,128,256,512,1024,2048},
+    xticklabels={16,32,64,128,256,512,1K,2K},
+    ytick={0,0.02,0.04,0.06,0.08,0.10,0.12,0.14},
+    legend pos=north east,
+    legend style={font=\tiny, fill=white, fill opacity=0.8},
+    grid=major,
+    grid style={gray!30},
+    width=7cm,
+    height=5.5cm,
+]
+% 1-way (highest miss rate)
+\addplot[blue, thick, mark=square*, mark size=1.5pt] coordinates {
+    (16,0.12) (32,0.095) (64,0.072) (128,0.052) (256,0.038) (512,0.028) (1024,0.021) (2048,0.016)
+};
+% 2-way
+\addplot[red, thick, mark=triangle*, mark size=1.5pt] coordinates {
+    (16,0.095) (32,0.072) (64,0.052) (128,0.038) (256,0.028) (512,0.021) (1024,0.016) (2048,0.013)
+};
+% 4-way
+\addplot[orange, thick, mark=diamond*, mark size=1.5pt] coordinates {
+    (16,0.082) (32,0.060) (64,0.043) (128,0.032) (256,0.024) (512,0.018) (1024,0.014) (2048,0.011)
+};
+% 8-way
+\addplot[teal, thick, mark=o, mark size=1.5pt] coordinates {
+    (16,0.075) (32,0.054) (64,0.039) (128,0.029) (256,0.022) (512,0.017) (1024,0.013) (2048,0.010)
+};
+\legend{1-way, 2-way, 4-way, 8-way}
+
+% Annotations for miss types
+\node[font=\tiny, blue!70!black] at (axis cs:40,0.008) {Compulsory};
+\draw[<-, thin, blue!70!black] (axis cs:100,0.010) -- (axis cs:60,0.008);
+\node[font=\tiny, orange!80!black] at (axis cs:700,0.045) {Capacity};
+\node[font=\tiny, red!70!black] at (axis cs:25,0.105) {Conflict};
+\end{axis}
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \section{Cache Optimization Techniques}
