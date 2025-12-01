@@ -1106,13 +1106,15 @@ When the cache write completes, the Store Buffer entry is freed and available fo
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile, label=rs-timeline-frame, shrink=20]
+\begin{frame}[fragile, label=rs-timeline-frame]
 \frametitle{Top-Down Analysis - Timeline with RS Entries}
 
 \begin{columns}[T]
 % Left column - Explanations (15%)
-\begin{column}{0.3\textwidth}
-\footnotesize
+\begin{column}{0.2\textwidth}
+%\footnotesize
+\scriptsize
+\vspace{-2mm}
 \only<5>{%
 \begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
 \textbf{Key:} Inst 4 allocated at cycle 2 (T alloc=2), same cycle when 4 uops execute (T exe=2).\\[2pt]
@@ -1141,12 +1143,26 @@ Instruction 8 could only be allocated at cycle 4 when 3 uops freed their RS entr
 This instruction also won't commit due to branch misprediction.
 \end{tcolorbox}
 }%
+\only<10>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Note:} Instruction 9 (store) also won't commit due to the branch misprediction.
+\end{tcolorbox}
+}%
+\only<11>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Note:} RS was full at cycle 4 (6 entries occupied).\\[2pt]
+Instruction 10 allocated at cycle 5 when flush occurs.\\[2pt]
+After flush, only Sta (Pdst 1) and Std (Pdst 3) remain in RS---these are from the correct path but haven't executed yet.\\[2pt]
+\#RS: 2 + 1 = 3
+\end{tcolorbox}
+}%
 \end{column}
 
 % Right column - Table (85%)
-\begin{column}{0.7\textwidth}
+\begin{column}{0.8\textwidth}
 \centering
-\footnotesize
+%\footnotesize
+\tiny
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{|c|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -1160,12 +1176,12 @@ This instruction also won't commit due to branch misprediction.
     3 & \texttt{st [R1+40]=R3} & - & - & - & 50 & 110 & 1 & R1 & P2 & 40 & 1 & 21 & \makecell{\tiny Std:22\\\tiny Sta:\tikzmarknode{texe3}{2}} & - & 22 & 23 & \onslide<4->{+2=\textcolor{red}{6}} \\
     4 & \texttt{add R1=R1+10} & 20 & - & - & - & - & 2 & R1 & - & 10 & 2 & - & \tikzmarknode{texe4}{3} & - & - & 23 & \onslide<5->{6\tikzmarknode{minus4}{-4}+1=3} \\
     5 & \texttt{blt (R1<100)} & 20 & 40 & 110 & - & - & 2 & P4 & - & 100 & 3 & - & \tikzmarknode{texe5}{4} & - & - & 23 & \onslide<6->{+1=4} \\
-    6 & \texttt{ld R2=[R1+30]} & - & 110 & - & 50 & 110 & 2 & P4 & - & 30 & 3 & - & \tikzmarknode{texe6}{4} & {\tiny \makecell{addr blk\\data blk}} & 24 & \tikzmarknode{tcommit6}{25} & \onslide<7->{+1=5} \\
-    7 & \texttt{st [R2+20]=R1} & - & - & - & 130 & 20 & \only<1-7>{\textcolor{orange}{?}}\only<8->{\textcolor{orange}{3}} & P6 & P4 & 20 & 24 & 3 & \makecell{\tiny Std:\tikzmarknode{texe7}{4}\\\tiny Sta:25} & - & 25 & \tikzmarknode{tcommit7}{26} & \onslide<8->{5\tikzmarknode{minus1}{-1}+2=\textcolor{red}{6}} \\
-    8 & \texttt{ld R3=[R1+100]} & - & - & 120 & 120 & 120 & \only<1-8>{\textcolor{orange}{?}}\only<9->{\textcolor{orange}{4}} & P4 & - & 100 & 4 & - & 5 & {\tiny addr blk} & 27 & \tikzmarknode{tcommit8}{28} & \onslide<9->{6\tikzmarknode{minus3}{-3}+1=4} \\
-    9 & \texttt{st [R1+40]=R3} & - & - & - & 60 & 120 & 4 & P8 & P4 & 40 & 27 & 4 & \makecell{\tiny Sta:5\\\tiny Std:28} & - & 28 & 29 & \onslide<10->{+2=\textcolor{red}{6}} \\
-    10 & \texttt{add R1=R1+10} & 30 & - & - & - & - & 5 & P4 & - & 10 & 3 & - & 4 & - & - & 23 & \onslide<11->{2+1=3} \\
-    11 & \texttt{blt (R1<100)} & 30 & 110 & 120 & - & - & 5 & P10 & - & 100 & 4 & - & 5 & - & - & 23 & \onslide<12->{+1=4} \\
+    6 & \texttt{ld R2=[R1+30]} & - & 110 & - & 50 & 110 & 2 & P4 & - & 30 & 3 & - & \tikzmarknode{texe6}{4} & {\tiny \makecell{addr blk\\data blk}} & \tikzmarknode{tdata6}{24} & \tikzmarknode{tcommit6}{25} & \onslide<7->{+1=5} \\
+    7 & \texttt{st [R2+20]=R1} & - & - & - & 130 & 20 & \only<1-7>{\textcolor{orange}{?}}\only<8->{\textcolor{orange}{3}} & P6 & P4 & 20 & 24 & 3 & \makecell{\tiny Std:\tikzmarknode{texe7}{4}\\\tiny Sta:25} & - & \tikzmarknode{tdata7}{25} & \tikzmarknode{tcommit7}{26} & \onslide<8->{5\tikzmarknode{minus1}{-1}+2=\textcolor{red}{6}} \\
+    8 & \texttt{ld R3=[R1+100]} & - & - & 120 & 120 & 120 & \only<1-8>{\textcolor{orange}{?}}\only<9->{\textcolor{orange}{4}} & P4 & - & 100 & 4 & - & 5 & {\tiny addr blk} & \tikzmarknode{tdata8}{27} & \tikzmarknode{tcommit8}{28} & \onslide<9->{6\tikzmarknode{minus3}{-3}+1=4} \\
+    9 & \texttt{st [R1+40]=R3} & - & - & - & 60 & 120 & 4 & P8 & P4 & 40 & 27 & 4 & \makecell{\tiny Sta:5\\\tiny Std:28} & - & \tikzmarknode{tdata9}{28} & \tikzmarknode{tcommit9}{29} & \onslide<10->{+2=\textcolor{red}{6}} \\
+    10 & \texttt{add R1=R1+10} & 30 & - & - & - & - & \only<1-10>{\textcolor{orange}{?}}\only<11->{\textcolor{orange}{5}} & P4 & - & 10 & 5 & - & 6 & - & - & 23 & \onslide<11->{2+1=3} \\
+    11 & \texttt{blt (R1<100)} & 30 & 110 & 120 & - & - & 5 & P10 & - & 100 & 7 & - & 8 & - & - & 23 & \onslide<12->{+1=4} \\
     \hline
 \end{tabular}
 \end{column}
@@ -1223,6 +1239,23 @@ This instruction also won't commit due to branch misprediction.
     \draw[->, red, thick] (texe5) -- ([yshift=1mm]minus3);
     \draw[->, red, thick] (texe6) -- ([yshift=1mm]minus3);
     \draw[->, red, thick] (texe7) -- ([yshift=1mm]minus3);
+\end{tikzpicture}
+}
+
+% X mark on T commit for inst 9 (from slide 10 onwards)
+\onslide<10->{
+\begin{tikzpicture}[remember picture, overlay]
+    \node at (tcommit9.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+\end{tikzpicture}
+}
+
+% X marks on T data rdy for inst 6,7,8,9 (from slide 11 onwards) - flushed instructions
+\onslide<11->{
+\begin{tikzpicture}[remember picture, overlay]
+    \node at (tdata6.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+    \node at (tdata7.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+    \node at (tdata8.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+    \node at (tdata9.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
 \end{tikzpicture}
 }
 \end{frame}

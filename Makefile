@@ -37,6 +37,7 @@ $(GENDIR)/%.pdf: figures/%.svg | $(GENDIR)
 $(BUILDDIR)/%.pdf: %.tex $(SVGPDFS) $(FIGPDFS) | $(BUILDDIR)
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
 	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
+	pdflatex -output-directory=$(BUILDDIR) -interaction=nonstopmode $<
 
 # Copy PDFs from build to output directory
 # Use .SECONDARY to prevent deletion of intermediate build PDFs
