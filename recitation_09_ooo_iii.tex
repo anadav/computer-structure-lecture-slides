@@ -1109,9 +1109,38 @@ When the cache write completes, the Store Buffer entry is freed and available fo
 \begin{frame}[fragile, label=rs-timeline-frame, shrink=20]
 \frametitle{Top-Down Analysis - Timeline with RS Entries}
 
+\begin{columns}[T]
+% Left column - Explanations (15%)
+\begin{column}{0.15\textwidth}
+\footnotesize
+\only<5>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Key:} Inst 4 allocated at cycle 2 (T alloc=2), same cycle when 4 uops execute (T exe=2).\\[2pt]
+Those 4 executing uops free their RS entries, making room for inst 4:\\[2pt]
+6 (occupied) - 4 (freed) + 1 (inst 4) = 3
+\end{tcolorbox}
+}%
+\only<7>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Note:} Instruction 6 will never commit.\\[2pt]
+The first branch (inst 5, \texttt{blt}) mispredicts at T=4, causing a flush at T=5.\\[2pt]
+All instructions after the branch (inst 6+) are on the wrong path and will be squashed.
+\end{tcolorbox}
+}%
+\only<8>{%
+\begin{tcolorbox}[colback=yellow!30, colframe=yellow!50, boxrule=1pt, arc=3mm, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\textbf{Note:} Instruction 7 (store) requires 2 RS entries (STA+STD), but RS was full at cycle 2.\\[2pt]
+It could only be allocated at cycle 3 when inst 4 freed its RS entry (circled T exe=3 $\rightarrow$ -1).\\[2pt]
+This instruction also won't commit due to the branch misprediction.
+\end{tcolorbox}
+}%
+\end{column}
+
+% Right column - Table (85%)
+\begin{column}{0.85\textwidth}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{3pt}  % Reduce column padding (default is 6pt)
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{|c|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
 \multirow{2}[0]{*}[-3em]{\rotatebox[origin=l]{90}{Pdst}} & \multirow{2}[0]{*}[-3em]{Instruction} & \multicolumn{3}{c|}{Reg Values} & \multicolumn{2}{c|}{Mem} & \multicolumn{4}{c|}{Decode} & \multicolumn{6}{c|}{Execution Timeline} & \multirow{2}[0]{*}{\makecell{\#RS\\Entries}} \\
@@ -1132,17 +1161,16 @@ When the cache write completes, the Store Buffer entry is freed and available fo
     11 & \texttt{blt (R1<100)} & 30 & 110 & 120 & - & - & 5 & P10 & - & 100 & 4 & - & 5 & - & - & 23 & \onslide<12->{+1=4} \\
     \hline
 \end{tabular}
+\end{column}
+\end{columns}
 
 % TikZ overlay for circles and arrows on slide 5
 \onslide<5>{
 \begin{tikzpicture}[remember picture, overlay]
-    % Draw circles around the four "2"s in T exe
     \draw[red, thick] (texe0) circle (4pt);
     \draw[red, thick] (texe1) circle (4pt);
     \draw[red, thick] (texe2) circle (4pt);
     \draw[red, thick] (texe3) circle (4pt);
-
-    % Draw arrows from circles to the "-4"
     \draw[->, red, thick] (texe0) -- ([yshift=1mm]minus4);
     \draw[->, red, thick] (texe1) -- ([yshift=1mm]minus4);
     \draw[->, red, thick] (texe2) -- ([yshift=1mm]minus4);
@@ -1150,55 +1178,25 @@ When the cache write completes, the Store Buffer entry is freed and available fo
 \end{tikzpicture}
 }
 
-% Explanation box for slide 5
-\onslide<5>{
-\begin{tikzpicture}[remember picture, overlay]
-    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, rounded corners=3mm, font=\small, text width=9.5cm, align=left, anchor=south west]
-        at ([yshift=1.8cm, xshift=0.3cm]current page.south west)
-        {\textbf{Key:} Inst 4 allocated at cycle 2 (T alloc=2), same cycle when 4 uops execute (T exe=2)\\
-        Those 4 executing uops free their RS entries, making room for inst 4:\\
-        \hspace{3mm}6 (occupied) - 4 (freed by circled uops) + 1 (inst 4) = 3};
-\end{tikzpicture}
-}
-
-% X mark on T commit for inst 6 (from slide 7 onwards) - won't commit due to branch misprediction
+% X mark on T commit for inst 6 (from slide 7 onwards)
 \onslide<7->{
 \begin{tikzpicture}[remember picture, overlay]
     \node at (tcommit6.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
 \end{tikzpicture}
 }
 
-% Explanation box for slide 7
-\onslide<7>{
-\begin{tikzpicture}[remember picture, overlay]
-    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, rounded corners=3mm, font=\small, text width=9.5cm, align=left, anchor=south west]
-        at ([yshift=1.8cm, xshift=0.3cm]current page.south west)
-        {\textbf{Note:} Instruction 6 will never commit. The first branch (inst 5, \texttt{blt}) mispredicts at T=4, causing a flush at T=5. All instructions after the branch (inst 6+) are on the wrong path and will be squashed.};
-\end{tikzpicture}
-}
-
-% X mark on T commit for inst 7 (from slide 8 onwards) - won't commit due to branch misprediction
+% X mark on T commit for inst 7 (from slide 8 onwards)
 \onslide<8->{
 \begin{tikzpicture}[remember picture, overlay]
     \node at (tcommit7.center) {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
 \end{tikzpicture}
 }
 
-% Circle and arrow for slide 8: T exe=3 of Pdst 4 frees RS entry
+% Circle and arrow for slide 8
 \onslide<8>{
 \begin{tikzpicture}[remember picture, overlay]
     \draw[red, thick] (texe4) circle (4pt);
     \draw[->, red, thick] (texe4) -- ([yshift=1mm]minus1);
-\end{tikzpicture}
-}
-
-% Explanation box for slide 8
-\onslide<8>{
-\begin{tikzpicture}[remember picture, overlay]
-    \node[fill=yellow!30, fill opacity=1, draw=yellow!50, line width=1pt, rounded corners=3mm, font=\small, text width=3.5cm, align=left, anchor=south west]
-        at ([yshift=6.5cm, xshift=0.3cm]current page.south west)
-        {\textbf{Note:} Instruction 7 (store) requires 2 RS entries (STA+STD), but RS was full at cycle 2. It could only be allocated at cycle 3 when inst 4 freed its RS entry (circled T exe=3 $\rightarrow$ -1).\\
-        This instruction also won't commit due to the branch misprediction.};
 \end{tikzpicture}
 }
 \end{frame}
