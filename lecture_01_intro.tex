@@ -459,38 +459,35 @@ $$\text{Speedup}_{overall} = 1 - 0.95 = 0.05 = 5\%$$
 \column{0.48\textwidth}
 \centering
 \begin{tikzpicture}[
-    box/.style={draw, thick, minimum width=3.6cm, minimum height=0.7cm, font=\small\bfseries},
+    box/.style={draw, thick, minimum width=4cm, minimum height=0.8cm, font=\small\bfseries, rounded corners=4pt},
     icon/.style={inner sep=0pt},
-    lbl/.style={font=\scriptsize, anchor=east}
+    lbl/.style={font=\scriptsize}
 ]
     % Software layer
     \node[box, fill=blue!15] (sw) at (0,0) {Software};
 
     % ISA layer (the contract) - two lines
-    \node[box, fill=yellow!40, minimum height=0.9cm, align=center, below=0.4cm of sw] (isa) {Instruction Set\\Architecture};
+    \node[box, fill=yellow!40, minimum height=0.9cm, align=center, below=0.5cm of sw] (isa) {Instruction Set\\Architecture};
 
     % Hardware layer
-    \node[box, fill=green!15, below=0.4cm of isa] (hw) {Hardware};
+    \node[box, fill=green!15, below=0.5cm of isa] (hw) {Hardware};
 
-    % Icons - positioned relative to boxes
-    \node[icon, left=0.25cm of sw] (progicon) {%
-        \includegraphics[height=0.85cm]{figures/noun-programmer-7899885.png}};
-    \node[icon, left=0.25cm of isa] (compicon) {%
+    % Software side icons - centered on Software box corners
+    \node[icon] (progicon) at (sw.north west) {%
+        \includegraphics[height=0.85cm]{figures/noun-programmer-8008262.png}};
+    \node[icon] (compicon) at (sw.north east) {%
         \includegraphics[height=0.85cm]{figures/noun-compiler-5057301.png}};
-    \node[icon, left=0.25cm of hw] (cpuicon) {%
+
+    % Labels for software side
+    \node[lbl, above=0.02cm of progicon] {Programmer};
+    \node[lbl, above=0.02cm of compicon] {Compiler};
+
+    % Hardware side icon - centered on Hardware box corner
+    \node[icon] (cpuicon) at (hw.south west) {%
         \includegraphics[height=0.85cm]{figures/noun-cpu-8157304.png}};
+    \node[lbl, below=0.02cm of cpuicon] {CPU};
 
-    % Labels - right-aligned using |- relative positioning
-    \node[lbl] (proglbl) at ([xshift=-0.15cm]progicon.west) {Programmer};
-    \node[lbl] at (proglbl.east |- compicon) {Compiler};
-    \node[lbl] at (proglbl.east |- cpuicon) {CPU};
-
-    % Arrows icon to box
-    \draw[->, thick, blue!70] (progicon) -- (sw.west);
-    \draw[->, thick, orange!80!black] (compicon) -- (isa.west);
-    \draw[->, thick, green!50!black] (cpuicon) -- (hw.west);
-
-    % Bidirectional arrows between layers
+    % Bidirectional arrows between layers (the interface)
     \draw[<->, very thick, red!70!black] (sw.south) -- (isa.north);
     \draw[<->, very thick, red!70!black] (isa.south) -- (hw.north);
 \end{tikzpicture}
