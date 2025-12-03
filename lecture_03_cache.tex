@@ -10,7 +10,7 @@
 \pgfplotsset{compat=1.18}
 \usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
-\usetikzlibrary{backgrounds, fit, decorations.pathreplacing}
+\usetikzlibrary{backgrounds, fit, decorations.pathreplacing, matrix}
 \usetikzlibrary{circuits.logic.US}
 
 \usetheme{Madrid}
@@ -1594,11 +1594,46 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{frame}
 
 \begin{frame}{Victim Cache}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
 \begin{itemize}
   \item Small FA cache that holds lines evicted from L1.
   \item Checked in parallel with L1; on hit, swap victim back to L1.
   \item Reduces conflict pressure, especially for direct-mapped L1.
 \end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\centering
+\begin{tikzpicture}[
+    cache/.style={draw, thick, minimum width=2cm, minimum height=2cm, align=center, font=\bfseries},
+    vcache/.style={draw, thick, minimum width=1.2cm, minimum height=0.5cm, anchor=center},
+    ]
+
+    % L1 cache (left)
+    \node[cache, fill=orange!30] (l1) at (0, 0) {L1\\cache};
+
+    % Victim cache (center) as matrix
+    \matrix[right=0.8cm of l1, matrix of nodes,
+            nodes={vcache, fill=gray!20},
+            row sep=1pt] (victim) {
+        |[coordinate] (v1)| \\
+        |[coordinate] (v2)| \\
+        |[coordinate] (v3)| \\
+    };
+
+    % Label for victim cache
+    \node[above=2mm of victim, font=\small\bfseries, align=center] {Victim\\cache};
+
+    % L2 cache (right)
+    \node[cache, fill=green!30, right=0.8cm of victim] (l2) {L2\\cache};
+
+    % Arrows
+    \draw[->, very thick] (l1.east) -- node[above, font=\small] {(1)} (victim.west);
+    \draw[->, very thick] (victim.east) -- node[above, font=\small] {(2)} (l2.west);
+    \draw[->, very thick] (victim.south) .. controls +(0,-0.5) and +(0,-0.5) .. node[below, font=\small] {(3)} (l1.south);
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Memory Updates on Writes}
