@@ -1702,73 +1702,78 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 \begin{frame}{ASID: Address Space Identifiers in TLBs}
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{Problem:} TLB flush on context switch
+\begin{column}{0.5\textwidth}
+\textbf{Problem:} TLB flush on every context switch
 \begin{itemize}
-\item Lose all cached translations
-\item Cold TLB after switch
+\item Lose all cached translations $\rightarrow$ cold TLB
 \end{itemize}
 
 \textbf{Solution: Address Space ID (ASID)}
 \begin{itemize}
-\item Unique identifier per address space
 \item Tags TLB entries with process context
-\item Multiple processes coexist in TLB
-\item x86: called PCID, 12-bit stored in CR3[11:0]
+\item Lookup requires VA match AND ASID match
+\item No flush on context switch
 \end{itemize}
 
-\textbf{CR3 with ASID (CR4.PCIDE=1):}
-\begin{center}
-\begin{tikzpicture}[scale=0.7]
-    % CR3 register
-    \draw[thick] (0,0) rectangle (6,0.5);
-    \fill[blue!20] (0,0) rectangle (0.8,0.5);
-    \fill[green!20] (0.8,0) rectangle (5.2,0.5);
-    
-    % Bit positions
-    \node[above, font=\tiny] at (0,0.5) {63};
-    \node[above, font=\tiny] at (0.8,0.5) {12 11};
-    \node[above, font=\tiny] at (6,0.5) {0};
-    
-    % Labels
-    \node[font=\tiny] at (0.4,0.25) {NF};
-    \node[font=\tiny] at (3,0.25) {PML4 Base (4KB aligned)};
-    \node[font=\tiny] at (5.6,0.25) {ASID};
-    
-    % ASID breakdown
-    \draw[thick] (4.8,-0.3) rectangle (6,-0.8);
-    \foreach \i in {0,...,11} {
-        \pgfmathsetmacro\x{4.8 + \i*0.1}
-        \draw (\x,-0.3) -- (\x,-0.8);
-    }
-    \node[below, font=\tiny] at (5.4,-0.8) {12-bit ASID (PCID)};
-    \draw[->] (5.4,0) -- (5.4,-0.3);
-\end{tikzpicture}
-\end{center}
-
-\textbf{Software impact:}
+\textbf{Benefits:}
 \begin{itemize}
-\item OS manages 4096 ASID values
-\item Linux KPTI: separate user/kernel ASIDs
-\item Critical for Meltdown mitigation
+\item Multiple address spaces coexist in TLB
+\item Reduces cold start penalty
+\item Critical for KPTI (Meltdown mitigation)
 \end{itemize}
 \end{column}
 
-\begin{column}{0.52\textwidth}
-\textbf{How ASID works:}
-\begin{itemize}
-\item TLB entries tagged with ASID
-\item Lookup requires both VA match AND ASID match
-\item Set-associative structure remains same
-\item Parallel comparison for performance
-\end{itemize}
+\begin{column}{0.5\textwidth}
+\textbf{x86: PCID in CR3 (CR4.PCIDE=1)}
+\begin{center}
+\begin{tikzpicture}
+    % CR3 register
+    \draw[thick] (0,0) rectangle (5,0.5);
+    \fill[green!20] (0,0) rectangle (4,0.5);
+    \fill[blue!20] (4,0) rectangle (5,0.5);
 
-\textbf{Key benefits:}
+    % Bit positions
+    \node[above, font=\tiny] at (0,0.5) {63};
+    \node[above, font=\tiny] at (4,0.5) {12};
+    \node[above, font=\tiny] at (5,0.5) {0};
+
+    % Labels
+    \node[font=\tiny] at (2,0.25) {PML4 Base (4KB aligned)};
+    \node[font=\tiny] at (4.5,0.25) {PCID};
+
+    % PCID note
+    \node[below, font=\tiny] at (4.5,-0.1) {12-bit};
+\end{tikzpicture}
+\end{center}
+
+\textbf{ARM: ASID in TTBR0\_EL1}
 \begin{itemize}
-\item No flush on context switch
-\item Multiple address spaces in TLB
-\item Reduces cold start penalty
-\item Essential for virtualization
+\item 8-bit or 16-bit ASID field
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{ASID: Practical Limitations}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Limited ASID space:}
+\begin{itemize}
+\item x86: $2^{12}$ = 4096 PCIDs
+\item ARM: $2^{8}$ = 256 or $2^{16}$ = 65536 ASIDs
+\item Not enough for all processes on busy systems
+\item OS must manage ASID allocation/recycling
+\item ASID reuse $\rightarrow$ selective TLB flush needed
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{TLB implementation constraints:}
+\begin{itemize}
+\item TLBs may store fewer ASID bits than arch defines
+\item Some TLBs hash the ASID $\rightarrow$ collisions
+\item Causes ``ASID aliasing'': unrelated processes evict each other's entries
+\item Different TLB levels may have different ASID support
 \end{itemize}
 \end{column}
 \end{columns}
@@ -2044,7 +2049,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
 \begin{frame}{TLB Shootdown: Maintaining Coherency}
 \begin{columns}[T]
-\begin{column}{0.55\textwidth}
+\begin{column}{0.6\textwidth}
 \textbf{Problem: TLB coherency across cores}
 \begin{itemize}
 \item CPU 0 unmaps a page
@@ -2056,20 +2061,27 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{enumerate}
 \item Initiator updates page table
 \item Send Inter-Processor Interrupt to all CPUs
-\item Each CPU invalidates TLB entry
-\item Wait for all acknowledgments
-\item Continue execution
+\item Each CPU runs \textbf{software handler} to invalidate TLB
+\item CPUs signal completion via \textbf{memory write} (ACK)
+\item Initiator polls/waits, then continues
 \end{enumerate}
 
 \textbf{Performance impact:}
 \begin{itemize}
 \item Synchronous operation - initiator waits
-\item IPIs interrupt all CPUs
+\item IPIs interrupt all CPUs (context switch overhead)
 \item Scales poorly with core count
+\end{itemize}
+
+\textbf{Software optimizations possible:}
+\begin{itemize}
+\item Batch multiple invalidations
+\item Selective targeting (skip idle CPUs)
+\item Lazy TLB mode for kernel threads
 \end{itemize}
 \end{column}
 
-\begin{column}{0.45\textwidth}
+\begin{column}{0.4\textwidth}
 \begin{center}
 \begin{tikzpicture}[
     % CPU style - symmetric pins (NL=NR, NT=NB)
@@ -2077,7 +2089,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
         external pins width=0, fill=blue!20},
     % TLB style - narrower than CPU, anchored at north to CPU's south
     tlbbox/.style={rectangle, draw, minimum width=0.8cm, minimum height=0.3cm,
-        fill=yellow!30, font=\tiny, anchor=north},
+        fill=yellow!30, font=\tiny, anchor=south},
     % Label style
     lbl/.style={font=\tiny},
     % CPU label style - positioned at top of CPU
@@ -2117,29 +2129,19 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
     \draw[->, thick, dashed, green!60!black] (cpu3.lpin 1) -- ++(-3mm,0) |- node[lbl, pos=0.25, right] {ACK} (cpu0.rpin 2);
 
     % Local TLB invalidation: left CPUs from lpin to TLB west, right CPUs from rpin to TLB east
-    \draw[->, thick, blue!60] (cpu0.lpin 2) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb0.west);
-    \draw[->, thick, blue!60] (cpu1.rpin 2) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb1.east);
-    \draw[->, thick, blue!60] (cpu2.lpin 2) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb2.west);
-    \draw[->, thick, blue!60] (cpu3.rpin 2) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb3.east);
-
-    % Title
-    \node[above=8mm of cpu0.north east, anchor=south, font=\small] {TLB Shootdown};
+    \draw[->, thick, orange!60] (cpu0.lpin 1) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb0.west);
+    \draw[->, thick, orange!60] (cpu1.rpin 1) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb1.east);
+    \draw[->, thick, orange!60] (cpu2.lpin 1) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb2.west);
+    \draw[->, thick, orange!60] (cpu3.rpin 1) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb3.east);
 \end{tikzpicture}
 \end{center}
-
-\textbf{Software workarounds:}
-\begin{itemize}
-\item Batch multiple invalidations
-\item Lazy TLB mode for idle CPUs
-\item Per-CPU page tables (KPTI)
-\end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
 
 \begin{frame}{Modern TLB Invalidation: Broadcast Instructions}
 \begin{columns}[T]
-\begin{column}{0.55\textwidth}
+\begin{column}{0.5\textwidth}
 \textbf{INVLPGB (AMD) / TLBSYNC:}
 \begin{itemize}
 \item Broadcast invalidation without IPIs
@@ -2163,75 +2165,29 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{itemize}
 \end{column}
 
-\begin{column}{0.45\textwidth}
-\begin{center}
-\begin{tikzpicture}[
-    % CPU style - symmetric pins (NL=NR, NT=NB)
-    cpublock/.style={muxdemux, muxdemux def={NL=2, NR=2, NT=2, NB=2, Lh=2, Rh=2, w=2},
-        external pins width=0, fill=blue!20},
-    % TLB style - narrower than CPU, anchored at north to CPU's south
-    tlbbox/.style={rectangle, draw, minimum width=0.8cm, minimum height=0.3cm,
-        fill=yellow!30, font=\tiny, anchor=north},
-    % Label style
-    lbl/.style={font=\tiny},
-    % CPU label style - positioned at top of CPU
-    cpulbl/.style={font=\small, anchor=north}
-]
-    % Interconnect at top
-    \node[rectangle, draw, thick, minimum width=5cm, minimum height=0.6cm, fill=gray!30]
-        (interconnect) {Interconnect};
-
-    % CPU 0 (top-left) - below interconnect
-    \node[cpublock, below left=12mm and 8mm of interconnect.south] (cpu0) {};
-    \node[cpulbl] at ([yshift=-1mm]cpu0.north) {CPU 0};
-    \node[tlbbox] (tlb0) at (cpu0.south) {TLB};
-
-    % CPU 1 (top-right) - relative to CPU 0
-    \node[cpublock, right=18mm of cpu0] (cpu1) {};
-    \node[cpulbl] at ([yshift=-1mm]cpu1.north) {CPU 1};
-    \node[tlbbox] (tlb1) at (cpu1.south) {TLB};
-
-    % CPU 2 (bottom-left) - relative to CPU 0
-    \node[cpublock, below=22mm of cpu0] (cpu2) {};
-    \node[cpulbl] at ([yshift=-1mm]cpu2.north) {CPU 2};
-    \node[tlbbox] (tlb2) at (cpu2.south) {TLB};
-
-    % CPU 3 (bottom-right) - relative to CPU 1
-    \node[cpublock, below=22mm of cpu1] (cpu3) {};
-    \node[cpulbl] at ([yshift=-1mm]cpu3.north) {CPU 3};
-    \node[tlbbox] (tlb3) at (cpu3.south) {TLB};
-
-    % Hardware broadcast lines from interconnect to CPUs
-    \draw[<->, thick, orange] (cpu0.tpin 1) -- (interconnect.south -| cpu0.tpin 1);
-    \draw[<->, thick, orange] (cpu1.tpin 2) -- (interconnect.south -| cpu1.tpin 2);
-    \draw[<->, thick, orange] (cpu2.tpin 1) -- ++(0,5mm) -| ([xshift=-10mm]interconnect.south);
-    \draw[<->, thick, orange] (cpu3.tpin 2) -- ++(0,5mm) -| ([xshift=10mm]interconnect.south);
-
-    % Local TLB invalidation: left CPUs from lpin to TLB west, right CPUs from rpin to TLB east
-    \draw[->, thick, blue!60] (cpu0.lpin 2) -- ++(-2mm,0) |- node[lbl, pos=0.75, left] {inv} (tlb0.west);
-    \draw[->, thick, blue!60] (cpu1.rpin 2) -- ++(2mm,0) |- node[lbl, pos=0.75, right] {inv} (tlb1.east);
-    \draw[->, thick, blue!60] (cpu2.lpin 2) -- ++(-2mm,0) |- node[lbl, pos=0.75, left] {inv} (tlb2.west);
-    \draw[->, thick, blue!60] (cpu3.rpin 2) -- ++(2mm,0) |- node[lbl, pos=0.75, right] {inv} (tlb3.east);
-
-    % Title and label
-    \node[above=3mm of interconnect, font=\small] {Hardware Broadcast};
-    \node[text=orange, lbl] at (interconnect.south) [below=1mm] {INVLPGB};
-\end{tikzpicture}
-\end{center}
-
-\textbf{Software benefits:}
+\begin{column}{0.5\textwidth}
+\textbf{Benefits:}
 \begin{itemize}
-\item No IPI overhead
+\item No IPI overhead (no context switches)
 \item Better scalability with core count
 \item Asynchronous operation possible
 \item Lower latency for munmap(), mprotect()
 \end{itemize}
 
-\textbf{When you see the impact:}
+\textbf{Limitations:}
+\begin{itemize}
+\item \textbf{All-or-nothing}: cannot skip idle CPUs
+\item Only options: all cores or local-only
+\item Software IPIs allow selective targeting
+\item Limited ASID bits (8-16) $\rightarrow$ ASID reuse requires global flush, negating broadcast benefits
+\end{itemize}
+
+\textbf{When broadcast wins:}
 \begin{itemize}
 \item JVM garbage collectors (unmapping large heaps)
 \item Database buffer pool resizing
-\item Container memory limits changes
+\item Container memory limit changes
+\item High core count systems (>32 cores)
 \end{itemize}
 \end{column}
 \end{columns}
