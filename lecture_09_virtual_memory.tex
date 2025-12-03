@@ -2074,52 +2074,53 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{tikzpicture}[
     % CPU style - symmetric pins (NL=NR, NT=NB)
     cpublock/.style={muxdemux, muxdemux def={NL=2, NR=2, NT=2, NB=2, Lh=2, Rh=2, w=2},
-        external pins width=0, fill=blue!20, font=\small},
-    % TLB style
-    tlbbox/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.35cm,
+        external pins width=0, fill=blue!20},
+    % TLB style - narrower than CPU, anchored at north to CPU's south
+    tlbbox/.style={rectangle, draw, minimum width=0.8cm, minimum height=0.3cm,
         fill=yellow!30, font=\tiny, anchor=north},
     % Label style
-    lbl/.style={font=\tiny}
+    lbl/.style={font=\tiny},
+    % CPU label style - positioned at top of CPU
+    cpulbl/.style={font=\small, anchor=north}
 ]
     % CPU 0 (top-left) - reference node
-    \node[cpublock] (cpu0) {CPU 0};
-    \node[tlbbox] (tlb0) at ([yshift=-1mm]cpu0.south) {TLB};
+    \node[cpublock] (cpu0) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu0.north) {CPU 0};
+    \node[tlbbox] (tlb0) at (cpu0.south) {TLB};
 
     % CPU 1 (top-right) - relative to CPU 0
-    \node[cpublock, right=18mm of cpu0] (cpu1) {CPU 1};
-    \node[tlbbox] (tlb1) at ([yshift=-1mm]cpu1.south) {TLB};
+    \node[cpublock, right=18mm of cpu0] (cpu1) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu1.north) {CPU 1};
+    \node[tlbbox] (tlb1) at (cpu1.south) {TLB};
 
     % CPU 2 (bottom-left) - relative to CPU 0
-    \node[cpublock, below=22mm of cpu0] (cpu2) {CPU 2};
-    \node[tlbbox] (tlb2) at ([yshift=-1mm]cpu2.south) {TLB};
+    \node[cpublock, below=22mm of cpu0] (cpu2) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu2.north) {CPU 2};
+    \node[tlbbox] (tlb2) at (cpu2.south) {TLB};
 
     % CPU 3 (bottom-right) - relative to CPU 1
-    \node[cpublock, below=22mm of cpu1] (cpu3) {CPU 3};
-    \node[tlbbox] (tlb3) at ([yshift=-1mm]cpu3.south) {TLB};
+    \node[cpublock, below=22mm of cpu1] (cpu3) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu3.north) {CPU 3};
+    \node[tlbbox] (tlb3) at (cpu3.south) {TLB};
 
     % IPI arrows from CPU 0 (red, solid)
-    % CPU0 → CPU1: straight horizontal (matching pins)
+    % CPU0 → CPU1: straight horizontal
     \draw[->, thick, red] (cpu0.rpin 1) -- node[lbl, above] {IPI} (cpu1.lpin 1);
-    % CPU0 → CPU2: straight vertical (matching pins)
+    % CPU0 → CPU2: straight vertical
     \draw[->, thick, red] (cpu0.bpin 1) -- node[lbl, left] {IPI} (cpu2.tpin 1);
     % CPU0 → CPU3: routed diagonal
-    \draw[->, thick, red] (cpu0.bpin 2) -- ++(0,-4mm) -| node[lbl, pos=0.25, right] {IPI} (cpu3.tpin 1);
+    \draw[->, thick, red] (cpu0.bpin 2) -- ++(0,-6mm) -| node[lbl, pos=0.7, right] {IPI} (cpu3.tpin 2);
 
-    % ACK arrows back to CPU 0 (green, dashed)
-    % CPU1 → CPU0: straight horizontal (matching pins)
+    % ACK arrows back to CPU 0 - all to rpin 2
     \draw[->, thick, dashed, green!60!black] (cpu1.lpin 2) -- node[lbl, below] {ACK} (cpu0.rpin 2);
-    % CPU2 → CPU0: straight vertical (matching pins)
-    \draw[->, thick, dashed, green!60!black] (cpu2.tpin 2) -- node[lbl, right] {ACK} (cpu0.bpin 2);
-    % CPU3 → CPU0: routed diagonal
-    \draw[->, thick, dashed, green!60!black] (cpu3.tpin 2) -- ++(0,4mm) -| node[lbl, pos=0.75, left] {ACK} (cpu0.rpin 2);
+    \draw[->, thick, dashed, green!60!black] (cpu2.rpin 1) -- ++(3mm,0) |- node[lbl, pos=0.25, right] {ACK} (cpu0.rpin 2);
+    \draw[->, thick, dashed, green!60!black] (cpu3.lpin 1) -- ++(-3mm,0) |- node[lbl, pos=0.25, right] {ACK} (cpu0.rpin 2);
 
-    % Local TLB invalidation loops (on TLB nodes)
-    \draw[->, thick, blue!60] (tlb1.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb1.south) node[lbl, right, pos=0.3] {inv};
-    \draw[->, thick, blue!60] (tlb2.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb2.south) node[lbl, right, pos=0.3] {inv};
-    \draw[->, thick, blue!60] (tlb3.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb3.south) node[lbl, right, pos=0.3] {inv};
+    % Local TLB invalidation: left CPUs from lpin to TLB west, right CPUs from rpin to TLB east
+    \draw[->, thick, blue!60] (cpu0.lpin 2) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb0.west);
+    \draw[->, thick, blue!60] (cpu1.rpin 2) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb1.east);
+    \draw[->, thick, blue!60] (cpu2.lpin 2) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb2.west);
+    \draw[->, thick, blue!60] (cpu3.rpin 2) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb3.east);
 
     % Title
     \node[above=8mm of cpu0.north east, anchor=south, font=\small] {TLB Shootdown};
@@ -2167,48 +2168,50 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{tikzpicture}[
     % CPU style - symmetric pins (NL=NR, NT=NB)
     cpublock/.style={muxdemux, muxdemux def={NL=2, NR=2, NT=2, NB=2, Lh=2, Rh=2, w=2},
-        external pins width=0, fill=blue!20, font=\small},
-    % TLB style
-    tlbbox/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.35cm,
+        external pins width=0, fill=blue!20},
+    % TLB style - narrower than CPU, anchored at north to CPU's south
+    tlbbox/.style={rectangle, draw, minimum width=0.8cm, minimum height=0.3cm,
         fill=yellow!30, font=\tiny, anchor=north},
     % Label style
-    lbl/.style={font=\tiny}
+    lbl/.style={font=\tiny},
+    % CPU label style - positioned at top of CPU
+    cpulbl/.style={font=\small, anchor=north}
 ]
     % Interconnect at top
     \node[rectangle, draw, thick, minimum width=5cm, minimum height=0.6cm, fill=gray!30]
         (interconnect) {Interconnect};
 
     % CPU 0 (top-left) - below interconnect
-    \node[cpublock, below left=12mm and 8mm of interconnect.south] (cpu0) {CPU 0};
-    \node[tlbbox] (tlb0) at ([yshift=-1mm]cpu0.south) {TLB};
+    \node[cpublock, below left=12mm and 8mm of interconnect.south] (cpu0) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu0.north) {CPU 0};
+    \node[tlbbox] (tlb0) at (cpu0.south) {TLB};
 
     % CPU 1 (top-right) - relative to CPU 0
-    \node[cpublock, right=18mm of cpu0] (cpu1) {CPU 1};
-    \node[tlbbox] (tlb1) at ([yshift=-1mm]cpu1.south) {TLB};
+    \node[cpublock, right=18mm of cpu0] (cpu1) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu1.north) {CPU 1};
+    \node[tlbbox] (tlb1) at (cpu1.south) {TLB};
 
     % CPU 2 (bottom-left) - relative to CPU 0
-    \node[cpublock, below=22mm of cpu0] (cpu2) {CPU 2};
-    \node[tlbbox] (tlb2) at ([yshift=-1mm]cpu2.south) {TLB};
+    \node[cpublock, below=22mm of cpu0] (cpu2) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu2.north) {CPU 2};
+    \node[tlbbox] (tlb2) at (cpu2.south) {TLB};
 
     % CPU 3 (bottom-right) - relative to CPU 1
-    \node[cpublock, below=22mm of cpu1] (cpu3) {CPU 3};
-    \node[tlbbox] (tlb3) at ([yshift=-1mm]cpu3.south) {TLB};
+    \node[cpublock, below=22mm of cpu1] (cpu3) {};
+    \node[cpulbl] at ([yshift=-1mm]cpu3.north) {CPU 3};
+    \node[tlbbox] (tlb3) at (cpu3.south) {TLB};
 
-    % Hardware broadcast lines from interconnect to CPUs (use matching tpin positions)
+    % Hardware broadcast lines from interconnect to CPUs
     \draw[<->, thick, orange] (cpu0.tpin 1) -- (interconnect.south -| cpu0.tpin 1);
     \draw[<->, thick, orange] (cpu1.tpin 2) -- (interconnect.south -| cpu1.tpin 2);
     \draw[<->, thick, orange] (cpu2.tpin 1) -- ++(0,5mm) -| ([xshift=-10mm]interconnect.south);
     \draw[<->, thick, orange] (cpu3.tpin 2) -- ++(0,5mm) -| ([xshift=10mm]interconnect.south);
 
-    % Local TLB invalidation loops (on TLB nodes)
-    \draw[->, thick, blue!60] (tlb0.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb0.south) node[lbl, right, pos=0.3] {inv};
-    \draw[->, thick, blue!60] (tlb1.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb1.south) node[lbl, right, pos=0.3] {inv};
-    \draw[->, thick, blue!60] (tlb2.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb2.south) node[lbl, right, pos=0.3] {inv};
-    \draw[->, thick, blue!60] (tlb3.east) -- ++(2mm,0) arc[start angle=90, end angle=-180, radius=2mm]
-        -- (tlb3.south) node[lbl, right, pos=0.3] {inv};
+    % Local TLB invalidation: left CPUs from lpin to TLB west, right CPUs from rpin to TLB east
+    \draw[->, thick, blue!60] (cpu0.lpin 2) -- ++(-2mm,0) |- node[lbl, pos=0.75, left] {inv} (tlb0.west);
+    \draw[->, thick, blue!60] (cpu1.rpin 2) -- ++(2mm,0) |- node[lbl, pos=0.75, right] {inv} (tlb1.east);
+    \draw[->, thick, blue!60] (cpu2.lpin 2) -- ++(-2mm,0) |- node[lbl, pos=0.75, left] {inv} (tlb2.west);
+    \draw[->, thick, blue!60] (cpu3.rpin 2) -- ++(2mm,0) |- node[lbl, pos=0.75, right] {inv} (tlb3.east);
 
     % Title and label
     \node[above=3mm of interconnect, font=\small] {Hardware Broadcast};
