@@ -2093,7 +2093,9 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
     % Label style
     lbl/.style={font=\tiny},
     % CPU label style - positioned at top of CPU
-    cpulbl/.style={font=\small, anchor=north}
+    cpulbl/.style={font=\small, anchor=north},
+    % Circled number style
+    stepnum/.style={circle, draw, fill=white, font=\tiny, inner sep=1pt, minimum size=3mm}
 ]
     % CPU 0 (top-left) - reference node
     \node[cpublock] (cpu0) {};
@@ -2117,20 +2119,20 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 
     % IPI arrows from CPU 0 (red, solid)
     % CPU0 → CPU1: straight horizontal
-    \draw[->, thick, red] (cpu0.rpin 1) -- node[lbl, above] {IPI} (cpu1.lpin 1);
+    \draw[->, thick, red] (cpu0.rpin 1) -- node[lbl, above] {\raisebox{0pt}[0pt][0pt]{\tikz\node[stepnum]{1};} IPI} (cpu1.lpin 1);
     % CPU0 → CPU2: straight vertical
     \draw[->, thick, red] (cpu0.bpin 1) -- node[lbl, left] {IPI} (cpu2.tpin 1);
     % CPU0 → CPU3: routed diagonal
     \draw[->, thick, red] (cpu0.bpin 2) -- ++(0,-6mm) -| node[lbl, pos=0.7, right] {IPI} (cpu3.tpin 2);
 
     % ACK arrows back to CPU 0 - all to rpin 2
-    \draw[->, thick, dashed, green!60!black] (cpu1.lpin 2) -- node[lbl, below] {ACK} (cpu0.rpin 2);
+    \draw[->, thick, dashed, green!60!black] (cpu1.lpin 2) -- node[lbl, below] {\raisebox{0pt}[0pt][0pt]{\tikz\node[stepnum]{3};} ACK} (cpu0.rpin 2);
     \draw[->, thick, dashed, green!60!black] (cpu2.rpin 1) -- ++(3mm,0) |- node[lbl, pos=0.25, right] {ACK} (cpu0.rpin 2);
     \draw[->, thick, dashed, green!60!black] (cpu3.lpin 1) -- ++(-3mm,0) |- node[lbl, pos=0.25, right] {ACK} (cpu0.rpin 2);
 
     % Local TLB invalidation: left CPUs from lpin to TLB west, right CPUs from rpin to TLB east
     \draw[->, thick, orange!60] (cpu0.lpin 1) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb0.west);
-    \draw[->, thick, orange!60] (cpu1.rpin 1) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb1.east);
+    \draw[->, thick, orange!60] (cpu1.rpin 1) -- ++(2mm,0) |- node[lbl, below] {\raisebox{0pt}[0pt][0pt]{\tikz\node[stepnum]{2};} inv} (tlb1.east);
     \draw[->, thick, orange!60] (cpu2.lpin 1) -- ++(-2mm,0) |- node[lbl, below] {inv} (tlb2.west);
     \draw[->, thick, orange!60] (cpu3.rpin 1) -- ++(2mm,0) |- node[lbl, below] {inv} (tlb3.east);
 \end{tikzpicture}
