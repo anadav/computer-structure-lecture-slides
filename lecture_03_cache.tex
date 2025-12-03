@@ -1462,70 +1462,42 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{center}
 \end{frame}
 
-\begin{frame}{Cache Line Fill and Fill Buffers}
-\begin{columns}[T]
-\begin{column}{0.7\textwidth}
-\begin{itemize}
-  \item Before inserting a new line into cache
-  \begin{itemize}
-    \item Put new line in a fill buffer
-  \end{itemize}
-  
-  \item Bus width considerations
-  \begin{itemize}
-    \item L2 to L1 bus may be narrower than cache line size
-    \item E.g., 16B bus width, 64B cache line $\Rightarrow$ 4 bus cycles
-    \item Fetch critical chunk (containing missed address) first
-    \item Fill buffer accumulates full line, then writes to cache
-    \item Search fill buffers in parallel with cache for data forwarding
-  \end{itemize}
-  
-  \item Streaming loads optimization
-  \begin{itemize}
-    \item SW/compiler hints for single-use data
-    \item E.g., scanning large arrays once
-    \item Line unlikely to be reused $\Rightarrow$ avoid cache pollution
-    \item Serve data directly from fill buffer without cache insertion
-  \end{itemize}
-\end{itemize}
-\end{column}
+\begin{frame}{Fill Buffers}
+\centering
+\begin{tikzpicture}[
+    cache/.style={draw, thick, minimum width=1.4cm, minimum height=1.4cm, inner sep=2pt, align=center, font=\bfseries},
+    buffer/.style={draw, thick, minimum width=0.175cm, minimum height=0.8cm},
+    ]
 
-\begin{column}{0.3\textwidth}
-\begin{center}
-\begin{tikzpicture}[scale=0.6]
-  % Define colors
-  \definecolor{l1color}{RGB}{235, 205, 175}
-  \definecolor{l2color}{RGB}{200, 230, 180}
-  \definecolor{buffercolor}{RGB}{200, 190, 220}
-  
-  % L1 Cache
-  \draw[thick, fill=l1color] (0,0) rectangle (1.8,2.2);
-  \node[font=\footnotesize\bfseries] at (0.9,1.1) {L1};
-  \node[font=\footnotesize\bfseries] at (0.9,0.7) {cache};
-  
-  % Fill Buffers
-  \node[font=\footnotesize] at (3.5,2.8) {Fill};
-  \node[font=\footnotesize] at (3.5,2.3) {Buffers};
-  \foreach \i in {0,1,2,3} {
-    \draw[fill=buffercolor] ({2.8+\i*0.4},0.5) rectangle ({3.1+\i*0.4},1.7);
-  }
-  
-  % L2 Cache
-  \draw[thick, fill=l2color] (5.5,0) rectangle (7.3,2.2);
-  \node[font=\footnotesize\bfseries] at (6.4,1.1) {L2};
-  \node[font=\footnotesize\bfseries] at (6.4,0.7) {cache};
-  
-  % Arrows with correct direction (L2 -> buffers -> L1)
-  \draw[->, thick] (5.5,1.1) -- (4.4,1.1);
-  \draw[->, thick] (2.8,1.1) -- (1.8,1.1);
-  
-  % Labels
-  \node[font=\tiny] at (5.0,1.4) {16B};
-  \node[font=\tiny] at (2.3,1.4) {64B};
+    % L1 cache (left)
+    \node[cache, fill=orange!30] (l1) at (0, 0) {L1\\cache};
+
+    % Fill buffers (center) as matrix - horizontal cells (columns)
+    \matrix[right=0.8cm of l1, matrix of nodes,
+            nodes={buffer, fill=gray!20},
+            column sep=1pt, ampersand replacement=\&] (fillbuf) {
+        |(b1)| \& |(b2)| \& |(b3)| \& |(b4)| \\
+    };
+
+    % Label for fill buffers (above)
+    \node[above=0.5mm of fillbuf, font=\small\bfseries, align=center] {Fill\\buffers};
+
+    % L2 cache (right)
+    \node[cache, fill=green!30, right=0.8cm of fillbuf] (l2) {L2\\cache};
+
+    % Arrows (data flows from L2 -> buffers -> L1)
+    \draw[->, very thick] (l2.west |- b4.east) -- node[above, font=\footnotesize] {16B} (b4.east);
+    \draw[->, very thick] (b1.west) -- node[above, font=\footnotesize] {64B} (b1.west -| l1.east);
 \end{tikzpicture}
-\end{center}
-\end{column}
-\end{columns}
+
+\vspace{0.4cm}
+\small
+\begin{itemize}\small
+  \item L2 to L1 bus may be narrower than cache line (e.g., 16B bus, 64B line $\Rightarrow$ 4 cycles)
+  \item Fill buffer accumulates full line, then writes to L1; searched in parallel with cache
+  \item Fetch critical chunk (containing missed address) first to reduce latency
+  \item Streaming loads: serve data directly from fill buffer without L1 insertion to avoid pollution
+\end{itemize}
 \end{frame}
 
 % Alternative version with more detail
