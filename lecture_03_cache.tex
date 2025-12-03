@@ -13,6 +13,9 @@
 \usetikzlibrary{backgrounds, fit, decorations.pathreplacing, matrix}
 \usetikzlibrary{circuits.logic.US}
 
+% Command for circled numbers
+\newcommand{\circnum}[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=1pt,minimum size=1.2em] (char) {\small #1};}}
+
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
 
@@ -1595,14 +1598,15 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 
 \begin{frame}{Victim Cache}
 \begin{columns}[T]
-\begin{column}{0.5\textwidth}
-\begin{itemize}
-  \item Small FA cache that holds lines evicted from L1.
-  \item Checked in parallel with L1; on hit, swap victim back to L1.
-  \item Reduces conflict pressure, especially for direct-mapped L1.
+\begin{column}{0.48\textwidth}\small
+\textbf{Victim cache gives a 2\textsuperscript{nd} chance to evicted lines}
+\begin{itemize}\small
+  \item \circnum{1} A line evicted from L1 cache is placed in the Victim Cache
+  \item \circnum{2} If the Victim Cache is full $\Rightarrow$ evict its LRU line to the L2 cache
+  \item Victim cache is small and can be built as fully associative
 \end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
+\begin{column}{0.48\textwidth}
 \centering
 \begin{tikzpicture}[
     cache/.style={draw, thick, minimum width=1.4cm, minimum height=1.4cm, inner sep=2pt, align=center, font=\bfseries},
@@ -1628,10 +1632,21 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
     \node[cache, fill=green!30, right=0.8cm of victim] (l2) {L2\\cache};
 
     % Arrows
-    \draw[->, very thick] (l1.east) -- node[above, font=\small] {(1)} (v1.west);
-    \draw[->, very thick] (victim.east) -- node[above, font=\small] {(2)} (l2.west);
-    \draw[->, very thick] (v3.west) -- node[below, font=\small] {(3)} (v3.west -| l1.east);
+    \draw[->, very thick] (l1.east |- v1.west) -- node[above, font=\small] {\circnum{1}} (v1.west);
+    \draw[->, very thick] (victim.east) -- node[above, font=\small] {\circnum{2}} (l2.west);
+    \draw[->, very thick] (v3.west) -- node[below, font=\small] {\circnum{3}} (v3.west -| l1.east);
 \end{tikzpicture}
+
+\vspace{0.5cm}
+\small
+\textbf{On L1 cache lookup, lookup the Victim Cache in parallel}
+\begin{itemize}\small
+  \item Data supplied to the core directly from Victim Cache at same access time as L1 cache hit
+  \item \circnum{3} On victim cache hit move the line back from the Victim Cache into the L1 cache
+  \begin{itemize}\scriptsize
+    \item Evicted line moved to the Victim Cache
+  \end{itemize}
+\end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
