@@ -235,59 +235,54 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
 \begin{tikzpicture}[
     % Styles
     pipestage/.style={draw, thick, minimum width=1.1cm, minimum height=1.1cm, font=\scriptsize, fill=blue!15, align=center},
-    latchcell/.style={draw, minimum width=0.55cm, minimum height=0.55cm, font=\tiny, inner sep=1pt},
-    latch t0/.style={latchcell, fill=red!25},
-    latch t1/.style={latchcell, fill=yellow!40},
+    % For rotated text: min width becomes visual height, min height becomes visual width
+    latchcell/.style={draw, minimum width=0.9cm, minimum height=0.5cm, font=\tiny, inner sep=1pt},
+    latch t0/.style={fill=red!25},
+    latch t1/.style={fill=yellow!40},
+    latchmatrix/.style={matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
+                        nodes={latchcell}},
     rscell/.style={draw, minimum width=0.5cm, minimum height=0.14cm, inner sep=0pt},
     rs t0/.style={rscell, fill=red!25},
     rs t1/.style={rscell, fill=yellow!40},
+    rsmatrix/.style={matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
+                     nodes={rscell, minimum width=0.5cm, minimum height=0.14cm}},
     bottombox/.style={draw, thick, minimum width=1.1cm, minimum height=0.9cm, font=\scriptsize, align=center},
     node distance=0.15cm
 ]
     % Inst Ptr latches (replicated, stacked vertically)
-    \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
-            nodes={latchcell}] (instptr) {
+    \matrix[latchmatrix] (instptr) {
         |[latch t0, rotate=90]| Inst Ptr \\
         |[latch t1, rotate=90]| Inst Ptr \\
     };
-    \draw[decorate, decoration={zigzag, segment length=2mm, amplitude=0.5mm}]
-        (instptr-1-1.south west) -- (instptr-1-1.south east);
 
     % Fetch stage
     \node[pipestage, right=0.3cm of instptr] (fetch) {Fetch};
 
     % Inst Q latches (replicated, stacked vertically)
-    \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
-            right=0.3cm of fetch, nodes={latchcell}] (instq) {
+    \matrix[latchmatrix, right=0.3cm of fetch] (instq) {
         |[latch t0, rotate=90]| Inst Q \\
         |[latch t1, rotate=90]| Inst Q \\
     };
-    \draw[decorate, decoration={zigzag, segment length=2mm, amplitude=0.5mm}]
-        (instq-1-1.south west) -- (instq-1-1.south east);
 
     % Decode stage
     \node[pipestage, right=0.3cm of instq] (decode) {Decode};
 
     % uopQ latches (replicated, stacked vertically)
-    \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
-            right=0.3cm of decode, nodes={latchcell}] (uopq) {
+    \matrix[latchmatrix, right=0.3cm of decode] (uopq) {
         |[latch t0, rotate=90]| $\mu$opQ \\
         |[latch t1, rotate=90]| $\mu$opQ \\
     };
-    \draw[decorate, decoration={zigzag, segment length=2mm, amplitude=0.5mm}]
-        (uopq-1-1.south west) -- (uopq-1-1.south east);
 
     % Alloc/Rename stage
     \node[pipestage, right=0.3cm of uopq, fill=yellow!40] (alloc) {Alloc\\rename};
 
-    % RS (shared with interleaved entries, single column)
-    \matrix[matrix of nodes, ampersand replacement=\&, right=0.3cm of alloc, row sep=-\pgflinewidth, column sep=0pt,
-            nodes={rscell}] (rs) {
+    % RS (shared with mixed thread entries, single column)
+    \matrix[rsmatrix, right=0.3cm of alloc] (rs) {
+        |[rs t0]| ~ \\
         |[rs t0]| ~ \\
         |[rs t1]| ~ \\
         |[rs t0]| ~ \\
         |[rs t1]| ~ \\
-        |[rs t0]| ~ \\
         |[rs t1]| ~ \\
         |[rs t0]| ~ \\
         |[rs t1]| ~ \\
@@ -298,13 +293,10 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
     \node[pipestage, right=0.3cm of rs, fill=yellow!40] (sched) {Sched\\EXE};
 
     % ROB latches (replicated, stacked vertically)
-    \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
-            right=0.3cm of sched, nodes={latchcell}] (rob) {
+    \matrix[latchmatrix, right=0.3cm of sched] (rob) {
         |[latch t0, rotate=90]| ROB \\
         |[latch t1, rotate=90]| ROB \\
     };
-    \draw[decorate, decoration={zigzag, segment length=2mm, amplitude=0.5mm}]
-        (rob-1-1.south west) -- (rob-1-1.south east);
 
     % Retire stage
     \node[pipestage, right=0.3cm of rob] (retire) {Retire};
