@@ -1463,6 +1463,21 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{frame}
 
 \begin{frame}{Fill Buffers}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}\small
+\begin{itemize}\small
+  \item L2 to L1 bus may be narrower than cache line
+  \begin{itemize}\scriptsize
+    \item E.g., 16B bus, 64B line $\Rightarrow$ 4 cycles
+    \item Fetch critical chunk (containing missed address) first to reduce latency
+  \end{itemize}
+  \item Fill buffer accumulates full line, then writes to L1
+  \begin{itemize}\scriptsize
+    \item Searched in parallel with cache
+  \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
 \centering
 \begin{tikzpicture}[
     cache/.style={draw, thick, minimum width=1.4cm, minimum height=1.4cm, inner sep=2pt, align=center, font=\bfseries},
@@ -1490,14 +1505,13 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
     \draw[->, very thick] (b1.west) -- node[above, font=\footnotesize] {64B} (b1.west -| l1.east);
 \end{tikzpicture}
 
-\vspace{0.4cm}
+\vspace{0.3cm}
 \small
 \begin{itemize}\small
-  \item L2 to L1 bus may be narrower than cache line (e.g., 16B bus, 64B line $\Rightarrow$ 4 cycles)
-  \item Fill buffer accumulates full line, then writes to L1; searched in parallel with cache
-  \item Fetch critical chunk (containing missed address) first to reduce latency
-  \item Streaming loads: serve data directly from fill buffer without L1 insertion to avoid pollution
+  \item Streaming loads (via SW/compiler hints): serve data directly from fill buffer without L1 insertion to avoid pollution
 \end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 % Alternative version with more detail
