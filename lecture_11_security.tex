@@ -1424,43 +1424,8 @@ func:
 \end{frame}
 
 \begin{frame}{Security Rings - x86 Architecture}
-    \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-            % Draw visible rings first
-            \draw[fill=red!40] (0,0) circle (4cm);
-            \draw[fill=orange!40] (0,0) circle (3.2cm);
-            \draw[fill=yellow!40] (0,0) circle (2.4cm);
-            
-            % Standard rings labels
-            \node at (0,2) {\small \textbf{Ring 0}};
-            \node at (0,1.7) {\tiny Kernel};
-            
-            \node at (0,2.8) {\small \textbf{Ring 1-2}};
-            \node at (0,2.5) {\tiny Drivers (unused)};
-            
-            \node at (0,3.6) {\small \textbf{Ring 3}};
-            \node at (0,3.3) {\tiny User Apps};
-            
-            % Hidden rings revealed on pause
-            \onslide<2->{
-                \draw[fill=green!40] (0,0) circle (1.6cm);
-                \node at (0,1.2) {\small \textbf{Ring -1}};
-                \node at (0,0.9) {\tiny Hypervisor};
-                \draw[thick,<-] (0.5,1) -- (2,0.5) node[right] {VMX Root Mode};
-            }
-            
-            \onslide<3->{
-                \draw[fill=blue!40] (0,0) circle (0.8cm);
-                \node at (0,0) {\small \textbf{Ring -2}};
-                \node at (0,-0.3) {\tiny SMM};
-                \draw[thick,<-] (0.5,-0.2) -- (2,-1) node[right] {System Management Mode};
-            }
-        \end{tikzpicture}
-    \end{center}
-    
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \centering
+    \begin{columns}[T]
+        \begin{column}{0.45\textwidth}
             \textbf{Modern Usage:}
             \begin{itemize}
                 \item Only Ring 0 (Kernel) and Ring 3 (User)
@@ -1468,65 +1433,93 @@ func:
                 \item Ring -1: Hypervisor (VMX root)
                 \item Ring -2: SMM firmware
             \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \centering
+
+            \vspace{0.5cm}
             \textbf{Protection Method:}
             \begin{tcolorbox}[colback=yellow!20]
                 Paging-based protection with NX/XD bit
             \end{tcolorbox}
+        \end{column}
+        \begin{column}{0.55\textwidth}
+            \centering
+            \begin{tikzpicture}[scale=0.65,
+                ring num/.style={font=\small\bfseries},
+                ring usage/.style={font=\tiny}]
+                % Draw visible rings first
+                \draw[fill=red!40] (0,0) circle (4cm);
+                \draw[fill=orange!40] (0,0) circle (3.2cm);
+                \draw[fill=yellow!40] (0,0) circle (2.4cm);
+
+                % Standard rings labels - number at top, usage at bottom
+                \node[ring num] at (0,3.6) {Ring 3};
+                \node[ring usage] at (0,-3.6) {User Apps};
+
+                \node[ring num] at (0,2.8) {Ring 1-2};
+                \node[ring usage] at (0,-2.8) {Drivers (unused)};
+
+                \node[ring num] at (0,2.1) {Ring 0};
+                \node[ring usage] at (0,-2.1) {Kernel};
+
+                % Hidden rings revealed on pause
+                \onslide<2->{
+                    \draw[fill=green!40] (0,0) circle (1.6cm);
+                    \node[ring num] at (0,1.3) {Ring -1};
+                    \node[ring usage] at (0,-1.3) {Hypervisor};
+                    \draw[thick,<-] (-1.2,0) -- (-2.5,0.5) node[left] {\small VMX Root};
+                }
+
+                \onslide<3->{
+                    \draw[fill=blue!40] (0,0) circle (0.8cm);
+                    \node[ring num] at (0,0.4) {Ring -2};
+                    \node[ring usage] at (0,-0.4) {SMM};
+                }
+            \end{tikzpicture}
         \end{column}
     \end{columns}
 \end{frame}
 
 \begin{frame}{ARM TrustZone - Trusted Execution Environment (TEE)}
     \begin{center}
-        \begin{tikzpicture}[scale=0.9]
-            % Secure World - Green gradient with special border
-            \draw[fill=green!20,rounded corners,line width=2pt,draw=green!70!black] (-4,0) rectangle (-0.5,4);
-            \node at (-2.25,3.7) {\textbf{Secure World (TEE)}};
-            
-            % Secure levels - gradient from most to least privileged
-            \draw[fill=blue!40,draw=green!70!black,line width=1pt] (-3.5,2.8) rectangle (-1,3.5);
-            \node at (-2.25,3.15) {\small S-EL3: Monitor};
-            
-            \draw[fill=green!50] (-3.5,1.9) rectangle (-1,2.6);
-            \node at (-2.25,2.25) {\small S-EL2: S-Hypervisor};
-            
-            \draw[fill=yellow!40] (-3.5,1) rectangle (-1,1.7);
-            \node at (-2.25,1.35) {\small S-EL1: Trusted OS};
-            
-            \draw[fill=red!30,draw=green!70!black,line width=1pt] (-3.5,0.2) rectangle (-1,0.8);
-            \node at (-2.25,0.5) {\small S-EL0: Trusted Apps};
-            
-            % Normal World - Red gradient (untrusted)
-            \draw[fill=red!10,rounded corners,line width=2pt,draw=red!70!black,dashed] (0.5,0) rectangle (4,4);
-            \node at (2.25,3.7) {\textbf{Normal World (REE)}};
-            
-            % Normal levels - gradient from kernel to user  
-            \draw[fill=green!30] (1,1.9) rectangle (3.5,2.6);
-            \node at (2.25,2.25) {\small EL2: Hypervisor};
-            
-            \draw[fill=yellow!40] (1,1) rectangle (3.5,1.7);
-            \node at (2.25,1.35) {\small EL1: Rich OS};
-            
-            \draw[fill=red!50] (1,0.2) rectangle (3.5,0.8);
-            \node at (2.25,0.5) {\small EL0: Applications};
-            
-            % Trust direction arrow
-            \draw[->,ultra thick,green!60!black] (-2.25,-0.5) -- (2.25,-0.5);
-            \node at (0,-0.9) {\small \textbf{More Trusted} $\rightarrow$ \textbf{Less Trusted}};
-            
+        \begin{tikzpicture}[scale=0.9,
+            world/.style={rounded corners, line width=2pt, minimum width=3.5cm, minimum height=4cm},
+            secure world/.style={world, fill=green!20, draw=green!70!black},
+            normal world/.style={world, fill=red!10, draw=red!70!black, dashed},
+            level/.style={draw, minimum width=2.5cm, minimum height=0.7cm, font=\small},
+            secure level/.style={level, draw=green!70!black, line width=1pt},
+            normal level/.style={level}]
+
+            % Secure World container
+            \node[secure world] (secure) at (-2.25,2) {};
+            \node[anchor=north, font=\bfseries] at (secure.north) {Secure World (TEE)};
+
+            % Secure levels - relative to container
+            \node[secure level, fill=blue!40] (sel3) at (secure.center |- 0,3.15) {S-EL3: Monitor};
+            \node[level, fill=green!50, below=0.2cm of sel3] (sel2) {S-EL2: S-Hypervisor};
+            \node[level, fill=yellow!40, below=0.2cm of sel2] (sel1) {S-EL1: Trusted OS};
+            \node[secure level, fill=red!30, below=0.2cm of sel1] (sel0) {S-EL0: Trusted Apps};
+
+            % Normal World container
+            \node[normal world] (normal) at (2.25,2) {};
+            \node[anchor=north, font=\bfseries] at (normal.north) {Normal World (REE)};
+
+            % Normal levels - relative to container
+            \node[normal level, fill=green!30] (el2) at (normal.center |- sel2) {EL2: Hypervisor};
+            \node[normal level, fill=yellow!40, below=0.2cm of el2] (el1) {EL1: Rich OS};
+            \node[normal level, fill=red!50, below=0.2cm of el1] (el0) {EL0: Applications};
+
             % SMC transition
-            \draw[<->,thick,blue] (-0.5,2) -- (0.5,2);
-            \node[blue] at (0,2.3) {\small SMC};
-            
+            \draw[<->, thick, blue] (secure.east) -- (normal.west) node[midway, above, font=\small] {SMC};
+
+            % Trust direction arrow
+            \draw[->, ultra thick, green!60!black] ([yshift=-0.3cm]secure.south) -- ([yshift=-0.3cm]normal.south);
+            \node[font=\small\bfseries] at (0,-0.7) {More Trusted $\rightarrow$ Less Trusted};
+
             % Legend
-            \node at (0,-1.5) {\tiny Solid border = Secure | Dashed border = Normal};
+            \node[font=\tiny] at (0,-1.3) {Solid border = Secure | Dashed border = Normal};
         \end{tikzpicture}
     \end{center}
-    
-    \begin{columns}
+
+    \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{TEE Use Cases:}
             \begin{itemize}
