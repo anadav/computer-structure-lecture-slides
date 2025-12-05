@@ -8,8 +8,20 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, patterns, fit, decorations.pathmorphing}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, patterns, fit, decorations.pathmorphing, shapes.callouts}
 \usepackage{tcolorbox}
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    xleftmargin=0.5em,
+    xrightmargin=0.5em,
+}
 
 \usetheme{Madrid}
 \usecolortheme{default}
@@ -346,131 +358,290 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
 
 % Slide 9: SMT Thread Select Points
 \begin{frame}{SMT Thread Select Points}
+\centering
+\begin{tikzpicture}[
+    % Styles
+    pipestage/.style={draw, thick, minimum width=1.0cm, minimum height=1.0cm, font=\scriptsize, fill=blue!15, align=center},
+    latchcell/.style={draw, minimum width=0.8cm, minimum height=0.45cm, font=\tiny, inner sep=1pt},
+    latch t0/.style={fill=red!25},
+    latch t1/.style={fill=yellow!40},
+    latchmatrix/.style={matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt, nodes={latchcell}},
+    rscell/.style={draw, minimum width=0.45cm, minimum height=0.2cm, inner sep=0pt},
+    rs t0/.style={fill=red!25},
+    rs t1/.style={fill=yellow!40},
+    rsmatrix/.style={matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt, nodes={rscell}},
+    star/.style={font=\small, text=green!50!black},
+    mycallout/.style={rectangle callout, draw, thick, fill=white, font=\tiny, align=center},
+    node distance=0.12cm
+]
+    % Inst Ptr latches (replicated, stacked vertically)
+    \matrix[latchmatrix] (instptr) {
+        |[latch t0, rotate=90]| Inst Ptr \\
+        |[latch t1, rotate=90]| Inst Ptr \\
+    };
+
+    % Star 1 - between Inst Ptr and Fetch
+    \node[star, right=0.15cm of instptr] (star1) {$\bigstar$};
+
+    % Fetch stage
+    \node[pipestage, right=0.15cm of star1] (fetch) {Fetch};
+
+    % Inst Q latches (replicated, stacked vertically)
+    \matrix[latchmatrix, right=0.25cm of fetch] (instq) {
+        |[latch t0, rotate=90]| Inst Q \\
+        |[latch t1, rotate=90]| Inst Q \\
+    };
+
+    % Star 2 - between Inst Q and Decode
+    \node[star, right=0.15cm of instq] (star2) {$\bigstar$};
+
+    % Decode stage
+    \node[pipestage, right=0.15cm of star2] (decode) {Decode};
+
+    % uopQ latches (replicated, stacked vertically)
+    \matrix[latchmatrix, right=0.25cm of decode] (uopq) {
+        |[latch t0, rotate=90]| $\mu$opQ \\
+        |[latch t1, rotate=90]| $\mu$opQ \\
+    };
+
+    % Star 3 - between uopQ and Alloc
+    \node[star, right=0.15cm of uopq] (star3) {$\bigstar$};
+
+    % Alloc/Rename stage
+    \node[pipestage, right=0.15cm of star3, fill=yellow!40] (alloc) {Alloc\\rename};
+
+    % RS (shared with mixed thread entries, single column)
+    \matrix[rsmatrix, right=0.25cm of alloc] (rs) {
+        |[rs t0]| ~ \\
+        |[rs t0]| ~ \\
+        |[rs t1]| ~ \\
+        |[rs t0]| ~ \\
+        |[rs t1]| ~ \\
+        |[rs t1]| ~ \\
+        |[rs t0]| ~ \\
+        |[rs t1]| ~ \\
+    };
+    \node[font=\tiny, above=-1mm of rs] {RS};
+
+    % Sched/EXE stage
+    \node[pipestage, right=0.25cm of rs, fill=yellow!40] (sched) {Sched\\EXE};
+
+    % ROB latches (replicated, stacked vertically)
+    \matrix[latchmatrix, right=0.25cm of sched] (rob) {
+        |[latch t0, rotate=90]| ROB \\
+        |[latch t1, rotate=90]| ROB \\
+    };
+
+    % Star 4 - between ROB and Retire
+    \node[star, right=0.15cm of rob] (star4) {$\bigstar$};
+
+    % Retire stage
+    \node[pipestage, right=0.15cm of star4] (retire) {Retire};
+
+    % Arrows connecting stages
+    \draw[->, thick] (instptr.east) -- (star1.west);
+    \draw[->, thick] (star1.east) -- (fetch.west);
+    \draw[->, thick] (fetch.east) -- (instq.west);
+    \draw[->, thick] (instq.east) -- (star2.west);
+    \draw[->, thick] (star2.east) -- (decode.west);
+    \draw[->, thick] (decode.east) -- (uopq.west);
+    \draw[->, thick] (uopq.east) -- (star3.west);
+    \draw[->, thick] (star3.east) -- (alloc.west);
+    \draw[->, thick] (alloc.east) -- (rs.west);
+    \draw[->, thick] (rs.east) -- (sched.west);
+    \draw[->, thick] (sched.east) -- (rob.west);
+    \draw[->, thick] (rob.east) -- (star4.west);
+    \draw[->, thick] (star4.east) -- (retire.west);
+
+    % Callout bubbles
+    \node[mycallout, callout absolute pointer={(star1.north)}, above=0.6cm of star1] (c1) {Read the I\$\\to fetch\\instructions};
+    \node[mycallout, callout absolute pointer={(star2.north)}, above=0.6cm of star2] (c2) {Read the IQ\\to decode\\instructions};
+    \node[mycallout, callout absolute pointer={(star3.north)}, above=0.6cm of star3] (c3) {Read the $\mu$opQ\\to alloc/rename\\instructions};
+    \node[mycallout, callout absolute pointer={(star4.north)}, above=0.6cm of star4] (c4) {Read the\\ROB to retire\\instructions};
+\end{tikzpicture}
+
+\vspace{0.3cm}
 \begin{columns}[T]
-\column{0.55\textwidth}
+\column{0.5\textwidth}
 \begin{itemize}\small
-    \item \textbf{Pipeline arbitration points} select the thread that gets to use a resource in a given cycle
+    \item \textbf{Pipeline arbitration points} ($\bigstar$) select the thread that gets to use a resource in a given cycle
     \begin{itemize}
         \item ``ping-pong'' between the threads on a cycle-by-cycle basis
         \item If one thread is stalled $\Rightarrow$ give its turn to the other thread
     \end{itemize}
-    \item \textbf{Achieves fairness} between the threads
-    \begin{itemize}
-        \item But still gives full bandwidth to one thread in case the other thread does not require the given resource
-    \end{itemize}
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{itemize}\small
     \item \textbf{The RS is not a thread arbitration point}
     \begin{itemize}
-        \item Dispatches $\mu$ops to EUs based on readiness and age (alloc time)
+        \item Dispatches $\mu$ops to EUs based on readiness and age
         \item Regardless of which thread they belong to
     \end{itemize}
 \end{itemize}
-
-\column{0.45\textwidth}
-\centering
-\begin{tikzpicture}[
-    stage/.style={draw, thick, minimum width=2.1cm, minimum height=0.5cm, font=\scriptsize},
-    arbpoint/.style={draw, thick, circle, minimum size=0.35cm, fill=red!30},
-    arblabel/.style={font=\tiny, anchor=west},
-    node distance=0.7cm,
-    arb distance/.store in=\arbdist, arb distance=0.8cm
-]
-    % Pipeline stages - relative positioning
-    \node[stage] (fetch) {Fetch (I\$)};
-    \node[stage, below=of fetch] (iq) {Instr Queue};
-    \node[stage, below=of iq] (decode) {Decode};
-    \node[stage, below=of decode] (uopq) {$\mu$op Queue};
-    \node[stage, below=of uopq] (alloc) {Alloc/Rename};
-    \node[stage, below=of alloc] (rs) {RS};
-    \node[stage, below=of rs] (exec) {Execute};
-    \node[stage, below=of exec] (rob) {ROB/Retire};
-
-    % Arbitration points - positioned relative to stages
-    \node[arbpoint, right=\arbdist of fetch.east, anchor=center] (a1) {};
-    \node[arbpoint, right=\arbdist of decode.east, anchor=center] (a2) {};
-    \node[arbpoint, right=\arbdist of alloc.east, anchor=center] (a3) {};
-    \node[arbpoint, right=\arbdist of rob.east, anchor=center] (a4) {};
-
-    % Labels for arbitration - anchored to arbpoints
-    \node[arblabel, right=0.15cm of a1] {Read I\$};
-    \node[arblabel, right=0.15cm of a2] {Read IQ};
-    \node[arblabel, right=0.15cm of a3] {Read $\mu$opQ};
-    \node[arblabel, right=0.15cm of a4] {Read ROB};
-
-    % Arrows between stages
-    \draw[->, thick] (fetch) -- (iq);
-    \draw[->, thick] (iq) -- (decode);
-    \draw[->, thick] (decode) -- (uopq);
-    \draw[->, thick] (uopq) -- (alloc);
-    \draw[->, thick] (alloc) -- (rs);
-    \draw[->, thick] (rs) -- (exec);
-    \draw[->, thick] (exec) -- (rob);
-
-    % Connect arbitration points to stages
-    \draw[->, dashed, red!60] (a1) -- (fetch.east);
-    \draw[->, dashed, red!60] (a2) -- (decode.east);
-    \draw[->, dashed, red!60] (a3) -- (alloc.east);
-    \draw[->, dashed, red!60] (a4) -- (rob.east);
-\end{tikzpicture}
 \end{columns}
 \end{frame}
 
 % Slide 10: Single-task And Multi-task Modes
 \begin{frame}{Single-task And Multi-task Modes}
+\begin{columns}[T]
+\column{0.45\textwidth}
 \begin{itemize}
     \item \textbf{MT-mode (Multi-task mode)}
     \begin{itemize}
-        \item Two active threads, with some resources partitioned as described earlier
+        \item Two active threads, resources partitioned
     \end{itemize}
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \item \textbf{ST-mode (Single-task mode)}
     \begin{itemize}
         \item ST0 / ST1 -- only thread 0 / 1 is active
-        \item Resources that are partitioned in MT-mode are re-combined to give the single active logical processor use of all of the resources
+        \item Partitioned resources re-combined for single thread
     \end{itemize}
-    \vspace{0.3cm}
-    \item \textbf{Moving the processor between modes}
+    \vspace{0.2cm}
+    \item \textbf{Low Power mode}
+    \begin{itemize}
+        \item Both threads halted
+    \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
+\column{0.55\textwidth}
 \centering
 \begin{tikzpicture}[
-    box/.style={draw, thick, rounded corners, minimum width=2.5cm, minimum height=1cm, font=\small, align=center},
-    arrow/.style={->, thick, >=Stealth}
+    state/.style={draw, very thick, circle, minimum size=1.1cm, font=\small},
+    ellstate/.style={draw, very thick, ellipse, minimum width=1.6cm, minimum height=1.1cm, font=\small, align=center},
+    haltarrow/.style={->, thick, >=Stealth},
+    intarrow/.style={->, thick, >=Stealth, blue},
+    labelstyle/.style={font=\scriptsize, align=center}
 ]
-    \node[box, fill=gray!20] (st0) at (0,0) {ST0\\(Thread 0 only)};
-    \node[box, fill=green!20] (mt) at (5,0) {MT\\(Both threads)};
-    \node[box, fill=gray!20] (st1) at (10,0) {ST1\\(Thread 1 only)};
+    % States in diamond pattern
+    \node[ellstate] (lp) at (0,2) {Low\\Power};
+    \node[state] (st0) at (-2,0) {ST0};
+    \node[state] (st1) at (2,0) {ST1};
+    \node[state] (mt) at (0,-2) {MT};
 
-    \draw[arrow, bend left=20] (st0) to (mt);
-    \draw[arrow, bend left=20] (mt) to (st0);
-    \draw[arrow, bend left=20] (mt) to (st1);
-    \draw[arrow, bend left=20] (st1) to (mt);
+    % Black arrows - Thread executes HALT
+    \draw[haltarrow, bend left=15] (st0) to node[labelstyle, above left, pos=0.4] {Thread 0\\executes HALT} (lp);
+    \draw[haltarrow, bend right=15] (st1) to node[labelstyle, above right, pos=0.4] {Thread 1\\executes HALT} (lp);
+    \draw[haltarrow, bend left=15] (mt) to node[labelstyle, below left, pos=0.5] {Thread 1\\executes HALT} (st0);
+    \draw[haltarrow, bend left=15] (mt) to node[labelstyle, below right, pos=0.5] {Thread 0\\executes HALT} (st1);
+
+    % Blue arrows - Interrupt (labeled)
+    \draw[intarrow, bend left=15] (lp) to node[labelstyle, left, blue, pos=0.5] {Interrupt} (st0);
+    \draw[intarrow, bend right=15] (lp) to node[labelstyle, right, blue, pos=0.5] {Interrupt} (st1);
+    \draw[intarrow, bend left=15] (st0) to node[labelstyle, left, blue, pos=0.5] {Interrupt} (mt);
+    \draw[intarrow, bend left=15] (st1) to node[labelstyle, right, blue, pos=0.5] {Interrupt} (mt);
 \end{tikzpicture}
+\end{columns}
 \end{frame}
 
 \section{Thread Optimization}
 
-% Slide 11: Thread Optimization
-\begin{frame}{Thread Optimization}
-\textbf{The OS should implement two optimizations:}
+% Slide 11: OS Thread Optimization - HALT
+\begin{frame}[fragile]{OS Optimization: Use HALT for Idle Processors}
+\begin{itemize}
+    \item When a logical processor has no work, OS should execute \texttt{HLT}
+    \item Allows transition to ST0/ST1 mode $\rightarrow$ sibling thread gets all resources
+\end{itemize}
+
+\vspace{0.2cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Bad: Busy-wait idle loop}
+\begin{lstlisting}[language=C]
+void os_idle_loop() {
+    while (!work_available) {
+        // Spin checking for work
+        // Wastes resources!
+    }
+}
+\end{lstlisting}
+
+\column{0.48\textwidth}
+\textbf{Good: Use HLT}
+\begin{lstlisting}[language=C]
+void os_idle_loop() {
+    while (!work_available) {
+        __halt();
+        // Wakes on interrupt
+    }
+}
+\end{lstlisting}
+\end{columns}
 
 \vspace{0.3cm}
 \begin{itemize}
-    \item \textbf{Use HALT if only one logical processor is active}
+    \item \texttt{HLT}: stops execution until interrupt arrives
     \begin{itemize}
-        \item Allows the processor to transition to either the ST0 or ST1 mode
-        \item Otherwise, the OS would execute on the idle logical processor a sequence of instructions that repeatedly checks for work to do
-        \item This so-called ``idle loop'' can consume significant execution resources that could otherwise be used by the other active logical processor
-    \end{itemize}
-    \vspace{0.3cm}
-    \item \textbf{On a multi-processor system}
-    \begin{itemize}
-        \item OS views logical processors similar to physical processors
-        \item But can still differentiate and prefer to schedule a thread on a new physical processor rather than on a 2nd logical processor in the same physical processor
-        \item Schedule threads to logical processors on different physical processors before scheduling multiple threads to the same physical processor
-        \item Allows SW threads to use different physical resources when possible
+        \item Enters low power mode, frees execution resources for sibling thread
+        \item Without HLT, idle loop consumes significant resources from active thread
     \end{itemize}
 \end{itemize}
+\end{frame}
+
+% Slide 12: Thread Optimization - Scheduling
+\begin{frame}[fragile]{Thread Optimization: Scheduling}
+\textbf{On a multi-processor system with SMT:}
+\begin{itemize}
+    \item OS views logical processors similar to physical processors
+    \item But should prefer scheduling on different \textit{physical} cores first
+    \item Only use sibling threads (same physical core) when all cores are busy
+\end{itemize}
+
+\vspace{0.0cm}
+\begin{lstlisting}[language=C, morekeywords={thread_t,cpu_t}]
+void schedule_thread(thread_t *thread) {
+    // First: try to find an idle physical core
+    for (cpu_t *cpu : all_physical_cores) {
+        if (cpu->thread0_idle && cpu->thread1_idle) {
+            assign(thread, cpu->thread0);  return;
+        }
+    }
+    // Second: use sibling thread on busy core
+    for (cpu_t *cpu : all_physical_cores) {
+        if (cpu->thread0_idle || cpu->thread1_idle) {
+            assign(thread, get_idle_thread(cpu)); return;
+        }
+    }
+    enqueue(thread);  // All CPUs busy, wait in queue
+}
+\end{lstlisting}
+\end{frame}
+
+% Slide 13: User-level Thread Optimization
+\begin{frame}[fragile]{User-level Optimization: PAUSE and Affinity}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Use PAUSE in spin-wait loops:}
+\begin{lstlisting}[language=C]
+void spin_lock(int *lock) {
+    while (*lock != 0) {
+        __pause();
+    }
+}
+\end{lstlisting}
+\begin{itemize}\small
+    \item Hints CPU: in spin-wait loop
+    \item Saves power, avoids memory order violation penalty
+    \item Reduces resource contention with sibling thread
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Set CPU affinity:}
+\begin{lstlisting}[language=C]
+// Linux: pin thread to CPU 0
+cpu_set_t cpuset;
+CPU_ZERO(&cpuset);
+CPU_SET(0, &cpuset);
+pthread_setaffinity_np(
+    thread, sizeof(cpuset),
+    &cpuset);
+\end{lstlisting}
+\begin{itemize}\small
+    \item User can control which logical CPUs a thread runs on
+    \item Avoid sibling threads for cache-sensitive workloads
+    \item Or co-locate cooperating threads on same core
+\end{itemize}
+\end{columns}
 \end{frame}
 
 \end{document}
