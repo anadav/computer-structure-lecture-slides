@@ -60,7 +60,7 @@
     \item \textbf{Data Level Parallelism (DLP)}
     \begin{itemize}
         \item Same operation executed on multiple data elements
-        \item E.g., adding two vectors: add operation on each one of the vector's elements
+        \item E.g., adding two vectors: same add operation applied to each pair of elements
     \end{itemize}
     \item \textbf{Thread Level Parallelism (TLP)}
     \begin{itemize}
@@ -106,14 +106,14 @@
         \item Instruction dependencies (ILP -- Instruction Level Parallelism)
         \item Cache misses
         \item Branch misprediction
-        \item Memory bound vs.\ compute bound
+        \item Memory bound vs.\ compute bound workloads
     \end{itemize}
     \vspace{0.3cm}
     \item \textbf{Server apps are typically memory bound, with low IPC}
     \begin{itemize}
         \item Actual average IPC for a 4-wide machine is $<2$
         \item Utilization $< 50\%$
-        \item Even taking into account 10\%-20\% more instructions are fetched and executed than retired due to speculative execution
+        \item Even taking into account that 10\%-20\% more instructions are fetched and executed than retired due to speculative execution
     \end{itemize}
     \vspace{0.3cm}
     \item \textbf{Increasing single thread performance becomes harder}
@@ -185,6 +185,8 @@
 
 % Slide 6: SMT Physical Resource Sharing Schemes
 \begin{frame}{SMT Physical Resource Sharing Schemes}
+\begin{columns}[T]
+\column{0.74\textwidth}
 \begin{itemize}
     \item \textbf{Replicated Resources}: each thread has its own resource
     \begin{itemize}
@@ -199,13 +201,65 @@
         \item Both threads compete for the entire resource
         \item e.g., RS entries (may have minimum guarantee per thread)
     \end{itemize}
-    \item \textbf{HT unaware resources}: both threads use the resource
+    \item \textbf{Thread-unaware resources}: both threads use the resource
     \begin{itemize}
         \item e.g., execution unit
     \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
+\column{0.24\textwidth}
+\centering
+\begin{tikzpicture}[
+    cell/.style={minimum width=0.28cm, minimum height=0.28cm, draw, inner sep=0pt},
+    t0/.style={fill=yellow!70},
+    t1/.style={fill=red!50},
+    shared/.style={fill=blue!20},
+    matrixstyle/.style={matrix of nodes, ampersand replacement=\&, nodes={cell}, row sep=-\pgflinewidth, column sep=-\pgflinewidth}
+]
+% Replicated - two separate matrices
+\matrix[matrixstyle, t0] (rep0) at (0,0) {
+ ~ \& ~ \& ~ \& ~ \\
+ ~ \& ~ \& ~ \& ~ \\
+ ~ \& ~ \& ~ \& ~ \\
+ ~ \& ~ \& ~ \& ~ \\
+};
+\matrix[matrixstyle, t1, right=0.15cm of rep0] (rep1) {
+ ~ \& ~ \& ~ \& ~ \\
+ ~ \& ~ \& ~ \& ~ \\
+ ~ \& ~ \& ~ \& ~ \\
+ ~ \& ~ \& ~ \& ~ \\
+};
+\node[font=\tiny, right=0.1cm of rep1] {Replicated};
+
+% Partitioned - one matrix, top half yellow, bottom half red
+\matrix[matrixstyle, below=0.4cm of rep0.south west, anchor=north west] (part) {
+ |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \\
+ |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \\
+ |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \\
+ |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \\
+ |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \\
+ |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \\
+ |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \\
+ |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \\
+};
+\node[font=\tiny, right=0.1cm of part.east] {Partitioned};
+
+% Competitive - mixed pattern
+\matrix[matrixstyle, below=0.4cm of part.south west, anchor=north west] (comp) {
+ |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t1]| ~ \\
+ |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \\
+ |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \\
+ |[t1]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \\
+ |[t0]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t0]| ~ \\
+ |[t1]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \\
+ |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \\
+ |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \& |[t1]| ~ \& |[t0]| ~ \& |[t1]| ~ \\
+};
+\node[font=\tiny, right=0.1cm of comp.east] {Competitive};
+\end{tikzpicture}
+\end{columns}
+
+\vspace{0.2cm}
 \begin{alertblock}{Resource Sharing May Cause Performance Issues}
 E.g., \textbf{cache thrashing}: the workload run by each thread fits into the cache, but both workloads together don't fit into the cache $\Rightarrow$ high miss rate
 \end{alertblock}
@@ -214,23 +268,20 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
 % Slide 7: SMT Resource Sharing Table
 \begin{frame}{SMT Resource Sharing}
 \centering
-\begin{table}
-\resizebox{0.95\textwidth}{!}{%
+\small
 \begin{tabular}{l|l|l|l}
 \toprule
 \textbf{Sharing Type} & \textbf{Frontend} & \textbf{OOO/EXE} & \textbf{Memory} \\
 \midrule
-\textbf{Replicated} & Instruction Pointer & \makecell[l]{Architectural registers\\Register renaming table} & Interrupt controller \\
+\textbf{Replicated} & Instruction Pointer & \makecell[l]{Arch.\ registers\\Renaming table} & Interrupt controller \\
 \midrule
 \textbf{Partitioned} & Instruction TLB & ROB & \makecell[l]{Load buffers\\Store buffers} \\
 \midrule
-\textbf{Competitively-shared} & Branch prediction & RS & \makecell[l]{Data TLB\\2nd Level TLB} \\
+\textbf{Competitive} & Branch prediction & RS & \makecell[l]{Data TLB\\2nd Level TLB} \\
 \midrule
-\textbf{Thread un-aware} & I\$, decoders & Execution units & D\$ \\
+\textbf{Thread-unaware} & I\$, decoders & Execution units & D\$ \\
 \bottomrule
 \end{tabular}
-}
-\end{table}
 \end{frame}
 
 % Slide 8: SMT: A High-level View of the Pipeline
