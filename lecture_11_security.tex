@@ -265,7 +265,7 @@ Stack Layout:
 \begin{frame}{ROP Attack Visualization}
     \begin{center}
         \begin{tikzpicture}[scale=0.8, font=\footnotesize,
-            gadget/.style={draw, fill=yellow!40, minimum width=2cm, minimum height=0.9cm, align=center},
+            gadget/.style={draw, fill=yellow!40, minimum width=1.7cm, minimum height=1.1cm, align=center},
             stack cell/.style={draw, minimum width=1.8cm, minimum height=0.4cm, font=\scriptsize},
             flow/.style={->, thick, red}]
 
@@ -274,9 +274,9 @@ Stack Layout:
             \node[font=\footnotesize\bfseries, anchor=north] at (code.north) {Existing Code (libc, program, etc.)};
 
             % Gadgets - positioned within code section
-            \node[gadget] (g1) at (1.2,1) {Gadget 1\\[-2pt]{\scriptsize pop rdi}};
-            \node[gadget] (g2) at (3.7,1.8) {Gadget 2\\[-2pt]{\scriptsize pop rsi}};
-            \node[gadget] (g3) at (6.2,0.8) {Gadget 3\\[-2pt]{\scriptsize mov rax,59}};
+            \node[gadget] (g1) at (1.2,1) {Gadget 1\\[-2pt]{\scriptsize pop rdi; ret}};
+            \node[gadget] (g2) at (3.7,1.8) {Gadget 2\\[-2pt]{\scriptsize pop rsi; ret}};
+            \node[gadget] (g3) at (6.2,0.8) {Gadget 3\\[-2pt]{\scriptsize mov rax,59; ret}};
             \node[gadget] (g4) at (8.7,1.5) {Gadget 4\\[-2pt]{\scriptsize syscall}};
 
             % Stack using matrix
@@ -347,22 +347,7 @@ Stack Layout:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{Without ASLR (predictable):}
-                \begin{verbatim}
-$ ./vuln
-Stack: 0x7fffffffe000
-Heap:  0x555555756000
-Libc:  0x7ffff7a00000
-
-$ ./vuln
-Stack: 0x7fffffffe000
-Heap:  0x555555756000
-Libc:  0x7ffff7a00000
-                \end{verbatim}
-            \end{tcolorbox}
-            
+            \vspace{-3cm}
             \begin{tcolorbox}[colback=green!10]
                 \small
                 \textbf{With ASLR (randomized):}
