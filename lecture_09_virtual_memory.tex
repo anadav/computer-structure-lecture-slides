@@ -264,20 +264,139 @@
 \end{frame}
 
 \begin{frame}{Virtual to Physical Address Translation}
-\begin{itemize}
-\item PTE – Page Table Entry
-\item Page size: $2^{12}$ byte = 4K byte
-\end{itemize}
 \begin{center}
-[Diagram showing virtual address (47-12 bits VPN, 11-0 bits offset) mapping to physical address]
+\begin{tikzpicture}[
+    % Styles
+    addrblock/.style={draw, thick, minimum height=0.55cm, font=\small},
+    vpnblock/.style={addrblock, fill=blue!20},
+    offsetblock/.style={addrblock, fill=orange!30},
+    ppnblock/.style={addrblock, fill=violet!30},
+    bitnumber/.style={font=\scriptsize},
+    addrlabel/.style={font=\bfseries},
+    ptecell/.style={draw, minimum height=0.38cm, font=\tiny, inner sep=1pt},
+    arrowstyle/.style={-{Stealth[length=2.5mm]}, thick},
+    callout/.style={font=\small},
+]
+    % Virtual Address title
+    \node[addrlabel, blue!70!black] at (4, 3.5) {Virtual Address};
+
+    % Virtual Address bar
+    \node[vpnblock, minimum width=5.5cm] (vpn) at (2.25, 2.8) {Virtual Page Number};
+    \node[offsetblock, minimum width=2.2cm] (voffset) at (6.1, 2.8) {Page offset};
+
+    % Bit numbers for virtual address
+    \node[bitnumber] at ([xshift=-0.2cm]vpn.north west) {47};
+    \node[bitnumber] at ([xshift=0.15cm]voffset.north west) {12};
+    \node[bitnumber] at ([xshift=-0.1cm]voffset.north west) {11};
+    \node[bitnumber] at ([xshift=0.2cm]voffset.north east) {0};
+
+    % Page Table Base Register
+    \node[draw, fill=red!15, minimum width=1.1cm, minimum height=0.9cm, align=center, font=\tiny]
+        (ptbr) at (-1.5, 0.5) {Page\\table\\base\\reg};
+
+    % Page Table - manual construction
+    \def\ptx{1.2}  % page table x position
+    \def\pty{1.6}  % page table top y position
+    \def\cellh{0.38}  % cell height
+    \def\pwidth{0.35}  % P column width
+    \def\dwidth{0.35}  % D column width
+    \def\acwidth{0.4}  % AC column width
+    \def\ppnwidth{1.6} % Phy page # width
+
+    % Header labels
+    \node[font=\tiny\bfseries] at (\ptx + \pwidth/2, \pty + 0.2) {P};
+    \node[font=\tiny\bfseries] at (\ptx + \pwidth + \dwidth/2, \pty + 0.2) {D};
+    \node[font=\tiny\bfseries] at (\ptx + \pwidth + \dwidth + \acwidth/2, \pty + 0.2) {AC};
+    \node[font=\tiny\bfseries] at (\ptx + \pwidth + \dwidth + \acwidth + \ppnwidth/2, \pty + 0.2) {Phy.\ page \#};
+
+    % Draw page table rows
+    \foreach \row in {0, 1, 2, 3, 4, 5} {
+        \pgfmathsetmacro{\ypos}{\pty - \row*\cellh}
+        % P column
+        \draw (\ptx, \ypos) rectangle ++(\pwidth, -\cellh);
+        % D column
+        \draw (\ptx + \pwidth, \ypos) rectangle ++(\dwidth, -\cellh);
+        % AC column
+        \draw (\ptx + \pwidth + \dwidth, \ypos) rectangle ++(\acwidth, -\cellh);
+        % PPN column
+        \draw (\ptx + \pwidth + \dwidth + \acwidth, \ypos) rectangle ++(\ppnwidth, -\cellh);
+    }
+
+    % Highlighted row (row 2, which is the 3rd data row)
+    \fill[green!30] (\ptx, \pty - 2*\cellh) rectangle ++(\pwidth, -\cellh);
+    \fill[yellow!30] (\ptx + \pwidth, \pty - 2*\cellh) rectangle ++(\dwidth, -\cellh);
+    \fill[gray!20] (\ptx + \pwidth + \dwidth, \pty - 2*\cellh) rectangle ++(\acwidth, -\cellh);
+    \fill[orange!40] (\ptx + \pwidth + \dwidth + \acwidth, \pty - 2*\cellh) rectangle ++(\ppnwidth, -\cellh);
+    % Redraw borders for highlighted row
+    \draw (\ptx, \pty - 2*\cellh) rectangle ++(\pwidth, -\cellh);
+    \draw (\ptx + \pwidth, \pty - 2*\cellh) rectangle ++(\dwidth, -\cellh);
+    \draw (\ptx + \pwidth + \dwidth, \pty - 2*\cellh) rectangle ++(\acwidth, -\cellh);
+    \draw (\ptx + \pwidth + \dwidth + \acwidth, \pty - 2*\cellh) rectangle ++(\ppnwidth, -\cellh);
+
+    % Values in highlighted row
+    \node[font=\tiny] at (\ptx + \pwidth/2, \pty - 2*\cellh - \cellh/2) {1};
+    \node[font=\tiny] at (\ptx + \pwidth + \dwidth/2, \pty - 2*\cellh - \cellh/2) {0};
+
+    % Outer box around page table
+    \draw[thick] (\ptx - 0.05, \pty + 0.02) rectangle
+                 (\ptx + \pwidth + \dwidth + \acwidth + \ppnwidth + 0.05, \pty - 6*\cellh - 0.02);
+
+    % Key coordinates for arrows
+    \coordinate (pttop) at (\ptx + 0.5, \pty + 0.02);
+    \coordinate (ptleft) at (\ptx - 0.05, \pty - \cellh/2);
+    \coordinate (highlightP) at (\ptx, \pty - 2*\cellh - \cellh/2);
+    \coordinate (highlightD) at (\ptx + \pwidth, \pty - 2*\cellh - \cellh/2);
+    \coordinate (highlightAC) at (\ptx + \pwidth + \dwidth + \acwidth, \pty - 2*\cellh - \cellh/2);
+    \coordinate (highlightPPN) at (\ptx + \pwidth + \dwidth + \acwidth + \ppnwidth/2, \pty - 3*\cellh);
+
+    % Arrow from PTBR to page table
+    \draw[arrowstyle] (ptbr.east) -- (ptleft);
+
+    % Arrow from VPN to page table (index into table)
+    \draw[arrowstyle] (vpn.south) -- ++(0, -0.4) -| (pttop);
+
+    % Present bit label
+    \draw[arrowstyle] (-1.3, -0.8) -- (highlightP);
+    \node[callout, anchor=east] at (-1.2, -0.8) {Present bit};
+
+    % Dirty bit label
+    \draw[arrowstyle] (-1.3, 1.6) -- (highlightD);
+    \node[callout, anchor=east] at (-1.2, 1.6) {Dirty bit};
+
+    % Access Control explanation
+    \node[callout, anchor=west, align=left, text width=3.5cm] (actext) at (5.2, 0.9) {%
+        \underline{Access Control}\\[-1pt]
+        {\footnotesize - Memory type}\\[-3pt]
+        {\footnotesize \hspace{0.3cm}(WB, WT, UC, WP \ldots)}\\[-3pt]
+        {\footnotesize - User / Supervisor}
+    };
+    \draw[arrowstyle] (highlightAC) -- ++(0.4, 0) |- (actext.west);
+
+    % Arrow from PTE physical page to physical address
+    \draw[arrowstyle, line width=1.2pt] (highlightPPN) -- ++(0, -1.0);
+
+    % Physical Address title
+    \node[addrlabel, green!50!black] at (4, -2.7) {Physical Address};
+
+    % Physical Address bar
+    \node[ppnblock, minimum width=4.0cm] (ppn) at (2.5, -2.0) {Physical Page Number};
+    \node[offsetblock, minimum width=2.2cm] (poffset) at (6.1, -2.0) {Page offset};
+
+    % Bit numbers for physical address
+    \node[bitnumber] at ([xshift=-0.2cm]ppn.north west) {38};
+    \node[bitnumber] at ([xshift=0.15cm]poffset.north west) {12};
+    \node[bitnumber] at ([xshift=-0.1cm]poffset.north west) {11};
+    \node[bitnumber] at ([xshift=0.2cm]poffset.north east) {0};
+
+    % Arrow showing page offset passes through
+    \draw[arrowstyle, dashed] (voffset.south) -- (poffset.north);
+
+    % Footer text
+    \node[font=\footnotesize, anchor=west] at (-2.2, -3.3) {PTE -- Page Table Entry};
+    \node[font=\footnotesize, anchor=west] at (-2.2, -3.7) {Page size: $2^{12}$ byte = 4K byte};
+
+\end{tikzpicture}
 \end{center}
-Components:
-\begin{itemize}
-\item Page table base reg
-\item Present bit, Dirty bit
-\item Access Control (Memory type, User/Supervisor)
-\item Physical page number
-\end{itemize}
 \end{frame}
 
 \begin{frame}{Page Table Location}
