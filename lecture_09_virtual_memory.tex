@@ -278,25 +278,25 @@
     callout/.style={font=\small},
 ]
     % Virtual Address title
-    \node[addrlabel, blue!70!black] at (4, 3.5) {Virtual Address};
+    \node[addrlabel, blue!70!black] at (4, 3.8) {Virtual Address};
 
     % Virtual Address bar
     \node[vpnblock, minimum width=5.5cm] (vpn) at (2.25, 2.8) {Virtual Page Number};
     \node[offsetblock, minimum width=2.2cm] (voffset) at (6.1, 2.8) {Page offset};
 
     % Bit numbers for virtual address
-    \node[bitnumber] at ([xshift=-0.2cm]vpn.north west) {47};
-    \node[bitnumber] at ([xshift=0.15cm]voffset.north west) {12};
-    \node[bitnumber] at ([xshift=-0.1cm]voffset.north west) {11};
-    \node[bitnumber] at ([xshift=0.2cm]voffset.north east) {0};
-
-    % Page Table Base Register
-    \node[draw, fill=red!15, minimum width=1.1cm, minimum height=0.9cm, align=center, font=\tiny]
-        (ptbr) at (-1.5, 0.5) {Page\\table\\base\\reg};
+    \node[bitnumber, anchor=south west] at (vpn.north west) {47};
+    \node[bitnumber, anchor=south west] at (vpn.north east) {12};
+    \node[bitnumber, anchor=south east] at (voffset.north west) {11};
+    \node[bitnumber, anchor=south east] at (voffset.north east) {0};
 
     % Page Table - manual construction
     \def\ptx{1.2}  % page table x position
     \def\pty{1.6}  % page table top y position
+
+    % Page Table Base Register - positioned left of table north west
+    \node[draw, fill=red!15, minimum width=1.1cm, minimum height=0.9cm, align=center, font=\tiny,
+          anchor=east] (ptbr) at (\ptx - 0.4, \pty) {Page\\table\\base\\reg};
     \def\cellh{0.38}  % cell height
     \def\pwidth{0.35}  % P column width
     \def\dwidth{0.35}  % D column width
@@ -343,14 +343,14 @@
 
     % Key coordinates for arrows
     \coordinate (pttop) at (\ptx + 0.5, \pty + 0.02);
-    \coordinate (ptleft) at (\ptx - 0.05, \pty - \cellh/2);
+    \coordinate (ptnw) at (\ptx - 0.05, \pty + 0.02);  % table north west
     \coordinate (highlightP) at (\ptx, \pty - 2*\cellh - \cellh/2);
     \coordinate (highlightD) at (\ptx + \pwidth, \pty - 2*\cellh - \cellh/2);
     \coordinate (highlightAC) at (\ptx + \pwidth + \dwidth + \acwidth, \pty - 2*\cellh - \cellh/2);
     \coordinate (highlightPPN) at (\ptx + \pwidth + \dwidth + \acwidth + \ppnwidth/2, \pty - 3*\cellh);
 
     % Arrow from PTBR to page table
-    \draw[arrowstyle] (ptbr.east) -- (ptleft);
+    \draw[arrowstyle] (ptbr.east) -- (ptnw);
 
     % Arrow from VPN to page table (index into table)
     \draw[arrowstyle] (vpn.south) -- ++(0, -0.4) -| (pttop);
@@ -380,13 +380,13 @@
 
     % Physical Address bar
     \node[ppnblock, minimum width=4.0cm] (ppn) at (2.5, -2.0) {Physical Page Number};
-    \node[offsetblock, minimum width=2.2cm] (poffset) at (6.1, -2.0) {Page offset};
+    \node[offsetblock, minimum width=2.2cm, anchor=west] (poffset) at (ppn.east) {Page offset};
 
     % Bit numbers for physical address
-    \node[bitnumber] at ([xshift=-0.2cm]ppn.north west) {38};
-    \node[bitnumber] at ([xshift=0.15cm]poffset.north west) {12};
-    \node[bitnumber] at ([xshift=-0.1cm]poffset.north west) {11};
-    \node[bitnumber] at ([xshift=0.2cm]poffset.north east) {0};
+    \node[bitnumber, anchor=south west] at (ppn.north west) {38};
+    \node[bitnumber, anchor=south west] at (ppn.north east) {12};
+    \node[bitnumber, anchor=south east] at (poffset.north west) {11};
+    \node[bitnumber, anchor=south east] at (poffset.north east) {0};
 
     % Arrow showing page offset passes through
     \draw[arrowstyle, dashed] (voffset.south) -- (poffset.north);
