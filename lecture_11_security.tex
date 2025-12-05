@@ -12,9 +12,8 @@
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 \title{Hardware Security Mechanisms}
-\subtitle{Computer Architecture}
-\author{Course 234267}
-\date{}
+\author{Computer Architecture 2360267}
+\date{2025, Lecture \#11}
 \begin{document}
 \frame{\titlepage}
 
@@ -380,7 +379,7 @@ Libc:  0x7fc8e1200000
 \end{frame}
 
 \begin{frame}[fragile]{Stack Canaries - Buffer Overflow Detection}
-    \begin{columns}
+    \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{How Stack Canaries Work:}
             \begin{itemize}
@@ -687,45 +686,46 @@ some_ioctl:
 \begin{frame}{Modern ROP Mitigations Summary}
     \begin{center}
         \begin{tikzpicture}[scale=0.8,
-            defense/.style={draw,minimum width=1.5cm,minimum height=0.6cm},
-            attack/.style={draw,fill=gray!20,minimum width=1.8cm}]
-            
+            timeline label/.style={font=\tiny, text depth=0.25ex},
+            defense/.style={draw, minimum width=1.5cm, minimum height=0.6cm, text depth=0.25ex},
+            attack/.style={draw, fill=gray!20, minimum width=1.8cm, text depth=0.25ex}]
+
             % Timeline arrow
             \draw[thick,->] (-0.5,-1) -- (12.5,-1) node[right] {Time};
-            
+
             % Defense nodes with relative positioning
-            \node[defense,fill=blue!30] (nx) at (0,0) {XD/NX};
-            \node[below] at (nx.south) {\tiny 2004};
-            
-            \node[defense,fill=green!30,right=0.8cm of nx] (aslr) {ASLR};
-            \node[below] at (aslr.south) {\tiny 2005};
-            
-            \node[defense,fill=yellow!30,right=1.5cm of aslr] (smep) {SMEP};
-            \node[below] at (smep.south) {\tiny 2012};
-            
-            \node[defense,fill=orange!30,right=0.5cm of smep] (smap) {SMAP};
-            \node[below] at (smap.south) {\tiny 2014};
-            
-            \node[defense,fill=red!30,right=1.5cm of smap] (cet) {CET};
-            \node[below] at (cet.south) {\tiny 2020};
-            
+            \node[defense, fill=blue!30] (nx) at (0,0) {XD/NX};
+            \node[timeline label, below=2pt of nx] {2004};
+
+            \node[defense, fill=green!30, right=0.8cm of nx] (aslr) {ASLR};
+            \node[timeline label, below=2pt of aslr] {2005};
+
+            \node[defense, fill=yellow!30, right=1.5cm of aslr] (smep) {SMEP};
+            \node[timeline label, below=2pt of smep] {2012};
+
+            \node[defense, fill=orange!30, right=0.5cm of smep] (smap) {SMAP};
+            \node[timeline label, below=2pt of smap] {2014};
+
+            \node[defense, fill=red!30, right=1.5cm of smap] (cet) {CET};
+            \node[timeline label, below=2pt of cet] {2020};
+
             % Attack techniques above defenses
-            \node[attack,above=1.5cm of nx] (inject) {Code Injection};
+            \node[attack, above=1.5cm of nx] (inject) {Code Injection};
             \draw[->,thick,red] (inject) -- (nx);
             \draw[thick,red] ([shift={(-0.2,-0.2)}]nx.center) -- ([shift={(0.2,0.2)}]nx.center);
-            
-            \node[attack,above=1.5cm of aslr] (rop) {Basic ROP};
+
+            \node[attack, above=1.5cm of aslr] (rop) {Basic ROP};
             \draw[->,thick,orange] (rop) -- (aslr);
-            
-            \node[attack,above=1.5cm of smep] (ret2user) {ret2user};
+
+            \node[attack, above=1.5cm of smep] (ret2user) {ret2user};
             \draw[->,thick,red] (ret2user) -- (smep);
             \draw[thick,red] ([shift={(-0.2,-0.2)}]smep.center) -- ([shift={(0.2,0.2)}]smep.center);
-            
-            \node[attack,above=1.5cm of smap] (pivot) {Stack Pivot};
+
+            \node[attack, above=1.5cm of smap] (pivot) {Stack Pivot};
             \draw[->,thick,red] (pivot) -- (smap);
             \draw[thick,red] ([shift={(-0.2,-0.2)}]smap.center) -- ([shift={(0.2,0.2)}]smap.center);
-            
-            \node[attack,above=1.5cm of cet] (advanced) {Advanced ROP};
+
+            \node[attack, above=1.5cm of cet] (advanced) {Advanced ROP};
             \draw[->,thick,red] (advanced) -- (cet);
             \draw[thick,red] ([shift={(-0.2,-0.2)}]cet.center) -- ([shift={(0.2,0.2)}]cet.center);
         \end{tikzpicture}
@@ -958,8 +958,8 @@ RET        ; Return if valid
                 \draw[->,thick,green!70!black] (C) -- (D);
                 
                 % Invalid edge (red, dashed)
-                \draw[->,thick,red,dashed] (B) to[bend left=60] (C);
-                \node[red] at (2.5,3) {\small Invalid};
+                \draw[->,thick,red,dashed] (B) to[bend right=20] (C);
+                \node[red] at (2,1.5) {\small Invalid};
                 
                 \node at (2,-1) {\textbf{CFG Enforcement}};
             \end{tikzpicture}
@@ -2429,34 +2429,31 @@ On Read:
 
 \begin{frame}{Hardware Security Evolution}
     \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-            % Timeline
-            \draw[thick,->] (0,0) -- (12,0) node[right] {Time};
-            
-            % Security features
-            \node[above] at (1,0.5) {NX Bit};
-            \draw[thick] (1,0) -- (1,0.2);
-            \node[below] at (1,-0.3) {\tiny 2000s};
-            
-            \node[above] at (3,0.5) {ASLR};
-            \draw[thick] (3,0) -- (3,0.2);
-            \node[below] at (3,-0.3) {\tiny 2005};
-            
-            \node[above] at (5,0.5) {SGX};
-            \draw[thick] (5,0) -- (5,0.2);
-            \node[below] at (5,-0.3) {\tiny 2015};
-            
-            \node[above] at (7,0.5) {CET};
-            \draw[thick] (7,0) -- (7,0.2);
-            \node[below] at (7,-0.3) {\tiny 2020};
-            
-            \node[above] at (9,0.5) {TDX};
-            \draw[thick] (9,0) -- (9,0.2);
-            \node[below] at (9,-0.3) {\tiny 2021};
-            
-            \node[above] at (11,0.5) {MTE/PAC};
-            \draw[thick] (11,0) -- (11,0.2);
-            \node[below] at (11,-0.3) {\tiny 2022};
+        \begin{tikzpicture}[scale=0.8,
+            timeline label/.style={font=\tiny, text depth=0.25ex},
+            feature/.style={draw, fill=blue!20, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex}]
+
+            % Timeline arrow
+            \draw[thick,->] (-0.5,-1) -- (12.5,-1) node[right] {Time};
+
+            % Security features with consistent style
+            \node[feature] (nx) at (1,0) {NX Bit};
+            \node[timeline label, below=2pt of nx] {2000s};
+
+            \node[feature, right=0.6cm of nx] (aslr) {ASLR};
+            \node[timeline label, below=2pt of aslr] {2005};
+
+            \node[feature, right=0.6cm of aslr] (sgx) {SGX};
+            \node[timeline label, below=2pt of sgx] {2015};
+
+            \node[feature, right=0.6cm of sgx] (cet) {CET};
+            \node[timeline label, below=2pt of cet] {2020};
+
+            \node[feature, right=0.6cm of cet] (tdx) {TDX};
+            \node[timeline label, below=2pt of tdx] {2021};
+
+            \node[feature, right=0.6cm of tdx] (mte) {MTE/PAC};
+            \node[timeline label, below=2pt of mte] {2022};
         \end{tikzpicture}
     \end{center}
     
