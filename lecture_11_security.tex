@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, backgrounds, fit}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 \title{Hardware Security Mechanisms}
@@ -170,31 +170,39 @@
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % Memory layout
-                \draw[fill=blue!30] (0,0) rectangle (4,1.5);
-                \node at (2,0.75) {Code Section};
-                \node at (5,0.75) {X=1, W=0};
-                
-                \draw[fill=green!30] (0,2) rectangle (4,3.5);
-                \node at (2,2.75) {Data Section};
-                \node at (5,2.75) {X=0, W=1};
-                
-                \draw[fill=yellow!30] (0,4) rectangle (4,5.5);
-                \node at (2,4.75) {Stack};
-                \node at (5,4.75) {X=0, W=1};
-                
-                \draw[fill=orange!30] (0,6) rectangle (4,7.5);
-                \node at (2,6.75) {Heap};
-                \node at (5,6.75) {X=0, W=1};
-                
-                % Attack blocked
-                \draw[->,thick,red] (7,4.75) -- (4.2,4.75);
-                \node[red] at (8.5,4.75) {Shellcode};
-                \draw[red,thick] (6.5,4.25) -- (7.5,5.25);
-                \draw[red,thick] (6.5,5.25) -- (7.5,4.25);
+            \begin{tikzpicture}[font=\footnotesize,
+                mem section/.style={draw, minimum width=2.5cm, minimum height=0.7cm},
+                perm/.style={font=\scriptsize, anchor=west}]
+
+                % Memory layout using matrix
+                \matrix[matrix of nodes,
+                    nodes={mem section},
+                    row sep=0.1cm] (mem) {
+                    |[fill=orange!30]| Heap \\
+                    |[fill=yellow!30]| Stack \\
+                    |[fill=green!30]| Data Section \\
+                    |[fill=blue!30]| Code Section \\
+                };
+
+                % Permissions - relative to each row
+                \node[perm, right=0.2cm of mem-1-1] {W=1, \textcolor{red}{X=0}};
+                \node[perm, right=0.2cm of mem-2-1] {W=1, \textcolor{red}{X=0}};
+                \node[perm, right=0.2cm of mem-3-1] {W=1, \textcolor{red}{X=0}};
+                \node[perm, right=0.2cm of mem-4-1] {W=0, \textcolor{green!50!black}{X=1}};
+
+                % CPU node
+                \node[draw, fill=gray!20, minimum width=1.2cm, minimum height=0.6cm,
+                      right=2.5cm of mem-3-1] (cpu) {CPU};
+
+                % Execution arrow - only from Code Section (with checkmark)
+                \draw[->, thick, green!50!black] (mem-4-1.east) -- (cpu.south west)
+                    node[pos=0.85, above, font=\small, sloped] {\checkmark};
+
+                % Blocked execution from Stack
+                \draw[->, thick, red, dashed] (mem-2-1.east) -- (cpu.north west)
+                    node[pos=0.85, above, font=\small\bfseries, sloped] {X};
             \end{tikzpicture}
-            
+
             \vspace{0.3cm}
             \textbf{What XD Prevents:}
             \begin{itemize}
@@ -256,57 +264,53 @@ Stack Layout:
 
 \begin{frame}{ROP Attack Visualization}
     \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-            % Code section
-            \draw[fill=blue!20] (0,0) rectangle (10,3);
-            \node at (5,2.7) {\textbf{Existing Code (libc, program, etc.)}};
-            
-            % Gadgets
-            \draw[fill=yellow!40] (0.5,0.5) rectangle (2,1.5);
-            \node at (1.25,1) {\small Gadget 1};
-            \node at (1.25,0.7) {\tiny pop rdi};
-            
-            \draw[fill=yellow!40] (3,1) rectangle (4.5,2);
-            \node at (3.75,1.5) {\small Gadget 2};
-            \node at (3.75,1.2) {\tiny pop rsi};
-            
-            \draw[fill=yellow!40] (5.5,0.3) rectangle (7,1.3);
-            \node at (6.25,0.8) {\small Gadget 3};
-            \node at (6.25,0.5) {\tiny mov rax,59};
-            
-            \draw[fill=yellow!40] (8,1.2) rectangle (9.5,2.2);
-            \node at (8.75,1.7) {\small Gadget 4};
-            \node at (8.75,1.4) {\tiny syscall};
-            
-            % Stack
-            \draw[fill=green!20] (11,0) rectangle (13,3);
-            \node at (12,2.7) {\textbf{Stack}};
-            
-            % ROP chain on stack
-            \draw (11,2.3) -- (13,2.3);
-            \node at (12,2.5) {\tiny addr\_g1};
-            \draw (11,1.9) -- (13,1.9);
-            \node at (12,2.1) {\tiny "/bin/sh"};
-            \draw (11,1.5) -- (13,1.5);
-            \node at (12,1.7) {\tiny addr\_g2};
-            \draw (11,1.1) -- (13,1.1);
-            \node at (12,1.3) {\tiny addr\_g3};
-            \draw (11,0.7) -- (13,0.7);
-            \node at (12,0.9) {\tiny addr\_g4};
-            
-            % Execution flow
-            \draw[->,thick,red] (12,2.5) to[out=180,in=90] (1.25,1.5);
-            \draw[->,thick,red] (1.25,0.5) to[out=-90,in=180] (12,1.7);
-            \draw[->,thick,red] (12,1.7) to[out=180,in=90] (3.75,2);
-            \draw[->,thick,red] (3.75,1) to[out=-90,in=180] (12,1.3);
-            \draw[->,thick,red] (12,1.3) to[out=180,in=90] (6.25,1.3);
-            \draw[->,thick,red] (6.25,0.3) to[out=-90,in=180] (12,0.9);
-            \draw[->,thick,red] (12,0.9) to[out=180,in=90] (8.75,2.2);
-            
-            \node[red] at (5,-0.5) {\textbf{Control Flow Hijacked via RET Chain}};
+        \begin{tikzpicture}[scale=0.8, font=\footnotesize,
+            gadget/.style={draw, fill=yellow!40, minimum width=2cm, minimum height=0.9cm, align=center},
+            stack cell/.style={draw, minimum width=1.8cm, minimum height=0.4cm, font=\scriptsize},
+            flow/.style={->, thick, red}]
+
+            % Code section background
+            \node[draw, fill=blue!20, minimum width=10cm, minimum height=3cm] (code) at (5,1.5) {};
+            \node[font=\footnotesize\bfseries, anchor=north] at (code.north) {Existing Code (libc, program, etc.)};
+
+            % Gadgets - positioned within code section
+            \node[gadget] (g1) at (1.2,1) {Gadget 1\\[-2pt]{\scriptsize pop rdi}};
+            \node[gadget] (g2) at (3.7,1.8) {Gadget 2\\[-2pt]{\scriptsize pop rsi}};
+            \node[gadget] (g3) at (6.2,0.8) {Gadget 3\\[-2pt]{\scriptsize mov rax,59}};
+            \node[gadget] (g4) at (8.7,1.5) {Gadget 4\\[-2pt]{\scriptsize syscall}};
+
+            % Stack using matrix
+            \matrix[matrix of nodes,
+                nodes={stack cell},
+                row sep=-\pgflinewidth,
+                right=1.5cm of code] (stack) {
+                |[fill=green!30]| addr\_g1 \\
+                |[fill=green!20]| "/bin/sh" \\
+                |[fill=green!30]| addr\_g2 \\
+                |[fill=green!30]| addr\_g3 \\
+                |[fill=green!30]| addr\_g4 \\
+            };
+            \node[font=\footnotesize\bfseries, above=0.2cm of stack] {Stack};
+
+            % Background for stack
+            \begin{scope}[on background layer]
+                \node[fill=green!10, fit=(stack), inner sep=4pt] {};
+            \end{scope}
+
+            % Execution flow arrows
+            \draw[flow] (stack-1-1.west) to[out=180,in=90] (g1.north);
+            \draw[flow] (g1.south) to[out=-90,in=180] (stack-2-1.west);
+            \draw[flow] (stack-3-1.west) to[out=180,in=90] (g2.north);
+            \draw[flow] (g2.south) to[out=-90,in=180] (stack-4-1.west);
+            \draw[flow] (stack-4-1.west) to[out=180,in=90] (g3.north);
+            \draw[flow] (g3.south) to[out=-90,in=180] (stack-5-1.west);
+            \draw[flow] (stack-5-1.west) to[out=180,in=90] (g4.north);
+
+            % Caption
+            \node[red, font=\footnotesize\bfseries, below=0.3cm of code] {Control Flow Hijacked via RET Chain};
         \end{tikzpicture}
     \end{center}
-    
+
     \begin{tcolorbox}[colback=red!10]
         \textbf{Key Insight:} ROP bypasses XD/NX by reusing existing executable code - no code injection needed!
     \end{tcolorbox}
@@ -453,41 +457,45 @@ vulnerable:
 
 \begin{frame}[fragile]{Stack Canary - Memory Layout}
     \begin{center}
-        \begin{tikzpicture}[scale=0.9]
-            % Stack frame
-            \draw[fill=gray!20] (0,0) rectangle (6,8);
-            \node at (3,7.5) {\textbf{Stack Frame}};
-            
-            % Stack contents
-            \draw[fill=blue!30] (0.5,6.5) rectangle (5.5,7.5);
-            \node at (3,7) {Local Variables};
-            
-            \draw[fill=green!30] (0.5,5) rectangle (5.5,6);
-            \node at (3,5.5) {Buffer[64]};
-            
-            \draw[fill=red!40,thick,draw=red] (0.5,4) rectangle (5.5,5);
-            \node at (3,4.5) {\textbf{CANARY}};
-            \node at (7,4.5) {\textcolor{red}{← Check this!}};
-            
-            \draw[fill=yellow!30] (0.5,3) rectangle (5.5,4);
-            \node at (3,3.5) {Saved RBP};
-            
-            \draw[fill=orange!30] (0.5,2) rectangle (5.5,3);
-            \node at (3,2.5) {Return Address};
-            
-            \draw[fill=gray!30] (0.5,1) rectangle (5.5,2);
-            \node at (3,1.5) {Function Args};
-            
-            % Attack arrow
-            \draw[->,ultra thick,red] (8,5.5) -- (6,5.5);
-            \node[red] at (9.5,5.5) {Overflow};
-            \draw[->,dashed,red] (8,4.8) -- (6,4.5);
-            \node[red] at (10,4.3) {Corrupts canary};
-            \draw[->,dashed,red] (8,2.8) -- (6,2.5);
-            \node[red] at (10,2.3) {Want to overwrite};
-            
-            % Detection
-            \node[draw,fill=green!20] at (3,0) {Canary mismatch → abort()};
+        \begin{tikzpicture}[font=\footnotesize,
+            stack cell/.style={draw, minimum width=3.5cm, minimum height=0.6cm},
+            annotation/.style={font=\scriptsize, red, anchor=west}]
+
+            % Stack frame title
+            \node[font=\footnotesize\bfseries] (title) {Stack Frame};
+
+            % Stack contents using matrix
+            \matrix[matrix of nodes,
+                nodes={stack cell},
+                row sep=-\pgflinewidth,
+                below=0.3cm of title] (stack) {
+                |[fill=blue!30]| Local Variables \\
+                |[fill=green!30]| Buffer[64] \\
+                |[fill=red!40, draw=red, thick]| \textbf{CANARY} \\
+                |[fill=yellow!30]| Saved RBP \\
+                |[fill=orange!30]| Return Address \\
+                |[fill=gray!30]| Function Args \\
+            };
+
+            % Background for stack frame
+            \begin{scope}[on background layer]
+                \node[fill=gray!20, fit=(title)(stack), inner sep=6pt] {};
+            \end{scope}
+
+            % Annotations
+            \node[annotation, right=0.3cm of stack-3-1] {← Check this!};
+
+            % Attack arrows
+            \draw[->, ultra thick, red] ([xshift=2.5cm]stack-2-1.east) -- (stack-2-1.east)
+                node[pos=0, anchor=west, font=\scriptsize] {Overflow};
+            \draw[->, dashed, red] ([xshift=2.5cm]stack-3-1.east) -- ([xshift=0.8cm]stack-3-1.east)
+                node[pos=0, anchor=west, font=\scriptsize] {Corrupts canary};
+            \draw[->, dashed, red] ([xshift=2.5cm]stack-5-1.east) -- ([xshift=0.8cm]stack-5-1.east)
+                node[pos=0, anchor=west, font=\scriptsize] {Target};
+
+            % Detection result
+            \node[draw, fill=green!20, font=\scriptsize, below=0.5cm of stack]
+                {Canary mismatch $\rightarrow$ abort()};
         \end{tikzpicture}
     \end{center}
 \end{frame}
@@ -1200,41 +1208,53 @@ sensitive_function:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.8]
-                % Regular Stack
-                \draw[fill=blue!20] (0,0) rectangle (3,6);
-                \node at (1.5,5.5) {\textbf{Regular Stack}};
-                
-                \draw[fill=gray!20] (0.2,4.5) rectangle (2.8,5.3);
-                \node at (1.5,4.9) {\small Local Vars};
-                
-                \draw[fill=yellow!30] (0.2,3.5) rectangle (2.8,4.3);
-                \node at (1.5,3.9) {\small Return Addr};
-                
-                \draw[fill=gray!20] (0.2,2.5) rectangle (2.8,3.3);
-                \node at (1.5,2.9) {\small Saved RBP};
-                
-                % Shadow Stack
-                \draw[fill=green!20,thick,draw=green] (5,0) rectangle (8,6);
-                \node at (6.5,5.5) {\textbf{Shadow Stack}};
-                
-                \draw[fill=green!40] (5.2,3.5) rectangle (7.8,4.3);
-                \node at (6.5,3.9) {\small Return Addr};
-                
-                % Protection
-                \node[draw,fill=red!20] at (6.5,2) {\small Write Protected};
-                
-                % Operations
-                \draw[<->,thick] (3.2,3.9) -- (4.8,3.9);
-                \node at (4,4.3) {\tiny Verify};
-                
-                % Attack blocked
-                \draw[->,thick,red] (-1,3.9) -- (-0.2,3.9);
-                \node[red,rotate=90] at (-1.5,3.9) {\tiny Overflow};
-                
-                \draw[red,ultra thick] (8.5,3.5) -- (9.5,4.5);
-                \draw[red,ultra thick] (8.5,4.5) -- (9.5,3.5);
-                \node[red] at (10.5,4) {\small No Access};
+            \begin{tikzpicture}[font=\footnotesize,
+                stack title/.style={font=\footnotesize\bfseries},
+                stack cell/.style={draw, minimum width=2.2cm, minimum height=0.6cm, anchor=north},
+                stack container/.style={draw, fill=#1, rounded corners=2pt},
+                stack container/.default=blue!20]
+
+                % Regular Stack using matrix
+                \matrix[matrix of nodes,
+                    nodes={stack cell},
+                    row sep=-\pgflinewidth,
+                    column sep=0pt] (regstack) {
+                    |[fill=gray!20]| Local Vars \\
+                    |[fill=yellow!30]| Return Addr \\
+                    |[fill=gray!20]| Saved RBP \\
+                };
+                \node[stack title, above=0.2cm of regstack] {Regular Stack};
+                \begin{scope}[on background layer]
+                    \node[stack container=blue!20, fit=(regstack), inner sep=4pt] {};
+                \end{scope}
+
+                % Shadow Stack using matrix
+                \matrix[matrix of nodes,
+                    nodes={stack cell},
+                    row sep=-\pgflinewidth,
+                    right=1.5cm of regstack] (shadowstack) {
+                    |[fill=green!40]| Return Addr \\
+                };
+                \node[stack title, above=0.2cm of shadowstack] {Shadow Stack};
+                \begin{scope}[on background layer]
+                    \node[stack container=green!20, draw=green!60!black, thick,
+                          fit=(shadowstack), inner sep=4pt] {};
+                \end{scope}
+
+                % Protection label
+                \node[draw, fill=red!20, font=\scriptsize, below=0.5cm of shadowstack] (prot) {Write Protected};
+
+                % Verify arrow between return addresses
+                \draw[<->, thick] (regstack-2-1.east) -- (shadowstack-1-1.west)
+                    node[midway, above, font=\scriptsize] {Verify};
+
+                % Attack arrow
+                \draw[->, thick, red] ([xshift=-1cm]regstack-2-1.west) -- (regstack-2-1.west)
+                    node[midway, above, font=\scriptsize] {Overflow};
+
+                % X mark for blocked access
+                \node[inner sep=0pt, right=0.3cm of shadowstack-1-1.east]
+                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
             \end{tikzpicture}
             
             \vspace{0.3cm}
@@ -1856,7 +1876,7 @@ func:
             \begin{tikzpicture}[scale=0.7, font=\small,
                 threat/.style={draw, fill=red!30, minimum width=3cm, minimum height=0.6cm, font=\small\bfseries},
                 vm/.style={draw, line width=1pt, minimum width=1.5cm, minimum height=1.5cm, align=center},
-                cpu/.style={draw, fill=yellow!30, minimum width=6cm, minimum height=0.8cm, font=\small\bfseries},
+                cpu/.style={draw, fill=yellow!30, minimum width=4.8cm, minimum height=0.8cm, font=\small\bfseries},
                 barrier/.style={ultra thick, blue}]
 
                 % CPU enforcement (top)
@@ -1873,8 +1893,9 @@ func:
                     node[right, font=\small] {TDX};
 
                 % Threat Actor (bottom)
-                \node[threat, below=2cm of cpu] (provider) {Cloud Provider};
-                \node[font=\tiny, below=1pt of provider] {(Untrusted)};
+                \node[inner sep=0pt, below=2cm of cpu] (provider)
+                    {\includegraphics[width=1.5cm]{figures/noun-cloud-5095064.png}};
+                \node[font=\tiny, below=1pt of provider] {Cloud Provider (Untrusted)};
 
                 % Attack attempts with X marks
                 \draw[->, thick, red] (provider.north) -- ++(0,0.8)
