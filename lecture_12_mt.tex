@@ -241,11 +241,12 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
     latch t1/.style={fill=yellow!40},
     latchmatrix/.style={matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
                         nodes={latchcell}},
-    rscell/.style={draw, minimum width=0.5cm, minimum height=0.14cm, inner sep=0pt},
-    rs t0/.style={rscell, fill=red!25},
-    rs t1/.style={rscell, fill=yellow!40},
+    % RS: 8 cells @ 0.275cm each = 2.2cm total height
+    rscell/.style={draw, minimum width=0.5cm, minimum height=0.22cm, inner sep=0pt},
+    rs t0/.style={fill=red!25},
+    rs t1/.style={fill=yellow!40},
     rsmatrix/.style={matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth, column sep=0pt,
-                     nodes={rscell, minimum width=0.5cm, minimum height=0.14cm}},
+                     nodes={rscell}},
     bottombox/.style={draw, thick, minimum width=1.1cm, minimum height=0.9cm, font=\scriptsize, align=center},
     node distance=0.15cm
 ]
@@ -287,7 +288,7 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
         |[rs t0]| ~ \\
         |[rs t1]| ~ \\
     };
-    \node[font=\tiny, above=0.01cm of rs] {RS};
+    \node[font=\tiny, above=-2mm of rs] {RS};
 
     % Sched/EXE stage
     \node[pipestage, right=0.3cm of rs, fill=yellow!40] (sched) {Sched\\EXE};
@@ -316,11 +317,11 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
     \node[bottombox, fill=red!25, below=0.6cm of fetch.south west, anchor=north] (apic0) {APIC};
     \node[bottombox, fill=yellow!40, right=0.1cm of apic0] (apic1) {APIC};
 
-    % Bottom row - Register boxes with legend
-    \node[font=\scriptsize, below=0.6cm of sched.south, anchor=north east, xshift=-0.3cm] (legendlabel) {Legend:};
-    \node[bottombox, fill=red!25, right=0.15cm of legendlabel.east, anchor=west] (archstate0) {Arch\\State};
-    \node[bottombox, fill=blue!15, right=0.1cm of archstate0] (physreg) {Physical\\Registers};
+    % Bottom row - Register boxes with legend (positioned relative to ROB)
+    \node[bottombox, fill=blue!15, below=0.2cm of rob.south, anchor=north] (physreg) {Physical\\Registers};
+    \node[bottombox, fill=red!25, left=0.1cm of physreg] (archstate0) {Arch\\State};
     \node[bottombox, fill=yellow!40, right=0.1cm of physreg] (archstate1) {Arch\\State};
+    \node[font=\scriptsize, left=0.15cm of archstate0.west, anchor=east] (legendlabel) {Legend:};
 
     % Dashed border around legend
     \node[draw, dashed, thick, rounded corners, inner sep=0.15cm, fit=(legendlabel)(archstate0)(physreg)(archstate1)] {};
