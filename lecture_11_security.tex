@@ -679,48 +679,48 @@ some_ioctl:
 \begin{frame}{Modern ROP Mitigations Summary}
     \begin{center}
         \begin{tikzpicture}[scale=0.8,
-            timeline label/.style={font=\tiny, text depth=0.25ex},
-            defense/.style={draw, minimum width=1.5cm, minimum height=0.6cm, text depth=0.25ex},
-            attack/.style={draw, fill=gray!20, minimum width=1.8cm, text depth=0.25ex}]
+            year/.style={font=\scriptsize, text depth=0.25ex},
+            defense/.style={draw, minimum width=1.4cm, minimum height=0.5cm, font=\footnotesize, text depth=0.25ex},
+            attack/.style={draw, fill=gray!20, minimum width=1.4cm, minimum height=0.5cm, font=\footnotesize, text depth=0.25ex},
+            mitigates/.style={->, thick},
+            crossout/.style={thick, red}]
 
-            % Timeline arrow
-            \draw[thick,->] (-0.5,-1) -- (12.5,-1) node[right] {Time};
+            % Timeline arrow - extended to avoid overlap with 2020
+            \draw[thick,->] (-1.5,0) -- (13,0) node[right] {Time};
 
-            % Defense nodes with relative positioning
-            \node[defense, fill=blue!30] (nx) at (0,0) {XD/NX};
-            \node[timeline label, below=2pt of nx] {2004};
+            % Year markers below the timeline
+            \node[year] (y2004) at (-1,-0.5) {2004};
+            \node[year] (y2005) at (2.5,-0.5) {2005};
+            \node[year] (y2012) at (5.5,-0.5) {2012};
+            \node[year] (y2014) at (8,-0.5) {2014};
+            \node[year] (y2020) at (11,-0.5) {2020};
 
-            \node[defense, fill=green!30, right=0.8cm of nx] (aslr) {ASLR};
-            \node[timeline label, below=2pt of aslr] {2005};
+            % Defense nodes above timeline, aligned with years
+            \node[defense, fill=blue!30, above=0.3cm of y2004] (nx) {XD/NX};
+            \node[defense, fill=green!30, above=0.3cm of y2005] (aslr) {ASLR};
+            \node[defense, fill=yellow!30, above=0.3cm of y2012] (smep) {SMEP};
+            \node[defense, fill=orange!30, above=0.3cm of y2014] (smap) {SMAP};
+            \node[defense, fill=red!30, above=0.3cm of y2020] (cet) {CET};
 
-            \node[defense, fill=yellow!30, right=1.5cm of aslr] (smep) {SMEP};
-            \node[timeline label, below=2pt of smep] {2012};
+            % Attack nodes above defenses - close to the mechanism that stops them
+            \node[attack, above=0.4cm of nx] (inject) {Code Injection};
+            \draw[mitigates] (nx) -- (inject);
+            \draw[crossout] ([shift={(-0.4,-0.15)}]inject.center) -- ([shift={(0.4,0.15)}]inject.center);
 
-            \node[defense, fill=orange!30, right=0.5cm of smep] (smap) {SMAP};
-            \node[timeline label, below=2pt of smap] {2014};
+            \node[attack, above=0.4cm of aslr] (rop) {Basic ROP};
+            \draw[mitigates, orange] (aslr) -- (rop);
 
-            \node[defense, fill=red!30, right=1.5cm of smap] (cet) {CET};
-            \node[timeline label, below=2pt of cet] {2020};
+            \node[attack, above=0.4cm of smep] (ret2user) {ret2user};
+            \draw[mitigates] (smep) -- (ret2user);
+            \draw[crossout] ([shift={(-0.4,-0.15)}]ret2user.center) -- ([shift={(0.4,0.15)}]ret2user.center);
 
-            % Attack techniques above defenses
-            \node[attack, above=1.5cm of nx] (inject) {Code Injection};
-            \draw[->,thick,red] (inject) -- (nx);
-            \draw[thick,red] ([shift={(-0.2,-0.2)}]nx.center) -- ([shift={(0.2,0.2)}]nx.center);
+            \node[attack, above=0.4cm of smap] (pivot) {Stack Pivot};
+            \draw[mitigates] (smap) -- (pivot);
+            \draw[crossout] ([shift={(-0.4,-0.15)}]pivot.center) -- ([shift={(0.4,0.15)}]pivot.center);
 
-            \node[attack, above=1.5cm of aslr] (rop) {Basic ROP};
-            \draw[->,thick,orange] (rop) -- (aslr);
-
-            \node[attack, above=1.5cm of smep] (ret2user) {ret2user};
-            \draw[->,thick,red] (ret2user) -- (smep);
-            \draw[thick,red] ([shift={(-0.2,-0.2)}]smep.center) -- ([shift={(0.2,0.2)}]smep.center);
-
-            \node[attack, above=1.5cm of smap] (pivot) {Stack Pivot};
-            \draw[->,thick,red] (pivot) -- (smap);
-            \draw[thick,red] ([shift={(-0.2,-0.2)}]smap.center) -- ([shift={(0.2,0.2)}]smap.center);
-
-            \node[attack, above=1.5cm of cet] (advanced) {Advanced ROP};
-            \draw[->,thick,red] (advanced) -- (cet);
-            \draw[thick,red] ([shift={(-0.2,-0.2)}]cet.center) -- ([shift={(0.2,0.2)}]cet.center);
+            \node[attack, above=0.4cm of cet] (advanced) {Advanced ROP};
+            \draw[mitigates] (cet) -- (advanced);
+            \draw[crossout] ([shift={(-0.4,-0.15)}]advanced.center) -- ([shift={(0.4,0.15)}]advanced.center);
         \end{tikzpicture}
     \end{center}
     
@@ -1113,32 +1113,20 @@ plt_stub:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=blue!10]
-                \small
-                \textbf{C Code:}
-                \begin{verbatim}
-void sensitive_function() {
-    // Function body
-    do_something();
-    return;
-}
-                \end{verbatim}
-            \end{tcolorbox}
-            
+
+            \vspace{-5mm}
             \begin{tcolorbox}[colback=green!10]
-                \small
-                \textbf{ARM64 Assembly with PAC:}
+                \footnotesize
+            \vspace{-2mm}
                 \begin{verbatim}
 sensitive_function:
-    ; Sign return address
-    paciasp
+    paciasp ; Sign return address
     
     ; Save frame
     stp x29, x30, [sp, #-16]!
     mov x29, sp
     
-    ; Function body
-    bl do_something
+    ; Function body ...
     
     ; Restore frame
     ldp x29, x30, [sp], #16
@@ -1147,8 +1135,8 @@ sensitive_function:
     autiasp
     
     ; Return (crashes if auth fails)
-    ret
-                \end{verbatim}
+    ret\end{verbatim}
+    \vspace{-6mm}
             \end{tcolorbox}
             
             \begin{tcolorbox}[colback=yellow!10]
