@@ -1480,42 +1480,35 @@ func:
 
 \begin{frame}{ARM TrustZone - Trusted Execution Environment (TEE)}
     \begin{center}
-        \begin{tikzpicture}[scale=0.9,
-            world/.style={rounded corners, line width=2pt, minimum width=3.5cm, minimum height=4cm},
+        \begin{tikzpicture}[font=\footnotesize,
+            world/.style={rounded corners, line width=2pt, minimum width=4cm, minimum height=3.8cm},
             secure world/.style={world, fill=green!20, draw=green!70!black},
             normal world/.style={world, fill=red!10, draw=red!70!black, dashed},
-            level/.style={draw, minimum width=2.5cm, minimum height=0.7cm, font=\small},
+            level/.style={draw, text width=3.2cm, minimum height=0.55cm, align=center},
             secure level/.style={level, draw=green!70!black, line width=1pt},
             normal level/.style={level}]
 
             % Secure World container
-            \node[secure world] (secure) at (-2.25,2) {};
-            \node[anchor=north, font=\bfseries] at (secure.north) {Secure World (TEE)};
+            \node[secure world] (secure) at (-3.2,2) {};
+            \node[anchor=north, font=\footnotesize\bfseries] at (secure.north) {Secure World (TEE)};
 
-            % Secure levels - relative to container
-            \node[secure level, fill=blue!40] (sel3) at (secure.center |- 0,3.15) {S-EL3: Monitor};
-            \node[level, fill=green!50, below=0.2cm of sel3] (sel2) {S-EL2: S-Hypervisor};
-            \node[level, fill=yellow!40, below=0.2cm of sel2] (sel1) {S-EL1: Trusted OS};
-            \node[secure level, fill=red!30, below=0.2cm of sel1] (sel0) {S-EL0: Trusted Apps};
+            % Secure levels
+            \node[secure level, fill=blue!40] (sel3) at ([yshift=-0.5cm]secure.north) {S-EL3: Monitor};
+            \node[level, fill=green!50, below=0.15cm of sel3] (sel2) {S-EL2: S-Hypervisor};
+            \node[level, fill=yellow!40, below=0.15cm of sel2] (sel1) {S-EL1: Trusted OS};
+            \node[secure level, fill=red!30, below=0.15cm of sel1] (sel0) {S-EL0: Trusted Apps};
 
             % Normal World container
-            \node[normal world] (normal) at (2.25,2) {};
-            \node[anchor=north, font=\bfseries] at (normal.north) {Normal World (REE)};
+            \node[normal world] (normal) at (3.2,2) {};
+            \node[anchor=north, font=\footnotesize\bfseries] at (normal.north) {Normal World (REE)};
 
-            % Normal levels - relative to container
+            % Normal levels - aligned with secure levels
             \node[normal level, fill=green!30] (el2) at (normal.center |- sel2) {EL2: Hypervisor};
-            \node[normal level, fill=yellow!40, below=0.2cm of el2] (el1) {EL1: Rich OS};
-            \node[normal level, fill=red!50, below=0.2cm of el1] (el0) {EL0: Applications};
+            \node[normal level, fill=yellow!40, below=0.15cm of el2] (el1) {EL1: Rich OS};
+            \node[normal level, fill=red!50, below=0.15cm of el1] (el0) {EL0: Applications};
 
             % SMC transition
-            \draw[<->, thick, blue] (secure.east) -- (normal.west) node[midway, above, font=\small] {SMC};
-
-            % Trust direction arrow
-            \draw[->, ultra thick, green!60!black] ([yshift=-0.3cm]secure.south) -- ([yshift=-0.3cm]normal.south);
-            \node[font=\small\bfseries] at (0,-0.7) {More Trusted $\rightarrow$ Less Trusted};
-
-            % Legend
-            \node[font=\tiny] at (0,-1.3) {Solid border = Secure | Dashed border = Normal};
+            \draw[<->, thick, blue] (secure.east) -- (normal.west) node[midway, above] {SMC};
         \end{tikzpicture}
     \end{center}
 
@@ -2493,15 +2486,6 @@ On Read:
         \centering
         \textbf{Future:} Homomorphic encryption, quantum-resistant crypto, AI-driven security
     \end{tcolorbox}
-\end{frame}
-
-\begin{frame}
-    \begin{center}
-    {\Huge Questions?}
-    
-    \vspace{1cm}
-    {\Large Thank You!}
-    \end{center}
 \end{frame}
 
 \end{document}
