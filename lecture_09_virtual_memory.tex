@@ -565,34 +565,38 @@
     decision/.style={diamond, draw, fill=blue!10, text width=1cm, align=center, inner sep=1pt, minimum height=0.3cm, aspect=3, font=\tiny},
     process/.style={rectangle, draw, fill=green!10, text width=1.5cm, align=center, minimum height=0.5cm, inner sep=2pt, font=\tiny},
     data/.style={ellipse, draw, fill=yellow!10, text width=1cm, align=center, minimum height=0.4cm, inner sep=2pt, font=\tiny},
+    l1hit/.style={decision, fill=yellow!40},
+    l2hit/.style={decision, fill=orange!40},
+    l3hit/.style={decision, fill=red!40},
+    accessmem/.style={process, fill=red!60},
     arrow/.style={->, >=stealth, thick},
     every node/.style={font=\tiny}
 ]
 
 % Top section - TLB lookup
-\node[data] (vpn) {Virtual Page Number};
-\node[decision, below=of vpn] (tlb) {TLB hit};
-\node[decision, below=of tlb] (stlb) {STLB hit};
+\node[data] (vpn) {\textbf{Virtual} Page Number};
+\node[l1hit, below=of vpn] (tlb) {TLB hit};
+\node[l2hit, below=of tlb] (stlb) {STLB hit};
 
 % Translation path
 \node[process, left=1cm of vpn, text width=3.5cm, minimum height=0.8cm] (pmh) {PMH injects a load to physical address PTBR+VPN$\times$PTE\_size to get the missing PTE};
 %\node[process, below=of pmh] (trans) {Get the Translation};
-\node[decision, below=of pmh] (l1) {L1\$ hit};
-\node[decision, below=of l1] (l2) {L2\$ hit};
-\node[decision, below=of l2] (l3) {L3\$ hit};
-\node[process, below=of l3] (mem1) {Access Mem};
+\node[l1hit, below=of pmh] (l1) {L1\$ hit};
+\node[l2hit, below=of l1] (l2) {L2\$ hit};
+\node[l3hit, below=of l2] (l3) {L3\$ hit};
+\node[accessmem, below=of l3] (mem1) {Access Mem};
 
-\node[data] (pfn) at (mem1 -| stlb) {Physical Page Number};
+\node[data, fill=blue!20] (pfn) at (mem1 -| stlb) {\textbf{Physical} Page Number};
 
 
 % Data path
 \node[rectangle, draw, fill=blue!20, minimum width=0.8cm, minimum height=0.5cm, font=\tiny, right=2cm of vpn] (pfnbox) {PFN};
 \node[rectangle, draw, fill=orange!30, minimum width=0.8cm, minimum height=0.5cm, font=\tiny, right=0pt of pfnbox] (offsetbox) {offset};
 \draw[decorate, decoration={brace, mirror, amplitude=3pt}] (pfnbox.south west) -- (offsetbox.south east) coordinate[midway, below=4pt] (bracepoint);
-\node[decision, below=of bracepoint] (l1d) {L1\$ hit};
-\node[decision, below=of l1d] (l2d) {L2\$ hit};
-\node[decision, below=of l2d] (l3d) {L3\$ hit};
-\node[process, below=of l3d] (mem2) {Access Mem};
+\node[l1hit, below=of bracepoint] (l1d) {L1\$ hit};
+\node[l2hit, below=of l1d] (l2d) {L2\$ hit};
+\node[l3hit, below=of l2d] (l3d) {L3\$ hit};
+\node[accessmem, below=of l3d] (mem2) {Access Mem};
 \node[data, below=of mem2] (data) {Data};
 
 % Arrows
