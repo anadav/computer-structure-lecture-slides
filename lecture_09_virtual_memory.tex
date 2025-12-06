@@ -560,6 +560,7 @@
 \end{frame}
 
 \begin{frame}{Virtual Memory and Cache}
+\centering
 \begin{tikzpicture}[
     node distance=3mm,
     decision/.style={diamond, draw, fill=blue!10, text width=1cm, align=center, inner sep=1pt, minimum height=0.3cm, aspect=3, font=\tiny},
@@ -624,8 +625,20 @@
 \draw[arrow] (l3d.east) -- node[above] {Yes} ++(1,0) |- (data);
 \draw[arrow] (mem2.south) -- (data);
 
+% Rotated labels (defined first so they can be included in fit)
+\node[rotate=90, font=\large\bfseries, above left=3mm and 3mm of pmh] (translabel) {\tikz[baseline=(c.base)]{\node[circle, draw, inner sep=1pt, font=\normalsize\bfseries] (c) {1};} Get the Translation};
+\coordinate (dataright) at ([xshift=18mm]data.east);
+\node[rotate=-90, font=\large\bfseries, anchor=south] at (dataright |- translabel) (datalabel) {\tikz[baseline=(c.base)]{\node[circle, draw, inner sep=1pt, font=\normalsize\bfseries] (c) {2};} Get the Data};
+
+% Background for sections (including labels)
+\begin{scope}[on background layer]
+\node[fit=(pmh)(vpn)(tlb)(stlb)(l1)(l2)(l3)(mem1)(pfn)(translabel), fill=brown!10, rounded corners, inner sep=4pt] (transbg) {};
+\node[fit=(pfnbox)(offsetbox)(l1d)(l2d)(l3d)(mem2)(data)(datalabel), fill=green!10, rounded corners, inner sep=4pt] (databg) {};
+\end{scope}
+
 \end{tikzpicture}
 
+\vspace{-2mm}
 \footnotesize
 \begin{itemize}
 \item Page table entries are cached in L1 D\$, L2\$ and L3\$ as data
