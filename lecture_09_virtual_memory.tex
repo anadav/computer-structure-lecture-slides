@@ -278,7 +278,7 @@
     callout/.style={font=\small},
 ]
     % Virtual Address title
-    \node[addrlabel, blue!70!black] at (4, 3.8) {Virtual Address};
+    \node[addrlabel, blue!70!black] at (4, 3.8) (vatitle) {Virtual Address};
 
     % Virtual Address bar
     \node[vpnblock, minimum width=5.5cm] (vpn) at (2.25, 2.8) {Virtual Page Number};
@@ -286,8 +286,8 @@
 
     % Bit numbers for virtual address
     \node[bitnumber, anchor=south west] at (vpn.north west) {47};
-    \node[bitnumber, anchor=south west] at (vpn.north east) {12};
-    \node[bitnumber, anchor=south east] at (voffset.north west) {11};
+    \node[bitnumber, anchor=south east] at (vpn.north east) {12};
+    \node[bitnumber, anchor=south west] at (voffset.north west) {11};
     \node[bitnumber, anchor=south east] at (voffset.north east) {0};
 
     % Page Table using matrix of nodes
@@ -343,20 +343,20 @@
     };
     \draw[arrowstyle] (selAC.east) -- ++(0.2, 0) |- (actext.west);
 
-    % Arrow from PTE physical page to physical address
-    \draw[arrowstyle, line width=1.2pt] (selPPN.south) -- ++(0, -1.0);
+    % Physical Address bar
+    \node[offsetblock, minimum width=2.2cm] (poffset) at ([yshift=-1cm]voffset |- pt.south) {Page offset};
+    \node[ppnblock, minimum width=4.0cm, anchor=east] (ppn) at (poffset.west) {Physical Page Number};
 
     % Physical Address title
-    \node[addrlabel, green!50!black] at (4, -2.7) {Physical Address};
+    \node[addrlabel, green!50!black, anchor=north] at (vatitle |- ppn.south) {Physical Address};
 
-    % Physical Address bar
-    \node[ppnblock, minimum width=4.0cm] (ppn) at (2.5, -2.0) {Physical Page Number};
-    \node[offsetblock, minimum width=2.2cm, anchor=west] (poffset) at (ppn.east) {Page offset};
+    % Arrow from PTE physical page to physical address
+    \draw[arrowstyle, line width=1.2pt] (selPPN.south) -- (selPPN |- ppn.north);
 
     % Bit numbers for physical address
     \node[bitnumber, anchor=south west] at (ppn.north west) {38};
-    \node[bitnumber, anchor=south west] at (ppn.north east) {12};
-    \node[bitnumber, anchor=south east] at (poffset.north west) {11};
+    \node[bitnumber, anchor=south east] at (ppn.north east) {12};
+    \node[bitnumber, anchor=south west] at (poffset.north west) {11};
     \node[bitnumber, anchor=south east] at (poffset.north east) {0};
 
     % Arrow showing page offset passes through
