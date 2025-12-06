@@ -259,7 +259,118 @@
     \end{itemize}
 \end{itemize}
 \begin{center}
-[Diagram: Page Table mapping Virtual Pages to Physical Pages and Disk with Present bits]
+\begin{tikzpicture}[
+    % Base style for all table cells
+    cell/.style={draw, minimum height=0.4cm, inner sep=0pt, font=\tiny, text depth=0pt, text height=0.25cm, anchor=center},
+    % Virtual pages
+    vpage/.style={cell, fill=blue!15, minimum width=1.8cm},
+    % Page table - present bit column
+    ptgreen/.style={cell, fill=green!30, minimum width=0.5cm},
+    ptred/.style={cell, fill=red!30, minimum width=0.5cm},
+    % Page table - PFN column
+    ptdatagreen/.style={cell, fill=green!30, minimum width=1cm},
+    ptdatared/.style={cell, fill=red!30, minimum width=1cm},
+    % Physical pages
+    ppage/.style={cell, fill=green!30, minimum width=1.5cm},
+    % Labels
+    mytitle/.style={font=\small\bfseries, text=gray!70!black},
+    colheader/.style={font=\tiny\bfseries, text=gray!70!black, minimum height=0.3cm},
+    arrow/.style={->, >=stealth, thick}
+]
+
+% Virtual Pages
+\matrix[matrix of nodes, row sep=-\pgflinewidth, ampersand replacement=\&,
+    label={[mytitle]above:Virtual Pages}] (vp) {
+    |[colheader]| VPN \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+    |[vpage]| \phantom{x} \\
+};
+
+% Page Table - positioned relative to vp
+\matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
+    right=1.5cm of vp, anchor=north west,
+    label={[mytitle]above:Page Table}] (pt) at (vp.north east) {
+    |[colheader]| P \& |[colheader]| PFN \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+};
+
+% Physical Pages - positioned relative to pt
+\matrix[matrix of nodes, row sep=-\pgflinewidth, ampersand replacement=\&,
+    right=2cm of pt, anchor=north west,
+    label={[mytitle]above:Physical Pages}] (pp) at (pt.north east) {
+    |[colheader]| PFN \\
+    |[ppage]| \phantom{x} \\
+    |[ppage]| \phantom{x} \\
+    |[ppage]| \phantom{x} \\
+    |[ppage]| \phantom{x} \\
+    |[ppage]| \phantom{x} \\
+    |[ppage]| \phantom{x} \\
+};
+
+% Page Table callout description - above Physical Pages
+\node[rectangle callout, draw, fill=yellow!20, callout absolute pointer={(pt.north east)},
+    font=\scriptsize, text width=2.5cm, align=center, above=0.5cm of pp.north] (ptdesc)
+    {Maps each virtual page to a physical page or to disk};
+
+% Disk - positioned relative to pp
+\node[mytitle, below=2cm of pp] (disklabel) {Disk};
+\begin{scope}[shift={(disklabel.south)}, yshift=-0.3cm]
+    \draw[thick, fill=blue!10] (0, 0) ellipse (1cm and 0.25cm);
+    \draw[thick, fill=blue!10] (-1, 0) -- (-1, -1.5);
+    \draw[thick, fill=blue!10] (1, 0) -- (1, -1.5);
+    \draw[thick, fill=blue!10] (0, -1.5) ellipse (1cm and 0.25cm);
+    % Disk slots
+    \fill[green!30] (-0.95, -0.3) rectangle (0.95, -0.6);
+    \draw (-0.95, -0.3) rectangle (0.95, -0.6);
+    \fill[red!30] (-0.95, -0.65) rectangle (0.95, -0.95);
+    \draw (-0.95, -0.65) rectangle (0.95, -0.95);
+    \fill[red!30] (-0.95, -1.0) rectangle (0.95, -1.3);
+    \draw (-0.95, -1.0) rectangle (0.95, -1.3);
+\end{scope}
+
+% Arrows from Virtual Pages to Page Table (both have headers, so row i+1 to row i+1)
+\foreach \i in {2,...,12} {
+    \draw[arrow] (vp-\i-1.east) -- (pt-\i-1.west);
+}
+
+% Arrows from Page Table to Physical Pages (all +1 for headers)
+\draw[arrow] (pt-2-2) -- (pp-2-1.west);
+\draw[arrow] (pt-3-2.east) -- (pp-4-1.west);
+\draw[arrow] (pt-4-2.east) -- (pp-3-1.west);
+\draw[arrow] (pt-6-2.east) -- (pp-6-1.west);
+\draw[arrow] (pt-7-2.east) -- (pp-5-1.west);
+\draw[arrow] (pt-9-2.east) -- (pp-7-1.west);
+\draw[arrow] (pt-10-2.east) -- (pp-6-1.west);
+\draw[arrow] (pt-12-2.east) -- (pp-7-1.west);
+
+% Arrows from Page Table to Disk (for present=0)
+\coordinate (diskslot1) at ($(disklabel.south) + (-0.95, -0.75)$);
+\coordinate (diskslot2) at ($(disklabel.south) + (-0.95, -1.1)$);
+\coordinate (diskslot3) at ($(disklabel.south) + (-0.95, -1.45)$);
+\draw[arrow] (pt-5-2.east) -- ++(0.5,0) |- (diskslot1);
+\draw[arrow] (pt-8-2.east) -- ++(0.7,0) |- (diskslot2);
+\draw[arrow] (pt-11-2.east) -- ++(0.9,0) |- (diskslot3);
+
+\end{tikzpicture}
 \end{center}
 \end{frame}
 
