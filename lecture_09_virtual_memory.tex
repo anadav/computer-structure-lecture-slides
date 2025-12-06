@@ -582,7 +582,7 @@
 \node[decision, below=of l2] (l3) {L3\$ hit};
 \node[process, below=of l3] (mem1) {Access Mem};
 
-\node[data] (pfn) at ([yshift=-2mm]mem1 -| stlb) {Physical Page number};
+\node[data] (pfn) at (mem1 -| stlb) {Physical Page Number};
 
 
 % Data path
@@ -596,7 +596,7 @@
 % Arrows
 \draw[arrow] (vpn) -- (tlb);
 \draw[arrow] (tlb) -- node[right] {No} (stlb);
-\draw[arrow] (tlb) -- ++(1,0) |- node[above] {Yes} (pfn);
+\draw[arrow] (tlb) -- ++(1,0) |- node[right] {Yes} (pfn);
 \draw[arrow] (stlb.west) -- ++(-0.5, 0) |- node[right] {No} (pmh.east);
 \draw[arrow] (stlb.south) -- node[right] {Yes} (pfn);
 %\draw[arrow] (pmh) -- (l1);
@@ -608,7 +608,7 @@
 \draw[arrow] (l3.east) -- node[above] {Yes} ++(1,0) |- (pfn);
 \draw[arrow] (mem1) -- (pfn);
 %\draw[arrow] (pmh) |- (getdata);
-%\draw[arrow] (pfn) |- node[near end, above] {PFN offset} (getdata);
+\draw[arrow] (pfn.south) -- ++(0, -0.3) -| ($(pfn)!0.5!(getdata)$) |- ([yshift=0.3]getdata);
 \draw[arrow] (getdata) -- (l1d);
 \draw[arrow] (l1d) -- node[right] {No} (l2d);
 \draw[arrow] (l2d) -- node[right] {No} (l3d);
