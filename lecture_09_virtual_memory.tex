@@ -9,7 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, patterns, fit, matrix, backgrounds, shapes.callouts}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, patterns, fit, matrix, backgrounds, shapes.callouts, decorations.pathreplacing}
 \usepackage{circuitikz}
 \usepackage{verbatim}  % For comment environment
 \usetheme{Madrid}
@@ -586,8 +586,10 @@
 
 
 % Data path
-\node[process, right=2cm of vpn] (getdata) {PFN + offset};
-\node[decision, below=of getdata] (l1d) {L1\$ hit};
+\node[rectangle, draw, fill=blue!20, minimum width=0.8cm, minimum height=0.5cm, font=\tiny, right=2cm of vpn] (pfnbox) {PFN};
+\node[rectangle, draw, fill=orange!30, minimum width=0.8cm, minimum height=0.5cm, font=\tiny, right=0pt of pfnbox] (offsetbox) {offset};
+\draw[decorate, decoration={brace, mirror, amplitude=3pt}] (pfnbox.south west) -- (offsetbox.south east) coordinate[midway, below=4pt] (bracepoint);
+\node[decision, below=of bracepoint] (l1d) {L1\$ hit};
 \node[decision, below=of l1d] (l2d) {L2\$ hit};
 \node[decision, below=of l2d] (l3d) {L3\$ hit};
 \node[process, below=of l3d] (mem2) {Access Mem};
@@ -608,8 +610,8 @@
 \draw[arrow] (l3.east) -- node[above] {Yes} ++(1,0) |- (pfn);
 \draw[arrow] (mem1) -- (pfn);
 %\draw[arrow] (pmh) |- (getdata);
-\draw[arrow] (pfn.south) -- ++(0, -0.3) -| ($(pfn)!0.5!(getdata)$) |- ([yshift=0.3]getdata);
-\draw[arrow] (getdata) -- (l1d);
+\draw[arrow] (pfn.south) -- ++(0, -0.3) -| ($(pfn)!0.5!(pfnbox)$) |- ([yshift=2mm]pfnbox.north) -- (pfnbox.north);
+\draw[arrow] (bracepoint) -- (l1d);
 \draw[arrow] (l1d) -- node[right] {No} (l2d);
 \draw[arrow] (l2d) -- node[right] {No} (l3d);
 \draw[arrow] (l3d) -- node[right] {No} (mem2);
@@ -623,7 +625,7 @@
 \footnotesize
 \begin{itemize}
 \item Page table entries are cached in L1 D\$, L2\$ and L3\$ as data
-\item If the injected load misses in a cache $\Rightarrow$ perform a cache line fill $\Rightarrow$ all PTEs in the missed cached line are brought into the cache
+\item Cache miss on injected load $\Rightarrow$ cache line fill brings all PTEs in that line into cache
 \item Only the specific missed PTE is filled into the STLB and TLB
 \end{itemize}
 \end{frame}
