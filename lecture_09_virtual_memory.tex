@@ -416,24 +416,25 @@
             row sep=-\pgflinewidth,
             nodes={draw, minimum height=0.35cm, font=\tiny, inner sep=1pt, anchor=center},
             column 1/.style={nodes={minimum width=0.4cm}},
-            column 2/.style={nodes={minimum width=0.4cm}},
-            column 3/.style={nodes={minimum width=0.45cm}},
-            column 4/.style={nodes={minimum width=1.6cm}},
+            column 2/.style={nodes={minimum width=0.5cm}},
+            column 3/.style={nodes={minimum width=0.5cm}},
+            column 4/.style={nodes={minimum width=0.4cm}},
+            column 5/.style={nodes={minimum width=1.4cm}},
             row 1/.style={nodes={draw=none, font=\tiny\bfseries, minimum height=0.3cm}},
-            ] (pt) at (2.2, 0.5) {
-        |[name=hdrP]| P \& D \& AC \& Phy.\ page \# \\
-        |[name=r1c1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=r1c4]| \phantom{0} \\
-        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
-        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
-        |[fill=green!30, name=selP]| 1 \& |[fill=yellow!30, name=selD]| 0 \& |[fill=gray!20, name=selAC]| \phantom{0} \& |[fill=orange!40, name=selPPN]| \phantom{0} \\
-        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
-        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
-        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
-        |[name=rlastc1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=rlastc4]| \phantom{0} \\
+            ] (pt) at (2.4, 0.5) {
+        |[name=hdrP]| P \& A/D \& AC \& C \& PPN \\
+        |[name=r1c1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=r1c5]| \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        |[fill=green!30, name=selP]| 1 \& |[fill=yellow!30, name=selAD]| \phantom{0} \& |[fill=gray!20, name=selAC]| \phantom{0} \& |[fill=cyan!20, name=selC]| \phantom{0} \& |[fill=orange!40, name=selPPN]| \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        |[name=rlastc1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=rlastc5]| \phantom{0} \\
     };
 
     % Outer box around page table (excluding header)
-    \node[draw, thick, inner sep=0pt, fit=(r1c1) (rlastc4)] (ptbox) {};
+    \node[draw, thick, inner sep=0pt, fit=(r1c1) (rlastc5)] (ptbox) {};
 
     % Page Table Base Register - positioned left of table north west
     \node[draw, fill=red!15, minimum width=1.1cm, minimum height=0.9cm, align=center, font=\tiny,
@@ -445,22 +446,15 @@
     % Arrow from VPN to page table (index into table)
     \draw[arrowstyle] (vpn.south) -- ++(0, -0.4) -| (hdrP.north);
 
-    % Present bit label
-    \node[callout, anchor=east] (presentlbl) at ([xshift=-0.5cm]selP.west) {Present bit};
-    \draw[arrowstyle] (presentlbl.east) -- (selP.west);
-
-    % Dirty bit label
-    \node[callout, anchor=east] (dirtylbl) at ([xshift=-0.5cm, yshift=1.5cm]selD.west) {Dirty bit};
-    \draw[arrowstyle] (dirtylbl.east) -- (selD.north west);
-
-    % Access Control explanation
-    \node[callout, anchor=west, align=left, text width=3.5cm] (actext) at ([xshift=0.8cm]selPPN.east) {%
-        \underline{Access Control}\\[-1pt]
-        {\footnotesize - Memory type}\\[-3pt]
-        {\footnotesize \hspace{0.3cm}(WB, WT, UC, WP \ldots)}\\[-3pt]
-        {\footnotesize - User / Supervisor}
-    };
-    \draw[arrowstyle] (selAC.east) -- ++(0.2, 0) |- (actext.west);
+    % Callouts for PTE fields
+    \node[rectangle callout, draw, fill=green!20, callout absolute pointer={(selP.south)},
+        font=\scriptsize, below=0.3cm of selP] {Present};
+    \node[rectangle callout, draw, fill=yellow!20, callout absolute pointer={(selAD.south)},
+        font=\scriptsize, below=0.6cm of selAD] {Accessed/Dirty};
+    \node[rectangle callout, draw, fill=gray!20, callout absolute pointer={(selAC.north)},
+        font=\scriptsize, above=0.8cm of selAC] {Access Control (R/W/X)};
+    \node[rectangle callout, draw, fill=cyan!20, callout absolute pointer={(selC.north)},
+        font=\scriptsize, above=0.4cm of selC] {Cache type};
 
     % Physical Address bar
     \node[offsetblock, minimum width=2.2cm] (poffset) at ([yshift=-1cm]voffset |- pt.south) {Page offset};
