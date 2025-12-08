@@ -420,7 +420,7 @@
             column 3/.style={nodes={minimum width=0.5cm}},
             column 4/.style={nodes={minimum width=0.4cm}},
             column 5/.style={nodes={minimum width=1.4cm}},
-            row 1/.style={nodes={draw=none, font=\tiny\bfseries, minimum height=0.3cm}},
+            row 1/.style={nodes={draw=none, font=\tiny\bfseries, minimum height=0.3cm, text depth=0pt, text height=0.2cm}},
             ] (pt) at (2.4, 0.5) {
         |[name=hdrP]| P \& A/D \& AC \& C \& PPN \\
         |[name=r1c1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=r1c5]| \phantom{0} \\
@@ -437,8 +437,8 @@
     \node[draw, thick, inner sep=0pt, fit=(r1c1) (rlastc5)] (ptbox) {};
 
     % Page Table Base Register - positioned left of table north west
-    \node[draw, fill=red!15, minimum width=1.1cm, minimum height=0.9cm, align=center, font=\tiny,
-          anchor=east] (ptbr) at ([xshift=-0.3cm]ptbox.north west) {Page\\table\\base\\reg};
+    \node[draw, fill=red!15, minimum height=0.4cm, font=\tiny,
+          anchor=east] (ptbr) at ([xshift=-0.3cm]ptbox.north west) {Page Table Base Reg};
 
     % Arrow from PTBR to page table
     \draw[arrowstyle] (ptbr.east) -- (ptbox.north west);
@@ -446,15 +446,15 @@
     % Arrow from VPN to page table (index into table)
     \draw[arrowstyle] (vpn.south) -- ++(0, -0.4) -| (hdrP.north);
 
-    % Callouts for PTE fields
-    \node[rectangle callout, draw, fill=green!20, callout absolute pointer={(selP.south)},
-        font=\scriptsize, below=0.3cm of selP] {Present};
-    \node[rectangle callout, draw, fill=yellow!20, callout absolute pointer={(selAD.south)},
-        font=\scriptsize, below=0.6cm of selAD] {Accessed/Dirty};
-    \node[rectangle callout, draw, fill=gray!20, callout absolute pointer={(selAC.north)},
-        font=\scriptsize, above=0.8cm of selAC] {Access Control (R/W/X)};
-    \node[rectangle callout, draw, fill=cyan!20, callout absolute pointer={(selC.north)},
-        font=\scriptsize, above=0.4cm of selC] {Cache type};
+    % Callouts for PTE fields - stacked on the left
+    \node[rectangle callout, draw, fill=green!20, callout absolute pointer={(selP.west)},
+        font=\scriptsize, anchor=east] (callP) at ([xshift=-5mm, yshift=1mm]selP.west) {Present};
+    \node[rectangle callout, draw, fill=yellow!20, callout absolute pointer={(selAD.center)},
+        font=\scriptsize, anchor=north east] (callAD) at ([yshift=-1mm]callP.south east) {Accessed/Dirty};
+    \node[rectangle callout, draw, fill=gray!20, callout absolute pointer={(selAC.center)},
+        font=\scriptsize, anchor=north east] (callAC) at ([yshift=-1mm]callAD.south east) {Access Control (R/W/X)};
+    \node[rectangle callout, draw, fill=cyan!20, callout absolute pointer={(selC.center)},
+        font=\scriptsize, anchor=north east] (callC) at ([yshift=-1mm]callAC.south east) {Cache type};
 
     % Physical Address bar
     \node[offsetblock, minimum width=2.2cm] (poffset) at ([yshift=-1cm]voffset |- pt.south) {Page offset};
