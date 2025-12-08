@@ -14,6 +14,21 @@
 \usepackage{verbatim}  % For comment environment
 \usetheme{Madrid}
 
+% Pseudocode listing style
+\lstdefinestyle{pseudocode}{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{blue!70!black},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red!70!black},
+    showstringspaces=false,
+    numbers=none,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    breaklines=true,
+    morekeywords={if, else, return, while, for, def, and, or, not},
+    morecomment=[l]{//},
+}
+
 % Define colors for registers
 \definecolor{r1color}{RGB}{255,0,0}
 \definecolor{r2color}{RGB}{0,128,0}
@@ -491,16 +506,62 @@
 
 \begin{frame}{Page Table Location}
 \begin{itemize}
-\item The page table of each process resides in main memory
-    \begin{itemize}
-    \item When a process is running, the start address of its page table is pointed by a special register in the CPU: the page table base register
-    \item The page table base register holds the physical address of entry 0
-    \end{itemize}
-\item The physical address of the PTE of virtual page \#VPN
-    \begin{itemize}
-    \item PTE address = Page table base reg + VPN $\times$ PTE\_size
-    \end{itemize}
+\item Page table of each process resides in main memory; \textit{page table base register} points to entry 0
+\item PTE address of virtual page \#VPN: \texttt{Page\_table\_base\_reg + VPN $\times$ PTE\_size}
 \end{itemize}
+\vspace{2mm}
+\begin{center}
+\begin{tikzpicture}[
+    cell/.style={draw, minimum height=0.4cm, font=\tiny, inner sep=1pt, anchor=center},
+    arrowstyle/.style={-{Stealth[length=2.5mm]}, thick},
+]
+    % Page Table using matrix of nodes
+    \matrix[matrix of nodes,
+            ampersand replacement=\&,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            nodes={cell},
+            column 1/.style={nodes={minimum width=0.4cm}},
+            column 2/.style={nodes={minimum width=0.5cm}},
+            column 3/.style={nodes={minimum width=0.5cm}},
+            column 4/.style={nodes={minimum width=0.5cm}},
+            column 5/.style={nodes={minimum width=0.4cm}},
+            column 6/.style={nodes={minimum width=1.0cm}},
+            row 1/.style={nodes={draw=none, font=\tiny\bfseries, minimum height=0.3cm, text depth=0pt, text height=0.2cm}},
+            ] (pt) at (0, 0) {
+        P \& A/D \& AC \& U/S \& C \& PPN \\
+        |[name=r1c1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=r1c6]| \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        |[fill=orange!40, name=selRow]| 1 \& |[fill=orange!40]| \phantom{0} \& |[fill=orange!40]| \phantom{0} \& |[fill=orange!40]| \phantom{0} \& |[fill=orange!40]| \phantom{0} \& |[fill=orange!40, name=selEnd]| \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \\
+        |[name=rlastc1]| \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& \phantom{0} \& |[name=rlastc6]| \phantom{0} \\
+    };
+
+    % Outer box around page table (excluding header)
+    \node[draw, thick, inner sep=0pt, fit=(r1c1) (rlastc6)] (ptbox) {};
+
+    % Page Table Base Register
+    \node[draw, fill=red!15, minimum height=0.4cm, font=\tiny,
+          anchor=east] (ptbr) at ([xshift=-1.5cm]ptbox.north west) {Page table base reg};
+
+    % Arrow from PTBR to page table top
+    \draw[arrowstyle] (ptbr.east) -- (ptbox.north west);
+
+    % Label for base reg + VPN * PTE_size on left
+    \node[font=\scriptsize, anchor=east, align=right, text=teal] (formula) at ([xshift=-3mm]selRow.west) {Page table base reg\\+ VPN $\times$ PTE\_size};
+    \draw[arrowstyle, teal] (formula.east) -- (selRow.west);
+
+    % VPN * PTE_size brace on right - from top of table content to highlighted row
+    \draw[decorate, decoration={brace, amplitude=5pt}, thick]
+        ([xshift=3mm]r1c6.north east) -- ([xshift=3mm]selEnd.north east)
+        node[midway, xshift=3mm, font=\scriptsize, anchor=west] {VPN $\times$ PTE\_size};
+
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{Mapping Virtual Address Spaces to Physical Memory}
@@ -516,29 +577,74 @@
 \end{center}
 \end{frame}
 
-\begin{frame}{Page Fault and Protection Violation Fault}
-\textbf{If present bit in the page table entry == 0 then // page fault}
+\begin{frame}[fragile]{Page Fault}
+\begin{columns}[T]
+\column{0.45\textwidth}
+\textbf{Present bit = 0} $\rightarrow$ page not in memory
 \begin{itemize}
-\item Page is not mapped to main memory $\rightarrow$ need to retrieve it from disk
-\item The CPU detects the situation, but cannot remedy it $\rightarrow$ traps to the OS
-\item The OS takes care of the page fault:
+\item CPU traps to OS (cannot handle itself)
+\item OS loads page from disk, updates PTE
+\item CPU retries the access
+\end{itemize}
+\column{0.55\textwidth}
+\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
+// OS: Present bit = 0
+handle_non_present_page(vaddr):
+  vpn = vaddr >> PAGE_BITS
+
+  if no_free_physical_page():
+    victim = select_victim()  // LRU, etc.
+    if victim.dirty:
+      write_to_swap(victim)
+    victim.pte.present = 0
+
+  ppn = allocate_physical_page()
+  read_from_disk(vpn, ppn)
+
+  pte[vpn].ppn = ppn
+  pte[vpn].present = 1
+  return_to_user()  // retry access
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Protection Violation Fault}
+\begin{columns}[T]
+\column{0.45\textwidth}
+\textbf{Access control bits}: R~(read), W~(write), X~(execute)
+\begin{itemize}
+\item CPU checks permissions on every access
+\item Violation $\rightarrow$ trap to OS
+\item \textbf{Not always a crash!}
     \begin{itemize}
-    \item If there is no free space in physical memory:
-        \begin{itemize}
-        \item Picks a physical page to discard (based on some replacement policy)
-        \item Marks the page as not present in the page table
-        \item Copies the page to the disk swap area
-        \end{itemize}
-    \item Loads the new page from disk into the selected physical page
-    \item Updates the page table entry of the new page
-    \item Resumes to the program so HW retries and succeeds
+    \item Copy-on-Write (COW)
+    \item Dirty bit emulation
+    \item Guard pages (stack growth)
     \end{itemize}
 \end{itemize}
-\textbf{When a page is present the CPU checks the page access control bits}
-\begin{itemize}
-\item R = Read-only, R/W = read/write, X = execute only
-\item If access type is not compatible with the specified access rights $\rightarrow$ protection violation fault
-\end{itemize}
+\column{0.55\textwidth}
+\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
+// OS: Access control violation
+handle_protection_violation(vaddr, access):
+  vpn = vaddr >> PAGE_BITS
+
+  // Copy-on-Write: shared page,
+  // write triggers private copy
+  if is_cow_page(vpn) && access == WRITE:
+    new_ppn = copy_page(pte[vpn].ppn)
+    pte[vpn].ppn = new_ppn
+    pte[vpn].writable = 1
+    return_to_user()  // retry
+
+  // Dirty tracking for swapping
+  if tracking_dirty(vpn) && access == WRITE:
+    pte[vpn].dirty = 1
+    pte[vpn].writable = 1
+    return_to_user()
+
+  kill_process(SIGSEGV)  // real violation
+\end{lstlisting}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Optimal Page Size}
