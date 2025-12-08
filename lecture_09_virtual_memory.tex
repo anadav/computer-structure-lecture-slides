@@ -396,12 +396,12 @@
     arrowstyle/.style={-{Stealth[length=2.5mm]}, thick},
     callout/.style={font=\small},
 ]
-    % Virtual Address title
-    \node[addrlabel, blue!70!black] at (4, 3.8) (vatitle) {Virtual Address};
-
     % Virtual Address bar
     \node[vpnblock, minimum width=5.5cm] (vpn) at (2.25, 2.8) {Virtual Page Number};
     \node[offsetblock, minimum width=2.2cm] (voffset) at (6.1, 2.8) {Page offset};
+
+    % Virtual Address title - left of VPN
+    \node[addrlabel, blue!70!black, anchor=east] (vatitle) at ([xshift=-3mm]vpn.west) {Virtual Address};
 
     % Bit numbers for virtual address
     \node[bitnumber, anchor=south west] at (vpn.north west) {47};
@@ -438,17 +438,17 @@
 
     % Page Table Base Register - positioned left of table north west
     \node[draw, fill=red!15, minimum height=0.4cm, font=\tiny,
-          anchor=east] (ptbr) at ([xshift=-0.3cm]ptbox.north west) {Page Table Base Reg};
+          anchor=east] (ptbr) at ([xshift=-2cm]ptbox.north west) {Page Table Base Reg};
 
     % Arrow from PTBR to page table
     \draw[arrowstyle] (ptbr.east) -- (ptbox.north west);
 
     % Arrow from VPN to page table (index into table)
-    \draw[arrowstyle] (vpn.south) -- ++(0, -0.4) -| (hdrP.north);
+    \draw[arrowstyle] ([xshift=1cm]vpn.south west) |- (selP.north west);
 
     % Callouts for PTE fields - stacked on the left
     \node[rectangle callout, draw, fill=green!20, callout absolute pointer={(selP.west)},
-        font=\scriptsize, anchor=east] (callP) at ([xshift=-5mm, yshift=1mm]selP.west) {Present};
+        font=\scriptsize, anchor=east] (callP) at ([xshift=-8mm, yshift=1mm]selP.west) {Present};
     \node[rectangle callout, draw, fill=yellow!20, callout absolute pointer={(selAD.center)},
         font=\scriptsize, anchor=north east] (callAD) at ([yshift=-1mm]callP.south east) {Accessed/Dirty};
     \node[rectangle callout, draw, fill=gray!20, callout absolute pointer={(selAC.center)},
@@ -460,8 +460,8 @@
     \node[offsetblock, minimum width=2.2cm] (poffset) at ([yshift=-1cm]voffset |- pt.south) {Page offset};
     \node[ppnblock, minimum width=4.0cm, anchor=east] (ppn) at (poffset.west) {Physical Page Number};
 
-    % Physical Address title
-    \node[addrlabel, green!50!black, anchor=north] at (vatitle |- ppn.south) {Physical Address};
+    % Physical Address title - x from vatitle, y from ppn
+    \node[addrlabel, green!50!black, anchor=east] (patitle) at (vatitle.east |- ppn) {Physical Address};
 
     % Arrow from PTE physical page to physical address
     \draw[arrowstyle, line width=1.2pt] (selPPN.south) -- (selPPN |- ppn.north);
