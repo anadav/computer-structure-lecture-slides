@@ -566,14 +566,87 @@
 
 \begin{frame}{Mapping Virtual Address Spaces to Physical Memory}
 \begin{itemize}
-\item Each process has its own address space $\rightarrow$ each process has its own page table
-    \begin{itemize}
-    \item A process cannot access physical memory allocated to another process (unless OS intentionally shares some of it)
-    \end{itemize}
-\item On a context switch, the Page Table Base Register is loaded with the page table base address of the process that moves in
+\item Each process has its own page table; processes cannot access each other's memory (unless shared)
+\item On context switch, Page Table Base Register is updated to the new process's table
 \end{itemize}
+\vspace{-2mm}
 \begin{center}
-[Diagram: Multiple process virtual address spaces mapping to physical memory]
+\begin{tikzpicture}[
+    cell/.style={draw, minimum height=0.35cm, minimum width=1.2cm, font=\tiny, inner sep=1pt},
+    arrowstyle/.style={-{Stealth[length=2mm]}, thick},
+    mytitle/.style={font=\scriptsize\bfseries},
+]
+    % Process A Page Table
+    \matrix[matrix of nodes,
+            ampersand replacement=\&,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            nodes={cell},
+            ] (ptA) at (-2, 0.5) {
+        |[fill=blue!20, name=ptA1]| \phantom{0} \\
+        |[fill=blue!20, name=ptA2]| \phantom{0} \\
+        |[fill=purple!30, name=ptA3]| \phantom{0} \\
+        |[fill=blue!20, name=ptA4]| \phantom{0} \\
+        |[name=ptA5]| \phantom{0} \\
+    };
+    \node[mytitle, blue!70!black, anchor=south, yshift=-1mm] at (ptA.north) {Process A};
+    \node[draw, thick, inner sep=0pt, fit=(ptA1) (ptA5)] (ptAbox) {};
+
+    % Process B Page Table (moved down 5mm)
+    \matrix[matrix of nodes,
+            ampersand replacement=\&,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            nodes={cell},
+            ] (ptB) at (-2, -2) {
+        |[fill=green!20, name=ptB1]| \phantom{0} \\
+        |[fill=purple!30, name=ptB2]| \phantom{0} \\
+        |[fill=green!20, name=ptB3]| \phantom{0} \\
+        |[name=ptB4]| \phantom{0} \\
+    };
+    \node[mytitle, green!50!black, anchor=south, yshift=-1mm] at (ptB.north) {Process B};
+    \node[draw, thick, inner sep=0pt, fit=(ptB1) (ptB4)] (ptBbox) {};
+
+    % Physical Frames
+    \matrix[matrix of nodes,
+            ampersand replacement=\&,
+            column sep=-\pgflinewidth,
+            row sep=-\pgflinewidth,
+            nodes={cell},
+            ] (frames) at (3.5, -0.5) {
+        |[fill=blue!20, name=f0]| \phantom{0} \\
+        |[name=f1]| Free \\
+        |[fill=green!20, name=f2]| \phantom{0} \\
+        |[fill=blue!20, name=f3]| \phantom{0} \\
+        |[fill=purple!30, name=f4]| Shared \\
+        |[fill=green!20, name=f5]| \phantom{0} \\
+        |[fill=blue!20, name=f6]| \phantom{0} \\
+        |[name=f7]| Free \\
+    };
+    \node[mytitle, anchor=south, yshift=-1mm] at (frames.north) {Frames};
+    \node[draw, thick, inner sep=0pt, fit=(f0) (f7)] (framesbox) {};
+
+    % Physical Memory box (dashed, using calc)
+    \draw[dashed, thick]
+        ($(ptAbox.north west) + (-3mm, 8mm)$) rectangle ($(framesbox.south east) + (3mm, -3mm)$);
+    \node[mytitle, anchor=south] at ($(ptAbox.north)!0.5!(framesbox.north) + (0, 8mm)$) {Physical Memory};
+
+    % Straight arrows from Process A to frames
+    \draw[arrowstyle, blue!70!black] (ptA1.east) -- (f0.west);
+    \draw[arrowstyle, blue!70!black] (ptA2.east) -- (f3.west);
+    \draw[arrowstyle, blue!70!black] (ptA4.east) -- (f6.west);
+    \draw[arrowstyle, purple!70!black] (ptA3.east) -- (f4.west);
+
+    % Straight arrows from Process B to frames
+    \draw[arrowstyle, green!50!black] (ptB1.east) -- (f2.west);
+    \draw[arrowstyle, green!50!black] (ptB3.east) -- (f5.west);
+    \draw[arrowstyle, purple!70!black] (ptB2.east) -- ([yshift=1mm]f4.west);
+
+    % Core 0 PTBR - same Y as Process A, pointing to top of table
+    \node[draw, fill=red!15, font=\tiny, minimum height=0.4cm, anchor=east] (core0) at ([xshift=-8mm]ptAbox.north west) {Core 0 PTBR};
+    \draw[arrowstyle, red!70!black] (core0.east) -- (ptAbox.north west);
+
+\end{tikzpicture}
 \end{center}
 \end{frame}
 
