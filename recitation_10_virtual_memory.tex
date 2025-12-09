@@ -8,6 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{tikz}
 \usetikzlibrary{matrix, arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.multipart, fit, decorations.pathreplacing}
+\usepackage{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -114,29 +115,39 @@
   \node[draw, circle, fill=processcolor, minimum size=1cm] (cpu) at (0,3) {CPU};
   \node[draw, rectangle, fill=lightblue!50, minimum width=1.5cm, minimum height=0.8cm] (p1) at (-2,1) {Process 1};
   \node[draw, rectangle, fill=lightblue!50, minimum width=1.5cm, minimum height=0.8cm] (p2) at (2,1) {Process 2};
-  \node[draw, rectangle, fill=lightblue!50, minimum width=1.5cm, minimum height=0.8cm] (p3) at (0,0) {Process 3};
-  \node[draw, rectangle, fill=memorycolor, minimum width=3cm, minimum height=2cm] (mem) at (0,-2.5) {Physical Memory};
-  
+  \node[draw, rectangle, fill=lightblue!50, minimum width=1.5cm, minimum height=0.8cm, yshift=-2mm] (p3) at (0,0) {Process 3};
+  \node[muxdemux, muxdemux def={NT=3, Rh=1.5, Lh=1.5, NR=0, NL=0, NB=0, w=6}, external pins width=0, fill=memorycolor] (mem) at (0,-2.5) {Physical Memory};
+
   \draw[->, thick] (cpu) -- (p1);
   \draw[->, thick] (cpu) -- (p2);
   \draw[->, thick] (cpu) -- (p3);
-  \draw[->, dashed] (p1) -- (mem);
-  \draw[->, dashed] (p2) -- (mem);
-  \draw[->, dashed] (p3) -- (mem);
+  \draw[->, dashed] (p1.south) -- (mem.tpin 1);
+  \draw[->, dashed] (p2.south) -- (mem.tpin 3);
+  \draw[->, dashed] (p3.south) -- (mem.tpin 2);
 \end{tikzpicture}
 \end{columns}
 \end{frame}
 
 \begin{frame}{The Solution: Virtual Memory}
+\begin{description}
+\item[\textcolor{processcolor!80!black}{Process}] Uses its own unique \textbf{virtual address space}
 \begin{itemize}
-\item Each process uses its own unique \textbf{virtual address space}
+  \item Sees the illusion of owning all memory
+  \item Accesses memory only through virtual addresses
+\end{itemize}
+
+\item[\textcolor{correctgreen}{OS}] Maps each process's virtual space to physical memory (or disk)
 \begin{itemize}
-  \item Creates the illusion that a single process owns all memory
-  \item Process accesses memory only through virtual addresses
+  \item Manages the translation tables
+  \item Handles page faults and swapping
 \end{itemize}
-\item Behind the scenes, the OS maps each process's virtual memory space to physical memory (or disk)
-\item When a process accesses a virtual address, hardware translates it to a physical address based on the OS mapping
+
+\item[\textcolor{darkblue}{Hardware}] Translates virtual → physical addresses
+\begin{itemize}
+  \item Uses OS-provided mapping tables
+  \item Performs translation on every memory access
 \end{itemize}
+\end{description}
 \end{frame}
 
 \begin{frame}{Key Concepts}
@@ -157,7 +168,7 @@
 \end{columns}
 
 \vspace{0.5cm}
-\begin{block}{Additional Concepts}
+\begin{block}{Memory Management Techniques}
 \begin{itemize}
 \item \textbf{Swapping}: Using secondary memory to extend memory space
 \item \textbf{Demand Paging}: Pages are brought into physical memory only when needed
