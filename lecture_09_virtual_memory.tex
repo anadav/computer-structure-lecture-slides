@@ -2791,20 +2791,9 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \item Initiator polls/waits, then continues
 \end{enumerate}
 
-\textbf{Performance impact:}
-\begin{itemize}
-\item Synchronous operation - initiator waits
-\item IPIs interrupt all CPUs (context switch overhead)
-\item Scales poorly with core count
-\end{itemize}
-
-\textbf{Software optimizations possible:}
-\begin{itemize}
-\item Batch multiple invalidations
-\item Selective targeting (skip idle CPUs)
-\item Lazy TLB mode for kernel threads
-\end{itemize}
 \end{column}
+
+
 
 \begin{column}{0.35\textwidth}
 \begin{center}
@@ -2864,6 +2853,8 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{center}
 \end{column}
 \end{columns}
+\fcolorbox{red!50}{red!10}{\parbox{0.95\textwidth}{\small\textbf{Performance impact:} Synchronous (initiator waits), IPIs interrupt all CPUs, scales poorly with core count}}
+
 \end{frame}
 
 \begin{frame}{Modern TLB Invalidation: Broadcast Instructions}
