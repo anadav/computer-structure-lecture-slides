@@ -1876,148 +1876,151 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{frame}
 
 \begin{frame}{PMH: Page Walk Flowchart}
+\centering
 \begin{tikzpicture}[
-    transform shape,
-    node distance=5mm,
-    decision/.style={diamond, draw, fill=blue!10, text width=1.1cm, align=center, inner sep=1pt, minimum height=0.5cm, aspect=3, font=\tiny},
-    process/.style={rectangle, draw, fill=green!10, text width=2.5cm, align=center, minimum height=0.5cm, inner sep=2pt, font=\tiny},
-    data/.style={ellipse, draw, fill=yellow!10, text width=1cm, align=center, minimum height=0.4cm, inner sep=2pt, font=\tiny},
+    scale=0.85, transform shape,
+    node distance=2mm,
+    vabox/.style={ellipse, draw, fill=yellow!20, font=\scriptsize, inner sep=1pt, minimum height=4mm},
+    cachehit/.style={diamond, draw, fill=green!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center},
+    tlbhit/.style={diamond, draw, fill=blue!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center},
+    stlbhit/.style={diamond, draw, fill=orange!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center},
+    entrybox/.style={rectangle, draw, fill=blue!15, font=\scriptsize, inner sep=2pt, align=center, rounded corners=2pt},
+    loadbox/.style={rectangle, draw, fill=gray!15, font=\tiny, text width=1.8cm, align=center, inner sep=2pt},
+    basebox/.style={rectangle, draw, fill=yellow!30, font=\scriptsize, inner sep=2pt, rounded corners=2pt},
+    l1hit/.style={diamond, draw, fill=yellow!40, font=\tiny, inner sep=0pt, aspect=2.5},
+    l2hit/.style={diamond, draw, fill=orange!40, font=\tiny, inner sep=0pt, aspect=2.5},
+    l3hit/.style={diamond, draw, fill=red!40, font=\tiny, inner sep=0pt, aspect=2.5},
+    membox/.style={rectangle, draw, fill=red!50, font=\tiny, inner sep=2pt, rounded corners=2pt},
+    ptebox/.style={ellipse, draw, fill=blue!30, font=\scriptsize, inner sep=2pt},
     arrow/.style={->, >=stealth, thick},
-    every node/.style={font=\tiny}
+    ymark/.style={font=\tiny},
+    nmark/.style={font=\tiny},
 ]
 
-% Start
-\node[data] (va) {VA[47:12]};
-\node[decision, below=of va] (tlb) {TLB hit};
-\node[decision, below=of tlb] (stlb) {STLB hit};
-\node[data, below right=of stlb] (pte) {PTE};
+% Column 1: PML4
+\node[vabox] (va1) {VA[47:39]};
+\node[cachehit, below=4mm of va1] (pml4hit) {PML4\$\\hit};
+\node[entrybox, below=4mm of pml4hit] (pml4e) {PML4\\entry};
+\node[basebox, left=8mm of pml4e] (cr3) {CR3};
+\node[font=\tiny, below=0pt of cr3] {PML4 base};
+\node[loadbox, below=5mm of pml4e] (pml4load) {inject load to\\PML4 base +\\VA[47:39]$\times$8\\to get PML4\\entry};
+% PML4 cache chain
+\node[l1hit, below=3mm of pml4load] (pml4l1) {L1\$ hit};
+\node[l2hit, below=2mm of pml4l1] (pml4l2) {L2\$ hit};
+\node[l3hit, below=2mm of pml4l2] (pml4l3) {L3\$ hit};
+\node[membox, below=2mm of pml4l3] (pml4mem) {Memory};
 
-\node[data, left=1.5cm of va] (va_pde) {VA[47:21]};
-\node[decision, below=of va_pde] (pde_hit) {PDE\$ hit};
-\node[data, below=of pde_hit] (pde) {PDE};
+% Column 2: PDP
+\node[vabox, right=22mm of va1] (va2) {VA[47:30]};
+\node[cachehit, below=4mm of va2] (pdphit) {PDP\$\\hit};
+\node[entrybox, below=4mm of pdphit] (pdpe) {PDP\\entry};
+\node[loadbox, below=5mm of pdpe] (pdpload) {inject load to\\PDP base +\\VA[38:30]$\times$8\\to get PDP\\entry};
+\node[font=\tiny, above=0pt of pdpload.north west, anchor=south west] {PDP base};
+% PDP cache chain
+\node[l1hit, below=3mm of pdpload] (pdpl1) {L1\$ hit};
+\node[l2hit, below=2mm of pdpl1] (pdpl2) {L2\$ hit};
+\node[l3hit, below=2mm of pdpl2] (pdpl3) {L3\$ hit};
+\node[membox, below=2mm of pdpl3] (pdpmem) {Memory};
 
-\node[data, left=8mm of va_pde] (va_pdp) {VA[47:30]};
-\node[decision, below=of va_pdp] (pdp_hit) {PDP\$ hit};
-\node[data, below=of pdp_hit] (pdp_entry) {PDP\\entry};
+% Column 3: PDE
+\node[vabox, right=22mm of va2] (va3) {VA[47:21]};
+\node[cachehit, below=4mm of va3] (pdehit) {PDE\$\\hit};
+\node[entrybox, below=4mm of pdehit] (pdee) {PDE};
+\node[loadbox, below=5mm of pdee] (pdeload) {inject load to\\PDE base +\\VA[29:21]$\times$8\\to get PDE};
+\node[font=\tiny, above=0pt of pdeload.north west, anchor=south west] {PDE base};
+% PDE cache chain
+\node[l1hit, below=3mm of pdeload] (pdel1) {L1\$ hit};
+\node[l2hit, below=2mm of pdel1] (pdel2) {L2\$ hit};
+\node[l3hit, below=2mm of pdel2] (pdel3) {L3\$ hit};
+\node[membox, below=2mm of pdel3] (pdemem) {Memory};
 
-\node[data, left=8mm of va_pdp] (va_pml4) {VA[47:39]};
-\node[decision, below=of va_pml4] (pml4_hit) {PML4\$ hit};
-\node[data, below=of pml4_hit] (pml4_entry) {PML4 entry};
+% Column 4: PT/TLB
+\node[vabox, right=22mm of va3] (va4) {VA[47:12]};
+\node[tlbhit, below=4mm of va4] (tlbhit) {TLB hit};
+\node[stlbhit, below=4mm of tlbhit] (stlbhit) {STLB\\hit};
+\node[loadbox, below=5mm of stlbhit] (ptload) {inject load to\\PT base +\\VA[20:12]$\times$8\\to get PTE};
+\node[font=\tiny, above=0pt of ptload.north west, anchor=south west] {PT base};
+% PT cache chain
+\node[l1hit, below=3mm of ptload] (ptl1) {L1\$ hit};
+\node[l2hit, below=2mm of ptl1] (ptl2) {L2\$ hit};
+\node[l3hit, below=2mm of ptl2] (ptl3) {L3\$ hit};
+\node[membox, below=2mm of ptl3] (ptmem) {Memory};
 
-\node[data, left=of pml4_entry] (cr3) {CR3};
+% PTE output (to the right of column 4)
+\node[ptebox, right=12mm of stlbhit] (pte) {PTE};
 
-\draw[arrow] (va) -- (tlb);
-\draw[arrow] (tlb) -- node[right] {No} (stlb);
-\draw[arrow] (tlb.east) -- node[above] {Yes} ++(1,0) |- (pte.east);
-\draw[arrow] (stlb.south) -- node[right] {Yes} (pte.north);
-\draw[arrow] (stlb.west) -- node[above] {No} ++(-1,0) |- (pde_hit.east);
+% Arrows from VA to cache/TLB diamonds
+\draw[arrow] (va1) -- (pml4hit);
+\draw[arrow] (va2) -- (pdphit);
+\draw[arrow] (va3) -- (pdehit);
+\draw[arrow] (va4) -- (tlbhit);
 
-\draw[arrow] (va_pde) -- (pde_hit);
-\draw[arrow] (pde_hit.south) -- node[right] {Yes} (pde.north);
-\draw[arrow] (pde_hit.west) -- node[above] {No} (pdp_hit.east);
+% Yes arrows (cache hits go to entry)
+\draw[arrow] (pml4hit) -- node[right, ymark] {Yes} (pml4e);
+\draw[arrow] (pdphit) -- node[right, ymark] {Yes} (pdpe);
+\draw[arrow] (pdehit) -- node[right, ymark] {Yes} (pdee);
 
-\draw[arrow] (va_pdp) -- (pdp_hit);
-\draw[arrow] (pdp_hit.south) -- node[right] {Yes} (pdp_entry.north);
-\draw[arrow] (pdp_hit.west) -- node[above] {No} (pml4_hit.east);
+% TLB/STLB Yes arrows to PTE
+\draw[arrow] (tlbhit) -- node[right, nmark] {No} (stlbhit);
+\draw[arrow] (tlbhit.east) -- ++(0.3,0) |- node[near start, above, ymark] {Yes} (pte);
+\draw[arrow] (stlbhit.east) -- node[above, ymark] {Yes} (pte);
 
-\draw[arrow] (va_pml4) -- (pml4_hit);
-\draw[arrow] (pml4_hit.south) -- node[right] {Yes} (pml4_entry.north);
-\draw[arrow] (pml4_hit.west) -- node[above] {No} ++(-1,0) -| (cr3.north);
+% No arrows (go left to previous level)
+\draw[arrow] (pml4hit.west) -- node[above, nmark] {No} ++(-0.5,0) |- (cr3.east);
+\draw[arrow] (pdphit.west) -- node[above, nmark] {No} (pml4hit.east);
+\draw[arrow] (pdehit.west) -- node[above, nmark] {No} (pdphit.east);
+\draw[arrow] (stlbhit.west) -- node[above, nmark] {No} ++(-0.5,0) |- (pdehit.east);
 
-% PML4 level
-%\node[data, left=2cm of va] (va) {VA[47:21]};
-%\node[decision, below=of stlb] (pml4c) {PML4\$ hit};
-%\node[process, left=2.5cm of pml4c, text width=3cm, minimum height=0.8cm] (pml4load) {inject load to PML4 base + VA[47:39]×8 to get PML4 entry};
-%\node[data, above=of pml4load, text width=1.3cm] (cr3) {CR3 PML4 base};
-%\node[decision, below=of pml4load] (pml4l1) {L1\$ hit};
-%\node[decision, below=of pml4l1] (pml4l2) {L2\$ hit};
-%\node[decision, below=of pml4l2] (pml4l3) {L3\$ hit};
-%\node[process, below=of pml4l3] (pml4mem) {Memory};
-%\node[data, right=1cm of pml4c, text width=1.2cm] (pml4e) {PML4 entry};
+% Entry to load box arrows
+\draw[arrow] (pml4e) -- (pml4load);
+\draw[arrow] (pdpe) -- (pdpload);
+\draw[arrow] (pdee) -- (pdeload);
 
-% PDP level
-%\node[decision, below=0.8cm of pml4c] (pdpc) {PDP\$ hit};
-%\node[process, left=2.5cm of pdpc, text width=3cm, minimum height=0.8cm] (pdpload) {inject load to PDP base + VA[38:30]×8 to get PDP entry};
-%\node[data, above=0.3cm of pdpload, text width=1.3cm] (pdpbase) {PDP base VA[47:39]};
-%\node[decision, below=0.6cm of pdpload] (pdpl1) {L1\$ hit};
-%\node[decision, below=0.4cm of pdpl1] (pdpl2) {L2\$ hit};
-%\node[decision, below=0.4cm of pdpl2] (pdpl3) {L3\$ hit};
-%\node[process, below=0.4cm of pdpl3] (pdpmem) {Memory};
-%\node[data, right=1cm of pdpc, text width=1.2cm] (pdpe) {PDP entry};
+% Load box to cache chain
+\draw[arrow] (pml4load) -- (pml4l1);
+\draw[arrow] (pdpload) -- (pdpl1);
+\draw[arrow] (pdeload) -- (pdel1);
+\draw[arrow] (stlbhit) -- node[right, nmark] {No} (ptload);
+\draw[arrow] (ptload) -- (ptl1);
 
-% PDE level
-%\node[decision, below=0.8cm of pdpc] (pdec) {PDE\$ hit};
-%\node[process, left=2.5cm of pdec, text width=3cm, minimum height=0.8cm] (pdeload) {inject load to PDE base + VA[29:21]×8 to get PDE};
-%\node[data, above=0.3cm of pdeload, text width=1.3cm] (pdebase) {PDE base VA[47:30]};
-%\node[decision, below=0.6cm of pdeload] (pdel1) {L1\$ hit};
-%\node[decision, below=0.4cm of pdel1] (pdel2) {L2\$ hit};
-%\node[decision, below=0.4cm of pdel2] (pdel3) {L3\$ hit};
-%\node[process, below=0.4cm of pdel3] (pdemem) {Memory};
-%\node[data, right=1cm of pdec, text width=1.3cm] (pdee) {PDE VA[47:21]};
+% Cache chain arrows
+\draw[arrow] (pml4l1) -- node[right, nmark] {No} (pml4l2);
+\draw[arrow] (pml4l2) -- node[right, nmark] {No} (pml4l3);
+\draw[arrow] (pml4l3) -- node[right, nmark] {No} (pml4mem);
+\draw[arrow] (pdpl1) -- node[right, nmark] {No} (pdpl2);
+\draw[arrow] (pdpl2) -- node[right, nmark] {No} (pdpl3);
+\draw[arrow] (pdpl3) -- node[right, nmark] {No} (pdpmem);
+\draw[arrow] (pdel1) -- node[right, nmark] {No} (pdel2);
+\draw[arrow] (pdel2) -- node[right, nmark] {No} (pdel3);
+\draw[arrow] (pdel3) -- node[right, nmark] {No} (pdemem);
+\draw[arrow] (ptl1) -- node[right, nmark] {No} (ptl2);
+\draw[arrow] (ptl2) -- node[right, nmark] {No} (ptl3);
+\draw[arrow] (ptl3) -- node[right, nmark] {No} (ptmem);
 
-% PT level
-%\node[process, below=1cm of pdec, text width=3cm, minimum height=0.8cm] (ptload) {inject load to PT base + VA[20:12]×8 to get PTE};
-%\node[data, left=0.3cm of ptload, text width=1cm] (ptbase) {PT base};
-%\node[decision, below=0.6cm of ptload] (ptl1) {L1\$ hit};
-%\node[decision, below=0.4cm of ptl1] (ptl2) {L2\$ hit};
-%\node[decision, below=0.4cm of ptl2] (ptl3) {L3\$ hit};
-%\node[process, below=0.4cm of ptl3] (ptmem) {Memory};
+% CR3 to load box
+\draw[arrow] (cr3.south) -- ++(0,-0.3) -| (pml4load.west);
 
-% Arrows
-%\draw[arrow] (va) -- (tlb);
-%\draw[arrow] (tlb) -- node[right] {No} (stlb);
-%\draw[arrow] (tlb.east) -- node[above] {Yes} ++(1,0) |- (pte);
-%\draw[arrow] (stlb.east) -- node[above] {Yes} ++(0.8,0) |- (pte);
-%\draw[arrow] (stlb) -- node[right] {No} (pml4c);
+% Cache hits go to entry above
+\draw[arrow] (pml4l1.west) -- ++(-0.2,0) |- node[near start, left, ymark] {Yes} (pml4e.west);
+\draw[arrow] (pml4l2.west) -- ++(-0.25,0) |- (pml4e.west);
+\draw[arrow] (pml4l3.west) -- ++(-0.3,0) |- (pml4e.west);
+\draw[arrow] (pml4mem.west) -- ++(-0.35,0) |- (pml4e.west);
 
-% PML4 arrows
-%\draw[arrow] (pml4c) -- node[above] {No} (pml4load);
-%\draw[arrow] (cr3) -- (pml4load);
-%\draw[arrow] (pml4load) -- (pml4l1);
-%\draw[arrow] (pml4l1) -- node[right] {No} (pml4l2);
-%\draw[arrow] (pml4l2) -- node[right] {No} (pml4l3);
-%\draw[arrow] (pml4l3) -- node[right] {No} (pml4mem);
-%\draw[arrow] (pml4c) -- node[above] {Yes} (pml4e);
-%\draw[arrow] (pml4e) -- (pdpc);
-%\foreach \x in {pml4l1,pml4l2,pml4l3,pml4mem} {
-%    \draw[arrow] (\x.east) -| ([xshift=0.5cm]\x.east |- pml4e) -- (pml4e);
-%}
+\draw[arrow] (pdpl1.west) -- ++(-0.2,0) |- node[near start, left, ymark] {Yes} (pdpe.west);
+\draw[arrow] (pdpl2.west) -- ++(-0.25,0) |- (pdpe.west);
+\draw[arrow] (pdpl3.west) -- ++(-0.3,0) |- (pdpe.west);
+\draw[arrow] (pdpmem.west) -- ++(-0.35,0) |- (pdpe.west);
 
-% PDP arrows
-%\draw[arrow] (pdpc) -- node[above] {No} (pdpload);
-%\draw[arrow] (pdpbase) -- (pdpload);
-%\draw[arrow] (pdpload) -- (pdpl1);
-%\draw[arrow] (pdpl1) -- node[right] {No} (pdpl2);
-%\draw[arrow] (pdpl2) -- node[right] {No} (pdpl3);
-%\draw[arrow] (pdpl3) -- node[right] {No} (pdpmem);
-%\draw[arrow] (pdpc) -- node[above] {Yes} (pdpe);
-%\draw[arrow] (pdpe) -- (pdec);
-%\foreach \x in {pdpl1,pdpl2,pdpl3,pdpmem} {
-%    \draw[arrow] (\x.east) -| ([xshift=0.5cm]\x.east |- pdpe) -- (pdpe);
-%}
+\draw[arrow] (pdel1.west) -- ++(-0.2,0) |- node[near start, left, ymark] {Yes} (pdee.west);
+\draw[arrow] (pdel2.west) -- ++(-0.25,0) |- (pdee.west);
+\draw[arrow] (pdel3.west) -- ++(-0.3,0) |- (pdee.west);
+\draw[arrow] (pdemem.west) -- ++(-0.35,0) |- (pdee.west);
 
-% PDE arrows
-%\draw[arrow] (pdec) -- node[above] {No} (pdeload);
-%\draw[arrow] (pdebase) -- (pdeload);
-%\draw[arrow] (pdeload) -- (pdel1);
-%\draw[arrow] (pdel1) -- node[right] {No} (pdel2);
-%\draw[arrow] (pdel2) -- node[right] {No} (pdel3);
-%\draw[arrow] (pdel3) -- node[right] {No} (pdemem);
-%\draw[arrow] (pdec) -- node[above] {Yes} (pdee);
-%\draw[arrow] (pdee) -- (ptload);
-%\foreach \x in {pdel1,pdel2,pdel3,pdemem} {
-%    \draw[arrow] (\x.east) -| ([xshift=0.5cm]\x.east |- pdee) -- (pdee);
-%}
-
-% PT arrows
-%\draw[arrow] (ptbase) -- (ptload);
-%\draw[arrow] (ptload) -- (ptl1);
-%\draw[arrow] (ptl1) -- node[right] {No} (ptl2);
-%\draw[arrow] (ptl2) -- node[right] {No} (ptl3);
-%\draw[arrow] (ptl3) -- node[right] {No} (ptmem);
-%\foreach \x in {ptl1,ptl2,ptl3,ptmem} {
-%    \draw[arrow] (\x.east) -| ++(3,0) |- (pte);
-%}
+% PT cache chain goes to PTE
+\draw[arrow] (ptl1.east) -- ++(0.2,0) |- node[near start, right, ymark] {Yes} (pte.south);
+\draw[arrow] (ptl2.east) -- ++(0.25,0) |- (pte.south);
+\draw[arrow] (ptl3.east) -- ++(0.3,0) |- (pte.south);
+\draw[arrow] (ptmem.east) -- ++(0.35,0) |- (pte.south);
 
 \end{tikzpicture}
 \end{frame}
