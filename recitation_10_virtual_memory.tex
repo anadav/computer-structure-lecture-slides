@@ -178,13 +178,23 @@
 
 \begin{frame}{Advantages of Virtual Memory}
 \begin{enumerate}
-\item \textbf{Memory expansion beyond physical limits} through swapping
-\item \textbf{No relocation needed} - each program has its own virtual address space starting at 0
-\item \textbf{Easy memory sharing} - multiple PTEs can point to the same physical frame
+\item \textbf{Memory Expansion}
 \begin{itemize}
-  \item Special case: Efficient support for process forking
+  \item Swapping extends memory beyond physical limits
 \end{itemize}
-\item \textbf{Protection/Isolation} between different process memory spaces
+\item \textbf{No Relocation Needed}
+\begin{itemize}
+  \item Each program has its own address space starting at 0
+\end{itemize}
+\item \textbf{Easy Memory Sharing}
+\begin{itemize}
+  \item Multiple PTEs can point to the same physical frame
+  \item Enables efficient process forking (copy-on-write)
+\end{itemize}
+\item \textbf{Protection \& Isolation}
+\begin{itemize}
+  \item Processes cannot access each other's memory spaces
+\end{itemize}
 \end{enumerate}
 \end{frame}
 
@@ -364,16 +374,15 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \node[pte, fill=red!20, below=0cm of pte2, text=red] (pte3) {PTE};
 \node[text=red, below=0cm of pte3] (pten) {\ldots};
 \node[entry, fill=white, below=0.15cm of pt3.south east, anchor=north east, text=green] (entry1) {1};
-\node[entry, fill=white, below=0.15cm of entry1, text=red] (entry2a) {2};
-\node[entry, fill=white, below=0.15cm of entry2a, text=blue] (entry2b) {2};
-\node[entry, fill=white, below=0.15cm of entry2a, text=red] (entry3) {3};
+\node[entry, fill=white, below=0.15cm of entry1, text=blue] (entry2a) {2};
+\node[entry, fill=white, below=0.15cm of entry2a, text=red] (entry2b) {2};
 
 % PTBR Register
 \node[draw, rectangle, fill=gray!20, minimum width=1.5cm, minimum height=0.6cm, left=2cm of pte1.north west] (ptbr) {\textbf{PTBR}};
 
 % Address labels
-\node[left, font=\scriptsize, left=-1mm of pte3] at (pte3.west) {[0x201200]};
-\node[right, font=\scriptsize, red, right=3mm of pte3] at (pte3.east) {= 940001C0};
+\node[left, font=\scriptsize, left=-1mm of pte3] at (pte3.west) (addr) {[0x201200]};
+\node[right, font=\scriptsize, red, anchor=east] at ([xshift=-2mm]addr.west) {940001C0 = };
 
 % Secondary Storage/Disk
 \node[draw, cylinder, shape border rotate=90, fill=cyan!40, minimum width=3cm, minimum height=6.5cm, aspect=0.8, right=2.5cm of mainmem] (storage) {};
@@ -394,9 +403,9 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \draw[->, thick] (ptbr.east) -- (pt3.north west);
 
 % Mapping arrows from entries to storage pages
-\draw[<->, dashed, thick] (entry1.east) -- ++(0.5,0) |- (page2b.west);
-\draw[<->, dashed, thick] (entry2a.east) -- ++(0.7,0) |- (page3b.west);
-\draw[<->, dashed, thick] (entry2b.east) -- ++(0.9,0) |- (page3c.west);
+\draw[<->, dashed, thick] (entry1.east) -- ++(0.5,0) |- (page1c.west);
+\draw[<->, dashed, thick] (entry2a.east) -- ++(0.7,0) |- (page2b.west);
+\draw[<->, dashed, thick] (entry2b.east) -- ++(0.9,0) |- (page2c.west);
 
 \end{tikzpicture}
 \end{center}
