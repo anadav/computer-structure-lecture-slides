@@ -1880,11 +1880,11 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \begin{tikzpicture}[
     scale=0.85, transform shape,
     node distance=2mm,
-    vabox/.style={ellipse, draw, fill=yellow!20, font=\scriptsize, inner sep=1pt, minimum width=14mm, minimum height=5mm},
+    vabox/.style={ellipse, draw, fill=cyan!20, font=\scriptsize, inner sep=1pt, minimum width=14mm, minimum height=5mm},
     cachehit/.style={diamond, draw, fill=green!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center, minimum width=12mm, minimum height=6mm},
     tlbhit/.style={diamond, draw, fill=blue!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center, minimum width=12mm, minimum height=6mm},
     stlbhit/.style={diamond, draw, fill=orange!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center, minimum width=12mm, minimum height=6mm},
-    entrybox/.style={ellipse, draw, fill=blue!15, font=\scriptsize, inner sep=1pt, align=center, minimum width=14mm, minimum height=5mm},
+    entrybox/.style={ellipse, draw, fill=blue!15, font=\scriptsize, inner sep=1pt, align=center, minimum width=14mm, minimum height=8mm},
     loadtext/.style={font=\tiny, text width=1.8cm, align=center, inner sep=1pt},
     basebox/.style={rectangle, draw, fill=yellow!30, font=\scriptsize, inner sep=2pt, rounded corners=2pt, minimum width=10mm, minimum height=5mm},
     l1hit/.style={diamond, draw, fill=yellow!40, font=\tiny, inner sep=0pt, aspect=2.5, minimum width=10mm, minimum height=5mm},
@@ -1955,6 +1955,12 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \node[fitbox, fit=(ptload)(ptl1)(ptl2)(ptl3)(ptmem)] (ptfit) {};
 \end{scope}
 
+% Midpoint coordinates for cache chain "Yes" arrows
+\coordinate (pml4mid) at ($(pml4l1.east)!0.5!(pml4mem.east)$);
+\coordinate (pdpmid) at ($(pdpl1.east)!0.5!(pdpmem.east)$);
+\coordinate (pdemid) at ($(pdel1.east)!0.5!(pdemem.east)$);
+\coordinate (ptmid) at ($(ptl1.east)!0.5!(ptmem.east)$);
+
 % Arrows from VA to cache/TLB diamonds
 \draw[arrow] (va1) -- (pml4hit);
 \draw[arrow] (va2) -- (pdphit);
@@ -2007,27 +2013,27 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 % CR3 to fit box
 \draw[arrow] (cr3.south) -- ++(0,-0.3) -| (pml4fit.west);
 
-% Cache hits go to entry above
-\draw[arrow] (pml4l1.west) -- ++(-0.15,0) |- node[near start, left, ymark] {Yes} (pml4e.west);
-\draw[arrow] (pml4l2.west) -- ++(-0.2,0) |- (pml4e.west);
-\draw[arrow] (pml4l3.west) -- ++(-0.25,0) |- (pml4e.west);
-\draw[arrow] (pml4mem.west) -- ++(-0.3,0) |- (pml4e.west);
+% Cache hits go to entry above (via midpoint)
+\draw[arrow] (pml4l1.east) -- (pml4l1.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
+\draw[arrow] (pml4l2.east) -- (pml4l2.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
+\draw[arrow] (pml4l3.east) -- (pml4l3.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
+\draw[arrow] (pml4mem.east) -- (pml4mem.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
 
-\draw[arrow] (pdpl1.west) -- ++(-0.15,0) |- node[near start, left, ymark] {Yes} (pdpe.west);
-\draw[arrow] (pdpl2.west) -- ++(-0.2,0) |- (pdpe.west);
-\draw[arrow] (pdpl3.west) -- ++(-0.25,0) |- (pdpe.west);
-\draw[arrow] (pdpmem.west) -- ++(-0.3,0) |- (pdpe.west);
+\draw[arrow] (pdpl1.east) -- (pdpl1.east -| pdpmid) -- ++(0.5,0) |- (pdpe.west);
+\draw[arrow] (pdpl2.east) -- (pdpl2.east -| pdpmid) -- ++(0.5,0) |- (pdpe.west);
+\draw[arrow] (pdpl3.east) -- (pdpl3.east -| pdpmid) -- ++(0.5,0) |- (pdpe.west);
+\draw[arrow] (pdpmem.east) -- (pdpmem.east -| pdpmid) -- ++(0.5,0) |- (pdpe.west);
 
-\draw[arrow] (pdel1.west) -- ++(-0.15,0) |- node[near start, left, ymark] {Yes} (pdee.west);
-\draw[arrow] (pdel2.west) -- ++(-0.2,0) |- (pdee.west);
-\draw[arrow] (pdel3.west) -- ++(-0.25,0) |- (pdee.west);
-\draw[arrow] (pdemem.west) -- ++(-0.3,0) |- (pdee.west);
+\draw[arrow] (pdel1.east) -- (pdel1.east -| pdemid) -- ++(0.5,0) |- (pdee.west);
+\draw[arrow] (pdel2.east) -- (pdel2.east -| pdemid) -- ++(0.5,0) |- (pdee.west);
+\draw[arrow] (pdel3.east) -- (pdel3.east -| pdemid) -- ++(0.5,0) |- (pdee.west);
+\draw[arrow] (pdemem.east) -- (pdemem.east -| pdemid) -- ++(0.5,0) |- (pdee.west);
 
-% PT cache chain goes to PTE
-\draw[arrow] (ptl1.east) -- ++(0.15,0) |- node[near start, right, ymark] {Yes} (pte.south);
-\draw[arrow] (ptl2.east) -- ++(0.2,0) |- (pte.south);
-\draw[arrow] (ptl3.east) -- ++(0.25,0) |- (pte.south);
-\draw[arrow] (ptmem.east) -- ++(0.3,0) |- (pte.south);
+% PT cache chain goes to PTE (via midpoint)
+\draw[arrow] (ptl1.east) -- (ptl1.east -| ptmid) -- ++(0.5,0) |- (pte.south);
+\draw[arrow] (ptl2.east) -- (ptl2.east -| ptmid) -- ++(0.5,0) |- (pte.south);
+\draw[arrow] (ptl3.east) -- (ptl3.east -| ptmid) -- ++(0.5,0) |- (pte.south);
+\draw[arrow] (ptmem.east) -- (ptmem.east -| ptmid) -- ++(0.5,0) |- (pte.south);
 
 \end{tikzpicture}
 \end{frame}
