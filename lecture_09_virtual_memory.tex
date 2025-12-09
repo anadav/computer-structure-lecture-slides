@@ -1884,68 +1884,70 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
     cachehit/.style={diamond, draw, fill=green!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center, minimum width=12mm, minimum height=6mm},
     tlbhit/.style={diamond, draw, fill=blue!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center, minimum width=12mm, minimum height=6mm},
     stlbhit/.style={diamond, draw, fill=orange!20, font=\scriptsize, inner sep=0pt, aspect=2.5, align=center, minimum width=12mm, minimum height=6mm},
-    entrybox/.style={ellipse, draw, fill=blue!15, font=\scriptsize, inner sep=1pt, align=center, minimum width=14mm, minimum height=8mm},
+    entrybox/.style={ellipse, draw, fill=blue!15, font=\scriptsize, inner sep=1pt, align=center, minimum width=14mm, minimum height=10mm},
     loadtext/.style={font=\tiny, text width=1.8cm, align=center, inner sep=1pt},
     basebox/.style={rectangle, draw, fill=yellow!30, font=\scriptsize, inner sep=2pt, rounded corners=2pt, minimum width=10mm, minimum height=5mm},
     l1hit/.style={diamond, draw, fill=yellow!40, font=\tiny, inner sep=0pt, aspect=2.5, minimum width=10mm, minimum height=5mm},
     l2hit/.style={diamond, draw, fill=orange!40, font=\tiny, inner sep=0pt, aspect=2.5, minimum width=10mm, minimum height=5mm},
     l3hit/.style={diamond, draw, fill=red!40, font=\tiny, inner sep=0pt, aspect=2.5, minimum width=10mm, minimum height=5mm},
     membox/.style={rectangle, draw, fill=red!50, font=\tiny, inner sep=2pt, rounded corners=2pt, minimum width=12mm, minimum height=5mm},
-    ptebox/.style={ellipse, draw, fill=blue!30, font=\scriptsize, inner sep=2pt, minimum width=12mm, minimum height=5mm},
+    ptebox/.style={ellipse, draw, fill=blue!30, font=\scriptsize, inner sep=2pt, minimum width=12mm, minimum height=10mm},
     fitbox/.style={draw, rounded corners=3pt, fill=gray!10, inner sep=3pt},
     arrow/.style={->, >=stealth, thick},
     ymark/.style={font=\tiny},
     nmark/.style={font=\tiny},
 ]
 
-% Column 1: PML4
-\node[vabox] (va1) {VA[47:39]};
-\node[cachehit, below=4mm of va1] (pml4hit) {PML4\$\\hit};
-\node[entrybox, below=4mm of pml4hit] (pml4e) {PML4\\entry};
-\node[basebox, left=8mm of pml4e] (cr3) {CR3};
-\node[font=\tiny, below=0pt of cr3] {PML4 base};
-\node[loadtext, below=5mm of pml4e] (pml4load) {inject load to\\PML4 base +\\VA[47:39]$\times$8\\to get PML4\\entry};
-% PML4 cache chain
+% Column 0: CR3
+\node[basebox] (cr3) {CR3};
+\node[font=\tiny, below=0pt of cr3] (cr3label) {PML4 base};
+% PML4 inject/cache chain (below CR3)
+\node[loadtext, below=5mm of cr3label] (pml4load) {inject load to\\PML4 base +\\VA[47:39]$\times$8\\to get PML4\\entry};
 \node[l1hit, below=3mm of pml4load] (pml4l1) {L1\$ hit};
 \node[l2hit, below=2mm of pml4l1] (pml4l2) {L2\$ hit};
 \node[l3hit, below=2mm of pml4l2] (pml4l3) {L3\$ hit};
 \node[membox, below=2mm of pml4l3] (pml4mem) {Memory};
 
-% Column 2: PDP
-\node[vabox, right=15mm of va1] (va2) {VA[47:30]};
-\node[cachehit, below=4mm of va2] (pdphit) {PDP\$\\hit};
-\node[entrybox, below=4mm of pdphit] (pdpe) {PDP\\entry};
-\node[loadtext, below=5mm of pdpe] (pdpload) {inject load to\\PDP base +\\VA[38:30]$\times$8\\to get PDP\\entry};
-% PDP cache chain
+% Column 1: PML4
+\node[vabox, right=9mm of cr3] (va1) {VA[47:39]};
+\node[cachehit, below=4mm of va1] (pml4hit) {PML4\$\\hit};
+\node[entrybox, below=4mm of pml4hit] (pml4e) {PML4\\entry};
+% PDP inject/cache chain (below PML4 entry)
+\node[loadtext, below=5mm of pml4e] (pdpload) {inject load to\\PDP base +\\VA[38:30]$\times$8\\to get PDP\\entry};
 \node[l1hit, below=3mm of pdpload] (pdpl1) {L1\$ hit};
 \node[l2hit, below=2mm of pdpl1] (pdpl2) {L2\$ hit};
 \node[l3hit, below=2mm of pdpl2] (pdpl3) {L3\$ hit};
 \node[membox, below=2mm of pdpl3] (pdpmem) {Memory};
 
-% Column 3: PDE
-\node[vabox, right=15mm of va2] (va3) {VA[47:21]};
-\node[cachehit, below=4mm of va3] (pdehit) {PDE\$\\hit};
-\node[entrybox, below=4mm of pdehit] (pdee) {PDE};
-\node[loadtext, below=5mm of pdee] (pdeload) {inject load to\\PDE base +\\VA[29:21]$\times$8\\to get PDE};
-% PDE cache chain
+% Column 2: PDP
+\node[vabox, right=9mm of va1] (va2) {VA[47:30]};
+\node[cachehit, below=4mm of va2] (pdphit) {PDP\$\\hit};
+\node[entrybox, below=4mm of pdphit] (pdpe) {PDP\\entry};
+% PDE inject/cache chain (below PDP entry)
+\node[loadtext, below=5mm of pdpe] (pdeload) {inject load to\\PDE base +\\VA[29:21]$\times$8\\to get PDE};
 \node[l1hit, below=3mm of pdeload] (pdel1) {L1\$ hit};
 \node[l2hit, below=2mm of pdel1] (pdel2) {L2\$ hit};
 \node[l3hit, below=2mm of pdel2] (pdel3) {L3\$ hit};
 \node[membox, below=2mm of pdel3] (pdemem) {Memory};
 
-% Column 4: PT/TLB
-\node[vabox, right=15mm of va3] (va4) {VA[47:12]};
-\node[tlbhit, below=4mm of va4] (tlbhit) {TLB hit};
-\node[stlbhit, below=4mm of tlbhit] (stlbhit) {STLB\\hit};
-\node[loadtext, below=5mm of stlbhit] (ptload) {inject load to\\PT base +\\VA[20:12]$\times$8\\to get PTE};
-% PT cache chain
+% Column 3: PDE
+\node[vabox, right=9mm of va2] (va3) {VA[47:21]};
+\node[cachehit, below=4mm of va3] (pdehit) {PDE\$\\hit};
+\node[entrybox, below=4mm of pdehit] (pdee) {PDE};
+% PT inject/cache chain (below PDE)
+\node[loadtext, below=5mm of pdee] (ptload) {inject load to\\PT base +\\VA[20:12]$\times$8\\to get PTE};
 \node[l1hit, below=3mm of ptload] (ptl1) {L1\$ hit};
 \node[l2hit, below=2mm of ptl1] (ptl2) {L2\$ hit};
 \node[l3hit, below=2mm of ptl2] (ptl3) {L3\$ hit};
 \node[membox, below=2mm of ptl3] (ptmem) {Memory};
 
-% PTE output (to the right of column 4)
-\node[ptebox, right=10mm of stlbhit] (pte) {PTE};
+% Column 4: TLB
+\node[vabox, right=9mm of va3] (va4) {VA[47:12]};
+\node[tlbhit, below=4mm of va4] (tlbhit) {TLB hit};
+\node[stlbhit, below=4mm of tlbhit] (stlbhit) {STLB\\hit};
+
+% PTE output (to the right of STLB)
+\node[ptebox, right=8mm of stlbhit] (pte) {PTE};
 
 % Fit boxes around load text and cache chain
 \begin{scope}[on background layer]
@@ -1955,7 +1957,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \node[fitbox, fit=(ptload)(ptl1)(ptl2)(ptl3)(ptmem)] (ptfit) {};
 \end{scope}
 
-% Midpoint coordinates for cache chain "Yes" arrows
+% Midpoint coordinates for cache chain arrows
 \coordinate (pml4mid) at ($(pml4l1.east)!0.5!(pml4mem.east)$);
 \coordinate (pdpmid) at ($(pdpl1.east)!0.5!(pdpmem.east)$);
 \coordinate (pdemid) at ($(pdel1.east)!0.5!(pdemem.east)$);
@@ -1978,16 +1980,18 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \draw[arrow] (stlbhit.east) -- node[above, ymark] {Yes} (pte);
 
 % No arrows (go left to previous level)
-\draw[arrow] (pml4hit.west) -- node[above, nmark] {No} ++(-0.5,0) |- (cr3.east);
+\draw[arrow] (pml4hit.west) -- node[above, nmark] {No} (cr3.north);
 \draw[arrow] (pdphit.west) -- node[above, nmark] {No} (pml4hit.east);
 \draw[arrow] (pdehit.west) -- node[above, nmark] {No} (pdphit.east);
-\draw[arrow] (stlbhit.west) -- node[above, nmark] {No} ++(-0.5,0) |- (pdehit.east);
+\draw[arrow] (stlbhit.west) -- node[above, nmark] {No} (pdehit.east);
+
+% CR3 to fit box
+\draw[arrow] (cr3label.south) -- (pml4fit.north);
 
 % Entry to fit box arrows
-\draw[arrow] (pml4e) -- (pml4fit.north);
-\draw[arrow] (pdpe) -- (pdpfit.north);
-\draw[arrow] (pdee) -- (pdefit.north);
-\draw[arrow] (stlbhit) -- node[right, nmark] {No} (ptfit.north);
+\draw[arrow] (pml4e) -- (pdpfit.north);
+\draw[arrow] (pdpe) -- (pdefit.north);
+\draw[arrow] (pdee) -- (ptfit.north);
 
 % Cache chain arrows (inside fit boxes)
 \draw[arrow] (pml4load) -- (pml4l1);
@@ -2010,10 +2014,7 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \draw[arrow] (ptl2) -- node[right, nmark] {No} (ptl3);
 \draw[arrow] (ptl3) -- node[right, nmark] {No} (ptmem);
 
-% CR3 to fit box
-\draw[arrow] (cr3.south) -- ++(0,-0.3) -| (pml4fit.west);
-
-% Cache hits go to entry above (via midpoint)
+% Cache hits go to next entry (via midpoint)
 \draw[arrow] (pml4l1.east) -- (pml4l1.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
 \draw[arrow] (pml4l2.east) -- (pml4l2.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
 \draw[arrow] (pml4l3.east) -- (pml4l3.east -| pml4mid) -- ++(0.5,0) |- (pml4e.west);
