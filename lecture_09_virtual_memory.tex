@@ -1580,6 +1580,266 @@ context_switch(proc_A, proc_B):
 \end{frame}
 
 
+\begin{frame}{2MB Page Mapping in 64-bit Mode}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
+\begin{itemize}
+\item \textbf{A page directory entry} (2\textsuperscript{nd} level table) has a ``page size'' bit
+\item \textbf{If page size = 1}
+    \begin{itemize}
+    \item Entry points to a 2MB page
+    \item VA bits[20:0] used as offset within page
+    \end{itemize}
+\item \textcolor{gray}{\textbf{If page size = 0}}
+    \begin{itemize}
+    \item \textcolor{gray}{Entry points to page table base}
+    \item \textcolor{gray}{Page table maps 512 pages of 4KB}
+    \item \textcolor{gray}{Total: $512 \times 4\text{KB} = 2\text{MB}$}
+    \item \textcolor{gray}{VA bits[20:12] select entry in PT}
+    \item \textcolor{gray}{VA bits[11:0] offset in 4KB page}
+    \end{itemize}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.56\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.72,
+    table/.style={rectangle, draw, thick, minimum width=0.9cm, fill=blue!15},
+    entry/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=0.3cm, fill=blue!30},
+    data/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=1.6cm, fill=orange!15},
+    arrow/.style={->, thick},
+    dashedarrow/.style={->, thick, dashed}]
+
+    % Virtual Address breakdown at the top
+    \draw[thick] (0,7.5) rectangle (11,8.3);
+
+    % Address fields with colors - 2MB version (no TABLE field)
+    \fill[green!20] (0,7.5) rectangle (2,8.3);
+    \fill[blue!20] (2,7.5) rectangle (3.4,8.3);
+    \fill[blue!20] (3.4,7.5) rectangle (4.8,8.3);
+    \fill[blue!20] (4.8,7.5) rectangle (6.2,8.3);
+    \fill[orange!20] (6.2,7.5) rectangle (11,8.3);
+
+    % Field separators
+    \draw[thick] (2,7.5) -- (2,8.3);
+    \draw[thick] (3.4,7.5) -- (3.4,8.3);
+    \draw[thick] (4.8,7.5) -- (4.8,8.3);
+    \draw[thick] (6.2,7.5) -- (6.2,8.3);
+
+    % Field labels above
+    \node[above, font=\tiny] at (0,8.3) {63};
+    \node[above, font=\tiny] at (1.95,8.3) {48 47};
+    \node[above, font=\tiny] at (3.35,8.3) {39 38};
+    \node[above, font=\tiny] at (4.75,8.3) {30 29};
+    \node[above, font=\tiny] at (6.15,8.3) {21 20};
+    \node[above, font=\tiny] at (11,8.3) {0};
+
+    \node[font=\tiny] at (1,7.9) {sign ext.};
+    \node[font=\tiny] at (2.7,7.9) {PML4};
+    \node[font=\tiny] at (4.1,7.9) {PDP};
+    \node[font=\tiny] at (5.5,7.9) {DIR};
+    \node[font=\tiny] at (8.6,7.9) {OFFSET};
+
+    % Page table hierarchy - 3 levels for 2MB pages (same style as 4KB version)
+    % PML4 Table (lowest)
+    \node[table, minimum height=1.6cm] (pml4) at (2,3.2) {};
+    \node[font=\tiny] at (2,3.4) {PML4};
+    \node[font=\tiny] at (2,3.1) {Table};
+    \node[entry] (pml4en) at (2,2.5) {};
+    \node[font=\tiny] at (pml4en) {PML4 en};
+
+    % PDP Table (higher)
+    \node[table, minimum height=1.6cm] (pdp) at (4.5,3.9) {};
+    \node[font=\tiny] at (4.5,4.2) {Page};
+    \node[font=\tiny] at (4.5,3.9) {Directory};
+    \node[font=\tiny] at (4.5,3.6) {Pointer};
+    \node[entry] (pdpen) at (4.5,3.0) {};
+    \node[font=\tiny] at (pdpen) {PDP en};
+
+    % Page Directory (higher) - directly points to 2MB page
+    \node[table, minimum height=1.6cm] (dir) at (7,4.6) {};
+    \node[font=\tiny] at (7,4.9) {Page};
+    \node[font=\tiny] at (7,4.6) {Directory};
+    \node[entry] (pde) at (7,3.8) {};
+    \node[font=\tiny] at (pde) {PDE};
+
+    % 2MB Data Page (highest) - replaces Page Table level
+    \node[data, minimum height=1.6cm] (datapage) at (9.5,5.3) {};
+    \node[font=\tiny] at (9.5,5.8) {2MByte};
+    \node[font=\tiny] at (9.5,5.4) {Page};
+    \node[entry, fill=orange!30] (databox) at (9.5,4.7) {};
+    \node[font=\tiny] at (databox) {data};
+
+    % CR3
+    \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm] (cr3) at (0.5,1.2) {\tiny CR3 (PDPTR)};
+
+    % Arrows from address fields to table entries (same style as 4KB)
+    % PML4 arrow with "9"
+    \draw[arrow] (2.7,7.5) -- (2.7,6.5) -- (0.8,6.5) -- (0.8,2.5) -- (pml4en.west);
+    \node[font=\tiny] at (3,7.3) {9};
+    \draw[thick] (2.65,7.2) -- (2.75,7.15);
+
+    % PDP arrow with "9"
+    \draw[arrow] (4.1,7.5) -- (4.1,6.2) -- (3.3,6.2) -- (3.3,3.0) -- (pdpen.west);
+    \node[font=\tiny] at (4.4,7.3) {9};
+    \draw[thick] (4.05,7.2) -- (4.15,7.15);
+
+    % DIR arrow with "9"
+    \draw[arrow] (5.5,7.5) -- (5.5,5.9) -- (5.8,5.9) -- (5.8,3.8) -- (pde.west);
+    \node[font=\tiny] at (5.8,7.3) {9};
+    \draw[thick] (5.45,7.2) -- (5.55,7.15);
+
+    % OFFSET arrow to data box with "21"
+    \draw[arrow] (8.6,7.5) |- (databox.west);
+    \node[font=\tiny] at (8.9,7.3) {21};
+    \draw[thick] (8.55,7.2) -- (8.65,7.15);
+
+    % Arrows connecting the hierarchy
+    % CR3 to PML4 Table
+    \draw[dashedarrow] (cr3.east) -| (pml4.south);
+    \draw[thick] ($(cr3.east) + (0.15,0.05)$) -- ($(cr3.east) + (0.25,-0.05)$);
+    \node[font=\tiny] at ($(cr3.east) + (1.0,-0.3)$) {M-12 (4KB aligned)};
+
+    % PML4 en to PDP Table
+    \draw[dashedarrow] (pml4en.east) -| (pdp.south);
+    \draw[thick] ($(pml4en.east) + (0.35,0.05)$) -- ($(pml4en.east) + (0.45,-0.05)$);
+    \node[font=\tiny] at ($(pml4en.east) + (0.5,-0.2)$) {M-12};
+
+    % PDP en to Page Directory
+    \draw[dashedarrow] (pdpen.east) -| (dir.south);
+    \draw[thick] ($(pdpen.east) + (0.35,0.05)$) -- ($(pdpen.east) + (0.45,-0.05)$);
+    \node[font=\tiny] at ($(pdpen.east) + (0.5,-0.2)$) {M-12};
+
+    % PDE to 2MB Page - M-21 bits (2MB aligned)
+    \draw[dashedarrow] (pde.east) -| (datapage.south);
+    \draw[thick] ($(pde.east) + (0.35,0.05)$) -- ($(pde.east) + (0.45,-0.05)$);
+    \node[font=\tiny] at ($(pde.east) + (0.8,-0.2)$) {M-21};
+
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{1GB Page Mapping in 64-bit Mode}
+\begin{columns}[T]
+\begin{column}{0.44\textwidth}
+\begin{itemize}
+\item \textbf{A PDP entry} (3\textsuperscript{rd} level table) has a ``page size'' bit
+\item \textbf{If page size = 1}
+    \begin{itemize}
+    \item Entry points to a 1GB page
+    \item VA bits[29:0] used as offset within page
+    \end{itemize}
+\item \textcolor{gray}{\textbf{If page size = 0}}
+    \begin{itemize}
+    \item \textcolor{gray}{Entry points to page directory base}
+    \item \textcolor{gray}{Page directory maps a total of 1GB}
+    \end{itemize}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.56\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.72,
+    table/.style={rectangle, draw, thick, minimum width=0.9cm, fill=blue!15},
+    entry/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=0.3cm, fill=blue!30},
+    data/.style={rectangle, draw, thick, minimum width=0.9cm, minimum height=1.6cm, fill=orange!15},
+    arrow/.style={->, thick},
+    dashedarrow/.style={->, thick, dashed}]
+
+    % Virtual Address breakdown at the top
+    \draw[thick] (0,7.5) rectangle (11,8.3);
+
+    % Address fields with colors - 1GB version (no DIR or TABLE fields)
+    \fill[green!20] (0,7.5) rectangle (2,8.3);
+    \fill[blue!20] (2,7.5) rectangle (3.4,8.3);
+    \fill[blue!20] (3.4,7.5) rectangle (4.8,8.3);
+    \fill[orange!20] (4.8,7.5) rectangle (11,8.3);
+
+    % Field separators
+    \draw[thick] (2,7.5) -- (2,8.3);
+    \draw[thick] (3.4,7.5) -- (3.4,8.3);
+    \draw[thick] (4.8,7.5) -- (4.8,8.3);
+
+    % Field labels above
+    \node[above, font=\tiny] at (0,8.3) {63};
+    \node[above, font=\tiny] at (1.95,8.3) {48 47};
+    \node[above, font=\tiny] at (3.35,8.3) {39 38};
+    \node[above, font=\tiny] at (4.75,8.3) {30 29};
+    \node[above, font=\tiny] at (11,8.3) {0};
+
+    \node[font=\tiny] at (1,7.9) {sign ext.};
+    \node[font=\tiny] at (2.7,7.9) {PML4};
+    \node[font=\tiny] at (4.1,7.9) {PDP};
+    \node[font=\tiny] at (7.9,7.9) {OFFSET};
+
+    % Page table hierarchy - 2 levels for 1GB pages
+    % PML4 Table (lowest)
+    \node[table, minimum height=1.6cm] (pml4) at (2,3.2) {};
+    \node[font=\tiny] at (2,3.4) {PML4};
+    \node[font=\tiny] at (2,3.1) {Table};
+    \node[entry] (pml4en) at (2,2.5) {};
+    \node[font=\tiny] at (pml4en) {PML4 en};
+
+    % PDP Table (higher) - directly points to 1GB page
+    \node[table, minimum height=1.6cm] (pdp) at (5,3.9) {};
+    \node[font=\tiny] at (5,4.2) {Page};
+    \node[font=\tiny] at (5,3.9) {Directory};
+    \node[font=\tiny] at (5,3.6) {Pointer};
+    \node[entry] (pdpen) at (5,3.0) {};
+    \node[font=\tiny] at (pdpen) {PDP en};
+
+    % 1GB Data Page (highest) - replaces Page Directory level
+    \node[data, minimum height=1.6cm] (datapage) at (9.2,4.6) {};
+    \node[font=\tiny] at (9.2,5.1) {1GByte};
+    \node[font=\tiny] at (9.2,4.7) {Page};
+    \node[entry, fill=orange!30] (databox) at (9.2,4.0) {};
+    \node[font=\tiny] at (databox) {data};
+
+    % CR3
+    \node[rectangle, draw, thick, minimum width=1.2cm, minimum height=0.4cm] (cr3) at (0.5,1.2) {\tiny CR3 (PDPTR)};
+
+    % Arrows from address fields to table entries
+    % PML4 arrow with "9"
+    \draw[arrow] (2.7,7.5) -- (2.7,6.5) -- (0.8,6.5) -- (0.8,2.5) -- (pml4en.west);
+    \node[font=\tiny] at (3,7.3) {9};
+    \draw[thick] (2.65,7.2) -- (2.75,7.15);
+
+    % PDP arrow with "9"
+    \draw[arrow] (4.1,7.5) -- (4.1,6.2) -- (3.8,6.2) -- (3.8,3.0) -- (pdpen.west);
+    \node[font=\tiny] at (4.4,7.3) {9};
+    \draw[thick] (4.05,7.2) -- (4.15,7.15);
+
+    % OFFSET arrow to data box with "30"
+    \draw[arrow] (7.9,7.5) |- (databox.west);
+    \node[font=\tiny] at (8.2,7.3) {30};
+    \draw[thick] (7.85,7.2) -- (7.95,7.15);
+
+    % Arrows connecting the hierarchy
+    % CR3 to PML4 Table
+    \draw[dashedarrow] (cr3.east) -| (pml4.south);
+    \draw[thick] ($(cr3.east) + (0.15,0.05)$) -- ($(cr3.east) + (0.25,-0.05)$);
+    \node[font=\tiny] at ($(cr3.east) + (1.0,-0.3)$) {M-12 (4KB aligned)};
+
+    % PML4 en to PDP Table
+    \draw[dashedarrow] (pml4en.east) -| (pdp.south);
+    \draw[thick] ($(pml4en.east) + (0.35,0.05)$) -- ($(pml4en.east) + (0.45,-0.05)$);
+    \node[font=\tiny] at ($(pml4en.east) + (0.5,-0.2)$) {M-12};
+
+    % PDP en to 1GB Page - M-30 bits (1GB aligned)
+    \draw[dashedarrow] (pdpen.east) -| (datapage.south);
+    \draw[thick] ($(pdpen.east) + (0.35,0.05)$) -- ($(pdpen.east) + (0.45,-0.05)$);
+    \node[font=\tiny] at ($(pdpen.east) + (0.8,-0.2)$) {M-30};
+
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+
 \begin{frame}{Example: Page Table Hierarchy}
 \begin{tikzpicture}[scale=0.6, transform shape,
     % Table styles for different levels
