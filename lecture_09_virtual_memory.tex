@@ -962,23 +962,6 @@ handle_protection_violation(vaddr, access):
 \end{frame}
 
 
-\begin{frame}{Virtual Memory And Cache}
-\begin{itemize}
-\item Page table entries are cached in L1 D\$, L2\$ and L3\$ as data
-\item If the injected load misses in a cache $\rightarrow$ perform a cache line fill
-    \begin{itemize}
-    \item all PTEs in the missed cached line are brought into the cache
-    \end{itemize}
-\item Only the specific missed PTE is filled into the STLB and TLB
-\end{itemize}
-\textbf{Get the Translation:}
-Virtual Page Number $\rightarrow$ TLB hit? $\rightarrow$ STLB hit? $\rightarrow$ PMH $\rightarrow$ L1\$/L2\$/L3\$/Mem
-
-\textbf{Get the Data:}
-PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ hit? $\rightarrow$ Access Mem
-\end{frame}
-
-
 \begin{frame}{Overlapping TLB \& Cache Access}
 \begin{columns}[T]
 \column{0.38\textwidth}
@@ -1255,42 +1238,77 @@ PFN + offset $\rightarrow$ L1\$ hit? $\rightarrow$ L2\$ hit? $\rightarrow$ L3\$ 
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Evicting a Page to Disk}
+\begin{frame}[fragile]{Evicting a Page to Disk}
+\begin{columns}[T]
+\column{0.42\textwidth}
 \textbf{OS updates the Page Table}
 \begin{itemize}
-\item OS invalidate the page from the TLBs (using a special instruction)
-    \begin{itemize}
-    \item It is the OS responsibility to maintain coherency between page table and TLBs for any change in the page table
-    \end{itemize}
-\item OS marks the swapped-out page as not present (present=0) in its PTE
-    \begin{itemize}
-    \item If the PTE is cached in any of the caches, MESI protocol maintains coherency
-    \end{itemize}
-\item OS writes the page disk location into the PTE
+\item Invalidate page from TLBs: invalidate on all cores
+\item Mark page as not present in PTE
+\item MESI keeps cached PTEs coherent
+\item Store disk location in PTE
 \end{itemize}
 
-\textbf{OS copies the page to the disk}
+\textbf{OS copies page to disk}
 \begin{itemize}
-\item Read each block (=cache line) within the page
-\item Snoop-invalidate each line in the CPUs caches
-\item Write the block to the disk-controller Memory-Mapped I/O area
+\item Only if dirty bit set (page modified)
+\item Clean pages: just discard
 \end{itemize}
+\column{0.58\textwidth}
+\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
+// OS: Evict page to make room
+evict_page_to_disk(victim_vpn):
+  // 1. TLB shootdown (all cores)
+  tlb_shootdown(victim_vpn)  // IPI to other cores
+
+  // 2. Update page table
+  pte[victim_vpn].present = 0
+
+  // 3. Write to disk only if dirty
+  if pte[victim_vpn].dirty:
+    disk_loc = find_swap_slot()
+    pte[victim_vpn].disk_loc = disk_loc
+    paddr = victim_ppn << PAGE_BITS
+    disk_write(disk_loc, paddr, PAGE_SIZE)
+  // else: clean page, just discard
+
+  // 4. Free physical page
+  free_physical_page(victim_ppn)
+\end{lstlisting}
+\end{columns}
 \end{frame}
 
-\begin{frame}{Context Switch}
+\begin{frame}[fragile]{Context Switch}
+\begin{columns}[T]
+\column{0.42\textwidth}
 \textbf{On a context switch}
 \begin{itemize}
-\item Save the current architectural state to a dedicated memory location
+\item Save current architectural state
     \begin{itemize}
-    \item HW supports fast save command
-    \item Architectural registers, including the page-table base-address register
+    \item HW supports fast save/restore
+    \item General purpose registers
     \end{itemize}
-\item Flush the TLBs
-\item Load the new architectural state from memory
+\item Load new process state
     \begin{itemize}
-    \item Architectural registers, including the page-table base-address register
+    \item Registers + page-table base (CR3)
+    \item Writing CR3 flushes TLB
     \end{itemize}
 \end{itemize}
+\column{0.58\textwidth}
+\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
+// OS: Switch from process A to process B
+context_switch(proc_A, proc_B):
+  // 1. Save current registers
+  proc_A.regs = save_registers()
+
+  // 2. Load new state (CR3 stored in PCB)
+  write_cr3(proc_B.cr3)  // flushes TLB
+  restore_registers(proc_B.regs)
+
+  // Resume execution in process B
+  return_to_user()
+\end{lstlisting}
+\end{columns}
 \end{frame}
 
 
