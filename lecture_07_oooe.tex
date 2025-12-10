@@ -62,19 +62,19 @@
       \item Minimize CPI $\Rightarrow$ use pipeline
       \item Minimize IC $\Rightarrow$ architecture
     \end{itemize}
-    
+
     \item \textbf{In a pipelined CPU}
     \begin{itemize}
       \item CPI w/o hazards is 1
       \item CPI with hazards is $> 1$
     \end{itemize}
-    
+
     \item \textbf{Adding more pipe stages reduces clock cycle but increases CPI}
     \begin{itemize}
       \item Higher penalty due to control hazards
       \item More data hazards
     \end{itemize}
-    
+
     \item \alert{What can we do? Further reduce the CPI!}
   \end{itemize}
 \end{frame}
@@ -87,44 +87,82 @@
       \item the bottleneck moves to other stages
     \end{itemize}
   \end{itemize}
-  
+
   \begin{center}
-    \begin{tikzpicture}[scale=0.8]
-      % Single pipeline with bulge at EXE
-      \draw[fill=cyan!30] (0,0) rectangle (2,0.8) node[midway] {Fetch};
-      \draw[fill=cyan!30] (2,0) rectangle (4,0.8) node[midway] {Dec};
-      \draw[fill=cyan!50] (4,-0.3) rectangle (6,1.1);
-      \node at (5,0.4) {EXE};
-      \draw[fill=cyan!30] (6,0) rectangle (8,0.8) node[midway] {MEM};
-      \draw[fill=cyan!30] (8,0) rectangle (10,0.8) node[midway] {WB};
-      
-      % Curved lines showing bottleneck
-      \draw[thick] (3.8,0.4) .. controls (4,0.8) and (4,0.8) .. (4,0.4);
-      \draw[thick] (6,0.4) .. controls (6,0.8) and (6,0.8) .. (6.2,0.4);
+    \begin{tikzpicture}[
+      stage/.style={draw, fill=cyan!30, minimum width=1.4cm, minimum height=0.7cm},
+      arr/.style={->, thick}
+    ]
+      % Pipeline stages
+      \node[stage] (fetch) at (0,0) {Fetch};
+      \node[stage] (dec) at (2.2,0) {Dec};
+      \node[stage] (exe1) at (4.4,0.45) {EXE};
+      \node[stage] (exe2) at (4.4,-0.45) {EXE};
+      \node[stage] (mem) at (6.6,0) {MEM};
+      \node[stage] (wb) at (8.8,0) {WB};
+
+      % Arrows between stages
+      \draw[arr] ([xshift=-0.5cm]fetch.west) -- (fetch.west);
+      \draw[arr] (fetch) -- (dec);
+      \draw[arr] (dec.east) -- (exe1.west);
+      \draw[arr] (dec.east) -- (exe2.west);
+      \draw[arr] (exe1.east) -- (mem.west);
+      \draw[arr] (exe2.east) -- (mem.west);
+      \draw[arr] (mem) -- (wb);
+      \draw[arr] (wb.east) -- ([xshift=0.5cm]wb.east);
     \end{tikzpicture}
   \end{center}
-  
+
   \vspace{0.3cm}
   \begin{itemize}
     \item \textbf{Getting IPC $> 1$ requires to fetch, decode, exe, and retire $>1$ instruction per clock:}
   \end{itemize}
-  
+
   \begin{center}
-    \begin{tikzpicture}[scale=0.8]
-      % Dual pipeline
-      \foreach \y in {0, -1} {
-        \draw[->, thick] (-0.5,\y+0.4) -- (0,\y+0.4);
-        \draw[fill=cyan!30] (0,\y) rectangle (2,\y+0.8) node[midway] {Fetch};
-        \draw[->, thick] (2,\y+0.4) -- (2.5,\y+0.4);
-        \draw[fill=cyan!30] (2.5,\y) rectangle (4.5,\y+0.8) node[midway] {Dec};
-        \draw[->, thick] (4.5,\y+0.4) -- (5,\y+0.4);
-        \draw[fill=cyan!30] (5,\y) rectangle (7,\y+0.8) node[midway] {EXE};
-        \draw[->, thick] (7,\y+0.4) -- (7.5,\y+0.4);
-        \draw[fill=cyan!30] (7.5,\y) rectangle (9.5,\y+0.8) node[midway] {MEM};
-        \draw[->, thick] (9.5,\y+0.4) -- (10,\y+0.4);
-        \draw[fill=cyan!30] (10,\y) rectangle (12,\y+0.8) node[midway] {WB};
-        \draw[->, thick] (12,\y+0.4) -- (12.5,\y+0.4);
-      }
+    \begin{tikzpicture}[
+      stage/.style={draw, fill=cyan!30, minimum width=1.4cm, minimum height=0.7cm},
+      arr/.style={->, thick},
+      cross/.style={->, gray, thick}
+    ]
+      % Top pipeline
+      \node[stage] (fetch1) at (0,0) {Fetch};
+      \node[stage] (dec1) at (2.2,0) {Dec};
+      \node[stage] (exe1) at (4.4,0) {EXE};
+      \node[stage] (mem1) at (6.6,0) {MEM};
+      \node[stage] (wb1) at (8.8,0) {WB};
+
+      % Bottom pipeline
+      \node[stage] (fetch2) at (0,-1.2) {Fetch};
+      \node[stage] (dec2) at (2.2,-1.2) {Dec};
+      \node[stage] (exe2) at (4.4,-1.2) {EXE};
+      \node[stage] (mem2) at (6.6,-1.2) {MEM};
+      \node[stage] (wb2) at (8.8,-1.2) {WB};
+
+      % Top pipeline arrows
+      \draw[arr] ([xshift=-0.5cm]fetch1.west) -- (fetch1.west);
+      \draw[arr] (fetch1) -- (dec1);
+      \draw[arr] (dec1) -- (exe1);
+      \draw[arr] (exe1) -- (mem1);
+      \draw[arr] (mem1) -- (wb1);
+      \draw[arr] (wb1.east) -- ([xshift=0.5cm]wb1.east);
+
+      % Bottom pipeline arrows
+      \draw[arr] ([xshift=-0.5cm]fetch2.west) -- (fetch2.west);
+      \draw[arr] (fetch2) -- (dec2);
+      \draw[arr] (dec2) -- (exe2);
+      \draw[arr] (exe2) -- (mem2);
+      \draw[arr] (mem2) -- (wb2);
+      \draw[arr] (wb2.east) -- ([xshift=0.5cm]wb2.east);
+
+      % Cross-pipeline arrows (gray)
+      \draw[cross] (fetch1.south east) -- (dec2.north west);
+      \draw[cross] (fetch2.north east) -- (dec1.south west);
+      \draw[cross] (dec1.south east) -- (exe2.north west);
+      \draw[cross] (dec2.north east) -- (exe1.south west);
+      \draw[cross] (exe1.south east) -- (mem2.north west);
+      \draw[cross] (exe2.north east) -- (mem1.south west);
+      \draw[cross] (mem1.south east) -- (wb2.north west);
+      \draw[cross] (mem2.north east) -- (wb1.south west);
     \end{tikzpicture}
   \end{center}
 \end{frame}
@@ -413,19 +451,19 @@
       \item Minimize CPI $\Rightarrow$ use pipeline
       \item Minimize IC $\Rightarrow$ architecture
     \end{itemize}
-    
+
     \item \textbf{In a pipelined CPU}
     \begin{itemize}
       \item CPI w/o hazards is 1
       \item CPI with hazards is $> 1$
     \end{itemize}
-    
+
     \item \textbf{Adding more pipe stages reduces clock cycle but increases CPI}
     \begin{itemize}
       \item Higher penalty due to control hazards
       \item More data hazards
     \end{itemize}
-    
+
     \item \alert{What can we do? Further reduce the CPI!}
   \end{itemize}
 \end{frame}
@@ -438,44 +476,82 @@
       \item the bottleneck moves to other stages
     \end{itemize}
   \end{itemize}
-  
+
   \begin{center}
-    \begin{tikzpicture}[scale=0.8]
-      % Single pipeline with bulge at EXE
-      \draw[fill=cyan!30] (0,0) rectangle (2,0.8) node[midway] {Fetch};
-      \draw[fill=cyan!30] (2,0) rectangle (4,0.8) node[midway] {Dec};
-      \draw[fill=cyan!50] (4,-0.3) rectangle (6,1.1);
-      \node at (5,0.4) {EXE};
-      \draw[fill=cyan!30] (6,0) rectangle (8,0.8) node[midway] {MEM};
-      \draw[fill=cyan!30] (8,0) rectangle (10,0.8) node[midway] {WB};
-      
-      % Curved lines showing bottleneck
-      \draw[thick] (3.8,0.4) .. controls (4,0.8) and (4,0.8) .. (4,0.4);
-      \draw[thick] (6,0.4) .. controls (6,0.8) and (6,0.8) .. (6.2,0.4);
+    \begin{tikzpicture}[
+      stage/.style={draw, fill=cyan!30, minimum width=1.4cm, minimum height=0.7cm},
+      arr/.style={->, thick}
+    ]
+      % Pipeline stages
+      \node[stage] (fetch) at (0,0) {Fetch};
+      \node[stage] (dec) at (2.2,0) {Dec};
+      \node[stage] (exe1) at (4.4,0.45) {EXE};
+      \node[stage] (exe2) at (4.4,-0.45) {EXE};
+      \node[stage] (mem) at (6.6,0) {MEM};
+      \node[stage] (wb) at (8.8,0) {WB};
+
+      % Arrows between stages
+      \draw[arr] ([xshift=-0.5cm]fetch.west) -- (fetch.west);
+      \draw[arr] (fetch) -- (dec);
+      \draw[arr] (dec.east) -- (exe1.west);
+      \draw[arr] (dec.east) -- (exe2.west);
+      \draw[arr] (exe1.east) -- (mem.west);
+      \draw[arr] (exe2.east) -- (mem.west);
+      \draw[arr] (mem) -- (wb);
+      \draw[arr] (wb.east) -- ([xshift=0.5cm]wb.east);
     \end{tikzpicture}
   \end{center}
-  
+
   \vspace{0.3cm}
   \begin{itemize}
     \item \textbf{Getting IPC $> 1$ requires to fetch, decode, exe, and retire $>1$ instruction per clock:}
   \end{itemize}
-  
+
   \begin{center}
-    \begin{tikzpicture}[scale=0.8]
-      % Dual pipeline
-      \foreach \y in {0, -1} {
-        \draw[->, thick] (-0.5,\y+0.4) -- (0,\y+0.4);
-        \draw[fill=cyan!30] (0,\y) rectangle (2,\y+0.8) node[midway] {Fetch};
-        \draw[->, thick] (2,\y+0.4) -- (2.5,\y+0.4);
-        \draw[fill=cyan!30] (2.5,\y) rectangle (4.5,\y+0.8) node[midway] {Dec};
-        \draw[->, thick] (4.5,\y+0.4) -- (5,\y+0.4);
-        \draw[fill=cyan!30] (5,\y) rectangle (7,\y+0.8) node[midway] {EXE};
-        \draw[->, thick] (7,\y+0.4) -- (7.5,\y+0.4);
-        \draw[fill=cyan!30] (7.5,\y) rectangle (9.5,\y+0.8) node[midway] {MEM};
-        \draw[->, thick] (9.5,\y+0.4) -- (10,\y+0.4);
-        \draw[fill=cyan!30] (10,\y) rectangle (12,\y+0.8) node[midway] {WB};
-        \draw[->, thick] (12,\y+0.4) -- (12.5,\y+0.4);
-      }
+    \begin{tikzpicture}[
+      stage/.style={draw, fill=cyan!30, minimum width=1.4cm, minimum height=0.7cm},
+      arr/.style={->, thick},
+      cross/.style={->, gray, thick}
+    ]
+      % Top pipeline
+      \node[stage] (fetch1) at (0,0) {Fetch};
+      \node[stage] (dec1) at (2.2,0) {Dec};
+      \node[stage] (exe1) at (4.4,0) {EXE};
+      \node[stage] (mem1) at (6.6,0) {MEM};
+      \node[stage] (wb1) at (8.8,0) {WB};
+
+      % Bottom pipeline
+      \node[stage] (fetch2) at (0,-1.2) {Fetch};
+      \node[stage] (dec2) at (2.2,-1.2) {Dec};
+      \node[stage] (exe2) at (4.4,-1.2) {EXE};
+      \node[stage] (mem2) at (6.6,-1.2) {MEM};
+      \node[stage] (wb2) at (8.8,-1.2) {WB};
+
+      % Top pipeline arrows
+      \draw[arr] ([xshift=-0.5cm]fetch1.west) -- (fetch1.west);
+      \draw[arr] (fetch1) -- (dec1);
+      \draw[arr] (dec1) -- (exe1);
+      \draw[arr] (exe1) -- (mem1);
+      \draw[arr] (mem1) -- (wb1);
+      \draw[arr] (wb1.east) -- ([xshift=0.5cm]wb1.east);
+
+      % Bottom pipeline arrows
+      \draw[arr] ([xshift=-0.5cm]fetch2.west) -- (fetch2.west);
+      \draw[arr] (fetch2) -- (dec2);
+      \draw[arr] (dec2) -- (exe2);
+      \draw[arr] (exe2) -- (mem2);
+      \draw[arr] (mem2) -- (wb2);
+      \draw[arr] (wb2.east) -- ([xshift=0.5cm]wb2.east);
+
+      % Cross-pipeline arrows (gray)
+      \draw[cross] (fetch1.south east) -- (dec2.north west);
+      \draw[cross] (fetch2.north east) -- (dec1.south west);
+      \draw[cross] (dec1.south east) -- (exe2.north west);
+      \draw[cross] (dec2.north east) -- (exe1.south west);
+      \draw[cross] (exe1.south east) -- (mem2.north west);
+      \draw[cross] (exe2.north east) -- (mem1.south west);
+      \draw[cross] (mem1.south east) -- (wb2.north west);
+      \draw[cross] (mem2.north east) -- (wb1.south west);
     \end{tikzpicture}
   \end{center}
 \end{frame}
