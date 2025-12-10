@@ -706,14 +706,14 @@
         (1) & & \texttt{\textcolor{blue}{r1} $\leftarrow$ r9/17} \\
         (2) & & \texttt{r2 $\leftarrow$ r2+\textcolor{blue}{r1}} \\
         (3) & & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
-        (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{r1}} \\
+        (4) & & \texttt{\textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1}} \\
         (5) & & \texttt{jcc L2} \\
         (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
-        (7) & & \texttt{r4 $\leftarrow$ r3+\textcolor{green}{r1}} \\
+        (7) & & \texttt{r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1}} \\
         (8) & & \texttt{r3 $\leftarrow$ 2} \\
       \end{tabular}
     \end{column}
-    
+
     \begin{column}{0.5\textwidth}
       \begin{block}{WAW Issue}
         If inst (3) is executed before inst (1), r1 ends up having a wrong value.
@@ -737,10 +737,10 @@
         (1) & & \texttt{\textcolor{blue}{r1\tikzmark{r1blue}} $\leftarrow$ r9/17} \\
         (2) & & \texttt{r2 $\leftarrow$ r2+\textcolor{blue}{r1}} \\
         & & \\
-        (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{\tikzmark{r1use}r1}} \\
+        (4) & & \texttt{\textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{\tikzmark{r1use}r1}} \\
         (5) & & \texttt{jcc L2} \\
         (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
-        (7) & & \texttt{r4 $\leftarrow$ r3+\textcolor{green}{r1}} \\
+        (7) & & \texttt{r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1}} \\
         (8) & & \texttt{r3 $\leftarrow$ 2} \\
       \end{tabular}
     \end{column}
@@ -781,10 +781,10 @@
         (3) & & \texttt{\textcolor{orange}{r1} $\leftarrow$ 23} \\
         (1) & & \texttt{\textcolor{blue}{r1} $\leftarrow$ r9/17} \\
         (2) & & \texttt{r2 $\leftarrow$ r2+\textcolor{blue}{r1}} \\
-        (4) & & \texttt{r3 $\leftarrow$ r3+\textcolor{orange}{r1}} \\
+        (4) & & \texttt{\textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1}} \\
         (5) & & \texttt{jcc L2} \\
         \rowcolor{pink!30} (6) & \texttt{L2:} & \texttt{\textcolor{green}{r1} $\leftarrow$ 35} \\
-        \rowcolor{pink!30} (7) & & \texttt{r4 $\leftarrow$ r3+\textcolor{green}{r1}} \\
+        \rowcolor{pink!30} (7) & & \texttt{r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1}} \\
         \rowcolor{pink!30} (8) & & \texttt{r3 $\leftarrow$ 2} \\
       \end{tabular}
     \end{column}
@@ -882,14 +882,14 @@
     \begin{column}{0.5\textwidth}
       \begin{tabular}[t]{lll}
         \multicolumn{3}{c}{\textbf{Original}} \\
-        (1) & r1 $\leftarrow$ 17 & \\
-        (2) & r2 $\leftarrow$ r2+r1 & \\
-        (3) & r1 $\leftarrow$ 23 & \\
-        (4) & r3 $\leftarrow$ r3+r1 & \\
+        (1) & \textcolor{blue}{r1} $\leftarrow$ 17 & \\
+        (2) & r2 $\leftarrow$ r2+\textcolor{blue}{r1} & \\
+        (3) & \textcolor{orange}{r1} $\leftarrow$ 23 & \\
+        (4) & \textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1} & \\
         (5) & jcc L2 & \\
-        (6) L2: & r1 $\leftarrow$ 35 & \\
-        (7) & r4 $\leftarrow$ r3+r1 & \\
-        (8) & r3 $\leftarrow$ 2 & \\
+        (6) L2: & \textcolor{green}{r1} $\leftarrow$ 35 & \\
+        (7) & r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1} & \\
+        (8) & \textcolor{blue}{r3} $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
 
@@ -925,14 +925,14 @@
     \begin{column}{0.5\textwidth}
       \begin{tabular}{lll}
         \multicolumn{3}{c}{\textbf{Original}} \\
-        (1) & r1 $\leftarrow$ 17 & \\
-        (2) & r2 $\leftarrow$ r2+r1 & \\
-        (3) & r1 $\leftarrow$ 23 & \\
-        (4) & r3 $\leftarrow$ r3+r1 & \\
+        (1) & \textcolor{blue}{r1} $\leftarrow$ 17 & \\
+        (2) & r2 $\leftarrow$ r2+\textcolor{blue}{r1} & \\
+        (3) & \textcolor{orange}{r1} $\leftarrow$ 23 & \\
+        (4) & \textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1} & \\
         (5) & jcc L2 & \\
-        (6) L2: & r1 $\leftarrow$ 35 & \\
-        (7) & r4 $\leftarrow$ r3+r1 & \\
-        (8) & r3 $\leftarrow$ 2 & \\
+        (6) L2: & \textcolor{green}{r1} $\leftarrow$ 35 & \\
+        (7) & r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1} & \\
+        (8) & \textcolor{blue}{r3} $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
 
@@ -972,14 +972,14 @@
     \begin{column}{0.5\textwidth}
       \begin{tabular}{lll}
         \multicolumn{3}{c}{\textbf{Original}} \\
-        (1) & r1 $\leftarrow$ 17 & \\
-        (2) & r2 $\leftarrow$ r2+r1 & \\
-        (3) & r1 $\leftarrow$ 23 & \\
-        (4) & r3 $\leftarrow$ r3+r1 & \\
+        (1) & \textcolor{blue}{r1} $\leftarrow$ 17 & \\
+        (2) & r2 $\leftarrow$ r2+\textcolor{blue}{r1} & \\
+        (3) & \textcolor{orange}{r1} $\leftarrow$ 23 & \\
+        (4) & \textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1} & \\
         (5) & jcc L2 & \\
-        (6) L2: & r1 $\leftarrow$ 35 & \\
-        (7) & r4 $\leftarrow$ r3+r1 & \\
-        (8) & r3 $\leftarrow$ 2 & \\
+        (6) L2: & \textcolor{green}{r1} $\leftarrow$ 35 & \\
+        (7) & r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1} & \\
+        (8) & \textcolor{blue}{r3} $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
 
@@ -1019,17 +1019,17 @@
     \begin{column}{0.5\textwidth}
       \begin{tabular}{lll}
         \multicolumn{3}{c}{\textbf{Original}} \\
-        (1) & r1 $\leftarrow$ 17 & \\
-        (2) & r2 $\leftarrow$ r2+r1 & \\
-        (3) & r1 $\leftarrow$ 23 & \\
-        (4) & r3 $\leftarrow$ r3+r1 & \\
+        (1) & \textcolor{blue}{r1} $\leftarrow$ 17 & \\
+        (2) & r2 $\leftarrow$ r2+\textcolor{blue}{r1} & \\
+        (3) & \textcolor{orange}{r1} $\leftarrow$ 23 & \\
+        (4) & \textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1} & \\
         (5) & jcc L2 & \\
-        \rowcolor{pink!30} (6) L2: & r1 $\leftarrow$ 35 & \\
-        \rowcolor{pink!30} (7) & r4 $\leftarrow$ r3+r1 & \\
-        \rowcolor{pink!30} (8) & r3 $\leftarrow$ 2 & \\
+        \rowcolor{pink!30} (6) L2: & \textcolor{green}{r1} $\leftarrow$ 35 & \\
+        \rowcolor{pink!30} (7) & r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1} & \\
+        \rowcolor{pink!30} (8) & \textcolor{blue}{r3} $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
-    
+
     \begin{column}{0.5\textwidth}
       \begin{tabular}{lll}
         \multicolumn{3}{c}{\textbf{Renaming}} \\
@@ -1068,17 +1068,17 @@
     \begin{column}{0.5\textwidth}
       \begin{tabular}{lll}
         \multicolumn{3}{c}{\textbf{Original}} \\
-        (1) & r1 $\leftarrow$ 17 & \\
-        (2) & r2 $\leftarrow$ r2+r1 & \\
-        (3) & r1 $\leftarrow$ 23 & \\
-        (4) & r3 $\leftarrow$ r3+r1 & \\
+        (1) & \textcolor{blue}{r1} $\leftarrow$ 17 & \\
+        (2) & r2 $\leftarrow$ r2+\textcolor{blue}{r1} & \\
+        (3) & \textcolor{orange}{r1} $\leftarrow$ 23 & \\
+        (4) & \textcolor{red}{r3} $\leftarrow$ r3+\textcolor{orange}{r1} & \\
         (5) & jcc L2 & \\
-        \rowcolor{pink!30} (6) L2: & r1 $\leftarrow$ 35 & \\
-        \rowcolor{pink!30} (7) & r4 $\leftarrow$ r3+r1 & \\
-        \rowcolor{pink!30} (8) & r3 $\leftarrow$ 2 & \\
+        \rowcolor{pink!30} (6) L2: & \textcolor{green}{r1} $\leftarrow$ 35 & \\
+        \rowcolor{pink!30} (7) & r4 $\leftarrow$ \textcolor{red}{r3}+\textcolor{green}{r1} & \\
+        \rowcolor{pink!30} (8) & \textcolor{blue}{r3} $\leftarrow$ 2 & \\
       \end{tabular}
     \end{column}
-    
+
     \begin{column}{0.5\textwidth}
       \begin{tabular}{lll}
         \multicolumn{3}{c}{\textbf{Renaming}} \\
