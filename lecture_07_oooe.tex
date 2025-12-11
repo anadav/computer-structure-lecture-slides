@@ -10,7 +10,7 @@
 \usepackage{bytefield}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit, matrix, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit, matrix, backgrounds, patterns}
 \usepackage{tcolorbox}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
@@ -1714,158 +1714,6 @@
   \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Out-of-Order Core: Execution Units}
-  \begin{center}
-  \begin{tikzpicture}[font=\footnotesize,
-    port/.style={draw, fill=green!20, minimum width=1.2cm, minimum height=3cm},
-    eu/.style={draw, fill=blue!15, minimum width=1cm, minimum height=0.4cm},
-    ]
-
-    % RS
-    \node[draw, fill=purple!20, minimum width=2.5cm, minimum height=2cm] (rs) {RS};
-
-    % Ports
-    \node[port, below right=1cm and 0.5cm of rs] (port0) {};
-    \node[above, font=\scriptsize] at (port0.north) {Port 0};
-
-    \node[port, right=0.3cm of port0] (port1) {};
-    \node[above, font=\scriptsize] at (port1.north) {Port 1};
-
-    \node[port, right=0.3cm of port1] (port2) {};
-    \node[above, font=\scriptsize] at (port2.north) {Port 2};
-
-    \node[port, right=0.3cm of port2] (port34) {};
-    \node[above, font=\scriptsize] at (port34.north) {Port 3,4};
-
-    % Execution units in Port 0
-    \node[eu] at (port0.center) (ieu0) {\tiny IEU};
-    \node[eu, above=0.1cm of ieu0] (fau) {\tiny FAU};
-    \node[eu, above=0.1cm of fau] (idiv) {\tiny IDIV};
-    \node[eu, above=0.1cm of idiv] (fdiv) {\tiny FDIV};
-    \node[eu, above=0.1cm of fdiv] (fmu) {\tiny FMU};
-    \node[eu, above=0.1cm of fmu] (shf) {\tiny SHF};
-
-    % Execution units in Port 1
-    \node[eu] at (port1.center) (ieu1) {\tiny IEU};
-    \node[eu, above=0.1cm of ieu1] (jeu) {\tiny JEU};
-
-    % Execution units in Port 2
-    \node[eu] at (port2.center) (agu2) {\tiny AGU};
-    \node[right=0.1cm of agu2, font=\tiny] {Load Address};
-
-    % Execution units in Port 3,4
-    \node[eu] at (port34.center) (agu34) {\tiny AGU};
-    \node[right=0.1cm of agu34, font=\tiny] {Store Address};
-
-    % SDB and Data Cache
-    \node[draw, fill=yellow!20, minimum width=0.8cm, minimum height=0.6cm, below=0.3cm of port34] (sdb) {\tiny SDB};
-    \node[draw, fill=gray!20, minimum width=1cm, minimum height=0.6cm, right=0.2cm of sdb] (dcache) {\tiny Data \$};
-
-    % Arrows from RS to ports
-    \foreach \p in {port0, port1, port2, port34} {
-      \draw[->, thick] (rs.south) -- (\p.north);
-      \draw[<-, thick, red] ([xshift=-3mm]rs.south) -- ([xshift=-3mm]\p.north);
-    }
-
-    % Labels for bypass levels
-    \node[above left=0.2cm and 0cm of rs, align=center, font=\tiny] {2nd\\bypass\\in RS};
-    \node[above=2.5cm of port1, align=center, font=\tiny] {1st\\bypass};
-    \node[above right=0.5cm and 0.2cm of port0, align=center, font=\tiny] {internal 0-delay\\bypass within\\each EU};
-  \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{Execution Units Bypasses}
-  \begin{center}
-  \begin{tikzpicture}[font=\footnotesize,
-    port/.style={draw, fill=green!20, inner sep=3mm},
-    eu/.style={draw, fill=blue!15, minimum width=1cm, minimum height=0.4cm},
-    ]
-
-    % RS
-    \node[draw, fill=purple!20, minimum width=2.5cm, minimum height=2cm] (rs) {RS};
-
-    % Execution units in Port 0
-    \node[eu, below right=1.5cm and 0.5cm of rs.south east] (ieu0) {\tiny IEU};
-    \node[eu, above=0.1cm of ieu0] (fau) {\tiny FAU};
-    \node[eu, above=0.1cm of fau] (idiv) {\tiny IDIV};
-    \node[eu, above=0.1cm of idiv] (fdiv) {\tiny FDIV};
-    \node[eu, above=0.1cm of fdiv] (fmu) {\tiny FMU};
-    \node[eu, above=0.1cm of fmu] (shf) {\tiny SHF};
-
-    % Execution units in Port 1
-    \node[eu, right=0.6cm of ieu0] (ieu1) {\tiny IEU};
-    \node[eu, above=0.1cm of ieu1] (jeu) {\tiny JEU};
-
-    % Execution units in Port 2
-    \node[eu, right=0.6cm of ieu1] (agu2) {\tiny AGU};
-
-    % Execution units in Port 3,4
-    \node[eu, right=0.6cm of agu2] (agu34) {\tiny AGU};
-
-    % Port containers using fit (with transparency to show EUs)
-    \node[port, fit=(ieu0)(shf), fill opacity=0.3] (port0) {};
-    \node[port, fit=(ieu1)(jeu), fill opacity=0.3] (port1) {};
-    \node[port, fit=(agu2), fill opacity=0.3] (port2) {};
-    \node[port, fit=(agu34), fill opacity=0.3] (port34) {};
-
-    % Port labels
-    \node[above=0mm of port0.north, font=\scriptsize, fill=white, inner sep=1pt] {Port 0};
-    \node[above=0mm of port1.north, font=\scriptsize, fill=white, inner sep=1pt] {Port 1};
-    \node[above=0mm of port2.north, font=\scriptsize, fill=white, inner sep=1pt] {Port 2};
-    \node[above=0mm of port34.north, font=\scriptsize, fill=white, inner sep=1pt] {Port 3,4};
-
-    % SDB and Data Cache
-    \node[draw, fill=yellow!20, minimum width=0.8cm, minimum height=0.6cm, below=0.3cm of port34] (sdb) {\tiny SDB};
-    \node[draw, fill=gray!20, minimum width=1cm, minimum height=0.6cm, right=0.2cm of sdb] (dcache) {\tiny Data \$};
-
-    % Arrows from RS to ports
-    \foreach \p in {port0, port1, port2, port34} {
-      \draw[->, thick] (rs.south) -| (\p.north);
-      \draw[<-, thick, red] ([xshift=-3mm]rs.south) |- ([xshift=-3mm]\p.north);
-    }
-
-    % Legend nodes
-    \node[draw, fill=red!20, align=center, font=\tiny, right=1.5cm of port1] (bypass0) {0-level bypass\\within port};
-    \node[draw, fill=green!20, align=center, font=\tiny, below=1cm of port2] (bypass1) {1st-level bypass\\between EUs in\\different ports};
-    \node[draw, fill=blue!20, align=center, font=\tiny, left=1cm of rs] (bypass2) {2nd-level bypass\\through the RS};
-
-    % Bypass illustrations
-    % 0-level bypass within port (red loop on port 1)
-    \draw[->, thick, red, rounded corners] ([xshift=8mm]ieu1.east) -| ([xshift=1.2cm]ieu1.east |- ieu1.north);
-
-    % 1st-level bypass between ports (green from port 1 to port 2)
-    \draw[->, thick, green!60!black] ([yshift=-5mm]port1.south) |- ([yshift=-5mm]port2.south);
-
-    % 2nd-level bypass through RS (blue loop back to RS)
-    \draw[->, thick, blue] ([xshift=-8mm]port34.north) |- ([xshift=8mm]rs.south);
-  \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}{The Bypass Network}
-  \begin{itemize}
-    \item \textbf{Assume:}
-    \begin{itemize}
-      \item Instruction Y writes PR19 (1 cycle execution)
-      \item Instruction X reads PR19 + immediate
-      \item 0-level bypass: same EU, back-to-back
-      \item 1-level bypass: different EU, 3 cycles
-    \end{itemize}
-
-    \item \textbf{RS marks X ready when:}
-    \begin{itemize}
-      \item \textbf{Y finished before X allocated:} PR19 value written to X's RS entry $\Rightarrow$ X ready at allocation
-
-      \item \textbf{Y and X sent to same EU:} X marked ready, dispatched next cycle (0-level bypass)
-
-      \item \textbf{Y and X sent to different EUs:} X marked ready after 3 cycles (1-level bypass)
-
-      \item \textbf{Y executing when X allocated:} X becomes ready when Y's write-back reaches RS
-    \end{itemize}
-  \end{itemize}
-\end{frame}
-
 \begin{frame}{The Reorder Buffer (ROB)}
   \vspace{-0.5cm}
   \begin{columns}
@@ -3215,40 +3063,70 @@
 
 % Slide 14: Periodic Checkpoints
 \begin{frame}{Periodic Checkpoints}
-  \begin{columns}[T] % [T] aligns columns at the top
-    % --- Left column: text (0.8\textwidth) ---
-    \begin{column}{0.8\textwidth}
-      \begin{itemize}
-        \item \textbf{Allow allocation and execution of instructions from the correct path before the mispredicted jump retires}
-        
-        \vspace{0.3cm}
-        \item \textbf{Every few instructions take a checkpoint of the Renamer}
-        \begin{itemize}
-          \item A snapshot of the current renaming map
-          \item Taking a snapshot on every jump is expensive
+  \begin{columns}[T]
+    \begin{column}{0.62\textwidth}
+      \begin{itemize}\setlength{\itemsep}{0.15cm}
+        \item \textbf{Allow allocation from correct path before mispredicted jump retires}
+
+        \item \textbf{Periodically checkpoint the Renamer}
+        \begin{itemize}\setlength{\itemsep}{0pt}
+          \item Snapshot of renaming map every N instructions
+          \item Per-jump snapshots too expensive
         \end{itemize}
-        
-        \vspace{0.3cm}
-        \item \textbf{In case of misprediction}
-        \begin{itemize}
-          \item Flush the frontend and start fetching instructions from the correct path
-          \item Selectively flush younger instructions from the ROB/RS
-          \item Recover Renamer to latest checkpoint taken prior to the mispredicted jump
-          \item Recover Renamer to its state at the jump
-          \begin{itemize}
-            \item Rename instructions from the checkpoint and until the jump
-          \end{itemize}
-          \item Allow instructions from the correct path to allocate
+
+        \item \textbf{On misprediction:}
+        \begin{itemize}\setlength{\itemsep}{0pt}
+          \item Flush frontend, fetch from correct path
+          \item Selectively flush younger instructions from ROB/RS
+          \item Recover Renamer to latest checkpoint before the jump
+          \item Re-rename: replay instructions from checkpoint to jump
+          \item Resume allocation from correct path
         \end{itemize}
       \end{itemize}
     \end{column}
 
-    % --- Right column: illustration (0.2\textwidth) ---
-    \begin{column}{0.2\textwidth}
+    \begin{column}{0.38\textwidth}
       \centering
-      \textit{[Checkpoint illustration goes here]}
-      % Example if you later add a figure:
-      % \includegraphics[width=\linewidth]{checkpoint.pdf}
+      \begin{tikzpicture}[font=\tiny,
+        N/.style={draw, fill=green!40, minimum width=1.8cm, minimum height=0.28cm, inner sep=1pt},
+        J/.style={N, fill=violet!50},
+        M/.style={N, fill=red!60},
+        S/.style={N, fill=red!20, pattern=horizontal lines, pattern color=red!30},
+        chk/.style={draw, fill=yellow!15, align=center, inner sep=2pt, rectangle callout},
+        chkA/.style={chk, fill=green!30, draw=green!60!black, thick}
+      ]
+        \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth,
+          nodes={minimum width=1.8cm, minimum height=0.28cm, inner sep=1pt}
+        ] (m) {
+          |[N]| \\
+          |[N]| \\
+          |[N]| \\
+          |[J]| jump \\
+          |[N]| \\
+          |[N]| \\
+          |[N]| \\
+          |[N]| \\
+          |[J]| jump \\
+          |[N]| \\
+          |[N]| \\
+          |[N]| \\
+          |[N]| \\
+          |[J]| jump \\
+          |[N]| \\
+          |[M, text=white, font=\tiny\bfseries]| jump \\
+          |[S]| \\
+          |[S]| \\
+          |[S]| \\
+        };
+        % "oldest" label (to the right)
+        \node[right=0.1cm of m-1-1.east, font=\scriptsize\bfseries] {oldest};
+        % Periodic checkpoints between entries (every 5 rows starting after row 2)
+        \node[chk, callout absolute pointer={($(m-2-1.south west)!0.5!(m-3-1.north west)$)}] at ($(m-2-1.south west)!0.5!(m-3-1.north west)+(-1.0,0)$) {check\\point};
+        \node[chk, callout absolute pointer={($(m-7-1.south west)!0.5!(m-8-1.north west)$)}] at ($(m-7-1.south west)!0.5!(m-8-1.north west)+(-1.0,0)$) {check\\point};
+        \node[chkA, callout absolute pointer={($(m-12-1.south west)!0.5!(m-13-1.north west)$)}] at ($(m-12-1.south west)!0.5!(m-13-1.north west)+(-1.0,0)$) {check\\point};
+        % Re-rename arrow (from checkpoint between 12-13 to mispredicted jump at row 16)
+        \draw[<->, thick, white] ($(m-12-1.south west)!0.5!(m-13-1.north west)+(-0.12,0)$) -- ($(m-16-1.west)+(-0.12,0)$) node[midway, left, text=black, font=\tiny] {Re-rename};
+      \end{tikzpicture}
     \end{column}
   \end{columns}
 \end{frame}
