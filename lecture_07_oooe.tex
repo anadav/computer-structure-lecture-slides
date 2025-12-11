@@ -10,7 +10,7 @@
 \usepackage{bytefield}
 \usepackage{listings}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit, matrix, backgrounds, patterns}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, shapes.callouts, fit, matrix, backgrounds, patterns, decorations.pathreplacing}
 \usepackage{tcolorbox}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
@@ -3064,7 +3064,7 @@
 % Slide 14: Periodic Checkpoints
 \begin{frame}{Periodic Checkpoints}
   \begin{columns}[T]
-    \begin{column}{0.62\textwidth}
+    \begin{column}{0.67\textwidth}
       \begin{itemize}\setlength{\itemsep}{0.15cm}
         \item \textbf{Allow allocation from correct path before mispredicted jump retires}
 
@@ -3085,7 +3085,7 @@
       \end{itemize}
     \end{column}
 
-    \begin{column}{0.38\textwidth}
+    \begin{column}{0.33\textwidth}
       \centering
       \begin{tikzpicture}[font=\tiny,
         N/.style={draw, fill=green!40, minimum width=1.8cm, minimum height=0.28cm, inner sep=1pt},
@@ -3124,8 +3124,13 @@
         \node[chk, callout absolute pointer={($(m-2-1.south west)!0.5!(m-3-1.north west)$)}] at ($(m-2-1.south west)!0.5!(m-3-1.north west)+(-1.0,0)$) {check\\point};
         \node[chk, callout absolute pointer={($(m-7-1.south west)!0.5!(m-8-1.north west)$)}] at ($(m-7-1.south west)!0.5!(m-8-1.north west)+(-1.0,0)$) {check\\point};
         \node[chkA, callout absolute pointer={($(m-12-1.south west)!0.5!(m-13-1.north west)$)}] at ($(m-12-1.south west)!0.5!(m-13-1.north west)+(-1.0,0)$) {check\\point};
-        % Re-rename arrow (from checkpoint between 12-13 to mispredicted jump at row 16)
-        \draw[<->, thick, white] ($(m-12-1.south west)!0.5!(m-13-1.north west)+(-0.12,0)$) -- ($(m-16-1.west)+(-0.12,0)$) node[midway, left, text=black, font=\tiny] {Re-rename};
+        % Misprediction callout (on the left like checkpoints)
+        \node[draw, fill=red!30, rectangle callout, callout absolute pointer={(m-16-1.west)}, font=\tiny, align=center, inner sep=2pt]
+          at ($(m-16-1.west)+(-1.0,0)$) {mis-\\predicted};
+        % Re-rename brace on the right (from checkpoint between 12-13 to mispredicted jump at row 16)
+        \draw[decorate, decoration={brace, amplitude=4pt}, thick, red]
+          ($(m-12-1.south east)!0.5!(m-13-1.north east)+(0.08,0)$) -- ($(m-16-1.east)+(0.08,0)$)
+          node[midway, right=3pt, font=\tiny\bfseries, text=red] {Re-rename};
       \end{tikzpicture}
     \end{column}
   \end{columns}
