@@ -2034,20 +2034,18 @@
           \item<1-> Interrupt arrives asynchronously
           \item<2-> Retire all ready instructions at head of ROB
           \item<3-> Flush remaining instructions
-          \item<4-> Initiate interrupt service routine (ISR)
-          \item<4-> Re-fetch subsequent instructions after ISR
+          \item<3-> Initiate interrupt service routine (ISR)
         \end{itemize}
       \end{itemize}
     \end{column}
     \begin{column}{0.4\textwidth}
-      \vspace{-1.2cm}
+      \vspace{-1cm}
       \begin{center}
         \begin{tikzpicture}[font=\tiny,
           E/.style={draw, fill=white, minimum width=1.8cm, minimum height=0.32cm, inner sep=0},
           G/.style={E, fill=green!30},
           R/.style={E, fill=red!30},
-          RR/.style={E, fill=red!60},
-          P/.style={E, fill=purple!30}
+          RR/.style={E, fill=red!60}
         ]
           \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth,
             nodes={minimum width=1.8cm, minimum height=0.32cm, inner sep=0}
@@ -2143,21 +2141,6 @@
             \draw[->,thick] (alloc) -- (m-6-1.west);
 
             \draw[->,dashed,thick] (alloc_old.north) -- (alloc.south);
-          }
-
-          % Stage 4: ISR and re-fetched
-          \only<4>{
-            \foreach \i in {4,...,8} { \node[P] at (m-\i-1) {}; }
-            \node[font=\tiny] at (m-6-1.center) {ISR};
-            \foreach \i in {9,...,16} { \node[G] at (m-\i-1) {}; }
-
-            % Labels
-            \node[left=0.4cm of m-4-1.west, anchor=east] (retire) {\scriptsize retire};
-            \draw[->,thick] (retire) -- (m-4-1.west);
-            \node[right=0.1cm of m-4-1.east, anchor=west] {\scriptsize oldest};
-            \node[left=0.4cm of m-17-1.west, anchor=east] (alloc) {\scriptsize alloc};
-            \draw[->,thick] (alloc) -- (m-17-1.west);
-            \node[right=0.1cm of m-16-1.east, anchor=west] {\scriptsize youngest};
           }
         \end{tikzpicture}
       \end{center}
@@ -2612,6 +2595,18 @@
         \node[font=\scriptsize] at ($(uopq1.south)!0.5!(uopq4.south)+(0,-0.15)$) {$\mu$opq};
         \node[font=\scriptsize] at ($(rs1.south)!0.5!(rs4.south)+(0,-0.15)$) {RS};
         \node[font=\scriptsize] at ($(rob1.south)!0.5!(rob4.south)+(0,-0.15)$) {ROB};
+
+        % Frontend/Backend backgrounds (on background layer)
+        \begin{scope}[on background layer]
+            \fill[cyan!10, rounded corners=3pt]
+                ($(fetch.north west)+(-0.1,0.1)$) rectangle ($(uopq4.south east)+(0.05,-0.25)$);
+            \fill[orange!10, rounded corners=3pt]
+                ($(alloc.north west)+(-0.1,0.1)$) rectangle ($(retire.south east)+(0.1,-0.25)$);
+        \end{scope}
+        \node[font=\footnotesize\sffamily\itshape, text=cyan!60!black]
+            at ($(fetch.south west)!0.5!(uopq4.south east)+(0,-0.4)$) {Frontend};
+        \node[font=\footnotesize\sffamily\itshape, text=orange!60!black]
+            at ($(alloc.south west)!0.5!(retire.south east)+(0,-0.4)$) {Backend};
     \end{tikzpicture}
 }
 
@@ -2652,29 +2647,9 @@
 \begin{frame}{OOO Machine Pipeline}
     \centering
     
-    % Background areas for Frontend/Backend
-    \begin{tikzpicture}[overlay, remember picture]
-        % Define coordinates for the rectangles
-        \coordinate (frontend-tl) at ($(current page.center)+(-7.5,3)$);
-        \coordinate (frontend-br) at ($(current page.center)+(-0.5,1)$);
-        \coordinate (backend-tl) at ($(current page.center)+(-0.5,3)$);
-        \coordinate (backend-br) at ($(current page.center)+(7.5,1)$);
-        
-        % Frontend background (left side)
-        \fill[cyan!10, rounded corners=5pt] 
-            (frontend-tl) rectangle (frontend-br);
-        % Backend background (right side)
-        \fill[orange!10, rounded corners=5pt] 
-            (backend-tl) rectangle (backend-br);
-        
-        % Category labels positioned relative to rectangle bottoms
-        \node[font=\footnotesize\sffamily\itshape, text=cyan!60!black] 
-            at ($(frontend-tl)!0.5!(frontend-br)+(0,-0.3)$) {Frontend};
-        \node[font=\footnotesize\sffamily\itshape, text=orange!60!black] 
-            at ($(backend-tl)!0.5!(backend-br)+(0,-0.3)$) {Backend};
-    \end{tikzpicture}
-    
     \drawpipeline{0}
+
+    \vspace{0.3cm}
     \begin{itemize}
     \item \textbf{IQ -- Instruction Queue}
     \begin{itemize}
