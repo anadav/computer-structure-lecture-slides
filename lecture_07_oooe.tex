@@ -2388,6 +2388,44 @@
   \end{columns}
 \end{frame}
 
+\begin{frame}{Memory Disambiguation}
+  \begin{itemize}
+    \item \textbf{MOB predicts} if a load can proceed despite unknown STAs
+    \begin{itemize}
+      \item \textcolor{red}{Predict colliding} $\rightarrow$ block Load (conservative)
+      \item \textcolor{green!50!black}{Predict non-colliding} $\rightarrow$ execute even with unknown STAs
+    \end{itemize}
+
+    \item \textbf{Wrong prediction?} $\rightarrow$ pipeline flush at retire, re-fetch
+  \end{itemize}
+
+  \vspace{0.2cm}
+  \begin{block}{Predict non-colliding $\rightarrow$ Load proceeds}
+    \begin{tabular}{@{}c@{\hspace{0.3cm}}l@{}}
+      & \textcolor{brown}{\texttt{Store Mem[r1+\textcolor{red}{r3}*2] $\leftarrow$ 8}} {\small\textcolor{brown}{// address unknown (\textcolor{red}{r3} not ready)}} \\[4pt]
+      \textcolor{green!50!black}{\textbf{GO}} & \texttt{Load R1 $\leftarrow$ Mem[1000]} {\small\textcolor{gray}{// predicted: no conflict}} \\
+    \end{tabular}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Store $\rightarrow$ Load Forwarding}
+  \begin{itemize}
+    \item \textbf{Condition:} Older store to same address, and store's data is ready
+    \item \textbf{Forwarding:} Load gets data directly from Store Data Buffer (SDB)
+    \begin{itemize}
+      \item No need to wait for store to retire and write to D\$
+    \end{itemize}
+    \item \textbf{Restrictions:} alignment, partial overlap, etc.
+  \end{itemize}
+
+  \vspace{0.2cm}
+  \begin{block}{Store's data is ready $\rightarrow$ forward to Load}
+    \begin{tabular}{@{}c@{\hspace{0.3cm}}l@{}}
+      & \texttt{Store Mem[1000] $\leftarrow$ 42} {\small\textcolor{gray}{// address known, data ready}} \\[4pt]
+      \textcolor{blue!70}{$\Rightarrow$} & \texttt{Load R1 $\leftarrow$ Mem[1000]} {\small\textcolor{blue!70}{// forwarded from SDB}} \\
+    \end{tabular}
+  \end{block}
+\end{frame}
 
 % Updated macro with more flexibility and queue colors
 \newcommand{\drawpipelineCustomExt}[9]{%
