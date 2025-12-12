@@ -517,10 +517,7 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
 %\vspace{-0.3cm}
 
 \begin{itemize}
-    \item \textbf{A 2-bit counter avoids the double mistake in glitches}
-    \begin{itemize}
-        \item Need "more evidence" to change prediction
-    \end{itemize}
+    \item \textbf{2-bit counter:} needs ``more evidence'' to change prediction
 \end{itemize}
 
 \vspace{-0.2cm}
@@ -561,26 +558,23 @@ Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1}
     % Prediction labels
     \node[myorange,font=\small] at (1.25,-1.2) {Predict not-taken};
     \node[mypurple,font=\small] at (6.25,-1.2) {Predict taken};
+
+    % Initial state indicator
+    \node[myblue,font=\scriptsize,anchor=east] (initial) at ([xshift=-0.8cm,yshift=0.8cm]WT.north) {initial state};
+    \draw[->,thick,myblue] (initial.east) -| (WT.north);
 \end{tikzpicture}
 \end{center}
 
 \vspace{0.1cm}
 
 \begin{itemize}
-    \item Initial state: weakly-taken (most branches are taken)
-\end{itemize}
-
-\begin{itemize}
-    \item \textbf{Update (at execution)}
+    \item \textbf{Initial state:} weakly-taken (most branches are taken)
+    \item \textbf{Update (at execution):}
     \begin{itemize}
-        \item Branch was actually taken: increment counter (saturate at 11)
-        \item Branch was actually not-taken: decrement counter (saturate at 00)
+        \item Taken $\rightarrow$ increment (saturate at 11); Not-taken $\rightarrow$ decrement (saturate at 00)
     \end{itemize}
-\end{itemize}
-
-\begin{itemize}
-    \item \textbf{Predict according to m.s.bit of counter (0=NT, 1=taken)}
-    \item \textbf{Does not predict well branches with patterns like 010101...}
+    \item \textbf{Prediction:} m.s.bit of counter (0=NT, 1=T)
+    \item Does not predict well patterns like 010101...
 \end{itemize}
 
 \end{frame}
