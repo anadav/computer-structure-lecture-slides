@@ -1107,24 +1107,27 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \label{frame:global_predictor}
 
 \begin{itemize}
-    \item \textbf{The behavior of some branches is highly correlated}
+    \item The behavior of some branches is \textbf{highly correlated}
 \end{itemize}
 
-%\vspace{0.2cm}
-
 \begin{center}
-\texttt{if (x < 1) ...}
+\begin{tcolorbox}[
+    colback=lightblue!10,
+    colframe=myblue,
+    boxrule=1pt,
+    arc=2mm,
+    left=3mm, right=3mm, top=2mm, bottom=2mm,
+    fontupper=\small\ttfamily,
+    width=0.85\textwidth
+]
+if (x < 1) \{ ... \}  \textcolor{black!60}{// branch A}
 
-\texttt{if (x > 1) ...}
+if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$ B not taken!}
+\end{tcolorbox}
 \end{center}
 
-\vspace{0.0cm}
-
 \begin{itemize}
-    \item \textbf{Using a single Global History Register (\textit{GHR}) for all branches}
-    \begin{itemize}
-        \item The prediction of the 2$^{nd}$ \textit{if} is influenced by the direction of the 1$^{st}$ \textit{if}
-    \end{itemize}
+    \item \textbf{Global History Register (GHR):} single history shared by all branches
 \end{itemize}
 
 \begin{center}
@@ -1153,10 +1156,10 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 \end{center}
 
 \begin{itemize}
-    \item \textbf{History interference between non-correlated might hurt prediction}
-    \item \textbf{With only a single history, can afford a long history}
+    \item History interference between non-correlated branches may hurt prediction
+    \item With a single history, can afford a \textbf{long history}
     \begin{itemize}
-        \item The predictor size: history\_size + 2$\times$$2^{\text{history\_size}}$
+        \item Predictor size: history\_size + 2$\times$$2^{\text{history\_size}}$
     \end{itemize}
 \end{itemize}
 
