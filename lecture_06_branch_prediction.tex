@@ -1429,29 +1429,12 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 \label{frame:indirect_target_2}
 
 \begin{itemize}
-    \item \textbf{Initially allocate indirect branch only in the Target Array (TA)}
+    \item \textbf{Initial allocation:} indirect branch stored only in Target Array (TA)
     \begin{itemize}
         \item Many indirect branches have only one target
     \end{itemize}
-\end{itemize}
-
-\vspace{0.2cm}
-
-\begin{itemize}
-    \item \textbf{If the TA mis-predicts for an indirect jump}
-    \begin{itemize}
-        \item Allocate an iTA entry with the current target
-        \item Indexed by IP $\oplus$ Global History
-    \end{itemize}
-\end{itemize}
-
-\vspace{0.2cm}
-
-\begin{itemize}
-    \item \textbf{Prediction from the iTA is used if}
-    \begin{itemize}
-        \item TA indicates an indirect jump and iTA hits
-    \end{itemize}
+    \item \textbf{On TA misprediction:} allocate iTA entry indexed by IP $\oplus$ GHR
+    \item \textbf{Use iTA prediction} when TA indicates indirect jump and iTA hits
 \end{itemize}
 
 \vspace{0.1cm}
@@ -1471,7 +1454,7 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 
     % Target Array as muxdemux - wider and shorter (Lh=Rh, slightly wider)
     \node[muxdemux, muxdemux def={Lh=2, Rh=2, NL=1, NR=5, w=4.5},
-          external pins width=0, fill=green!20, anchor=lpin 1, right=1.5cm of conn_ip, align=center,
+          external pins width=0, fill=lightblue!20, anchor=lpin 1, right=1.5cm of conn_ip, align=center,
           font=\small] (ta) {Target Array};
 
     % Main MUX for output selection - now with top pin, positioned lower
@@ -1480,13 +1463,15 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 
     % Indirect Target Predictor - wider and shorter, positioned using |- relative to TA and MUX
     \node[muxdemux, muxdemux def={Lh=2, Rh=2, NL=1, NR=3, w=4.5},
-          external pins width=0, fill=green!20, anchor=rpin 2, align=center, font=\small] (itp) at (ta.east |- mux.lpin 2) {Indirect Target\\Predictor};
+          external pins width=0, fill=lightblue!20, anchor=rpin 2, align=center, font=\small] (itp) at (ta.east |- mux.lpin 2) {Indirect Target\\Predictor};
 
     % XOR gate positioned using |- with conn_ip x-axis and itp y-axis
     \node[circle, draw=black!80, line width=1pt, minimum size=0.7cm, fill=white] (xor) at (conn_ip |- itp.lpin 1) {$\oplus$};
 
-    % Global history input - positioned using |- with branch_ip.east x-axis and xor y-axis, anchored east
-    \node[font=\normalsize, text=myblue, anchor=east, align=center] (ghr) at (branch_ip.east |- xor) {Global\\history};
+    % GHR - positioned using |- with branch_ip x-axis and xor y-axis
+    \node[draw, thick, fill=lightblue!20, minimum width=1.2cm, minimum height=0.5cm,
+          anchor=east, font=\scriptsize] (ghr) at ([xshift=-2mm]branch_ip.east |- xor) {history};
+    \node[anchor=south, font=\tiny\bfseries, myblue] at (ghr.north) {GHR};
 
     % AND gate rotated 90 degrees - smaller, anchored at output pin above MUX top pin
     \node[and port, rotate=-90, xscale=0.2, yscale=0.6, anchor=out, external pins width=0,
@@ -1509,8 +1494,8 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
     % Branch IP to XOR gate - goes to xor.north
     \draw[arrow] (conn_ip) -- (xor.north);
 
-    % Global history to XOR gate
-    \draw[arrow] (ghr) -- (xor.west);
+    % GHR to XOR gate
+    \draw[arrow] (ghr.east) -- (xor.west);
 
     % XOR to Indirect Target Predictor
     \draw[arrow] (xor.east) -- (itp.lpin 1);
