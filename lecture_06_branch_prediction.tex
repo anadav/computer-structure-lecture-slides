@@ -923,12 +923,12 @@ do {
         node[anchor=west,font=\small,mypurple] {prediction = msb of counter};
 
     % Update history arrow - points to BHR
-    \draw[->,thick,mygreen] (0,-1.2) -- (bhr.south);
-    \node[anchor=north,font=\scriptsize,mygreen,align=center] at (0,-1.3) {Update history\\with branch outcome};
+    \draw[->,thick,mygreen] ($(bhr.south)+(0,-1)$) -- (bhr.south)
+        node[pos=0,anchor=north,font=\scriptsize,align=center] {Update history\\with branch outcome};
 
     % Update counter arrow - points to the orange counter cell (row 3)
-    \node[anchor=north west,font=\scriptsize,myorange,align=center] (update_counter) at ($(counter_array-3-1.south)+(0.5cm,-0.8cm)$) {Update counter\\(at execution)};
-    \draw[->,thick,myorange] (update_counter.north) -- (counter_array-3-1.south east);
+    \draw[->,thick,myorange] ($(counter_array-3-1.south east)+(0.5,-1)$) -- (counter_array-3-1.south east)
+        node[pos=0,anchor=north west,font=\scriptsize,align=center] {Update counter\\(at execution)};
 \end{tikzpicture}
 \end{center}
 
@@ -985,8 +985,8 @@ do {
     \draw[->,thick] (counter_array-3-1.east) -- (pred.west);
 
     % Speculative update: arrow from prediction back to history (from bottom)
-    \draw[->,thick,mygreen] (pred.south) .. controls ++(0,-1) and ++(3,-1) .. (sbhr.south);
-    \node[anchor=east,font=\scriptsize,mygreen,align=right] at ($(sbhr.south)+(-0.2,-0.3)$) {Update history\\with prediction};
+    \draw[->,thick,mygreen] (pred.south) .. controls ++(0,-1) and ++(3,-1) .. (sbhr.south)
+        node[pos=0.8,below,font=\scriptsize,align=right] {Update history\\with prediction};
 \end{tikzpicture}
 \end{center}
 
