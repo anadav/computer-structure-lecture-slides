@@ -443,51 +443,58 @@ $\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hs
 
 \section{Conditional Branch Direction Prediction}
 
-\subsection{Bimodal Predictors}
-
+% Section title - Conditional Branch Direction Prediction
 \begin{frame}
-\frametitle{Bimodal Predictor}
-\label{frame:bimodal_predictor_cont}
-
-\vspace{-0.2cm}
-
 \begin{center}
-\textcolor{myblue}{\textbf{2-bit-sat counter array}}
+\vspace{2cm}
+{\Huge\textcolor{myblue}{\textbf{Conditional Branch}}}
+
+\vspace{0.3cm}
+
+{\Huge\textcolor{myblue}{\textbf{Direction Prediction}}}
 \end{center}
+\end{frame}
 
-\vspace{0.2cm}
+% One-Bit Predictor
+\begin{frame}
+\frametitle{One-Bit Predictor}
+\label{frame:one_bit_predictor}
 
 \begin{center}
-\begin{tikzpicture}[scale=0.7]
-    % Draw the counter array
-    \fill[lightblue] (0,0) rectangle (1,4.5);
-    \draw[thick] (0,0) rectangle (1,4.5);
-    
-    % Draw array divisions
-    \foreach \y in {0.5,1,1.5,2,2.5,3,3.5,4} {
-        \draw (0,\y) -- (1,\y);
-    }
-    
-    % Highlight the second cell from top (the one being accessed)
-    \fill[lightblue!60] (0,3.5) rectangle (1,4);
-    
-    % Labels and arrows - pointing to second cell from top
-    \node[mygreen,anchor=east,font=\small] at (-0.8,3.75) {l.s. bits of branch IP};
-    \draw[->,thick,mygreen] (-0.2,3.75) -- (0,3.75);
-    
-    \node[mypurple,anchor=west,font=\small] at (1.8,3.75) {Prediction = msb of counter};
-    \draw[->,thick,mypurple] (1,3.75) -- (1.3,3.75);
-    
-    % Curved arrow for update - starting low and curving up to second cell
-    \draw[->,thick,myblue] (1.1,1.5) .. controls (2.5,1.5) and (2.5,3.5) .. (1,3.5);
-    \node[myblue,align=left,anchor=west,font=\footnotesize] at (1.8,0.9) {Update counter\\with branch outcome\\(at execution)};
+\begin{tikzpicture}[scale=0.8]
+    % Bit array as matrix of nodes
+    \matrix[matrix of nodes,
+            nodes={draw, minimum width=1.1cm, minimum height=0.45cm, anchor=center, fill=lightblue!10, inner sep=1pt},
+            row sep=-\pgflinewidth, column sep=-\pgflinewidth] (bit_array) {
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[draw=myorange, line width=1.5pt, fill=myorange!20, font=\tiny]| T/NT \\
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+    };
+    \node[anchor=south,font=\small\bfseries,myblue] at (bit_array.north) {Bit Array};
+
+    % Input label - positioned relative to highlighted cell
+    \node[mygreen,anchor=east,font=\small,left=1.5cm of bit_array-3-1.west] (ls_bits) {l.s. bits of Branch IP};
+    \draw[->,thick,mygreen] (ls_bits.east) -- (bit_array-3-1.west);
+
+    % Output label - positioned relative to highlighted cell
+    \node[mypurple,anchor=west,font=\small,align=left,right=1.5cm of bit_array-3-1.east] (prediction) {Prediction (at fetch):\\previous branch outcome};
+    \draw[->,thick,mypurple] (bit_array-3-1.east) -- (prediction.west);
+
+    % Curved arrow for update - relative positioning
+    \node[myblue,align=center,anchor=north west,font=\footnotesize] at ([xshift=5mm]bit_array-4-1.south east) (update) {Update bit with\\branch outcome\\(at execution)};
+    \draw[->,thick,myblue] (update.north) .. controls ([xshift=2cm]bit_array-4-1.east) and ([xshift=2cm]bit_array-3-1.east) .. ([xshift=2mm,yshift=-2mm]bit_array-3-1.east);
 \end{tikzpicture}
 \end{center}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item \small\textbf{2-bit predictor avoids a double mistake in loops / glitches from the pattern}
+    \item \textbf{Problem: 1-bit predictor has a double mistake in loops}
 \end{itemize}
 
 \vspace{0.1cm}
@@ -495,12 +502,13 @@ $\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hs
 {\footnotesize
 \begin{tabular}{@{}ll@{}}
 Branch Outcome & \texttt{0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1} \\
-Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 \textcolor{red}{0} 0 0 0 0 0 0} \\
+Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 0} \\
 \end{tabular}
 }
 
 \end{frame}
 
+\subsection{Bimodal Predictors}
 
 \begin{frame}
 \frametitle{Bimodal (2-Bit) Predictor}
@@ -689,71 +697,6 @@ br3: JNZ n, Loop
 \end{tcolorbox}
 \end{column}
 \end{columns}
-
-\end{frame}
-
-% Section title - Conditional Branch Direction Prediction
-\begin{frame}
-\begin{center}
-\vspace{2cm}
-{\Huge\textcolor{myblue}{\textbf{Conditional Branch}}}
-
-\vspace{0.3cm}
-
-{\Huge\textcolor{myblue}{\textbf{Direction Prediction}}}
-\end{center}
-\end{frame}
-
-% One-Bit Predictor
-\begin{frame}
-\frametitle{One-Bit Predictor}
-\label{frame:one_bit_predictor}
-
-\begin{center}
-\begin{tikzpicture}[scale=0.8]
-    % Bit array as matrix of nodes
-    \matrix[matrix of nodes,
-            nodes={draw, minimum width=1.1cm, minimum height=0.45cm, anchor=center, fill=lightblue!10, inner sep=1pt},
-            row sep=-\pgflinewidth, column sep=-\pgflinewidth] (bit_array) {
-        |[fill=lightblue!10]| \\
-        |[fill=lightblue!10]| \\
-        |[draw=myorange, line width=1.5pt, fill=myorange!20]| \\
-        |[fill=lightblue!10]| \\
-        |[fill=lightblue!10]| \\
-        |[fill=lightblue!10]| \\
-        |[fill=lightblue!10]| \\
-        |[fill=lightblue!10]| \\
-    };
-    \node[anchor=south,font=\small\bfseries,myblue] at (bit_array.north) {Bit Array};
-
-    % Input label - positioned relative to highlighted cell
-    \node[mygreen,anchor=east,font=\small,left=1.5cm of bit_array-3-1.west] (ls_bits) {l.s. bits of Branch IP};
-    \draw[->,thick,mygreen] (ls_bits.east) -- (bit_array-3-1.west);
-
-    % Output label - positioned relative to highlighted cell
-    \node[mypurple,anchor=west,font=\small,align=left,right=1.5cm of bit_array-3-1.east] (prediction) {Prediction (at fetch):\\previous branch outcome};
-    \draw[->,thick,mypurple] (bit_array-3-1.east) -- (prediction.west);
-
-    % Curved arrow for update - relative positioning
-    \node[myblue,align=center,anchor=north west,font=\footnotesize] at ([xshift=5mm]bit_array-4-1.south east) (update) {Update bit with\\branch outcome\\(at execution)};
-    \draw[->,thick,myblue] (update.north) .. controls ([xshift=2cm]bit_array-4-1.east) and ([xshift=2cm]bit_array-3-1.east) .. ([xshift=2mm,yshift=-2mm]bit_array-3-1.east);
-\end{tikzpicture}
-\end{center}
-
-\vspace{0.3cm}
-
-\begin{itemize}
-    \item \textbf{Problem: 1-bit predictor has a double mistake in loops}
-\end{itemize}
-
-\vspace{0.1cm}
-
-{\footnotesize
-\begin{tabular}{@{}ll@{}}
-Branch Outcome & \texttt{0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1} \\
-Prediction & \texttt{?~0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 \textcolor{red}{0 1} 0 0 0 0 0} \\
-\end{tabular}
-}
 
 \end{frame}
 
