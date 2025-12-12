@@ -1171,7 +1171,7 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 \label{frame:gshare}
 
 \begin{itemize}
-    \item \textbf{\textit{Gshare} combines global history information with the branch IP}
+    \item \textbf{Gshare:} combines global history with the branch IP using XOR
 \end{itemize}
 
 \vspace{0.3cm}
@@ -1214,11 +1214,11 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item \textbf{The counter accessed is a function of the global history and of the specific branch being predicted / updated:}
+    \item Counter index = GHR $\oplus$ Branch IP
     \begin{itemize}
-        \item Following this history, for this specific branch, the branch is taken/NT
+        \item Learns: ``following this history, at this branch $\rightarrow$ taken/not-taken''
     \end{itemize}
-    \item \textbf{This turns to be extremely accurate and space-efficient}
+    \item Turns out to be \textbf{extremely accurate} and space-efficient
 \end{itemize}
 
 \end{frame}
@@ -1229,30 +1229,23 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 \label{frame:why_gshare}
 
 \begin{itemize}
-    \item \textbf{Updating a single history with all branches' outcomes might look like a mess, but ...}
+    \item Updating a single history with all branches' outcomes might seem chaotic, but...
+    \item The \textbf{number of active branches} at any moment is usually small
 \end{itemize}
 
 \vspace{0.3cm}
 
+\textbf{Example 1:} A short loop with no \texttt{if} statements
 \begin{itemize}
-    \item \textbf{The numbers of branches active in the program at a given moment is usually small}
-    \begin{itemize}
-        \item E.g., in case of short loop with no if statements in the loop body
-        \begin{itemize}
-            \item There is only one branch in the loop (the loop's branch)
-            \item Gshare behaves just like local history
-        \end{itemize}
-    \end{itemize}
+    \item Only one branch exists $\Rightarrow$ Gshare behaves like local history
 \end{itemize}
 
 \vspace{0.3cm}
 
+\textbf{Example 2:} Two active branches A and B
 \begin{itemize}
-    \item \textbf{Assume 2 branches are active simultaneously: A and B}
-    \begin{itemize}
-        \item Some of the bits in the GHR are for A, and some for B
-        \item Due to the XOR with their IP's, A and B update different counters
-    \end{itemize}
+    \item GHR contains interleaved outcomes from both
+    \item XOR with different IPs $\Rightarrow$ A and B update \textbf{different counters}
 \end{itemize}
 
 \end{frame}
