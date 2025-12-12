@@ -2452,34 +2452,32 @@
 \centering
 \begin{tikzpicture}[
     cache/.style={draw, thick, minimum width=1.4cm, minimum height=1.4cm, inner sep=2pt, align=center, font=\bfseries},
-    fbentry/.style={draw, thick, minimum width=2.2cm, minimum height=0.35cm},
+    fbentry/.style={draw, minimum width=0.7cm, minimum height=0.35cm, fill=gray!20, inner sep=0pt},
+    fbheader/.style={minimum width=0.7cm, minimum height=0.35cm, font=\scriptsize, inner sep=0pt},
     ]
 
-    % L1 cache (left)
-    \node[cache, fill=orange!30] (l1) at (0, 0) {L1\\cache};
+    % L2 cache (left)
+    \node[cache, fill=green!30] (l2) at (0, 0) {L2\\cache};
 
-    % Fill Buffers (center) as matrix
-    \matrix[right=0.6cm of l1, matrix of nodes,
-            nodes={fbentry, fill=gray!20},
-            row sep=1pt,
-            column sep=0pt,
-            ampersand replacement=\&] (fb) {
-        |(fb1d)| \scriptsize data \& |(fb1a)| \scriptsize addr. \\
-        |(fb2d)|  \& |(fb2a)|  \\
-        |(fb3d)|  \& |(fb3a)|  \\
-        |(fb4d)|  \& |(fb4a)|  \\
+    % Fill Buffers (center) as matrix with header row
+    \matrix[right=0.6cm of l2, matrix of nodes,
+            row sep=-0.4pt,
+            column sep=-0.4pt,
+            ampersand replacement=\&,
+            label={[font=\small\bfseries]above:Fill Buffers}] (fb) {
+        |[fbheader]| data \& |[fbheader]| addr. \\
+        |(fb1d)[fbentry]|  \& |(fb1a)[fbentry]|  \\
+        |(fb2d)[fbentry]|  \& |(fb2a)[fbentry]|  \\
+        |(fb3d)[fbentry]|  \& |(fb3a)[fbentry]|  \\
+        |(fb4d)[fbentry]|  \& |(fb4a)[fbentry]|  \\
     };
 
-    % Label for fill buffers
-    \node[above=1mm of fb, font=\small\bfseries, align=center] {Fill Buffers};
+    % L1 cache (right)
+    \node[cache, fill=orange!30, right=0.6cm of fb] (l1) {L1\\cache};
 
-    % L2 cache (right)
-    \node[cache, fill=green!30, right=0.6cm of fb] (l2) {L2\\cache};
-
-    % Arrows
-    \draw[->, very thick] (l1.east) -- (fb1d.west |- l1.east);
-    \draw[->, very thick] (fb2a.east) -- (fb2a.east -| l2.west);
-    \draw[<-, very thick] (fb3d.east) -- (fb3d.east -| l2.west);
+    % Arrows: L1 -> FB, FB <-> L2
+    \draw[<-, very thick] (fb.east) -- (fb.east -| l1.west);
+    \draw[<->, very thick] (fb.west) -- (fb.west -| l2.east);
 \end{tikzpicture}
 \end{column}
 \end{columns}
