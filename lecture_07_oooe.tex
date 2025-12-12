@@ -2105,119 +2105,86 @@
       \begin{itemize}
         \item \textbf{Interrupts served when next instruction retires}
         \begin{itemize}
-          \item Let current cycle instruction retire
+          \item<1-> Let current cycle instruction retire
+          \item<2-> Flush subsequent instructions
+          \item<3-> Initiate interrupt service code
+          \item<3-> Re-fetch subsequent instructions
         \end{itemize}
       \end{itemize}
     \end{column}
     \begin{column}{0.35\textwidth}
       \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-          % Interrupt indicator
-          \node[star, star points=7, star point ratio=2.5, draw=red, thick, fill=yellow, minimum size=1.5cm] at (3,-1) {\textcolor{red}{\textbf{Interrupt}}};
+        \begin{tikzpicture}[font=\tiny,
+          E/.style={draw, fill=white, minimum width=1.6cm, minimum height=0.3cm, inner sep=0},
+          G/.style={E, fill=green!30},
+          R/.style={E, fill=red!30},
+          P/.style={E, fill=purple!30}
+        ]
+          \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth,
+            nodes={minimum width=1.6cm, minimum height=0.3cm, inner sep=0}
+          ] (m) {
+            |[E]| \\
+            |[E]| \\
+            |[G]| \\
+            |[R]| \\
+            |[G]| \\
+            |[R]| \\
+            |[R]| \\
+            |[G]| \\
+            |[R]| \\
+            |[R]| \\
+            |[R]| \\
+            |[G]| \\
+            |[G]| \\
+            |[G]| \\
+            |[G]| \\
+            |[G]| \\
+            |[E]| \\
+            |[E]| \\
+          };
 
-          % ROB visualization
-          \foreach \i in {0,2,4,5,7,8,9} {
-            \draw[fill=red!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
-          }
-          \foreach \i in {1,3,6,10,11,12,13,14} {
-            \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
-          }
-
-          % Empty entries
-          \foreach \i in {-2,-1,15,16} {
-            \draw[fill=white] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
-          }
-
-          % Labels
-          \draw[->,thick] (-0.5,-0.2) -- (0,-0.2) node[left] at (-0.5,-0.2) {retire};
-          \node[right] at (2.1,-0.2) {oldest};
-
-          \draw[->,thick] (-0.5,-5.6) -- (0,-5.6) node[left] at (-0.5,-5.6) {alloc};
-          \node[right] at (2.1,-5.6) {youngest};
-        \end{tikzpicture}
-      \end{center}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Interrupts}
-  \begin{columns}
-    \begin{column}{0.65\textwidth}
-      \begin{itemize}
-        \item \textbf{Interrupts served when next instruction retires}
-        \begin{itemize}
-          \item Let current cycle instruction retire
-          \item Flush subsequent instructions
-        \end{itemize}
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.35\textwidth}
-      \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-          % Interrupt indicator
-          \node[star, star points=7, star point ratio=2.5, draw=red, thick, fill=yellow, minimum size=1.5cm] at (3,-1) {\textcolor{red}{\textbf{Interrupt}}};
-
-          % Empty ROB after flush
-          \foreach \i in {-2,-1,0,...,16} {
-            \draw[fill=white] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+          % Interrupt indicator above ROB (stages 1-2)
+          \only<1-2>{
+            \node[inner sep=0pt, above=0.2cm of m-1-1] (boom) {\includegraphics[width=1.6cm, height=1.0cm]{figures/noun-boom-6722068.png}};
+            \node[font=\scriptsize\bfseries] at (boom.center) {\textcolor{red}{interrupt}};
           }
 
-          % Labels
-          \draw[->,thick] (-1,-0.2) -- (0,-0.2) node[left] at (-1,-0.2) {\small retire};
-          \node[right] at (2.1,-0.2) {oldest};
-
-          \draw[->,thick] (-1,-0.2) -- (0,-0.2) node[left] at (-1,-0.2) {\small alloc};
-        \end{tikzpicture}
-      \end{center}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Interrupts}
-  \begin{columns}
-    \begin{column}{0.65\textwidth}
-      \begin{itemize}
-        \item \textbf{Interrupts served when next instruction retires}
-        \begin{itemize}
-          \item Let current cycle instruction retire
-          \item Flush subsequent instructions
-          \item Initiate interrupt service code
-          \item Re-fetch subsequent instructions
-        \end{itemize}
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.35\textwidth}
-      \begin{center}
-        \begin{tikzpicture}[scale=0.8]
-          % Interrupt service routine
-          \foreach \i in {0,1,2,3,4} {
-            \draw[fill=purple!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+          % Stage 2: Flushed overlay
+          \only<2>{
+            \fill[white, opacity=0.7] (m-4-1.north west) rectangle (m-16-1.south east);
+            \node[rotate=45, font=\small, opacity=0.8] at (m-10-1.center) {flushed};
           }
-          \node[font=\tiny,align=center] at (1,-0.8) {interrupt\\service\\routine};
 
-          % Re-fetched instructions
-          \foreach \i in {5,...,9} {
-            \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
-          }
-          \node[right,font=\tiny] at (2.1,-7*0.4) {youngest};
-
-          \foreach \i in {10,...,14} {
-            \draw[fill=green!30] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
-          }
-          \node[right,font=\tiny] at (2.1,-12*0.4) {youngest};
-
-          % Empty entries
-          \foreach \i in {-2,-1,15,16} {
-            \draw[fill=white] (0,-\i*0.4) rectangle (2,-\i*0.4+0.35);
+          % Stage 3: ISR and re-fetched
+          \only<3>{
+            % Override with purple for ISR
+            \node[P] at (m-3-1) {};
+            \node[P] at (m-4-1) {};
+            \node[P] at (m-5-1) {};
+            \node[P] at (m-6-1) {};
+            \node[P] at (m-7-1) {};
+            \node[font=\tiny, align=center] at (m-5-1.center) {ISR};
+            % Override rest with green
+            \foreach \i in {8,...,16} {
+              \node[G] at (m-\i-1) {};
+            }
           }
 
           % Labels
-          \draw[->,thick] (-0.5,-0.2) -- (0,-0.2) node[left] at (-0.5,-0.2) {retire};
-          \node[right] at (2.1,-0.2) {oldest};
+          \node[left=0.3cm of m-3-1.west, anchor=east] (retire) {\scriptsize retire};
+          \draw[->,thick] (retire) -- (m-3-1.west);
+          \node[right=0.1cm of m-3-1.east, anchor=west] {\scriptsize oldest};
 
-          \draw[->,thick] (-0.5,-2.0) -- (0,-2.0) node[left] at (-0.5,-2.0) {alloc};
-
-          \draw[->,thick] (-0.5,-4.8) -- (0,-4.8) node[left] at (-0.5,-4.8) {alloc};
+          \only<1-2>{
+            \node[left=0.3cm of m-16-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-16-1.west);
+            \node[right=0.1cm of m-16-1.east, anchor=west] {\scriptsize youngest};
+          }
+          \only<3>{
+            \node[left=0.3cm of m-16-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-16-1.west);
+            \node[right=0.1cm of m-16-1.east, anchor=west] {\scriptsize youngest};
+          }
         \end{tikzpicture}
       \end{center}
     \end{column}
