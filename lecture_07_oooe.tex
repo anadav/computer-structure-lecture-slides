@@ -2244,30 +2244,31 @@
 
 \begin{frame}{OOO Execution of Memory Operations}
   \begin{itemize}
-    \item \textbf{The RS dispatches instructions based on \textcolor{green}{register} dependencies}
+    \item \textbf{RS (Reservation Station)}
     \begin{itemize}
-      \item The RS cannot detect \textcolor{purple}{memory} dependencies
-      \begin{center}
-        \texttt{store Mem[r1+r3*2] $\leftarrow$ r9}\\
-        \texttt{load  r2 $\leftarrow$ Mem[r10+r7*2]}
-      \end{center}
-      \begin{itemize}
-        \item Does not know the load/store memory addresses
-      \end{itemize}
-      
-      \item The RS dispatches load/store instructions to the Address Generation Unit (AGU) when the sources for the address calculation are ready
-      
-      \item The AGU calculates the virtual memory address:
-      \begin{center}
-        \colorbox{gray!20}{Base Register + (Scale × Index Register) + Displacement}
-      \end{center}
+      \item Dispatches based on \textcolor{green}{register} dependencies only
+      \item Cannot detect \textcolor{purple}{memory} dependencies -- doesn't know addresses yet
+      \item Dispatches load/store to AGU when address operands are ready
     \end{itemize}
-    
-    \item \textbf{The AGU sends the address to the Memory Order Buffer (MOB)}
+
+    \item \textbf{AGU (Address Generation Unit)}
     \begin{itemize}
-      \item The MOB resolves memory dependencies and enforces memory ordering
+      \item Calculates virtual address: \colorbox{gray!20}{Base + Scale $\times$ Index + Displacement}
+      \item Sends address to MOB
+    \end{itemize}
+
+    \item \textbf{MOB (Memory Order Buffer)}
+    \begin{itemize}
+      \item Resolves memory dependencies (now that addresses are known)
+      \item Enforces memory ordering
     \end{itemize}
   \end{itemize}
+
+  \vspace{0.3cm}
+  \begin{center}
+    \small\texttt{store Mem[r1+r3*2] $\leftarrow$ r9} \quad vs \quad \texttt{load r2 $\leftarrow$ Mem[r10+r7*2]}\\[0.1cm]
+    {\footnotesize\textcolor{gray}{Are these dependent? RS doesn't know -- MOB will resolve.}}
+  \end{center}
 \end{frame}
 
 \begin{frame}{Load/Store Ordering}
