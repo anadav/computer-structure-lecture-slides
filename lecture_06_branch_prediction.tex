@@ -962,8 +962,8 @@ do {
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
     % Speculative BHR
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (sbhr) at (0,0) {history};
-    \node[anchor=south,font=\small\bfseries,myblue] at (sbhr.north) {Speculative BHR};
+    \node[draw,thick,fill=lightgreen!30,minimum width=2cm,minimum height=0.7cm] (sbhr) at (0,0) {\textcolor{mygreen}{history}};
+    \node[anchor=south,font=\small\bfseries,red!70!black] at (sbhr.north) {Speculative BHR};
 
     % Counter array as matrix of nodes
     \matrix[matrix of nodes,
@@ -1000,7 +1000,7 @@ do {
 
 % Speculative History Updates - slide 2
 \begin{frame}[t]
-\frametitle{Handling Misprediction}
+\frametitle{Speculative History: Misprediction Recovery}
 \label{frame:speculative_history_2}
 
 \begin{itemize}
@@ -1063,21 +1063,16 @@ do {
 \end{frame}
 
 % Speculative History Updates - slide 3
-\begin{frame}
-\frametitle{Speculative History Updates}
+\begin{frame}[t]
+\frametitle{Speculative History: Counter Array}
 \label{frame:speculative_history_3}
 
 \begin{itemize}
-    \item \textbf{The counter array is not updated speculatively}
+    \item The counter array is \textbf{not} updated speculatively
+    \item Prediction changes only on misprediction (state $01\rightarrow10$ or $10\rightarrow01$)
+    \item Counter array too big to recover after misprediction
     \begin{itemize}
-        \item Prediction can change only on a misprediction
-        \begin{itemize}
-            \item state $01\rightarrow10$ or $10\rightarrow01$
-        \end{itemize}
-        \item The counter array is too big to be recovered following misprediction
-        \begin{itemize}
-            \item Too expensive to maintain both speculative and non-speculative copies of the counter array
-        \end{itemize}
+        \item Too expensive to maintain both speculative and non-speculative copies
     \end{itemize}
 \end{itemize}
 
@@ -1090,22 +1085,99 @@ do {
 
 \textbf{Holding BHRs and counter arrays for many branches:}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
 \begin{center}
-% TODO: Add history cache with private arrays diagram
-\textcolor{red}{[PLACEHOLDER: History Cache with private counter arrays diagram]}
+\begin{tikzpicture}[
+    cache_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.45cm, fill=lightgreen!30, inner sep=2pt, font=\scriptsize},
+    counter_row/.style={draw=black!60, line width=0.6pt, minimum height=0.4cm, fill=lightblue!30, inner sep=1pt, font=\tiny},
+    counter_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.4cm, minimum width=0.35cm, fill=lightblue!30, inner sep=1pt, font=\tiny},
+    arrow/.style={-latex, thick, draw=black!70}
+]
+
+    % History Cache using matrix of nodes
+    \matrix[matrix of nodes,
+        nodes={cache_cell},
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        ampersand replacement=\&
+    ] (hist_cache) {
+        |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| history \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+    };
+
+    % History Cache title
+    \node[above=0.1cm of hist_cache.north, font=\small\bfseries, brown!70!black] {History Cache};
+
+    % Branch IP input
+    \node[anchor=east, left=0.5cm of hist_cache.west, font=\small, text=brown!70!black] (ip) {Branch IP};
+    \draw[arrow, brown!70!black] (ip.east) -- (hist_cache-2-1.west);
+
+    % Counter arrays - table with multiple rows (single wide column each)
+    \matrix[matrix of nodes,
+        nodes={counter_row, minimum width=2.2cm},
+        row sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        right=2.2cm of hist_cache.east,
+        anchor=west
+    ] (counter_table) {
+        \phantom{x} \\
+        \phantom{x} \\
+        \phantom{x} \\
+        \phantom{x} \\
+        \phantom{x} \\
+    };
+
+    % Overlay: multi-column cells on row 2
+    \matrix[matrix of nodes,
+        nodes={counter_cell},
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        at=(counter_table-2-1.center),
+        anchor=center
+    ] (counter_cells) {
+        \phantom{} \& \phantom{} \& |[fill=white, draw=black, line width=0.8pt]| \phantom{} \& \phantom{} \& \phantom{} \& \phantom{} \\
+    };
+
+    % Dots to indicate more counters
+    \node[font=\tiny, right=1pt of counter_cells-1-6] {\textbullet\textbullet\textbullet};
+
+    % Counter arrays title
+    \node[above=0.1cm of counter_table.north, font=\small\bfseries, blue!70!black] {2-bit-sat counter arrays};
+
+    % Arrow from history to counter arrays
+    \draw[arrow] (hist_cache-2-2.east) -- ++(0.5,0) |- (counter_cells-1-1.west);
+
+    % Prediction output
+    \node[anchor=west, right=0.8cm of counter_table.east, yshift=0.5cm, font=\small, text=blue!70!black, align=left] (prediction) {prediction =\\msb of counter};
+
+    % Arrow from counter to prediction
+    \draw[arrow, blue!70!black] (counter_cells-1-3.north) |- (prediction.west);
+
+    % Update history label
+    \node[anchor=north, below=0.5cm of hist_cache.south, font=\scriptsize, text=brown!70!black, align=center] (update_hist) {Update history with\\branch prediction /\\branch outcome};
+    \draw[arrow, brown!70!black] (update_hist.north) -- (hist_cache-5-2.south);
+
+    % Update counter label
+    \node[anchor=north, below=0.5cm of counter_table.south, font=\scriptsize, text=blue!70!black, align=center] (update_counter) {Update counter with\\branch outcome};
+    \draw[arrow, blue!70!black] (update_counter.north) -- (counter_cells-1-3.south);
+
+\end{tikzpicture}
 \end{center}
-
-\vspace{0.3cm}
-
-Predictor size: \#BHRs $\times$ (tag\_size + history\_size + 2 $\times$ $2^{\text{history\_size}}$)
 
 \vspace{0.2cm}
 
-Example: \#BHRs = 1024; tag\_size=8; history\_size=6 $\Rightarrow$
+\begin{alertblock}{Predictor Size}
+\small
+Size = \#BHRs $\times$ (tag\_size + history\_size + 2 $\times$ $2^{\text{history\_size}}$)
 
-size=1024 $\times$ (8 + 6 + 2$\times$$2^6$) = 142Kbit
+\vspace{0.1cm}
+\textbf{Example:} \#BHRs = 1024; tag\_size=8; history\_size=6 $\Rightarrow$ size = 1024 $\times$ (8 + 6 + 2$\times 2^6$) = 142Kbit
+\end{alertblock}
 
 \end{frame}
 
