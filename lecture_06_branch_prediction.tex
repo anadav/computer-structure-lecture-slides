@@ -1372,55 +1372,54 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 \label{frame:indirect_target_1}
 
 \begin{itemize}
-    \item \textbf{Indirect branch targets: target given in a register}
+    \item \textbf{Indirect branches:} target given in a register
     \begin{itemize}
-        \item Can have many targets: e.g., a case statement
+        \item Can have many targets (e.g., switch/case statements)
         \item Resolved at execution $\Rightarrow$ high misprediction penalty
-        \item Used in object-oriented code (C++, Java)
+        \item Common in object-oriented code (C++, Java)
     \end{itemize}
-\end{itemize}
-
-\vspace{0.3cm}
-
-\begin{itemize}
-    \item \textbf{A history-based indirect branch target predictor}
-    \begin{itemize}
-        \item Uses the same global history used for conditional jumps
-    \end{itemize}
+    \item \textbf{History-based prediction:} uses the same GHR as conditional branches
 \end{itemize}
 
 \vspace{0.3cm}
 
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
-    % GHR
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1) {history};
-    \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
-
-    % Branch IP
-    \node[anchor=east,font=\small,myblue] at (-0.5,-0.5) {Branch IP};
-
     % XOR
     \node[draw,circle,minimum size=0.8cm] (xor) at (3,0) {$\oplus$};
 
-    % iTA
-    \fill[lightblue!30] (5.5,-1) rectangle (7.5,1);
-    \draw[thick] (5.5,-1) rectangle (7.5,1);
-    \node[anchor=south,font=\small\bfseries,myblue] at (6.5,1.1) {Indirect Target Array};
+    % GHR (above and left of xor)
+    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at ([xshift=-3cm,yshift=1cm]xor) {history};
+    \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
+
+    % Branch IP (below GHR, symmetric y-delta from xor)
+    \node[font=\small,myblue] (branchip) at ([yshift=-1cm]ghr |- xor) {Branch IP};
+
+    % Indirect Target Array as matrix of nodes
+    \matrix[matrix of nodes,
+            nodes={draw, minimum width=0.8cm, minimum height=0.4cm, anchor=center, fill=lightblue!10, inner sep=1pt},
+            row sep=-\pgflinewidth, column sep=-\pgflinewidth,
+            anchor=west] (ita) at (5.5,0) {
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[draw=myorange, line width=1.5pt, fill=myorange!20]| \\
+        |[fill=lightblue!10]| \\
+    };
+    \node[anchor=south,font=\tiny\bfseries,myblue] at (ita.north) {Indirect Target Array};
 
     % Arrows
-    \draw[->,thick] (ghr.east) -- (xor.west);
-    \draw[->,thick] (0,-0.5) -- (xor.south);
-    \draw[->,very thick] (xor.east) -- (5.3,0);
-    \draw[->,very thick] (7.5,0) -- (8.5,0);
-    \node[anchor=west,font=\small,mypurple] at (8.5,0) {Predicted Target};
+    \draw[->,thick] (ghr.east) -| (xor.north);
+    \draw[->,thick] (branchip.east) -| (xor.south);
+    \draw[->,thick] (xor.east) -- ++(0.5,0) |- (ita-3-1.west);
+    \draw[->,thick] (ita-3-1.east) -- ++(1.5,0)
+        node[anchor=west,font=\small,mypurple] {Predicted Target};
 \end{tikzpicture}
 \end{center}
 
 \vspace{0.3cm}
 
 \begin{itemize}
-    \item Each Jump takes multiple entries $\Rightarrow$ more expensive than TA $\Rightarrow$ should only be used for jumps with multiple targets
+    \item Each jump uses multiple entries $\Rightarrow$ more expensive than TA $\Rightarrow$ use only for multi-target jumps
 \end{itemize}
 
 \end{frame}
