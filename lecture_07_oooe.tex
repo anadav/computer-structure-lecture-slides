@@ -1740,129 +1740,100 @@
     \end{column}
     \begin{column}{0.35\textwidth}
       \begin{center}
-        \begin{tikzpicture}[scale=0.8,
-          rob entry/.style={draw, minimum width=2cm, minimum height=0.35cm, inner sep=0, anchor=north west},
-          rob empty/.style={rob entry, fill=white},
-          rob allocated/.style={rob entry, fill=green!30},
-          rob new/.style={rob entry, fill=green!50},
-          rob executed/.style={rob entry, fill=red!30},
-          rob executed redder/.style={rob entry, fill=red!60},
-          rob faulting/.style={rob entry, fill=red!30},
-          rob handler/.style={rob entry, fill=purple!30}
+        \begin{tikzpicture}[font=\tiny,
+          E/.style={draw, fill=white, minimum width=1.8cm, minimum height=0.32cm, inner sep=0},
+          G/.style={E, fill=green!30},
+          N/.style={E, fill=green!50},
+          R/.style={E, fill=red!30},
+          RR/.style={E, fill=red!60}
         ]
-          % Draw white background for all entries (all stages) with names
-          \foreach \i in {-2,-1,0,...,16} {
-            \node[rob empty] (entry\i) at (0,-\i*0.4+0.35) {};
-          }
+          \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth,
+            nodes={minimum width=1.8cm, minimum height=0.32cm, inner sep=0}
+          ] (m) {
+            |[E]| \\ |[E]| \\
+            |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\
+            |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\
+            |[E]| \\ |[E]| \\ |[E]| \\
+          };
 
           % ROB label
-          \node[above=0.1cm of entry-2.north, font=\small] {ROB};
+          \node[above=0.1cm of m-1-1, font=\small] {ROB};
 
-          % Stage 1: All allocated (green)
+          % Stage 1: Allocated (green) + new entries
           \only<1>{
-            \foreach \i in {0,...,11} {
-              \node[rob allocated] at (0,-\i*0.4+0.35) {};
-            }
-            % New entries (12, 13, 14) with special green
-            \foreach \i in {12,13,14} {
-              \node[rob new] at (0,-\i*0.4+0.35) {};
-            }
+            \foreach \i in {3,...,14} { \node[G] at (m-\i-1) {}; }
+            \foreach \i in {15,16,17} { \node[N] at (m-\i-1) {}; }
+            \node[fill=green!50, inner sep=2pt, font=\tiny, align=center] at (m-16-1.center) {new\\entries};
 
-            % Labels: retire points to first allocated, alloc points to first empty
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
+            % Labels
+            \node[left=0.4cm of m-3-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-3-1.west);
+            \node[right=0.1cm of m-3-1.east, anchor=west] {\scriptsize oldest};
 
             % Faded previous state
-            \node[left=0.5cm of entry12.west, anchor=east, opacity=0.4] (alloc_old) {alloc};
-            \draw[->,thick, opacity=0.4] (alloc_old) -- (entry12.west);
-            \node[right=0.1cm of entry11.east, anchor=west, opacity=0.4] (youngest_old) {youngest};
+            \node[left=0.4cm of m-15-1.west, anchor=east, opacity=0.4] (alloc_old) {\scriptsize alloc};
+            \draw[->,thick, opacity=0.4] (alloc_old) -- (m-15-1.west);
+            \node[right=0.1cm of m-14-1.east, anchor=west, opacity=0.4] (youngest_old) {\scriptsize youngest};
 
             % Current state
-            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
-            \draw[->,thick] (alloc) -- (entry15.west);
-            \node[right=0.1cm of entry14.east, anchor=west] (youngest) {youngest};
+            \node[left=0.4cm of m-18-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-18-1.west);
+            \node[right=0.1cm of m-17-1.east, anchor=west] (youngest) {\scriptsize youngest};
 
-            % "New entries" label inside the ROB
-            \node[fill=green!50, inner sep=2pt, font=\tiny, align=center] at (entry13.center) {new\\entries};
-
-            % Straight dashed arrow from old alloc to new alloc
+            % Dashed arrows
             \draw[->,dashed,thick] (alloc_old.south) -- (alloc.north);
-
-            % Straight dashed arrow from old youngest to new youngest
             \draw[->,dashed,thick] (youngest_old.south) -- (youngest.north);
           }
 
-          % Stage 2: Some executed (same as stage 3 but not the top one)
+          % Stage 2: Some executed (red)
           \only<2>{
-            % Entry 0 is still allocated (green)
-            \node[rob allocated] at (0,-0*0.4+0.35) {};
-            % Executed entries (same pattern as stage 3, excluding entry 0)
-            \foreach \i in {1,2,4,5,7,8,9} {
-              \node[rob executed] at (0,-\i*0.4+0.35) {};
-            }
-            % Other allocated entries
-            \foreach \i in {3,6,10,11,12,13,14} {
-              \node[rob allocated] at (0,-\i*0.4+0.35) {};
-            }
+            \node[G] at (m-3-1) {};
+            \foreach \i in {4,5,7,8,10,11,12} { \node[R] at (m-\i-1) {}; }
+            \foreach \i in {6,9,13,14,15,16,17} { \node[G] at (m-\i-1) {}; }
 
-            % "Executed" labels inside the ROB for the three groups
-            \node[fill=red!30, inner sep=2pt, font=\tiny] at ($(entry1)!0.5!(entry2)$) {executed};
-            \node[fill=red!30, inner sep=2pt, font=\tiny] at ($(entry4)!0.5!(entry5)$) {executed};
-            \node[fill=red!30, inner sep=2pt, font=\tiny] at (entry8.center) {executed};
+            % "Executed" labels
+            \node[fill=red!30, inner sep=1pt, font=\tiny] at ($(m-4-1)!0.5!(m-5-1)$) {executed};
+            \node[fill=red!30, inner sep=1pt, font=\tiny] at ($(m-7-1)!0.5!(m-8-1)$) {executed};
+            \node[fill=red!30, inner sep=1pt, font=\tiny] at (m-11-1.center) {executed};
 
-            % Labels: retire points to first allocated, alloc points to first empty
-            \node[left=0.5cm of entry0.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west] {oldest};
-            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
-            \draw[->,thick] (alloc) -- (entry15.west);
-            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
+            % Labels
+            \node[left=0.4cm of m-3-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-3-1.west);
+            \node[right=0.1cm of m-3-1.east, anchor=west] {\scriptsize oldest};
+            \node[left=0.4cm of m-18-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-18-1.west);
+            \node[right=0.1cm of m-17-1.east, anchor=west] {\scriptsize youngest};
           }
 
-          % Stage 3: Retirement - top three entries retired (faded)
+          % Stage 3: Retirement
           \only<3>{
-            % Top entry is "redder" executed
-            \node[rob executed redder] at (0,-0*0.4+0.35) {};
-            % Entries 1 and 2 are executed
-            \foreach \i in {1,2} {
-              \node[rob executed] at (0,-\i*0.4+0.35) {};
-            }
-            % Other executed entries
-            \foreach \i in {4,5,7,8,9} {
-              \node[rob executed] at (0,-\i*0.4+0.35) {};
-            }
-            % Allocated entries
-            \foreach \i in {3,6,10,11,12,13,14} {
-              \node[rob allocated] at (0,-\i*0.4+0.35) {};
-            }
+            \node[RR] at (m-3-1) {};
+            \foreach \i in {4,5} { \node[R] at (m-\i-1) {}; }
+            \foreach \i in {7,8,10,11,12} { \node[R] at (m-\i-1) {}; }
+            \foreach \i in {6,9,13,14,15,16,17} { \node[G] at (m-\i-1) {}; }
 
             % Fade the top three entries (retired)
-            \foreach \i in {0,1,2} {
-              \node[rob entry, fill=white, opacity=0.4] at (0,-\i*0.4+0.35) {};
-            }
+            \fill[white, opacity=0.6] (m-3-1.north west) rectangle (m-5-1.south east);
+            \node[font=\tiny, opacity=0.8] at (m-4-1.center) {reclaimed};
 
-            % "Reclaimed" label in the middle of the top three
-            \node[fill=white, inner sep=2pt, font=\tiny, opacity=0.7] at (entry1.center) {reclaimed};
+            % Faded previous state
+            \node[left=0.4cm of m-3-1.west, anchor=east, opacity=0.4] (retire_old) {\scriptsize retire};
+            \draw[->,thick, opacity=0.4] (retire_old) -- (m-3-1.west);
+            \node[right=0.1cm of m-3-1.east, anchor=west, opacity=0.4] (oldest_old) {\scriptsize oldest};
 
-            % Faded previous state (old retire position)
-            \node[left=0.5cm of entry0.west, anchor=east, opacity=0.4] (retire_old) {retire};
-            \draw[->,thick, opacity=0.4] (retire_old) -- (entry0.west);
-            \node[right=0.1cm of entry0.east, anchor=west, opacity=0.4] (oldest_old) {oldest};
+            % Current state (new retire position)
+            \node[left=0.4cm of m-6-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-6-1.west);
+            \node[right=0.1cm of m-6-1.east, anchor=west] (oldest) {\scriptsize oldest};
 
-            % Current state (new retire position at entry 3)
-            \node[left=0.5cm of entry3.west, anchor=east] (retire) {retire};
-            \draw[->,thick] (retire) -- (entry3.west);
-            \node[right=0.1cm of entry3.east, anchor=west] (oldest) {oldest};
-
-            % Dashed arrows from old positions to new positions
+            % Dashed arrows
             \draw[->,dashed,thick] (retire_old.south) -- (retire.north);
             \draw[->,dashed,thick] (oldest_old.south) -- (oldest.north);
 
-            % Alloc and youngest unchanged
-            \node[left=0.5cm of entry15.west, anchor=east] (alloc) {alloc};
-            \draw[->,thick] (alloc) -- (entry15.west);
-            \node[right=0.1cm of entry14.east, anchor=west] {youngest};
+            % Alloc unchanged
+            \node[left=0.4cm of m-18-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-18-1.west);
+            \node[right=0.1cm of m-17-1.east, anchor=west] {\scriptsize youngest};
           }
         \end{tikzpicture}
       \end{center}
