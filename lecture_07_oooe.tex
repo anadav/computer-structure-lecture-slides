@@ -518,45 +518,6 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{The Pentium® Processor (1993)}
-  \begin{itemize}
-    \item \textbf{Fetch and decode 2 instructions per cycle}
-    
-    \item \textbf{At decode stage decide on \emph{pairing}:} can the two instructions be executed in parallel
-    
-    \item \textbf{Pairing decision is based on:}
-    \begin{itemize}
-      \item \textcolor{blue}{Data dependencies}: 2nd instruction must be independent of 1st
-      \begin{itemize}
-        \item If the 1st instruction produces data needed by the 2nd instruction, the 2nd instruction cannot be executed in parallel to the 1st instruction
-      \end{itemize}
-      
-      \item \textcolor{blue}{Resources}: U-pipe and V-pipe are not symmetric (save HW)
-      \begin{itemize}
-        \item Common instructions can execute on either pipe
-        \item Some instructions can execute only on the U-pipe
-        \item V-pipe can run a subset of the instructions that can run on U-pipe
-        \item If the 2nd instruction requires the U-pipe, it cannot pair
-        \item Some instructions use resources of both pipes (and therefore cannot pair)
-      \end{itemize}
-    \end{itemize}
-  \end{itemize}
-  
-  \begin{center}
-    \begin{tikzpicture}[scale=0.9]
-      \draw[->, thick] (-0.5,0) -- (0,0);
-      \draw[->, thick] (-0.5,-0.5) -- (0,-0.5);
-      \draw[fill=cyan!30] (0,-0.75) rectangle (2,0.25) node[midway] {Fetch};
-      \draw[->, thick] (2,0) -- (2.5,0);
-      \draw[->, thick] (2,-0.5) -- (2.5,-0.5);
-      \draw[fill=cyan!30] (2.5,-0.75) rectangle (4.5,0.25) node[midway] {Dec};
-      \node[rotate=45] at (5,0) {\small pairing};
-      \draw[->, thick] (4.5,0) -- (5.5,0.3) node[right] {U-pipe};
-      \draw[->, thick] (4.5,-0.5) -- (5.5,-0.8) node[right] {V-pipe};
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
-
 \begin{frame}{Misprediction Penalty in a Superscalar CPU}
   \begin{itemize}
     \item \textbf{Assume}

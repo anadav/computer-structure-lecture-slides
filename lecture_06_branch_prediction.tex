@@ -1172,15 +1172,15 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
 
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
-    % GHR
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1) {history};
-    \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
-
-    % Branch IP
-    \node[anchor=east,font=\small,myblue] at (-0.5,-0.5) {Branch IP};
-
     % XOR
     \node[draw,circle,minimum size=0.8cm] (xor) at (3,0) {$\oplus$};
+
+    % GHR (above and left of xor)
+    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1.8) {history};
+    \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
+
+    % Branch IP (left of xor)
+    \node[anchor=east,font=\small,myblue] (branchip) at (-0.5,0) {Branch IP};
 
     % Counter array
     \fill[lightblue!30] (5.5,-1.5) rectangle (6.7,1.5);
@@ -1188,8 +1188,8 @@ Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\te
     \node[anchor=south,font=\small\bfseries,myblue] at (6.1,1.6) {2-bit-sat counter array};
 
     % Arrows
-    \draw[->,thick] (ghr.east) -- (xor.west);
-    \draw[->,thick] (0,-0.5) -- (xor.south);
+    \draw[->,thick] (ghr.east) -| (xor.north);
+    \draw[->,thick] (0,0) -- (xor.west);
     \draw[->,very thick] (xor.east) -- (5.3,0);
     \draw[->,very thick] (6.7,0.5) -- (8,0.5);
     \node[anchor=west,font=\small,mypurple] at (8,0.5) {prediction = msb of counter};
