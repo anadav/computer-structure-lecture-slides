@@ -2434,18 +2434,10 @@
 \begin{columns}[T]
 \begin{column}{0.52\textwidth}
 \begin{itemize}
-  \item \textbf{Non-blocking D\$:} On load miss, continue dispatching subsequent loads
+  \item \textbf{Non-blocking D\$:} On miss, continue dispatching subsequent loads
   \begin{itemize}
     \item Blocking cache hurts OOO benefit: hiding miss latency
   \end{itemize}
-  \item \textbf{On load miss:}
-  \begin{itemize}
-    \item Assign a \textbf{Fill Buffer (FB)} entry
-    \item Issue L2 request
-    \item FB holds address and data (when it returns)
-  \end{itemize}
-  \item More loads can dispatch as long as free FBs exist
-  \item Subsequent loads to same missed line share the FB entry
 \end{itemize}
 \end{column}
 \begin{column}{0.44\textwidth}
@@ -2456,11 +2448,11 @@
     fbheader/.style={minimum width=0.7cm, minimum height=0.35cm, font=\scriptsize, inner sep=0pt},
     ]
 
-    % L2 cache (left)
-    \node[cache, fill=green!30] (l2) at (0, 0) {L2\\cache};
+    % L1 cache (left)
+    \node[cache, fill=orange!30] (l1) at (0, 0) {L1\\cache};
 
     % Fill Buffers (center) as matrix with header row
-    \matrix[right=0.6cm of l2, matrix of nodes,
+    \matrix[right=0.6cm of l1, matrix of nodes,
             row sep=-0.4pt,
             column sep=-0.4pt,
             ampersand replacement=\&,
@@ -2472,35 +2464,38 @@
         |(fb4d)[fbentry]|  \& |(fb4a)[fbentry]|  \\
     };
 
-    % L1 cache (right)
-    \node[cache, fill=orange!30, right=0.6cm of fb] (l1) {L1\\cache};
+    % L2 cache (right)
+    \node[cache, fill=green!30, right=0.6cm of fb] (l2) {L2\\cache};
 
-    % Arrows: L1 -> FB, FB <-> L2
-    \draw[<-, very thick] (fb.east) -- (fb.east -| l1.west);
-    \draw[<->, very thick] (fb.west) -- (fb.west -| l2.east);
+    % Arrows: L2 -> FB, FB -> L1
+    \draw[->, very thick] (l2.west) -- (l2.west -| fb.east);
+    \draw[->, very thick] (fb.west) -- (fb.west -| l1.east);
 \end{tikzpicture}
 \end{column}
 \end{columns}
-\end{frame}
 
-\begin{frame}{Data Cache Miss -- Handling}
 \begin{itemize}
   \item \textbf{On load miss:}
   \begin{itemize}
-    \item Mark load's write-back data as \textit{invalid}
-    \item RS dispatches load consumers assuming hit
-    \item Consumers are re-dispatched once load's data is available
+    \item Assign a \textbf{Fill Buffer (FB)} entry, issue L2 request
+    \item Mark load's result as \textit{invalid}
+    \item RS dispatches consumers assuming hit $\rightarrow$ will replay later
   \end{itemize}
+  \item More loads can dispatch as long as free FBs exist
+  \item Loads to same missed line share the FB entry
+\end{itemize}
+\end{frame}
 
-  \vspace{0.3cm}
-
-  \item \textbf{When critical chunk returns from L2:}
+\begin{frame}{Data Cache Miss -- Completion}
+\begin{itemize}
+  \item \textbf{When data returns from L2:}
   \begin{itemize}
-    \item Wakeup and re-dispatch the load waiting for the data
+    \item Data written to FB; wakeup the load
     \item Load reads directly from FB (no need to wait for D\$ write)
+    \item Replay dependent instructions with correct data
   \end{itemize}
 
-  \vspace{0.3cm}
+  \vspace{0.4cm}
 
   \item \textbf{Blocked load} (unknown store addr/data):
   \begin{itemize}
