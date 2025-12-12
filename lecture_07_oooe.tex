@@ -2273,30 +2273,21 @@
 
 \begin{frame}{Load/Store Ordering}
   \begin{itemize}
-    \item \textbf{Loads can be executed OOO with respect to other loads}
+    \item \textbf{Loads} -- can execute OOO with respect to other loads
     \begin{itemize}
-      \item Not allowing this would have a very big performance impact
+      \item Critical for performance
     \end{itemize}
-    
-    \item \textbf{Stores write value to the data-cache in-order, post retirement}
+
+    \item \textbf{Stores} -- write to data-cache in-order, post retirement
     \begin{itemize}
-      \item Stores cannot write values to the data-cache speculatively
-      \begin{itemize}
-        \item There is no simple way to undo them
-      \end{itemize}
-      \item Stores to the data-cache are never re-ordered among themselves
-      \begin{itemize}
-        \item Must be seen in-order to other cores or agents
-      \end{itemize}
+      \item Cannot write speculatively (no simple way to undo)
+      \item Never re-ordered among themselves (must be seen in-order by other cores)
     \end{itemize}
-    
-    \item \textbf{Loads need to maintain correct order with respect to stores}
+
+    \item \textbf{Load vs Store} -- MOB tracks dependencies
     \begin{itemize}
-      \item The RS dispatches instructions based on \textcolor{gray}{register dependencies}
-      \begin{itemize}
-        \item The RS cannot detect memory dependencies
-      \end{itemize}
-      \item The MOB tracks dependencies between loads and stores
+      \item RS only knows register dependencies, not memory
+      \item MOB resolves ordering once addresses are known
     \end{itemize}
   \end{itemize}
 \end{frame}
