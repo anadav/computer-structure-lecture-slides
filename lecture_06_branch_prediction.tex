@@ -1182,11 +1182,11 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
     \node[draw,circle,minimum size=0.8cm] (xor) at (3,0) {$\oplus$};
 
     % GHR (above and left of xor)
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1.8) {history};
+    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1.5) {history};
     \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
 
-    % Branch IP (left of xor)
-    \node[anchor=east,font=\small,myblue] (branchip) at (-0.5,0) {Branch IP};
+    % Branch IP (below GHR, symmetric y-delta from xor)
+    \node[font=\small,myblue] (branchip) at ([yshift=-1cm]ghr |- xor) {Branch IP};
 
     % Counter array as matrix of nodes
     \matrix[matrix of nodes,
@@ -1204,7 +1204,7 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 
     % Arrows
     \draw[->,thick] (ghr.east) -| (xor.north);
-    \draw[->,thick] (0,0) -- (xor.west);
+    \draw[->,thick] (branchip.east) -| (xor.south);
     \draw[->,thick] (xor.east) -- ++(0.5,0) |- (counter_array-3-1.west);
     \draw[->,thick] (counter_array-3-1.east) -- ++(1.5,0)
         node[anchor=west,font=\small,mypurple] {prediction = msb of counter};
