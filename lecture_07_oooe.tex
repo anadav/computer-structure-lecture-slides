@@ -2350,33 +2350,24 @@
   \begin{columns}
     \begin{column}{0.7\textwidth}
       \begin{itemize}
-        \item \textbf{Store Coloring}
+        \item \textbf{Store Coloring} -- in-order allocation
         \begin{itemize}
-          \item Stores: track in \emph{Store Buffer} $\rightarrow$ alloc \textbf{SBID}
-          \item Loads: track in \emph{Load Buffer} $\rightarrow$ alloc \textbf{LBID}, save \textbf{SBID}
-          \item In-order allocation
+          \item Stores $\rightarrow$ Store Buffer, alloc \textbf{SBID}
+          \item Loads $\rightarrow$ Load Buffer, alloc \textbf{LBID}, save current \textbf{SBID}
         \end{itemize}
-        
-        \item \textbf{Loads check against prior stores}
-        \begin{itemize}
-          \item Those with SBID $\leq$ load's SBID
-        \end{itemize}
-        
+
+        \item \textbf{Loads check against prior stores} (SBID $\leq$ load's SBID)
+
         \item \textbf{Load blocks when:}
         \begin{itemize}
-          \item Relevant STA has unresolved address
-          \item STA to same address awaits data
-          \item Data cache misses
+          \item Prior STA has unresolved address; or
+          \item Prior store to same address awaits data; or
+          \item Data cache miss
         \end{itemize}
-        
-        \item \textbf{MOB handles blocked loads:}
-        \begin{itemize}
-          \item Records blocking info in Load Buffer
-          \item Re-dispatches on wake-up signal
-          \item May block again on new condition
-        \end{itemize}
-        
-        \item \textbf{Unblocked loads → execute (bypass)}
+
+        \item \textbf{Blocked loads} -- MOB records reason, re-dispatches on wake-up
+
+        \item \textbf{Unblocked loads} -- execute immediately (bypass from store buffer)
       \end{itemize}
     \end{column}
     
