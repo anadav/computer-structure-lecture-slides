@@ -945,49 +945,55 @@ do {
 \end{frame}
 
 % Speculative History Updates - slide 1
-\begin{frame}
+\begin{frame}[t]
 \frametitle{Speculative History Updates}
 \label{frame:speculative_history_1}
 
 \begin{itemize}
-    \item \textbf{Deep pipeline $\Rightarrow$ many cycles between fetch and branch resolution}
+    \item Deep pipeline $\Rightarrow$ many cycles between fetch and branch resolution
     \begin{itemize}
-        \item If history is updated only at resolution (branch execute)
-        \begin{itemize}
-            \item Future occurrences of the same branch may be fetched before history is updated, and predicted with a stale history
-        \end{itemize}
-        \item Update history speculatively according to prediction
+        \item If history updated only at execution, future branches may use stale history
+        \item Solution: update history speculatively according to prediction
     \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
 \begin{center}
-\begin{tikzpicture}[scale=0.7]
+\begin{tikzpicture}[scale=0.8]
     % Speculative BHR
     \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (sbhr) at (0,0) {history};
     \node[anchor=south,font=\small\bfseries,myblue] at (sbhr.north) {Speculative BHR};
 
-    % Counter array
-    \fill[lightblue!30] (4,-1.5) rectangle (5.2,1.5);
-    \draw[thick] (4,-1.5) rectangle (5.2,1.5);
-    \node[anchor=south,font=\small\bfseries,myblue] at (4.6,1.6) {2-bit-sat counter array};
+    % Counter array as matrix of nodes
+    \matrix[matrix of nodes,
+            nodes={draw, minimum width=1.1cm, minimum height=0.45cm, anchor=center, fill=lightblue!10, inner sep=1pt},
+            row sep=-\pgflinewidth, column sep=-\pgflinewidth,
+            anchor=west] (counter_array) at (4,0) {
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[draw=myorange, line width=1.5pt, fill=myorange!20, font=\tiny]| (counter) \\
+        |[fill=lightblue!10]| \\
+    };
+    \node[anchor=south,font=\tiny\bfseries,myblue] at (counter_array.north) {2-bit-sat counter array};
 
-    % Arrows
-    \draw[->,very thick] (sbhr.east) -- (3.8,0);
-    \draw[->,very thick] (5.2,0.5) -- (6.5,0.5);
-    \node[anchor=west,font=\small,mypurple] at (6.5,0.5) {prediction};
+    % Arrow from BHR to counter array
+    \draw[->,thick] (sbhr.east) -- ++(0.5,0) |- (counter_array-3-1.west);
 
-    % Update with prediction
-    \draw[->,thick,mygreen] (6.5,0.2) .. controls (3,0.8) and (1,0.8) .. (sbhr.north);
-    \node[anchor=south,font=\scriptsize,mygreen,align=center] at (3,1.5) {Update History with prediction};
+    % Arrow from counter to prediction
+    \node[anchor=west,font=\small,mypurple] (pred) at ($(counter_array-3-1.east)+(1.5,0)$) {prediction};
+    \draw[->,thick] (counter_array-3-1.east) -- (pred.west);
+
+    % Speculative update: arrow from prediction back to history (from bottom)
+    \draw[->,thick,mygreen] (pred.south) .. controls ++(0,-1) and ++(3,-1) .. (sbhr.south);
+    \node[anchor=east,font=\scriptsize,mygreen,align=right] at ($(sbhr.south)+(-0.2,-0.3)$) {Update history\\with prediction};
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
 \begin{itemize}
-    \item \textbf{As long as the prediction of previous branches is correct, the history used for predicting the next branch is correct as well}
+    \item As long as predictions are correct, the history used for next branch is correct
 \end{itemize}
 
 \end{frame}
