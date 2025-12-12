@@ -2323,31 +2323,24 @@
 
 \begin{frame}{Store Implemented as 2 $\mu$ops}
   \begin{itemize}
-    \item \textbf{Stores are decoded into two independent $\mu$ops}
+    \item \textbf{STA (Store-Address)} -- calculates address
     \begin{itemize}
-      \item STA (store-address): calculates the address of the store
-      \item STD (store-data): stores the data into the Store Data buffer
-      \begin{itemize}
-        \item This makes the data available to any Load that needs it
-        \item The actual write to memory is done when the store retires
-      \end{itemize}
+      \item Dispatched to AGU when base + index ready
     \end{itemize}
-    
-    \vspace{0.5cm}
-    
-    \item \textbf{Separating Store to STA \& STD improves performance}
+
+    \item \textbf{STD (Store-Data)} -- writes data to Store Data Buffer
     \begin{itemize}
-      \item Allows STA to dispatch earlier, even before the data is known
-      \begin{itemize}
-        \item Address conflicts resolved earlier $\Rightarrow$\\
-        opens memory pipeline for other loads
-      \end{itemize}
-      
-      \item STA and STD can be issued to execution units in parallel
-      \begin{itemize}
-        \item STA dispatched to AGU when its sources (base + index) are ready
-        \item STD dispatched to SDB when its source operand is available
-      \end{itemize}
+      \item Dispatched when source operand available
+      \item Makes data available to dependent loads (actual write on retirement)
+    \end{itemize}
+
+    \vspace{0.3cm}
+
+    \item \textbf{Why separate?}
+    \begin{itemize}
+      \item STA can dispatch early, even before data is known
+      \item Resolves address conflicts earlier $\Rightarrow$ unblocks other loads
+      \item STA and STD can issue in parallel
     \end{itemize}
   \end{itemize}
 \end{frame}
