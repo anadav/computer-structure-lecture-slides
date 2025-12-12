@@ -9,7 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix, shapes.gates.logic.US, decorations.pathreplacing}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix, shapes.gates.logic.US, decorations.pathreplacing, fit}
 \usepackage[siunitx, RPvoltages]{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{listings}
@@ -22,6 +22,14 @@
 \definecolor{lightblue}{RGB}{173,216,230}
 \definecolor{peach}{RGB}{255,218,185}
 \definecolor{lightpurple}{RGB}{230,230,250}
+\definecolor{lightgreen}{RGB}{144,238,144}
+
+% TikZ alt key for beamer overlays
+\tikzset{
+    alt/.code args={<#1>#2#3}{%
+        \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}%
+    }
+}
 
 % Listings configuration for C
 \lstset{
@@ -708,39 +716,104 @@ do {
 \frametitle{2-Level Branch Prediction}
 \label{frame:2level_prediction}
 
+\begin{columns}[T]
+\begin{column}{0.72\textwidth}
 \begin{itemize}
-    \item \textbf{Save branch direction history in a Branch History Register}
+    \item Save branch direction history in a Branch History Register (BHR)
     \begin{itemize}
-        \item A shift-register that saves the last $n$ outcomes of the branch
-        \item History points to an array of $2^n$ bits
-        \item Bit pointed by a history specifies the predicted branch direction following that history
+        \item A shift-register that saves the last $n$ outcomes
+        \item History points to Pattern History Table ($2^n$ entries)
+        \item PHT entry specifies predicted direction for that history
     \end{itemize}
+    \item Example: pattern 0001 0001 ... with $n=3$
 \end{itemize}
+\end{column}
+\begin{column}{0.28\textwidth}
+\end{column}
+\end{columns}
 
-\vspace{0.3cm}
+\vspace{-0.3cm}
 
-\begin{itemize}
-    \item \textbf{Example: predicting the pattern 0001 0001 0001 ...}
-    \begin{itemize}
-        \item History length $n=3$
-    \end{itemize}
-\end{itemize}
-
-\vspace{0.2cm}
+\begin{tikzpicture}[remember picture,overlay]
+    % PHT on the right
+    \matrix[matrix of nodes,
+        nodes={draw,thick,fill=lightblue!20,minimum width=0.55cm,minimum height=0.4cm,anchor=center,font=\scriptsize},
+        row sep=0cm,ampersand replacement=\&,
+        anchor=north east,
+        at={($(current page.north east)+(-0.8cm,-2.2cm)$)}
+    ] (pht) {
+        |[alt=<2->{fill=myorange!40}{}]| \only<1>{?}\only<2->{\textbf{1}} \& |[draw=none,font=\tiny]| 000 \\
+        |[alt=<3->{fill=myorange!40}{}]| \only<1-2>{?}\only<3->{\textbf{0}} \& |[draw=none,font=\tiny]| 001 \\
+        |[alt=<4->{fill=myorange!40}{}]| \only<1-3>{?}\only<4->{\textbf{0}} \& |[draw=none,font=\tiny]| 010 \\
+        ? \& |[draw=none,font=\tiny]| 011 \\
+        |[alt=<5->{fill=myorange!40}{}]| \only<1-4>{?}\only<5->{\textbf{0}} \& |[draw=none,font=\tiny]| 100 \\
+        ? \& |[draw=none,font=\tiny]| 101 \\
+        ? \& |[draw=none,font=\tiny]| 110 \\
+        ? \& |[draw=none,font=\tiny]| 111 \\
+    };
+    \node[above=0.1cm of pht-1-1,font=\footnotesize\bfseries] {PHT};
+\end{tikzpicture}
 
 \begin{center}
-% TODO: Add 2-level prediction diagram
-\textcolor{red}{[PLACEHOLDER: 2-level predictor diagram showing BHR and counter array]}
-\end{center}
+\begin{tikzpicture}[
+    every node/.style={font=\small},
+    bhr/.style={draw,thick,fill=lightgreen!50,minimum width=0.5cm,minimum height=0.5cm},
+    actual/.style={draw,thick,fill=yellow!50,minimum width=0.5cm,minimum height=0.5cm},
+    other/.style={draw,thin,gray!50,text=gray,minimum width=0.5cm,minimum height=0.5cm}
+]
+    % Branch outcomes sequence - shifting window
+    \matrix[matrix of nodes,nodes={minimum width=0.5cm,minimum height=0.5cm,anchor=center},column sep=0.08cm,ampersand replacement=\&] (seq) {
+        |[alt=<1>{bhr}{other}]| 0 \&
+        |[alt=<1-2>{bhr}{other}]| 0 \&
+        |[alt=<1-3>{bhr}{other}]| 0 \&
+        |[alt=<1>{actual}{alt=<2-4>{bhr}{other}}]| 1 \&
+        |[alt=<2>{actual}{alt=<3-5>{bhr}{other}}]| 0 \&
+        |[alt=<3>{actual}{alt=<4-6>{bhr}{other}}]| 0 \&
+        |[alt=<4>{actual}{alt=<5-6>{bhr}{other}}]| 0 \&
+        |[alt=<5>{actual}{alt=<6>{bhr}{other}}]| 1 \&
+        |[alt=<6>{actual}{other}]| 0 \&
+        |[other]| 0 \&
+        |[other]| 0 \&
+        |[other]| 1 \&
+        |[draw=none,text=gray]| \ldots \\
+    };
 
-\begin{center}
-{\footnotesize
-\texttt{0 0 0 | 1 0 0 0 1 0 0 0 1 ...}
+    % BHR box - shifts each stage
+    \only<1>{\node[draw,very thick,rounded corners=2pt,fit=(seq-1-1)(seq-1-3),inner sep=1pt,label={[font=\footnotesize\bfseries]above:BHR}] (bhrbox) {};}
+    \only<2>{\node[draw,very thick,rounded corners=2pt,fit=(seq-1-2)(seq-1-4),inner sep=1pt,label={[font=\footnotesize\bfseries]above:BHR}] (bhrbox) {};}
+    \only<3>{\node[draw,very thick,rounded corners=2pt,fit=(seq-1-3)(seq-1-5),inner sep=1pt,label={[font=\footnotesize\bfseries]above:BHR}] (bhrbox) {};}
+    \only<4>{\node[draw,very thick,rounded corners=2pt,fit=(seq-1-4)(seq-1-6),inner sep=1pt,label={[font=\footnotesize\bfseries]above:BHR}] (bhrbox) {};}
+    \only<5>{\node[draw,very thick,rounded corners=2pt,fit=(seq-1-5)(seq-1-7),inner sep=1pt,label={[font=\footnotesize\bfseries]above:BHR}] (bhrbox) {};}
+    \only<6>{\node[draw,very thick,rounded corners=2pt,fit=(seq-1-6)(seq-1-8),inner sep=1pt,label={[font=\footnotesize\bfseries]above:BHR}] (bhrbox) {};}
 
-\vspace{0.2cm}
+    % Arrows from BHR to PHT
+    \only<1>{\draw[->,thick] (bhrbox.north east) to[out=30,in=180] ++(4.8,1.7);}
+    \only<2>{\draw[->,thick] (bhrbox.north east) to[out=30,in=180] ++(4.5,1.4);}
+    \only<3>{\draw[->,thick] (bhrbox.north east) to[out=30,in=180] ++(4.2,1.1);}
+    \only<4>{\draw[->,thick] (bhrbox.north east) to[out=30,in=180] ++(3.9,1.7);}
+    \only<5>{\draw[->,thick] (bhrbox.north east) to[out=30,in=180] ++(3.6,2.0);}
+    \only<6>{\draw[->,thick] (bhrbox.north east) to[out=30,in=180] ++(3.3,1.7);}
 
-\textbf{Predict at Fetch} \hspace{2cm} \textbf{Update at EXE}
-}
+    % Checkmarks below processed branches
+    \only<2->{\node[below=0.1cm of seq-1-4,mygreen,font=\small] {\checkmark};}
+    \only<3->{\node[below=0.1cm of seq-1-5,mygreen,font=\small] {\checkmark};}
+    \only<4->{\node[below=0.1cm of seq-1-6,mygreen,font=\small] {\checkmark};}
+    \only<5->{\node[below=0.1cm of seq-1-7,mygreen,font=\small] {\checkmark};}
+    \only<6->{\node[below=0.1cm of seq-1-8,mygreen,font=\small] {\checkmark};}
+
+    % Labels
+    \node[left=0.2cm of seq-1-1,font=\footnotesize] {Branches:};
+
+    % Stage explanation in a box
+    \node[below=0.7cm of seq,draw,fill=lightblue!15,rounded corners=3pt,inner sep=6pt,font=\footnotesize,align=left] {
+        \only<1>{BHR=000 $\rightarrow$ predict PHT[000]=? $\rightarrow$ actual is \textbf{1} $\rightarrow$ update PHT[000]$\leftarrow$1}
+        \only<2>{BHR=001 $\rightarrow$ predict PHT[001]=? $\rightarrow$ actual is \textbf{0} $\rightarrow$ update PHT[001]$\leftarrow$0}
+        \only<3>{BHR=010 $\rightarrow$ predict PHT[010]=? $\rightarrow$ actual is \textbf{0} $\rightarrow$ update PHT[010]$\leftarrow$0}
+        \only<4>{BHR=100 $\rightarrow$ predict PHT[100]=? $\rightarrow$ actual is \textbf{0} $\rightarrow$ update PHT[100]$\leftarrow$0}
+        \only<5>{BHR=000 $\rightarrow$ predict PHT[000]=1 $\rightarrow$ actual is \textbf{1} \checkmark correct!}
+        \only<6>{BHR=001 $\rightarrow$ predict PHT[001]=0 $\rightarrow$ actual is \textbf{0} \checkmark steady state}
+    };
+\end{tikzpicture}
 \end{center}
 
 \end{frame}
