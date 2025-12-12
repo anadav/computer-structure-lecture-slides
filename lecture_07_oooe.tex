@@ -2430,32 +2430,85 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{Data Cache Miss}
+\begin{frame}{Data Cache Miss -- Fill Buffers}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\begin{itemize}
+  \item \textbf{Non-blocking D\$:} On load miss, continue dispatching subsequent loads
   \begin{itemize}
-    \item \textbf{Non-blocking D\$:} On load miss, continue dispatching subsequent loads
-    \begin{itemize}
-      \item Blocking cache would hurt a main OOO benefit: hiding cache miss latency
-    \end{itemize}
-    \item \textbf{On load miss:}
-    \begin{itemize}
-      \item Mark load's write-back data as \textit{invalid}
-      \begin{itemize}
-        \item RS dispatches load consumers assuming hit; re-dispatch when data arrives
-      \end{itemize}
-      \item Assign a \textbf{Fill Buffer (FB)} entry, issue L2 request
-      \begin{itemize}
-        \item FB holds request address and data (when it returns)
-        \item More loads can dispatch as long as free FBs exist
-      \end{itemize}
-      \item Subsequent loads to same missed line share the FB entry
-    \end{itemize}
-    \item \textbf{When critical chunk returns:}
-    \begin{itemize}
-      \item Wakeup and re-dispatch the waiting load
-      \item Load reads directly from FB (no need to wait for D\$ write)
-    \end{itemize}
-    \item \textbf{Blocked load} (unknown store addr/data): still performs D\$ lookup as \textit{prefetch}
+    \item Blocking cache hurts OOO benefit: hiding miss latency
   \end{itemize}
+  \item \textbf{On load miss:}
+  \begin{itemize}
+    \item Assign a \textbf{Fill Buffer (FB)} entry
+    \item Issue L2 request
+    \item FB holds address and data (when it returns)
+  \end{itemize}
+  \item More loads can dispatch as long as free FBs exist
+  \item Subsequent loads to same missed line share the FB entry
+\end{itemize}
+\end{column}
+\begin{column}{0.44\textwidth}
+\centering
+\begin{tikzpicture}[
+    cache/.style={draw, thick, minimum width=1.4cm, minimum height=1.4cm, inner sep=2pt, align=center, font=\bfseries},
+    fbentry/.style={draw, thick, minimum width=2.2cm, minimum height=0.35cm},
+    ]
+
+    % L1 cache (left)
+    \node[cache, fill=orange!30] (l1) at (0, 0) {L1\\cache};
+
+    % Fill Buffers (center) as matrix
+    \matrix[right=0.6cm of l1, matrix of nodes,
+            nodes={fbentry, fill=gray!20},
+            row sep=1pt,
+            column sep=0pt,
+            ampersand replacement=\&] (fb) {
+        |(fb1d)| \scriptsize data \& |(fb1a)| \scriptsize addr. \\
+        |(fb2d)|  \& |(fb2a)|  \\
+        |(fb3d)|  \& |(fb3a)|  \\
+        |(fb4d)|  \& |(fb4a)|  \\
+    };
+
+    % Label for fill buffers
+    \node[above=1mm of fb, font=\small\bfseries, align=center] {Fill Buffers};
+
+    % L2 cache (right)
+    \node[cache, fill=green!30, right=0.6cm of fb] (l2) {L2\\cache};
+
+    % Arrows
+    \draw[->, very thick] (l1.east) -- (fb1d.west |- l1.east);
+    \draw[->, very thick] (fb2a.east) -- (fb2a.east -| l2.west);
+    \draw[<-, very thick] (fb3d.east) -- (fb3d.east -| l2.west);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Data Cache Miss -- Handling}
+\begin{itemize}
+  \item \textbf{On load miss:}
+  \begin{itemize}
+    \item Mark load's write-back data as \textit{invalid}
+    \item RS dispatches load consumers assuming hit
+    \item Consumers are re-dispatched once load's data is available
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \item \textbf{When critical chunk returns from L2:}
+  \begin{itemize}
+    \item Wakeup and re-dispatch the load waiting for the data
+    \item Load reads directly from FB (no need to wait for D\$ write)
+  \end{itemize}
+
+  \vspace{0.3cm}
+
+  \item \textbf{Blocked load} (unknown store addr/data):
+  \begin{itemize}
+    \item Still performs D\$ lookup as \textit{prefetch}
+  \end{itemize}
+\end{itemize}
 \end{frame}
 
 % Updated macro with more flexibility and queue colors
