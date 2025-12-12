@@ -2295,29 +2295,16 @@
 \begin{frame}{Load/Store Ordering}
     The MOB tracks dependencies between loads and stores
     \begin{block}{An older Store has an unresolved address $\rightarrow$ block Load}
-      \begin{tikzpicture}[remember picture]
-        \node[align=left] at (4,1.5) {\texttt{Store Mem[2000] $\leftarrow$ 7}};
-        \node[align=left, brown] at (4,1) {\texttt{Store Mem[r1+\tikzmark{r3}\textcolor{red}{r3}*2] $\leftarrow$ 8} \small // address not calculated since};
-        \node[align=left, brown] at (6.7,0.6) {\small // one of the source registers is not ready};
-        \node[red] at (1,0.5) {= ?};
-        \draw[red, ultra thick] (0.3,0.5) -- (0.7,0.9);
-        \draw[red, ultra thick] (0.3,0.9) -- (0.7,0.5);
-        \node[red, rotate=-10] at (0.5,0.2) {\small STOP};
-        \node[align=left] at (4,-0.3) {\texttt{Load R1 $\leftarrow$ Mem[\tikzmark{target}1000]}};
-      \end{tikzpicture}
-      \begin{tikzpicture}[remember picture, overlay]
-        \draw[->, red, thick] ([xshift=4pt,yshift=-1pt]pic cs:r3) -- ([xshift=5,yshift=12pt]pic cs:target);
-      \end{tikzpicture}
+      \begin{tabular}{@{}c@{\hspace{0.3cm}}l@{}}
+        & \textcolor{brown}{\texttt{Store Mem[r1+\textcolor{red}{r3}*2] $\leftarrow$ 8}} {\small\textcolor{brown}{// address unknown (\textcolor{red}{r3} not ready)}} \\[4pt]
+        \raisebox{-0.5ex}{\includegraphics[height=1.2em]{figures/noun-stop-sign-7580056.png}} & \texttt{Load R1 $\leftarrow$ Mem[1000]} {\small\textcolor{gray}{// might conflict?}} \\
+      \end{tabular}
     \end{block}
     \begin{block}{Older Store to same address, but Store's data \underline{is not ready} $\rightarrow$ block Load}
-    \begin{tikzpicture}
-      \node[align=left] at (4,1.2) {\texttt{Store Mem[2000] $\leftarrow$ 7}};
-      \node[align=left, brown] at (4.3,0.7) {\texttt{Store Mem[1000] $\leftarrow$ r5} \small // data unknown since r5 is not ready};
-      \draw[red, ultra thick] (0.3,0.3) -- (0.7,0.7);
-      \draw[red, ultra thick] (0.3,0.7) -- (0.7,0.3);
-      \node[red, rotate=-10] at (0.5,-0.2) {\small STOP};
-      \node[align=left] at (4,0) {\texttt{Load R1 $\leftarrow$ Mem[1000]}};
-    \end{tikzpicture}
+      \begin{tabular}{@{}c@{\hspace{0.3cm}}l@{}}
+        & \textcolor{brown}{\texttt{Store Mem[1000] $\leftarrow$ \textcolor{red}{r5}}} {\small\textcolor{brown}{// data unknown (\textcolor{red}{r5} not ready)}} \\[4pt]
+        \raisebox{-0.5ex}{\includegraphics[height=1.2em]{figures/noun-stop-sign-7580056.png}} & \texttt{Load R1 $\leftarrow$ Mem[1000]} {\small\textcolor{gray}{// same address, must wait}} \\
+      \end{tabular}
     \end{block}
 \end{frame}
 
