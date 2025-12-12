@@ -2026,89 +2026,137 @@
 \end{frame}
 
 \begin{frame}{Interrupts}
-  \begin{columns}
-    \begin{column}{0.65\textwidth}
+  \begin{columns}[T]
+    \begin{column}{0.6\textwidth}
       \begin{itemize}
-        \item \textbf{Interrupts served when next instruction retires}
+        \item \textbf{Interrupts served when oldest instruction retires}
         \begin{itemize}
-          \item<1-> Let current cycle instruction retire
-          \item<2-> Flush subsequent instructions
-          \item<3-> Initiate interrupt service code
-          \item<3-> Re-fetch subsequent instructions
+          \item<1-> Interrupt arrives asynchronously
+          \item<2-> Retire all ready instructions at head of ROB
+          \item<3-> Flush remaining instructions
+          \item<4-> Initiate interrupt service routine (ISR)
+          \item<4-> Re-fetch subsequent instructions after ISR
         \end{itemize}
       \end{itemize}
     \end{column}
-    \begin{column}{0.35\textwidth}
+    \begin{column}{0.4\textwidth}
+      \vspace{-1.2cm}
       \begin{center}
         \begin{tikzpicture}[font=\tiny,
-          E/.style={draw, fill=white, minimum width=1.6cm, minimum height=0.3cm, inner sep=0},
+          E/.style={draw, fill=white, minimum width=1.8cm, minimum height=0.32cm, inner sep=0},
           G/.style={E, fill=green!30},
           R/.style={E, fill=red!30},
+          RR/.style={E, fill=red!60},
           P/.style={E, fill=purple!30}
         ]
           \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth,
-            nodes={minimum width=1.6cm, minimum height=0.3cm, inner sep=0}
+            nodes={minimum width=1.8cm, minimum height=0.32cm, inner sep=0}
           ] (m) {
-            |[E]| \\
-            |[E]| \\
-            |[G]| \\
-            |[R]| \\
-            |[G]| \\
-            |[R]| \\
-            |[R]| \\
-            |[G]| \\
-            |[R]| \\
-            |[R]| \\
-            |[R]| \\
-            |[G]| \\
-            |[G]| \\
-            |[G]| \\
-            |[G]| \\
-            |[G]| \\
-            |[E]| \\
-            |[E]| \\
+            |[E]| \\ |[E]| \\ |[E]| \\
+            |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\
+            |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\ |[E]| \\
+            |[E]| \\ |[E]| \\
           };
 
-          % Interrupt indicator above ROB (stages 1-2)
-          \only<1-2>{
-            \node[inner sep=0pt, above=0.2cm of m-1-1] (boom) {\includegraphics[width=1.6cm, height=1.0cm]{figures/noun-boom-6722068.png}};
+          % ROB label
+          \node[above=0.1cm of m-1-1, font=\small] {ROB};
+
+          % Stage 1: Interrupt arrives, top two executed (red)
+          \only<1>{
+            \node[R] at (m-4-1) {};
+            \node[R] at (m-5-1) {};
+            \node[G] at (m-6-1) {};
+            \foreach \i in {7,9,10,11} { \node[R] at (m-\i-1) {}; }
+            \foreach \i in {8,12,13,14,15,16} { \node[G] at (m-\i-1) {}; }
+
+            % Interrupt indicator (left of ROB)
+            \node[inner sep=0pt, anchor=south east] at (m-1-1.north west) (boom) {\includegraphics[width=1.4cm, height=0.9cm]{figures/noun-boom-6722068.png}};
             \node[font=\scriptsize\bfseries] at (boom.center) {\textcolor{red}{interrupt}};
-          }
 
-          % Stage 2: Flushed overlay
-          \only<2>{
-            \fill[white, opacity=0.7] (m-4-1.north west) rectangle (m-16-1.south east);
-            \node[rotate=45, font=\small, opacity=0.8] at (m-10-1.center) {flushed};
-          }
-
-          % Stage 3: ISR and re-fetched
-          \only<3>{
-            % Override with purple for ISR
-            \node[P] at (m-3-1) {};
-            \node[P] at (m-4-1) {};
-            \node[P] at (m-5-1) {};
-            \node[P] at (m-6-1) {};
-            \node[P] at (m-7-1) {};
-            \node[font=\tiny, align=center] at (m-5-1.center) {ISR};
-            % Override rest with green
-            \foreach \i in {8,...,16} {
-              \node[G] at (m-\i-1) {};
-            }
-          }
-
-          % Labels
-          \node[left=0.3cm of m-3-1.west, anchor=east] (retire) {\scriptsize retire};
-          \draw[->,thick] (retire) -- (m-3-1.west);
-          \node[right=0.1cm of m-3-1.east, anchor=west] {\scriptsize oldest};
-
-          \only<1-2>{
-            \node[left=0.3cm of m-16-1.west, anchor=east] (alloc) {\scriptsize alloc};
-            \draw[->,thick] (alloc) -- (m-16-1.west);
+            % Labels
+            \node[left=0.4cm of m-4-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-4-1.west);
+            \node[right=0.1cm of m-4-1.east, anchor=west] {\scriptsize oldest};
+            \node[left=0.4cm of m-17-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-17-1.west);
             \node[right=0.1cm of m-16-1.east, anchor=west] {\scriptsize youngest};
           }
+
+          % Stage 2: Top two retiring
+          \only<2>{
+            \node[RR] at (m-4-1) {};
+            \node[RR] at (m-5-1) {};
+            \node[G] at (m-6-1) {};
+            \foreach \i in {7,9,10,11} { \node[R] at (m-\i-1) {}; }
+            \foreach \i in {8,12,13,14,15,16} { \node[G] at (m-\i-1) {}; }
+
+            % Interrupt indicator (left of ROB)
+            \node[inner sep=0pt, anchor=south east] at (m-1-1.north west) (boom) {\includegraphics[width=1.4cm, height=0.9cm]{figures/noun-boom-6722068.png}};
+            \node[font=\scriptsize\bfseries] at (boom.center) {\textcolor{red}{interrupt}};
+
+            % Labels
+            \node[left=0.4cm of m-4-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-4-1.west);
+            \node[right=0.1cm of m-4-1.east, anchor=west] {\scriptsize oldest};
+            \node[left=0.4cm of m-17-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-17-1.west);
+            \node[right=0.1cm of m-16-1.east, anchor=west] {\scriptsize youngest};
+          }
+
+          % Stage 3: Top two retired, flush rest
           \only<3>{
-            \node[left=0.3cm of m-16-1.west, anchor=east] (alloc) {\scriptsize alloc};
-            \draw[->,thick] (alloc) -- (m-16-1.west);
+            \node[R] at (m-4-1) {};
+            \node[R] at (m-5-1) {};
+            \node[G] at (m-6-1) {};
+            \foreach \i in {7,9,10,11} { \node[R] at (m-\i-1) {}; }
+            \foreach \i in {8,12,13,14,15,16} { \node[G] at (m-\i-1) {}; }
+
+            % Fade retired entries
+            \fill[white, opacity=0.6] (m-4-1.north west) rectangle (m-5-1.south east);
+            \node[font=\tiny, opacity=0.8] at ($(m-4-1)!0.5!(m-5-1)$) {retired};
+
+            % Fade flushed entries
+            \fill[white, opacity=0.6] (m-6-1.north west) rectangle (m-16-1.south east);
+            \node[rotate=45, font=\small, opacity=0.7] at (m-11-1.center) {flushed};
+
+            % Faded previous state
+            \node[left=0.4cm of m-4-1.west, anchor=east, opacity=0.4] (retire_old) {\scriptsize retire};
+            \draw[->,thick, opacity=0.4] (retire_old) -- (m-4-1.west);
+            \node[right=0.1cm of m-4-1.east, anchor=west, opacity=0.4] (oldest_old) {\scriptsize oldest};
+
+            % Current state (new retire/alloc at m-6-1)
+            \node[left=0.4cm of m-6-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-6-1.west);
+            \node[right=0.1cm of m-6-1.east, anchor=west] (oldest) {\scriptsize oldest};
+
+            % Dashed arrows
+            \draw[->,dashed,thick] (retire_old.west) to[out=180,in=180] (retire.west);
+            \draw[->,dashed,thick] (oldest_old.east) to[out=0,in=0] (oldest.east);
+
+            % Faded old alloc
+            \node[left=0.4cm of m-17-1.west, anchor=east, opacity=0.4] (alloc_old) {\scriptsize alloc};
+            \draw[->,thick, opacity=0.4] (alloc_old) -- (m-17-1.west);
+            \node[right=0.1cm of m-16-1.east, anchor=west, opacity=0.4] (youngest_old) {\scriptsize youngest};
+
+            % New alloc
+            \node[left=0.4cm of m-6-1.west, anchor=east, yshift=-0.4cm] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-6-1.west);
+
+            \draw[->,dashed,thick] (alloc_old.north) -- (alloc.south);
+          }
+
+          % Stage 4: ISR and re-fetched
+          \only<4>{
+            \foreach \i in {4,...,8} { \node[P] at (m-\i-1) {}; }
+            \node[font=\tiny] at (m-6-1.center) {ISR};
+            \foreach \i in {9,...,16} { \node[G] at (m-\i-1) {}; }
+
+            % Labels
+            \node[left=0.4cm of m-4-1.west, anchor=east] (retire) {\scriptsize retire};
+            \draw[->,thick] (retire) -- (m-4-1.west);
+            \node[right=0.1cm of m-4-1.east, anchor=west] {\scriptsize oldest};
+            \node[left=0.4cm of m-17-1.west, anchor=east] (alloc) {\scriptsize alloc};
+            \draw[->,thick] (alloc) -- (m-17-1.west);
             \node[right=0.1cm of m-16-1.east, anchor=west] {\scriptsize youngest};
           }
         \end{tikzpicture}
