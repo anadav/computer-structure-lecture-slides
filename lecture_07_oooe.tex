@@ -2399,16 +2399,13 @@
     \item \textbf{Wrong prediction?} $\rightarrow$ pipeline flush at retire, re-fetch
   \end{itemize}
 
-  \vspace{0.3cm}
-  \fcolorbox{gray!40}{gray!8}{%
-    \begin{minipage}{0.92\textwidth}
-      \small Predict non-colliding $\rightarrow$ Load proceeds:\\[4pt]
-      \begin{tabular}{@{}c@{\hspace{0.3cm}}l@{}}
-        & \textcolor{brown}{\texttt{Store Mem[r1+\textcolor{red}{r3}*2] $\leftarrow$ 8}} {\small\textcolor{brown}{// address unknown (\textcolor{red}{r3} not ready)}} \\[4pt]
-        \textcolor{green!50!black}{\textbf{GO}} & \texttt{Load R1 $\leftarrow$ Mem[1000]} {\small\textcolor{gray}{// predicted: no conflict}} \\
-      \end{tabular}
-    \end{minipage}%
-  }
+  \vspace{0.2cm}
+  \begin{block}{Predict non-colliding $\rightarrow$ Load proceeds}
+    \begin{tabular}{@{}c@{\hspace{0.3cm}}l@{}}
+      & \textcolor{brown}{\texttt{Store Mem[r1+\textcolor{red}{r3}*2] $\leftarrow$ 8}} {\small\textcolor{brown}{// address unknown (\textcolor{red}{r3} not ready)}} \\[4pt]
+      \raisebox{-0.5ex}{\includegraphics[height=1.2em]{figures/noun-proceed-3856370.png}} & \texttt{Load R1 $\leftarrow$ Mem[1000]} {\small\textcolor{gray}{// predicted: no conflict}} \\
+    \end{tabular}
+  \end{block}
 \end{frame}
 
 \begin{frame}{Store $\rightarrow$ Load Forwarding}
@@ -2421,20 +2418,44 @@
     \item \textbf{Restrictions:} alignment, partial overlap, etc.
   \end{itemize}
 
-  \vspace{0.3cm}
-  \fcolorbox{gray!40}{gray!8}{%
-    \begin{minipage}{0.92\textwidth}
-      \vspace{0.2cm}
-      \begin{tikzpicture}[remember picture]
-        \node[anchor=west] (store) at (0,0) {\texttt{Store \tikzmark{storemem}Mem[1000] $\leftarrow$ 42} {\small\textcolor{gray}{// address known, data ready}}};
-        \node[anchor=west] (load) at (0,-1) {\texttt{Load R1 $\leftarrow$ \tikzmark{loadmem}Mem[1000]} {\small\textcolor{blue!70}{// forwarded from SDB}}};
-      \end{tikzpicture}
-      \begin{tikzpicture}[remember picture, overlay]
-        \draw[->, blue!70, thick] ([xshift=0.5cm, yshift=-2pt]pic cs:storemem) -- node[right, font=\scriptsize] {SDB} ([xshift=0.5cm, yshift=8pt]pic cs:loadmem);
-      \end{tikzpicture}
-      \vspace{0.1cm}
-    \end{minipage}%
-  }
+  \vspace{0.2cm}
+  \begin{block}{Store data ready $\rightarrow$ forward via SDB}
+    \begin{tikzpicture}[remember picture]
+      \node[anchor=west] (store) at (0,0) {\texttt{Store \tikzmark{storemem}Mem[1000] $\leftarrow$ 42} {\small\textcolor{gray}{// address known, data ready}}};
+      \node[anchor=west] (load) at (0,-1) {\texttt{Load R1 $\leftarrow$ \tikzmark{loadmem}Mem[1000]} {\small\textcolor{blue!70}{// forwarded from SDB}}};
+    \end{tikzpicture}
+    \begin{tikzpicture}[remember picture, overlay]
+      \draw[->, blue!70, thick] ([xshift=0.5cm, yshift=-2pt]pic cs:storemem) -- node[right, font=\scriptsize] {SDB} ([xshift=0.5cm, yshift=8pt]pic cs:loadmem);
+    \end{tikzpicture}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Data Cache Miss}
+  \begin{itemize}
+    \item \textbf{Non-blocking D\$:} On load miss, continue dispatching subsequent loads
+    \begin{itemize}
+      \item Blocking cache would hurt a main OOO benefit: hiding cache miss latency
+    \end{itemize}
+    \item \textbf{On load miss:}
+    \begin{itemize}
+      \item Mark load's write-back data as \textit{invalid}
+      \begin{itemize}
+        \item RS dispatches load consumers assuming hit; re-dispatch when data arrives
+      \end{itemize}
+      \item Assign a \textbf{Fill Buffer (FB)} entry, issue L2 request
+      \begin{itemize}
+        \item FB holds request address and data (when it returns)
+        \item More loads can dispatch as long as free FBs exist
+      \end{itemize}
+      \item Subsequent loads to same missed line share the FB entry
+    \end{itemize}
+    \item \textbf{When critical chunk returns:}
+    \begin{itemize}
+      \item Wakeup and re-dispatch the waiting load
+      \item Load reads directly from FB (no need to wait for D\$ write)
+    \end{itemize}
+    \item \textbf{Blocked load} (unknown store addr/data): still performs D\$ lookup as \textit{prefetch}
+  \end{itemize}
 \end{frame}
 
 % Updated macro with more flexibility and queue colors
