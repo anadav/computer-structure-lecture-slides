@@ -900,7 +900,7 @@ do {
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
     % BHR
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (bhr) at (0,0) {history};
+    \node[draw,thick,fill=lightgreen!30,minimum width=2cm,minimum height=0.7cm] (bhr) at (0,0) {\textcolor{mygreen}{history}};
     \node[anchor=south,font=\small\bfseries,myblue] at (bhr.north) {BHR};
 
     % Counter array as matrix of nodes
@@ -1104,7 +1104,7 @@ do {
         label={above:{\small\bfseries\color{brown!70!black}History Cache}}
     ] (hist_cache) {
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
-        |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| history \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| \textcolor{mygreen}{history} \\
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
@@ -1187,28 +1187,75 @@ $\Rightarrow$ size = 1024 $\times$ (8 + 6 + 2$\times 2^6$) = 142Kbit
 \label{frame:local_shared}
 
 \begin{itemize}
-    \item \textbf{Using a single counter array shared by all BHR's}
-    \begin{itemize}
-        \item All BHR's index the same array
-        \item Branches with similar patterns interfere with each other
-        \begin{itemize}
-            \item Interference can be either constructive or destructive
-        \end{itemize}
-    \end{itemize}
+    \item \textbf{Single counter array shared by all BHRs} -- all histories index the same array
+    \item Branches with similar patterns interfere with each other
+    \item Interference can be constructive or destructive
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
 \begin{center}
-% TODO: Add shared counter array diagram
-\textcolor{red}{[PLACEHOLDER: History Cache with shared counter array diagram]}
+\begin{tikzpicture}[
+    cache_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.45cm, fill=lightgreen!30, inner sep=2pt, font=\scriptsize},
+    counter_row/.style={draw=black!60, line width=0.6pt, minimum height=0.4cm, fill=lightblue!30, inner sep=1pt, font=\tiny},
+    arrow/.style={-latex, thick, draw=black!70}
+]
+
+    % History Cache using matrix of nodes (4 rows)
+    \matrix[matrix of nodes,
+        nodes={cache_cell},
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        label={above:{\small\bfseries\color{brown!70!black}History Cache}}
+    ] (hist_cache) {
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| \textcolor{mygreen}{history} \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+    };
+
+    % Branch IP input - positioned relative to tag cell
+    \node[anchor=east, left=0.5cm of hist_cache-2-1.west, font=\small, text=brown!70!black] (ip) {Branch IP};
+    \draw[arrow, brown!70!black] (ip.east) -- (hist_cache-2-1.west);
+
+    % Single shared counter array (vertical, 4 rows, highlight 3rd)
+    \matrix[matrix of nodes,
+        nodes={counter_row, minimum width=1.1cm},
+        row sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        right=3cm of hist_cache.east,
+        anchor=west
+    ] (counter_array) {
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[draw=myorange, line width=1.5pt, fill=myorange!20, font=\tiny]| (counter) \\
+        |[fill=lightblue!10]| \\
+    };
+
+    % Counter array title
+    \node[above=0.1cm of counter_array.north, font=\small\bfseries, text=blue!70!black, align=center] {2-bit-sat\\counter array};
+
+    % Arrow from history to counter array - nice path going right then down then -| to highlighted cell (row 3)
+    \draw[arrow] (hist_cache-2-2.east) -- ++(0.6,0) -- ++(0,-0.5) -| (counter_array-3-1.west);
+
+    % Prediction output - right of highlighted cell for straight arrow
+    \node[anchor=west, right=0.8cm of counter_array-3-1.east, font=\small, text=blue!70!black, align=left] (prediction) {prediction =\\msb of counter};
+
+    % Arrow from counter to prediction (straight)
+    \draw[arrow, blue!70!black] (counter_array-3-1.east) -- (prediction.west);
+
+\end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
-Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{history\_size}}$
+\begin{alertblock}{Local Predictor with Shared Counter Size}
+\small
+Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{history\_size}}$
+\end{alertblock}
 
-Example: \#BHRs = 1024; tag\_size=8; history\_size=6 $\Rightarrow$ size=1024 $\times$ (8 + 6) + 2$\times$$2^6$ = 14.1Kbit
+\textbf{Example:} \#BHRs = 1024; tag\_size=8; history\_size=6 $\Rightarrow$ size = 1024 $\times$ (8 + 6) + 2$\times 2^6$ = 14.1Kbit
 
 \end{frame}
 
@@ -1294,7 +1341,7 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
     % GHR
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,0) {history};
+    \node[draw,thick,fill=lightgreen!30,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,0) {\textcolor{mygreen}{history}};
     \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
 
     % Counter array as matrix of nodes
@@ -1343,7 +1390,7 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
     \node[draw,circle,minimum size=0.8cm] (xor) at (3,0) {$\oplus$};
 
     % GHR (above and left of xor)
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1.5) {history};
+    \node[draw,thick,fill=lightgreen!30,minimum width=2cm,minimum height=0.7cm] (ghr) at (0,1.5) {\textcolor{mygreen}{history}};
     \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
 
     % Branch IP (below GHR, symmetric y-delta from xor)
@@ -1550,7 +1597,7 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
     \node[draw,circle,minimum size=0.8cm] (xor) at (3,0) {$\oplus$};
 
     % GHR (above and left of xor)
-    \node[draw,thick,fill=lightblue!20,minimum width=2cm,minimum height=0.7cm] (ghr) at ([xshift=-3cm,yshift=1cm]xor) {history};
+    \node[draw,thick,fill=lightgreen!30,minimum width=2cm,minimum height=0.7cm] (ghr) at ([xshift=-3cm,yshift=1cm]xor) {\textcolor{mygreen}{history}};
     \node[anchor=south,font=\small\bfseries,myblue] at (ghr.north) {GHR};
 
     % Branch IP (below GHR, symmetric y-delta from xor)
@@ -1630,8 +1677,8 @@ if (x > 1) \{ ... \}  \textcolor{black!60}{// branch B: if A taken $\Rightarrow$
     \node[circle, draw=black!80, line width=1pt, minimum size=0.7cm, fill=white] (xor) at (conn_ip |- itp.lpin 1) {$\oplus$};
 
     % GHR - positioned using |- with branch_ip x-axis and xor y-axis
-    \node[draw, thick, fill=lightblue!20, minimum width=1.2cm, minimum height=0.5cm,
-          anchor=east, font=\scriptsize] (ghr) at ([xshift=-2mm]branch_ip.east |- xor) {history};
+    \node[draw, thick, fill=lightgreen!30, minimum width=1.2cm, minimum height=0.5cm,
+          anchor=east, font=\scriptsize] (ghr) at ([xshift=-2mm]branch_ip.east |- xor) {\textcolor{mygreen}{history}};
     \node[anchor=south, font=\tiny\bfseries, myblue] at (ghr.north) {GHR};
 
     % AND gate rotated 90 degrees - smaller, anchored at output pin above MUX top pin
