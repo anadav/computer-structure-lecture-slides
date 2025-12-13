@@ -103,7 +103,7 @@
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
 \node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
 \node[adder, above=3mm of IMem.north east, anchor=south east] (PCadder) {+};
-\node[mux3, anchor=south] (PCSrcMux) at ([yshift=5mm]IMem.north west) {};
+\node[mux3, anchor=south] (PCSrcMux) at ([yshift=15mm]IMem.north west) {};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
 % BPU in Fetch stage (muxdemux block)
@@ -111,7 +111,7 @@
 
 % BPU labels (inside box)
 \node[align=left, xshift=3mm, font=\tiny] at (BPU.blpin 1) {IP};
-\node[align=left, xshift=3mm, font=\tiny] at (BPU.blpin 2) {allocate};
+\node[align=left, xshift=6mm, font=\tiny] at (BPU.blpin 2) {allocate};
 \node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 1) {target};
 \node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 2) {dir};
 
@@ -212,8 +212,8 @@
 \coordinate (execute_in_pred_dir) at (IDEX.east |- fetch_out_pred_dir);
 \coordinate (execute_out_pred_dir) at (EXMEM.west |- fetch_out_pred_dir);
 
-% Next sequential address coordinates
-\coordinate (fetch_out_next_seq) at ([yshift=2mm]IFID.north west);
+% Next sequential address coordinates (based on PC adder output position)
+\coordinate (fetch_out_next_seq) at (PCadder.brpin 1 -| IFID.west);
 \coordinate (decode_in_next_seq) at (IFID.east |- fetch_out_next_seq);
 \coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
 \coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
@@ -222,8 +222,8 @@
 % Repair path coordinate
 \coordinate (repair_in) at ([yshift=6mm]IFID.north west);
 
-% MUX output to PC
-\draw[data_path] (PCSrcMux.lpin 1) |- (PC.north);
+% MUX output to PC (via intermediate point)
+\draw[data_path] (PCSrcMux.lpin 1) |- ([xshift=-5mm]PC.west) -- (PC.west);
 \draw[data_path] (PC.east) -- (IMem.blpin 2);
 
 % PC to BPU
@@ -238,23 +238,23 @@
 % Fetch stage: adder -> IF/ID
 \draw[data_path] (PCadder.brpin 1) -- ++(0.3,0) |- (fetch_out_next_seq);
 % Decode stage: IF/ID -> ID/EX
-\draw[data_path] (decode_in_next_seq) -- node[midway, above=-1pt, font=\tiny] {next sequential address} (decode_out_next_seq);
-% Execute stage: ID/EX -> back to MUX
-\draw[data_path] (execute_in_next_seq) -- (execute_out_next_seq) -| ([xshift=3mm]PCSrcMux.rpin 1) -- (PCSrcMux.rpin 1);
+\draw[data_path] (decode_in_next_seq) -- node[midway, above, inner sep=1pt, font=\tiny] {next sequential address} (decode_out_next_seq);
+% Execute stage: ID/EX -> back to MUX (rpin 3)
+\draw[data_path] (execute_in_next_seq) -- (execute_out_next_seq) -| ([xshift=3mm]PCSrcMux.rpin 3) -- (PCSrcMux.rpin 3);
 
 % === Predicted target: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
 \draw[bpu_path] (BPU.brpin 1) -- ++(0.4,0) |- (fetch_out_pred_target);
 % Decode stage: IF/ID -> ID/EX
-\draw[bpu_path] (decode_in_pred_target) -- node[midway, above=-1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
-% Execute stage: ID/EX -> back to MUX
+\draw[bpu_path] (decode_in_pred_target) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
+% Execute stage: ID/EX -> back to MUX (rpin 2)
 \draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target) -| ([xshift=3mm]PCSrcMux.rpin 2) -- (PCSrcMux.rpin 2);
 
 % === Predicted direction: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
 \draw[bpu_path] (BPU.brpin 2) -- ++(0.6,0) |- (fetch_out_pred_dir);
 % Decode stage: IF/ID -> ID/EX
-\draw[bpu_path] (decode_in_pred_dir) -- node[midway, above=-1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
+\draw[bpu_path] (decode_in_pred_dir) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
 % Execute stage: ID/EX -> (for verification)
 \draw[bpu_path] (execute_in_pred_dir) -- (execute_out_pred_dir);
 
@@ -299,12 +299,10 @@
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
 \draw[data_path] (MEMWB.east |- WBMux.lpin 2) -- (WBMux.blpin 2);
 
-% Repair path from Execute to MUX (calculated target on misprediction, rpin 3)
+% Repair path from Execute to MUX (calculated target on misprediction, rpin 1)
 \draw[repair_path] (TargetAdder.brpin 1) -- ++(0.5,0) |- (repair_in)
-    -| ([xshift=3mm]PCSrcMux.rpin 3) -- node[pos=0.8, right, font=\tiny, text=red!70!black] {repair} (PCSrcMux.rpin 3);
+    -| ([xshift=3mm]PCSrcMux.rpin 1) -- node[pos=0.8, right, font=\tiny, text=red!70!black] {repair} (PCSrcMux.rpin 1);
 
-% Flush signal from compare
-\draw[repair_path, dashed] (Compare.west) -| node[pos=0.15, below, font=\tiny, text=red!70!black] {flush} ([xshift=3mm]IFID.south);
 
 % Register File labels
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {read\\reg 1};
