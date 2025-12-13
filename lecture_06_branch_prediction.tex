@@ -1276,13 +1276,99 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
 \vspace{0.3cm}
 
 \begin{center}
-% TODO: Add Lselect diagram
-\textcolor{red}{[PLACEHOLDER: Lselect predictor diagram with IP concatenation]}
+\begin{tikzpicture}[
+    cache_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.45cm, fill=lightgreen!30, inner sep=2pt, font=\scriptsize},
+    counter_row/.style={draw=black!60, line width=0.6pt, minimum height=0.4cm, fill=lightblue!30, inner sep=1pt, font=\tiny},
+    arrow/.style={-latex, thick, draw=black!70},
+    data_connector/.style={circle, fill=black, inner sep=1.2pt}
+]
+
+    % History Cache using matrix of nodes (4 rows)
+    \matrix[matrix of nodes,
+        nodes={cache_cell},
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        label={[label distance=1pt]above:{\small\bfseries\color{brown!70!black}History Cache}}
+    ] (hist_cache) {
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| \textcolor{mygreen}{history} \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+    };
+
+    % Branch IP input - positioned relative to tag cell
+    \node[anchor=east, left=0.5cm of hist_cache-2-1.west, font=\small, text=brown!70!black] (ip) {Branch IP};
+
+    % Connector for branching off to m l.s.bits path
+    \node[data_connector] (ip_conn) at ([xshift=-0.15cm]hist_cache-2-1.west) {};
+    \draw[arrow, brown!70!black] (ip.east) -- (ip_conn);
+    \draw[thick, brown!70!black] (ip_conn) -- (hist_cache-2-1.west);
+
+    % Single shared counter array (vertical, 4 rows, highlight 3rd)
+    \matrix[matrix of nodes,
+        nodes={counter_row, minimum width=1.1cm},
+        row sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        right=4cm of hist_cache.east,
+        anchor=west
+    ] (counter_array) {
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[draw=myorange, line width=1.5pt, fill=myorange!20, font=\tiny]| (counter) \\
+        |[fill=lightblue!10]| \\
+    };
+
+    % Counter array title
+    \node[above=1pt of counter_array.north, font=\small\bfseries, text=blue!70!black, align=center] {2-bit-sat\\counter array};
+
+    % Coordinates for routing around history cache
+    \coordinate (lower_left) at ([xshift=-0.3cm, yshift=-0.4cm]hist_cache.south west);
+    \coordinate (lower_right) at ([xshift=0.3cm, yshift=-0.4cm]hist_cache.south east);
+
+    % Meeting point for h and m paths
+    \coordinate (meet_point) at ([xshift=1.5cm]hist_cache-2-2.east);
+
+    % Arrow from history going right with "h" label
+    \draw[thick, draw=black!70] (hist_cache-2-2.east) -- ++(0.5,0)
+        node[midway, sloped, font=\scriptsize] {/}
+        node[midway, above=2pt, font=\scriptsize\itshape] {h};
+    \coordinate (h_turn) at ([xshift=0.5cm]hist_cache-2-2.east);
+
+    % Route from connector around history cache bottom with "m l.s.bits of IP" label
+    \draw[thick, draw=black!70] (ip_conn) |- (lower_left);
+    \draw[thick, draw=black!70] (lower_left) -- (lower_right)
+        node[midway, sloped, font=\scriptsize] {/}
+        node[midway, below=3pt, font=\scriptsize\itshape, text=red!70!black] {m l.s.bits of IP};
+
+    % m path goes up to meet point
+    \coordinate (m_up) at (lower_right |- meet_point);
+    \draw[thick, draw=black!70] (lower_right) -- (m_up);
+
+    % h path goes down to meet point
+    \draw[thick, draw=black!70] (h_turn) -- (h_turn |- meet_point);
+
+    % Combined h+m path to counter array
+    \node[data_connector] at (meet_point) (combine_conn) {};
+    \draw[arrow] (combine_conn) -- (counter_array-3-1.west)
+        node[midway, sloped, font=\scriptsize] {/}
+        node[midway, above=2pt, font=\scriptsize\itshape, text=mygreen!70!black] {h+m};
+
+    % Prediction output - right of highlighted cell for straight arrow
+    \node[anchor=west, right=0.8cm of counter_array-3-1.east, font=\small, text=blue!70!black, align=left] (prediction) {prediction =\\msb of counter};
+
+    % Arrow from counter to prediction (straight)
+    \draw[arrow, blue!70!black] (counter_array-3-1.east) -- (prediction.west);
+
+\end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
-Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{history\_size} + m}$
+\begin{alertblock}{Local Predictor with Lselect Size}
+\small
+Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{history\_size} + m}$
+\end{alertblock}
 
 \end{frame}
 
