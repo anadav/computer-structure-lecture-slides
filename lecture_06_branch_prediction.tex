@@ -1265,12 +1265,10 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
 \label{frame:lselect}
 
 \begin{itemize}
-    \item \textbf{\textit{Lselect} reduces inter-branch-interference in the counter array}
-    \begin{itemize}
-        \item The counter array index is a concatenation of the jump history and $m$ l.s.bits of the jump IP
-        \item Counter array size becomes $2^m$ times bigger
-        \item All Branches with the same $m$ IP l.s.bits interfere with each other
-    \end{itemize}
+    \item \textbf{\textit{Lselect} reduces inter-branch-interference} in the counter array
+    \item Counter array index = history $\|$ $m$ l.s.bits of IP (concatenation)
+    \item Counter array size becomes $2^m$ times bigger
+    \item Branches with the same $m$ IP l.s.bits still interfere
 \end{itemize}
 
 \vspace{-0.1cm}
@@ -1341,9 +1339,10 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
 
     % Combined h+m path to counter array
     \node[data_connector] at (meet_point) (combine_conn) {};
-    \draw[arrow] (combine_conn) -- (counter_array-3-1.west)
+    \draw[arrow] (combine_conn) -- ++(0.8,0)
         node[midway, sloped, font=\scriptsize] {/}
-        node[midway, above=2pt, font=\scriptsize\itshape, text=mygreen!70!black] {h+m};
+        node[midway, above=2pt, font=\scriptsize\itshape, text=mygreen!70!black] {h+m}
+        |- (counter_array-3-1.west);
 
     % Prediction output - right of highlighted cell for straight arrow
     \node[anchor=west, right=0.8cm of counter_array-3-1.east, font=\small, text=blue!70!black, align=left] (prediction) {prediction =\\msb of counter};
