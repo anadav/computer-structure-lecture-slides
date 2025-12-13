@@ -75,8 +75,8 @@
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm},
     imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=3.6, square pins=1},
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    bpu_block/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=2, w=2.8, square pins=1},
-                        external pins width=0, align=center, text depth=4ex, fill=lightgreen!40},
+    bpu_block/.style={muxdemux, muxdemux def={Lh=4, NL=2, Rh=4, NR=2, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=6ex, fill=lightgreen!40},
     regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
                     external pins width=0, fill=cyan!20, align=center},
     alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NB=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
@@ -85,7 +85,7 @@
                      external pins width=0, fill=cyan!20, font=\scriptsize},
     memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=1, w=2.8, square pins=1},
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    mux3/.style={muxdemux, muxdemux def={Lh=2, Rh=1, NL=3, NR=1, NB=1, w=0.8},
+    mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NB=1, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
                  external pins width=0, fill=cyan!20},
@@ -103,11 +103,20 @@
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
 \node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
 \node[adder, above=3mm of IMem.north east, anchor=south east] (PCadder) {+};
-\node[mux3, anchor=rpin 1] (PCSrcMux) at ([xshift=-12mm]PC.west) {};
+\node[mux3, anchor=south] (PCSrcMux) at ([yshift=5mm]IMem.north west) {};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
-% BPU - below Instruction Memory
+% BPU in Fetch stage (muxdemux block)
 \node[bpu_block, below=8mm of IMem] (BPU) {BPU};
+
+% BPU labels (inside box)
+\node[align=left, xshift=3mm, font=\tiny] at (BPU.blpin 1) {IP};
+\node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 1) {target};
+\node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 2) {dir};
+
+% Define coordinates for BPU connections
+\coordinate (BPU-in) at (BPU.blpin 1);
+\coordinate (BPU-target) at (BPU.brpin 1);
 
 % Pipeline register IF/ID
 \node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
@@ -115,6 +124,10 @@
 
 % ID Stage Components
 \node[regfile, right=15mm of IFID] (RegFile) {\rotatebox{90}{Register File}};
+
+% Sign Extend unit
+\node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
+      font=\tiny, below=5mm of RegFile.south] (SignExt) {\rotatebox{90}{SignExt}};
 
 % Pipeline register ID/EX
 \node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
@@ -137,6 +150,34 @@
 % MEM Stage Components
 \node[memory_block, right=8mm of EXMEM] (DMem) {Data\\Cache};
 
+% Branch verification logic (in Memory stage above Data Cache)
+\begin{scope}[shift={($(DMem.north) + (0, 5mm)$)}]
+    % Top comparator (target) - ALU style like adder
+    \node[muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=2, NR=1, w=0.8, inset w=0.3, inset Lh=0.8, inset Rh=0, square pins=1},
+          external pins width=0, fill=red!30, anchor=south, font=\scriptsize] (TargetComp) {$\neq$};
+
+    % Bottom comparator (direction) - ALU style
+    \node[muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=2, NR=1, w=0.8, inset w=0.3, inset Lh=0.8, inset Rh=0, square pins=1},
+          external pins width=0, fill=red!30, font=\scriptsize, below=2mm of TargetComp.south, anchor=north] (DirComp) {$\neq$};
+
+    % AND gate for misprediction detection
+    \node[and port, scale=0.5, fill=red!30, anchor=bin 1] (MispredAnd) at ([xshift=6mm]TargetComp.brpin 1) {};
+
+    % Connections inside box
+    \draw[->, thick, blue] (TargetComp.brpin 1) -- (MispredAnd.bin 1);
+    \draw[->, thick, blue] (DirComp.brpin 1) -| ([xshift=3mm]DirComp.brpin 1) |- (MispredAnd.bin 2);
+
+    % Input coordinates
+    \coordinate (VerifyIn1) at ([xshift=-4mm]TargetComp.blpin 1);
+    \coordinate (VerifyIn2) at ([xshift=-4mm]DirComp.blpin 1);
+
+    % Background box
+    \begin{scope}[on background layer]
+        \node[draw=mygreen!70!black, line width=1.5pt, fill=lightgreen!30, rounded corners=3pt,
+              fit=(TargetComp)(DirComp)(MispredAnd)(VerifyIn1)(VerifyIn2), inner sep=2mm] (VerifyBox) {};
+    \end{scope}
+\end{scope}
+
 % Pipeline register MEM/WB
 \node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
 
@@ -144,7 +185,7 @@
 \node[mux2, right=8mm of MEMWB] (WBMux) {};
 
 % Stage labels at top
-\node[stage_label] (IF_label) at ([yshift=8mm]IMem.north) {Fetch};
+\node[stage_label] (IF_label) at ([yshift=33mm]IMem.north) {Fetch};
 \node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
 \node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
 \node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
@@ -152,23 +193,69 @@
 
 % === Data paths ===
 
-% PC to MUX and to IMem
-\draw[data_path] (PCSrcMux.rpin 1) -- (PC.west);
+% === Routing coordinates for pipeline signal propagation ===
+% Each signal has coordinates at: fetch_out (IF/ID.west), decode_in (IF/ID.east),
+% decode_out (ID/EX.west), execute_in (ID/EX.east), execute_out (EX/MEM.west)
+
+% Predicted target coordinates
+\coordinate (fetch_out_pred_target) at ([yshift=-2mm]IFID.north west);
+\coordinate (decode_in_pred_target) at (IFID.east |- fetch_out_pred_target);
+\coordinate (decode_out_pred_target) at (IDEX.west |- fetch_out_pred_target);
+\coordinate (execute_in_pred_target) at (IDEX.east |- fetch_out_pred_target);
+\coordinate (execute_out_pred_target) at (EXMEM.west |- fetch_out_pred_target);
+
+% Predicted direction coordinates
+\coordinate (fetch_out_pred_dir) at ([yshift=-6mm]IFID.north west);
+\coordinate (decode_in_pred_dir) at (IFID.east |- fetch_out_pred_dir);
+\coordinate (decode_out_pred_dir) at (IDEX.west |- fetch_out_pred_dir);
+\coordinate (execute_in_pred_dir) at (IDEX.east |- fetch_out_pred_dir);
+\coordinate (execute_out_pred_dir) at (EXMEM.west |- fetch_out_pred_dir);
+
+% Next sequential address coordinates
+\coordinate (fetch_out_next_seq) at ([yshift=2mm]IFID.north west);
+\coordinate (decode_in_next_seq) at (IFID.east |- fetch_out_next_seq);
+\coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
+\coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
+\coordinate (execute_out_next_seq) at (EXMEM.west |- fetch_out_next_seq);
+
+% Repair path coordinate
+\coordinate (repair_in) at ([yshift=6mm]IFID.north west);
+
+% MUX output to PC
+\draw[data_path] (PCSrcMux.lpin 1) |- (PC.north);
 \draw[data_path] (PC.east) -- (IMem.blpin 2);
 
 % PC to BPU
 \node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
-\draw[data_path] (PC_conn) |- (BPU.blpin 1);
+\draw[data_path] (PC_conn) |- (BPU-in);
 
 % PC to adder
 \draw[data_path] (PC_conn) |- (PCadder.blpin 1);
 \draw[data_path] (four.east) -- (PCadder.blpin 2);
 
-% Next sequential address (+4) to MUX
-\draw[data_path] (PCadder.brpin 1) -- ++(0.3,0) |- node[pos=0.85, left, font=\tiny] {+4} (PCSrcMux.lpin 1);
+% === Next sequential address: separate arrows between buffers ===
+% Fetch stage: adder -> IF/ID
+\draw[data_path] (PCadder.brpin 1) -- ++(0.3,0) |- (fetch_out_next_seq);
+% Decode stage: IF/ID -> ID/EX
+\draw[data_path] (decode_in_next_seq) -- node[midway, above=-1pt, font=\tiny] {next sequential address} (decode_out_next_seq);
+% Execute stage: ID/EX -> back to MUX
+\draw[data_path] (execute_in_next_seq) -- (execute_out_next_seq) -| ([xshift=3mm]PCSrcMux.rpin 1) -- (PCSrcMux.rpin 1);
 
-% BPU predicted target to MUX
-\draw[bpu_path] (BPU.blpin 2) -| node[pos=0.1, below, font=\tiny, text=mygreen!70!black] {predicted target} ([xshift=-3mm]PCSrcMux.lpin 2) -- (PCSrcMux.lpin 2);
+% === Predicted target: separate arrows between buffers ===
+% Fetch stage: BPU -> IF/ID
+\draw[bpu_path] (BPU.brpin 1) -| (fetch_out_pred_target);
+% Decode stage: IF/ID -> ID/EX
+\draw[bpu_path] (decode_in_pred_target) -- node[midway, above=-1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
+% Execute stage: ID/EX -> back to MUX
+\draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target) -| ([xshift=3mm]PCSrcMux.rpin 2) -- (PCSrcMux.rpin 2);
+
+% === Predicted direction: separate arrows between buffers ===
+% Fetch stage: BPU -> IF/ID
+\draw[bpu_path] (BPU.brpin 2) -| (fetch_out_pred_dir);
+% Decode stage: IF/ID -> ID/EX
+\draw[bpu_path] (decode_in_pred_dir) -- node[midway, above=-1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
+% Execute stage: ID/EX -> (for verification)
+\draw[bpu_path] (execute_in_pred_dir) -- (execute_out_pred_dir);
 
 % IMem to IF/ID
 \draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
@@ -181,6 +268,11 @@
 \draw[data_path] (RegFile.brpin 1) -- (IDEX.west |- RegFile.brpin 1);
 \draw[data_path] (RegFile.brpin 2) -- (IDEX.west |- RegFile.brpin 2);
 
+% IF/ID to Sign Extend
+\draw[data_path] (IFID.east |- SignExt) -- (SignExt.west);
+% Sign Extend to ID/EX
+\draw[data_path] (SignExt.east) -- (IDEX.west |- SignExt);
+
 % ID/EX to ALU (top input direct, bottom through MUX)
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
 \draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (ALUMux.blpin 1);
@@ -190,8 +282,11 @@
 % ID/EX to Target Adder
 \draw[data_path] (IDEX.east |- TargetAdder.blpin 2) -- (TargetAdder.blpin 2);
 
-% ALU to EX/MEM
-\draw[data_path] (ALU.brpin 3) -- (EXMEM.west |- ALU.brpin 3);
+% ALU outputs to EX/MEM buffer
+\coordinate (exmem_alu_result) at (ALU.brpin 2 -| EXMEM.west);
+\coordinate (exmem_alu_zero) at (ALU.brpin 4 -| EXMEM.west);
+\draw[data_path] (ALU.brpin 2) -- node[pos=0.5, above, font=\tiny] {result} (exmem_alu_result);
+\draw[data_path] (ALU.brpin 4) -- node[pos=0.5, above, font=\tiny] {zero} (exmem_alu_zero);
 
 % EX/MEM to DMem
 \draw[data_path] (EXMEM.east |- DMem.lpin 2) -- (DMem.blpin 2);
@@ -203,16 +298,25 @@
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
 \draw[data_path] (MEMWB.east |- WBMux.lpin 2) -- (WBMux.blpin 2);
 
-% Repair path from Execute to MUX (calculated target on misprediction)
-\draw[repair_path] (TargetAdder.brpin 1) -- ++(0.5,0) |- ([yshift=15mm]PCSrcMux.lpin 3)
-    -- node[pos=0.9, left, font=\tiny, text=red!70!black] {repair} (PCSrcMux.lpin 3);
+% Repair path from Execute to MUX (calculated target on misprediction, rpin 3)
+\draw[repair_path] (TargetAdder.brpin 1) -- ++(0.5,0) |- (repair_in)
+    -| ([xshift=3mm]PCSrcMux.rpin 3) -- node[pos=0.8, right, font=\tiny, text=red!70!black] {repair} (PCSrcMux.rpin 3);
 
 % Flush signal from compare
 \draw[repair_path, dashed] (Compare.west) -| node[pos=0.15, below, font=\tiny, text=red!70!black] {flush} ([xshift=3mm]IFID.south);
 
-% BPU outputs labels
-\node[font=\tiny, text=mygreen!70!black, right=2mm of BPU.brpin 1] {target};
-\node[font=\tiny, text=mygreen!70!black, right=2mm of BPU.brpin 2] {direction};
+% Register File labels
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {read\\reg 1};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {read\\reg 2};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {write\\reg};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {write\\data};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 1) {read\\data 1};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {read\\data 2};
+
+% Data Cache labels
+\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 2) {addr};
+\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 3) {write\\data};
+\node[align=right, font=\tiny] at ([xshift=-3mm]DMem.brpin 1) {read\\data};
 
 % === Callouts ===
 \node[callout, anchor=north east] at ([xshift=-3mm, yshift=-3mm]BPU.south west) {
@@ -220,7 +324,7 @@
     Provides predicted target \& direction
 };
 
-\node[callout, anchor=north west, text width=3.8cm] at ([xshift=3mm, yshift=-3mm]Compare.south east) {
+\node[callout, anchor=north west, text width=3.8cm] at ([xshift=3mm, yshift=-3mm]VerifyBox.south east) {
     \textbf{Verify} direction \& target\\
     \textbf{Flush} if misprediction\\
     \textbf{Update/allocate} BPU
