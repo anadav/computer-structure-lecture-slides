@@ -111,6 +111,7 @@
 
 % BPU labels (inside box)
 \node[align=left, xshift=3mm, font=\tiny] at (BPU.blpin 1) {IP};
+\node[align=left, xshift=3mm, font=\tiny] at (BPU.blpin 2) {allocate};
 \node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 1) {target};
 \node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 2) {dir};
 
@@ -242,16 +243,16 @@
 \draw[data_path] (execute_in_next_seq) -- (execute_out_next_seq) -| ([xshift=3mm]PCSrcMux.rpin 1) -- (PCSrcMux.rpin 1);
 
 % === Predicted target: separate arrows between buffers ===
-% Fetch stage: BPU -> IF/ID
-\draw[bpu_path] (BPU.brpin 1) -| (fetch_out_pred_target);
+% Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
+\draw[bpu_path] (BPU.brpin 1) -- ++(0.4,0) |- (fetch_out_pred_target);
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_target) -- node[midway, above=-1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
 % Execute stage: ID/EX -> back to MUX
 \draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target) -| ([xshift=3mm]PCSrcMux.rpin 2) -- (PCSrcMux.rpin 2);
 
 % === Predicted direction: separate arrows between buffers ===
-% Fetch stage: BPU -> IF/ID
-\draw[bpu_path] (BPU.brpin 2) -| (fetch_out_pred_dir);
+% Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
+\draw[bpu_path] (BPU.brpin 2) -- ++(0.6,0) |- (fetch_out_pred_dir);
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_dir) -- node[midway, above=-1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
 % Execute stage: ID/EX -> (for verification)
