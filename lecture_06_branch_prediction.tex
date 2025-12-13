@@ -1121,7 +1121,6 @@ do {
         ampersand replacement=\&,
         right=3cm of hist_cache.east,
         anchor=west,
-        label={above:{\small\bfseries\color{blue!70!black}2-bit-sat counter arrays}}
     ] (counter_table) {
         \phantom{x} \\
         \phantom{x} \\
@@ -1129,6 +1128,9 @@ do {
         \phantom{x} \\
         \phantom{x} \\
     };
+
+    % Counter arrays title (separate node for two-line support)
+    \node[above=0.1cm of counter_table.north, font=\small\bfseries, text=blue!70!black, align=center] {2-bit-sat\\counter arrays};
 
     % Overlay: multi-column cells on row 2
     \matrix[matrix of nodes,
@@ -1142,8 +1144,9 @@ do {
         \phantom{} \& \phantom{} \& |[fill=white, draw=black, line width=0.8pt]| \phantom{} \& \phantom{} \& \phantom{} \& \phantom{} \\
     };
 
-    % Dots to indicate more counters
-    \node[font=\tiny, right=1pt of counter_cells-1-6] {\textbullet\textbullet\textbullet};
+    % Dots on top of 4th cell with rectangle
+    \node[draw=black!60, anchor=east, line width=0.6pt, fill=lightblue!15, minimum width=0.7cm, minimum height=0.35cm, font=\scriptsize]
+        at (counter_cells-1-6.east) {\textbullet\textbullet\textbullet};
 
     % Arrow from history to counter arrays - nice path going right then down then -| to bottom of cell
     \draw[arrow] (hist_cache-2-2.east) -- ++(0.6,0) -- ++(0,-0.5) -| (counter_cells-1-3.south);
@@ -1165,15 +1168,16 @@ do {
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.2cm}
+\vspace{-0.2cm}
 
-\begin{alertblock}{Predictor Size}
+\begin{alertblock}{Local Predictor with Private Counters Size}
 \small
 Size = \#BHRs $\times$ (tag\_size + history\_size + 2 $\times$ $2^{\text{history\_size}}$)
-
-\vspace{0.1cm}
-\textbf{Example:} \#BHRs = 1024; tag\_size=8; history\_size=6 $\Rightarrow$ size = 1024 $\times$ (8 + 6 + 2$\times 2^6$) = 142Kbit
 \end{alertblock}
+
+\textbf{Example:} \#BHRs = 1024; tag\_size=8; history\_size=6
+
+$\Rightarrow$ size = 1024 $\times$ (8 + 6 + 2$\times 2^6$) = 142Kbit
 
 \end{frame}
 
