@@ -1100,17 +1100,15 @@ do {
         nodes={cache_cell},
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
-        ampersand replacement=\&
+        ampersand replacement=\&,
+        label={above:{\small\bfseries\color{brown!70!black}History Cache}}
     ] (hist_cache) {
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
         |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| history \\
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
-        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
     };
-
-    % History Cache title
-    \node[above=0.1cm of hist_cache.north, font=\small\bfseries, brown!70!black] {History Cache};
 
     % Branch IP input
     \node[anchor=east, left=0.5cm of hist_cache.west, font=\small, text=brown!70!black] (ip) {Branch IP};
@@ -1121,8 +1119,9 @@ do {
         nodes={counter_row, minimum width=2.2cm},
         row sep=-\pgflinewidth,
         ampersand replacement=\&,
-        right=2.2cm of hist_cache.east,
-        anchor=west
+        right=3cm of hist_cache.east,
+        anchor=west,
+        label={above:{\small\bfseries\color{blue!70!black}2-bit-sat counter arrays}}
     ] (counter_table) {
         \phantom{x} \\
         \phantom{x} \\
@@ -1146,25 +1145,22 @@ do {
     % Dots to indicate more counters
     \node[font=\tiny, right=1pt of counter_cells-1-6] {\textbullet\textbullet\textbullet};
 
-    % Counter arrays title
-    \node[above=0.1cm of counter_table.north, font=\small\bfseries, blue!70!black] {2-bit-sat counter arrays};
-
-    % Arrow from history to counter arrays
-    \draw[arrow] (hist_cache-2-2.east) -- ++(0.5,0) |- (counter_cells-1-1.west);
+    % Arrow from history to counter arrays - nice path going right then down then -| to bottom of cell
+    \draw[arrow] (hist_cache-2-2.east) -- ++(0.6,0) -- ++(0,-0.5) -| (counter_cells-1-3.south);
 
     % Prediction output
-    \node[anchor=west, right=0.8cm of counter_table.east, yshift=0.5cm, font=\small, text=blue!70!black, align=left] (prediction) {prediction =\\msb of counter};
+    \node[anchor=west, yshift=0.5cm, font=\small, text=blue!70!black, align=left] at ([xshift=5mm]counter_cells-1-3.south -| counter_table.east) (prediction) {prediction =\\msb of counter};
 
     % Arrow from counter to prediction
     \draw[arrow, blue!70!black] (counter_cells-1-3.north) |- (prediction.west);
 
-    % Update history label
-    \node[anchor=north, below=0.5cm of hist_cache.south, font=\scriptsize, text=brown!70!black, align=center] (update_hist) {Update history with\\branch prediction /\\branch outcome};
-    \draw[arrow, brown!70!black] (update_hist.north) -- (hist_cache-5-2.south);
+    % Update history label - south east of history cell
+    \node[anchor=north west, font=\scriptsize, text=brown!70!black, align=left] (update_hist) at ([xshift=0.2cm, yshift=-0.3cm]hist_cache-2-2.south east) {Update history with\\branch prediction /\\branch outcome};
+    \draw[arrow, brown!70!black] (update_hist.north west) -- (hist_cache-2-2.south);
 
-    % Update counter label
-    \node[anchor=north, below=0.5cm of counter_table.south, font=\scriptsize, text=blue!70!black, align=center] (update_counter) {Update counter with\\branch outcome};
-    \draw[arrow, blue!70!black] (update_counter.north) -- (counter_cells-1-3.south);
+    % Update counter label - anchored south west relative to counter_table south east
+    \node[anchor=south west, font=\scriptsize, text=blue!70!black, align=left] (update_counter) at ([xshift=0.2cm]counter_table.south east) {Update counter with\\branch outcome};
+    \draw[arrow, blue!70!black] (update_counter.north west) -- (counter_cells-1-3.south east);
 
 \end{tikzpicture}
 \end{center}
