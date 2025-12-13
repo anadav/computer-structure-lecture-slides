@@ -85,7 +85,7 @@
                      external pins width=0, fill=cyan!20, font=\scriptsize},
     memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=1, w=2.8, square pins=1},
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NB=1, w=0.8},
+    mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=1, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
                  external pins width=0, fill=cyan!20},
@@ -254,7 +254,13 @@
 
 % === Predicted direction: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
-\draw[bpu_path] (BPU.brpin 2) -- ++(0.6,0) |- (fetch_out_pred_dir);
+\coordinate (dir_joint) at ([xshift=6mm]BPU.brpin 2 |- fetch_out_pred_dir);
+\draw[bpu_path] (BPU.brpin 2) -- ++(0.6,0) |- (dir_joint);
+\node[data_connector] at (dir_joint) {};
+\draw[bpu_path] (dir_joint) -- (fetch_out_pred_dir);
+% Dir to fetch MUX (select signal - NT = not taken)
+\draw[bpu_path] (dir_joint) |- ([yshift=3mm]PCSrcMux.tpin 1) -- (PCSrcMux.tpin 1);
+\node[font=\tiny, above right, inner sep=1pt] at (PCSrcMux.tpin 1) {NT};
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_dir) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
 % Execute stage: ID/EX -> (for verification)
@@ -303,7 +309,7 @@
 
 % Repair path from Execute to MUX (calculated target on misprediction, rpin 1)
 \draw[repair_path] (TargetAdder.brpin 1) -- ++(0.5,0) |- 
-    node[pos=0.9, above, font=\tiny, text=red!70!black] {repair} (PCSrcMux.rpin 1);
+    node[pos=0.95, above, font=\tiny, text=red!70!black] {repair} (PCSrcMux.rpin 1);
 
 
 % Register File labels
