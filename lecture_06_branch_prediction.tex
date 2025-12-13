@@ -1273,7 +1273,7 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
     \end{itemize}
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{-0.1cm}
 
 \begin{center}
 \begin{tikzpicture}[
@@ -1289,7 +1289,7 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         ampersand replacement=\&,
-        label={[label distance=1pt]above:{\small\bfseries\color{brown!70!black}History Cache}}
+        label={[label distance=-5pt]above:{\small\bfseries\color{brown!70!black}History Cache}}
     ] (hist_cache) {
         |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
         |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| \textcolor{mygreen}{history} \\
@@ -1320,33 +1320,24 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
     };
 
     % Counter array title
-    \node[above=1pt of counter_array.north, font=\small\bfseries, text=blue!70!black, align=center] {2-bit-sat\\counter array};
-
-    % Coordinates for routing around history cache
-    \coordinate (lower_left) at ([xshift=-0.3cm, yshift=-0.4cm]hist_cache.south west);
-    \coordinate (lower_right) at ([xshift=0.3cm, yshift=-0.4cm]hist_cache.south east);
+    \node[above=-5pt of counter_array.north, font=\small\bfseries, text=blue!70!black, align=center] {2-bit-sat\\counter array};
 
     % Meeting point for h and m paths
-    \coordinate (meet_point) at ([xshift=1.5cm]hist_cache-2-2.east);
+    \coordinate (meet_point) at ([xshift=1cm]hist_cache-2-2.east);
 
-    % Arrow from history going right with "h" label
+    % Arrow from history going right with "h" label, then down to meet point
     \draw[thick, draw=black!70] (hist_cache-2-2.east) -- ++(0.5,0)
         node[midway, sloped, font=\scriptsize] {/}
-        node[midway, above=2pt, font=\scriptsize\itshape] {h};
-    \coordinate (h_turn) at ([xshift=0.5cm]hist_cache-2-2.east);
+        node[midway, above=2pt, font=\scriptsize\itshape] {h}
+        -- (meet_point);
 
     % Route from connector around history cache bottom with "m l.s.bits of IP" label
-    \draw[thick, draw=black!70] (ip_conn) |- (lower_left);
-    \draw[thick, draw=black!70] (lower_left) -- (lower_right)
-        node[midway, sloped, font=\scriptsize] {/}
-        node[midway, below=3pt, font=\scriptsize\itshape, text=red!70!black] {m l.s.bits of IP};
-
-    % m path goes up to meet point
-    \coordinate (m_up) at (lower_right |- meet_point);
-    \draw[thick, draw=black!70] (lower_right) -- (m_up);
-
-    % h path goes down to meet point
-    \draw[thick, draw=black!70] (h_turn) -- (h_turn |- meet_point);
+    \draw[thick, draw=black!70] (ip_conn)
+        |- ([yshift=-0.2cm]hist_cache.south -| ip_conn)
+        -- ([yshift=-0.2cm]hist_cache.south -| meet_point)
+            node[midway, sloped, font=\scriptsize] {/}
+            node[midway, below=3pt, font=\scriptsize\itshape, text=red!70!black] {m l.s.bits of IP}
+        -- (meet_point);
 
     % Combined h+m path to counter array
     \node[data_connector] at (meet_point) (combine_conn) {};
@@ -1363,7 +1354,7 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.2cm}
+\vspace{-0.2cm}
 
 \begin{alertblock}{Local Predictor with Lselect Size}
 \small
