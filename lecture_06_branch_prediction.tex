@@ -1367,20 +1367,98 @@ Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{histor
 \frametitle{Local Predictor: \textit{Lshare}}
 \label{frame:lshare}
 
-\textbf{\textit{Lshare} reduces inter-branch-interference in the counter array:}
+\begin{itemize}
+    \item \textbf{\textit{Lshare} reduces inter-branch-interference} in the counter array
+    \item Counter array index = history $\oplus$ $h$ l.s.bits of IP (XOR)
+    \item Maps common patterns in different branches to different counters
+\end{itemize}
 
-maps common patterns in different branches to different counters
-
-\vspace{0.3cm}
+\vspace{-0.1cm}
 
 \begin{center}
-% TODO: Add Lshare diagram with XOR
-\textcolor{red}{[PLACEHOLDER: Lshare predictor diagram with XOR hashing]}
+\begin{tikzpicture}[
+    cache_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.45cm, fill=lightgreen!30, inner sep=2pt, font=\scriptsize},
+    counter_row/.style={draw=black!60, line width=0.6pt, minimum height=0.4cm, fill=lightblue!30, inner sep=1pt, font=\tiny},
+    arrow/.style={-latex, thick, draw=black!70},
+    data_connector/.style={circle, fill=black, inner sep=1.2pt}
+]
+
+    % History Cache using matrix of nodes (4 rows)
+    \matrix[matrix of nodes,
+        nodes={cache_cell},
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        label={[label distance=1pt]above:{\small\bfseries\color{brown!70!black}History Cache}}
+    ] (hist_cache) {
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| tag \& |[minimum width=1.4cm, fill=lightgreen!25]| \textcolor{mygreen}{history} \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+        |[minimum width=0.9cm, fill=lightgreen!50]| \& |[minimum width=1.4cm, fill=lightgreen!25]| \\
+    };
+
+    % Branch IP input - positioned relative to tag cell
+    \node[anchor=east, left=0.5cm of hist_cache-2-1.west, font=\small, text=brown!70!black] (ip) {Branch IP};
+
+    % Connector for branching off to h l.s.bits path
+    \node[data_connector] (ip_conn) at ([xshift=-0.15cm]hist_cache-2-1.west) {};
+    \draw[arrow, brown!70!black] (ip.east) -- (ip_conn);
+    \draw[thick, brown!70!black] (ip_conn) -- (hist_cache-2-1.west);
+
+    % XOR gate
+    \node[draw, circle, minimum size=0.7cm] (xor) at ([xshift=2cm]hist_cache-2-2.east) {$\oplus$};
+
+    % Single shared counter array (vertical, 4 rows, highlight 3rd)
+    \matrix[matrix of nodes,
+        nodes={counter_row, minimum width=1.1cm},
+        row sep=-\pgflinewidth,
+        ampersand replacement=\&,
+        right=4cm of hist_cache.east,
+        anchor=west
+    ] (counter_array) {
+        |[fill=lightblue!10]| \\
+        |[fill=lightblue!10]| \\
+        |[draw=myorange, line width=1.5pt, fill=myorange!20, font=\tiny]| (counter) \\
+        |[fill=lightblue!10]| \\
+    };
+
+    % Counter array title
+    \node[above=1pt of counter_array.north, font=\small\bfseries, text=blue!70!black, align=center] {2-bit-sat\\counter array};
+
+    % Arrow from history going right to XOR with "h" label
+    \draw[arrow] (hist_cache-2-2.east) -- (xor.west)
+        node[midway, sloped, font=\scriptsize] {/}
+        node[midway, above=2pt, font=\scriptsize\itshape] {h};
+
+    % Route from connector around history cache bottom with "h l.s.bits of IP" label
+    \draw[thick, draw=black!70] (ip_conn)
+        |- ([xshift=-0.3cm, yshift=-0.4cm]hist_cache.south west)
+        -- ([yshift=-0.4cm]hist_cache.south -| xor)
+            node[midway, sloped, font=\scriptsize] {/}
+            node[midway, below=3pt, font=\scriptsize\itshape, text=red!70!black] {h l.s.bits of IP};
+    \draw[arrow] ([yshift=-0.4cm]hist_cache.south -| xor) -- (xor.south);
+
+    % XOR to counter array with "h" label
+    \draw[arrow] (xor.east) -- ++(0.8,0)
+        node[midway, sloped, font=\scriptsize] {/}
+        node[midway, above=2pt, font=\scriptsize\itshape] {h}
+        |- (counter_array-3-1.west);
+
+    % Prediction output - right of highlighted cell for straight arrow
+    \node[anchor=west, right=0.8cm of counter_array-3-1.east, font=\small, text=blue!70!black, align=left] (prediction) {prediction =\\msb of counter};
+
+    % Arrow from counter to prediction (straight)
+    \draw[arrow, blue!70!black] (counter_array-3-1.east) -- (prediction.west);
+
+\end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
-Predictor size: \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{history\_size}}$
+\begin{alertblock}{Local Predictor with Lshare Size}
+\small
+Size = \#BHRs $\times$ (tag\_size + history\_size) + 2 $\times$ $2^{\text{history\_size}}$
+\end{alertblock}
 
 \end{frame}
 
