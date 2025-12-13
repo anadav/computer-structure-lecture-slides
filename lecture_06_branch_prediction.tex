@@ -66,31 +66,169 @@
 \frametitle{Branch Prediction Unit in the Pipeline}
 \label{frame:bpu_pipeline}
 
-% TODO: Add pipeline diagram showing BPU integration
-% See PDF page 2 for reference diagram
 \begin{center}
-\textcolor{red}{[PLACEHOLDER: Pipeline diagram with BPU, showing Fetch/Decode/Execute/Memory/WB stages]}
+\scalebox{0.62}{
+\begin{circuitikz}[
+    % Component styles from recitation
+    component/.style={draw, thick, minimum height=0.8cm},
+    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=5.5cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm},
+    imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=6ex, fill=yellow!20},
+    bpu_block/.style={muxdemux, muxdemux def={Lh=3, NL=2, Rh=3, NR=2, w=2.8, square pins=1},
+                        external pins width=0, align=center, text depth=4ex, fill=lightgreen!40},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                    external pins width=0, fill=cyan!20, align=center},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NB=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, fill=green!20, font=\scriptsize},
+    adder/.style={muxdemux, muxdemux def={Lh=2, NL=2, Rh=0.7, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0, square pins=1},
+                     external pins width=0, fill=cyan!20, font=\scriptsize},
+    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=1, w=2.8, square pins=1},
+                        external pins width=0, align=center, text depth=6ex, fill=yellow!20},
+    mux3/.style={muxdemux, muxdemux def={Lh=2, Rh=1, NL=3, NR=1, NB=1, w=0.8},
+                 external pins width=0, fill=cyan!20},
+    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
+                 external pins width=0, fill=cyan!20},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, black},
+    bpu_path/.style={arrow, mygreen!70!black},
+    repair_path/.style={arrow, red!70!black},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+    callout/.style={draw=myorange!80!black, line width=1pt, fill=myorange!10, rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt},
+    node distance=5mm and 5mm,
+]
+
+% IF Stage Components
+\node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
+\node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
+\node[adder, above=3mm of IMem.north east, anchor=south east] (PCadder) {+};
+\node[mux3, anchor=rpin 1] (PCSrcMux) at ([xshift=-12mm]PC.west) {};
+\node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
+
+% BPU - below Instruction Memory
+\node[bpu_block, below=8mm of IMem] (BPU) {BPU};
+
+% Pipeline register IF/ID
+\node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
+\node[data_latch] (Instruction) at (IMem.rpin 2 -| IFID) {\rotatebox{90}{Instruction}};
+
+% ID Stage Components
+\node[regfile, right=15mm of IFID] (RegFile) {\rotatebox{90}{Register File}};
+
+% Pipeline register ID/EX
+\node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
+
+% EX Stage Components - MUX before ALU for immediate selection
+\node[mux2, right=12mm of IDEX] (ALUMux) {};
+\node[alu_style, right=5mm of ALUMux.rpin 1, anchor=blpin 2] (ALU) {};
+\node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
+
+% Target calculation adder
+\node[adder, above=5mm of ALU.north, anchor=south] (TargetAdder) {+};
+\node[font=\tiny, above=1mm of TargetAdder.north] {calc. target};
+
+% Compare unit for misprediction detection
+\node[draw, thick, fill=red!20, circle, minimum size=8mm, font=\small, below=8mm of ALU.south] (Compare) {$\neq$};
+
+% Pipeline register EX/MEM
+\node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
+
+% MEM Stage Components
+\node[memory_block, right=8mm of EXMEM] (DMem) {Data\\Cache};
+
+% Pipeline register MEM/WB
+\node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
+
+% WB Stage - just a mux
+\node[mux2, right=8mm of MEMWB] (WBMux) {};
+
+% Stage labels at top
+\node[stage_label] (IF_label) at ([yshift=8mm]IMem.north) {Fetch};
+\node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
+\node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
+\node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
+\node[stage_label] (WB_label) at (IF_label -| WBMux) {WB};
+
+% === Data paths ===
+
+% PC to MUX and to IMem
+\draw[data_path] (PCSrcMux.rpin 1) -- (PC.west);
+\draw[data_path] (PC.east) -- (IMem.blpin 2);
+
+% PC to BPU
+\node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
+\draw[data_path] (PC_conn) |- (BPU.blpin 1);
+
+% PC to adder
+\draw[data_path] (PC_conn) |- (PCadder.blpin 1);
+\draw[data_path] (four.east) -- (PCadder.blpin 2);
+
+% Next sequential address (+4) to MUX
+\draw[data_path] (PCadder.brpin 1) -- ++(0.3,0) |- node[pos=0.85, left, font=\tiny] {+4} (PCSrcMux.lpin 1);
+
+% BPU predicted target to MUX
+\draw[bpu_path] (BPU.blpin 2) -| node[pos=0.1, below, font=\tiny, text=mygreen!70!black] {predicted target} ([xshift=-3mm]PCSrcMux.lpin 2) -- (PCSrcMux.lpin 2);
+
+% IMem to IF/ID
+\draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
+
+% IF/ID to RegFile
+\draw[data_path] (IFID.east |- RegFile.lpin 1) -- (RegFile.blpin 1);
+\draw[data_path] (IFID.east |- RegFile.lpin 2) -- (RegFile.blpin 2);
+
+% RegFile to ID/EX
+\draw[data_path] (RegFile.brpin 1) -- (IDEX.west |- RegFile.brpin 1);
+\draw[data_path] (RegFile.brpin 2) -- (IDEX.west |- RegFile.brpin 2);
+
+% ID/EX to ALU (top input direct, bottom through MUX)
+\draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (ALUMux.blpin 1);
+\draw[data_path] (IDEX.east |- ALUMux.lpin 2) -- (ALUMux.blpin 2);
+\draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
+
+% ID/EX to Target Adder
+\draw[data_path] (IDEX.east |- TargetAdder.blpin 2) -- (TargetAdder.blpin 2);
+
+% ALU to EX/MEM
+\draw[data_path] (ALU.brpin 3) -- (EXMEM.west |- ALU.brpin 3);
+
+% EX/MEM to DMem
+\draw[data_path] (EXMEM.east |- DMem.lpin 2) -- (DMem.blpin 2);
+
+% DMem to MEM/WB
+\draw[data_path] (DMem.brpin 1) -- (MEMWB.west |- DMem.brpin 1);
+
+% MEM/WB to WB Mux
+\draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
+\draw[data_path] (MEMWB.east |- WBMux.lpin 2) -- (WBMux.blpin 2);
+
+% Repair path from Execute to MUX (calculated target on misprediction)
+\draw[repair_path] (TargetAdder.brpin 1) -- ++(0.5,0) |- ([yshift=15mm]PCSrcMux.lpin 3)
+    -- node[pos=0.9, left, font=\tiny, text=red!70!black] {repair} (PCSrcMux.lpin 3);
+
+% Flush signal from compare
+\draw[repair_path, dashed] (Compare.west) -| node[pos=0.15, below, font=\tiny, text=red!70!black] {flush} ([xshift=3mm]IFID.south);
+
+% BPU outputs labels
+\node[font=\tiny, text=mygreen!70!black, right=2mm of BPU.brpin 1] {target};
+\node[font=\tiny, text=mygreen!70!black, right=2mm of BPU.brpin 2] {direction};
+
+% === Callouts ===
+\node[callout, anchor=north east] at ([xshift=-3mm, yshift=-3mm]BPU.south west) {
+    \textbf{Lookup BPU} in parallel to I\$\\
+    Provides predicted target \& direction
+};
+
+\node[callout, anchor=north west, text width=3.8cm] at ([xshift=3mm, yshift=-3mm]Compare.south east) {
+    \textbf{Verify} direction \& target\\
+    \textbf{Flush} if misprediction\\
+    \textbf{Update/allocate} BPU
+};
+
+\end{circuitikz}
+}
 \end{center}
-
-\vspace{0.3cm}
-
-\begin{itemize}
-    \item \textbf{Lookup BPU in parallel to I\$}
-    \begin{itemize}
-        \item BPU provides the predicted target and direction at fetch
-    \end{itemize}
-\end{itemize}
-
-\vspace{0.2cm}
-
-\begin{itemize}
-    \item \textbf{At Execute stage}
-    \begin{itemize}
-        \item Verify direction (T/NT) and target (if taken)
-        \item Flush if mis-predict
-        \item Update/allocate BPU
-    \end{itemize}
-\end{itemize}
 
 \end{frame}
 
@@ -98,46 +236,71 @@
 \frametitle{Branches and Performance}
 \label{frame:branches_performance}
 
-\begin{itemize}
-    \item \textbf{Misprediction Rate (MPR) vs. Misprediction Per Instruction (MPI)}
-\end{itemize}
+\textbf{Misprediction Rate (MPR) vs. Misprediction Per Instruction (MPI):}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
 \begin{center}
-\begin{tabular}{ccc}
-$\text{MPR} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# jump}}$ & \hspace{1cm} & $\text{MPI} = \dfrac{\text{\# mis-predicted jumps}}{\text{total \# instructions}}$
-\end{tabular}
+\begin{tikzpicture}
+    % MPR box
+    \node[draw=brown!70!black, line width=1pt, fill=brown!10, rounded corners=3pt,
+          inner sep=8pt, font=\normalsize] (mpr) at (0,0) {
+        $\text{MPR} = \dfrac{\text{\# mispredicted branches}}{\text{total \# branches}}$
+    };
+
+    % MPI box
+    \node[draw=blue!70!black, line width=1pt, fill=blue!10, rounded corners=3pt,
+          inner sep=8pt, font=\normalsize, right=1cm of mpr] (mpi) {
+        $\text{MPI} = \dfrac{\text{\# mispredicted branches}}{\text{total \# instructions}}$
+    };
+\end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.1cm}
 
 \begin{itemize}
-    \item MPI correlates better with performance since it takes into account jumps frequency
+    \item \textcolor{blue!70!black}{\textbf{MPI}} correlates better with performance -- accounts for branch frequency
 \end{itemize}
 
 \vspace{0.2cm}
 
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{tcolorbox}[
+    colback=lightgreen!15,
+    colframe=mygreen!80!black,
+    boxrule=1pt,
+    arc=2mm,
+    title={\textbf{Assume}},
+    fonttitle=\small
+]
+\small
 \begin{itemize}
-    \item \textbf{Assume}
-    \begin{itemize}
-        \item MPI = 1\% (1 flush every 100 instructions on average)
-        \item IPC=2 \hspace{0.5cm} (2 instructions per cycle on average)
-        \item Flush penalty of 10 cycles
-    \end{itemize}
+    \item MPI = 1\%
+    \item IPC = 2
+    \item Flush penalty = 10 cycles
 \end{itemize}
+\end{tcolorbox}
+\end{column}
 
-\vspace{0.2cm}
-
+\begin{column}{0.48\textwidth}
+\begin{tcolorbox}[
+    colback=myorange!10,
+    colframe=myorange!80!black,
+    boxrule=1pt,
+    arc=2mm,
+    title={\textbf{Result}},
+    fonttitle=\small
+]
+\small
 \begin{itemize}
-    \item \textbf{We get:}
-    \begin{itemize}
-        \item MPI = 1\% $\Rightarrow$ 1 flush every 100 instructions on average
-        \item IPC=2 $\Rightarrow$ 1 flush every 50 cycles
-        \item 10 cycles flush penalty every 50 cycles
-        \item 20\% in performance
-    \end{itemize}
+    \item 1 flush / 100 instructions
+    \item $\Rightarrow$ 1 flush / 50 cycles
+    \item $\Rightarrow$ \textbf{\textcolor{red!70!black}{20\% performance loss!}}
 \end{itemize}
+\end{tcolorbox}
+\end{column}
+\end{columns}
 
 \end{frame}
 
