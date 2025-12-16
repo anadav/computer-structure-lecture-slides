@@ -85,7 +85,7 @@
                      external pins width=0, fill=cyan!20, font=\scriptsize},
     memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=4, w=2.8, square pins=1},
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=1, w=0.8},
+    mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=2, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
                  external pins width=0, fill=cyan!20},
@@ -150,7 +150,6 @@
 
 % Target calculation adder
 \node[adder, above=5mm of ALU.north, anchor=south] (TargetAdder) {+};
-\node[font=\tiny, above=1mm of TargetAdder.north] {calc. target};
 
 % Pipeline register EX/MEM
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
@@ -168,7 +167,6 @@
       line width=0.7pt, anchor=bin 1, external pins width=0] (MismatchAnd) at ([xshift=5mm]TargetComp.rpin 1) {};
 \node[or port, number inputs=2, rotate=90, scale=0.26, fill=red!30, draw=red!70!black,
       line width=0.7pt, anchor=bin 1, external pins width=0] (FlushOr) at ([yshift=4mm]MismatchAnd.out) {};
-\coordinate (MispredOut) at ([yshift=3mm]FlushOr.out);
 
 % Entry coordinates for predicted/actual signals and enable
 \coordinate (ActualTargetEntry) at ([xshift=-7mm]TargetComp.blpin 2);
@@ -178,19 +176,18 @@
 % Actual outcome wires (orange) feeding comparators
 \draw[verify_actual] (ActualTargetEntry) -- (TargetComp.blpin 2);
 \draw[verify_actual] (ALU.brpin 2 -| EXMEM.east) -- ++(0.5,0) |- (DirComp.blpin 2);
-\node[data_connector] (DirActualConn) at ([xshift=-3mm]DirComp.blpin 2) {};
+\node[data_connector, fill=myorange!90!black] (DirActualConn) at ([xshift=-3mm]DirComp.blpin 2) {};
 \draw[verify_actual] (DirActualConn) |- (MismatchAnd.bin 2);
 
 % Comparator outputs and gating logic: top comparator & enable -> AND, lower comparator -> OR
 \draw[verify_flag] (TargetComp.brpin 1) -- ++(1mm,0) |- (MismatchAnd.bin 1);
 \draw[verify_flag] (MismatchAnd.bout) -| (FlushOr.bin 1);
 \draw[verify_flag] (DirComp.brpin 1) -| (FlushOr.bin 2);
-\draw[verify_flag] (FlushOr.out) -- (MispredOut);
 
 % Background (single filled box reminiscent of reference)
 \begin{scope}[on background layer]
     \node[draw=mygreen!70!black, line width=1pt, fill=lightgreen!35, rounded corners=4pt,
-          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr)(MispredOut),
+          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr),
           inner sep=2.3mm] (VerifyBox) {};
 \end{scope}
 
@@ -277,8 +274,7 @@
 \node[data_connector] at (dir_joint) {};
 \draw[bpu_path] (dir_joint) -- (fetch_out_pred_dir);
 % Dir to fetch MUX (select signal - NT = not taken)
-\draw[bpu_path] (dir_joint) |- ([yshift=3mm]PCSrcMux.tpin 1) -- (PCSrcMux.tpin 1);
-\node[font=\tiny, above right, inner sep=1pt] at (PCSrcMux.tpin 1) {NT};
+\draw[bpu_path] (dir_joint) |- ([yshift=3mm]PCSrcMux.tpin 2) -- (PCSrcMux.tpin 2);
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_dir) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
 % Execute stage: ID/EX -> (for verification)
@@ -309,6 +305,9 @@
 % ID/EX to Target Adder
 \draw[data_path] (IDEX.east |- TargetAdder.blpin 2) -- (TargetAdder.blpin 2);
 
+% Target Adder to EX/MEM buffer
+\draw[data_path] (TargetAdder.brpin 1) -- (TargetAdder.brpin 1 -| EXMEM.west);
+
 % ALU outputs to EX/MEM buffer
 \coordinate (exmem_alu_zero) at (ALU.brpin 2 -| EXMEM.west);
 \coordinate (exmem_alu_result) at (ALU.brpin 4 -| EXMEM.west);
@@ -325,8 +324,8 @@
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
 \draw[data_path] (MEMWB.east |- WBMux.lpin 2) -- (WBMux.blpin 2);
 
-% Repair path from Execute to MUX (calculated target on misprediction, rpin 1)
-\draw[repair_path] (TargetAdder.brpin 1) -- ++(0.5,0) |- node[pos=0.9, repair_label] {repair} (PCSrcMux.rpin 1);
+% Flush signal from OR gate to fetch MUX
+\draw[repair_path] (FlushOr.out) -- ++(0,0.7) -| node[pos=0.9, repair_label] {flush} (PCSrcMux.tpin 1);
 
 
 % Register File labels
