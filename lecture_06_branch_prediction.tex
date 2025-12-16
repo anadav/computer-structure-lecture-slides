@@ -9,7 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix, shapes.gates.logic.US, decorations.pathreplacing, fit}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, backgrounds, matrix, shapes.gates.logic.US, decorations.pathreplacing, fit, shapes.callouts}
 \usepackage[siunitx, RPvoltages]{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{listings}
@@ -347,7 +347,11 @@
     Provides predicted target \& direction
 };
 
-\node[callout, anchor=north west, text width=3.8cm] at ([xshift=3mm, yshift=-3mm]VerifyBox.south east) {
+\coordinate (CalloutPointer) at ([xshift=1cm]DirComp);
+\node[rectangle callout, draw=myorange!80!black, line width=1pt, fill=myorange!10,
+      rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt,
+      callout absolute pointer=(CalloutPointer), text width=3.8cm]
+      at ([xshift=1cm, yshift=-4cm]VerifyBox.south east) {
     \textbf{Verify} direction \& target\\
     \textbf{Flush} if misprediction\\
     \textbf{Update/allocate} BPU
