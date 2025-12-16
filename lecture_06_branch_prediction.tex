@@ -171,23 +171,18 @@
 \coordinate (MispredOut) at ([yshift=3mm]FlushOr.out);
 
 % Entry coordinates for predicted/actual signals and enable
-\coordinate (PredTargetEntry) at ([xshift=-7mm]TargetComp.blpin 1);
-\coordinate (PredDirEntry) at ([xshift=-7mm]DirComp.blpin 1);
 \coordinate (ActualTargetEntry) at ([xshift=-7mm]TargetComp.blpin 2);
-\coordinate (ActualDirEntry) at ([xshift=-7mm]DirComp.blpin 2);
-\coordinate (AndEnableEntry) at ([xshift=-3mm]MismatchAnd.bin 2);
 
 % Prediction wires direct to comparators
-\draw[verify_pred] (PredTargetEntry) -- (TargetComp.blpin 1);
-\draw[verify_pred] (PredDirEntry) -- (DirComp.blpin 1);
 
 % Actual outcome wires (orange) feeding comparators
 \draw[verify_actual] (ActualTargetEntry) -- (TargetComp.blpin 2);
-\draw[verify_actual] (ActualDirEntry) -- (DirComp.blpin 2);
+\draw[verify_actual] (ALU.brpin 2 -| EXMEM.east) -- ++(0.5,0) |- (DirComp.blpin 2);
+\node[data_connector] (DirActualConn) at ([xshift=-3mm]DirComp.blpin 2) {};
+\draw[verify_actual] (DirActualConn) |- (MismatchAnd.bin 2);
 
 % Comparator outputs and gating logic: top comparator & enable -> AND, lower comparator -> OR
 \draw[verify_flag] (TargetComp.brpin 1) -- ++(1mm,0) |- (MismatchAnd.bin 1);
-\draw[verify_flag] (AndEnableEntry) -- (MismatchAnd.bin 2);
 \draw[verify_flag] (MismatchAnd.bout) -| (FlushOr.bin 1);
 \draw[verify_flag] (DirComp.brpin 1) -| (FlushOr.bin 2);
 \draw[verify_flag] (FlushOr.out) -- (MispredOut);
@@ -195,8 +190,7 @@
 % Background (single filled box reminiscent of reference)
 \begin{scope}[on background layer]
     \node[draw=mygreen!70!black, line width=1pt, fill=lightgreen!35, rounded corners=4pt,
-          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr)(MispredOut)
-              (PredTargetEntry)(ActualDirEntry)(AndEnableEntry),
+          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr)(MispredOut),
           inner sep=2.3mm] (VerifyBox) {};
 \end{scope}
 
