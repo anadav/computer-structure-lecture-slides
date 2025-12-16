@@ -166,8 +166,9 @@
 \node[or port, number inputs=2, rotate=90, scale=0.26, fill=red!30, draw=red!70!black,
       line width=0.7pt, anchor=bin 1, external pins width=0] (FlushOr) at ([yshift=4mm]MismatchAnd.out) {};
 
+
 % Actual outcome wires (orange) feeding comparators
-\draw[verify_actual] (TargetAdder.brpin 1 -| EXMEM.east) -- (TargetComp.blpin 2);
+
 \draw[verify_actual] (ALU.brpin 2 -| EXMEM.east) -- ++(0.5,0) |- (DirComp.blpin 2);
 \node[data_connector, fill=myorange!90!black] (DirActualConn) at ([xshift=-3mm]DirComp.blpin 2) {};
 \draw[verify_actual] (DirActualConn) |- (MismatchAnd.bin 2);
@@ -181,12 +182,16 @@
 \node[muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NB=1, w=0.8},
       external pins width=0, fill=blue!20, anchor=lpin 1] (RepairMux) at (PCSrcMux.rpin 1 -| TargetComp) {};
 
+% Calc target to mux rpin 1
+\draw[verify_actual] (TargetAdder.brpin 1 -| EXMEM.east) -| ([xshift=5mm]FlushOr.east) |-  (RepairMux.rpin 1);
+
 % Wire repair mux inputs (predicted target to rpin 1, actual target to rpin 2)
 \node[data_connector, fill=myorange!90!black] (ActualTargetConn) at ([xshift=-3mm]TargetComp.blpin 2) {};
 \draw[verify_actual] (ActualTargetConn) |- (RepairMux.rpin 2);
 \node[data_connector, fill=mygreen!70!black] (PredTargetConn) at ([xshift=-3mm]TargetComp.blpin 1) {};
-\draw[bpu_path] (PredTargetConn) |- (RepairMux.rpin 1);
-\draw[verify_flag] (FlushOr.out) -- (FlushOr.out |- RepairMux.bpin 1) -- (RepairMux.bpin 1);
+
+% Not in the original diagram but we need something perhaps for completeness
+%\draw[verify_flag] (FlushOr.out) -- (FlushOr.out |- RepairMux.bpin 1) -- (RepairMux.bpin 1);
 % Repair mux output to fetch mux
 \draw[repair_path] (RepairMux.lpin 1) -- node[midway, repair_label] {repair} (PCSrcMux.rpin 1);
 
@@ -201,7 +206,7 @@
 \node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
 
 % WB Stage - just a mux
-\node[mux2, right=8mm of MEMWB] (WBMux) {};
+\node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 3) (WBMux) {};
 
 % Stage labels at top
 \node[stage_label] (IF_label) at ([yshift=33mm]IMem.north) {Fetch};
@@ -329,8 +334,14 @@
 % EX/MEM to DMem
 \draw[data_path] (EXMEM.east |- DMem.lpin 3) -- (DMem.lpin 3);
 
-% DMem to MEM/WB
-\draw[data_path] (DMem.brpin 1) -- (MEMWB.west |- DMem.brpin 1);
+% DMem to MEM/WB (read data)
+\draw[data_path] (DMem.brpin 3) -- (MEMWB.west |- DMem.brpin 3);
+
+% Instruction propagation through pipeline
+\draw[data_path] ([yshift=8mm]Instruction.south east) -- ++(0.5,0) |- ([yshift=5mm]IDEX.south west);
+\draw[data_path] ([yshift=5mm]IDEX.south east) -- ([yshift=5mm]EXMEM.south west);
+\draw[data_path] ([yshift=5mm]EXMEM.south east) -- ([yshift=5mm]MEMWB.south west);
+\draw[data_path] ([yshift=5mm]MEMWB.south east) -- ++(0.5,0) |- ([yshift=-5mm,xshift=-6mm]RegFile.west |- IDEX.south) |- (RegFile.blpin 3);
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
@@ -340,6 +351,9 @@
 \node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.blpin 3) {};
 \draw[data_path] (AddrConn) |- (AddrWB);
 \draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
+
+% WB Mux output to Register File write data
+\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([yshift=-8mm]IDEX.south) -| ([xshift=-5mm]RegFile.blpin 4) -- (RegFile.blpin 4);
 
 % Flush signal from OR gate to fetch MUX
 \draw[repair_path] (FlushOr.out) -- ++(0,0.7) -| node[pos=0.9, repair_label] {flush} (PCSrcMux.tpin 1);
