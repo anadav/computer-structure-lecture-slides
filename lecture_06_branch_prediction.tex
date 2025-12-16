@@ -83,16 +83,23 @@
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
-    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=1, w=2.8, square pins=1},
+    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=4, w=2.8, square pins=1},
                         external pins width=0, align=center, text depth=6ex, fill=yellow!20},
     mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=1, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
                  external pins width=0, fill=cyan!20},
+    verify_comp/.style={muxdemux, muxdemux def={Lh=0.95, Rh=0.45, NL=2, NR=1, w=0.65, inset w=0.22, inset Lh=0.7, inset Rh=0, square pins=1},
+                       external pins width=0, fill=red!30, font=\scriptsize},
+    verify_split/.style={muxdemux, muxdemux def={Lh=0.9, Rh=0.9, NL=2, NR=2, w=0.7, inset w=0.18, inset Lh=0.6, inset Rh=0, square pins=1},
+                        external pins width=0, fill=blue!25, font=\scriptsize},
     arrow/.style={->, >=stealth, thick},
     data_path/.style={arrow, black},
     bpu_path/.style={arrow, mygreen!70!black},
     repair_path/.style={arrow, red!70!black},
+    verify_pred/.style={arrow, blue!80},
+    verify_actual/.style={arrow, myorange!90!black},
+    verify_flag/.style={arrow, red!70!black},
     line_label/.style={above, inner sep=1pt, font=\tiny},
     bpu_label/.style={line_label, text=mygreen!70!black},
     repair_label/.style={line_label, text=red!70!black},
@@ -151,31 +158,53 @@
 % MEM Stage Components
 \node[memory_block, right=8mm of EXMEM] (DMem) {Data\\Cache};
 
-% Branch verification logic (in Memory stage above Data Cache)
-\begin{scope}[shift={($(DMem.north) + (0, 5mm)$)}]
-    % Top comparator (target) - ALU style like adder
-    \node[muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=2, NR=1, w=0.8, inset w=0.3, inset Lh=0.8, inset Rh=0, square pins=1},
-          external pins width=0, fill=red!30, anchor=south, font=\scriptsize] (TargetComp) {$\neq$};
+% Branch verification logic (anchored above Data Cache)
+\coordinate (VerifyAnchor) at ($(DMem.north) + (0, 9mm)$);
+\begin{scope}[shift={(VerifyAnchor)}]
+    % Comparators for target and direction (stacked, reusable style)
+    \node[verify_comp, anchor=south] (TargetComp) at (0,0) {$\neq$};
+    \node[verify_comp, anchor=north] (DirComp) at ([yshift=-3mm]TargetComp.south) {$\neq$};
 
-    % Bottom comparator (direction) - ALU style
-    \node[muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=2, NR=1, w=0.8, inset w=0.3, inset Lh=0.8, inset Rh=0, square pins=1},
-          external pins width=0, fill=red!30, font=\scriptsize, below=2mm of TargetComp.south, anchor=north] (DirComp) {$\neq$};
+    % Small mux that fans out prediction info to both comparators
+    \node[verify_split, anchor=east] (VerifySplit) at ([xshift=-2.4mm]TargetComp.west) {};
 
-    % AND gate for misprediction detection
-    \node[and port, scale=0.5, fill=red!30, anchor=bin 1] (MispredAnd) at ([xshift=6mm]TargetComp.brpin 1) {};
+    % Logic gates: mismatch AND feeds upward OR (AND output becomes OR input)
+    \node[and port, number inputs=2, scale=0.26, fill=red!30, draw=red!70!black,
+          line width=0.7pt, anchor=bin 1, external pins width=0] (MismatchAnd) at ([xshift=5mm]DirComp.east) {};
+    \node[or port, number inputs=2, rotate=90, scale=0.26, fill=red!30, draw=red!70!black,
+          line width=0.7pt, anchor=bin 1, external pins width=0] (FlushOr) at ([yshift=3.2mm]MismatchAnd.out) {};
+    \coordinate (MispredOut) at ([yshift=3mm]FlushOr.out);
 
-    % Connections inside box
-    \draw[->, thick, blue] (TargetComp.brpin 1) -- (MispredAnd.bin 1);
-    \draw[->, thick, blue] (DirComp.brpin 1) -| ([xshift=3mm]DirComp.brpin 1) |- (MispredAnd.bin 2);
+    % Entry coordinates for predicted/actual signals and enable
+    \coordinate (PredTargetEntry) at ([xshift=-4mm]VerifySplit.blpin 1);
+    \coordinate (PredDirEntry) at ([xshift=-4mm]VerifySplit.blpin 2);
+    \coordinate (ActualTargetEntry) at ([xshift=-7mm]TargetComp.blpin 2);
+    \coordinate (ActualDirEntry) at ([xshift=-7mm]DirComp.blpin 2);
+    \coordinate (AndEnableEntry) at ([xshift=-3mm]MismatchAnd.bin 2);
 
-    % Input coordinates
-    \coordinate (VerifyIn1) at ([xshift=-4mm]TargetComp.blpin 1);
-    \coordinate (VerifyIn2) at ([xshift=-4mm]DirComp.blpin 1);
+    % Prediction wires via mux fanout
+    \draw[verify_pred] (PredTargetEntry) -- (VerifySplit.blpin 1);
+    \draw[verify_pred] (PredDirEntry) -- (VerifySplit.blpin 2);
+    \draw[verify_pred] (VerifySplit.brpin 1) -- ++(0.6mm,0) |- (TargetComp.blpin 1);
+    \draw[verify_pred] (VerifySplit.brpin 2) -- ++(0.6mm,0) |- (DirComp.blpin 1);
 
-    % Background box
+    % Actual outcome wires (orange) feeding comparators
+    \draw[verify_actual] (ActualTargetEntry) -- (TargetComp.blpin 2);
+    \draw[verify_actual] (ActualDirEntry) -- (DirComp.blpin 2);
+
+    % Comparator outputs and gating logic: top comparator & enable -> AND, lower comparator -> OR
+    \draw[verify_flag] (TargetComp.brpin 1) -- ++(1mm,0) |- (MismatchAnd.bin 1);
+    \draw[verify_flag] (AndEnableEntry) -- (MismatchAnd.bin 2);
+    \draw[verify_flag] (MismatchAnd.out) |- (FlushOr.bin 1);
+    \draw[verify_flag] (DirComp.brpin 1) -- ++(1mm,0) |- (FlushOr.bin 2);
+    \draw[verify_flag] (FlushOr.out) -- (MispredOut);
+
+    % Background (single filled box reminiscent of reference)
     \begin{scope}[on background layer]
-        \node[draw=mygreen!70!black, line width=1.5pt, fill=lightgreen!30, rounded corners=3pt,
-              fit=(TargetComp)(DirComp)(MispredAnd)(VerifyIn1)(VerifyIn2), inner sep=2mm] (VerifyBox) {};
+        \node[draw=mygreen!70!black, line width=1pt, fill=lightgreen!35, rounded corners=4pt,
+              fit=(TargetComp)(DirComp)(VerifySplit)(MismatchAnd)(FlushOr)(MispredOut)
+                  (PredTargetEntry)(ActualDirEntry)(AndEnableEntry),
+              inner sep=2.3mm] (VerifyBox) {};
     \end{scope}
 \end{scope}
 
@@ -301,7 +330,7 @@
 \draw[data_path] (ALU.brpin 4) -- node[pos=0.5, above, font=\tiny] {zero} (exmem_alu_zero);
 
 % EX/MEM to DMem
-\draw[data_path] (EXMEM.east |- DMem.lpin 2) -- (DMem.blpin 2);
+\draw[data_path] (EXMEM.east |- DMem.lpin 3) -- (DMem.lpin 3);
 
 % DMem to MEM/WB
 \draw[data_path] (DMem.brpin 1) -- (MEMWB.west |- DMem.brpin 1);
@@ -323,9 +352,9 @@
 \node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {read\\data 2};
 
 % Data Cache labels
-\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 2) {addr};
-\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 3) {write\\data};
-\node[align=right, font=\tiny] at ([xshift=-3mm]DMem.brpin 1) {read\\data};
+\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 3) {addr};
+\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 4) {write\\data};
+\node[align=right, font=\tiny] at ([xshift=-3mm]DMem.brpin 3) {read\\data};
 
 % === Callouts ===
 \node[callout, anchor=north east] at ([xshift=-3mm, yshift=-3mm]BPU.south west) {
