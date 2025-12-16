@@ -304,13 +304,18 @@
 \draw[data_path] (SignExt.east) -- (IDEX.west |- SignExt);
 
 % ID/EX to ALU (top input direct, bottom through MUX)
+\coordinate (ALUInJunction) at ([xshift=-5mm]ALU.lpin 1);
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
+\node[data_connector] at (ALUInJunction) {};
+\draw[data_path] (ALUInJunction) |- (DMem.lpin 3 -| EXMEM.west);
 \draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (ALUMux.blpin 1);
-\draw[data_path] (IDEX.east |- ALUMux.lpin 2) -- (ALUMux.blpin 2);
 \draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
 
-% SignExt through ID/EX to Target Adder
-\draw[data_path] (SignExt -| IDEX.east) -- ++(0.5,0) |- (TargetAdder.blpin 2);
+% SignExt through ID/EX to ALUMux and Target Adder
+\coordinate (ImmJunction) at ([xshift=-3mm]ALUMux.lpin 2);
+\draw[data_path] (SignExt -| IDEX.east) -| (ImmJunction) -- (ALUMux.lpin 2);
+\node[data_connector] at (ImmJunction) {};
+\draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
 
 % Target Adder to EX/MEM buffer
 \draw[data_path] (TargetAdder.brpin 1) -- node[midway, line_label] {calc.\ target} (TargetAdder.brpin 1 -| EXMEM.west);
@@ -329,7 +334,12 @@
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
-\draw[data_path] (MEMWB.east |- WBMux.lpin 2) -- (WBMux.blpin 2);
+
+% Address path from DMem to WB Mux (bypassing MEM/WB for ALU result)
+\coordinate (AddrWB) at ([yshift=-5mm]DMem.south -| MEMWB.west);
+\node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.blpin 3) {};
+\draw[data_path] (AddrConn) |- (AddrWB);
+\draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
 
 % Flush signal from OR gate to fetch MUX
 \draw[repair_path] (FlushOr.out) -- ++(0,0.7) -| node[pos=0.9, repair_label] {flush} (PCSrcMux.tpin 1);
