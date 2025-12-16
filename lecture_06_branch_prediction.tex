@@ -103,6 +103,8 @@
     line_label/.style={above, inner sep=1pt, font=\tiny},
     bpu_label/.style={line_label, text=mygreen!70!black},
     repair_label/.style={line_label, text=red!70!black},
+    lpin_label/.style={align=left, xshift=3mm, font=\tiny},
+    rpin_label/.style={align=right, xshift=-3mm, font=\tiny},
     data_connector/.style={circle, fill, inner sep=1.2pt},
     data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     callout/.style={draw=myorange!80!black, line width=1pt, fill=myorange!10, rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt},
@@ -120,14 +122,10 @@
 \node[bpu_block, below=8mm of IMem] (BPU) {BPU};
 
 % BPU labels (inside box)
-\node[align=left, xshift=3mm, font=\tiny] at (BPU.blpin 1) {IP};
-\node[align=left, xshift=4mm, font=\tiny] at (BPU.blpin 2) {allocate};
-\node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 1) {target};
-\node[align=right, xshift=-3mm, font=\tiny] at (BPU.brpin 2) {dir};
-
-% Define coordinates for BPU connections
-\coordinate (BPU-in) at (BPU.blpin 1);
-\coordinate (BPU-target) at (BPU.brpin 1);
+\node[lpin_label] at (BPU.blpin 1) {IP};
+\node[lpin_label] at (BPU.blpin 2) {allocate};
+\node[rpin_label] at (BPU.brpin 1) {target};
+\node[rpin_label] at (BPU.brpin 2) {dir};
 
 % Pipeline register IF/ID
 \node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
@@ -245,7 +243,7 @@
 
 % PC to BPU (IP input)
 \node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
-\draw[data_path] (PC_conn) |- (BPU-in);
+\draw[data_path] (PC_conn) |- (BPU.blpin 1);
 
 % PC to adder
 \draw[data_path] (PC_conn) |- (PCadder.blpin 1);
