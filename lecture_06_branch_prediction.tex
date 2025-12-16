@@ -159,53 +159,45 @@
 \node[memory_block, right=8mm of EXMEM] (DMem) {Data\\Cache};
 
 % Branch verification logic (anchored above Data Cache)
-\coordinate (VerifyAnchor) at ($(DMem.north) + (0, 9mm)$);
-\begin{scope}[shift={(VerifyAnchor)}]
-    % Comparators for target and direction (stacked, reusable style)
-    \node[verify_comp, anchor=south] (TargetComp) at (0,0) {$\neq$};
-    \node[verify_comp, anchor=north] (DirComp) at ([yshift=-3mm]TargetComp.south) {$\neq$};
+% Comparators for target and direction (stacked, reusable style)
+\node[verify_comp, anchor=south] (DirComp) at ([yshift=1mm]DMem.north) {$\neq$};
+\node[verify_comp, anchor=south] (TargetComp) at ([yshift=4mm, xshift=-6mm]DirComp.north) {$\neq$};
 
-    % Small mux that fans out prediction info to both comparators
-    \node[verify_split, anchor=east] (VerifySplit) at ([xshift=-2.4mm]TargetComp.west) {};
+% Logic gates: mismatch AND feeds upward OR (AND output becomes OR input)
+\node[and port, number inputs=2, scale=0.26, fill=red!30, draw=red!70!black,
+      line width=0.7pt, anchor=bin 1, external pins width=0] (MismatchAnd) at ([xshift=5mm]TargetComp.rpin 1) {};
+\node[or port, number inputs=2, rotate=90, scale=0.26, fill=red!30, draw=red!70!black,
+      line width=0.7pt, anchor=bin 1, external pins width=0] (FlushOr) at ([yshift=4mm]MismatchAnd.out) {};
+\coordinate (MispredOut) at ([yshift=3mm]FlushOr.out);
 
-    % Logic gates: mismatch AND feeds upward OR (AND output becomes OR input)
-    \node[and port, number inputs=2, scale=0.26, fill=red!30, draw=red!70!black,
-          line width=0.7pt, anchor=bin 1, external pins width=0] (MismatchAnd) at ([xshift=5mm]DirComp.east) {};
-    \node[or port, number inputs=2, rotate=90, scale=0.26, fill=red!30, draw=red!70!black,
-          line width=0.7pt, anchor=bin 1, external pins width=0] (FlushOr) at ([yshift=3.2mm]MismatchAnd.out) {};
-    \coordinate (MispredOut) at ([yshift=3mm]FlushOr.out);
+% Entry coordinates for predicted/actual signals and enable
+\coordinate (PredTargetEntry) at ([xshift=-7mm]TargetComp.blpin 1);
+\coordinate (PredDirEntry) at ([xshift=-7mm]DirComp.blpin 1);
+\coordinate (ActualTargetEntry) at ([xshift=-7mm]TargetComp.blpin 2);
+\coordinate (ActualDirEntry) at ([xshift=-7mm]DirComp.blpin 2);
+\coordinate (AndEnableEntry) at ([xshift=-3mm]MismatchAnd.bin 2);
 
-    % Entry coordinates for predicted/actual signals and enable
-    \coordinate (PredTargetEntry) at ([xshift=-4mm]VerifySplit.blpin 1);
-    \coordinate (PredDirEntry) at ([xshift=-4mm]VerifySplit.blpin 2);
-    \coordinate (ActualTargetEntry) at ([xshift=-7mm]TargetComp.blpin 2);
-    \coordinate (ActualDirEntry) at ([xshift=-7mm]DirComp.blpin 2);
-    \coordinate (AndEnableEntry) at ([xshift=-3mm]MismatchAnd.bin 2);
+% Prediction wires direct to comparators
+\draw[verify_pred] (PredTargetEntry) -- (TargetComp.blpin 1);
+\draw[verify_pred] (PredDirEntry) -- (DirComp.blpin 1);
 
-    % Prediction wires via mux fanout
-    \draw[verify_pred] (PredTargetEntry) -- (VerifySplit.blpin 1);
-    \draw[verify_pred] (PredDirEntry) -- (VerifySplit.blpin 2);
-    \draw[verify_pred] (VerifySplit.brpin 1) -- ++(0.6mm,0) |- (TargetComp.blpin 1);
-    \draw[verify_pred] (VerifySplit.brpin 2) -- ++(0.6mm,0) |- (DirComp.blpin 1);
+% Actual outcome wires (orange) feeding comparators
+\draw[verify_actual] (ActualTargetEntry) -- (TargetComp.blpin 2);
+\draw[verify_actual] (ActualDirEntry) -- (DirComp.blpin 2);
 
-    % Actual outcome wires (orange) feeding comparators
-    \draw[verify_actual] (ActualTargetEntry) -- (TargetComp.blpin 2);
-    \draw[verify_actual] (ActualDirEntry) -- (DirComp.blpin 2);
+% Comparator outputs and gating logic: top comparator & enable -> AND, lower comparator -> OR
+\draw[verify_flag] (TargetComp.brpin 1) -- ++(1mm,0) |- (MismatchAnd.bin 1);
+\draw[verify_flag] (AndEnableEntry) -- (MismatchAnd.bin 2);
+\draw[verify_flag] (MismatchAnd.bout) -| (FlushOr.bin 1);
+\draw[verify_flag] (DirComp.brpin 1) -| (FlushOr.bin 2);
+\draw[verify_flag] (FlushOr.out) -- (MispredOut);
 
-    % Comparator outputs and gating logic: top comparator & enable -> AND, lower comparator -> OR
-    \draw[verify_flag] (TargetComp.brpin 1) -- ++(1mm,0) |- (MismatchAnd.bin 1);
-    \draw[verify_flag] (AndEnableEntry) -- (MismatchAnd.bin 2);
-    \draw[verify_flag] (MismatchAnd.out) |- (FlushOr.bin 1);
-    \draw[verify_flag] (DirComp.brpin 1) -- ++(1mm,0) |- (FlushOr.bin 2);
-    \draw[verify_flag] (FlushOr.out) -- (MispredOut);
-
-    % Background (single filled box reminiscent of reference)
-    \begin{scope}[on background layer]
-        \node[draw=mygreen!70!black, line width=1pt, fill=lightgreen!35, rounded corners=4pt,
-              fit=(TargetComp)(DirComp)(VerifySplit)(MismatchAnd)(FlushOr)(MispredOut)
-                  (PredTargetEntry)(ActualDirEntry)(AndEnableEntry),
-              inner sep=2.3mm] (VerifyBox) {};
-    \end{scope}
+% Background (single filled box reminiscent of reference)
+\begin{scope}[on background layer]
+    \node[draw=mygreen!70!black, line width=1pt, fill=lightgreen!35, rounded corners=4pt,
+          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr)(MispredOut)
+              (PredTargetEntry)(ActualDirEntry)(AndEnableEntry),
+          inner sep=2.3mm] (VerifyBox) {};
 \end{scope}
 
 % Pipeline register MEM/WB
@@ -324,10 +316,10 @@
 \draw[data_path] (IDEX.east |- TargetAdder.blpin 2) -- (TargetAdder.blpin 2);
 
 % ALU outputs to EX/MEM buffer
-\coordinate (exmem_alu_result) at (ALU.brpin 2 -| EXMEM.west);
-\coordinate (exmem_alu_zero) at (ALU.brpin 4 -| EXMEM.west);
-\draw[data_path] (ALU.brpin 2) -- node[pos=0.5, above, font=\tiny] {result} (exmem_alu_result);
-\draw[data_path] (ALU.brpin 4) -- node[pos=0.5, above, font=\tiny] {zero} (exmem_alu_zero);
+\coordinate (exmem_alu_zero) at (ALU.brpin 2 -| EXMEM.west);
+\coordinate (exmem_alu_result) at (ALU.brpin 4 -| EXMEM.west);
+\draw[data_path] (ALU.brpin 2) -- node[midway, line_label] {zero} (exmem_alu_zero);
+\draw[data_path] (ALU.brpin 4) -- node[midway, line_label] {result} (exmem_alu_result);
 
 % EX/MEM to DMem
 \draw[data_path] (EXMEM.east |- DMem.lpin 3) -- (DMem.lpin 3);
