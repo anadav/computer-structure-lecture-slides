@@ -158,7 +158,7 @@
 % Branch verification logic (anchored above Data Cache)
 % Comparators for target and direction (stacked, reusable style)
 \node[verify_comp, anchor=south] (DirComp) at ([yshift=3mm]DMem.north) {$\neq$};
-\node[verify_comp, anchor=lpin 2] (TargetComp) at ([xshift=-9mm]DirComp.north |- TargetAdder) {$\neq$};
+\node[verify_comp, anchor=lpin 1] (TargetComp) at ([xshift=8mm, yshift=-1mm]EXMEM.east |- IFID.north) {$\neq$};
 
 % Logic gates: mismatch AND feeds upward OR (AND output becomes OR input)
 \node[and port, number inputs=2, scale=0.26, fill=red!30, draw=red!70!black,
@@ -272,8 +272,9 @@
 \draw[bpu_path] (BPU.brpin 2) -- ++(0.4,0) |- (fetch_out_pred_target);
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_target) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
-% Execute stage: ID/EX -> back to MUX (rpin 2)
+% Execute stage: ID/EX -> EX/MEM -> TargetComp
 \draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target);
+\draw[bpu_path] (EXMEM.east |- execute_out_pred_target) -- (TargetComp.lpin 1);
 
 % === Predicted direction: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
@@ -312,7 +313,7 @@
 \draw[data_path] (SignExt -| IDEX.east) -- ++(0.5,0) |- (TargetAdder.blpin 2);
 
 % Target Adder to EX/MEM buffer
-\draw[data_path] (TargetAdder.brpin 1) -- (TargetAdder.brpin 1 -| EXMEM.west);
+\draw[data_path] (TargetAdder.brpin 1) -- node[midway, line_label] {calc.\ target} (TargetAdder.brpin 1 -| EXMEM.west);
 
 % ALU outputs to EX/MEM buffer
 \coordinate (exmem_alu_zero) at (ALU.brpin 2 -| EXMEM.west);
