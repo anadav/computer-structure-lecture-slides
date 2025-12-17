@@ -184,6 +184,7 @@
 
 % Calc target to mux rpin 1
 \coordinate (calc_target_mem_in) at (TargetAdder.brpin 1 -| EXMEM.east);
+\coordinate (calc_target_top_right) at ([xshift=7mm]FlushOr.east |- RepairMux.rpin 1);
 \node[data_connector, fill=myorange!90!black] (ActualTargetConn) at ([xshift=3mm]calc_target_mem_in) {};
 \draw[verify_actual] (ActualTargetConn) |- (TargetComp.lpin 2);
 \draw[verify_actual] (calc_target_mem_in) -| ([xshift=7mm]FlushOr.east) |- (RepairMux.rpin 1);
@@ -196,7 +197,7 @@
 % Background (single filled box reminiscent of reference)
 \begin{scope}[on background layer]
     \node[draw=mygreen!70!black, line width=1pt, fill=lightgreen!35, rounded corners=4pt,
-          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr)(RepairMux)(ActualTargetConn),
+          fit=(TargetComp)(DirComp)(MismatchAnd)(FlushOr)(RepairMux)(ActualTargetConn)(calc_target_top_right),
           inner sep=2mm] (VerifyBox) {};
 \end{scope}
 
