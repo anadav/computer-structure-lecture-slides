@@ -100,7 +100,7 @@
     verify_pred/.style={arrow, blue!80},
     verify_actual/.style={arrow, myorange!90!black},
     verify_flag/.style={arrow, red!70!black},
-    line_label/.style={above, inner sep=1pt, font=\tiny},
+    line_label/.style={above, inner sep=1pt, font=\footnotesize},
     bpu_label/.style={line_label, text=mygreen!70!black},
     repair_label/.style={line_label, text=red!70!black},
     lpin_label/.style={align=left, anchor=west, font=\tiny},
@@ -114,7 +114,7 @@
 % IF Stage Components
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
 \node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
-\node[adder, above=3mm of IMem.north, anchor=south] (PCadder) {+};
+\node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
 \node[mux3, anchor=south] (PCSrcMux) at ([yshift=13mm]IMem.north west) {};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
@@ -169,9 +169,9 @@
 
 % Actual outcome wires (orange) feeding comparators
 
-\draw[verify_actual] (ALU.brpin 2 -| EXMEM.east) -- ++(0.5,0) |- (DirComp.blpin 2);
-\node[data_connector, fill=myorange!90!black] (DirActualConn) at ([xshift=-3mm]DirComp.blpin 2) {};
-\draw[verify_actual] (DirActualConn) |- (MismatchAnd.bin 2);
+\draw[arrow, orange!70!black] (ALU.brpin 2 -| EXMEM.east) -- ++(0.5,0) |- (DirComp.blpin 2);
+\node[data_connector, fill=orange!70!black] (DirActualConn) at ([xshift=-3mm]DirComp.blpin 2) {};
+\draw[arrow, orange!70!black] (DirActualConn) |- (MismatchAnd.bin 2);
 
 % Comparator outputs and gating logic: top comparator & enable -> AND, lower comparator -> OR
 \draw[verify_flag] (TargetComp.brpin 1) -- ++(1mm,0) |- (MismatchAnd.bin 1);
@@ -192,7 +192,7 @@
 % Not in the original diagram but we need something perhaps for completeness
 %\draw[verify_flag] (FlushOr.out) -- (FlushOr.out |- RepairMux.bpin 1) -- (RepairMux.bpin 1);
 % Repair mux output to fetch mux
-\draw[repair_path] (RepairMux.lpin 1) -- node[pos=0.5, repair_label] {repair IP} (PCSrcMux.rpin 1);
+\draw[arrow, gray!50!black] (RepairMux.lpin 1) -- node[pos=0.5, line_label, text=gray!50!black] {repair IP} (PCSrcMux.rpin 1);
 
 % Background (single filled box reminiscent of reference)
 \begin{scope}[on background layer]
@@ -294,18 +294,18 @@
 % Execute stage: ID/EX -> EX/MEM -> TargetComp
 \draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target);
 \draw[bpu_path] (mem_in_pred_target) -- (TargetComp.lpin 1);
-\draw[bpu_path] (mem_in_pred_target) |- (DirComp.lpin 1);
+\draw[verify_actual] (mem_in_pred_target) |- (DirComp.lpin 1);
 
 % === Predicted direction: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
 \coordinate (dir_joint) at ([xshift=5mm]BPU.brpin 3 |- fetch_out_pred_dir);
-\draw[bpu_path] (BPU.brpin 3) -| (dir_joint) node[data_connector] {} -- (fetch_out_pred_dir);
+\draw[verify_actual] (BPU.brpin 3) -| (dir_joint) node[data_connector, fill=myorange!90!black] {} -- (fetch_out_pred_dir);
 % Dir to fetch MUX (select signal - NT = not taken)
-\draw[bpu_path] (dir_joint) |- ([yshift=2mm]PCSrcMux.tpin 2) -- (PCSrcMux.tpin 2);
+\draw[verify_actual] (dir_joint) |- ([yshift=2mm]PCSrcMux.tpin 2) -- (PCSrcMux.tpin 2);
 % Decode stage: IF/ID -> ID/EX
-\draw[bpu_path] (decode_in_pred_dir) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted direction} (decode_out_pred_dir);
+\draw[verify_actual] (decode_in_pred_dir) -- node[midway, above, inner sep=1pt, font=\tiny, text=myorange!90!black] {predicted direction} (decode_out_pred_dir);
 % Execute stage: ID/EX -> (for verification)
-\draw[bpu_path] (execute_in_pred_dir) -- (execute_out_pred_dir);
+\draw[verify_actual] (execute_in_pred_dir) -- (execute_out_pred_dir);
 
 % IMem to IF/ID
 \draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
@@ -343,7 +343,7 @@
 % ALU outputs to EX/MEM buffer
 \coordinate (exmem_alu_zero) at (ALU.brpin 2 -| EXMEM.west);
 \coordinate (exmem_alu_result) at (ALU.brpin 4 -| EXMEM.west);
-\draw[data_path] (ALU.brpin 2) -- node[midway, line_label] {zero} (exmem_alu_zero);
+\draw[arrow, orange!70!black] (ALU.brpin 2) -- node[midway, line_label, text=orange!70!black] {zero} (exmem_alu_zero);
 \draw[data_path] (ALU.brpin 4) -- node[midway, line_label] {result} (exmem_alu_result);
 
 % EX/MEM to DMem (addr)
