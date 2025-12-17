@@ -227,6 +227,7 @@
 \coordinate (decode_out_pred_target) at (IDEX.west |- fetch_out_pred_target);
 \coordinate (execute_in_pred_target) at (IDEX.east |- fetch_out_pred_target);
 \coordinate (execute_out_pred_target) at (EXMEM.west |- fetch_out_pred_target);
+\coordinate (mem_in_pred_target) at (execute_out_pred_target -| EXMEM.east);
 
 % Predicted direction coordinates (above predicted target)
 \coordinate (fetch_out_pred_dir) at (IFID.north west |- DirComp.lpin 1);
@@ -291,7 +292,8 @@
 \draw[bpu_path] (decode_in_pred_target) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
 % Execute stage: ID/EX -> EX/MEM -> TargetComp
 \draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target);
-\draw[bpu_path] (EXMEM.east |- execute_out_pred_target) -- (TargetComp.lpin 1);
+\draw[bpu_path] (mem_in_pred_target) -- (TargetComp.lpin 1);
+\draw[bpu_path] (mem_in_pred_target) |- (DirComp.lpin 1);
 
 % === Predicted direction: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
