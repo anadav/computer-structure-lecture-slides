@@ -143,7 +143,7 @@
 
 % EX Stage Components - ALU and MUX for immediate selection
 \node[alu_style, anchor=blpin 1] (ALU) at ([xshift=2cm]RegFile.brpin 1 -| IDEX.east) {};
-\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-8mm]ALU.lpin 2) {};
+\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-4mm]ALU.lpin 2) {};
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 
 % Target calculation adder
@@ -318,15 +318,15 @@
 \draw[data_path] (SignExt.east) -- (IDEX.west |- SignExt);
 
 % ID/EX to ALU (top input direct, bottom through MUX)
-\coordinate (ALUInJunction) at ([xshift=-5mm]ALU.lpin 1);
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
-\node[data_connector] at (ALUInJunction) {};
-\draw[data_path] (ALUInJunction) |- (DMem.lpin 3 -| EXMEM.west);
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (ALUMux.blpin 1);
+\coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+\draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.blpin 4);
+\draw[data_path] (EXMEM.east |- DMem.blpin 4) -- (DMem.blpin 4);
 \draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
 
 % SignExt through ID/EX to ALUMux and Target Adder
-\coordinate (ImmJunction) at ([xshift=-3mm]ALUMux.lpin 2);
+\coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
 \draw[data_path] (SignExt -| IDEX.east) -| (ImmJunction) -- (ALUMux.lpin 2);
 \node[data_connector] at (ImmJunction) {};
 \draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
