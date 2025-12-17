@@ -280,6 +280,9 @@
 \coordinate (execute_out_next_seq) at ([yshift=3mm]TargetAdder.north -| EXMEM.west);
 \draw[data_path] (execute_in_next_seq) -- ++(1,0) node[data_connector] (NextSeqExeConn) {} |- (TargetAdder.lpin 1);
 \draw[data_path] (NextSeqExeConn) |- (execute_out_next_seq);
+% Memory stage: EX/MEM -> RepairMux rpin 2
+\coordinate (mem_in_next_seq) at (execute_out_next_seq -| EXMEM.east);
+\draw[data_path] (mem_in_next_seq) -| ([xshift=2mm]FlushOr.east) |- (RepairMux.rpin 2);
 
 % === Predicted target: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
