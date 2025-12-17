@@ -220,7 +220,7 @@
 % decode_out (ID/EX.west), execute_in (ID/EX.east), execute_out (EX/MEM.west)
 
 % Predicted target coordinates (above next seq address)
-\coordinate (fetch_out_pred_target) at ([yshift=-1mm]IFID.north west);
+\coordinate (fetch_out_pred_target) at (IFID.west |- PCSrcMux.rpin 2);
 \coordinate (decode_in_pred_target) at (IFID.east |- fetch_out_pred_target);
 \coordinate (decode_out_pred_target) at (IDEX.west |- fetch_out_pred_target);
 \coordinate (execute_in_pred_target) at (IDEX.east |- fetch_out_pred_target);
@@ -285,7 +285,9 @@
 
 % === Predicted target: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
-\draw[bpu_path] (BPU.brpin 2) -- ++(0.4,0) |- (fetch_out_pred_target);
+\coordinate (target_joint) at ([xshift=0.4cm]BPU.brpin 2);
+\draw[bpu_path] (BPU.brpin 2) -- (target_joint) node[data_connector] {} |- (fetch_out_pred_target);
+\draw[bpu_path] (target_joint) |- (PCSrcMux.rpin 2);
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_target) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
 % Execute stage: ID/EX -> EX/MEM -> TargetComp
