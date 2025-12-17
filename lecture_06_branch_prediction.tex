@@ -147,7 +147,7 @@
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 
 % Target calculation adder
-\node[adder, anchor=lpin 1] (TargetAdder) at (ALU |- PCadder.rpin 1) {+};
+\node[adder, anchor=lpin 1] (TargetAdder) at (ALU.west |- PCadder.rpin 1) {+};
 
 % Pipeline register EX/MEM
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
@@ -270,8 +270,8 @@
 \draw[data_path] (decode_in_next_seq) -- node[midway, above, inner sep=1pt, font=\tiny] {next sequential address} (decode_out_next_seq);
 % Execute stage: ID/EX -> Adder lpin 1, then to EX/MEM
 \coordinate (execute_out_next_seq) at ([yshift=3mm]TargetAdder.north -| EXMEM.west);
-\draw[data_path] (execute_in_next_seq) -- ++(1,0) node[data_connector] {} |- (TargetAdder.lpin 1);
-\draw[data_path] (TargetAdder.lpin 1) |- (execute_out_next_seq);
+\draw[data_path] (execute_in_next_seq) -- ++(1,0) node[data_connector] (NextSeqExeConn) {} |- (TargetAdder.lpin 1);
+\draw[data_path] (NextSeqExeConn) |- (execute_out_next_seq);
 
 % === Predicted target: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
