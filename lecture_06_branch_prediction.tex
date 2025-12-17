@@ -67,7 +67,7 @@
 \label{frame:bpu_pipeline}
 
 \begin{center}
-\scalebox{0.7}{
+\scalebox{0.72}{
 \begin{circuitikz}[
     % Component styles from recitation
     component/.style={draw, thick, minimum height=0.8cm},
@@ -103,6 +103,9 @@
     line_label/.style={above, inner sep=1pt, font=\footnotesize},
     bpu_label/.style={line_label, text=mygreen!70!black},
     repair_label/.style={line_label, text=red!70!black},
+    pred_target_label/.style={line_label, midway, text=mygreen!70!black},
+    pred_dir_label/.style={line_label, midway, text=myorange!90!black},
+    next_seq_label/.style={line_label, midway},
     lpin_label/.style={align=left, anchor=west, font=\tiny},
     rpin_label/.style={align=right, anchor=east, font=\tiny},
     data_connector/.style={circle, fill, inner sep=1.2pt},
@@ -147,7 +150,7 @@
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 
 % Target calculation adder
-\node[adder, anchor=lpin 1] (TargetAdder) at (ALU.west |- PCadder.rpin 1) {+};
+\node[adder, anchor=lpin 1] (TargetAdder) at ([xshift=-5mm]ALU.west |- PCadder.rpin 1) {+};
 
 % Pipeline register EX/MEM
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
@@ -208,7 +211,7 @@
 \node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 5) (WBMux) {};
 
 % Stage labels at top
-\node[stage_label] (IF_label) at ([yshift=35mm]IMem.north) {Fetch};
+\node[stage_label] (IF_label) at ([yshift=37mm]IMem.north) {Fetch};
 \node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
 \node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
 \node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
@@ -275,7 +278,7 @@
 % Next seq to fetch MUX rpin 3
 \draw[data_path] (NextSeqConn) |- (PCSrcMux.rpin 3);
 % Decode stage: IF/ID -> ID/EX
-\draw[data_path] (decode_in_next_seq) -- node[midway, above, inner sep=1pt, font=\tiny] {next sequential address} (decode_out_next_seq);
+\draw[data_path] (decode_in_next_seq) -- node[next_seq_label] {next sequential address} (decode_out_next_seq);
 % Execute stage: ID/EX -> Adder lpin 1, then to EX/MEM
 \coordinate (execute_out_next_seq) at ([yshift=2mm]execute_out_pred_dir -| EXMEM.west);
 \draw[data_path] (execute_in_next_seq) -- ++(1,0) node[data_connector] (NextSeqExeConn) {} |- (TargetAdder.lpin 1);
@@ -290,7 +293,7 @@
 \draw[bpu_path] (BPU.brpin 2) -| (target_joint) node[data_connector] {} -- (fetch_out_pred_target);
 \draw[bpu_path] (target_joint) -- (PCSrcMux.rpin 2);
 % Decode stage: IF/ID -> ID/EX
-\draw[bpu_path] (decode_in_pred_target) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
+\draw[bpu_path] (decode_in_pred_target) -- node[pred_target_label] {predicted target} (decode_out_pred_target);
 % Execute stage: ID/EX -> EX/MEM -> TargetComp
 \draw[bpu_path] (execute_in_pred_target) -- (execute_out_pred_target);
 \draw[bpu_path] (mem_in_pred_target) -- (TargetComp.lpin 1);
@@ -303,7 +306,7 @@
 % Dir to fetch MUX (select signal - NT = not taken)
 \draw[verify_actual] (dir_joint) |- ([yshift=2mm]PCSrcMux.tpin 2) -- (PCSrcMux.tpin 2);
 % Decode stage: IF/ID -> ID/EX
-\draw[verify_actual] (decode_in_pred_dir) -- node[midway, above, inner sep=1pt, font=\tiny, text=myorange!90!black] {predicted direction} (decode_out_pred_dir);
+\draw[verify_actual] (decode_in_pred_dir) -- node[pred_dir_label] {predicted direction} (decode_out_pred_dir);
 % Execute stage: ID/EX -> (for verification)
 \draw[verify_actual] (execute_in_pred_dir) -- (execute_out_pred_dir);
 
