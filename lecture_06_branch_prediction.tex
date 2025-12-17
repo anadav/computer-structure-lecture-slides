@@ -67,15 +67,15 @@
 \label{frame:bpu_pipeline}
 
 \begin{center}
-\scalebox{0.62}{
+\scalebox{0.7}{
 \begin{circuitikz}[
     % Component styles from recitation
     component/.style={draw, thick, minimum height=0.8cm},
     pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=5.8cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
-    imem_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=3.6, square pins=1},
-                        external pins width=0, align=center, text depth=6ex, fill=yellow!20},
-    bpu_block/.style={muxdemux, muxdemux def={Lh=4, NL=3, Rh=4, NR=3, w=3.6, square pins=1},
+    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+    bpu_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
                         external pins width=0, align=center, text depth=6ex, fill=lightgreen!40},
     regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
                     external pins width=0, fill=cyan!20, align=center},
@@ -84,7 +84,7 @@
     adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
     memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=4, w=2.8, square pins=1},
-                        external pins width=0, align=center, text depth=6ex, fill=yellow!20},
+                        external pins width=0, align=center, text depth=4ex, fill=yellow!20},
     mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=2, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
@@ -103,8 +103,8 @@
     line_label/.style={above, inner sep=1pt, font=\tiny},
     bpu_label/.style={line_label, text=mygreen!70!black},
     repair_label/.style={line_label, text=red!70!black},
-    lpin_label/.style={align=left, xshift=3mm, font=\tiny},
-    rpin_label/.style={align=right, xshift=-3mm, font=\tiny},
+    lpin_label/.style={align=left, anchor=west, font=\tiny},
+    rpin_label/.style={align=right, anchor=east, font=\tiny},
     data_connector/.style={circle, fill, inner sep=1.2pt},
     data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
     callout/.style={draw=myorange!80!black, line width=1pt, fill=myorange!10, rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt},
@@ -114,7 +114,7 @@
 % IF Stage Components
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
 \node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
-\node[adder, above=2mm of IMem.north east, anchor=south east] (PCadder) {+};
+\node[adder, above=3mm of IMem.north, anchor=south] (PCadder) {+};
 \node[mux3, anchor=south] (PCSrcMux) at ([yshift=12mm]IMem.north west) {};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
@@ -124,7 +124,7 @@
 % BPU labels (inside box)
 \node[lpin_label] at (BPU.blpin 2) {IP};
 \node[lpin_label] at (BPU.blpin 3) {allocate};
-\node[rpin_label] at (BPU.brpin 2) {target};
+\node[rpin_label] at (BPU.rpin 2) {target};
 \node[rpin_label] at (BPU.brpin 3) {dir};
 
 % Pipeline register IF/ID
@@ -153,7 +153,7 @@
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
 
 % MEM Stage Components
-\node[memory_block, muxdemux def={Lh=5, NL=10, Rh=5, NR=10, w=2.8, square pins=1}, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache\\};
+\node[memory_block, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1}, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache\\};
 
 % Branch verification logic (anchored above Data Cache)
 % Comparators for target and direction (stacked, reusable style)
@@ -186,7 +186,7 @@
 \coordinate (calc_target_mem_in) at (TargetAdder.brpin 1 -| EXMEM.east);
 \node[data_connector, fill=myorange!90!black] (ActualTargetConn) at ([xshift=3mm]calc_target_mem_in) {};
 \draw[verify_actual] (ActualTargetConn) |- (TargetComp.lpin 2);
-\draw[verify_actual] (calc_target_mem_in) -| ([xshift=5mm]FlushOr.east) |- (RepairMux.rpin 1);
+\draw[verify_actual] (calc_target_mem_in) -| ([xshift=7mm]FlushOr.east) |- (RepairMux.rpin 1);
 
 % Not in the original diagram but we need something perhaps for completeness
 %\draw[verify_flag] (FlushOr.out) -- (FlushOr.out |- RepairMux.bpin 1) -- (RepairMux.bpin 1);
@@ -270,7 +270,7 @@
 
 % === Next sequential address: separate arrows between buffers ===
 % Fetch stage: adder -> IF/ID
-\draw[data_path] (PCadder.brpin 1) -- ++(5mm,0) node[data_connector] (NextSeqConn) {} -- ++(0.1,0) |- (fetch_out_next_seq);
+\draw[data_path] (PCadder.brpin 1) -- ++(4mm,0) node[data_connector] (NextSeqConn) {} -- ++(0.1,0) |- (fetch_out_next_seq);
 % Next seq to fetch MUX rpin 3
 \draw[data_path] (NextSeqConn) |- (PCSrcMux.rpin 3);
 % Decode stage: IF/ID -> ID/EX
@@ -281,11 +281,11 @@
 \draw[data_path] (NextSeqExeConn) |- (execute_out_next_seq);
 % Memory stage: EX/MEM -> RepairMux rpin 2
 \coordinate (mem_in_next_seq) at (execute_out_next_seq -| EXMEM.east);
-\draw[data_path] (mem_in_next_seq) -| ([xshift=2mm]FlushOr.east) |- (RepairMux.rpin 2);
+\draw[data_path] (mem_in_next_seq) -| ([xshift=4mm]FlushOr.east) |- (RepairMux.rpin 2);
 
 % === Predicted target: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
-\coordinate (target_joint) at ([xshift=0.4cm]BPU.rpin 2 |- PCSrcMux.rpin 2);
+\coordinate (target_joint) at ([xshift=2mm]BPU.rpin 2 |- PCSrcMux.rpin 2);
 \draw[bpu_path] (BPU.brpin 2) -| (target_joint) node[data_connector] {} -- (fetch_out_pred_target);
 \draw[bpu_path] (target_joint) -- (PCSrcMux.rpin 2);
 % Decode stage: IF/ID -> ID/EX
@@ -297,7 +297,7 @@
 
 % === Predicted direction: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
-\coordinate (dir_joint) at ([xshift=6mm]BPU.brpin 3 |- fetch_out_pred_dir);
+\coordinate (dir_joint) at ([xshift=5mm]BPU.brpin 3 |- fetch_out_pred_dir);
 \draw[bpu_path] (BPU.brpin 3) -| (dir_joint) node[data_connector] {} -- (fetch_out_pred_dir);
 % Dir to fetch MUX (select signal - NT = not taken)
 \draw[bpu_path] (dir_joint) |- ([yshift=2mm]PCSrcMux.tpin 2) -- (PCSrcMux.tpin 2);
@@ -367,7 +367,7 @@
 \draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
 
 % WB Mux output to Register File write data
-\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([yshift=-8mm]IDEX.south) -| ([xshift=-5mm]RegFile.blpin 4) -- (RegFile.blpin 4);
+\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([xshift=-4mm,yshift=-8mm]IDEX.south -| RegFile.lpin 4) |- (RegFile.blpin 4);
 
 % Flush signal from OR gate to fetch MUX
 \coordinate (flush_line_y) at ([yshift=0.8cm]FlushOr.out);
@@ -388,12 +388,15 @@
 \node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {read\\data 2};
 
 % Data Cache labels
-\node[align=left, font=\tiny] at ([xshift=3mm]DMem.lpin 5) {addr};
+\node[align=left, font=\tiny] at ([xshift=3mm,yshift=-1mm]DMem.lpin 5) {addr};
 \node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {write\\data};
-\node[align=right, font=\tiny] at ([xshift=-3mm]DMem.rpin 5) {read\\data};
+\node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {read\\data};
 
 % === Callouts ===
-\node[callout, anchor=north east] at ([xshift=-3mm, yshift=-3mm]BPU.south west) {
+\node[rectangle callout, draw=myorange!80!black, line width=1pt, fill=myorange!10,
+      rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt,
+      callout absolute pointer={([yshift=1mm]BPU.south)}, anchor=north]
+      at ([yshift=-5mm]BPU.south) {
     \textbf{Lookup BPU} in parallel to I\$\\
     Provides predicted target \& direction
 };
