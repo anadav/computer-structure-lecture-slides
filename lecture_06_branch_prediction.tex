@@ -158,7 +158,7 @@
 % Branch verification logic (anchored above Data Cache)
 % Comparators for target and direction (stacked, reusable style)
 \node[verify_comp, anchor=south] (DirComp) at ([yshift=5mm]DMem.north) {$\neq$};
-\node[verify_comp, anchor=lpin 1] (TargetComp) at ([xshift=8mm, yshift=-1mm]EXMEM.east |- IFID.north) {$\neq$};
+\node[verify_comp, anchor=lpin 1] (TargetComp) at ([xshift=8mm]EXMEM.east |- PCSrcMux.rpin 2) {$\neq$};
 
 % Logic gates: mismatch AND feeds upward OR (AND output becomes OR input)
 \node[and port, number inputs=2, scale=0.26, fill=red!30, draw=red!70!black,
@@ -285,9 +285,9 @@
 
 % === Predicted target: separate arrows between buffers ===
 % Fetch stage: BPU -> IF/ID (go right first, then up to buffer)
-\coordinate (target_joint) at ([xshift=0.4cm]BPU.brpin 2);
-\draw[bpu_path] (BPU.brpin 2) -- (target_joint) node[data_connector] {} |- (fetch_out_pred_target);
-\draw[bpu_path] (target_joint) |- (PCSrcMux.rpin 2);
+\coordinate (target_joint) at ([xshift=0.4cm]BPU.rpin 2 |- PCSrcMux.rpin 2);
+\draw[bpu_path] (BPU.brpin 2) -| (target_joint) node[data_connector] {} -- (fetch_out_pred_target);
+\draw[bpu_path] (target_joint) -- (PCSrcMux.rpin 2);
 % Decode stage: IF/ID -> ID/EX
 \draw[bpu_path] (decode_in_pred_target) -- node[midway, above, inner sep=1pt, font=\tiny, text=mygreen!70!black] {predicted target} (decode_out_pred_target);
 % Execute stage: ID/EX -> EX/MEM -> TargetComp
