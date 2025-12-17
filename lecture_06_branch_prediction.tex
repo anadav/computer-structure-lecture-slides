@@ -153,11 +153,11 @@
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
 
 % MEM Stage Components
-\node[memory_block, muxdemux def={Lh=5, NL=5, Rh=5, NR=5, w=2.8, square pins=1}, anchor=lpin 3] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
+\node[memory_block, muxdemux def={Lh=5, NL=10, Rh=5, NR=10, w=2.8, square pins=1}, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache\\};
 
 % Branch verification logic (anchored above Data Cache)
 % Comparators for target and direction (stacked, reusable style)
-\node[verify_comp, anchor=south] (DirComp) at ([yshift=4mm]DMem.north) {$\neq$};
+\node[verify_comp, anchor=south] (DirComp) at ([yshift=5mm]DMem.north) {$\neq$};
 \node[verify_comp, anchor=lpin 1] (TargetComp) at ([xshift=8mm, yshift=-1mm]EXMEM.east |- IFID.north) {$\neq$};
 
 % Logic gates: mismatch AND feeds upward OR (AND output becomes OR input)
@@ -204,7 +204,7 @@
 \node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
 
 % WB Stage - just a mux
-\node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 4) (WBMux) {};
+\node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 5) (WBMux) {};
 
 % Stage labels at top
 \node[stage_label] (IF_label) at ([yshift=33mm]IMem.north) {Fetch};
@@ -326,8 +326,8 @@
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
 \coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
 \draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
-\draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.blpin 5);
-\draw[data_path] (EXMEM.east |- DMem.blpin 5) -- (DMem.blpin 5);
+\draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
+\draw[data_path] (EXMEM.east |- DMem.lpin 10) -- (DMem.lpin 10);
 \draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
 
 % SignExt through ID/EX to ALUMux and Target Adder
@@ -346,10 +346,10 @@
 \draw[data_path] (ALU.brpin 4) -- node[midway, line_label] {result} (exmem_alu_result);
 
 % EX/MEM to DMem (addr)
-\draw[data_path] (EXMEM.east |- DMem.lpin 3) -- (DMem.lpin 3);
+\draw[data_path] (EXMEM.east |- DMem.lpin 5) -- (DMem.lpin 5);
 
 % DMem to MEM/WB (read data)
-\draw[data_path] (DMem.rpin 4) -- (MEMWB.west |- DMem.rpin 4);
+\draw[data_path] (DMem.rpin 5) -- (MEMWB.west |- DMem.rpin 5);
 
 % Instruction propagation through pipeline
 \draw[data_path] ([yshift=8mm]Instruction.south east) -- ++(0.5,0) |- (decode_out_target_reg);
@@ -361,8 +361,8 @@
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
 
 % Address path from DMem to WB Mux (bypassing MEM/WB for ALU result)
-\coordinate (AddrWB) at ([yshift=-5mm]DMem.south -| MEMWB.west);
-\node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.lpin 3) {};
+\coordinate (AddrWB) at ([yshift=-3mm]DMem.south -| MEMWB.west);
+\node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.lpin 5) {};
 \draw[data_path] (AddrConn) |- (AddrWB);
 \draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
 
@@ -388,9 +388,9 @@
 \node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {read\\data 2};
 
 % Data Cache labels
-\node[align=left, font=\tiny] at ([xshift=3mm]DMem.lpin 3) {addr};
-\node[align=left, font=\tiny] at ([xshift=3mm]DMem.blpin 5) {write\\data};
-\node[align=right, font=\tiny] at ([xshift=-3mm]DMem.rpin 4) {read\\data};
+\node[align=left, font=\tiny] at ([xshift=3mm]DMem.lpin 5) {addr};
+\node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {write\\data};
+\node[align=right, font=\tiny] at ([xshift=-3mm]DMem.rpin 5) {read\\data};
 
 % === Callouts ===
 \node[callout, anchor=north east] at ([xshift=-3mm, yshift=-3mm]BPU.south west) {
