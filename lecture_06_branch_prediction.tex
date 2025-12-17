@@ -229,7 +229,7 @@
 \coordinate (execute_out_pred_target) at (EXMEM.west |- fetch_out_pred_target);
 
 % Predicted direction coordinates (above predicted target)
-\coordinate (fetch_out_pred_dir) at ([yshift=-4mm]IFID.north west);
+\coordinate (fetch_out_pred_dir) at (IFID.north west |- DirComp.lpin 1);
 \coordinate (decode_in_pred_dir) at (IFID.east |- fetch_out_pred_dir);
 \coordinate (decode_out_pred_dir) at (IDEX.west |- fetch_out_pred_dir);
 \coordinate (execute_in_pred_dir) at (IDEX.east |- fetch_out_pred_dir);
@@ -277,7 +277,7 @@
 % Decode stage: IF/ID -> ID/EX
 \draw[data_path] (decode_in_next_seq) -- node[midway, above, inner sep=1pt, font=\tiny] {next sequential address} (decode_out_next_seq);
 % Execute stage: ID/EX -> Adder lpin 1, then to EX/MEM
-\coordinate (execute_out_next_seq) at ([yshift=3mm]TargetAdder.north -| EXMEM.west);
+\coordinate (execute_out_next_seq) at ([yshift=2mm]execute_out_pred_dir -| EXMEM.west);
 \draw[data_path] (execute_in_next_seq) -- ++(1,0) node[data_connector] (NextSeqExeConn) {} |- (TargetAdder.lpin 1);
 \draw[data_path] (NextSeqExeConn) |- (execute_out_next_seq);
 % Memory stage: EX/MEM -> RepairMux rpin 2
