@@ -368,7 +368,13 @@
 \draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([yshift=-8mm]IDEX.south) -| ([xshift=-5mm]RegFile.blpin 4) -- (RegFile.blpin 4);
 
 % Flush signal from OR gate to fetch MUX
-\draw[repair_path] (FlushOr.out) -- ++(0,0.8) -| node[pos=0.2, repair_label] {flush and repair} (PCSrcMux.tpin 1);
+\coordinate (flush_line_y) at ([yshift=0.8cm]FlushOr.out);
+\draw[repair_path] (FlushOr.out) -- (flush_line_y) -| node[pos=0.2, repair_label] {flush and repair} (PCSrcMux.tpin 1);
+% Flush connectors to pipeline latches
+\node[data_connector, fill=red!70!black] at (flush_line_y -| IDEX.north) {};
+\draw[repair_path] (flush_line_y -| IDEX.north) -- (IDEX.north);
+\node[data_connector, fill=red!70!black] at (flush_line_y -| IFID.north) {};
+\draw[repair_path] (flush_line_y -| IFID.north) -- (IFID.north);
 
 
 % Register File labels
