@@ -136,7 +136,7 @@
 
 % Sign Extend unit
 \node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
-      font=\tiny, below=5mm of RegFile.south] (SignExt) {\rotatebox{90}{SignExt}};
+      font=\tiny, below=2mm of RegFile.south] (SignExt) {\rotatebox{90}{SignExt}};
 
 % Pipeline register ID/EX
 \node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
@@ -241,6 +241,14 @@
 \coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
 \coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
 
+% Target register coordinates (instruction propagation through pipeline)
+\coordinate (decode_out_target_reg) at ([yshift=-2mm]IDEX.west |- SignExt.south);
+\coordinate (execute_in_target_reg) at (decode_out_target_reg -| IDEX.east);
+\coordinate (execute_out_target_reg) at (decode_out_target_reg -| EXMEM.west);
+\coordinate (mem_in_target_reg) at (decode_out_target_reg -| EXMEM.east);
+\coordinate (mem_out_target_reg) at (decode_out_target_reg -| MEMWB.west);
+\coordinate (wb_in_target_reg) at (decode_out_target_reg -| MEMWB.east);
+
 % Repair path coordinate
 \coordinate (repair_in) at ([yshift=6mm]IFID.north west);
 
@@ -339,10 +347,10 @@
 \draw[data_path] (DMem.brpin 3) -- (MEMWB.west |- DMem.brpin 3);
 
 % Instruction propagation through pipeline
-\draw[data_path] ([yshift=8mm]Instruction.south east) -- ++(0.5,0) |- ([yshift=5mm]IDEX.south west);
-\draw[data_path] ([yshift=5mm]IDEX.south east) -- ([yshift=5mm]EXMEM.south west);
-\draw[data_path] ([yshift=5mm]EXMEM.south east) -- ([yshift=5mm]MEMWB.south west);
-\draw[data_path] ([yshift=5mm]MEMWB.south east) -- ++(0.5,0) |- ([yshift=-5mm,xshift=-6mm]RegFile.west |- IDEX.south) |- (RegFile.blpin 3);
+\draw[data_path] ([yshift=8mm]Instruction.south east) -- ++(0.5,0) |- (decode_out_target_reg);
+\draw[data_path] (execute_in_target_reg) -- (execute_out_target_reg);
+\draw[data_path] (mem_in_target_reg) -- (mem_out_target_reg);
+\draw[data_path] (wb_in_target_reg) -- ++(0.5,0) |- ([yshift=-5mm,xshift=-6mm]RegFile.west |- IDEX.south) |- (RegFile.blpin 3);
 
 % MEM/WB to WB Mux
 \draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
