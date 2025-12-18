@@ -1864,15 +1864,27 @@ then stall
 % Prominent instruction style on latches
 \tikzset{
     latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
     latch_inst_highlight/.style={draw=red!70!black, line width=2pt, fill=yellow!30,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
     latch_target/.style={draw=green!60!black, line width=1pt, fill=green!25,
                          rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
     latch_dir/.style={draw=orange!60!black, line width=1pt, fill=orange!25,
                       rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
     latch_nextseq/.style={draw=gray!60!black, line width=1pt, fill=gray!20,
                           rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    % Actual values from execution (for verification)
+    latch_actual_dir/.style={draw=green!70!black, line width=1pt, fill=green!20,
+                             rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_actual_target/.style={draw=green!70!black, line width=1pt, fill=green!15,
+                                rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    % IP value style
+    ip_value/.style={font=\small\bfseries, text=blue!70!black},
+    % Branch offset style
+    branch_offset/.style={draw=cyan!60!black, line width=1pt, fill=cyan!15,
+                          rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
     stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
                       rounded corners=6pt, font=\small, inner sep=8pt},
 }
@@ -1880,8 +1892,10 @@ then stall
 % === Animation: Instructions on latches + values + callouts ===
 % Slide 1: or fetching, lookup BTB
 \only<1>{
-    % Instruction on IF/ID latch - anchored to bottom of Instruction rectangle
-    \node[latch_inst, anchor=north] at (Instruction.south) {or};
+    % IP value below IP register
+    \node[ip_value] at ([yshift=-3mm]PC.south) {4};
+    % Instruction on IF/ID latch - bottom aligned with Instruction rectangle bottom
+    \node[latch_inst] at (Instruction.south) {or};
     % Stage explanation - colorbox at bottom
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{blue!60!black}{\textbf{Fetch:}} Looking up IP=4 in I\$ and BTB in parallel
@@ -1890,8 +1904,11 @@ then stall
 
 % Slide 2: jcc fetching, BTB provides prediction
 \only<2>{
-    % Instruction on latch - anchored to bottom of Instruction rectangle
-    \node[latch_inst, anchor=north] at (Instruction.south) {jcc};
+    % IP value below IP register
+    \node[ip_value] at ([yshift=-3mm]PC.south) {4};
+    % Instruction on latch with branch offset below
+    \node[latch_inst] (jcc2) at (Instruction.south) {jcc};
+    \node[branch_offset, anchor=north] at (jcc2.south) {42};
     % Latch values - positioned relative to signal coordinates
     \node[latch_target] at (IFID.center |- fetch_out_pred_target) {50};
     \node[latch_dir] at ([yshift=2mm]IFID.center |- fetch_out_pred_dir) {taken};
@@ -1907,9 +1924,12 @@ then stall
 
 % Slide 3: sub fetching (from predicted path), jcc decoding
 \only<3>{
+    % IP value below IP register
+    \node[ip_value] at ([yshift=-3mm]PC.south) {54};
     % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {sub};
-    \node[latch_inst] at (IDEX.center |- Instruction.south) {jcc};
+    \node[latch_inst] at (Instruction.south) {sub};
+    \node[latch_inst] (jcc3) at (IDEX.center |- Instruction.south) {jcc};
+    \node[branch_offset, anchor=north] at (jcc3.south) {42};
     % Latch values propagating - positioned relative to signal coordinates
     \node[latch_target] at (IDEX.center |- decode_out_pred_target) {50};
     \node[latch_dir] at ([yshift=2mm]IDEX.center |- decode_out_pred_dir) {taken};
@@ -1922,14 +1942,20 @@ then stall
 
 % Slide 4: mul fetching, sub decoding, jcc executing
 \only<4>{
+    % IP value below IP register
+    \node[ip_value] at ([yshift=-3mm]PC.south) {58};
     % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {mul};
+    \node[latch_inst] at (Instruction.south) {mul};
     \node[latch_inst] at (IDEX.center |- Instruction.south) {sub};
-    \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
-    % Latch values - positioned relative to signal coordinates
+    \node[latch_inst_highlight] (jcc4) at (EXMEM.center |- Instruction.south) {jcc};
+    \node[branch_offset, anchor=north] at (jcc4.south) {42};
+    % Predicted values - positioned relative to signal coordinates
     \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
     \node[latch_dir] at ([yshift=-1.5mm]EXMEM.center |- execute_out_pred_dir) {taken};
     \node[latch_nextseq] at ([yshift=1.5mm]EXMEM.center |- execute_out_next_seq) {8};
+    % Actual values from execution (direction and calculated target)
+    \node[latch_actual_dir] at (EXMEM.center |- exmem_alu_zero) {taken};
+    \node[latch_actual_target] at (EXMEM.center |- calc_target_mem_in) {50};
     % Stage explanation
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{green!50!black}{\textbf{Execute:}} jcc executes $\rightarrow$ verify prediction at Memory
@@ -1947,8 +1973,10 @@ then stall
 
 % Slide 5: add fetching, verification complete (OK)
 \only<5>{
+    % IP value below IP register
+    \node[ip_value] at ([yshift=-3mm]PC.south) {62};
     % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {add};
+    \node[latch_inst] at (Instruction.south) {add};
     \node[latch_inst] at (IDEX.center |- Instruction.south) {mul};
     \node[latch_inst] at (EXMEM.center |- Instruction.south) {sub};
     \node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
@@ -2287,21 +2315,35 @@ then stall
 
 \tikzset{
     latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
     latch_inst_highlight/.style={draw=red!70!black, line width=2pt, fill=yellow!30,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
     latch_inst_flush/.style={draw=red!70!black, line width=2pt, fill=red!40,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt, text=white},
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt, text=white,
+                       minimum height=5mm, text depth=0.5ex},
     latch_inst_nop/.style={draw=gray!50!black, line width=1pt, fill=gray!25,
-                       rounded corners=3pt, font=\small\ttfamily, inner sep=4pt, opacity=0.7},
+                       rounded corners=3pt, font=\small\ttfamily, inner sep=4pt, opacity=0.7,
+                       minimum height=5mm, text depth=0.5ex},
     latch_inst_new/.style={draw=green!60!black, line width=2pt, fill=green!25,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
     latch_target/.style={draw=green!60!black, line width=1pt, fill=green!25,
                          rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
     latch_dir/.style={draw=orange!60!black, line width=1pt, fill=orange!25,
                       rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
     latch_nextseq/.style={draw=gray!60!black, line width=1pt, fill=gray!20,
                           rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    % Actual values from execution (for verification)
+    latch_actual_dir/.style={draw=green!70!black, line width=1pt, fill=green!20,
+                             rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_actual_target/.style={draw=green!70!black, line width=1pt, fill=green!15,
+                                rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    % IP value and branch offset styles
+    ip_value/.style={font=\small\bfseries, text=blue!70!black},
+    branch_offset/.style={draw=cyan!60!black, line width=1pt, fill=cyan!15,
+                          rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
     stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
                       rounded corners=6pt, font=\small, inner sep=8pt},
 }
@@ -2309,15 +2351,21 @@ then stall
 % === Animated misprediction scenario ===
 % Slide 1: mul/sub fetched on wrong path, jcc executing, detecting mismatch
 \only<1>{
+    % IP value below IP register
+    \node[ip_value] at ([yshift=-3mm]PC.south) {58};
     % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {mul};
+    \node[latch_inst] at (Instruction.south) {mul};
     \node[latch_inst] at (IDEX.center |- Instruction.south) {sub};
-    \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
+    \node[latch_inst_highlight] (jccM1) at (EXMEM.center |- Instruction.south) {jcc};
+    \node[branch_offset, anchor=north] at (jccM1.south) {42};
     \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
-    % Latch values - positioned relative to signal coordinates
+    % Predicted values - positioned relative to signal coordinates
     \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
     \node[latch_dir] at (EXMEM.center |- execute_out_pred_dir) {taken};
     \node[latch_nextseq] at (EXMEM.center |- execute_out_next_seq) {8};
+    % Actual values from execution (NOT taken - mismatch!)
+    \node[latch_actual_dir, draw=red!70!black, fill=red!20] at (EXMEM.center |- exmem_alu_zero) {Not taken};
+    \node[latch_actual_target] at (EXMEM.center |- calc_target_mem_in) {50};
     % Callout: Wrong direction detected
     \node[rectangle callout, draw=red!80!black, line width=1.5pt, fill=red!15,
           rounded corners=4pt, font=\small, align=center, inner sep=6pt,
@@ -2334,8 +2382,10 @@ then stall
 
 % Slide 2: Flush detected, repair IP selected
 \only<2>{
+    % IP value - being repaired to 8
+    \node[ip_value, text=red!70!black] at ([yshift=-3mm]PC.south) {$\rightarrow$8};
     % Instructions - mul/sub being flushed - using -| for consistent y-level
-    \node[latch_inst_flush, anchor=north] at (Instruction.south) {mul};
+    \node[latch_inst_flush] at (Instruction.south) {mul};
     \node[latch_inst_flush] at (IDEX.center |- Instruction.south) {sub};
     \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
     \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
@@ -2359,8 +2409,10 @@ then stall
 
 % Slide 3: Pipeline flushed, bubbles inserted
 \only<3>{
+    % IP value - now at 8
+    \node[ip_value] at ([yshift=-3mm]PC.south) {8};
     % Instructions - NOPs (bubbles) in flushed stages - using -| for consistent y-level
-    \node[latch_inst_nop, anchor=north] at (Instruction.south) {NOP};
+    \node[latch_inst_nop] at (Instruction.south) {NOP};
     \node[latch_inst_nop] at (IDEX.center |- Instruction.south) {NOP};
     \node[latch_inst] at (EXMEM.center |- Instruction.south) {jcc};
     \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
@@ -2373,8 +2425,10 @@ then stall
 
 % Slide 4: Fetching from correct path
 \only<4>{
+    % IP value - at 8, fetching and
+    \node[ip_value] at ([yshift=-3mm]PC.south) {8};
     % Instructions - and fetched from correct path - using -| for consistent y-level
-    \node[latch_inst_new, anchor=north] at (Instruction.south) {and};
+    \node[latch_inst_new] at (Instruction.south) {and};
     \node[latch_inst_nop] at (IDEX.center |- Instruction.south) {--};
     \node[latch_inst_nop] at (EXMEM.center |- Instruction.south) {--};
     \node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
