@@ -635,16 +635,13 @@
 
 \begin{columns}[T]
 \begin{column}{0.65\textwidth}
+\vspace{-3mm}
 \begin{itemize}
-    \item \textbf{The TA is accessed using the branch address (branch IP)}
+    \item \textbf{The TA is accessed using the branch address}
     \begin{itemize}
         \item Implemented as an $n$-way set associative cache
     \end{itemize}
-\end{itemize}
 
-\vspace{0.15cm}
-
-\begin{itemize}
     \item \textbf{The TA predicts the following}
     \begin{itemize}
         \item Instruction is a branch
@@ -658,27 +655,10 @@
         \end{itemize}
     \end{itemize}
 \end{itemize}
-
-\vspace{0.15cm}
-
-\begin{itemize}
-    \item \textbf{The TA is allocated/updated at Decode / EXE}
-\end{itemize}
-
-\vspace{0.15cm}
-
-\begin{itemize}
-    \item \textbf{Tags are usually partial}
-    \begin{itemize}
-        \item Trade-off space, can get false hits
-        \item Few branches aliased to same entry
-        \item No \textit{correctness}, only \textit{performance}
-    \end{itemize}
-\end{itemize}
 \end{column}
 
 \begin{column}{0.35\textwidth}
-\vspace{0.3cm}
+\vspace{-0.5cm}
 \begin{center}
 \begin{tikzpicture}[
     ta_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.5cm, inner sep=2pt, font=\scriptsize},
@@ -691,12 +671,11 @@
         column sep=-\pgflinewidth,
         ampersand replacement=\&,
     ] (ta) {
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
         |[minimum width=1.05cm, fill=lightblue!50, font=\small\bfseries]| \textcolor{myblue}{tag}
             \& |[minimum width=2.0cm, fill=lightgreen!40, font=\small\bfseries]| \textcolor{myblue}{target}
             \& |[minimum width=0.95cm, fill=peach!60, font=\small\bfseries]| \textcolor{myblue}{type} \\
-        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
-        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
-        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
         |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
         |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
     };
@@ -705,19 +684,31 @@
     \node[anchor=south, font=\small\bfseries, text=myblue] (ip) at ([xshift=-2mm, yshift=2mm]ta.north west) {Branch IP};
     \draw[arrow, myblue] (ip.south) |- (ta-3-1.west);
 
-    % Output arrows from the selected row (row 3), labels below whole table
-    \draw[arrow] (ta-3-1.south) -- (ta-3-1.south |- ta.south) -- ++(0,-0.5);
-    \node[anchor=north, align=center, font=\tiny, myblue] at ([yshift=-0.5cm]ta-3-1.south |- ta.south) {hit/miss\\(indicates\\a branch)};
+    % Output labels below whole table, then arrows to them
+    \node[anchor=north, align=center, font=\tiny, myblue] (out1) at ([yshift=-3mm]ta-3-1.south |- ta.south) {hit/miss\\(indicates\\a branch)};
+    \draw[arrow] (ta-3-1.south) -- (ta-3-1.south |- ta.south) -- (out1.north);
 
-    \draw[arrow] (ta-3-2.south) -- (ta-3-2.south |- ta.south) -- ++(0,-0.5);
-    \node[anchor=north, align=center, font=\tiny, myblue] at ([yshift=-0.5cm]ta-3-2.south |- ta.south) {predicted\\target};
+    \node[anchor=north, align=center, font=\tiny, myblue] (out2) at ([yshift=-3mm]ta-3-2.south |- ta.south) {predicted\\target};
+    \draw[arrow] (ta-3-2.south) -- (ta-3-2.south |- ta.south) -- (out2.north);
 
-    \draw[arrow] (ta-3-3.south) -- (ta-3-3.south |- ta.south) -- ++(0,-0.5);
-    \node[anchor=north, align=center, font=\tiny, myblue] at ([yshift=-0.5cm]ta-3-3.south |- ta.south) {predicted\\type};
+    \node[anchor=north, align=center, font=\tiny, myblue] (out3) at ([yshift=-3mm]ta-3-3.south |- ta.south) {predicted\\type};
+    \draw[arrow] (ta-3-3.south) -- (ta-3-3.south |- ta.south) -- (out3.north);
 \end{tikzpicture}
 \end{center}
 \end{column}
 \end{columns}
+
+\vspace{0.1cm}
+
+\begin{itemize}
+    \item \textbf{The TA is allocated/updated at Decode / EXE}
+    \item \textbf{Tags are usually partial}
+    \begin{itemize}
+        \item Trade-off space, can get false hits
+        \item Few branches aliased to same entry
+        \item No \textit{correctness}, only \textit{performance}
+    \end{itemize}
+\end{itemize}
 
 \end{frame}
 
