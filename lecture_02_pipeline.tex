@@ -1892,10 +1892,10 @@ then stall
 \only<2>{
     % Instruction on latch
     \node[latch_inst] at (IFID.center) {jcc};
-    % Latch values - predicted target and direction appear
-    \node[latch_target] at ([yshift=18mm]IFID.center) {50};
-    \node[latch_dir] at ([yshift=28mm]IFID.center) {taken};
-    \node[latch_nextseq] at ([yshift=8mm]IFID.center) {8};
+    % Latch values - positioned relative to signal coordinates
+    \node[latch_target] at (IFID.center |- fetch_out_pred_target) {50};
+    \node[latch_dir] at ([yshift=2mm]IFID.center |- fetch_out_pred_dir) {taken};
+    \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {8};
     % Stage explanation
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{blue!60!black}{\textbf{Fetch:}} BTB hit! ~
@@ -1910,10 +1910,10 @@ then stall
     % Instructions on latches
     \node[latch_inst] at (IFID.center) {sub};
     \node[latch_inst] at (IDEX.center) {jcc};
-    % Latch values propagating - now on ID/EX
-    \node[latch_target] at ([yshift=18mm]IDEX.center) {50};
-    \node[latch_dir] at ([yshift=28mm]IDEX.center) {taken};
-    \node[latch_nextseq] at ([yshift=8mm]IDEX.center) {8};
+    % Latch values propagating - positioned relative to signal coordinates
+    \node[latch_target] at (IDEX.center |- decode_out_pred_target) {50};
+    \node[latch_dir] at ([yshift=2mm]IDEX.center |- decode_out_pred_dir) {taken};
+    \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {8};
     % Stage explanation
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{cyan!60!black}{\textbf{Decode:}} jcc decoded, prediction values propagate $\rightarrow$
@@ -1926,10 +1926,10 @@ then stall
     \node[latch_inst] at (IFID.center) {mul};
     \node[latch_inst] at (IDEX.center) {sub};
     \node[latch_inst_highlight] at (EXMEM.center) {jcc};
-    % Latch values - now at EX/MEM for verification
-    \node[latch_target] at ([yshift=18mm]EXMEM.center) {50};
-    \node[latch_dir] at ([yshift=28mm]EXMEM.center) {taken};
-    \node[latch_nextseq] at ([yshift=8mm]EXMEM.center) {8};
+    % Latch values - positioned relative to signal coordinates
+    \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
+    \node[latch_dir] at ([yshift=-1.5mm]EXMEM.center |- execute_out_pred_dir) {taken};
+    \node[latch_nextseq] at ([yshift=1.5mm]EXMEM.center |- execute_out_next_seq) {8};
     % Stage explanation
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{green!50!black}{\textbf{Execute:}} jcc executes $\rightarrow$ verify prediction at Memory
@@ -2314,10 +2314,10 @@ then stall
     \node[latch_inst] at (IDEX.center) {sub};
     \node[latch_inst_highlight] at (EXMEM.center) {jcc};
     \node[latch_inst] at (MEMWB.center) {or};
-    % Latch values at EX/MEM
-    \node[latch_target] at ([yshift=18mm]EXMEM.center) {50};
-    \node[latch_dir] at ([yshift=28mm]EXMEM.center) {taken};
-    \node[latch_nextseq] at ([yshift=8mm]EXMEM.center) {8};
+    % Latch values - positioned relative to signal coordinates
+    \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
+    \node[latch_dir] at (EXMEM.center |- execute_out_pred_dir) {taken};
+    \node[latch_nextseq] at (EXMEM.center |- execute_out_next_seq) {8};
     % Callout: Wrong direction detected
     \node[rectangle callout, draw=red!80!black, line width=1.5pt, fill=red!15,
           rounded corners=4pt, font=\small, align=center, inner sep=6pt,
