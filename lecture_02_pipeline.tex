@@ -10,6 +10,7 @@
 \usepackage{tikz}
 \usepackage[american]{circuitikz}
 \usepackage{listings}
+\usepackage{tcolorbox}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, backgrounds, matrix, shapes.callouts, fit, shapes.gates.logic.US}
 \usetheme{Madrid}
 
@@ -1450,54 +1451,76 @@ then stall
 
 %% Slide: BTB
 \begin{frame}{BTB}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textcolor{myblue}{\textbf{(1) Allocation}} -- at Decode/EXE
+\begin{itemize}
+    \item Allocate branches after decode
+    \item Not-taken branches need not be allocated
+    \item BTB miss $\Rightarrow$ predict not-taken
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textcolor{myorange}{\textbf{(3) Update}} -- at EXE
+\begin{itemize}
+    \item Branch target
+    \item Branch history (taken/not-taken)
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textcolor{mygreen!80!black}{\textbf{(2) Prediction}} -- at Fetch
+\begin{itemize}
+    \item BTB lookup parallel to I\$ lookup
+    \item BTB provides:
     \begin{itemize}
-        \item \textbf{Allocation} - at Decode / EXE
-        \begin{itemize}
-            \item Allocate instructions identified as branches (after decode)
-            \item Not taken branches need not be allocated
-            \item BTB miss implicitly predicts not-taken
-        \end{itemize}
-        \item \textbf{Prediction} - at Fetch
-        \begin{itemize}
-            \item BTB lookup is done parallel to IC lookup
-            \item BTB provides:
-            \begin{itemize}
-                \item Indication that the instruction is a branch (BTB hits)
-                \item Branch predicted target
-                \item Branch predicted direction
-                \item Branch predicted type (e.g., conditional, unconditional)
-            \end{itemize}
-        \end{itemize}
-        \item \textbf{Update} (when branch outcome is known - at EXE)
-        \begin{itemize}
-            \item Branch target
-            \item Branch history (taken / not-taken)
-        \end{itemize}
+        \item Branch indication (BTB hit)
+        \item Predicted target
+        \item Predicted direction
+        \item Branch type (cond./uncond.)
     \end{itemize}
+\end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
-%% Slide: BTB (cont.)
-\begin{frame}{BTB (cont.)}
-    \begin{itemize}
-        \item \textbf{Wrong prediction}
-        \begin{itemize}
-            \item Predict not-taken, actual taken
-            \item Predict taken, actual not-taken, or actual taken but wrong target
-        \end{itemize}
-        \item \textbf{In case of wrong prediction – flush the pipeline}
-        \begin{itemize}
-            \item Reset latches (same as making all instructions to be NOPs)
-            \item Select the PC source to be from the correct path
-            \item Need get the fall-through with the branch
-            \item Start fetching instruction from correct path
-        \end{itemize}
-        \item \textbf{Assuming P\% correct prediction rate}
-        \begin{itemize}
-            \item $\text{CPI}_{\text{new}} = 1 + (0.2 \times (1-P)) \times 3$
-            \item For example, if P=0.7
-            \item $\text{CPI}_{\text{new}} = 1 + (0.2 \times 0.3) \times 3 = 1.18$
-        \end{itemize}
-    \end{itemize}
+%% Slide: Misprediction
+\begin{frame}{Misprediction}
+\begin{center}
+\begin{tikzpicture}
+    % Wrong prediction box
+    \node[draw=red!70!black, line width=1pt, fill=red!8, rounded corners=3pt,
+          text width=6.2cm, align=left, inner sep=8pt] (wrong) {
+        \textbf{\textcolor{red!70!black}{Wrong Prediction}}\\[3pt]
+        \small
+        \textbullet\ Predict not-taken, actual taken\\
+        \textbullet\ Predict taken, actual not-taken\\
+        \textbullet\ Predict taken, wrong target
+    };
+
+    % Flush box
+    \node[draw=myorange!70!black, line width=1pt, fill=myorange!10, rounded corners=3pt,
+          text width=6.8cm, align=left, inner sep=8pt, right=1cm of wrong] (flush) {
+        \textbf{\textcolor{myorange!80!black}{Flush the Pipeline}}\\[3pt]
+        \small
+        \textbullet\ Reset latches (instructions $\rightarrow$ NOPs)\\
+        \textbullet\ Redirect PC to correct path\\
+        \textbullet\ Start fetching from correct path
+    };
+
+    % Arrow
+    \draw[->, thick, red!70!black] (wrong.east) -- (flush.west);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+
+\textbf{Performance Impact:} With prediction rate $P$ and 3-cycle penalty:
+\[
+\text{CPI} = 1 + 0.2 \times (1{-}P) \times 3
+\]
+\textbf{Example:} If $P = 70\%$, then $\text{CPI} = 1 + 0.2 \times 0.3 \times 3 = \textbf{1.18}$
 \end{frame}
 
 %% Slide: Adding a BTB to the Pipeline (based on lecture_06 style)
