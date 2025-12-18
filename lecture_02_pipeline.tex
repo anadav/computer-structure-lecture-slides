@@ -18,6 +18,8 @@
 \definecolor{mygreen}{RGB}{0,128,0}
 \definecolor{myorange}{RGB}{255,140,0}
 \definecolor{lightgreen}{RGB}{144,238,144}
+\definecolor{lightblue}{RGB}{173,216,230}
+\definecolor{peach}{RGB}{255,218,185}
 \lstset{
     escapeinside={@}{@},
     basicstyle=\ttfamily\small
@@ -269,56 +271,48 @@
 % BTB Structure diagram macro
 \newcommand{\btbdiagram}{
 \begin{tikzpicture}[scale=0.8]
-    % BTB table as matrix
+    % BTB table as matrix (lecture_06 style)
     \matrix[matrix of nodes,
             column sep=-\pgflinewidth,
             row sep=-\pgflinewidth,
             inner sep=0pt,
             anchor=north,
             nodes in empty cells,
-            nodes={draw, align=center},
-            column 1/.append style={nodes={text width=1.8cm, minimum height=0.25cm}},
-            column 2/.append style={nodes={text width=1.8cm, minimum height=0.25cm}},
-            column 3/.append style={nodes={text width=1.2cm, minimum height=0.25cm}},
+            nodes={draw=black!60, line width=0.6pt, align=center, inner sep=2pt, font=\scriptsize,
+                   minimum width=1.6cm, minimum height=0.35cm},
             ampersand replacement=\&
         ] (btb) {
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
-        \& \& \\
+        |[fill=lightblue!50, font=\scriptsize\bfseries]| \textcolor{myblue}{Tag} \& |[fill=lightgreen!50, font=\scriptsize\bfseries]| \textcolor{myblue}{Target} \& |[fill=peach!60, font=\scriptsize\bfseries, minimum width=1.3cm]| \textcolor{myblue}{History} \\
+        |[fill=lightblue!20]| \phantom{0} \& |[fill=lightgreen!20]| \phantom{0} \& |[fill=peach!25, minimum width=1.3cm]| \phantom{0} \\
+        |[fill=lightblue!20]| \phantom{0} \& |[fill=lightgreen!20]| \phantom{0} \& |[fill=peach!25, minimum width=1.3cm]| \phantom{0} \\
+        |[fill=lightblue!20]| \phantom{0} \& |[fill=lightgreen!20]| \phantom{0} \& |[fill=peach!25, minimum width=1.3cm]| \phantom{0} \\
+        |[fill=lightblue!20]| \phantom{0} \& |[fill=lightgreen!20]| \phantom{0} \& |[fill=peach!25, minimum width=1.3cm]| \phantom{0} \\
+        |[fill=lightblue!20]| \phantom{0} \& |[fill=lightgreen!20]| \phantom{0} \& |[fill=peach!25, minimum width=1.3cm]| \phantom{0} \\
     };
 
-    \node[draw, rectangle, above=8mm of btb-1-1.north, xshift=-8mm, font=\scriptsize] (pc) {PC of instruction to fetch};
-    % Table headers positioned relative to matrix columns
-    \node[above=1mm of btb-1-1.north, text depth=0ex, font=\scriptsize] {Look up};
-    \node[above=1mm of btb-1-2.north, text depth=0ex, font=\scriptsize] {Predicted PC};
-    \node[above=1mm of btb-1-3.north, text depth=0ex, font=\scriptsize] {History};
+    \node[draw, rectangle, above=4mm of btb-1-1.north, xshift=-8mm, font=\scriptsize, fill=yellow!20] (pc) {PC of instruction to fetch};
 
     % BTB label positioned relative to matrix left
     \node[rotate=90, left=5mm of btb.north west, font=\tiny, anchor=north east] {$\leftarrow$ \# of entries $\rightarrow$};
 
     % Comparator positioned relative to first column bottom
-    \node[circle, draw, inner sep=1pt, font=\tiny] (comp) at ($ (btb-8-1.south) + (0, -0.4) $) {=};
+    \node[circle, draw, thick, inner sep=2pt, font=\scriptsize, fill=cyan!20] (comp) at ($ (btb-6-1.south) + (0, -0.5) $) {=};
 
     % Arrows using relative positioning
-    \draw[->] (pc) -- (btb-1-1.north -| pc);
-    \draw[->] ([xshift=2mm]pc.south west) |- (comp.west);
-    \draw[->] (btb-8-1.south) -- (comp);
+    \draw[->, thick] (pc) -- (btb-1-1.north -| pc);
+    \draw[->, thick] ([xshift=2mm]pc.south west) |- (comp.west);
+    \draw[->, thick] (btb-6-1.south) -- (comp);
 
-    \node[right=8mm of comp, font=\tiny, align=left, text=red] (no) {not predicted\\to be branch.\\ $\Rightarrow$ Proceed};
+    \node[right=8mm of comp, font=\scriptsize, align=left, text=red!70!black] (no) {Not predicted\\to be branch\\$\Rightarrow$ Proceed};
 
     % Output logic positioned relative to comparator
-    \draw[->] (comp.east) -- node[above, font=\tiny]{no} (no);
+    \draw[->, thick] (comp.east) -- node[above, font=\tiny]{no} (no);
 
-    \node[below=4mm of comp, font=\tiny, align=left, text=green] (yes) {predicted to\\be branch.\\ $\Rightarrow$ Use target};
-    \draw[->] (comp.south) -- node[left, font=\tiny]{yes} (yes);
+    \node[below=5mm of comp, font=\scriptsize, align=left, text=mygreen!80!black] (yes) {Predicted to\\be branch\\$\Rightarrow$ Use target};
+    \draw[->, thick] (comp.south) -- node[left, font=\tiny]{yes} (yes);
 
     % Prediction output from third column
-    \draw[->] ([xshift=3mm]btb-8-3.south) -- ++(0, -8mm) node[below, align=center, font=\tiny] {Branch prediction\\Taken/Not taken};
+    \draw[->, thick] ([xshift=3mm]btb-6-3.south) -- ++(0, -14mm) node[below, align=center, font=\scriptsize] {Branch prediction\\Taken/Not taken};
 \end{tikzpicture}
 }
 
@@ -1432,26 +1426,25 @@ then stall
 
 %% Slide: Dynamic Branch Prediction
 \begin{frame}{Dynamic Branch Prediction}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
     \begin{itemize}
         \item \textbf{Branch Target Buffer} (BTB) that predicts (at fetch)
         \begin{itemize}
-            \item[$\diamond$] Instruction is a branch
-            \item[$\diamond$] Branch taken / not-taken
-            \item[$\diamond$] Taken branch target
+            \item Instruction is a branch
+            \item Branch taken / not-taken
+            \item Taken branch target
         \end{itemize}
-    \end{itemize}
-    
-    \vspace{0.3cm}
-
-    \centering
-    \btbdiagram
-    
-    \vspace{0.4cm}
-    
-    \begin{itemize}
+        \vspace{0.3cm}
         \item BTB allocated at execute -- after all branch info is known
         \item BTB is looked up at instruction fetch
     \end{itemize}
+\end{column}
+\begin{column}{0.55\textwidth}
+    \centering
+    \btbdiagram
+\end{column}
+\end{columns}
 \end{frame}
 
 
