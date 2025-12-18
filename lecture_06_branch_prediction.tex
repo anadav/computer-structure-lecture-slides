@@ -188,9 +188,9 @@
 % Calc target to mux rpin 1
 \coordinate (calc_target_mem_in) at (TargetAdder.brpin 1 -| EXMEM.east);
 \coordinate (calc_target_top_right) at ([xshift=7mm]FlushOr.east |- RepairMux.rpin 1);
-\node[data_connector, fill=myorange!90!black] (ActualTargetConn) at ([xshift=3mm]calc_target_mem_in) {};
-\draw[verify_actual] (ActualTargetConn) |- (TargetComp.lpin 2);
-\draw[verify_actual] (calc_target_mem_in) -| ([xshift=7mm]FlushOr.east) |- (RepairMux.rpin 1);
+\node[data_connector, fill=green!60!black] (ActualTargetConn) at ([xshift=3mm]calc_target_mem_in) {};
+\draw[arrow, green!60!black] (ActualTargetConn) |- (TargetComp.lpin 2);
+\draw[arrow, green!60!black] (calc_target_mem_in) -| ([xshift=7mm]FlushOr.east) |- (RepairMux.rpin 1);
 
 % Not in the original diagram but we need something perhaps for completeness
 %\draw[verify_flag] (FlushOr.out) -- (FlushOr.out |- RepairMux.bpin 1) -- (RepairMux.bpin 1);
@@ -341,7 +341,7 @@
 \draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
 
 % Target Adder to EX/MEM buffer
-\draw[data_path] (TargetAdder.brpin 1) -- node[midway, line_label] {calc.\ target} (TargetAdder.brpin 1 -| EXMEM.west);
+\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (TargetAdder.brpin 1 -| EXMEM.west);
 
 % ALU outputs to EX/MEM buffer
 \coordinate (exmem_alu_zero) at (ALU.brpin 2 -| EXMEM.west);
@@ -497,86 +497,86 @@
 \frametitle{What/Who/When We Predict/Fix/Allocate}
 \label{frame:predict_fix_allocate}
 
-\begin{tikzpicture}[scale=0.85, transform shape,
-    box/.style={rectangle, draw=black, thick, minimum height=0.8cm, text width=4.2cm, align=left, font=\footnotesize},
+\begin{tikzpicture}[remember picture, overlay,
+    box/.style={rectangle, draw=black, thick, minimum height=0.6cm, text width=3.6cm, align=left, font=\scriptsize},
     greenbox/.style={box, fill=green!30},
     yellowbox/.style={box, fill=yellow!60},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries\scriptsize, minimum width=1.2cm, minimum height=0.4cm, text depth=0.15ex},
     arrow/.style={->, thick, >=stealth}
 ]
 
-% Column headers
-\node[font=\normalsize, anchor=south] at (2.1, 5.8) {\underline{Fetch}};
-\node[font=\normalsize, anchor=south] at (7.5, 5.8) {\underline{Decode}};
-\node[font=\normalsize, anchor=south] at (12.9, 5.8) {\underline{Execute}};
+% Define column X positions relative to page
+\coordinate (col1) at ([xshift=-3.8cm, yshift=-0.5cm]current page.center);
+\coordinate (col2) at ([xshift=0.7cm, yshift=-0.5cm]current page.center);
+\coordinate (col3) at ([xshift=5.2cm, yshift=-0.5cm]current page.center);
+
+% Column headers (stage labels like pipeline slide)
+\node[stage_label] (fetch_label) at ([yshift=3.2cm]col1) {Fetch};
+\node[stage_label] (decode_label) at ([yshift=3.2cm]col2) {Decode};
+\node[stage_label] (execute_label) at ([yshift=3.2cm]col3) {Execute};
 
 % Fetch column
-\node[greenbox] (ta) at (2.1, 4.5) {
-    \textbf{Target Array}\\
+\node[greenbox, anchor=north] (ta) at ([yshift=2.7cm]col1) {
+    \textbf{\underline{Target Array}}\\
     $\diamond$ Branch type\\
-    \hspace{0.3cm}$\triangleright$ conditional direct\\
-    \hspace{0.3cm}$\triangleright$ unconditional direct\\
-    \hspace{0.3cm}$\triangleright$ unconditional indirect\\
-    \hspace{0.3cm}$\triangleright$ call\\
-    \hspace{0.3cm}$\triangleright$ return\\
+    \hspace{0.2cm}$\triangleright$ conditional direct\\
+    \hspace{0.2cm}$\triangleright$ unconditional direct\\
+    \hspace{0.2cm}$\triangleright$ unconditional indirect\\
+    \hspace{0.2cm}$\triangleright$ call\\
+    \hspace{0.2cm}$\triangleright$ return\\
     $\diamond$ Branch target
 };
 
-\node[yellowbox] (cbp) at (2.1, 2.3) {
-    \textbf{Cond. Branch Predictor}\\
+\node[yellowbox, anchor=north] (cbp) at ([yshift=-0.15cm]ta.south) {
+    \textbf{\underline{Cond. Branch Predictor}}\\
     $\diamond$ Predict conditional T/NT
 };
 
-\node[greenbox] (rsb) at (2.1, 0.7) {
-    \textbf{Return Stack Buffer}\\
+\node[greenbox, anchor=north] (rsb) at ([yshift=-0.15cm]cbp.south) {
+    \textbf{\underline{Return Stack Buffer}}\\
     $\diamond$ Predict return target
 };
 
-\node[greenbox] (ita) at (2.1, -1.0) {
-    \textbf{Indirect Target Array}\\
+\node[greenbox, anchor=north] (ita) at ([yshift=-0.15cm]rsb.south) {
+    \textbf{\underline{Indirect Target Array}}\\
     $\diamond$ Predict indirect target\\
-    \hspace{0.3cm}$\triangleright$ override TA target
+    \hspace{0.2cm}$\triangleright$ override TA target
 };
 
-% Decode column
-\node[greenbox] (dec1) at (7.5, 4.5) {
+% Decode column - positioned relative to Fetch column boxes
+\node[greenbox, anchor=west] (dec1) at ([xshift=0.8cm]ta.east |- ta) {
     $\diamond$ Fix TA miss\\
     $\diamond$ Allocate TA\\
     $\diamond$ Fix wrong direct target
 };
 
-\node[yellowbox] (dec2) at (7.5, 2.3) {
-    on TA miss for cond. br, use\\
-    pred from cond. br. predictor
+\node[yellowbox, anchor=west] (dec2) at ([xshift=0.8cm]cbp.east |- cbp) {
+    On TA miss for cond.\ branch, use prediction from cond.\ br.\ predictor
 };
 
-\node[greenbox] (dec3) at (7.5, 0.7) {
-    on TA miss for RET,\\
-    use prediction from RSB
+\node[greenbox, anchor=west] (dec3) at ([xshift=0.8cm]rsb.east |- rsb) {
+    On TA miss for RET, use prediction from RSB
 };
 
-\node[greenbox] (dec4) at (7.5, -1.0) {
-    on TA miss for ind branch,\\
-    use prediction from ITA
+\node[greenbox, anchor=west] (dec4) at ([xshift=0.8cm]ita.east |- ita) {
+    On TA miss for indirect branch, use prediction from ITA
 };
 
-% Execute column
-\node[greenbox] (exe1) at (12.9, 4.5) {
+% Execute column - positioned relative to Decode column boxes
+\node[greenbox, anchor=west] (exe1) at ([xshift=0.8cm]dec1.east) {
     $\diamond$ Allocate TA
 };
 
-\node[yellowbox] (exe2) at (12.9, 2.3) {
-    Fix wrong cond. br\\
-    prediction + allocate
+\node[yellowbox, anchor=west] (exe2) at ([xshift=0.8cm]dec2.east) {
+    Fix wrong cond.\ branch prediction + allocate
 };
 
-\node[greenbox] (exe3) at (12.9, 0.7) {
-    Fix wrong RET\\
-    prediction
+\node[greenbox, anchor=west] (exe3) at ([xshift=0.8cm]dec3.east) {
+    Fix wrong RET prediction
 };
 
-\node[greenbox] (exe4) at (12.9, -1.0) {
-    Fix wrong indirect\\
-    prediction + allocate
+\node[greenbox, anchor=west] (exe4) at ([xshift=0.8cm]dec4.east) {
+    Fix wrong indirect prediction + allocate
 };
 
 % Arrows between columns
@@ -590,28 +590,38 @@
 \draw[arrow] (dec3.east) -- (exe3.west);
 \draw[arrow] (dec4.east) -- (exe4.west);
 
-% Vertical dashed lines
-\draw[dashed, gray] (0, -2) -- (0, 6);
-\draw[dashed, gray] (4.3, -2) -- (4.3, 6);
-\draw[dashed, gray] (10.7, -2) -- (10.7, 6);
-\draw[dashed, gray] (15.1, -2) -- (15.1, 6);
+% Vertical dashed lines - straight lines at midpoints between columns
+% Line 0: left of Fetch
+\coordinate (line0) at ([xshift=-0.3cm]ta.west);
+\draw[dashed, gray] (line0 |- fetch_label.north) ++(0,0.3cm) -- (line0 |- ita.south) ++(0,-1.1cm);
 
-% Left annotation
-\node[draw, rounded corners, thick, text width=2.5cm, align=center, font=\footnotesize] at (-2.2, 1.5) {
-    85\% of jumps,\\
-    with big\\
-    misprediction\\
-    penalty
+% Line 1: between Fetch and Decode (midpoint)
+\coordinate (mid1) at ($(ta.east)!0.5!(dec1.west)$);
+\draw[dashed, gray] (mid1 |- fetch_label.north) ++(0,0.3cm) -- (mid1 |- ita.south) ++(0,-1.1cm);
+
+% Line 2: between Decode and Execute (midpoint)
+\coordinate (mid2) at ($(dec1.east)!0.5!(exe1.west)$);
+\draw[dashed, gray] (mid2 |- fetch_label.north) ++(0,0.3cm) -- (mid2 |- ita.south) ++(0,-1.1cm);
+
+% Line 3: right of Execute
+\coordinate (line3) at ([xshift=0.3cm]exe1.east);
+\draw[dashed, gray] (line3 |- fetch_label.north) ++(0,0.3cm) -- (line3 |- ita.south) ++(0,-1.1cm);
+
+% Left annotation using callout
+\node[draw, thick, rectangle callout, callout absolute pointer={(cbp.west)},
+      rounded corners=2pt, font=\tiny, align=center, text width=1.4cm]
+      (annotation) at ([xshift=-1.2cm]cbp.west) {
+    85\% of jumps, with big misprediction penalty
 };
-\draw[thick] (-1.0, 1.5) -- (-0.2, 2.3);
 
+% Red flush arrows
+\coordinate (flush_y1) at ([yshift=-0.5cm]ita.south);
+\coordinate (flush_y2) at ([yshift=-0.9cm]ita.south);
+\draw[arrow, red, very thick] (dec4.south |- flush_y1) -- (line0 |- flush_y1);
+\node[red, font=\scriptsize, anchor=west] at ([xshift=0.05cm]dec4.south |- flush_y1) {\textbf{Dec Flush}};
 
-% Red flush arrows (arrow ends just before the text)
-\draw[arrow, red, very thick] (9.7, -1.8) -- (0.2, -1.8);
-\node[red, font=\normalsize, anchor=west] at (9.75, -1.8) {\textbf{Dec Flush}};
-
-\draw[arrow, red, very thick] (14.2, -2.3) -- (0.2, -2.3);
-\node[red, font=\normalsize, anchor=west] at (14.25, -2.3) {\textbf{Exe Flush}};
+\draw[arrow, red, very thick] (exe4.south |- flush_y2) -- (line0 |- flush_y2);
+\node[red, font=\scriptsize, anchor=west] at ([xshift=0.05cm]exe4.south |- flush_y2) {\textbf{Exe Flush}};
 
 \end{tikzpicture}
 
