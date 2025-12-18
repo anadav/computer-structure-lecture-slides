@@ -634,7 +634,7 @@
 \label{frame:target_array}
 
 \begin{columns}[T]
-\begin{column}{0.58\textwidth}
+\begin{column}{0.65\textwidth}
 \begin{itemize}
     \item \textbf{The TA is accessed using the branch address (branch IP)}
     \begin{itemize}
@@ -677,153 +677,48 @@
 \end{itemize}
 \end{column}
 
-\begin{column}{0.42\textwidth}
-\vspace{0.5cm}
+\begin{column}{0.35\textwidth}
+\vspace{0.3cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
-    % Define dimensions
-    \def\tablewidth{5.5}
-    \def\tableheight{3.5}
-    \def\headerheight{0.6}
-    \def\tagwidth{1.3}
-    \def\targetwidth{2.7}
-    \def\typewidth{1.5}
-    
-    % Draw the main table structure with colored columns
-    % Tag column background
-    \fill[lightblue!30] (0,0) rectangle (\tagwidth, -\tableheight);
-    % Target column background  
-    \fill[green!15] (\tagwidth,0) rectangle (\tagwidth+\targetwidth, -\tableheight);
-    % Type column background
-    \fill[peach!40] (\tagwidth+\targetwidth,0) rectangle (\tablewidth, -\tableheight);
-    
-    % Draw header row with stronger colors
-    \fill[lightblue!50] (0,0) rectangle (\tagwidth, -\headerheight);
-    \fill[green!30] (\tagwidth,0) rectangle (\tagwidth+\targetwidth, -\headerheight);
-    \fill[peach!60] (\tagwidth+\targetwidth,0) rectangle (\tablewidth, -\headerheight);
-    
-    % Draw the table border
-    \draw[thick, black] (0,0) rectangle (\tablewidth, -\tableheight);
-    
-    % Draw column dividers
-    \draw[thick] (\tagwidth, 0) -- (\tagwidth, -\tableheight);
-    \draw[thick] (\tagwidth+\targetwidth, 0) -- (\tagwidth+\targetwidth, -\tableheight);
-    
-    % Draw header separator
-    \draw[thick] (0, -\headerheight) -- (\tablewidth, -\headerheight);
-    
-    % Add some row lines to show it's a table
-    \foreach \y in {1.2, 1.9, 2.6} {
-        \draw[gray, thin] (0, -\y) -- (\tablewidth, -\y);
-    }
-    
-    % Header labels
-    \node[myblue, font=\small\bfseries] at (\tagwidth/2, -\headerheight/2) {tag};
-    \node[myblue, font=\small\bfseries] at (\tagwidth+\targetwidth/2, -\headerheight/2) {target};
-    \node[myblue, font=\small\bfseries] at (\tagwidth+\targetwidth+\typewidth/2, -\headerheight/2) {type};
-    
-    % Branch IP label and arrow pointing to table
-    \node[myblue, font=\small\bfseries] at (-1.2, -1.5) {Branch IP};
-    \draw[->, thick, myblue] (-0.3, -1.5) -- (0, -1.5);
-    
-    % Output arrows and labels below the table
-    \draw[->, thick] (\tagwidth/2, -\tableheight) -- (\tagwidth/2, -\tableheight-0.7);
-    \node[align=center, font=\tiny, myblue] at (\tagwidth/2, -\tableheight-1.0) {hit/miss\\(indicates\\a branch)};
-    
-    \draw[->, thick] (\tagwidth+\targetwidth/2, -\tableheight) -- (\tagwidth+\targetwidth/2, -\tableheight-0.7);
-    \node[align=center, font=\tiny, myblue] at (\tagwidth+\targetwidth/2, -\tableheight-1.0) {predicted\\target};
-    
-    \draw[->, thick] (\tagwidth+\targetwidth+\typewidth/2, -\tableheight) -- (\tagwidth+\targetwidth+\typewidth/2, -\tableheight-0.7);
-    \node[align=center, font=\tiny, myblue] at (\tagwidth+\targetwidth+\typewidth/2, -\tableheight-1.0) {predicted\\type};
+\begin{tikzpicture}[
+    ta_cell/.style={draw=black!60, line width=0.6pt, minimum height=0.5cm, inner sep=2pt, font=\scriptsize},
+    arrow/.style={-latex, thick, draw=black!70}
+]
+    % Target Array as matrix of nodes
+    \matrix[matrix of nodes,
+        nodes={ta_cell},
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        ampersand replacement=\&,
+    ] (ta) {
+        |[minimum width=1.05cm, fill=lightblue!50, font=\small\bfseries]| \textcolor{myblue}{tag}
+            \& |[minimum width=2.0cm, fill=lightgreen!40, font=\small\bfseries]| \textcolor{myblue}{target}
+            \& |[minimum width=0.95cm, fill=peach!60, font=\small\bfseries]| \textcolor{myblue}{type} \\
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
+        |[minimum width=1.05cm, fill=lightblue!25]| \phantom{} \& |[minimum width=2.0cm, fill=lightgreen!20]| \phantom{} \& |[minimum width=0.95cm, fill=peach!30]| \phantom{} \\
+    };
+
+    % Branch IP input - positioned above-left of matrix, arrow using |-
+    \node[anchor=south, font=\small\bfseries, text=myblue] (ip) at ([xshift=-2mm, yshift=2mm]ta.north west) {Branch IP};
+    \draw[arrow, myblue] (ip.south) |- (ta-3-1.west);
+
+    % Output arrows from the selected row (row 3), labels below whole table
+    \draw[arrow] (ta-3-1.south) -- (ta-3-1.south |- ta.south) -- ++(0,-0.5);
+    \node[anchor=north, align=center, font=\tiny, myblue] at ([yshift=-0.5cm]ta-3-1.south |- ta.south) {hit/miss\\(indicates\\a branch)};
+
+    \draw[arrow] (ta-3-2.south) -- (ta-3-2.south |- ta.south) -- ++(0,-0.5);
+    \node[anchor=north, align=center, font=\tiny, myblue] at ([yshift=-0.5cm]ta-3-2.south |- ta.south) {predicted\\target};
+
+    \draw[arrow] (ta-3-3.south) -- (ta-3-3.south |- ta.south) -- ++(0,-0.5);
+    \node[anchor=north, align=center, font=\tiny, myblue] at ([yshift=-0.5cm]ta-3-3.south |- ta.south) {predicted\\type};
 \end{tikzpicture}
 \end{center}
 \end{column}
 \end{columns}
 
-\end{frame}
-
-
-
-
-\begin{frame}{The Target Array}
-\begin{columns}[T,onlytextwidth]
-  \begin{column}{0.63\textwidth}
-    \begin{itemize}
-      \item The TA is accessed using the branch address (branch IP)
-      \begin{itemize}
-        \item Implemented as an $n$-way set associative cache
-      \end{itemize}
-
-      \item The TA predicts the following
-      \begin{itemize}
-        \item Instruction is a branch
-        \item Predicted target
-        \item Branch type
-        \begin{itemize}
-          \item Conditional: jump to target if predict taken
-          \item Unconditional direct: take target
-          \item Unconditional indirect: if iTA hits, use its target
-          \item Return: get target from Return Stack Buffer
-        \end{itemize}
-      \end{itemize}
-
-      \item The TA is allocated/updated at Decode / EXE
-
-      \item Tags are usually partial
-      \begin{itemize}
-        \item Trade-off space, can get false hits
-        \item Few branches aliased to same entry
-        \item No correctness, only performance
-      \end{itemize}
-    \end{itemize}
-  \end{column}
-
-  \begin{column}{0.37\textwidth}
-    \centering
-    \begin{tikzpicture}[>=Stealth, node distance=2mm]
-      % Sizes
-      \def\W{4.2}   % total width
-      \def\H{4.2}   % total height
-      \def\tagw{1.0}
-      \def\targetw{2.6}
-      \def\typew{0.6}
-
-      % Background column tints
-      \fill[blue!12]   (0,-\H) rectangle (\tagw,0);
-      \fill[green!12]  (\tagw,-\H) rectangle (\tagw+\targetw,0);
-      \fill[orange!18] (\tagw+\targetw,-\H) rectangle (\W,0);
-
-      % Outer box
-      \draw[rounded corners=1pt, line width=0.8pt] (0,0) rectangle (\W,-\H);
-
-      % Column dividers
-      \draw (\tagw,0) -- (\tagw,-\H);
-      \draw (\tagw+\targetw,0) -- (\tagw+\targetw,-\H);
-
-      % Header separator
-      \draw (0,-0.8) -- (\W,-0.8);
-
-      % Header labels
-      \node[font=\small\bfseries,blue]   at ($(0,0)!0.5!(\tagw,0)+(0,-0.4)$) {tag};
-      \node[font=\small\bfseries,blue]   at ($(\tagw,0)!0.5!(\tagw+\targetw,0)+(0,-0.4)$) {target};
-      \node[font=\small\bfseries,blue]   at ($(\tagw+\targetw,0)!0.5!(\W,0)+(0,-0.4)$) {type};
-
-      % Branch IP input (left)
-      \node[align=left, blue] (bp) at (-1.5,-0.6) {\small Branch IP};
-      \draw[->,blue,thick] (bp.east) -- (-0.02,-1.0);
-
-      % Bottom outputs
-      \node[align=center, font=\scriptsize, blue!70!black] (hit) at (\tagw/2,-\H-0.9) {hit / miss\\(indicates\\a branch)};
-      \draw[->] (\tagw/2,-\H) -- (hit.north);
-
-      \node[align=center, font=\scriptsize, blue!70!black] (pt) at (\tagw+\targetw/2,-\H-0.7) {predicted\\target};
-      \draw[->] (\tagw+\targetw/2,-\H) -- (pt.north);
-
-      \node[align=center, font=\scriptsize, blue!70!black] (ty) at (\tagw+\targetw+\typew/2,-\H-0.7) {predicted\\type};
-      \draw[->] (\tagw+\targetw+\typew/2,-\H) -- (ty.north);
-    \end{tikzpicture}
-  \end{column}
-\end{columns}
 \end{frame}
 
 \section{Conditional Branch Direction Prediction}
