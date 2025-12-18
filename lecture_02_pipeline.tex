@@ -1365,64 +1365,66 @@ then stall
 
 %% Slide: Control Hazard: Stall
 \begin{frame}{Control Hazard: Stall}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{itemize}
+    \item Stall pipe when branch is encountered until resolved
+    \item Assumptions:
     \begin{itemize}
-        \item Stall pipe when branch is encountered until resolved
-        \item Stall impact: assumptions
-        \begin{itemize}
-            \item CPI = 1
-            \item 20\% of instructions are branches
-            \item Stall 3 cycles on every branch
-            \item[$\Rightarrow$] $\text{CPI}_{\text{new}} = 1 + 0.2 \times 3 = 1.6$
-        \end{itemize}
+        \item CPI = 1
+        \item 20\% of instructions are branches
+        \item Stall 3 cycles on every branch
     \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{tikzpicture}
+    \node[draw=red!70!black, line width=1.5pt, fill=red!10, rounded corners=4pt,
+          inner sep=10pt, align=center] {
+        $\text{CPI} = 1 + 0.2 \times 3 = \textbf{1.6}$\\[8pt]
+        \textcolor{red!70!black}{\textbf{60\% performance loss!}}
+    };
+\end{tikzpicture}
+\end{column}
+\end{columns}
 
-    \vspace{0.5cm}
-    \centering
-    $\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{Avg. } \frac{\text{stall cycles}}{\text{instruction}}$
-
-    \vspace{0.5cm}
-    \textcolor{red}{\textbf{We lose 60\% of the performance}}
-\end{frame}
-
-%% Slide: Control Hazard: Stall
-\begin{frame}{Control Hazard: Stall}
-    \begin{itemize}
-        \item Stall pipe when branch is encountered until resolved
-        \item Stall impact: assumptions
-        \begin{itemize}
-            \item CPI = 1
-            \item 20\% of instructions are branches
-            \item Stall 3 cycles on every branch
-            \item[$\Rightarrow$] $\text{CPI}_{\text{new}} = 1 + 0.2 \times 3 = 1.6$
-        \end{itemize}
-    \end{itemize}
-
-    \vspace{0.5cm}
-    \centering
-    $\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{Avg. } \frac{\text{stall cycles}}{\text{instruction}}$
-
-    \vspace{0.5cm}
-    \textcolor{red}{\textbf{We lose 60\% of the performance}}
+\vspace{0.4cm}
+\centering
+$\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \text{Avg. } \dfrac{\text{stall cycles}}{\text{instruction}}$
 \end{frame}
 
 %% Slide: Control Hazard: Predict Not Taken
 \begin{frame}{Control Hazard: Predict Not Taken}
+\begin{columns}[T]
+\begin{column}{0.58\textwidth}
+\begin{itemize}
+    \item Execute instructions from the fall-through path
     \begin{itemize}
-        \item Execute instructions from the fall-through (not-taken) path
-        \begin{itemize}
-            \item As if there is no branch
-            \item If the branch is not-taken ($\sim50\%$), no penalty is paid
-        \end{itemize}
-        \item If branch actually taken
-        \begin{itemize}
-            \item Flush the fall-through path instructions before they change the machine state (memory / registers)
-            \item Fetch the instructions from the correct (taken) path
-        \end{itemize}
-        \item Assuming 20\% of instructions are branches and $\sim50\%$ branches not taken on average
-        \begin{itemize}
-            \item $\text{CPI}_{\text{new}} = 1 + (0.2 \times 0.5) \times 3 = 1.3$
-        \end{itemize}
+        \item As if there is no branch
+        \item If not-taken ($\sim$50\%), no penalty
     \end{itemize}
+    \item If branch actually taken:
+    \begin{itemize}
+        \item Flush before state changes
+        \item Fetch from correct path
+    \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.38\textwidth}
+\begin{tikzpicture}
+    \node[draw=myorange!70!black, line width=1.5pt, fill=myorange!10, rounded corners=4pt,
+          inner sep=10pt, align=center] {
+        $\text{CPI} = 1 + 0.2 \times 0.5 \times 3$\\[4pt]
+        $= \textbf{1.3}$\\[8pt]
+        \textcolor{myorange!80!black}{\textbf{30\% performance loss}}
+    };
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+\small
+Assuming 20\% branches, $\sim$50\% taken on average
 \end{frame}
 
 %% Slide: Dynamic Branch Prediction
@@ -1491,7 +1493,7 @@ then stall
 \begin{tikzpicture}
     % Wrong prediction box
     \node[draw=red!70!black, line width=1pt, fill=red!8, rounded corners=3pt,
-          text width=6.2cm, align=left, inner sep=8pt] (wrong) {
+          text width=5.5cm, align=left, inner sep=8pt] (wrong) {
         \textbf{\textcolor{red!70!black}{Wrong Prediction}}\\[3pt]
         \small
         \textbullet\ Predict not-taken, actual taken\\
@@ -1501,7 +1503,7 @@ then stall
 
     % Flush box
     \node[draw=myorange!70!black, line width=1pt, fill=myorange!10, rounded corners=3pt,
-          text width=6.8cm, align=left, inner sep=8pt, right=1cm of wrong] (flush) {
+          text width=6.5cm, align=left, inner sep=8pt, right=0.8cm of wrong] (flush) {
         \textbf{\textcolor{myorange!80!black}{Flush the Pipeline}}\\[3pt]
         \small
         \textbullet\ Reset latches (instructions $\rightarrow$ NOPs)\\
@@ -1514,13 +1516,31 @@ then stall
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
-\textbf{Performance Impact:} With prediction rate $P$ and 3-cycle penalty:
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{Performance:} With prediction rate $P$:
 \[
 \text{CPI} = 1 + 0.2 \times (1{-}P) \times 3
 \]
-\textbf{Example:} If $P = 70\%$, then $\text{CPI} = 1 + 0.2 \times 0.3 \times 3 = \textbf{1.18}$
+\textbf{Example:} $P = 70\%$ $\Rightarrow$ $\text{CPI} = \textbf{1.18}$
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{tikzpicture}
+    \node[draw=mygreen!70!black, line width=1.5pt, fill=lightgreen!20, rounded corners=4pt,
+          inner sep=8pt, align=center] {
+        \small\textbf{Performance Loss}\\[4pt]
+        \footnotesize
+        Stall: \textcolor{red!70!black}{\textbf{60\%}}\\
+        \footnotesize
+        Predict NT: \textcolor{myorange!80!black}{\textbf{30\%}}\\
+        \footnotesize
+        BTB (70\%): \textcolor{mygreen!80!black}{\textbf{18\%}}
+    };
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 %% Slide: Adding a BTB to the Pipeline (based on lecture_06 style)
