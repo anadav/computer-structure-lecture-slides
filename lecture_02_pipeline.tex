@@ -1526,8 +1526,6 @@ then stall
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
-    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=4, w=2.8, square pins=1},
-                        external pins width=0, align=center, text depth=4ex, fill=yellow!20},
     mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=2, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
@@ -1593,7 +1591,8 @@ then stall
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
 
 % MEM Stage Components
-\node[memory_block, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1}, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
+\node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
+      external pins width=0, align=center, text depth=4ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
 
 % Verification comparators
 \node[verify_comp, anchor=south] (DirComp) at ([yshift=5mm]DMem.north) {$\neq$};
@@ -1858,104 +1857,109 @@ then stall
     \end{tabular}
 };
 
-% === Latch value styles ===
-% Consistent instruction style on latches
-% latch_inst: instruction name on latch
-% latch_val: numeric value on latch
-% new_highlight: highlight for newly appearing elements
+% === Enhanced styles for visibility ===
+% Coordinate for stage explanation box at bottom
+\coordinate (StageExplainPos) at ([yshift=-20mm]BPU.south -| RegFile);
+
+% Prominent instruction style on latches
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+    latch_inst_highlight/.style={draw=red!70!black, line width=2pt, fill=yellow!30,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+    latch_target/.style={draw=green!60!black, line width=1pt, fill=green!25,
+                         rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_dir/.style={draw=orange!60!black, line width=1pt, fill=orange!25,
+                      rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_nextseq/.style={draw=gray!60!black, line width=1pt, fill=gray!20,
+                          rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
+                      rounded corners=6pt, font=\small, inner sep=8pt},
+}
 
 % === Animation: Instructions on latches + values + callouts ===
 % Slide 1: or fetching, lookup BTB
 \only<1>{
-    % Instruction on IF/ID latch
-    \node[inst_label] at (IFID.center) {or};
-    % Stage explanation
-    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
-          at ([yshift=-3mm]BPU.south -| ALU) {
-        \textbf{Fetch:} Looking up IP=4 in I\$ and BTB in parallel
+    % Instruction on IF/ID latch - prominent
+    \node[latch_inst] at (IFID.center) {or};
+    % Stage explanation - colorbox at bottom
+    \node[stage_box, anchor=west] at (StageExplainPos) {
+        \textcolor{blue!60!black}{\textbf{Fetch:}} Looking up IP=4 in I\$ and BTB in parallel
     };
 }
 
 % Slide 2: jcc fetching, BTB provides prediction
 \only<2>{
-    % Instructions on latches
-    \node[inst_label] at (IFID.center) {jcc};
+    % Instruction on latch
+    \node[latch_inst] at (IFID.center) {jcc};
     % Latch values - predicted target and direction appear
-    \node[draw, fill=green!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=15mm]IFID.center) {50};
-    \node[draw, fill=orange!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=25mm]IFID.center) {taken};
-    \node[draw, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=5mm]IFID.center) {8};
+    \node[latch_target] at ([yshift=18mm]IFID.center) {50};
+    \node[latch_dir] at ([yshift=28mm]IFID.center) {taken};
+    \node[latch_nextseq] at ([yshift=8mm]IFID.center) {8};
     % Stage explanation
-    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
-          at ([yshift=-3mm]BPU.south -| ALU) {
-        \textbf{Fetch:} BTB hit! Predicted target=50, direction=taken, next seq=8
+    \node[stage_box, anchor=west] at (StageExplainPos) {
+        \textcolor{blue!60!black}{\textbf{Fetch:}} BTB hit! ~
+        \colorbox{green!25}{\strut target=50}~
+        \colorbox{orange!25}{\strut dir=taken}~
+        \colorbox{gray!20}{\strut next=8}
     };
 }
 
 % Slide 3: sub fetching (from predicted path), jcc decoding
 \only<3>{
     % Instructions on latches
-    \node[inst_label] at (IFID.center) {sub};
-    \node[inst_label] at (IDEX.center) {jcc};
-    % Latch values propagating
-    \node[draw, fill=green!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=15mm]IDEX.center) {50};
-    \node[draw, fill=orange!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=25mm]IDEX.center) {taken};
-    \node[draw, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=5mm]IDEX.center) {8};
+    \node[latch_inst] at (IFID.center) {sub};
+    \node[latch_inst] at (IDEX.center) {jcc};
+    % Latch values propagating - now on ID/EX
+    \node[latch_target] at ([yshift=18mm]IDEX.center) {50};
+    \node[latch_dir] at ([yshift=28mm]IDEX.center) {taken};
+    \node[latch_nextseq] at ([yshift=8mm]IDEX.center) {8};
     % Stage explanation
-    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
-          at ([yshift=-3mm]BPU.south -| ALU) {
-        \textbf{Decode:} jcc decoded, prediction values propagate through pipeline
+    \node[stage_box, anchor=west] at (StageExplainPos) {
+        \textcolor{cyan!60!black}{\textbf{Decode:}} jcc decoded, prediction values propagate $\rightarrow$
     };
 }
 
 % Slide 4: mul fetching, sub decoding, jcc executing
 \only<4>{
-    % Instructions on latches
-    \node[inst_label] at (IFID.center) {mul};
-    \node[inst_label] at (IDEX.center) {sub};
-    \node[inst_label] at (EXMEM.center) {jcc};
+    % Instructions on latches - jcc highlighted as it's being verified
+    \node[latch_inst] at (IFID.center) {mul};
+    \node[latch_inst] at (IDEX.center) {sub};
+    \node[latch_inst_highlight] at (EXMEM.center) {jcc};
     % Latch values - now at EX/MEM for verification
-    \node[draw, fill=green!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=15mm]EXMEM.center) {50};
-    \node[draw, fill=orange!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=25mm]EXMEM.center) {taken};
-    \node[draw, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
-          at ([yshift=5mm]EXMEM.center) {8};
+    \node[latch_target] at ([yshift=18mm]EXMEM.center) {50};
+    \node[latch_dir] at ([yshift=28mm]EXMEM.center) {taken};
+    \node[latch_nextseq] at ([yshift=8mm]EXMEM.center) {8};
     % Stage explanation
-    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
-          at ([yshift=-3mm]BPU.south -| ALU) {
-        \textbf{Execute:} jcc executes, actual direction computed $\rightarrow$ verify prediction
+    \node[stage_box, anchor=west] at (StageExplainPos) {
+        \textcolor{green!50!black}{\textbf{Execute:}} jcc executes $\rightarrow$ verify prediction at Memory
     };
     % Verification callout
     \coordinate (CalloutPointer) at ([xshift=0.5cm]DirComp);
-    \node[rectangle callout, draw=myorange!80!black, line width=1pt, fill=myorange!10,
-          rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt,
-          callout absolute pointer=(CalloutPointer), text width=3.5cm]
+    \node[rectangle callout, draw=red!70!black, line width=1.5pt, fill=yellow!15,
+          rounded corners=4pt, font=\small, align=left, inner sep=6pt,
+          callout absolute pointer=(CalloutPointer), text width=3.8cm]
           at ([xshift=1cm, yshift=-3cm]VerifyBox.south east) {
-        Verify direction\\
-        Verify target (if taken)
+        \textbf{Verify direction}\\
+        \textbf{Verify target} (if taken)
     };
 }
 
 % Slide 5: add fetching, verification complete (OK)
 \only<5>{
     % Instructions on latches
-    \node[inst_label] at (IFID.center) {add};
-    \node[inst_label] at (IDEX.center) {mul};
-    \node[inst_label] at (EXMEM.center) {sub};
-    \node[inst_label] at (MEMWB.center) {jcc};
-    % Verification OK
-    \node[font=\scriptsize\bfseries, fill=green!40, rounded corners=3pt, inner sep=4pt, text=green!30!black]
-          at (VerifyBox.center) {OK};
+    \node[latch_inst] at (IFID.center) {add};
+    \node[latch_inst] at (IDEX.center) {mul};
+    \node[latch_inst] at (EXMEM.center) {sub};
+    \node[latch_inst] at (MEMWB.center) {jcc};
+    % Verification OK - prominent
+    \node[draw=green!50!black, line width=2pt, fill=green!35, rounded corners=5pt,
+          font=\normalsize\bfseries, inner sep=6pt, text=green!20!black]
+          at (VerifyBox.center) {\checkmark~OK};
     % Stage explanation
-    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
-          at ([yshift=-3mm]BPU.south -| ALU) {
-        \textbf{Memory:} Prediction verified correct! Pipeline continues normally
+    \node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+          font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
+        \textcolor{green!40!black}{\textbf{Memory:}} Prediction correct! Pipeline continues normally~\checkmark
     };
 }
 
@@ -1983,8 +1987,6 @@ then stall
                      external pins width=0, fill=green!20, font=\scriptsize},
     adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
                      external pins width=0, fill=cyan!20, font=\scriptsize},
-    memory_block/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=4, w=2.8, square pins=1},
-                        external pins width=0, align=center, text depth=4ex, fill=yellow!20},
     mux3/.style={muxdemux, muxdemux def={Lh=1, Rh=2, NL=1, NR=3, NT=2, w=0.8},
                  external pins width=0, fill=cyan!20},
     mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
@@ -2051,7 +2053,8 @@ then stall
 \node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
 
 % MEM Stage Components
-\node[memory_block, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1}, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
+\node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
+      external pins width=0, align=center, text depth=4ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
 
 % Verification comparators
 \node[verify_comp, anchor=south] (DirComp) at ([yshift=5mm]DMem.north) {$\neq$};
@@ -2265,57 +2268,121 @@ then stall
 \node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {write\\data};
 \node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {read\\data};
 
-% Code listing
-\node[anchor=north west, font=\scriptsize\ttfamily, align=left] at ([xshift=5mm]WBMux.east |- IF_label.south) {
-    0: or\\
-    4: jcc 50\\
-    8: and\\
-    ...\\
-    50: sub\\
-    54: mul
+% Program listing with border
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
+    \begin{tabular}{rl}
+    0: & or \\
+    4: & jcc 50 \\
+    8: & and \\
+    \multicolumn{2}{c}{...} \\
+    50: & sub \\
+    54: & mul \\
+    \end{tabular}
 };
 
-% === Animated misprediction scenario with callouts ===
+% === Enhanced styles (same as first slide) ===
+\coordinate (StageExplainPos) at ([yshift=-20mm]BPU.south -| RegFile);
+
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+    latch_inst_highlight/.style={draw=red!70!black, line width=2pt, fill=yellow!30,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+    latch_inst_flush/.style={draw=red!70!black, line width=2pt, fill=red!40,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt, text=white},
+    latch_inst_nop/.style={draw=gray!50!black, line width=1pt, fill=gray!25,
+                       rounded corners=3pt, font=\small\ttfamily, inner sep=4pt, opacity=0.7},
+    latch_inst_new/.style={draw=green!60!black, line width=2pt, fill=green!25,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt},
+    latch_target/.style={draw=green!60!black, line width=1pt, fill=green!25,
+                         rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_dir/.style={draw=orange!60!black, line width=1pt, fill=orange!25,
+                      rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_nextseq/.style={draw=gray!60!black, line width=1pt, fill=gray!20,
+                          rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
+                      rounded corners=6pt, font=\small, inner sep=8pt},
+}
+
+% === Animated misprediction scenario ===
+% Slide 1: mul/sub fetched on wrong path, jcc executing, detecting mismatch
 \only<1>{
-    \node[inst_label, fill=green!40] at (IMem.center) {mul};
-    \node[inst_label, fill=green!40] at (RegFile.center) {sub};
-    \node[inst_label] at (ALU.center) {jcc};
-    \node[inst_label] at (DMem.center) {or};
+    % Instructions on latches
+    \node[latch_inst] at (IFID.center) {mul};
+    \node[latch_inst] at (IDEX.center) {sub};
+    \node[latch_inst_highlight] at (EXMEM.center) {jcc};
+    \node[latch_inst] at (MEMWB.center) {or};
+    % Latch values at EX/MEM
+    \node[latch_target] at ([yshift=18mm]EXMEM.center) {50};
+    \node[latch_dir] at ([yshift=28mm]EXMEM.center) {taken};
+    \node[latch_nextseq] at ([yshift=8mm]EXMEM.center) {8};
     % Callout: Wrong direction detected
-    \node[rectangle callout, draw=red!80!black, line width=1pt, fill=red!10,
-          rounded corners=3pt, font=\scriptsize, align=center, inner sep=4pt,
-          callout absolute pointer={(DirComp.east)}, text width=2.5cm]
+    \node[rectangle callout, draw=red!80!black, line width=1.5pt, fill=red!15,
+          rounded corners=4pt, font=\small, align=center, inner sep=6pt,
+          callout absolute pointer={(DirComp.east)}, text width=3cm]
           at ([xshift=2cm, yshift=-1cm]DirComp.east) {
-        Wrong direction\\flush
+        \textbf{Wrong direction!}\\Actual: Not Taken
+    };
+    % Stage explanation
+    \node[draw=red!50!black, line width=1.5pt, fill=red!8, rounded corners=6pt,
+          font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
+        \textcolor{red!60!black}{\textbf{Execute:}} jcc actual direction = Not Taken $\neq$ predicted (Taken)
     };
 }
+
+% Slide 2: Flush detected, repair IP selected
 \only<2>{
-    \node[flush_label] at (IMem.center) {mul};
-    \node[flush_label] at (RegFile.center) {sub};
-    \node[inst_label] at (ALU.center) {jcc};
-    \node[inst_label] at (DMem.center) {or};
-    \node[font=\scriptsize, fill=red!60, text=white, rounded corners, inner sep=3pt] at (VerifyBox.center) {$\neq$};
-    % Callout: Along with repair IP
-    \node[rectangle callout, draw=red!80!black, line width=1pt, fill=red!10,
-          rounded corners=3pt, font=\scriptsize, align=center, inner sep=4pt,
-          callout absolute pointer={(RepairMux.south)}, text width=3cm]
+    % Instructions - mul/sub being flushed
+    \node[latch_inst_flush] at (IFID.center) {mul};
+    \node[latch_inst_flush] at (IDEX.center) {sub};
+    \node[latch_inst_highlight] at (EXMEM.center) {jcc};
+    \node[latch_inst] at (MEMWB.center) {or};
+    % Mismatch indicator
+    \node[draw=red!70!black, line width=2pt, fill=red!50, rounded corners=5pt,
+          font=\normalsize\bfseries, inner sep=6pt, text=white]
+          at (VerifyBox.center) {$\neq$ FLUSH};
+    % Callout: Repair IP
+    \node[rectangle callout, draw=red!80!black, line width=1.5pt, fill=yellow!20,
+          rounded corners=4pt, font=\small, align=center, inner sep=6pt,
+          callout absolute pointer={(RepairMux.south)}, text width=3.5cm]
           at ([yshift=-1.5cm]RepairMux.south) {
-        Along with the repair IP
+        \textbf{Repair IP} $\leftarrow$ 8\\(fall-through address)
+    };
+    % Stage explanation
+    \node[draw=red!50!black, line width=1.5pt, fill=red!8, rounded corners=6pt,
+          font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
+        \textcolor{red!60!black}{\textbf{Flush:}} Issue flush, select repair IP = 8 (next sequential)
     };
 }
+
+% Slide 3: Pipeline flushed, bubbles inserted
 \only<3>{
-    \node[inst_label, fill=gray!30, opacity=0.5] at (IMem.center) {NOP};
-    \node[inst_label, fill=gray!30, opacity=0.5] at (RegFile.center) {NOP};
-    \node[inst_label] at (ALU.center) {jcc};
-    \node[inst_label] at (DMem.center) {or};
-    \node[font=\scriptsize, text=red!70!black, align=center] at ([yshift=-8mm]BPU.south) {Flush pipeline!\\Repair IP $\leftarrow$ 8 (fall-through)};
+    % Instructions - NOPs (bubbles) in flushed stages
+    \node[latch_inst_nop] at (IFID.center) {NOP};
+    \node[latch_inst_nop] at (IDEX.center) {NOP};
+    \node[latch_inst] at (EXMEM.center) {jcc};
+    \node[latch_inst] at (MEMWB.center) {or};
+    % Stage explanation
+    \node[draw=orange!50!black, line width=1.5pt, fill=orange!10, rounded corners=6pt,
+          font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
+        \textcolor{orange!60!black}{\textbf{Flush:}} Pipeline flushed! IF/ID and ID/EX $\leftarrow$ NOP (bubbles)
+    };
 }
+
+% Slide 4: Fetching from correct path
 \only<4>{
-    \node[inst_label, fill=blue!40] at (IMem.center) {and};
-    \node[inst_label, fill=gray!30, opacity=0.5] at (RegFile.center) {--};
-    \node[inst_label, fill=gray!30, opacity=0.5] at (ALU.center) {--};
-    \node[inst_label] at (DMem.center) {jcc};
-    \node[font=\scriptsize, text=blue!70!black, align=center] at ([yshift=-8mm]BPU.south) {Fetching from correct path\\3 cycles penalty};
+    % Instructions - and fetched from correct path
+    \node[latch_inst_new] at (IFID.center) {and};
+    \node[latch_inst_nop] at (IDEX.center) {--};
+    \node[latch_inst_nop] at (EXMEM.center) {--};
+    \node[latch_inst] at (MEMWB.center) {jcc};
+    % Stage explanation
+    \node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+          font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
+        \textcolor{green!50!black}{\textbf{Recovery:}} Fetching ``and'' from correct path (IP=8). \textbf{3 cycle penalty}
+    };
 }
 
 \end{circuitikz}
