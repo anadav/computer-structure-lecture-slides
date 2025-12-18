@@ -1880,8 +1880,8 @@ then stall
 % === Animation: Instructions on latches + values + callouts ===
 % Slide 1: or fetching, lookup BTB
 \only<1>{
-    % Instruction on IF/ID latch - prominent
-    \node[latch_inst] at (IFID.center) {or};
+    % Instruction on IF/ID latch - anchored to bottom of Instruction rectangle
+    \node[latch_inst, anchor=north] at (Instruction.south) {or};
     % Stage explanation - colorbox at bottom
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{blue!60!black}{\textbf{Fetch:}} Looking up IP=4 in I\$ and BTB in parallel
@@ -1890,8 +1890,8 @@ then stall
 
 % Slide 2: jcc fetching, BTB provides prediction
 \only<2>{
-    % Instruction on latch
-    \node[latch_inst] at (IFID.center) {jcc};
+    % Instruction on latch - anchored to bottom of Instruction rectangle
+    \node[latch_inst, anchor=north] at (Instruction.south) {jcc};
     % Latch values - positioned relative to signal coordinates
     \node[latch_target] at (IFID.center |- fetch_out_pred_target) {50};
     \node[latch_dir] at ([yshift=2mm]IFID.center |- fetch_out_pred_dir) {taken};
@@ -1907,9 +1907,9 @@ then stall
 
 % Slide 3: sub fetching (from predicted path), jcc decoding
 \only<3>{
-    % Instructions on latches
-    \node[latch_inst] at (IFID.center) {sub};
-    \node[latch_inst] at (IDEX.center) {jcc};
+    % Instructions on latches - using -| for consistent y-level
+    \node[latch_inst, anchor=north] at (Instruction.south) {sub};
+    \node[latch_inst] at (IDEX.center |- Instruction.south) {jcc};
     % Latch values propagating - positioned relative to signal coordinates
     \node[latch_target] at (IDEX.center |- decode_out_pred_target) {50};
     \node[latch_dir] at ([yshift=2mm]IDEX.center |- decode_out_pred_dir) {taken};
@@ -1922,10 +1922,10 @@ then stall
 
 % Slide 4: mul fetching, sub decoding, jcc executing
 \only<4>{
-    % Instructions on latches - jcc highlighted as it's being verified
-    \node[latch_inst] at (IFID.center) {mul};
-    \node[latch_inst] at (IDEX.center) {sub};
-    \node[latch_inst_highlight] at (EXMEM.center) {jcc};
+    % Instructions on latches - using -| for consistent y-level
+    \node[latch_inst, anchor=north] at (Instruction.south) {mul};
+    \node[latch_inst] at (IDEX.center |- Instruction.south) {sub};
+    \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
     % Latch values - positioned relative to signal coordinates
     \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
     \node[latch_dir] at ([yshift=-1.5mm]EXMEM.center |- execute_out_pred_dir) {taken};
@@ -1947,11 +1947,11 @@ then stall
 
 % Slide 5: add fetching, verification complete (OK)
 \only<5>{
-    % Instructions on latches
-    \node[latch_inst] at (IFID.center) {add};
-    \node[latch_inst] at (IDEX.center) {mul};
-    \node[latch_inst] at (EXMEM.center) {sub};
-    \node[latch_inst] at (MEMWB.center) {jcc};
+    % Instructions on latches - using -| for consistent y-level
+    \node[latch_inst, anchor=north] at (Instruction.south) {add};
+    \node[latch_inst] at (IDEX.center |- Instruction.south) {mul};
+    \node[latch_inst] at (EXMEM.center |- Instruction.south) {sub};
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
     % Verification OK - prominent
     \node[draw=green!50!black, line width=2pt, fill=green!35, rounded corners=5pt,
           font=\normalsize\bfseries, inner sep=6pt, text=green!20!black]
@@ -2309,11 +2309,11 @@ then stall
 % === Animated misprediction scenario ===
 % Slide 1: mul/sub fetched on wrong path, jcc executing, detecting mismatch
 \only<1>{
-    % Instructions on latches
-    \node[latch_inst] at (IFID.center) {mul};
-    \node[latch_inst] at (IDEX.center) {sub};
-    \node[latch_inst_highlight] at (EXMEM.center) {jcc};
-    \node[latch_inst] at (MEMWB.center) {or};
+    % Instructions on latches - using -| for consistent y-level
+    \node[latch_inst, anchor=north] at (Instruction.south) {mul};
+    \node[latch_inst] at (IDEX.center |- Instruction.south) {sub};
+    \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
     % Latch values - positioned relative to signal coordinates
     \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
     \node[latch_dir] at (EXMEM.center |- execute_out_pred_dir) {taken};
@@ -2334,11 +2334,11 @@ then stall
 
 % Slide 2: Flush detected, repair IP selected
 \only<2>{
-    % Instructions - mul/sub being flushed
-    \node[latch_inst_flush] at (IFID.center) {mul};
-    \node[latch_inst_flush] at (IDEX.center) {sub};
-    \node[latch_inst_highlight] at (EXMEM.center) {jcc};
-    \node[latch_inst] at (MEMWB.center) {or};
+    % Instructions - mul/sub being flushed - using -| for consistent y-level
+    \node[latch_inst_flush, anchor=north] at (Instruction.south) {mul};
+    \node[latch_inst_flush] at (IDEX.center |- Instruction.south) {sub};
+    \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
     % Mismatch indicator
     \node[draw=red!70!black, line width=2pt, fill=red!50, rounded corners=5pt,
           font=\normalsize\bfseries, inner sep=6pt, text=white]
@@ -2359,11 +2359,11 @@ then stall
 
 % Slide 3: Pipeline flushed, bubbles inserted
 \only<3>{
-    % Instructions - NOPs (bubbles) in flushed stages
-    \node[latch_inst_nop] at (IFID.center) {NOP};
-    \node[latch_inst_nop] at (IDEX.center) {NOP};
-    \node[latch_inst] at (EXMEM.center) {jcc};
-    \node[latch_inst] at (MEMWB.center) {or};
+    % Instructions - NOPs (bubbles) in flushed stages - using -| for consistent y-level
+    \node[latch_inst_nop, anchor=north] at (Instruction.south) {NOP};
+    \node[latch_inst_nop] at (IDEX.center |- Instruction.south) {NOP};
+    \node[latch_inst] at (EXMEM.center |- Instruction.south) {jcc};
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
     % Stage explanation
     \node[draw=orange!50!black, line width=1.5pt, fill=orange!10, rounded corners=6pt,
           font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
@@ -2373,11 +2373,11 @@ then stall
 
 % Slide 4: Fetching from correct path
 \only<4>{
-    % Instructions - and fetched from correct path
-    \node[latch_inst_new] at (IFID.center) {and};
-    \node[latch_inst_nop] at (IDEX.center) {--};
-    \node[latch_inst_nop] at (EXMEM.center) {--};
-    \node[latch_inst] at (MEMWB.center) {jcc};
+    % Instructions - and fetched from correct path - using -| for consistent y-level
+    \node[latch_inst_new, anchor=north] at (Instruction.south) {and};
+    \node[latch_inst_nop] at (IDEX.center |- Instruction.south) {--};
+    \node[latch_inst_nop] at (EXMEM.center |- Instruction.south) {--};
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
     % Stage explanation
     \node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
           font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
