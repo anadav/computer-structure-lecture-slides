@@ -1843,39 +1843,120 @@ then stall
     };
 }
 
-% Code listing on right
-\node[anchor=north west, font=\scriptsize\ttfamily, align=left] at ([xshift=5mm]WBMux.east |- IF_label.south) {
-    0: or\\
-    4: jcc 50\\
-    8: and\\
-    ...\\
-    50: sub\\
-    54: mul\\
-    58: add
+% Program listing with border (right side)
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
+    \begin{tabular}{rl}
+    0: & or \\
+    4: & jcc 50 \\
+    8: & and \\
+    \multicolumn{2}{c}{...} \\
+    50: & sub \\
+    54: & mul \\
+    58: & add \\
+    \end{tabular}
 };
 
-% === Animated instruction labels ===
+% === Latch value styles ===
+% Consistent instruction style on latches
+% latch_inst: instruction name on latch
+% latch_val: numeric value on latch
+% new_highlight: highlight for newly appearing elements
+
+% === Animation: Instructions on latches + values + callouts ===
+% Slide 1: or fetching, lookup BTB
 \only<1>{
-    \node[inst_label] at (IMem.center) {jcc};
-    \node[inst_label] at (RegFile.center) {or};
+    % Instruction on IF/ID latch
+    \node[inst_label] at (IFID.center) {or};
+    % Stage explanation
+    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
+          at ([yshift=-3mm]BPU.south -| ALU) {
+        \textbf{Fetch:} Looking up IP=4 in I\$ and BTB in parallel
+    };
 }
+
+% Slide 2: jcc fetching, BTB provides prediction
 \only<2>{
-    \node[inst_label, fill=green!40] at (IMem.center) {sub};
-    \node[inst_label] at (RegFile.center) {jcc};
-    \node[inst_label] at (ALU.center) {or};
+    % Instructions on latches
+    \node[inst_label] at (IFID.center) {jcc};
+    % Latch values - predicted target and direction appear
+    \node[draw, fill=green!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=15mm]IFID.center) {50};
+    \node[draw, fill=orange!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=25mm]IFID.center) {taken};
+    \node[draw, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=5mm]IFID.center) {8};
+    % Stage explanation
+    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
+          at ([yshift=-3mm]BPU.south -| ALU) {
+        \textbf{Fetch:} BTB hit! Predicted target=50, direction=taken, next seq=8
+    };
 }
+
+% Slide 3: sub fetching (from predicted path), jcc decoding
 \only<3>{
-    \node[inst_label, fill=green!40] at (IMem.center) {mul};
-    \node[inst_label, fill=green!40] at (RegFile.center) {sub};
-    \node[inst_label] at (ALU.center) {jcc};
-    \node[inst_label] at (DMem.center) {or};
+    % Instructions on latches
+    \node[inst_label] at (IFID.center) {sub};
+    \node[inst_label] at (IDEX.center) {jcc};
+    % Latch values propagating
+    \node[draw, fill=green!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=15mm]IDEX.center) {50};
+    \node[draw, fill=orange!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=25mm]IDEX.center) {taken};
+    \node[draw, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=5mm]IDEX.center) {8};
+    % Stage explanation
+    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
+          at ([yshift=-3mm]BPU.south -| ALU) {
+        \textbf{Decode:} jcc decoded, prediction values propagate through pipeline
+    };
 }
+
+% Slide 4: mul fetching, sub decoding, jcc executing
 \only<4>{
-    \node[inst_label, fill=green!40] at (IMem.center) {add};
-    \node[inst_label, fill=green!40] at (RegFile.center) {mul};
-    \node[inst_label, fill=green!40] at (ALU.center) {sub};
-    \node[inst_label] at (DMem.center) {jcc};
-    \node[font=\scriptsize, fill=green!20, rounded corners, inner sep=3pt] at (VerifyBox.center) {OK};
+    % Instructions on latches
+    \node[inst_label] at (IFID.center) {mul};
+    \node[inst_label] at (IDEX.center) {sub};
+    \node[inst_label] at (EXMEM.center) {jcc};
+    % Latch values - now at EX/MEM for verification
+    \node[draw, fill=green!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=15mm]EXMEM.center) {50};
+    \node[draw, fill=orange!30, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=25mm]EXMEM.center) {taken};
+    \node[draw, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2pt]
+          at ([yshift=5mm]EXMEM.center) {8};
+    % Stage explanation
+    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
+          at ([yshift=-3mm]BPU.south -| ALU) {
+        \textbf{Execute:} jcc executes, actual direction computed $\rightarrow$ verify prediction
+    };
+    % Verification callout
+    \coordinate (CalloutPointer) at ([xshift=0.5cm]DirComp);
+    \node[rectangle callout, draw=myorange!80!black, line width=1pt, fill=myorange!10,
+          rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt,
+          callout absolute pointer=(CalloutPointer), text width=3.5cm]
+          at ([xshift=1cm, yshift=-3cm]VerifyBox.south east) {
+        Verify direction\\
+        Verify target (if taken)
+    };
+}
+
+% Slide 5: add fetching, verification complete (OK)
+\only<5>{
+    % Instructions on latches
+    \node[inst_label] at (IFID.center) {add};
+    \node[inst_label] at (IDEX.center) {mul};
+    \node[inst_label] at (EXMEM.center) {sub};
+    \node[inst_label] at (MEMWB.center) {jcc};
+    % Verification OK
+    \node[font=\scriptsize\bfseries, fill=green!40, rounded corners=3pt, inner sep=4pt, text=green!30!black]
+          at (VerifyBox.center) {OK};
+    % Stage explanation
+    \node[anchor=north, font=\scriptsize, align=center, text width=12cm]
+          at ([yshift=-3mm]BPU.south -| ALU) {
+        \textbf{Memory:} Prediction verified correct! Pipeline continues normally
+    };
 }
 
 \end{circuitikz}
