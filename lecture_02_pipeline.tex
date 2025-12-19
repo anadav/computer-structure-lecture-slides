@@ -1299,250 +1299,8 @@ then stall
     \end{tikzpicture}
 \end{frame}
 
-\begin{frame}[label=control-hazard]{Control Hazard on Branches}
-    \centering
-    \drawPipelineDiagram[0,0.5]
-    
-    \vspace{0.5cm}
-    \begin{center}
-        \texttt{jcc target; if cond then PC $\leftarrow$ target}
-        
-        \vspace{0.2cm}
-        \begin{minipage}{0.8\textwidth}
-            \textcolor{green!70!black}{$\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction}
-            
-            \textcolor{green!70!black}{$\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding}
-        \end{minipage}
-    \end{center}
-\end{frame}
-
-%% Slide: Control Hazard on Branches - With Annotations
-\begin{frame}[label=control-hazard-annotated]{Control Hazard on Branches}
-    \centering
-    \begin{columns}[c]
-        \column{0.1\textwidth}
-        \begin{tabular}{rl}
-            \footnotesize 0 & \footnotesize\ttfamily or\\
-            \footnotesize 4 & \footnotesize\ttfamily jcc 50H\\
-            \footnotesize 8 & \footnotesize\ttfamily and\\
-            \footnotesize 12 & \footnotesize\ttfamily sw\\
-            \footnotesize 16 & \footnotesize\ttfamily sub
-        \end{tabular}
-        
-        \column{0.9\textwidth}
-        \drawPipelineDiagram[0,0.5]
-    \end{columns}
-    
-    % Add annotations specific to this slide
-    \begin{tikzpicture}[remember picture, overlay]
-        % Add blue numbers for PC values
-        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (-6.4,-1.2)$) {8};
-        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (-3.7,1.4)$) {12};
-        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (-1.4,1.4)$) {8};
-        \node[blue, font=\footnotesize\bfseries] at ($(current page.center) + (1.1,1.4)$) {4};
-        
-        % Add instruction labels in latches
-        \node[font=\footnotesize\bfseries] at ($(current page.center) + (-3.05,-0.3)$) {jcc};
-        \node[font=\footnotesize\bfseries] at ($(current page.center) + (-0.7,-0.3)$) {or};
-        
-        % Add orange highlight around certain paths
-        \draw[orange!50, very thick, rounded corners] ($(current page.center) + (-7.0,0.9)$) rectangle ($(current page.center) + (6.4,3.1)$);
-        
-        % Add green highlight for decode stage
-        \draw[green!50, very thick, rounded corners] ($(current page.center) + (-3.7,-1.5)$) rectangle ($(current page.center) + (-1.8,1.3)$);
-        
-        % Add text annotations at bottom
-        \node[font=\footnotesize, align=left] at ($(current page.center) + (0,-3.0)$) {
-            \texttt{jcc target; if cond then PC $\leftarrow$ target}
-        };
-        \node[font=\footnotesize, align=left, text=green!70!black] at ($(current page.center) + (0,-3.5)$) {
-            $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction
-        };
-        \node[font=\footnotesize, align=left, text=green!70!black] at ($(current page.center) + (0,-4.0)$) {
-            $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
-        };
-    \end{tikzpicture}
-\end{frame}
-
-%% Slide: Control Hazard: Stall
-\begin{frame}{Control Hazard: Stall}
-\begin{columns}[T]
-\begin{column}{0.55\textwidth}
-\begin{itemize}
-    \item Stall pipe when branch is encountered until resolved
-    \item Assumptions:
-    \begin{itemize}
-        \item CPI = 1
-        \item 20\% of instructions are branches
-        \item Stall 3 cycles on every branch
-    \end{itemize}
-\end{itemize}
-\end{column}
-\begin{column}{0.42\textwidth}
-\begin{tikzpicture}
-    \node[draw=red!70!black, line width=1.5pt, fill=red!10, rounded corners=4pt,
-          inner sep=10pt, align=center] {
-        $\text{CPI} = 1 + 0.2 \times 3 = \textbf{1.6}$\\[8pt]
-        \textcolor{red!70!black}{\textbf{1.6$\times$ slowdown!}}
-    };
-\end{tikzpicture}
-\end{column}
-\end{columns}
-
-\vspace{0.4cm}
-\centering
-$\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \textit{avg}\left(\dfrac{\text{stall cycles}}{\text{instruction}}\right)$
-\end{frame}
-
-%% Slide: Control Hazard: Predict Not Taken
-\begin{frame}{Control Hazard: Predict Not Taken}
-\begin{columns}[T]
-\begin{column}{0.58\textwidth}
-\begin{itemize}
-    \item Execute instructions from the fall-through path
-    \begin{itemize}
-        \item As if there is no branch
-        \item If not-taken ($\sim$50\%), no penalty
-    \end{itemize}
-    \item If branch actually taken:
-    \begin{itemize}
-        \item Flush before state changes
-        \item Fetch from correct path
-    \end{itemize}
-\end{itemize}
-\end{column}
-\begin{column}{0.38\textwidth}
-\begin{tikzpicture}
-    \node[draw=myorange!70!black, line width=1.5pt, fill=myorange!10, rounded corners=4pt,
-          inner sep=10pt, align=center] {
-        $\text{CPI} = 1 + 0.2 \times 0.5 \times 3$\\[4pt]
-        $= \textbf{1.3}$\\[8pt]
-        \textcolor{myorange!80!black}{\textbf{1.3$\times$ slowdown}}
-    };
-\end{tikzpicture}
-\end{column}
-\end{columns}
-
-\vspace{0.3cm}
-\small
-Assuming 20\% branches, $\sim$50\% taken on average
-\end{frame}
-
-%% Slide: Dynamic Branch Prediction
-\begin{frame}{Dynamic Branch Prediction}
-\begin{columns}[T]
-\begin{column}{0.45\textwidth}
-    \begin{itemize}
-        \item \textbf{Branch Target Buffer} (BTB) that predicts (at fetch)
-        \begin{itemize}
-            \item Instruction is a branch
-            \item Branch taken / not-taken
-            \item Taken branch target
-        \end{itemize}
-        \vspace{0.3cm}
-        \item BTB allocated at execute -- after all branch info is known
-        \item BTB is looked up at instruction fetch
-    \end{itemize}
-\end{column}
-\begin{column}{0.55\textwidth}
-    \centering
-    \btbdiagram
-\end{column}
-\end{columns}
-\end{frame}
-
-
-%% Slide: BTB
-\begin{frame}{BTB}
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textcolor{myblue}{\textbf{(1) Allocation}} -- at Decode/EXE
-\begin{itemize}
-    \item Allocate branches after decode
-    \item Not-taken branches need not be allocated
-    \item BTB miss $\Rightarrow$ predict not-taken
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textcolor{myorange}{\textbf{(3) Update}} -- at EXE
-\begin{itemize}
-    \item Branch target
-    \item Branch history (taken/not-taken)
-\end{itemize}
-\end{column}
-
-\begin{column}{0.48\textwidth}
-\textcolor{mygreen!80!black}{\textbf{(2) Prediction}} -- at Fetch
-\begin{itemize}
-    \item BTB lookup parallel to I\$ lookup
-    \item BTB provides:
-    \begin{itemize}
-        \item Branch indication (BTB hit)
-        \item Predicted target
-        \item Predicted direction
-        \item Branch type (cond./uncond.)
-    \end{itemize}
-\end{itemize}
-\end{column}
-\end{columns}
-\end{frame}
-
-%% Slide: Misprediction
-\begin{frame}{Misprediction}
-\begin{center}
-\begin{tikzpicture}
-    % Wrong prediction box
-    \node[draw=red!70!black, line width=1pt, fill=red!8, rounded corners=3pt,
-          text width=5.5cm, align=left, inner sep=8pt] (wrong) {
-        \textbf{\textcolor{red!70!black}{Wrong Prediction}}\\[3pt]
-        \small
-        \textbullet\ Predict not-taken, actual taken\\
-        \textbullet\ Predict taken, actual not-taken\\
-        \textbullet\ Predict taken, wrong target
-    };
-
-    % Flush box
-    \node[draw=myorange!70!black, line width=1pt, fill=myorange!10, rounded corners=3pt,
-          text width=6.5cm, align=left, inner sep=8pt, right=0.8cm of wrong] (flush) {
-        \textbf{\textcolor{myorange!80!black}{Flush the Pipeline}}\\[3pt]
-        \small
-        \textbullet\ Reset latches (instructions $\rightarrow$ NOPs)\\
-        \textbullet\ Redirect PC to correct path\\
-        \textbullet\ Start fetching from correct path
-    };
-
-    % Arrow
-    \draw[->, thick, red!70!black] (wrong.east) -- (flush.west);
-\end{tikzpicture}
-\end{center}
-
-\vspace{0.2cm}
-
-\begin{columns}[T]
-\begin{column}{0.55\textwidth}
-\textbf{Performance:} With prediction rate $P$:
-\[
-\text{CPI} = 1 + 0.2 \times (1{-}P) \times 3
-\]
-\textbf{Example:} $P = 70\%$ $\Rightarrow$ $\text{CPI} = \textbf{1.18}$
-\end{column}
-\begin{column}{0.42\textwidth}
-\begin{tikzpicture}
-    \node[draw=mygreen!70!black, line width=1.5pt, fill=lightgreen!20, rounded corners=4pt,
-          inner sep=8pt, align=center, font=\footnotesize] {
-        \small\textbf{Slowdown}\\[4pt]
-        Stall: \textcolor{red!70!black}{\textbf{1.6$\times$}}\\
-        Predict NT: \textcolor{myorange!80!black}{\textbf{1.3$\times$}}\\
-        BTB (70\%): \textcolor{mygreen!80!black}{\textbf{1.18$\times$}}
-    };
-\end{tikzpicture}
-\end{column}
-\end{columns}
-\end{frame}
-
 %% Slide: Control Hazard on Branches (based on BTB slide structure but without BTB)
-\begin{frame}{Control Hazard on Branches}
+\begin{frame}<1-4>[label=control-hazard]{Control Hazard on Branches}
 \begin{center}
 \scalebox{0.58}{
 \begin{circuitikz}[
@@ -1752,25 +1510,14 @@ Assuming 20\% branches, $\sim$50\% taken on average
                        minimum height=5mm, text depth=0.5ex},
     latch_nextseq/.style={draw=gray!60!black, line width=1pt, fill=gray!20,
                           rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    latch_offset/.style={draw=cyan!60!black, line width=1pt, fill=cyan!15,
+                          rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    latch_target/.style={draw=green!60!black, line width=1pt, fill=green!25,
+                          rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
     ip_value/.style={font=\small\bfseries, text=blue!70!black},
     stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
                       rounded corners=6pt, font=\small, inner sep=8pt},
 }
-
-% === IP value ===
-\node[ip_value] at ([yshift=-3mm]PC.south) {50};
-
-% === Instructions on latches (showing branch resolved, flush happening) ===
-% Flushed instructions (one step forward from EXE resolution)
-\node[latch_inst_flush] at (Instruction.south) {\sout{sub}};
-\node[latch_inst_flush] at (IDEX.center |- Instruction.south) {\sout{sw}};
-\node[latch_inst_flush] at (EXMEM.center |- Instruction.south) {\sout{and}};
-% jcc at MEM/WB (branch was resolved in previous cycle)
-\node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
-
-% Latch values (20 and 16)
-\node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {20};
-\node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {16};
 
 % Program listing with border (right side, same as BTB slide)
 \node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
@@ -1788,17 +1535,278 @@ Assuming 20\% branches, $\sim$50\% taken on average
 % Coordinate for explanation box at bottom
 \coordinate (StageExplainPos) at ([yshift=-15mm]IMem.south -| RegFile);
 
-% Explanation box (matching original text)
-\node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
-      font=\small, inner sep=8pt, anchor=west, align=left] at (StageExplainPos) {
-    If the \underline{jcc} is resolved as taken at EXE $\Rightarrow$ flush the pipeline:\\
-    Reset the pipe latches, and set PC $\leftarrow$ target
-};
+% === Slide 1: Empty pipeline, explain jcc (PPT slide 30) ===
+\only<1>{
+    \node[anchor=west, align=left, font=\small] at (StageExplainPos) {
+        \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
+        $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction\\
+        $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
+    };
+}
+
+% === Slide 2: PC=8, jcc at IF/ID, or at ID/EX (PPT slide 31) ===
+\only<2>{
+    \node[ip_value] at ([yshift=-3mm]PC.south) {8};
+    % Instructions
+    \node[latch_inst] (jcc2) at (Instruction.south) {jcc};
+    \node[latch_offset, anchor=north] at ([yshift=-1mm]jcc2.south) {42};
+    \node[latch_inst] at (IDEX.center |- Instruction.south) {or};
+    % Values
+    \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {8};
+    \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {4};
+    % Explanation
+    \node[anchor=west, align=left, font=\small] at (StageExplainPos) {
+        \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
+        $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction\\
+        $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
+    };
+}
+
+% === Slide 3: IP=12, jcc at ID/EX, and at IF/ID, or at EX/MEM (PPT slide 32) ===
+\only<3>{
+    \node[ip_value] at ([yshift=-3mm]PC.south) {12};
+    % Instructions
+    \node[latch_inst] at (Instruction.south) {and};
+    \node[latch_inst] (jcc3) at (IDEX.center |- Instruction.south) {jcc};
+    \node[latch_offset, anchor=north] at ([yshift=-1mm]jcc3.south) {42};
+    \node[latch_inst] at (EXMEM.center |- Instruction.south) {or};
+    % Values
+    \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {12};
+    \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {8};
+    \node[latch_target] at ([yshift=5mm]EXMEM.center |- calc_target_exmem) {50};
+    % Explanation
+    \node[anchor=west, font=\small] at (StageExplainPos) {
+        Instructions following the branch get into the pipe
+    };
+}
+
+% === Slide 4: PC=16, jcc at EX/MEM (PPT slide 33) ===
+\only<4>{
+    \node[ip_value] at ([yshift=-3mm]PC.south) {16};
+    % Instructions
+    \node[latch_inst] at (Instruction.south) {sw};
+    \node[latch_inst] at (IDEX.center |- Instruction.south) {and};
+    \node[latch_inst] at (EXMEM.center |- Instruction.south) {jcc};
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
+    % Values
+    \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {16};
+    \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {12};
+    \node[latch_target] at ([yshift=5mm]EXMEM.center |- calc_target_exmem) {50};
+    % Cond value
+    \node[draw=orange!60!black, line width=1pt, fill=orange!25, rounded corners=3pt,
+          font=\small\bfseries, inner sep=3pt] at (EXMEM.center |- exmem_alu_zero) {cond};
+    % Explanation
+    \node[anchor=west, font=\small] at (StageExplainPos) {
+        Instructions following the branch get into the pipe
+    };
+}
+
+% === Slide 5: Flush - PC=50, jcc at MEM/WB, flushed instructions (PPT slide 37) ===
+\only<5>{
+    \node[ip_value] at ([yshift=-3mm]PC.south) {50};
+    % Flushed instructions
+    \node[latch_inst_flush] at (Instruction.south) {\sout{sub}};
+    \node[latch_inst_flush] at (IDEX.center |- Instruction.south) {\sout{sw}};
+    \node[latch_inst_flush] at (EXMEM.center |- Instruction.south) {\sout{and}};
+    % jcc at MEM/WB (branch was resolved in previous cycle)
+    \node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
+    % Latch values (20 and 16)
+    \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {20};
+    \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {16};
+    % Explanation box (matching original text)
+    \node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+          font=\small, inner sep=8pt, anchor=west, align=left] at (StageExplainPos) {
+        If the \underline{jcc} is resolved as taken at EXE $\Rightarrow$ flush the pipeline:\\
+        Reset the pipe latches, and set PC $\leftarrow$ target
+    };
+}
 
 \end{circuitikz}
 }
 \end{center}
 \end{frame}
+
+
+%% Slide: Control Hazard: Stall
+\begin{frame}{Control Hazard: Stall}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{itemize}
+    \item Stall pipe when branch is encountered until resolved
+    \item Assumptions:
+    \begin{itemize}
+        \item CPI = 1
+        \item 20\% of instructions are branches
+        \item Stall 3 cycles on every branch
+    \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{tikzpicture}
+    \node[draw=red!70!black, line width=1.5pt, fill=red!10, rounded corners=4pt,
+          inner sep=10pt, align=center] {
+        $\text{CPI} = 1 + 0.2 \times 3 = \textbf{1.6}$\\[8pt]
+        \textcolor{red!70!black}{\textbf{1.6$\times$ slowdown!}}
+    };
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+\centering
+$\text{CPI}_{\text{new}} = \text{CPI}_{\text{Ideal}} + \textit{avg}\left(\dfrac{\text{stall cycles}}{\text{instruction}}\right)$
+\end{frame}
+
+%% Slide: Control Hazard: Predict Not Taken
+\begin{frame}{Control Hazard: Predict Not Taken}
+\begin{columns}[T]
+\begin{column}{0.58\textwidth}
+\begin{itemize}
+    \item Execute instructions from the fall-through path
+    \begin{itemize}
+        \item As if there is no branch
+        \item If not-taken ($\sim$50\%), no penalty
+    \end{itemize}
+    \item If branch actually taken:
+    \begin{itemize}
+        \item Flush before state changes
+        \item Fetch from correct path
+    \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.38\textwidth}
+\begin{tikzpicture}
+    \node[draw=myorange!70!black, line width=1.5pt, fill=myorange!10, rounded corners=4pt,
+          inner sep=10pt, align=center] {
+        $\text{CPI} = 1 + 0.2 \times 0.5 \times 3$\\[4pt]
+        $= \textbf{1.3}$\\[8pt]
+        \textcolor{myorange!80!black}{\textbf{1.3$\times$ slowdown}}
+    };
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+\small
+Assuming 20\% branches, $\sim$50\% taken on average
+\end{frame}
+
+%% Show overlay 5 (flush scenario - PPT slide 37) of Control Hazard on Branches
+\againframe<5>{control-hazard}
+
+%% Slide: Dynamic Branch Prediction
+\begin{frame}{Dynamic Branch Prediction}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+    \begin{itemize}
+        \item \textbf{Branch Target Buffer} (BTB) that predicts (at fetch)
+        \begin{itemize}
+            \item Instruction is a branch
+            \item Branch taken / not-taken
+            \item Taken branch target
+        \end{itemize}
+        \vspace{0.3cm}
+        \item BTB allocated at execute -- after all branch info is known
+        \item BTB is looked up at instruction fetch
+    \end{itemize}
+\end{column}
+\begin{column}{0.55\textwidth}
+    \centering
+    \btbdiagram
+\end{column}
+\end{columns}
+\end{frame}
+
+
+%% Slide: BTB
+\begin{frame}{BTB}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textcolor{myblue}{\textbf{(1) Allocation}} -- at Decode/EXE
+\begin{itemize}
+    \item Allocate branches after decode
+    \item Not-taken branches need not be allocated
+    \item BTB miss $\Rightarrow$ predict not-taken
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textcolor{myorange}{\textbf{(3) Update}} -- at EXE
+\begin{itemize}
+    \item Branch target
+    \item Branch history (taken/not-taken)
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textcolor{mygreen!80!black}{\textbf{(2) Prediction}} -- at Fetch
+\begin{itemize}
+    \item BTB lookup parallel to I\$ lookup
+    \item BTB provides:
+    \begin{itemize}
+        \item Branch indication (BTB hit)
+        \item Predicted target
+        \item Predicted direction
+        \item Branch type (cond./uncond.)
+    \end{itemize}
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Misprediction
+\begin{frame}{Misprediction}
+\begin{center}
+\begin{tikzpicture}
+    % Wrong prediction box
+    \node[draw=red!70!black, line width=1pt, fill=red!8, rounded corners=3pt,
+          text width=5.5cm, align=left, inner sep=8pt] (wrong) {
+        \textbf{\textcolor{red!70!black}{Wrong Prediction}}\\[3pt]
+        \small
+        \textbullet\ Predict not-taken, actual taken\\
+        \textbullet\ Predict taken, actual not-taken\\
+        \textbullet\ Predict taken, wrong target
+    };
+
+    % Flush box
+    \node[draw=myorange!70!black, line width=1pt, fill=myorange!10, rounded corners=3pt,
+          text width=6.5cm, align=left, inner sep=8pt, right=0.8cm of wrong] (flush) {
+        \textbf{\textcolor{myorange!80!black}{Flush the Pipeline}}\\[3pt]
+        \small
+        \textbullet\ Reset latches (instructions $\rightarrow$ NOPs)\\
+        \textbullet\ Redirect PC to correct path\\
+        \textbullet\ Start fetching from correct path
+    };
+
+    % Arrow
+    \draw[->, thick, red!70!black] (wrong.east) -- (flush.west);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{Performance:} With prediction rate $P$:
+\[
+\text{CPI} = 1 + 0.2 \times (1{-}P) \times 3
+\]
+\textbf{Example:} $P = 70\%$ $\Rightarrow$ $\text{CPI} = \textbf{1.18}$
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{tikzpicture}
+    \node[draw=mygreen!70!black, line width=1.5pt, fill=lightgreen!20, rounded corners=4pt,
+          inner sep=8pt, align=center, font=\footnotesize] {
+        \small\textbf{Slowdown}\\[4pt]
+        Stall: \textcolor{red!70!black}{\textbf{1.6$\times$}}\\
+        Predict NT: \textcolor{myorange!80!black}{\textbf{1.3$\times$}}\\
+        BTB (70\%): \textcolor{mygreen!80!black}{\textbf{1.18$\times$}}
+    };
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
 
 %% Slide: Adding a BTB to the Pipeline (based on lecture_06 style)
 \begin{frame}{Adding a BTB to the Pipeline}
