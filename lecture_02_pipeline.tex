@@ -1580,7 +1580,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
 \node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
 \node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
-\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=13mm]IMem.north west) {};
+\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=17mm]IMem.north west) {};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
 % Pipeline register IF/ID
@@ -1723,18 +1723,11 @@ Assuming 20\% branches, $\sim$50\% taken on average
 
 % === Branch target path (from calc target back to PC mux) - highlighted ===
 \coordinate (calc_target_mem_out) at (calc_target_exmem -| EXMEM.east);
-\draw[arrow, blue!70!black, line width=1.5pt] (calc_target_mem_out) -- ++(3mm,0) |- ([yshift=5mm]PCSrcMux.north) -| (PCSrcMux.rpin 1);
+\draw[arrow, blue!70!black, line width=1.5pt] (calc_target_mem_out) -- ++(0.5,0) |- (PCSrcMux.rpin 1);
 
 % === Zero (branch taken) signal to mux select ===
 \coordinate (zero_mem_out) at (exmem_alu_zero -| EXMEM.east);
-\draw[arrow, orange!70!black, line width=1.5pt] (zero_mem_out) -- ++(6mm,0) |- ([yshift=8mm]PCSrcMux.north) -- (PCSrcMux.tpin 1);
-
-% === Flush signal from EX stage ===
-\coordinate (flush_line_y) at ([yshift=20mm]EXMEM.north);
-\draw[repair_path, line width=1.5pt] (EXMEM.north) -- (flush_line_y) node[pos=0.7, repair_label, right] {flush} -| (IDEX.north);
-\node[data_connector, fill=red!70!black] at (flush_line_y -| IDEX.north) {};
-\draw[repair_path, line width=1.5pt] (flush_line_y -| IDEX.north) -- ++(0,0) -| (IFID.north);
-\node[data_connector, fill=red!70!black] at (flush_line_y -| IFID.north) {};
+\draw[arrow, orange!70!black, line width=1.5pt] (zero_mem_out) -- ++(6mm,0) |- ([yshift=5mm]PCSrcMux.north) -- (PCSrcMux.tpin 1);
 
 % Register File labels
 \node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {read\\reg 1};
@@ -1768,46 +1761,39 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \node[ip_value] at ([yshift=-3mm]PC.south) {50};
 
 % === Instructions on latches (showing branch resolved, flush happening) ===
-% Flushed instructions
+% Flushed instructions (one step forward from EXE resolution)
 \node[latch_inst_flush] at (Instruction.south) {\sout{sub}};
-\node[latch_inst_flush] at (IDEX.center |- Instruction.south) {\sout{and}};
-% jcc at EX/MEM (just resolved)
-\node[latch_inst, draw=red!70!black, line width=2pt, fill=yellow!30] at (EXMEM.center |- Instruction.south) {jcc};
-% or at MEM/WB
-\node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
+\node[latch_inst_flush] at (IDEX.center |- Instruction.south) {\sout{sw}};
+\node[latch_inst_flush] at (EXMEM.center |- Instruction.south) {\sout{and}};
+% jcc at MEM/WB (branch was resolved in previous cycle)
+\node[latch_inst] at (MEMWB.center |- Instruction.south) {jcc};
 
-% Latch values (next seq addresses)
+% Latch values (20 and 16)
+\node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {20};
 \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {16};
-\node[latch_nextseq] at ([yshift=10mm]EXMEM.center |- execute_in_next_seq) {12};
 
-% Program listing with border (same position as BTB slide)
+% Program listing with border (right side, same as BTB slide)
 \node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
       anchor=north west, font=\small\ttfamily, align=left]
       (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
     \begin{tabular}{rl}
     0: & or \\
     4: & jcc 50 \\
-    8: & \textcolor{red}{\sout{and}} \\
-    12: & \textcolor{red}{\sout{sub}} \\
-    \multicolumn{2}{c}{...} \\
-    50: & mul \\
-    54: & add \\
+    8: & and \\
+    12: & sw \\
+    16: & sub \\
     \end{tabular}
 };
 
-% Coordinate for stage explanation box at bottom (same as BTB slide)
+% Coordinate for explanation box at bottom
 \coordinate (StageExplainPos) at ([yshift=-15mm]IMem.south -| RegFile);
 
-% Explanation box
-\node[draw=red!50!black, line width=1.5pt, fill=red!10, rounded corners=6pt,
-      font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
-    \textcolor{red!60!black}{\textbf{Control Hazard:}} Branch resolved at Execute $\Rightarrow$ flush IF/ID and ID/EX, set IP $\leftarrow$ target (50)
+% Explanation box (matching original text)
+\node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+      font=\small, inner sep=8pt, anchor=west, align=left] at (StageExplainPos) {
+    If the \underline{jcc} is resolved as taken at EXE $\Rightarrow$ flush the pipeline:\\
+    Reset the pipe latches, and set PC $\leftarrow$ target
 };
-
-% Flush indicator at top
-\node[draw=red!70!black, line width=2pt, fill=red!20, rounded corners=5pt,
-      font=\normalsize\bfseries, inner sep=6pt, text=red!70!black]
-      at ([yshift=5mm]flush_line_y -| IDEX) {FLUSH};
 
 \end{circuitikz}
 }
@@ -2139,19 +2125,12 @@ Assuming 20\% branches, $\sim$50\% taken on average
     };
 }
 \only<4>{
-    % Direction comparator callout (lower)
-    \node[rectangle callout, draw=orange!70!black, line width=1pt, fill=orange!10,
-          rounded corners=3pt, font=\scriptsize, inner sep=4pt,
-          callout absolute pointer={(DirComp.east)}]
-          at ([xshift=2cm, yshift=-3mm]DirComp.east) {
-        Verify direction
-    };
-    % Target comparator callout (upper)
-    \node[rectangle callout, draw=green!60!black, line width=1pt, fill=green!10,
-          rounded corners=3pt, font=\scriptsize, inner sep=4pt,
-          callout absolute pointer={(TargetComp.east)}]
-          at ([xshift=2cm, yshift=3mm]TargetComp.east) {
-        Verify target
+    % Combined verify callout pointing to verification box
+    \node[rectangle callout, draw=purple!70!black, line width=1pt, fill=purple!10,
+          rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt,
+          callout absolute pointer={(VerifyBox.east)}]
+          at ([xshift=2.5cm]VerifyBox.east) {
+        Verify direction \& target
     };
 }
 
@@ -2273,20 +2252,12 @@ Assuming 20\% branches, $\sim$50\% taken on average
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{green!50!black}{\textbf{Execute:}} jcc executes $\rightarrow$ verify prediction at Memory
     };
-    % Verification callouts - separate for each comparator
-    % Direction comparator (lower)
-    \node[rectangle callout, draw=orange!70!black, line width=1.5pt, fill=orange!10,
-          rounded corners=4pt, font=\small, inner sep=5pt,
-          callout absolute pointer={(DirComp.east)}]
-          at ([xshift=2.5cm, yshift=-5mm]DirComp.east) {
-        \textbf{Verify direction}
-    };
-    % Target comparator (upper)
-    \node[rectangle callout, draw=green!60!black, line width=1.5pt, fill=green!10,
-          rounded corners=4pt, font=\small, inner sep=5pt,
-          callout absolute pointer={(TargetComp.east)}]
-          at ([xshift=2.5cm, yshift=5mm]TargetComp.east) {
-        \textbf{Verify target}
+    % Combined verify callout pointing to verification box
+    \node[rectangle callout, draw=purple!70!black, line width=1.5pt, fill=purple!10,
+          rounded corners=4pt, font=\small, align=left, inner sep=5pt,
+          callout absolute pointer={(VerifyBox.east)}]
+          at ([xshift=2.5cm]VerifyBox.east) {
+        \textbf{Verify direction \& target}
     };
     % Mux callout explaining its role
     \node[rectangle callout, draw=blue!60!black, line width=1.5pt, fill=blue!10,
@@ -2711,8 +2682,8 @@ Assuming 20\% branches, $\sim$50\% taken on average
     % IP value - being repaired to 8
     \node[ip_value, text=red!70!black] at ([yshift=-3mm]PC.south) {$\rightarrow$8};
     % Instructions - mul/sub being flushed - using -| for consistent y-level
-    \node[latch_inst_flush] at (Instruction.south) {mul};
-    \node[latch_inst_flush] at (IDEX.center |- Instruction.south) {sub};
+    \node[latch_inst_flush] at (Instruction.south) {\sout{mul}};
+    \node[latch_inst_flush] at (IDEX.center |- Instruction.south) {\sout{sub}};
     \node[latch_inst_highlight] at (EXMEM.center |- Instruction.south) {jcc};
     \node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
     % Mismatch indicator
@@ -2722,8 +2693,8 @@ Assuming 20\% branches, $\sim$50\% taken on average
     % Callout: Repair IP
     \node[rectangle callout, draw=red!80!black, line width=1.5pt, fill=yellow!20,
           rounded corners=4pt, font=\small, align=center, inner sep=6pt,
-          callout absolute pointer={(RepairMux.south)}, text width=3.5cm]
-          at ([yshift=-1.5cm]RepairMux.south) {
+          callout absolute pointer={(RepairMux.north)}, text width=3.5cm]
+          at ([yshift=1.5cm,xshift=4cm]RepairMux.south) {
         \textbf{Repair IP} $\leftarrow$ 8\\(fall-through address)
     };
     % Stage explanation
