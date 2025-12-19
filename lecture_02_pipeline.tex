@@ -11,6 +11,7 @@
 \usepackage[american]{circuitikz}
 \usepackage{listings}
 \usepackage{tcolorbox}
+\usepackage[normalem]{ulem} % for strikethrough (\sout)
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, backgrounds, matrix, shapes.callouts, fit, shapes.gates.logic.US}
 \usetheme{Madrid}
 
@@ -1538,6 +1539,279 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \end{tikzpicture}
 \end{column}
 \end{columns}
+\end{frame}
+
+%% Slide: Control Hazard on Branches (based on BTB slide structure but without BTB)
+\begin{frame}{Control Hazard on Branches}
+\begin{center}
+\scalebox{0.58}{
+\begin{circuitikz}[
+    % Component styles matching BTB slide exactly
+    component/.style={draw, thick, minimum height=0.8cm},
+    pipeline_reg/.style={draw, thick, fill=gray!20, minimum width=6mm, minimum height=5.8cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
+    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                    external pins width=0, fill=cyan!20, align=center},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NB=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, fill=green!20, font=\scriptsize},
+    adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+                     external pins width=0, fill=cyan!20, font=\scriptsize},
+    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NB=1, w=0.8},
+                 external pins width=0, fill=cyan!20},
+    pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
+                 external pins width=0, fill=cyan!20},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, black},
+    repair_path/.style={arrow, red!70!black},
+    line_label/.style={above, inner sep=1pt, font=\footnotesize},
+    next_seq_label/.style={line_label, midway},
+    repair_label/.style={line_label, text=red!70!black},
+    lpin_label/.style={align=left, anchor=west, font=\tiny},
+    rpin_label/.style={align=right, anchor=east, font=\tiny},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+    inst_label/.style={draw, fill=orange!40, rounded corners=2pt, font=\scriptsize\ttfamily, inner sep=2pt},
+    node distance=5mm and 5mm,
+]
+
+% IF Stage Components (same positioning as BTB slide)
+\node[component, fill=yellow!30, minimum width=0.8cm] (PC) {IP};
+\node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
+\node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
+\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=13mm]IMem.north west) {};
+\node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
+
+% Pipeline register IF/ID
+\node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
+\node[data_latch, minimum height=2cm] (Instruction) at (IMem.rpin 2 -| IFID) {\rotatebox{90}{Instruction}};
+
+% ID Stage Components
+\node[regfile, right=15mm of IFID] (RegFile) {\rotatebox{90}{Register File}};
+
+% Sign Extend unit
+\node[ellipse, draw, thick, fill=cyan!20, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
+      font=\tiny, below=2mm of RegFile.south] (SignExt) {\rotatebox{90}{SignExt}};
+
+% Pipeline register ID/EX
+\node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
+
+% EX Stage Components - ALU and MUX for immediate selection
+\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=2cm]RegFile.brpin 1 -| IDEX.east) {};
+\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-4mm]ALU.lpin 2) {};
+\node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
+
+% Target calculation adder
+\node[adder, anchor=lpin 1] (TargetAdder) at ([xshift=-5mm]ALU.west |- PCadder.rpin 1) {+};
+
+% Pipeline register EX/MEM
+\node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
+
+% MEM Stage Components
+\node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
+      external pins width=0, align=center, text depth=6.5ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
+
+% Pipeline register MEM/WB
+\node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
+
+% WB Stage
+\node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 5) (WBMux) {};
+
+% Stage labels (same positioning as BTB slide - relative to IMem.north)
+\node[stage_label] (IF_label) at ([yshift=37mm]IMem.north) {Fetch};
+\node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
+\node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
+\node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
+\node[stage_label] (WB_label) at (IF_label -| WBMux) {WB};
+
+% === Routing coordinates for pipeline signal propagation ===
+% Next sequential address coordinates
+\coordinate (fetch_out_next_seq) at (PCadder.brpin 1 -| IFID.west);
+\coordinate (decode_in_next_seq) at (IFID.east |- fetch_out_next_seq);
+\coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
+\coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
+
+% Target register coordinates
+\coordinate (decode_out_target_reg) at ([yshift=-2mm]IDEX.west |- SignExt.south);
+\coordinate (execute_in_target_reg) at (decode_out_target_reg -| IDEX.east);
+\coordinate (execute_out_target_reg) at (decode_out_target_reg -| EXMEM.west);
+\coordinate (mem_in_target_reg) at (decode_out_target_reg -| EXMEM.east);
+\coordinate (mem_out_target_reg) at (decode_out_target_reg -| MEMWB.west);
+\coordinate (wb_in_target_reg) at (decode_out_target_reg -| MEMWB.east);
+
+% === Data paths (same as BTB slide) ===
+% MUX output to PC
+\coordinate (IP_west_conn) at ([xshift=-5mm]PC.west);
+\draw[data_path] (PCSrcMux.lpin 1) -| (IP_west_conn) -- (PC.west);
+\draw[data_path] (PC.east) -- (IMem.blpin 2);
+
+% PC to adder
+\node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
+\draw[data_path] (PC_conn) |- (PCadder.blpin 1);
+\draw[data_path] (four.east) -- (PCadder.blpin 2);
+
+% === Next sequential address ===
+\draw[data_path] (PCadder.brpin 1) -- ++(4mm,0) node[data_connector] (NextSeqConn) {} -- ++(0.1,0) |- (fetch_out_next_seq);
+\draw[data_path] (NextSeqConn) |- (PCSrcMux.rpin 2);
+\draw[data_path] (decode_in_next_seq) -- node[next_seq_label] {next sequential address} (decode_out_next_seq);
+\draw[data_path] (execute_in_next_seq) |- (TargetAdder.lpin 1);
+
+% IMem to IF/ID
+\draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
+
+% IF/ID to RegFile
+\draw[data_path] (IFID.east |- RegFile.lpin 1) -- (RegFile.blpin 1);
+\draw[data_path] (IFID.east |- RegFile.lpin 2) -- (RegFile.blpin 2);
+
+% RegFile to ID/EX
+\draw[data_path] (RegFile.brpin 1) -- (IDEX.west |- RegFile.brpin 1);
+\draw[data_path] (RegFile.brpin 2) -- (IDEX.west |- RegFile.brpin 2);
+
+% IF/ID to Sign Extend
+\draw[data_path] (IFID.east |- SignExt) -- (SignExt.west);
+% Sign Extend to ID/EX
+\draw[data_path] (SignExt.east) -- (IDEX.west |- SignExt);
+
+% ID/EX to ALU (top input direct, bottom through MUX)
+\draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
+\coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+\draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
+\draw[data_path] (EXMEM.east |- DMem.lpin 10) -- (DMem.lpin 10);
+\draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
+
+% SignExt through ID/EX to ALUMux and Target Adder
+\coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
+\draw[data_path] (SignExt -| IDEX.east) -| (ImmJunction) -- (ALUMux.lpin 2);
+\node[data_connector] at (ImmJunction) {};
+\draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
+
+% Target Adder to EX/MEM buffer
+\coordinate (calc_target_exmem) at (TargetAdder.brpin 1 -| EXMEM.west);
+\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_exmem);
+
+% ALU outputs to EX/MEM buffer
+\coordinate (exmem_alu_zero) at (ALU.brpin 2 -| EXMEM.west);
+\coordinate (exmem_alu_result) at (ALU.brpin 4 -| EXMEM.west);
+\draw[arrow, orange!70!black] (ALU.brpin 2) -- node[midway, line_label, text=orange!70!black] {zero} (exmem_alu_zero);
+\draw[data_path] (ALU.brpin 4) -- node[midway, line_label] {result} (exmem_alu_result);
+
+% EX/MEM to DMem (addr)
+\draw[data_path] (EXMEM.east |- DMem.lpin 5) -- (DMem.lpin 5);
+
+% DMem to MEM/WB (read data)
+\draw[data_path] (DMem.rpin 5) -- (MEMWB.west |- DMem.rpin 5);
+
+% Instruction propagation through pipeline
+\draw[data_path] ([yshift=8mm]Instruction.south east) -- ++(0.5,0) |- (decode_out_target_reg);
+\draw[data_path] (execute_in_target_reg) -- (execute_out_target_reg);
+\draw[data_path] (mem_in_target_reg) -- (mem_out_target_reg);
+\draw[data_path] (wb_in_target_reg) -- ++(0.5,0) |- ([yshift=-5mm,xshift=-6mm]RegFile.west |- IDEX.south) |- (RegFile.blpin 3);
+
+% MEM/WB to WB Mux
+\draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
+
+% Address path from DMem to WB Mux
+\coordinate (AddrWB) at ([yshift=-3mm]DMem.south -| MEMWB.west);
+\node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.lpin 5) {};
+\draw[data_path] (AddrConn) |- (AddrWB);
+\draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
+
+% WB Mux output to Register File write data
+\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([xshift=-4mm,yshift=-8mm]IDEX.south -| RegFile.lpin 4) |- (RegFile.blpin 4);
+
+% === Branch target path (from calc target back to PC mux) - highlighted ===
+\coordinate (calc_target_mem_out) at (calc_target_exmem -| EXMEM.east);
+\draw[arrow, blue!70!black, line width=1.5pt] (calc_target_mem_out) -- ++(3mm,0) |- ([yshift=5mm]PCSrcMux.north) -| (PCSrcMux.rpin 1);
+
+% === Zero (branch taken) signal to mux select ===
+\coordinate (zero_mem_out) at (exmem_alu_zero -| EXMEM.east);
+\draw[arrow, orange!70!black, line width=1.5pt] (zero_mem_out) -- ++(6mm,0) |- ([yshift=8mm]PCSrcMux.north) -- (PCSrcMux.tpin 1);
+
+% === Flush signal from EX stage ===
+\coordinate (flush_line_y) at ([yshift=20mm]EXMEM.north);
+\draw[repair_path, line width=1.5pt] (EXMEM.north) -- (flush_line_y) node[pos=0.7, repair_label, right] {flush} -| (IDEX.north);
+\node[data_connector, fill=red!70!black] at (flush_line_y -| IDEX.north) {};
+\draw[repair_path, line width=1.5pt] (flush_line_y -| IDEX.north) -- ++(0,0) -| (IFID.north);
+\node[data_connector, fill=red!70!black] at (flush_line_y -| IFID.north) {};
+
+% Register File labels
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {read\\reg 1};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {read\\reg 2};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {write\\reg};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {write\\data};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 1) {read\\data 1};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {read\\data 2};
+
+% Data Cache labels
+\node[align=left, font=\tiny] at ([xshift=3mm,yshift=-1mm]DMem.lpin 5) {addr};
+\node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {write\\data};
+\node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {read\\data};
+
+% === Styles for instructions and values ===
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
+    latch_inst_flush/.style={draw=red!70!black, line width=2pt, fill=red!30,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
+    latch_nextseq/.style={draw=gray!60!black, line width=1pt, fill=gray!20,
+                          rounded corners=3pt, font=\small\bfseries, inner sep=3pt},
+    ip_value/.style={font=\small\bfseries, text=blue!70!black},
+    stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
+                      rounded corners=6pt, font=\small, inner sep=8pt},
+}
+
+% === IP value ===
+\node[ip_value] at ([yshift=-3mm]PC.south) {50};
+
+% === Instructions on latches (showing branch resolved, flush happening) ===
+% Flushed instructions
+\node[latch_inst_flush] at (Instruction.south) {\sout{sub}};
+\node[latch_inst_flush] at (IDEX.center |- Instruction.south) {\sout{and}};
+% jcc at EX/MEM (just resolved)
+\node[latch_inst, draw=red!70!black, line width=2pt, fill=yellow!30] at (EXMEM.center |- Instruction.south) {jcc};
+% or at MEM/WB
+\node[latch_inst] at (MEMWB.center |- Instruction.south) {or};
+
+% Latch values (next seq addresses)
+\node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {16};
+\node[latch_nextseq] at ([yshift=10mm]EXMEM.center |- execute_in_next_seq) {12};
+
+% Program listing with border (same position as BTB slide)
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
+    \begin{tabular}{rl}
+    0: & or \\
+    4: & jcc 50 \\
+    8: & \textcolor{red}{\sout{and}} \\
+    12: & \textcolor{red}{\sout{sub}} \\
+    \multicolumn{2}{c}{...} \\
+    50: & mul \\
+    54: & add \\
+    \end{tabular}
+};
+
+% Coordinate for stage explanation box at bottom (same as BTB slide)
+\coordinate (StageExplainPos) at ([yshift=-15mm]IMem.south -| RegFile);
+
+% Explanation box
+\node[draw=red!50!black, line width=1.5pt, fill=red!10, rounded corners=6pt,
+      font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
+    \textcolor{red!60!black}{\textbf{Control Hazard:}} Branch resolved at Execute $\Rightarrow$ flush IF/ID and ID/EX, set IP $\leftarrow$ target (50)
+};
+
+% Flush indicator at top
+\node[draw=red!70!black, line width=2pt, fill=red!20, rounded corners=5pt,
+      font=\normalsize\bfseries, inner sep=6pt, text=red!70!black]
+      at ([yshift=5mm]flush_line_y -| IDEX) {FLUSH};
+
+\end{circuitikz}
+}
+\end{center}
 \end{frame}
 
 %% Slide: Adding a BTB to the Pipeline (based on lecture_06 style)
