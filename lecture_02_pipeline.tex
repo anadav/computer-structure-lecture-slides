@@ -1532,12 +1532,18 @@ then stall
     \end{tabular}
 };
 
-% Coordinate for explanation box at bottom
-\coordinate (StageExplainPos) at ([yshift=-15mm]IMem.south -| RegFile);
+% Coordinate for explanation box at bottom of page
+\coordinate (StageExplainPos) at ([yshift=-38mm]IMem.south -| RegFile);
+
+% Style for consistent explanation box
+\tikzset{
+    explain_box/.style={draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+                        font=\small, inner sep=8pt, anchor=west, align=left},
+}
 
 % === Slide 1: Empty pipeline, explain jcc (PPT slide 30) ===
 \only<1>{
-    \node[anchor=west, align=left, font=\small] at (StageExplainPos) {
+    \node[explain_box] at (StageExplainPos) {
         \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
         $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction\\
         $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
@@ -1555,7 +1561,7 @@ then stall
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {8};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {4};
     % Explanation
-    \node[anchor=west, align=left, font=\small] at (StageExplainPos) {
+    \node[explain_box] at (StageExplainPos) {
         \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
         $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction\\
         $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
@@ -1573,9 +1579,9 @@ then stall
     % Values
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {12};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {8};
-    \node[latch_target] at ([yshift=5mm]EXMEM.center |- calc_target_exmem) {50};
+    \node[latch_target] at ([xshift=-2mm]calc_target_exmem) {50};
     % Explanation
-    \node[anchor=west, font=\small] at (StageExplainPos) {
+    \node[explain_box] at (StageExplainPos) {
         Instructions following the branch get into the pipe
     };
 }
@@ -1591,12 +1597,12 @@ then stall
     % Values
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {16};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {12};
-    \node[latch_target] at ([yshift=5mm]EXMEM.center |- calc_target_exmem) {50};
+    \node[latch_target] at ([xshift=-2mm]calc_target_exmem) {50};
     % Cond value
     \node[draw=orange!60!black, line width=1pt, fill=orange!25, rounded corners=3pt,
           font=\small\bfseries, inner sep=3pt] at (EXMEM.center |- exmem_alu_zero) {cond};
     % Explanation
-    \node[anchor=west, font=\small] at (StageExplainPos) {
+    \node[explain_box] at (StageExplainPos) {
         Instructions following the branch get into the pipe
     };
 }
@@ -1613,9 +1619,8 @@ then stall
     % Latch values (20 and 16)
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {20};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {16};
-    % Explanation box (matching original text)
-    \node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
-          font=\small, inner sep=8pt, anchor=west, align=left] at (StageExplainPos) {
+    % Explanation box
+    \node[explain_box] at (StageExplainPos) {
         If the \underline{jcc} is resolved as taken at EXE $\Rightarrow$ flush the pipeline:\\
         Reset the pipe latches, and set PC $\leftarrow$ target
     };

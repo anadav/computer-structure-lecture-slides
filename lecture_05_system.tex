@@ -11,7 +11,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix}
 \usepackage{circuitikz}
 \usepackage{tikz-timing}
 \usepackage{tcolorbox}
@@ -964,46 +964,56 @@ False sharing across sockets = 10x slower
 
 \column{0.55\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
+\begin{tikzpicture}[scale=0.8,
+    numanode/.style={draw, thick, minimum width=2.6cm, minimum height=2.8cm, rounded corners=2pt},
+    coreblue/.style={draw, fill=blue!30, minimum width=0.35cm, minimum height=0.25cm},
+    coregreen/.style={draw, fill=green!30, minimum width=0.35cm, minimum height=0.25cm},
+    ramblock/.style={draw, fill=gray!30, minimum width=2.2cm, minimum height=0.8cm}
+]
 % NUMA Node 0
-\draw[thick, fill=blue!10] (0,0) rectangle (3,3);
-\node at (1.5, 2.7) {\small \textbf{NUMA Node 0}};
-\foreach \x in {0.3,0.9,1.5,2.1} {
-    \foreach \y in {1.8,2.3} {
-        \draw[fill=blue!30] (\x,\y) rectangle (\x+0.4,\y+0.3);
-    }
+\node[numanode, fill=blue!10] (node0) at (0,0) {};
+\node[anchor=north, font=\small\bfseries] at (node0.north) {NUMA Node 0};
+
+% Cores for Node 0
+\foreach \i in {-0.7,-0.35,0,0.35} {
+    \node[coreblue] at (\i, 0.5) {};
+    \node[coreblue] at (\i, 0.15) {};
 }
-\node at (1.5, 2.05) {\tiny 8 cores};
-\draw[fill=gray!30] (0.3,0.3) rectangle (2.7,1.3);
-\node at (1.5,0.8) {32GB RAM};
+\node[font=\tiny] at (0, -0.1) {8 cores};
+
+% RAM for Node 0
+\node[ramblock] (ram0) at (0, -0.85) {};
+\node[font=\scriptsize] at (ram0.center) {32GB RAM};
 
 % NUMA Node 1
-\draw[thick, fill=green!10] (4,0) rectangle (7,3);
-\node at (5.5, 2.7) {\small \textbf{NUMA Node 1}};
-\foreach \x in {4.3,4.9,5.5,6.1} {
-    \foreach \y in {1.8,2.3} {
-        \draw[fill=green!30] (\x,\y) rectangle (\x+0.4,\y+0.3);
-    }
+\node[numanode, fill=green!10, right=0.8cm of node0] (node1) {};
+\node[anchor=north, font=\small\bfseries] at (node1.north) {NUMA Node 1};
+
+% Cores for Node 1
+\foreach \i in {-0.7,-0.35,0,0.35} {
+    \node[coregreen] at ([xshift=\i cm]node1.center |- 0,0.5) {};
+    \node[coregreen] at ([xshift=\i cm]node1.center |- 0,0.15) {};
 }
-\node at (5.5, 2.05) {\tiny 8 cores};
-\draw[fill=gray!30] (4.3,0.3) rectangle (6.7,1.3);
-\node at (5.5,0.8) {32GB RAM};
+\node[font=\tiny] at (node1.center |- 0,-0.1) {8 cores};
+
+% RAM for Node 1
+\node[ramblock] (ram1) at (node1.center |- 0,-0.85) {};
+\node[font=\scriptsize] at (ram1.center) {32GB RAM};
 
 % Interconnect
-\draw[<->, ultra thick, red] (3,1.5) -- node[above] {\small QPI/UPI} node[below] {\tiny 25.6 GB/s} (4,1.5);
+\draw[<->, ultra thick, red] (node0.east) -- node[above, font=\small] {QPI/UPI} node[below, font=\tiny] {25.6 GB/s} (node1.west);
 
-% Distance matrix
-\node at (3.5, -0.8) {\small \textbf{NUMA Distance Matrix:}};
-\node at (2.5, -1.3) {\tiny node};
-\node at (3.5, -1.3) {\tiny 0};
-\node at (4.5, -1.3) {\tiny 1};
-\node at (2.5, -1.7) {\tiny 0};
-\node at (3.5, -1.7) {\tiny \textbf{10}};
-\node at (4.5, -1.7) {\tiny 21};
-\node at (2.5, -2.1) {\tiny 1};
-\node at (3.5, -2.1) {\tiny 21};
-\node at (4.5, -2.1) {\tiny \textbf{10}};
+% Distance matrix label - positioned below nodes
+\node[font=\small\bfseries, anchor=north] at ([yshift=-0.3cm]$(node0.south)!0.5!(node1.south)$) {NUMA Distance Matrix:};
 \end{tikzpicture}
+
+\vspace{-0.2cm}
+\begin{tabular}{r|cc}
+\scriptsize node & \scriptsize 0 & \scriptsize 1 \\
+\hline
+\scriptsize 0 & \scriptsize \textbf{10} & \scriptsize 21 \\
+\scriptsize 1 & \scriptsize 21 & \scriptsize \textbf{10} \\
+\end{tabular}
 \end{center}
 \end{columns}
 \end{frame}
@@ -1012,64 +1022,64 @@ False sharing across sockets = 10x slower
 \begin{frame}{Interconnect Topologies}
 \begin{center}
 \begin{tikzpicture}[scale=0.65,
-    cpu/.style={draw, circle, fill=blue!30, minimum size=0.8cm},
+    cpu/.style={draw, circle, minimum size=0.5cm, inner sep=1pt, font=\tiny},
     mem/.style={draw, rectangle, fill=gray!30, minimum width=0.6cm, minimum height=0.4cm}
 ]
 
 % Ring (Intel)
 \begin{scope}[shift={(0,0)}]
-\node at (0, 1.5) {\textbf{Ring (Intel Sandy Bridge+)}};
+\node at (0, 1.8) {\textbf{Ring (Intel Sandy Bridge+)}};
 \foreach \i in {0,1,2,3} {
-    \node[cpu] (c\i) at ({90-\i*90}:1) {\tiny C\i};
+    \node[cpu, fill=blue!30] (c\i) at ({90-\i*90}:1) {C\i};
 }
 \foreach \i in {0,1,2,3} {
     \pgfmathtruncatemacro{\j}{mod(\i+1,4)}
-    \draw[->, thick] (c\i) to[bend left=20] (c\j);
+    \draw[->, thick, blue!70] (c\i) to[bend left=20] (c\j);
 }
-\node[mem] at (0,-1.8) {\tiny Mem};
-\draw[<->, thick] (c2) -- (0,-1.4);
-\node[text width=3cm, align=center] at (0,-2.5) {\tiny Bidirectional ring\\ Low latency\\ Limited scalability};
+\node[mem] at (0,-2) {\tiny Mem};
+\draw[<->, thick] (c2) -- (0,-1.6);
+\node[text width=3cm, align=center] at (0,-2.9) {\tiny Bidirectional ring\\ Low latency\\ Limited scalability};
 \end{scope}
 
 % Mesh (Intel)
 \begin{scope}[shift={(5,0)}]
-\node at (0, 1.5) {\textbf{Mesh (Intel Skylake-SP)}};
+\node at (0, 1.8) {\textbf{Mesh (Intel Skylake-SP)}};
 \foreach \x in {0,1,2} {
     \foreach \y in {0,1} {
-        \node[cpu] (m\x\y) at (\x*0.8-0.8,\y*0.8-0.4) {\tiny};
+        \node[cpu, fill=green!30] (m\x\y) at (\x*0.7-0.7,\y*0.7-0.35) {};
     }
 }
 % Horizontal connections
-\foreach \y in {0,1} {
-    \draw[<->, thick] (m00) -- (m10);
-    \draw[<->, thick] (m10) -- (m20);
-}
+\draw[<->, thick, green!60!black] (m00) -- (m10);
+\draw[<->, thick, green!60!black] (m10) -- (m20);
+\draw[<->, thick, green!60!black] (m01) -- (m11);
+\draw[<->, thick, green!60!black] (m11) -- (m21);
 % Vertical connections
 \foreach \x in {0,1,2} {
-    \draw[<->, thick] (m\x0) -- (m\x1);
+    \draw[<->, thick, green!60!black] (m\x0) -- (m\x1);
 }
-\node[mem] at (0,-1.8) {\tiny Mem};
-\draw[<->, thick] (m10) -- (0,-1.4);
-\node[text width=3cm, align=center] at (0,-2.5) {\tiny 2D grid\\ Good scalability\\ Higher latency};
+\node[mem] at (0,-2) {\tiny Mem};
+\draw[<->, thick] (m10) -- (0,-1.6);
+\node[text width=3cm, align=center] at (0,-2.9) {\tiny 2D grid\\ Good scalability\\ Higher latency};
 \end{scope}
 
 % Crossbar (AMD)
 \begin{scope}[shift={(10,0)}]
-\node at (0, 1.5) {\textbf{Crossbar (AMD Zen)}};
+\node at (0, 1.8) {\textbf{Crossbar (AMD Zen)}};
 \foreach \i in {0,1,2,3} {
-    \node[cpu] (x\i) at ({45+\i*90}:1.2) {\tiny};
+    \node[cpu, fill=orange!30] (x\i) at ({45+\i*90}:1) {};
 }
 % Full crossbar connections
 \foreach \i in {0,1,2} {
     \foreach \j in {1,2,3} {
         \ifnum\i<\j
-            \draw[-, thick, gray!50] (x\i) -- (x\j);
+            \draw[-, thick, orange!70] (x\i) -- (x\j);
         \fi
     }
 }
-\node[mem] at (0,-1.8) {\tiny IF};
-\draw[<->, thick] (x2) -- (0,-1.4);
-\node[text width=3cm, align=center] at (0,-2.5) {\tiny All-to-all within CCX\\ Lowest latency\\ Limited to small clusters};
+\node[mem] at (0,-2) {\tiny IF};
+\draw[<->, thick] (x2) -- (0,-1.6);
+\node[text width=3cm, align=center] at (0,-2.9) {\tiny All-to-all within CCX\\ Lowest latency\\ Limited to small clusters};
 \end{scope}
 
 \end{tikzpicture}
