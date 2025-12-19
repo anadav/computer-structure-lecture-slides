@@ -11,7 +11,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, fit, backgrounds}
 \usepackage{circuitikz}
 \usepackage{tikz-timing}
 \usepackage{tcolorbox}
@@ -140,47 +140,46 @@
 
 \column{0.5\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
+\begin{tikzpicture}[
+    tilebox/.style={draw, ultra thick, minimum width=2cm, minimum height=2.5cm},
+    corebox/.style={draw, fill=blue!30, minimum width=0.65cm, minimum height=0.45cm, font=\tiny},
+    cachebox/.style={draw, minimum width=1.5cm, minimum height=0.35cm, font=\tiny},
+    minitile/.style={draw, thick, minimum width=1.1cm, minimum height=0.85cm}
+]
 % Single tile detail
-\draw[ultra thick] (0,0) rectangle (2,2.5);
-\node at (1,2.2) {\textbf{Tile}};
-\draw[fill=blue!30] (0.2,1.5) rectangle (0.9,2);
-\node at (0.55,1.75) {\tiny Core};
-\draw[fill=blue!30] (1.1,1.5) rectangle (1.8,2);
-\node at (1.45,1.75) {\tiny Core};
-\draw[fill=yellow!30] (0.2,0.9) rectangle (1.8,1.3);
-\node at (1,1.1) {\tiny L2 Cache};
-\draw[fill=green!30] (0.2,0.3) rectangle (1.8,0.7);
-\node at (1,0.5) {\tiny L3 Slice};
-\draw[fill=red!20] (0.2,0.05) rectangle (1.8,0.25);
-\node at (1,0.15) {\tiny Ring Stop};
+\node[tilebox] (tile) at (0,0) {};
+\node[font=\bfseries, anchor=south] at (tile.north) {Tile};
+\node[corebox] (c1) at ([yshift=-0.4cm, xshift=-0.4cm]tile.north) {Core};
+\node[corebox, right=0.1cm of c1] (c2) {Core};
+\node[cachebox, fill=yellow!30, below=0.15cm of $(c1.south)!0.5!(c2.south)$] (l2) {L2 Cache};
+\node[cachebox, fill=green!30, below=0.1cm of l2] (l3) {L3 Slice};
+\node[cachebox, fill=red!20, below=0.1cm of l3, minimum height=0.2cm] (ring) {Ring Stop};
+\node[font=\small, below=0.3cm of tile] {Single Tile};
 
-\node at (1,-0.5) {\small Single Tile};
+% Multiple tiles - 2x2 grid
+\node[minitile, right=1.8cm of tile, yshift=0.55cm] (t00) {};
+\node[minitile, right=0.15cm of t00] (t10) {};
+\node[minitile, below=0.15cm of t00] (t01) {};
+\node[minitile, right=0.15cm of t01] (t11) {};
 
-% Multiple tiles
-\begin{scope}[shift={(3,0)}]
-\foreach \x in {0,1.5} {
-    \foreach \y in {0,1.3} {
-        \draw[thick] (\x,\y) rectangle (\x+1.3,\y+1);
-        \draw[fill=blue!20] (\x+0.1,\y+0.6) rectangle (\x+0.6,\y+0.9);
-        \draw[fill=green!20] (\x+0.1,\y+0.1) rectangle (\x+1.2,\y+0.4);
-    }
-}
-\draw[red, thick] (0.65,0) -- (0.65,2.3);
-\draw[red, thick] (1.5+0.65,0) -- (1.5+0.65,2.3);
-\draw[red, thick] (0,0.5) -- (2.8,0.5);
-\draw[red, thick] (0,1.8) -- (2.8,1.8);
-\node at (1.4,-0.5) {\small 4-Tile Mesh};
-\end{scope}
+% Mini content
+\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t00.center) {};
+\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t00.center) {};
+\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t10.center) {};
+\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t10.center) {};
+\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t01.center) {};
+\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t01.center) {};
+\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t11.center) {};
+\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t11.center) {};
+
+% Mesh lines
+\draw[red, thick] ($(t00.south)!0.5!(t01.north)$) -- ($(t10.south)!0.5!(t11.north)$);
+\draw[red, thick] ($(t00.east)!0.5!(t10.west)$) -- ($(t01.east)!0.5!(t11.west)$);
+\node[font=\small, below=0.3cm of $(t01.south)!0.5!(t11.south)$] {4-Tile Mesh};
 \end{tikzpicture}
 \end{center}
 
-\textbf{Examples:}
-\begin{itemize}
-\item Intel Skylake-SP: Tiles in mesh
-\item Intel Lakefield: Big + small tiles
-\item Modern server CPUs: 10-40 tiles
-\end{itemize}
+\textbf{Examples:} Intel Skylake-SP (mesh), Lakefield (big+small), Server CPUs (10-40 tiles)
 \end{columns}
 \end{frame}
 
@@ -216,64 +215,60 @@
 
 \column{0.55\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.75]
-% Monolithic
-\draw[thick] (0,0) rectangle (3,2.5);
-\node at (1.5,2.2) {\textbf{Monolithic}};
-\foreach \x in {0.3,0.9,1.5,2.1} {
-    \draw[fill=blue!30] (\x,1.5) rectangle (\x+0.4,1.9);
-}
-\draw[fill=green!30] (0.3,0.8) rectangle (2.7,1.2);
-\node at (1.5,1) {\tiny L3 Cache};
-\draw[fill=orange!30] (0.3,0.3) rectangle (1.4,0.6);
-\node at (0.85,0.45) {\tiny MC};
-\draw[fill=purple!30] (1.6,0.3) rectangle (2.7,0.6);
-\node at (2.15,0.45) {\tiny I/O};
-\node at (1.5,-0.3) {\small Intel Core i7};
+\begin{tikzpicture}[
+    corebox/.style={draw, fill=blue!30, minimum width=0.3cm, minimum height=0.3cm, font=\tiny},
+    cachebox/.style={draw, fill=green!30, minimum height=0.25cm, font=\tiny},
+    iobox/.style={draw, minimum width=0.8cm, minimum height=0.25cm, text depth=0.1ex, font=\tiny},
+    ccdbox/.style={draw, thick, fill=blue!10, minimum width=1.15cm, minimum height=1.1cm},
+    iodbox/.style={draw, thick, fill=orange!10, minimum width=2.45cm, minimum height=0.85cm}
+]
+% Monolithic - build from content outward
+\node[corebox] (mc1) at (0,0) {C};
+\node[corebox, right=0.06cm of mc1] (mc2) {C};
+\node[corebox, right=0.06cm of mc2] (mc3) {C};
+\node[corebox, right=0.06cm of mc3] (mc4) {C};
+\node[cachebox, minimum width=1.7cm, below=0.1cm of $(mc1.south)!0.5!(mc4.south)$] (ml3) {L3 Cache};
+\node[iobox, fill=orange!30, below=0.08cm of ml3, xshift=-0.4cm] (mmc) {MC};
+\node[iobox, fill=purple!30, right=0.06cm of mmc] (mio) {I/O};
 
-% Chiplet design
-\begin{scope}[shift={(4.5,0)}]
-% CCD 1
-\draw[thick, fill=blue!10] (0,1.3) rectangle (1.3,2.5);
-\node at (0.65,2.2) {\tiny CCD};
-\foreach \x in {0.1,0.7} {
-    \foreach \y in {1.4,1.8} {
-        \draw[fill=blue!30] (\x,\y) rectangle (\x+0.4,\y+0.3);
-    }
-}
+% Monolithic box fitted around content
+\node[draw, thick, fit=(mc1)(mc4)(ml3)(mmc)(mio), inner sep=0.12cm] (mono) {};
+\node[font=\footnotesize\bfseries, anchor=south] at (mono.north) {Monolithic};
+\node[font=\small, below=0.2cm of mono] {Intel Core i7};
+
+% Chiplet design - CCD 1
+\node[ccdbox, right=1.3cm of mono, yshift=0.45cm] (ccd1) {};
+\node[font=\tiny\bfseries, anchor=south] at (ccd1.north) {CCD};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm] (cc1_1) at ([xshift=-0.25cm, yshift=0.2cm]ccd1.center) {C};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc1_1] (cc1_2) {C};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm, below=0.04cm of cc1_1] (cc1_3) {C};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc1_3] (cc1_4) {C};
+\node[cachebox, minimum width=0.9cm, below=0.06cm of $(cc1_3.south)!0.5!(cc1_4.south)$] (cl3_1) {L3};
 
 % CCD 2
-\draw[thick, fill=blue!10] (1.5,1.3) rectangle (2.8,2.5);
-\node at (2.15,2.2) {\tiny CCD};
-\foreach \x in {1.6,2.2} {
-    \foreach \y in {1.4,1.8} {
-        \draw[fill=blue!30] (\x,\y) rectangle (\x+0.4,\y+0.3);
-    }
-}
+\node[ccdbox, right=0.15cm of ccd1] (ccd2) {};
+\node[font=\tiny\bfseries, anchor=south] at (ccd2.north) {CCD};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm] (cc2_1) at ([xshift=-0.25cm, yshift=0.2cm]ccd2.center) {C};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc2_1] (cc2_2) {C};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm, below=0.04cm of cc2_1] (cc2_3) {C};
+\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc2_3] (cc2_4) {C};
+\node[cachebox, minimum width=0.9cm, below=0.06cm of $(cc2_3.south)!0.5!(cc2_4.south)$] (cl3_2) {L3};
 
-% IOD
-\draw[thick, fill=orange!10] (0,0) rectangle (2.8,1.1);
-\node at (1.4,0.8) {\small I/O Die};
-\draw[fill=orange!30] (0.2,0.3) rectangle (1.2,0.6);
-\node at (0.7,0.45) {\tiny MC};
-\draw[fill=purple!30] (1.6,0.3) rectangle (2.6,0.6);
-\node at (2.1,0.45) {\tiny PCIe};
+% I/O Die
+\node[iodbox, below=0.12cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
+\node[font=\tiny\bfseries, anchor=north] at ([yshift=-0.02cm]iod.north) {I/O Die};
+\node[iobox, fill=orange!30, anchor=south, xshift=-0.45cm] at ([yshift=0.06cm]iod.south) (iomc) {MC};
+\node[iobox, fill=purple!30, right=0.06cm of iomc] (iopcie) {PCIe};
 
 % Connections
-\draw[<->, red, thick] (0.65,1.3) -- (0.65,1.1);
-\draw[<->, red, thick] (2.15,1.3) -- (2.15,1.1);
+\draw[<->, red, thick] (ccd1.south) -- (ccd1.south |- iod.north);
+\draw[<->, red, thick] (ccd2.south) -- (ccd2.south |- iod.north);
 
-\node at (1.4,-0.3) {\small AMD Ryzen};
-\end{scope}
+\node[font=\small, below=0.2cm of iod] {AMD Ryzen};
 \end{tikzpicture}
 \end{center}
 
-\textbf{Advantages of Chiplets:}
-\begin{itemize}
-\item Mix different process nodes (7nm compute, 14nm I/O)
-\item Reuse dies across products
-\item Better yields (smaller dies)
-\end{itemize}
+\textbf{Chiplet Advantages:} Mix process nodes, reuse dies, better yields
 \end{columns}
 \end{frame}
 
@@ -359,7 +354,9 @@
 \begin{frame}{Hierarchy: From Transistor to System}
 \begin{center}
 \begin{tikzpicture}[scale=0.75,
-    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.8cm}
+    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.8cm},
+    desc/.style={text width=6.5cm, anchor=west, font=\small, align=left, inner ysep=0pt},
+    example/.style={anchor=east, font=\small\itshape}
 ]
 
 % Hierarchy levels
@@ -370,21 +367,21 @@
 \node[level, fill=blue!20] (package) at (0,4.8) {Package};
 \node[level, fill=purple!20] (system) at (0,6) {System};
 
-% Descriptions
-\node[text width=6cm, anchor=west] (trans_disc) at ([xshift=12]trans.east) {\small Billions of switches\\ (5-10nm process)};
-\node[text width=6cm, anchor=west] at (trans_disc.west |- core) {\small Execution unit + L1/L2\\ (1-2 threads)};
-\node[text width=6cm, anchor=west] at (trans_disc.west |- tile) {\small Core(s) + L3 slice + interconnect\\ (modular unit)};
-\node[text width=6cm, anchor=west] at (trans_disc.west |- die) {\small Complete silicon chip\\ (monolithic or chiplet)};
-\node[text width=6cm, anchor=west] at (trans_disc.west |- package) {\small Die(s) + substrate + pins\\ (what goes in socket)};
-\node[text width=6cm, anchor=west] at (trans_disc.west |- system) {\small Multiple sockets + memory + I/O\\ (complete computer)};
+% Descriptions - using style with reduced spacing
+\node[desc] (trans_desc) at ([xshift=0.4cm]trans.east) {Billions of switches (5-10nm)};
+\node[desc] at (trans_desc.west |- core) {Execution unit + L1/L2 (1-2 threads)};
+\node[desc] at (trans_desc.west |- tile) {Core(s) + L3 slice + interconnect};
+\node[desc] at (trans_desc.west |- die) {Complete silicon chip (mono/chiplet)};
+\node[desc] at (trans_desc.west |- package) {Die(s) + substrate + pins};
+\node[desc] at (trans_desc.west |- system) {Multiple sockets + memory + I/O};
 
-% Examples on left
-\node[text width=6cm, anchor=east] (trans_example) at ([xshift=-12]trans.east) {\small \textit{7nm = 10M+/mm²}};
-\node[text width=6cm, anchor=east] at (trans_example.east |- core) {\small \textit{Golden Cove, Zen 4}};
-\node[text width=6cm, anchor=east] at (trans_example.east |- tile) {\small \textit{2-core tile}};
-\node[text width=6cm, anchor=east] at (trans_example.east |- die) {\small \textit{CCD, Alder Lake die}};
-\node[text width=6cm, anchor=east] at (trans_example.east |- package) {\small \textit{Xeon, EPYC, Core i9}};
-\node[text width=6cm, anchor=east] at (trans_example.east |- system) {\small \textit{2S server, workstation}};
+% Examples on left - using style
+\node[example] (trans_ex) at ([xshift=-0.4cm]trans.west) {7nm = 10M+/mm²};
+\node[example] at (trans_ex.east |- core) {Golden Cove, Zen 4};
+\node[example] at (trans_ex.east |- tile) {2-core tile};
+\node[example] at (trans_ex.east |- die) {CCD, Alder Lake};
+\node[example] at (trans_ex.east |- package) {Xeon, EPYC, i9};
+\node[example] at (trans_ex.east |- system) {2S server};
 
 % Arrows
 \foreach \i in {0,1,2,3,4} {
@@ -472,40 +469,50 @@ Intel Sapphire Rapids & up to 60 & 4 & EMIB bridges & Multi-tile \\
 
 \column{0.45\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.75]
-% Socket box
-\draw[thick, dashed] (-0.5,-0.5) rectangle (4.5,4.5);
-\node at (2,4.2) {\textbf{CPU Socket}};
+\begin{tikzpicture}[
+    coreunit/.style={draw, fill=blue!30, minimum width=0.6cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
+    l2unit/.style={draw, fill=yellow!30, minimum width=0.4cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
+    l3box/.style={draw, fill=green!30, minimum height=0.4cm, text depth=0.1ex, font=\scriptsize},
+    mcbox/.style={draw, fill=orange!30, minimum height=0.4cm, text depth=0.1ex, font=\tiny}
+]
+% Core 0 + L2 (top-left)
+\node[coreunit] (c0) at (0,0) {Core 0};
+\node[l2unit, right=0.02cm of c0] (l2c0) {L2};
 
-% Cores
-\foreach \x in {0,1} {
-    \foreach \y in {0,1} {
-        \pgfmathtruncatemacro{\cnum}{\x*2+\y}
-        \draw[fill=blue!30] (\x*2,\y*2+1.5) rectangle (\x*2+0.8,\y*2+2.3);
-        \node at (\x*2+0.4,\y*2+1.9) {\tiny Core \cnum};
-        \draw[fill=yellow!30] (\x*2+0.9,\y*2+1.5) rectangle (\x*2+1.5,\y*2+2.3);
-        \node at (\x*2+1.2,\y*2+1.9) {\tiny L2};
-    }
-}
+% Core 1 + L2 (top-right)
+\node[coreunit, right=0.12cm of l2c0] (c1) {Core 1};
+\node[l2unit, right=0.02cm of c1] (l2c1) {L2};
 
-% Shared L3
-\draw[fill=green!30] (0.5,0.5) rectangle (3.5,1);
-\node at (2,0.75) {Shared L3 Cache};
+% Core 2 + L2 (bottom-left)
+\node[coreunit, below=0.15cm of c0] (c2) {Core 2};
+\node[l2unit, right=0.02cm of c2] (l2c2) {L2};
 
-% Memory Controller
-\draw[fill=orange!30] (0,0) rectangle (1.5,0.3);
-\node at (0.75,0.15) {\tiny Mem Ctrl};
+% Core 3 + L2 (bottom-right)
+\node[coreunit, right=0.12cm of l2c2] (c3) {Core 3};
+\node[l2unit, right=0.02cm of c3] (l2c3) {L2};
 
-% Ring interconnect
-\draw[thick, blue, <->] (0.4,1.5) -- (0.4,1.2);
-\draw[thick, blue, <->] (2.4,1.5) -- (2.4,1.2);
-\draw[thick, blue, <->] (0.4,3.5) -- (0.4,3.8);
-\draw[thick, blue, <->] (2.4,3.5) -- (2.4,3.8);
-\draw[thick, blue] (0.4,1.2) -- (2.4,1.2);
-\draw[thick, blue] (0.4,3.8) -- (2.4,3.8);
-\draw[thick, blue] (0.4,1.2) -- (0.4,3.8);
-\draw[thick, blue] (2.4,1.2) -- (2.4,3.8);
-\node[blue] at (1.4,2.5) {\tiny Ring};
+% Ring interconnect - rectangle around cores
+\draw[thick, blue, rounded corners=3pt]
+    ([xshift=-0.08cm, yshift=0.08cm]c0.north west) --
+    ([xshift=0.08cm, yshift=0.08cm]l2c1.north east) --
+    ([xshift=0.08cm, yshift=-0.08cm]l2c3.south east) --
+    ([xshift=-0.08cm, yshift=-0.08cm]c2.south west) -- cycle;
+\node[blue, font=\tiny] at ($(l2c0.south east)!0.5!(c3.north west)$) {Ring};
+
+% Shared L3 - further down
+\node[l3box, below=0.5cm of $(c2.south)!0.5!(l2c3.south)$] (l3) {Shared L3 Cache};
+
+% Memory Controller - centered below L3
+\node[mcbox, below=0.15cm of l3] (mc) {Memory Controller};
+
+% Connection from ring to L3
+\draw[thick, blue, <->] ([yshift=-0.08cm]$(c2.south)!0.5!(l2c3.south)$) -- (l3.north);
+
+% Socket container - fitted around content
+\begin{scope}[on background layer]
+\node[draw, thick, dashed, fit=(c0)(l2c1)(l3)(mc), inner sep=0.15cm] (socket) {};
+\end{scope}
+\node[font=\bfseries\footnotesize, anchor=south] at (socket.north) {CPU Socket};
 
 \end{tikzpicture}
 \end{center}
@@ -657,38 +664,47 @@ All cores can access all cache and memory controllers, but with varying latency
 
 \column{0.5\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
-% Draw ring stops
-\foreach \i/\name in {0/Core0, 1/Core1, 2/Core2, 3/Core3, 4/LLC, 5/MC} {
-    \pgfmathsetmacro{\angle}{90-\i*60}
-    \coordinate (stop\i) at (\angle:1.5);
-    \draw[fill=blue!20] (\angle:1.5) circle (0.3);
-    \node at (\angle:2.1) {\tiny \name};
-}
+\begin{tikzpicture}[
+    stop/.style={draw, circle, fill=blue!20, minimum size=0.5cm, inner sep=1pt, font=\tiny}
+]
+% Ring stops positioned explicitly
+\node[stop] (s0) at (90:1.3) {};
+\node[font=\tiny, above=0.1cm of s0] {Core0};
+\node[stop] (s1) at (30:1.3) {};
+\node[font=\tiny, right=0.05cm of s1] {Core1};
+\node[stop] (s2) at (-30:1.3) {};
+\node[font=\tiny, right=0.05cm of s2] {Core2};
+\node[stop] (s3) at (-90:1.3) {};
+\node[font=\tiny, below=0.1cm of s3] {Core3};
+\node[stop, fill=green!20] (s4) at (-150:1.3) {};
+\node[font=\tiny, left=0.05cm of s4] {LLC};
+\node[stop, fill=orange!20] (s5) at (150:1.3) {};
+\node[font=\tiny, left=0.05cm of s5] {MC};
 
-% Draw ring connections
-\foreach \i in {0,...,5} {
-    \pgfmathtruncatemacro{\next}{mod(\i+1,6)}
-    \pgfmathsetmacro{\angle}{90-\i*60}
-    \pgfmathsetmacro{\nextangle}{90-\next*60}
-    \draw[->, thick, blue] (\angle:1.5) ++({\angle-90}:0.3) arc ({\angle-90}:{\nextangle+90}:1.2);
-    \draw[->, thick, red] (\angle:1.5) ++({\angle+90}:0.3) arc ({\angle+90}:{\nextangle-90}:1.8);
-}
+% Clockwise ring (blue, inner)
+\draw[->, thick, blue] (s0) to[bend left=25] (s1);
+\draw[->, thick, blue] (s1) to[bend left=25] (s2);
+\draw[->, thick, blue] (s2) to[bend left=25] (s3);
+\draw[->, thick, blue] (s3) to[bend left=25] (s4);
+\draw[->, thick, blue] (s4) to[bend left=25] (s5);
+\draw[->, thick, blue] (s5) to[bend left=25] (s0);
 
-\node at (0,0) {\footnotesize Bidirectional};
+% Counter-clockwise ring (red, outer)
+\draw[->, thick, red] (s0) to[bend right=25] (s5);
+\draw[->, thick, red] (s5) to[bend right=25] (s4);
+\draw[->, thick, red] (s4) to[bend right=25] (s3);
+\draw[->, thick, red] (s3) to[bend right=25] (s2);
+\draw[->, thick, red] (s2) to[bend right=25] (s1);
+\draw[->, thick, red] (s1) to[bend right=25] (s0);
 
-% Example path
-\draw[->, ultra thick, green, dashed] (90:1.8) arc (90:330:1.8);
-\node[green] at (0,-2.5) {\tiny Core0 → LLC: 2 hops (shortest)};
+\node[font=\footnotesize] at (0,0) {Bidirectional};
+
+% Example path annotation
+\node[font=\tiny, green!50!black, below=0.3cm of s3] {Core0 → LLC: 2 hops};
 \end{tikzpicture}
 \end{center}
 
-\textbf{Limitations:}
-\begin{itemize}
-\item Bandwidth shared by all stops
-\item Latency grows with core count
-\item Not suitable for >10-12 cores
-\end{itemize}
+\textbf{Limitations:} Shared bandwidth, latency grows with cores, not for >10-12 cores
 \end{columns}
 \end{frame}
 
@@ -964,55 +980,53 @@ False sharing across sockets = 10x slower
 
 \column{0.55\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.8,
-    numanode/.style={draw, thick, minimum width=2.6cm, minimum height=2.8cm, rounded corners=2pt},
-    coreblue/.style={draw, fill=blue!30, minimum width=0.35cm, minimum height=0.25cm},
-    coregreen/.style={draw, fill=green!30, minimum width=0.35cm, minimum height=0.25cm},
-    ramblock/.style={draw, fill=gray!30, minimum width=2.2cm, minimum height=0.8cm}
+\begin{tikzpicture}[
+    coreblue/.style={draw, fill=blue!30, minimum width=0.38cm, minimum height=0.28cm},
+    coregreen/.style={draw, fill=green!30, minimum width=0.38cm, minimum height=0.28cm},
+    ramblock/.style={draw, fill=gray!30, font=\scriptsize, minimum width=1.9cm, minimum height=0.5cm}
 ]
-% NUMA Node 0
-\node[numanode, fill=blue!10] (node0) at (0,0) {};
-\node[anchor=north, font=\small\bfseries] at (node0.north) {NUMA Node 0};
+% NUMA Node 0 - cores as matrix at origin
+\matrix[matrix of nodes, ampersand replacement=\&,
+        nodes={coreblue}, row sep=0.06cm, column sep=0.06cm] (cores0) at (0,0) {
+    \phantom{} \& \phantom{} \& \phantom{} \& \phantom{} \\
+    \phantom{} \& \phantom{} \& \phantom{} \& \phantom{} \\
+};
+\node[font=\tiny, below=0.08cm of cores0] (lbl0) {8 cores};
+\node[ramblock, below=0.1cm of lbl0] (ram0) {32GB RAM};
 
-% Cores for Node 0
-\foreach \i in {-0.7,-0.35,0,0.35} {
-    \node[coreblue] at (\i, 0.5) {};
-    \node[coreblue] at (\i, 0.15) {};
-}
-\node[font=\tiny] at (0, -0.1) {8 cores};
+% NUMA Node 1 - cores as matrix, positioned relative to cores0
+\matrix[matrix of nodes, ampersand replacement=\&,
+        nodes={coregreen}, row sep=0.06cm, column sep=0.06cm,
+        right=3.0cm of cores0] (cores1) {
+    \phantom{} \& \phantom{} \& \phantom{} \& \phantom{} \\
+    \phantom{} \& \phantom{} \& \phantom{} \& \phantom{} \\
+};
+\node[font=\tiny, below=0.08cm of cores1] (lbl1) {8 cores};
+\node[ramblock, below=0.1cm of lbl1] (ram1) {32GB RAM};
 
-% RAM for Node 0
-\node[ramblock] (ram0) at (0, -0.85) {};
-\node[font=\scriptsize] at (ram0.center) {32GB RAM};
+% Background fit boxes
+\begin{scope}[on background layer]
+\node[draw, thick, fill=blue!10, rounded corners=2pt, fit=(cores0)(ram0), inner sep=0.15cm] (node0) {};
+\node[draw, thick, fill=green!10, rounded corners=2pt, fit=(cores1)(ram1), inner sep=0.15cm] (node1) {};
+\end{scope}
 
-% NUMA Node 1
-\node[numanode, fill=green!10, right=0.8cm of node0] (node1) {};
-\node[anchor=north, font=\small\bfseries] at (node1.north) {NUMA Node 1};
-
-% Cores for Node 1
-\foreach \i in {-0.7,-0.35,0,0.35} {
-    \node[coregreen] at ([xshift=\i cm]node1.center |- 0,0.5) {};
-    \node[coregreen] at ([xshift=\i cm]node1.center |- 0,0.15) {};
-}
-\node[font=\tiny] at (node1.center |- 0,-0.1) {8 cores};
-
-% RAM for Node 1
-\node[ramblock] (ram1) at (node1.center |- 0,-0.85) {};
-\node[font=\scriptsize] at (ram1.center) {32GB RAM};
+% Labels on top
+\node[anchor=south, font=\footnotesize\bfseries] at (node0.north) {NUMA Node 0};
+\node[anchor=south, font=\footnotesize\bfseries] at (node1.north) {NUMA Node 1};
 
 % Interconnect
 \draw[<->, ultra thick, red] (node0.east) -- node[above, font=\small] {QPI/UPI} node[below, font=\tiny] {25.6 GB/s} (node1.west);
-
-% Distance matrix label - positioned below nodes
-\node[font=\small\bfseries, anchor=north] at ([yshift=-0.3cm]$(node0.south)!0.5!(node1.south)$) {NUMA Distance Matrix:};
 \end{tikzpicture}
+\end{center}
 
-\vspace{-0.2cm}
-\begin{tabular}{r|cc}
-\scriptsize node & \scriptsize 0 & \scriptsize 1 \\
+\begin{center}
+\textbf{\small NUMA Distance Matrix}\\[0.1cm]
+{\footnotesize Relative cost to access memory (10 = local)}\\[0.15cm]
+\begin{tabular}{>{\footnotesize}r|>{\footnotesize}c>{\footnotesize}c}
+node & 0 & 1 \\
 \hline
-\scriptsize 0 & \scriptsize \textbf{10} & \scriptsize 21 \\
-\scriptsize 1 & \scriptsize 21 & \scriptsize \textbf{10} \\
+0 & \textbf{10} & 21 \\
+1 & 21 & \textbf{10} \\
 \end{tabular}
 \end{center}
 \end{columns}
@@ -1021,71 +1035,67 @@ False sharing across sockets = 10x slower
 % Slide 3: Interconnect Topologies
 \begin{frame}{Interconnect Topologies}
 \begin{center}
-\begin{tikzpicture}[scale=0.65,
+\begin{tikzpicture}[
     cpu/.style={draw, circle, minimum size=0.5cm, inner sep=1pt, font=\tiny},
-    mem/.style={draw, rectangle, fill=gray!30, minimum width=0.6cm, minimum height=0.4cm}
+    cpublue/.style={cpu, fill=blue!30},
+    cpugreen/.style={cpu, fill=green!30},
+    cpuorange/.style={cpu, fill=orange!30},
+    mem/.style={draw, rectangle, fill=gray!30, minimum width=0.6cm, minimum height=0.4cm, font=\tiny},
+    conn/.style={<->, thick},
+    desc/.style={text width=2.8cm, align=center, font=\tiny}
 ]
 
 % Ring (Intel)
-\begin{scope}[shift={(0,0)}]
-\node at (0, 1.8) {\textbf{Ring (Intel Sandy Bridge+)}};
-\foreach \i in {0,1,2,3} {
-    \node[cpu, fill=blue!30] (c\i) at ({90-\i*90}:1) {C\i};
-}
-\foreach \i in {0,1,2,3} {
-    \pgfmathtruncatemacro{\j}{mod(\i+1,4)}
-    \draw[->, thick, blue!70] (c\i) to[bend left=20] (c\j);
-}
-\node[mem] at (0,-2) {\tiny Mem};
-\draw[<->, thick] (c2) -- (0,-1.6);
-\node[text width=3cm, align=center] at (0,-2.9) {\tiny Bidirectional ring\\ Low latency\\ Limited scalability};
-\end{scope}
+\node (ringtitle) at (0, 1.4) {\small\textbf{Ring}};
+\node[font=\tiny, below=0.02cm of ringtitle] {Intel Sandy Bridge+};
+\node[cpublue] (r0) at (0,0.5) {};
+\node[cpublue, right=0.4cm of r0] (r1) {};
+\node[cpublue, below=0.4cm of r1] (r2) {};
+\node[cpublue, left=0.4cm of r2] (r3) {};
+\draw[->, thick, blue!70] (r0) to[bend left=15] (r1);
+\draw[->, thick, blue!70] (r1) to[bend left=15] (r2);
+\draw[->, thick, blue!70] (r2) to[bend left=15] (r3);
+\draw[->, thick, blue!70] (r3) to[bend left=15] (r0);
+\node[mem, below=0.5cm of r3] (rmem) {Mem};
+\draw[conn] (r3) -- (rmem);
+\node[desc, below=0.15cm of rmem] {Bidirectional ring\\ Low latency\\ Limited scalability};
 
 % Mesh (Intel)
-\begin{scope}[shift={(5,0)}]
-\node at (0, 1.8) {\textbf{Mesh (Intel Skylake-SP)}};
-\foreach \x in {0,1,2} {
-    \foreach \y in {0,1} {
-        \node[cpu, fill=green!30] (m\x\y) at (\x*0.7-0.7,\y*0.7-0.35) {};
-    }
-}
-% Horizontal connections
-\draw[<->, thick, green!60!black] (m00) -- (m10);
-\draw[<->, thick, green!60!black] (m10) -- (m20);
-\draw[<->, thick, green!60!black] (m01) -- (m11);
-\draw[<->, thick, green!60!black] (m11) -- (m21);
-% Vertical connections
-\foreach \x in {0,1,2} {
-    \draw[<->, thick, green!60!black] (m\x0) -- (m\x1);
-}
-\node[mem] at (0,-2) {\tiny Mem};
-\draw[<->, thick] (m10) -- (0,-1.6);
-\node[text width=3cm, align=center] at (0,-2.9) {\tiny 2D grid\\ Good scalability\\ Higher latency};
-\end{scope}
+\node (meshtitle) at (4.5, 1.4) {\small\textbf{Mesh}};
+\node[font=\tiny, below=0.02cm of meshtitle] {Intel Skylake-SP};
+\node[cpugreen] (m00) at (3.8,0.5) {};
+\node[cpugreen, right=0.35cm of m00] (m10) {};
+\node[cpugreen, right=0.35cm of m10] (m20) {};
+\node[cpugreen, below=0.4cm of m00] (m01) {};
+\node[cpugreen, right=0.35cm of m01] (m11) {};
+\node[cpugreen, right=0.35cm of m11] (m21) {};
+\draw[conn, green!60!black] (m00) -- (m10) -- (m20);
+\draw[conn, green!60!black] (m01) -- (m11) -- (m21);
+\draw[conn, green!60!black] (m00) -- (m01);
+\draw[conn, green!60!black] (m10) -- (m11);
+\draw[conn, green!60!black] (m20) -- (m21);
+\node[mem, below=0.5cm of m11] (mmem) {Mem};
+\draw[conn] (m11) -- (mmem);
+\node[desc, below=0.15cm of mmem] {2D grid\\ Good scalability\\ Higher latency};
 
 % Crossbar (AMD)
-\begin{scope}[shift={(10,0)}]
-\node at (0, 1.8) {\textbf{Crossbar (AMD Zen)}};
-\foreach \i in {0,1,2,3} {
-    \node[cpu, fill=orange!30] (x\i) at ({45+\i*90}:1) {};
-}
-% Full crossbar connections
-\foreach \i in {0,1,2} {
-    \foreach \j in {1,2,3} {
-        \ifnum\i<\j
-            \draw[-, thick, orange!70] (x\i) -- (x\j);
-        \fi
-    }
-}
-\node[mem] at (0,-2) {\tiny IF};
-\draw[<->, thick] (x2) -- (0,-1.6);
-\node[text width=3cm, align=center] at (0,-2.9) {\tiny All-to-all within CCX\\ Lowest latency\\ Limited to small clusters};
-\end{scope}
+\node (crosstitle) at (9, 1.4) {\small\textbf{Crossbar}};
+\node[font=\tiny, below=0.02cm of crosstitle] {AMD Zen CCX};
+\node[cpuorange] (x0) at (8.5,0.5) {};
+\node[cpuorange, right=0.7cm of x0] (x1) {};
+\node[cpuorange, below=0.5cm of x0] (x2) {};
+\node[cpuorange, right=0.7cm of x2] (x3) {};
+\draw[-, thick, orange!70] (x0) -- (x1) -- (x2) -- (x3) -- (x0) -- (x2);
+\draw[-, thick, orange!70] (x1) -- (x3);
+% IF connects to center of crossbar (shared L3/fabric)
+\coordinate (xcenter) at ($(x0)!0.5!(x3)$);
+\node[mem, below=0.7cm of xcenter] (xmem) {IF};
+\draw[conn] (xcenter) -- (xmem);
+\node[desc, below=0.15cm of xmem] {All-to-all within CCX\\ Lowest latency\\ Limited to small clusters};
 
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.3cm}
 \textbf{Software Impact:}
 \begin{itemize}
 \item Different topologies $\rightarrow$ different performance characteristics
