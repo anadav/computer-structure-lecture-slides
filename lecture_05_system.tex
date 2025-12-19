@@ -186,34 +186,28 @@
 % Slide 3: Die and Multi-Die Designs
 \begin{frame}{Die and Multi-Die Designs}
 \begin{columns}[T]
-\column{0.45\textwidth}
-\textbf{Die (Silicon Die):}
+\column{0.5\textwidth}
+\textbf{Die:} Single piece of silicon cut from wafer
 \begin{itemize}
-\item Single piece of silicon
-\item Cut from a wafer
 \item Contains transistors/circuits
 \item Traditional: 1 die = 1 CPU
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Monolithic Die:}
+\textbf{Monolithic:} Everything on one die
 \begin{itemize}
-\item Everything on one die
 \item Simpler, lower latency
-\item More expensive (yield)
+\item More expensive (yield issues)
 \item Size limited by manufacturing
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Multi-Die (Chiplet):}
+\textbf{Multi-Die (Chiplet):} Multiple smaller dies
 \begin{itemize}
-\item Multiple smaller dies
 \item Connected in package
 \item Better yield, mix-and-match
 \item Higher latency between dies
 \end{itemize}
 
-\column{0.55\textwidth}
+\column{0.5\textwidth}
 \begin{center}
 \begin{tikzpicture}[
     corebox/.style={draw, fill=blue!30, minimum width=0.3cm, minimum height=0.3cm, font=\tiny},
@@ -255,7 +249,7 @@
 \node[cachebox, minimum width=0.9cm, below=0.06cm of $(cc2_3.south)!0.5!(cc2_4.south)$] (cl3_2) {L3};
 
 % I/O Die
-\node[iodbox, below=0.12cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
+\node[iodbox, below=0.3cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
 \node[font=\tiny\bfseries, anchor=north] at ([yshift=-0.02cm]iod.north) {I/O Die};
 \node[iobox, fill=orange!30, anchor=south, xshift=-0.45cm] at ([yshift=0.06cm]iod.south) (iomc) {MC};
 \node[iobox, fill=purple!30, right=0.06cm of iomc] (iopcie) {PCIe};
@@ -276,6 +270,7 @@
 \begin{frame}{Package and Socket}
 \begin{columns}[T]
 \column{0.5\textwidth}
+\vspace{-3mm}
 \textbf{Package:}
 \begin{itemize}
 \item Physical chip you can hold
@@ -290,7 +285,7 @@
 \item Provides electrical connections
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{1mm}
 \textbf{Socket:}
 \begin{itemize}
 \item Receptacle on motherboard
@@ -305,6 +300,7 @@
 \end{itemize}
 
 \column{0.5\textwidth}
+\vspace{-8mm}
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
 % Cross-section view
@@ -354,18 +350,18 @@
 \begin{frame}{Hierarchy: From Transistor to System}
 \begin{center}
 \begin{tikzpicture}[scale=0.75,
-    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.8cm},
+    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.68cm, inner sep=2pt},
     desc/.style={text width=6.5cm, anchor=west, font=\small, align=left, inner ysep=0pt},
     example/.style={anchor=east, font=\small\itshape}
 ]
 
 % Hierarchy levels
 \node[level, fill=red!20] (trans) at (0,0) {Transistors};
-\node[level, fill=orange!20] (core) at (0,1.2) {Core};
-\node[level, fill=yellow!20] (tile) at (0,2.4) {Tile};
-\node[level, fill=green!20] (die) at (0,3.6) {Die};
-\node[level, fill=blue!20] (package) at (0,4.8) {Package};
-\node[level, fill=purple!20] (system) at (0,6) {System};
+\node[level, fill=orange!20] (core) at (0,1.1) {Core};
+\node[level, fill=yellow!20] (tile) at (0,2.2) {Tile};
+\node[level, fill=green!20] (die) at (0,3.3) {Die};
+\node[level, fill=blue!20] (package) at (0,4.4) {Package};
+\node[level, fill=purple!20] (system) at (0,5.5) {System};
 
 % Descriptions - using style with reduced spacing
 \node[desc] (trans_desc) at ([xshift=0.4cm]trans.east) {Billions of switches (5-10nm)};
@@ -385,7 +381,7 @@
 
 % Arrows
 \foreach \i in {0,1,2,3,4} {
-    \draw[->, thick] (0,\i*1.2+0.4) -- (0,\i*1.2+0.8);
+    \draw[->, thick] (0,\i*1.1+0.34) -- (0,\i*1.1+0.76);
 }
 
 \end{tikzpicture}
@@ -846,10 +842,7 @@ All cores can access all cache and memory controllers, but with varying latency
 \begin{frame}{Software Implications}
 \begin{columns}[T]
 \column{0.5\textwidth}
-\textbf{What Software Developers Need to Know:}
-
-\vspace{0.2cm}
-\textbf{1. Cache Coherency}
+\textbf{Cache Coherency}
 \begin{itemize}
 \item Maintained automatically
 \item But costs performance
@@ -857,7 +850,7 @@ All cores can access all cache and memory controllers, but with varying latency
 \end{itemize}
 
 \vspace{0.2cm}
-\textbf{2. Memory Allocation}
+\textbf{Memory Allocation}
 \begin{itemize}
 \item First-touch policy
 \item NUMA-aware allocation
@@ -865,7 +858,7 @@ All cores can access all cache and memory controllers, but with varying latency
 \end{itemize}
 
 \vspace{0.2cm}
-\textbf{3. Thread Placement}
+\textbf{Thread Placement}
 \begin{itemize}
 \item Pin threads to cores
 \item Keep related threads on same socket
@@ -874,25 +867,24 @@ All cores can access all cache and memory controllers, but with varying latency
 
 \column{0.5\textwidth}
 \textbf{Performance Tips:}
-
-\begin{enumerate}
+\begin{itemize}
 \item \textbf{Check your topology:}\\
    \texttt{lscpu -e} or \texttt{lstopo}
-   
+
 \item \textbf{Quick improvement:}\\
    \texttt{numactl --cpunodebind=0 ./app}
-   
+
 \item \textbf{For shared data:}\\
    Place on socket with most accessors
-   
+
 \item \textbf{For partitioned data:}\\
    Align partitions to NUMA nodes
-\end{enumerate}
+\end{itemize}
 
 \vspace{0.3cm}
 \begin{tikzpicture}
-\node[draw, thick, fill=red!20, text width=5cm] at (0,0) {
-\textbf{Remember:}\\
+\node[draw, thick, fill=red!20, text width=7.5cm] at (0,0) {
+%\textbf{Remember:}\\
 Remote memory access = 1.5-2x slower\\
 Cross-socket atomics = 3-5x slower\\
 False sharing across sockets = 10x slower
@@ -1227,7 +1219,7 @@ float* data = malloc(N * sizeof(float));
 \column{0.45\textwidth}
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
-\node[text width=5cm, draw, thick] (rulethumb) at (0,0) {
+\node[text width=6.6cm, draw, thick] (rulethumb) at (0,0) {
 \textbf{Rule of Thumb:}\\[0.2cm]
 If your application:\\
 • Uses $>$ 10GB memory\\
@@ -1236,7 +1228,7 @@ If your application:\\
 $\Rightarrow$ \textcolor{red}{Consider NUMA optimization}
 };
 
-\node[text width=5cm, draw, thick, fill=yellow!20, anchor=north] at ([yshift=-0.5cm]rulethumb.south) {
+\node[text width=6.6cm, draw, thick, fill=yellow!20, anchor=north] at ([yshift=-0.5cm]rulethumb.south) {
 \textbf{Quick Win:}\\[0.1cm]
 \texttt{numactl --interleave=all ./app}\\[0.1cm]
 Spreads memory across all nodes\\
