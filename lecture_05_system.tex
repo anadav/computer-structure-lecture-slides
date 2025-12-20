@@ -1116,9 +1116,8 @@ node & 0 & 1 \\
     coretile/.style={tile, fill=blue!60, text=white},
     mctile/.style={tile, fill=gray!50, minimum height=0.9cm, text width=0.9cm, align=center},
     router/.style={draw, fill=yellow!60, minimum size=0.15cm, inner sep=0pt},
-    meshline/.style={line width=1pt},
-    vmesh/.style={meshline, orange!70},
-    hmesh/.style={meshline, cyan!50}
+    meshline/.style={line width=0.5pt, orange!80},
+    meshgap/.style={line width=0.04cm}
 ]
 
 % Column positions (tighter spacing)
@@ -1173,31 +1172,36 @@ node & 0 & 1 \\
 % Mesh line positions at tile edges (where routers are)
 \def\tileHalfWidth{0.55}
 \def\cacheCoreBoundary{-0.225}
+\def\lineGap{0.04}
 \pgfmathsetmacro{\topRouterY}{\rowI - 0.35}
 
-% Vertical mesh lines - from top row router to bottom row router
+% Vertical mesh lines (double lines for bidirectional ring)
 % Left 3 columns (A, B, C): lines on east edge
 \foreach \col in {\colA, \colB, \colC} {
     \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth}
     \pgfmathsetmacro{\bottomY}{\rowV + \cacheCoreBoundary}
-    \draw[vmesh] (\lineX, \topRouterY) -- (\lineX, \bottomY);
+    \draw[meshline] (\lineX - \lineGap, \topRouterY) -- (\lineX - \lineGap, \bottomY);
+    \draw[meshline] (\lineX + \lineGap, \topRouterY) -- (\lineX + \lineGap, \bottomY);
 }
 % Right 3 columns (D, E, F): lines on west edge
 \foreach \col in {\colD, \colE, \colF} {
     \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth}
     \pgfmathsetmacro{\bottomY}{\rowV + \cacheCoreBoundary}
-    \draw[vmesh] (\lineX, \topRouterY) -- (\lineX, \bottomY);
+    \draw[meshline] (\lineX - \lineGap, \topRouterY) -- (\lineX - \lineGap, \bottomY);
+    \draw[meshline] (\lineX + \lineGap, \topRouterY) -- (\lineX + \lineGap, \bottomY);
 }
 
-% Horizontal mesh lines - only between leftmost and rightmost routers
+% Horizontal mesh lines (double lines for bidirectional ring)
 \pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth}
 \pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth}
 % Top row horizontal line
-\draw[hmesh] (\leftmostX, \topRouterY) -- (\rightmostX, \topRouterY);
+\draw[meshline] (\leftmostX, \topRouterY - \lineGap) -- (\rightmostX, \topRouterY - \lineGap);
+\draw[meshline] (\leftmostX, \topRouterY + \lineGap) -- (\rightmostX, \topRouterY + \lineGap);
 % Cache/Core rows horizontal lines
 \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
     \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
-    \draw[hmesh] (\leftmostX, \lineY) -- (\rightmostX, \lineY);
+    \draw[meshline] (\leftmostX, \lineY - \lineGap) -- (\rightmostX, \lineY - \lineGap);
+    \draw[meshline] (\leftmostX, \lineY + \lineGap) -- (\rightmostX, \lineY + \lineGap);
 }
 
 % Routers at intersections
