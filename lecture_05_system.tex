@@ -1169,37 +1169,40 @@ node & 0 & 1 \\
     \node[coretile] at (\col, \rowV - 0.45) {Core};
 }
 
-% Mesh line positions at tile edges (where routers are)
+% Mesh line positions centered on router boxes
 \def\tileHalfWidth{0.55}
 \def\cacheCoreBoundary{-0.225}
-\def\lineGap{0.04}
+\def\lineGap{0.03}
+\def\routerHalf{0.075}  % half of router size (0.15cm)
 \pgfmathsetmacro{\topRouterY}{\rowI - 0.35}
 
 % Vertical mesh lines (double lines for bidirectional ring)
-% Left 3 columns (A, B, C): lines on east edge
+% Y coordinates: top router center to bottom router center
+\pgfmathsetmacro{\topCenterY}{\topRouterY + \routerHalf}
+\pgfmathsetmacro{\bottomCenterY}{\rowV + \cacheCoreBoundary - \routerHalf}
+% Left 3 columns (A, B, C): lines centered on router (which is anchored at east edge)
 \foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth}
-    \pgfmathsetmacro{\bottomY}{\rowV + \cacheCoreBoundary}
-    \draw[meshline] (\lineX - \lineGap, \topRouterY) -- (\lineX - \lineGap, \bottomY);
-    \draw[meshline] (\lineX + \lineGap, \topRouterY) -- (\lineX + \lineGap, \bottomY);
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
+    \draw[meshline] (\lineX - \lineGap, \topCenterY) -- (\lineX - \lineGap, \bottomCenterY);
+    \draw[meshline] (\lineX + \lineGap, \topCenterY) -- (\lineX + \lineGap, \bottomCenterY);
 }
-% Right 3 columns (D, E, F): lines on west edge
+% Right 3 columns (D, E, F): lines centered on router (which is anchored at west edge)
 \foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth}
-    \pgfmathsetmacro{\bottomY}{\rowV + \cacheCoreBoundary}
-    \draw[meshline] (\lineX - \lineGap, \topRouterY) -- (\lineX - \lineGap, \bottomY);
-    \draw[meshline] (\lineX + \lineGap, \topRouterY) -- (\lineX + \lineGap, \bottomY);
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
+    \draw[meshline] (\lineX - \lineGap, \topCenterY) -- (\lineX - \lineGap, \bottomCenterY);
+    \draw[meshline] (\lineX + \lineGap, \topCenterY) -- (\lineX + \lineGap, \bottomCenterY);
 }
 
 % Horizontal mesh lines (double lines for bidirectional ring)
-\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth}
-\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth}
-% Top row horizontal line
-\draw[meshline] (\leftmostX, \topRouterY - \lineGap) -- (\rightmostX, \topRouterY - \lineGap);
-\draw[meshline] (\leftmostX, \topRouterY + \lineGap) -- (\rightmostX, \topRouterY + \lineGap);
-% Cache/Core rows horizontal lines
+\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth - \routerHalf}
+\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth + \routerHalf}
+% Top row horizontal line (router anchored at south, so center is up by routerHalf)
+\pgfmathsetmacro{\topLineY}{\topRouterY + \routerHalf}
+\draw[meshline] (\leftmostX, \topLineY - \lineGap) -- (\rightmostX, \topLineY - \lineGap);
+\draw[meshline] (\leftmostX, \topLineY + \lineGap) -- (\rightmostX, \topLineY + \lineGap);
+% Cache/Core rows horizontal lines (router anchored at north, so center is down by routerHalf)
 \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary - \routerHalf}
     \draw[meshline] (\leftmostX, \lineY - \lineGap) -- (\rightmostX, \lineY - \lineGap);
     \draw[meshline] (\leftmostX, \lineY + \lineGap) -- (\rightmostX, \lineY + \lineGap);
 }
