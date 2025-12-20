@@ -1105,6 +1105,143 @@ node & 0 & 1 \\
 \end{itemize}
 \end{frame}
 
+% Mesh Interconnect Detail
+\begin{frame}{Mesh Interconnect (Intel Skylake-SP / Xeon Scalable)}
+\begin{center}
+\begin{tikzpicture}[scale=0.85, transform shape,
+    tile/.style={draw, minimum width=1.1cm, minimum height=0.45cm, font=\tiny, inner sep=1pt, text depth=0.1ex},
+    iotile/.style={tile, fill=blue!70, text=white, minimum height=0.7cm},
+    linktile/.style={tile, fill=blue!50, text=white, minimum height=0.7cm, text width=0.9cm, align=center},
+    cachetile/.style={tile, fill=cyan!40},
+    coretile/.style={tile, fill=blue!60, text=white},
+    mctile/.style={tile, fill=gray!50, minimum height=0.9cm, text width=0.9cm, align=center},
+    router/.style={draw, fill=yellow!60, minimum size=0.15cm, inner sep=0pt},
+    meshline/.style={line width=1pt},
+    vmesh/.style={meshline, orange!70},
+    hmesh/.style={meshline, cyan!50}
+]
+
+% Column positions (tighter spacing)
+\def\colA{0}
+\def\colB{1.15}
+\def\colC{2.3}
+\def\colD{3.45}
+\def\colE{4.6}
+\def\colF{5.75}
+
+% Row positions (top to bottom)
+\def\rowI{0}
+\def\rowII{-1.0}
+\def\rowIII{-2.0}
+\def\rowIV{-3.0}
+\def\rowV{-4.0}
+
+% Router offset from tile center (at NE corner of Core = SE corner of Cache)
+\def\routerOffsetX{0.45}
+\def\routerOffsetY{-0.225}
+
+% Top row: Inter Socket Link and IO
+\node[linktile] at (\colA, \rowI) {Inter Socket\\Link};
+\node[iotile] at (\colB, \rowI) {IO};
+\node[iotile] at (\colC, \rowI) {IO};
+\node[iotile] at (\colD, \rowI) {IO};
+\node[iotile] at (\colE, \rowI) {IO};
+\node[linktile] at (\colF, \rowI) {Inter Socket\\Link};
+
+% Row 2: Cache + Core tiles
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowII) {Cache};
+    \node[coretile] at (\col, \rowII - 0.45) {Core};
+}
+
+% Row 3: Memory Controller on left, Cache+Core in middle, Memory Controller on right
+\node[mctile] at (\colA, \rowIII - 0.2) {Memory\\Controller};
+\foreach \col in {\colB, \colC, \colD, \colE} {
+    \node[cachetile] at (\col, \rowIII) {Cache};
+    \node[coretile] at (\col, \rowIII - 0.45) {Core};
+}
+\node[mctile] at (\colF, \rowIII - 0.2) {Memory\\Controller};
+
+% Row 4: Cache + Core tiles
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowIV) {Cache};
+    \node[coretile] at (\col, \rowIV - 0.45) {Core};
+}
+
+% Row 5: Cache + Core tiles
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowV) {Cache};
+    \node[coretile] at (\col, \rowV - 0.45) {Core};
+}
+
+% Vertical mesh lines - on east side for left cols, west side for right cols
+% Left 3 columns (A, B, C): lines on east side
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\lineX}{\col + \routerOffsetX}
+    \draw[vmesh] (\lineX, 0.45) -- (\lineX, -4.7);
+}
+% Right 3 columns (D, E, F): lines on west side
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\lineX}{\col - \routerOffsetX}
+    \draw[vmesh] (\lineX, 0.45) -- (\lineX, -4.7);
+}
+
+% Horizontal mesh lines (between cache and core)
+\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+    \pgfmathsetmacro{\lineY}{\row + \routerOffsetY}
+    \draw[hmesh] (-0.6, \lineY) -- (6.35, \lineY);
+}
+
+% Routers at intersections - left cols on east, right cols on west
+% Left 3 columns (A, B, C): router on east side (NE of core)
+\foreach \col in {\colA, \colB, \colC} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \pgfmathsetmacro{\rx}{\col + \routerOffsetX}
+        \pgfmathsetmacro{\ry}{\row + \routerOffsetY}
+        \node[router] at (\rx, \ry) {};
+    }
+}
+% Right 3 columns (D, E, F): router on west side (NW of core)
+\foreach \col in {\colD, \colE, \colF} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \pgfmathsetmacro{\rx}{\col - \routerOffsetX}
+        \pgfmathsetmacro{\ry}{\row + \routerOffsetY}
+        \node[router] at (\rx, \ry) {};
+    }
+}
+
+% DDR4 arrows
+\draw[<->, very thick] (-1.1, \rowIII - 0.2) -- (-0.6, \rowIII - 0.2);
+\node[font=\small\bfseries, anchor=east] at (-1.2, \rowIII - 0.2) {DDR4};
+\draw[<->, very thick] (6.35, \rowIII - 0.2) -- (6.85, \rowIII - 0.2);
+\node[font=\small\bfseries, anchor=west] at (6.95, \rowIII - 0.2) {DDR4};
+
+% Top/bottom arrows for UPI
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\arrowX}{\col + \routerOffsetX}
+    \draw[->, thick] (\arrowX, 0.6) -- (\arrowX, 0.45);
+    \draw[->, thick] (\arrowX, -4.7) -- (\arrowX, -4.85);
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\arrowX}{\col - \routerOffsetX}
+    \draw[->, thick] (\arrowX, 0.6) -- (\arrowX, 0.45);
+    \draw[->, thick] (\arrowX, -4.7) -- (\arrowX, -4.85);
+}
+
+% Outer box
+\draw[very thick, rounded corners=3pt] (-0.65, 0.5) rectangle (6.4, -4.75);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.2cm}
+\begin{itemize}
+\item Each tile: Core + private L1/L2 + slice of distributed L3 cache
+\item Mesh routers at each intersection enable flexible routing
+\item Memory controllers and I/O at edges; UPI links for multi-socket
+\end{itemize}
+\end{frame}
+
 % Slide 4: Software Implications
 \begin{frame}{NUMA: Software Implications}
 \begin{columns}[T]
@@ -3334,10 +3471,65 @@ Multiple machines & Cluster & Message Passing \\
 
 \column{0.45\textwidth}
 \begin{center}
-\includegraphics[width=\textwidth]{figures/cmp_mesh.png}
+\begin{tikzpicture}[scale=0.45,
+    core/.style={draw, fill=orange!30, minimum width=8mm, minimum height=6mm, font=\tiny},
+    cache/.style={draw, fill=yellow!20, minimum width=8mm, minimum height=4mm, font=\tiny},
+    llc/.style={draw, fill=green!20, minimum width=8mm, minimum height=5mm, font=\tiny},
+    ctrl/.style={draw, fill=blue!20, minimum width=10mm, minimum height=5mm, font=\tiny},
+    ring/.style={draw, very thick, red!60, rounded corners=2mm}]
+
+% Row 1: 4 cores with L2 cache
+\node[core] (c1) {Core};
+\node[cache, below=1mm of c1] (l2-1) {L2};
+\node[core, right=3mm of c1] (c2) {Core};
+\node[cache, below=1mm of c2] (l2-2) {L2};
+\node[core, right=3mm of c2] (c3) {Core};
+\node[cache, below=1mm of c3] (l2-3) {L2};
+\node[core, right=3mm of c3] (c4) {Core};
+\node[cache, below=1mm of c4] (l2-4) {L2};
+
+% Row 2: LLC slices
+\node[llc, below=4mm of l2-1] (llc1) {LLC};
+\node[llc, below=4mm of l2-2] (llc2) {LLC};
+\node[llc, below=4mm of l2-3] (llc3) {LLC};
+\node[llc, below=4mm of l2-4] (llc4) {LLC};
+
+% Row 3: 4 more cores with L2 cache
+\node[core, below=4mm of llc1] (c5) {Core};
+\node[cache, above=1mm of c5] (l2-5) {L2};
+\node[core, below=4mm of llc2] (c6) {Core};
+\node[cache, above=1mm of c6] (l2-6) {L2};
+\node[core, below=4mm of llc3] (c7) {Core};
+\node[cache, above=1mm of c7] (l2-7) {L2};
+\node[core, below=4mm of llc4] (c8) {Core};
+\node[cache, above=1mm of c8] (l2-8) {L2};
+
+% Ring interconnect (rectangle around LLC row)
+\draw[ring] ([xshift=-2mm, yshift=2mm]llc1.north west) rectangle ([xshift=2mm, yshift=-2mm]llc4.south east);
+\node[font=\tiny, red!70] at ([xshift=-6mm]llc1.west) {Ring};
+
+% Memory Controller and I/O on the sides
+\node[ctrl, left=5mm of llc1, yshift=-5mm] (mc) {Mem Ctrl};
+\node[ctrl, right=5mm of llc4, yshift=-5mm] (io) {I/O};
+
+% Connections
+\draw[<->, thin] (l2-1) -- (l2-1 |- llc1.north);
+\draw[<->, thin] (l2-2) -- (l2-2 |- llc2.north);
+\draw[<->, thin] (l2-3) -- (l2-3 |- llc3.north);
+\draw[<->, thin] (l2-4) -- (l2-4 |- llc4.north);
+\draw[<->, thin] (l2-5) -- (l2-5 |- llc1.south);
+\draw[<->, thin] (l2-6) -- (l2-6 |- llc2.south);
+\draw[<->, thin] (l2-7) -- (l2-7 |- llc3.south);
+\draw[<->, thin] (l2-8) -- (l2-8 |- llc4.south);
+
+% MC and I/O to ring
+\draw[<->, thick] (mc.east) -- ([xshift=-2mm]llc1.west |- mc.east);
+\draw[<->, thick] (io.west) -- ([xshift=2mm]llc4.east |- io.west);
+
+\end{tikzpicture}
 \end{center}
 \footnotesize
-Ring or Mesh interconnect between cores, shared LLC, memory controller, and I/O
+Ring interconnect between cores, shared LLC, memory controller, and I/O
 \end{columns}
 \end{frame}
 
