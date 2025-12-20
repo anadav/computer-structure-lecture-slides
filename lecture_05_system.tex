@@ -3237,52 +3237,43 @@ Programming & Easy & Medium & Hard \\
 
 \column{0.45\textwidth}
 \begin{center}
-\begin{tikzpicture}[scale=0.7,
-    comp/.style={draw, minimum height=7mm, minimum width=12mm, font=\scriptsize, text depth=0.5ex, text height=1.5ex},
-    mem/.style={comp, fill=blue!20},
-    proc/.style={comp, fill=green!20},
-    io/.style={comp, fill=orange!20}]
+\begin{tikzpicture}[scale=0.5,
+    % Same compact styles as NUMA
+    scomp/.style={draw, minimum height=3.5mm, minimum width=6mm, font=\tiny, inner sep=1pt, outer sep=0pt, text depth=0.2ex, text height=0.8ex},
+    smem/.style={scomp, fill=blue!20},
+    sproc/.style={scomp, fill=orange!20, minimum width=14mm},
+    sio/.style={scomp, fill=green!20},
+    % Pic for message passing node (I/O on right - for left-side nodes)
+    pics/mpnode/.style={code={
+        \node[smem] (-mem) {Memory};
+        \node[sio, right=1mm of -mem] (-io) {I/O};
+        \node[sproc, below=2.5mm of -mem, xshift=3.5mm] (-p) {P};
+        \draw[<->, thin] (-mem) -- (-mem |- -p.north);
+        \draw[<->, thin] (-io) -- (-io |- -p.north);
+    }},
+    % Pic for message passing node (I/O on left - for right-side nodes)
+    pics/mpnodeR/.style={code={
+        \node[sio] (-io) {I/O};
+        \node[smem, right=1mm of -io] (-mem) {Memory};
+        \node[sproc, below=2.5mm of -io, xshift=3.5mm] (-p) {P};
+        \draw[<->, thin] (-io) -- (-io |- -p.north);
+        \draw[<->, thin] (-mem) -- (-mem |- -p.north);
+    }}]
 
-% Node 1 (anchor)
-\node[proc] (p1) {P1};
-\node[mem, below=2mm of p1] (m1) {Mem};
-\node[io, below=2mm of m1] (io1) {I/O};
+% Place 4 message passing nodes (2x2 layout)
+\pic (n1) at (0,0) {mpnode};
+\pic (n2) at (5.5,0) {mpnodeR};
+\pic (n3) at (0,-5) {mpnode};
+\pic (n4) at (5.5,-5) {mpnodeR};
 
-% Node 2
-\node[proc, right=5mm of p1] (p2) {P2};
-\node[mem, below=2mm of p2] (m2) {Mem};
-\node[io, below=2mm of m2] (io2) {I/O};
+% Central Interconnect (centered between left I/O and right I/O)
+\node[draw, fill=red!20, minimum width=12mm, minimum height=5mm, font=\tiny, inner sep=1pt] (ic) at (3.5,-2.5) {Interconnect};
 
-% Node 3
-\node[proc, right=5mm of p2] (p3) {P3};
-\node[mem, below=2mm of p3] (m3) {Mem};
-\node[io, below=2mm of m3] (io3) {I/O};
-
-% Node 4
-\node[proc, right=5mm of p3] (p4) {P4};
-\node[mem, below=2mm of p4] (m4) {Mem};
-\node[io, below=2mm of m4] (io4) {I/O};
-
-% Local connections
-\draw[<->, thick] (p1) -- (m1);
-\draw[<->, thick] (m1) -- (io1);
-\draw[<->, thick] (p2) -- (m2);
-\draw[<->, thick] (m2) -- (io2);
-\draw[<->, thick] (p3) -- (m3);
-\draw[<->, thick] (m3) -- (io3);
-\draw[<->, thick] (p4) -- (m4);
-\draw[<->, thick] (m4) -- (io4);
-
-% Network bus - below I/O nodes
-\node[below=8mm of io2, xshift=5mm] (net-center) {};
-\draw[ultra thick, red!60] ([xshift=-2.5cm]net-center.center) -- ([xshift=2.5cm]net-center.center);
-\node[font=\scriptsize, below=1mm of net-center] {Network};
-
-% Connections to network
-\draw[->, thick] (io1) -- (io1 |- net-center.center);
-\draw[->, thick] (io2) -- (io2 |- net-center.center);
-\draw[->, thick] (io3) -- (io3 |- net-center.center);
-\draw[->, thick] (io4) -- (io4 |- net-center.center);
+% Connect I/O to Interconnect
+\draw[<->, thick] (n1-io.east) -| ([xshift=-2mm]ic.north);
+\draw[<->, thick] (n2-io.west) -| ([xshift=2mm]ic.north);
+\draw[<->, thick] (n3-io.east) -| ([xshift=-2mm]ic.south);
+\draw[<->, thick] (n4-io.west) -| ([xshift=2mm]ic.south);
 
 \end{tikzpicture}
 \end{center}

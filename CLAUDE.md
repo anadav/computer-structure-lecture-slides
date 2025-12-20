@@ -18,3 +18,5 @@
   3. "Output written" does NOT mean success - nonstopmode continues past errors
   4. Only declare success if grep returns NO results (empty output)
   5. Common gotcha: Using \\ in TikZ nodes requires align=center in the node style
+
+- Do NOT use "open" command to show generated PDF files to the user after building.
