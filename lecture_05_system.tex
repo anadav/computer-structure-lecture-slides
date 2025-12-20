@@ -300,44 +300,48 @@
 \end{itemize}
 
 \column{0.5\textwidth}
-\vspace{-8mm}
+\vspace{-7mm}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-% Cross-section view
-\node at (0,2.85) {\textbf{Package Cross-Section}};
+\begin{tikzpicture}[scale=0.8,
+    every node/.style={inner sep=0pt},
+    box/.style={draw, minimum height=6mm}]
 
-% IHS
-\draw[fill=gray!50] (-2,2) rectangle coordinate[pos=0] (ihs-bl) coordinate[pos=1] (ihs-tr) (2,2.6);
-\node at (0,2.3) {\small IHS (Heat Spreader)};
+% Motherboard (anchor element)
+\node[box, minimum width=7cm, fill=green!60] (mobo) {\small Motherboard};
 
-% Die
-\draw[fill=blue!30] (-1,1.3) rectangle (1,1.8);
-\node at (0,1.55) {\small Die};
+% Socket - above motherboard (text inside)
+\node[box, minimum width=6cm, ultra thick, minimum height=4mm, above=1mm of mobo, inner sep=2pt] (socket) {\small Socket};
 
-% Substrate
-\draw[fill=green!30] (-2.5,0.5) rectangle (2.5,1.2);
-\node at (0,0.85) {\small Substrate};
+% Substrate - positioned above socket with space for pins
+\node[box, minimum width=5cm, fill=green!30, minimum height=7mm, above=5mm of socket] (substrate) {\small Substrate};
 
-% Pins
-\foreach \x in {-2,-1.5,-1,-0.5,0,0.5,1,1.5,2} {
-    \draw[thick] (\x,0.5) -- (\x,0.2);
+% Pins - drawn from substrate bottom using calc
+\foreach \i in {1,...,9} {
+    \draw[thick] ($(substrate.south west)!{\i/10}!(substrate.south east)$) -- ++(0,-3mm);
 }
-\node at (0,0) {\small Pins/Pads};
+\node[anchor=north east] at ([yshift=-1mm, xshift=5mm]substrate.south west) {\small Pins/Pads};
 
-% Socket representation
-\draw[ultra thick] (-3,-0.5) rectangle coordinate[pos=1] (socket-tr) (3,-0.2);
-\node at (0,-0.7) {\small Socket};
+% Die - above substrate (narrower)
+\node[box, minimum width=2cm, fill=blue!30, minimum height=5mm, above=1mm of substrate] (die) {\small Die};
 
-% Motherboard
-\draw[fill=green!60] (-3.5,-1.5) rectangle (3.5,-0.9);
-\node at (0,-1.2) {\small Motherboard};
+% IHS (Heat Spreader) - above die
+\node[box, minimum width=4cm, fill=gray!50, above=1mm of die] (ihs) {\small IHS (Heat Spreader)};
+
+% Title - above IHS
+\node[above=2mm of ihs] {\textbf{Package Cross-Section}};
+
+% Package background shading using fit
+\begin{scope}[on background layer]
+    \node[fit=(ihs)(substrate), fill=orange!10, inner sep=3mm, yshift=-2mm] (package-bg) {};
+\end{scope}
 
 % Package arrow - right of diagram, using relative positioning
-\coordinate (arrow-x) at ([xshift=7mm]ihs-tr);
-\draw[<->, thick] (arrow-x |- ihs-tr) -- (arrow-x |- socket-tr) node[midway, right] {\small Package};
+\coordinate (arrow-x) at ([xshift=7mm]ihs.north east);
+\draw[<->, thick] (arrow-x |- ihs.north) -- (arrow-x |- socket.north) node[midway, right] {\small Package};
 \end{tikzpicture}
 \end{center}
 
+\vspace{-3mm}
 \textbf{Multi-Socket Systems:}
 \begin{itemize}
 \item 2S, 4S, 8S (S = Socket)
@@ -2991,6 +2995,326 @@ Binary representation of hardware topology, typically loaded from flash or passe
 \begin{block}{NVMe Advantage}
 NVMe reduces CPU overhead and latency by using PCIe directly instead of SATA controller, enabling full flash performance
 \end{block}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MULTI-PROCESSOR SYSTEMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Section: Multi-Processor Systems
+\begin{frame}
+\sectionpage
+\centering
+{\Huge Multi-Processor Systems}
+\end{frame}
+
+% Slide: Multi-Processor Systems Introduction
+\begin{frame}{Multi-Processor Systems}
+\textbf{Multi-Processor Systems:}
+\begin{itemize}
+\item Use multiple CPUs to perform parallelizable complex tasks
+\item Support multiple tasks and/or multiple users
+\item System resources (memory, I/O, etc.) may be divided symmetrically or asymmetrically
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Symmetric Multiprocessing (SMP):}
+\begin{itemize}
+\item All CPUs are treated equally
+\item Shared access to memory and I/O
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Asymmetric Multiprocessing (ASMP) Examples:}
+\begin{itemize}
+\item Non-Uniform Memory Access (NUMA)
+\item Clustered multiprocessing
+\end{itemize}
+\end{frame}
+
+% Slide: Multi-Processor Memory - UMA
+\begin{frame}{Multi-Processor Memory: Shared Memory (UMA)}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Centralized Shared Memory (SMP)}
+\begin{itemize}
+\item Uniform Memory Access (UMA)
+\item All processors access all memory locations at similar latency
+\item Data sharing through memory reads/writes
+\item Memory bandwidth becomes bottleneck
+\item Not scalable to many processors
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.7,
+    box/.style={draw, minimum height=8mm, minimum width=12mm, font=\footnotesize},
+    cache/.style={draw, minimum height=5mm, minimum width=10mm, font=\scriptsize, fill=yellow!20}]
+
+% Memory at top
+\node[box, minimum width=5cm, fill=blue!20] (mem) {Memory};
+
+% System bus
+\draw[ultra thick] (-2.2,-1) -- (2.2,-1);
+\node[right, font=\scriptsize] at (2.2,-1) {System Bus};
+
+% Processors with caches
+\foreach \i/\x in {1/-1.5, 2/0, n/1.5} {
+    \node[cache] (cache\i) at (\x,-1.8) {cache};
+    \node[box, fill=green!20] (p\i) at (\x,-2.8) {P\i};
+    \draw (cache\i) -- (\x,-1);
+    \draw (cache\i) -- (p\i);
+}
+
+% Memory connection
+\draw (mem) -- (0,-1);
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% Slide: Multi-Processor Memory - NUMA
+\begin{frame}{Multi-Processor Memory: Distributed Shared Memory (NUMA)}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Distributed Shared-Memory (DSM)}
+\begin{itemize}
+\item Also called NUMA (Non-Uniform Memory Access)
+\item All processors can address all memory locations
+\item Variable latency: local access faster than remote
+\item Better scalability than UMA
+\item Requires cache coherence protocol
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.65,
+    node/.style={draw, rounded corners, minimum height=6mm, minimum width=10mm, font=\scriptsize}]
+
+% Create 4 nodes in a square
+\foreach \i/\x/\y in {1/-1.2/1.2, 2/1.2/1.2, 3/-1.2/-1.2, 4/1.2/-1.2} {
+    \node[node, fill=green!20] (p\i) at (\x,\y) {P\i};
+    \node[node, fill=blue!20, below=1mm of p\i, minimum width=8mm] (m\i) {Mem};
+    \node[node, fill=orange!20, below=1mm of m\i, minimum width=8mm] (io\i) {I/O};
+}
+
+% Interconnect lines
+\draw[thick] (p1) -- (p2);
+\draw[thick] (p3) -- (p4);
+\draw[thick] (p1) -- (p3);
+\draw[thick] (p2) -- (p4);
+\draw[thick] (p1) -- (p4);
+\draw[thick] (p2) -- (p3);
+
+\node[font=\scriptsize] at (0,0) {Interconnect};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% Slide: Multi-Processor Memory - Message Passing
+\begin{frame}{Multi-Processor Memory: Message Passing}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Message-Passing (Clusters)}
+\begin{itemize}
+\item Computer cluster: connected computers working together
+\item Each processor can only directly address local memory
+\item Communicates via sending/receiving messages
+\item Extra burden on software for handling messages
+\item Scales to many processors
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.7,
+    node/.style={draw, rounded corners, minimum height=5mm, minimum width=8mm, font=\scriptsize}]
+
+% Create 4 nodes
+\foreach \i/\x in {1/-1.5, 2/-0.5, 3/0.5, 4/1.5} {
+    \node[node, fill=orange!20] (io\i) at (\x,0) {I/O};
+    \node[node, fill=blue!20, above=1mm of io\i] (m\i) {Mem};
+    \node[node, fill=green!20, above=1mm of m\i] (p\i) {P\i};
+}
+
+% Network at bottom
+\draw[ultra thick] (-2,-0.8) -- (2,-0.8);
+\node[font=\scriptsize] at (0,-1.2) {Network};
+
+% Connections to network
+\foreach \i/\x in {1/-1.5, 2/-0.5, 3/0.5, 4/1.5} {
+    \draw (io\i) -- (\x,-0.8);
+}
+\end{tikzpicture}
+\end{center}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{block}{Comparison}
+\footnotesize
+\begin{tabular}{lll}
+\textbf{UMA/SMP} & Simple programming & Limited scalability \\
+\textbf{NUMA/DSM} & Shared address space & Variable latency \\
+\textbf{Clusters} & High scalability & Complex programming \\
+\end{tabular}
+\end{block}
+\end{frame}
+
+% Slide: CMP - Core Multi-Processing
+\begin{frame}{CMP -- Chip Multi-Processing}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Simple SMP on the same chip:}
+\begin{itemize}
+\item Resources shared between CPUs (e.g., shared L3 cache)
+\item \textbf{Cheaper} than multi-socket SMP
+  \begin{itemize}
+  \item Interface logic integrated on-chip
+  \item Fewer total chips, single CPU socket
+  \item Single interface to main memory
+  \end{itemize}
+\item \textbf{Less power} than multi-socket
+  \begin{itemize}
+  \item On-die communication more power-efficient
+  \end{itemize}
+\item \textbf{Performance}
+  \begin{itemize}
+  \item On-chip communication is faster
+  \end{itemize}
+\item \textbf{Efficiency}
+  \begin{itemize}
+  \item Better use of resources than improving single-thread performance
+  \end{itemize}
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\includegraphics[width=\textwidth]{figures/cmp_mesh.png}
+\end{center}
+\footnotesize
+Ring or Mesh interconnect between cores, shared LLC, memory controller, and I/O
+\end{columns}
+\end{frame}
+
+% Slide: Multi-Socket System
+\begin{frame}{Multi-Socket System}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Architecture:}
+\begin{itemize}
+\item Each socket (chip) includes multiple cores (CMP)
+\item Each socket has Inter-Processor Link (IPL) controllers
+\item Sockets fully connected via high-speed point-to-point interconnect
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Coherency:}
+\begin{itemize}
+\item Coherent interconnect
+\item Single shared memory address space
+\item Directory-based home snoop coherency protocol
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.6,
+    socket/.style={draw, thick, rounded corners, minimum width=2.2cm, minimum height=1.5cm, fill=gray!10},
+    ipl/.style={draw, fill=purple!30, minimum width=4mm, minimum height=4mm, font=\tiny},
+    mem/.style={draw, fill=blue!20, minimum width=4mm, minimum height=6mm, font=\tiny, rotate=90}]
+
+% Four sockets in 2x2
+\foreach \i/\x/\y in {1/-1.5/1.5, 2/1.5/1.5, 3/-1.5/-1.5, 4/1.5/-1.5} {
+    \node[socket] (s\i) at (\x,\y) {};
+    \node[font=\scriptsize] at (\x,\y) {Socket \i};
+}
+
+% IPL connections (fully connected)
+\draw[very thick, red!60] (s1) -- (s2);
+\draw[very thick, red!60] (s3) -- (s4);
+\draw[very thick, red!60] (s1) -- (s3);
+\draw[very thick, red!60] (s2) -- (s4);
+\draw[very thick, red!60] (s1) -- (s4);
+\draw[very thick, red!60] (s2) -- (s3);
+
+% Memory below each socket
+\foreach \i/\x/\y in {1/-1.5/0.4, 2/1.5/0.4, 3/-1.5/-2.6, 4/1.5/-2.6} {
+    \node[draw, fill=blue!30, minimum width=1.5cm, minimum height=4mm, font=\tiny] at (\x,\y) {DDR};
+}
+
+\node[font=\tiny, red!70] at (0,0) {IPL};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% Slide: Server Systems
+\begin{frame}{Server Systems}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Server systems combine:}
+\begin{itemize}
+\item \textbf{SMP}: Multiple sockets per motherboard
+\item \textbf{CMP}: Multiple cores per socket
+\item \textbf{SMT}: Multiple threads per core
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Example: Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} E7-8890 V4}
+\begin{itemize}
+\item SMP: Up to 8 processors per board
+\item CMP: 24 cores per processor
+\item SMT: 2 threads per core
+\item Total: $8 \times 24 \times 2 = 384$ threads
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Blade servers:}
+\begin{itemize}
+\item Multiple blades per rack
+\item Blades connect via network (e.g., InfiniBand\textsuperscript{\textregistered})
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{figures/xeon_e7.jpeg}
+
+\vspace{0.3cm}
+\includegraphics[width=0.9\textwidth]{figures/server_blade.jpeg}
+\end{center}
+\end{columns}
+\end{frame}
+
+% Slide: Supercomputers
+\begin{frame}{Supercomputers}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{High Performance Computing (HPC) Clusters:}
+\begin{itemize}
+\item Group of servers connected with dedicated high-speed network
+\item Top500 ranks the 500 most powerful non-distributed systems
+\item Based on HPL (High-Performance LINPACK benchmark)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Example: Trinity (Cray XC40)}\\
+\footnotesize Los Alamos National Laboratory
+\begin{itemize}
+\item Cores: 979,968
+\item Processor: Intel Xeon Phi 7250 68C 1.4GHz
+\item Linpack: 14,137 TFlop/s
+\item Theoretical Peak: 43,902 TFlop/s
+\item Power: 3,843 kW
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\includegraphics[width=\textwidth]{figures/trinity_supercomputer.jpeg}
+\end{center}
+
+\vspace{0.2cm}
+\footnotesize
+\textbf{Note:} Modern top supercomputers exceed 1 ExaFlop/s (Frontier, Aurora)
+\end{columns}
 \end{frame}
 
 
