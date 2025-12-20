@@ -1129,16 +1129,12 @@ node & 0 & 1 \\
 \def\colE{4.6}
 \def\colF{5.75}
 
-% Row positions (top to bottom)
-\def\rowI{0}
+% Row positions (top to bottom) - rowI adjusted so IO/ISL has same gap to Cache as other rows
+\def\rowI{-0.32}
 \def\rowII{-1.0}
 \def\rowIII{-2.0}
 \def\rowIV{-3.0}
 \def\rowV{-4.0}
-
-% Router offset from tile center (at NE corner of Core = SE corner of Cache)
-\def\routerOffsetX{0.45}
-\def\routerOffsetY{-0.225}
 
 % Top row: Inter Socket Link and IO
 \node[linktile] at (\colA, \rowI) {Inter Socket\\Link};
@@ -1174,39 +1170,63 @@ node & 0 & 1 \\
     \node[coretile] at (\col, \rowV - 0.45) {Core};
 }
 
-% Vertical mesh lines - on east side for left cols, west side for right cols
-% Left 3 columns (A, B, C): lines on east side
+% Mesh line positions at tile edges (where routers are)
+\def\tileHalfWidth{0.55}
+\def\cacheCoreBoundary{-0.225}
+\pgfmathsetmacro{\topRouterY}{\rowI - 0.35}
+
+% Vertical mesh lines - from top row router to bottom row router
+% Left 3 columns (A, B, C): lines on east edge
 \foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\lineX}{\col + \routerOffsetX}
-    \draw[vmesh] (\lineX, 0.45) -- (\lineX, -4.7);
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth}
+    \pgfmathsetmacro{\bottomY}{\rowV + \cacheCoreBoundary}
+    \draw[vmesh] (\lineX, \topRouterY) -- (\lineX, \bottomY);
 }
-% Right 3 columns (D, E, F): lines on west side
+% Right 3 columns (D, E, F): lines on west edge
 \foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\lineX}{\col - \routerOffsetX}
-    \draw[vmesh] (\lineX, 0.45) -- (\lineX, -4.7);
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth}
+    \pgfmathsetmacro{\bottomY}{\rowV + \cacheCoreBoundary}
+    \draw[vmesh] (\lineX, \topRouterY) -- (\lineX, \bottomY);
 }
 
-% Horizontal mesh lines (between cache and core)
+% Horizontal mesh lines - only between leftmost and rightmost routers
+\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth}
+\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth}
+% Top row horizontal line
+\draw[hmesh] (\leftmostX, \topRouterY) -- (\rightmostX, \topRouterY);
+% Cache/Core rows horizontal lines
 \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-    \pgfmathsetmacro{\lineY}{\row + \routerOffsetY}
-    \draw[hmesh] (-0.6, \lineY) -- (6.35, \lineY);
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    \draw[hmesh] (\leftmostX, \lineY) -- (\rightmostX, \lineY);
 }
 
-% Routers at intersections - left cols on east, right cols on west
-% Left 3 columns (A, B, C): router on east side (NE of core)
+% Routers at intersections
+% Top row (IO/ISL) - anchored at SE corner for left cols, SW for right cols
+% Tile half-width = 0.55, half-height = 0.35
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\rx}{\col + 0.55}
+    \pgfmathsetmacro{\ry}{\rowI - 0.35}
+    \node[router, anchor=south east] at (\rx, \ry) {};
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\rx}{\col - 0.55}
+    \pgfmathsetmacro{\ry}{\rowI - 0.35}
+    \node[router, anchor=south west] at (\rx, \ry) {};
+}
+% Cache/Core rows - anchored at NE corner for left cols, NW for right cols
+% (between Cache bottom and Core top)
 \foreach \col in {\colA, \colB, \colC} {
     \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-        \pgfmathsetmacro{\rx}{\col + \routerOffsetX}
-        \pgfmathsetmacro{\ry}{\row + \routerOffsetY}
-        \node[router] at (\rx, \ry) {};
+        \pgfmathsetmacro{\rx}{\col + 0.55}
+        \pgfmathsetmacro{\ry}{\row - 0.225}
+        \node[router, anchor=north east] at (\rx, \ry) {};
     }
 }
-% Right 3 columns (D, E, F): router on west side (NW of core)
 \foreach \col in {\colD, \colE, \colF} {
     \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-        \pgfmathsetmacro{\rx}{\col - \routerOffsetX}
-        \pgfmathsetmacro{\ry}{\row + \routerOffsetY}
-        \node[router] at (\rx, \ry) {};
+        \pgfmathsetmacro{\rx}{\col - 0.55}
+        \pgfmathsetmacro{\ry}{\row - 0.225}
+        \node[router, anchor=north west] at (\rx, \ry) {};
     }
 }
 
@@ -1216,20 +1236,16 @@ node & 0 & 1 \\
 \draw[<->, very thick] (6.35, \rowIII - 0.2) -- (6.85, \rowIII - 0.2);
 \node[font=\small\bfseries, anchor=west] at (6.95, \rowIII - 0.2) {DDR4};
 
-% Top/bottom arrows for UPI
-\foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\arrowX}{\col + \routerOffsetX}
-    \draw[->, thick] (\arrowX, 0.6) -- (\arrowX, 0.45);
-    \draw[->, thick] (\arrowX, -4.7) -- (\arrowX, -4.85);
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\arrowX}{\col - \routerOffsetX}
-    \draw[->, thick] (\arrowX, 0.6) -- (\arrowX, 0.45);
-    \draw[->, thick] (\arrowX, -4.7) -- (\arrowX, -4.85);
+% Top arrows from IO/ISL tiles (extending further up)
+\pgfmathsetmacro{\ioTop}{\rowI + 0.35}
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \draw[<->, thick] (\col, \ioTop + 0.35) -- (\col, \ioTop);
 }
 
-% Outer box
-\draw[very thick, rounded corners=3pt] (-0.65, 0.5) rectangle (6.4, -4.75);
+% Outer box - adjusted to fit tile positions
+\pgfmathsetmacro{\boxTop}{\rowI + 0.4}
+\pgfmathsetmacro{\boxBottom}{\rowV - 0.45 - 0.28}
+\draw[very thick, rounded corners=3pt] (-0.65, \boxTop) rectangle (6.4, \boxBottom);
 
 \end{tikzpicture}
 \end{center}
