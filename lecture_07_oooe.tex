@@ -3,6 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb}
 \usepackage{booktabs}
+\usepackage{tabularx}
 \usepackage{colortbl}
 \usepackage{hyperref}
 \usepackage{makecell}
@@ -2831,6 +2832,31 @@
     \end{columns}
 \end{frame}
 
+% Slide: Misprediction Recovery Overview
+\begin{frame}{Misprediction Recovery -- Two Approaches}
+    \centering
+    \vspace{0.5cm}
+
+    \small
+    \begin{tabularx}{\textwidth}{@{} l X X @{}}
+        \toprule
+        & \textbf{Flush at Retire} & \textbf{Flush at Execute} \\
+        \midrule
+        \textbf{When recover} & \textcolor{red!70!black}{When mispredicted jump retires} & \textcolor{green!50!black}{When misprediction detected} \\[0.2cm]
+        \textbf{What's flushed} & \textcolor{red!70!black}{Entire pipeline} & \textcolor{green!50!black}{Frontend only (initially)} \\[0.2cm]
+        \textbf{Penalty} & \textcolor{red!70!black}{High (wait for retire)} & \textcolor{green!50!black}{Lower (act immediately)} \\[0.2cm]
+        \textbf{Complexity} & \textcolor{green!50!black}{Simple} & \textcolor{red!70!black}{Higher (needs checkpointing)} \\[0.2cm]
+        \textbf{Wrong-path work} & Executes until retire & Executes until retire \\
+        \bottomrule
+    \end{tabularx}
+
+    \vspace{0.5cm}
+    \begin{itemize}
+        \item Both approaches detect misprediction at execute
+        \item Difference: when to start fetching from correct path
+    \end{itemize}
+\end{frame}
+
 % Slide 7: Jump Misprediction - Flush at Retire
 \begin{frame}{Jump Misprediction -- Flush at Retire}
     \centering
@@ -2839,24 +2865,22 @@
         \begin{column}{0.9\textwidth}
             \textbf{When a mispredicted jump retires}
             \begin{itemize}
-                \item Flush the pipeline
+                \item Flush the entire pipeline
                 \begin{itemize}
-                    \item When the jump commits, all the instructions remaining in the pipe are younger than the jump $\Rightarrow$ from the wrong path
+                    \item All remaining instructions are younger $\Rightarrow$ all from wrong path
                 \end{itemize}
-                \item Reset the renaming map
+                \item Reset the rename map to architectural registers
                 \begin{itemize}
-                    \item So all the registers are mapped to the architectural registers
-                    \item This is ok since there are no consumers of physical registers (pipe is flushed)
+                    \item Safe: no in-flight consumers of physical registers
                 \end{itemize}
-                \item Start fetching instructions from the correct path
+                \item Redirect fetch to the correct path
             \end{itemize}
-            
+
             \vspace{0.3cm}
             \textbf{Disadvantage}
             \begin{itemize}
-                \item Very high misprediction penalty
-                \item Misprediction is already known after the jump was executed
-                \item We will see ways to recover a misprediction at execution
+                \item High misprediction penalty --- misprediction detected at execute, \\
+                but recovery waits until retire
             \end{itemize}
         \end{column}
     \end{columns}
@@ -2895,8 +2919,8 @@
 \begin{frame}{Flush at Retire: Mispredicted Jump Retires}
     \vspace{1cm}
     \centering
-    \drawpipelineCustom{2}{2}{2}{2}{2}
-    
+    \drawpipelineCustomExt{2}{2}{2}{2}{2}{1}{1}{1}{1}
+
     % Add flush arrow and text using node positions from the macro
     \begin{tikzpicture}[overlay, remember picture]
         \draw[->, red, ultra thick] (retire.north) -- ++(0,0.8) -| 
@@ -2994,7 +3018,7 @@
 \begin{frame}{Flush at EXE: Mispredicted Jump Retires}
     \centering
     \vspace{1cm}
-    \drawpipelineCustomExt{0}{0}{2}{2}{2}{1}{0}{0}{0}
+    \drawpipelineCustomExt{0}{0}{2}{2}{2}{0}{0}{1}{1}
 
     % Clear arrow
     \begin{tikzpicture}[overlay, remember picture]
