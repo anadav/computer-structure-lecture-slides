@@ -2857,186 +2857,82 @@
     \end{itemize}
 \end{frame}
 
-% Slide 7: Jump Misprediction - Flush at Retire
-\begin{frame}{Jump Misprediction -- Flush at Retire}
+% Slide: Flush at Retire: Jump Executed
+\begin{frame}{Flush at Retire: Jump Executed}
     \centering
-    
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \textbf{When a mispredicted jump retires}
-            \begin{itemize}
-                \item Flush the entire pipeline
-                \begin{itemize}
-                    \item All remaining instructions are younger $\Rightarrow$ all from wrong path
-                \end{itemize}
-                \item Reset the rename map to architectural registers
-                \begin{itemize}
-                    \item Safe: no in-flight consumers of physical registers
-                \end{itemize}
-                \item Redirect fetch to the correct path
-            \end{itemize}
+    \drawpipelineCustom{0}{0}{0}{3}{0}
 
-            \vspace{0.3cm}
-            \textbf{Disadvantage}
-            \begin{itemize}
-                \item High misprediction penalty --- misprediction detected at execute, \\
-                but recovery waits until retire
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-% Slide 8: Flush at Retire: Misp. Jump at EXE
-\begin{frame}{Flush at Retire: Mispredicted Jump at EXE}
-    \centering
-    \drawpipelineCustom{0}{0}{0}{1}{0}
-    
-    % Add Clear arrow from retire to alloc
-    \begin{tikzpicture}[overlay, remember picture]
-        % Arrow from retire to alloc showing what gets cleared when jump retires
-        \coordinate (clear-start) at ($(retire.south)+(0,-0.3)$);
-        \coordinate (clear-end) at ($(alloc.south)+(0,-0.3)$);
-        
-        % Draw the clear indication
-        \draw[<->, red, thick] (clear-start) -- (clear-end);
-        \node[red, font=\small\bfseries] at ($(clear-start)!0.5!(clear-end)+(0,-0.2)$) {Clear when jump retires};
-    \end{tikzpicture}
-    
     \vspace{0.5cm}
-    \begin{columns}[T]
-        \begin{column}{0.9\textwidth}
-            \begin{itemize}
-                \item \textbf{Misprediction detected when jump is executed}
-                \begin{itemize}
-                    \item Mark the jump as mispredicted in ROB
-                \end{itemize}
-            \end{itemize}
-        \end{column}
-    \end{columns}
+    \begin{itemize}
+        \item Misprediction detected --- mark jump as mispredicted in ROB
+        \item Pipeline continues filling with wrong-path instructions
+        \item No recovery action yet --- wait for jump to retire
+    \end{itemize}
 \end{frame}
 
-% Slide 9: Flush at Retire: Misp. Jump Retires
-\begin{frame}{Flush at Retire: Mispredicted Jump Retires}
-    \vspace{1cm}
+% Slide 9: Flush at Retire: Jump Retires
+\begin{frame}{Flush at Retire: Jump Retires}
+    \vspace{0.5cm}
     \centering
     \drawpipelineCustomExt{2}{2}{2}{2}{2}{1}{1}{1}{1}
 
     % Add flush arrow and text using node positions from the macro
     \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] (retire.north) -- ++(0,0.8) -| 
-          node[red, font=\bfseries\small, below, near start] {Clear} (fetch.north)
+        \draw[->, red, ultra thick] (retire.north) -- ++(0,0.8) -|
+          node[red, font=\bfseries\small, below, near start] {Flush} (fetch.north)
           node[black, font=\scriptsize, near end, left, align=right] {Redirect Fetch\\+ update BPU};
     \end{tikzpicture}
-    
-    %\vspace{0.5cm}
-    %\textbf{When the mispredicted jump retires}
+
+    \vspace{0.3cm}
     \begin{itemize}
-        \item[]\textbf{When the mispredicted jump retires}
-        \item All instructions in the pipe are younger than the jump \\
-        $\Rightarrow$ all are from the wrong path $\Rightarrow$ flush the entire pipeline
-        \item Reset the renaming map
-        \begin{itemize}
-            \item Map all the registers to the architectural registers
-            \item This is ok since there are no consumers of physical registers (pipe is flushed)
-        \end{itemize}
-        \item Start fetching instructions from the correct path
+        \item Flush entire pipeline (all instructions are wrong-path)
+        \item Reset rename map to architectural registers
+        \item Redirect fetch to correct path
     \end{itemize}
 \end{frame}
 
-% Slide 10: Jump Misprediction - Flush at Execute
-\begin{frame}{Jump Misprediction -- Flush at Execute}
-    \begin{itemize}
-        \item[] \textbf{When a jump misprediction is detected (at jump execution)}
-        \item Flush the in-order front-end
-        \item Continue executing instructions already in the OOO part
-        \begin{itemize}
-            \item Including wrong-path instructions (waste of execution resources and power)
-        \end{itemize}
-        \item Start fetching and decoding instructions from the correct path
-        \begin{itemize}
-            \item Note that the ``correct'' path may still be wrong...
-            \item An older instruction may cause an exception when it retires
-            \item An older jump executed out-of-order can also mispredict
-        \end{itemize}
-        \item Block younger jumps (executed OOO) from clearing
-        \item Stall the correct instruction stream at the Renamer
-        \begin{itemize}
-            \item The RAT (Register Alias Table) was wrongly updated by wrong-path instructions
-        \end{itemize}
-        \vspace{0.5cm}
-        \item[] \textbf{When the mispredicted jump retires}
-        \item Flush all instructions from the RS/ROB
-        \begin{itemize}
-            \item All are from the wrong path at this point
-        \end{itemize}
-        \item Reset the Renamer to point only to architectural registers
-        \item Un-stall the Renamer and allow instructions from correct path to rename/allocate
-    \end{itemize}
-\end{frame}
-
-% Slide 11: Flush at EXE: Jump Gets to EXE (first)
-\begin{frame}{Flush at EXE: Jump Gets to EXE}
-    \centering
-    \drawpipelineCustom{0}{0}{0}{3}{0}
-    
-    \vspace{4cm} % Space for potential diagram
-\end{frame}
-
-% Slide 12: Flush at EXE: Jump Gets to EXE (detailed)
-\begin{frame}{Flush at EXE: Jump Gets to EXE}
-    \vspace{1cm}
+% Slide: Flush at Execute: Jump Executed
+\begin{frame}{Flush at Execute: Jump Executed}
+    \vspace{0.5cm}
     \centering
     \drawpipelineCustomExt{2}{2}{0}{3}{0}{1}{1}{0}{0}
-    
+
     % Add Flush arrow and labels
     \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] (ex.north) -- ++(0,0.8) -| 
+        \draw[->, red, ultra thick] (ex.north) -- ++(0,0.8) -|
           node[red, font=\bfseries\small, below, near start] {Flush} (fetch.north)
           node[black, font=\scriptsize, near end, left, align=right] {Redirect Fetch\\+ update BPU};
         % draw red line left of alloc
         \draw[red, ultra thick] ([yshift=-1mm]alloc.south west) -- ([yshift=1mm]alloc.north west);
     \end{tikzpicture}
-    
-    \vspace{0.5cm}
+
+    \vspace{0.3cm}
     \begin{itemize}
-        \item Flush the front-end and re-steer it to correct path
-        \item Renamer state updated by wrong path $\Rightarrow$ Block further allocation
-        \item Update BPU
-        \item OOO not flushed
-        \begin{itemize}
-            \item Contains both instruction older and younger than the mispredicted jump
-            \item Instructions already in the OOO part continue to execute
-            \begin{itemize}
-                \item Including wrong-path instructions (waste of execution resource and power)
-            \end{itemize}
-        \end{itemize}
-        \item Block younger jumps from clearing
+        \item Flush frontend and redirect to correct path
+        \item Block allocation (rename map corrupted)
+        \item OOO continues --- wrong-path instructions still execute
+        \item Block younger jumps (executed OOO) from triggering flushes
+        \item Caveat: ``correct'' path may still be wrong (older jump/exception)
     \end{itemize}
 \end{frame}
 
-% Slide 13: Flush at EXE: Misp. Jump Retires
-\begin{frame}{Flush at EXE: Mispredicted Jump Retires}
+% Slide: Flush at Execute: Jump Retires
+\begin{frame}{Flush at Execute: Jump Retires}
+    \vspace{0.5cm}
     \centering
-    \vspace{1cm}
     \drawpipelineCustomExt{0}{0}{2}{2}{2}{0}{0}{1}{1}
 
     % Clear arrow
     \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] 
-          (retire.north) -- ++(0,0.8) -| node[red, font=\bfseries\small, below, near start] {Clear} (alloc.north);
+        \draw[->, red, ultra thick]
+          (retire.north) -- ++(0,0.8) -| node[red, font=\bfseries\small, below, near start] {Flush} (alloc.north);
     \end{tikzpicture}
-    
-    \vspace{0.5cm}
+
+    \vspace{0.3cm}
     \begin{itemize}
-        \item[] \textbf{When the mispredicted jump retires}
-        \item Flush OOO
-        \begin{itemize}
-            \item Only instruction following the jump are left in the machine \\
-            $\Rightarrow$ they must all be flushed
-            \item Resets all state in the OOO (Renamer, RS, ROB, MOB, etc.)
-            \item Reset the Renamer to point only to architectural registers, and unblock rename
-        \end{itemize}
-        \item Allow allocation of instructions from correct path
+        \item Flush OOO backend (only wrong-path instructions remain)
+        \item Reset rename map to architectural registers
+        \item Unblock allocation for correct-path instructions
     \end{itemize}
 \end{frame}
 
