@@ -1266,6 +1266,288 @@ node & 0 & 1 \\
 \end{itemize}
 \end{frame}
 
+% Mesh Components - with overlays: 1=interconnect only, 2=with tiles
+\begin{frame}{Mesh Components}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape,
+    tile/.style={draw, minimum width=0.9cm, minimum height=0.38cm, font=\tiny, inner sep=1pt},
+    iotile/.style={tile, fill=blue!70, text=white, minimum height=0.55cm},
+    linktile/.style={tile, fill=blue!50, text=white, minimum height=0.55cm, text width=0.75cm, align=center},
+    cachetile/.style={tile, fill=cyan!40},
+    coretile/.style={tile, fill=blue!60, text=white},
+    mctile/.style={tile, fill=gray!50, minimum height=0.7cm, text width=0.75cm, align=center},
+    router/.style={draw, fill=yellow!60, minimum size=0.12cm, inner sep=0pt},
+    meshline/.style={line width=0.5pt, orange!80}
+]
+
+% Column and row positions
+\def\colA{0}
+\def\colB{0.95}
+\def\colC{1.9}
+\def\colD{2.85}
+\def\colE{3.8}
+\def\colF{4.75}
+\def\rowI{-0.25}
+\def\rowII{-0.85}
+\def\rowIII{-1.65}
+\def\rowIV{-2.45}
+\def\rowV{-3.25}
+
+\def\tileHalfWidth{0.45}
+\def\cacheCoreBoundary{-0.19}
+\def\lineGap{0.025}
+\def\routerHalf{0.06}
+\pgfmathsetmacro{\topRouterY}{\rowI - 0.275}
+\pgfmathsetmacro{\topCenterY}{\topRouterY + \routerHalf}
+\pgfmathsetmacro{\bottomCenterY}{\rowV + \cacheCoreBoundary}
+\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth - \routerHalf}
+\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth + \routerHalf}
+\pgfmathsetmacro{\topLineY}{\topRouterY + \routerHalf}
+
+% ===== ROUTERS FIRST (so lines draw on top) =====
+\foreach \col in {\colA, \colB, \colC} {
+    \node[router, anchor=south east] at (\col + 0.45, \rowI - 0.275) {};
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \node[router, anchor=south west] at (\col - 0.45, \rowI - 0.275) {};
+}
+\foreach \col in {\colA, \colB, \colC} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \node[router, anchor=east] at (\col + 0.45, \row - 0.19) {};
+    }
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \node[router, anchor=west] at (\col - 0.45, \row - 0.19) {};
+    }
+}
+
+% ===== MESH LINES (on top of routers, extended past edges) =====
+\def\extendLen{0.15}  % How far lines extend past edge routers
+
+% Vertical mesh lines - extended past top and bottom routers
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
+    \draw[meshline] (\lineX - \lineGap, \bottomCenterY - \extendLen) -- (\lineX - \lineGap, \topCenterY + \extendLen);
+    \draw[meshline] (\lineX + \lineGap, \bottomCenterY - \extendLen) -- (\lineX + \lineGap, \topCenterY + \extendLen);
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
+    \draw[meshline] (\lineX - \lineGap, \bottomCenterY - \extendLen) -- (\lineX - \lineGap, \topCenterY + \extendLen);
+    \draw[meshline] (\lineX + \lineGap, \bottomCenterY - \extendLen) -- (\lineX + \lineGap, \topCenterY + \extendLen);
+}
+
+% Horizontal mesh lines - extended past left and right routers
+\draw[meshline] (\leftmostX - \extendLen, \topLineY - \lineGap) -- (\rightmostX + \extendLen, \topLineY - \lineGap);
+\draw[meshline] (\leftmostX - \extendLen, \topLineY + \lineGap) -- (\rightmostX + \extendLen, \topLineY + \lineGap);
+\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    \draw[meshline] (\leftmostX - \extendLen, \lineY - \lineGap) -- (\rightmostX + \extendLen, \lineY - \lineGap);
+    \draw[meshline] (\leftmostX - \extendLen, \lineY + \lineGap) -- (\rightmostX + \extendLen, \lineY + \lineGap);
+}
+
+% ===== TILES (only on slide 2) =====
+\only<2>{
+\node[linktile] at (\colA, \rowI) {Inter Socket Link};
+\node[iotile] at (\colB, \rowI) {IO};
+\node[iotile] at (\colC, \rowI) {IO};
+\node[iotile] at (\colD, \rowI) {IO};
+\node[iotile] at (\colE, \rowI) {IO};
+\node[linktile] at (\colF, \rowI) {Inter Socket Link};
+
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowII) {Cache};
+    \node[coretile] at (\col, \rowII - 0.38) {Core};
+}
+
+\node[mctile] at (\colA, \rowIII - 0.15) {Mem\\Ctrl};
+\foreach \col in {\colB, \colC, \colD, \colE} {
+    \node[cachetile] at (\col, \rowIII) {Cache};
+    \node[coretile] at (\col, \rowIII - 0.38) {Core};
+}
+\node[mctile] at (\colF, \rowIII - 0.15) {Mem\\Ctrl};
+
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowIV) {Cache};
+    \node[coretile] at (\col, \rowIV - 0.38) {Core};
+    \node[cachetile] at (\col, \rowV) {Cache};
+    \node[coretile] at (\col, \rowV - 0.38) {Core};
+}
+
+\draw[<->, thick] (-0.9, \rowIII - 0.15) -- (-0.5, \rowIII - 0.15);
+\node[font=\tiny\bfseries, anchor=east] at (-0.95, \rowIII - 0.15) {DDR4};
+\draw[<->, thick] (5.25, \rowIII - 0.15) -- (5.65, \rowIII - 0.15);
+\node[font=\tiny\bfseries, anchor=west] at (5.7, \rowIII - 0.15) {DDR4};
+}
+
+% ===== RING CLOSURES (simple arcs) and ARROWS on straight lines =====
+\pgfmathsetmacro{\topEndY}{\topCenterY + \extendLen}
+\pgfmathsetmacro{\bottomEndY}{\bottomCenterY - \extendLen}
+\pgfmathsetmacro{\leftEndX}{\leftmostX - \extendLen}
+\pgfmathsetmacro{\rightEndX}{\rightmostX + \extendLen}
+\def\arrowLen{0.08}
+
+% Vertical ring closures (arcs) and vertical arrows
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
+    % Top arc closure
+    \draw[meshline] (\lineX - \lineGap, \topEndY) arc (180:0:\lineGap);
+    % Bottom arc closure
+    \draw[meshline] (\lineX + \lineGap, \bottomEndY) arc (0:-180:\lineGap);
+    % Vertical arrows on extended lines (showing ring direction)
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \topEndY - \arrowLen) -- (\lineX - \lineGap, \topEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topEndY) -- (\lineX + \lineGap, \topEndY - \arrowLen);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \bottomEndY + \arrowLen) -- (\lineX + \lineGap, \bottomEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomEndY) -- (\lineX - \lineGap, \bottomEndY + \arrowLen);
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
+    % Top arc closure
+    \draw[meshline] (\lineX - \lineGap, \topEndY) arc (180:0:\lineGap);
+    % Bottom arc closure
+    \draw[meshline] (\lineX + \lineGap, \bottomEndY) arc (0:-180:\lineGap);
+    % Vertical arrows
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \topEndY - \arrowLen) -- (\lineX - \lineGap, \topEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topEndY) -- (\lineX + \lineGap, \topEndY - \arrowLen);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \bottomEndY + \arrowLen) -- (\lineX + \lineGap, \bottomEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomEndY) -- (\lineX - \lineGap, \bottomEndY + \arrowLen);
+}
+
+% Horizontal ring closures (arcs) and horizontal arrows
+\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    % Left arc closure
+    \draw[meshline] (\leftEndX, \lineY - \lineGap) arc (-90:-270:\lineGap);
+    % Right arc closure
+    \draw[meshline] (\rightEndX, \lineY + \lineGap) arc (90:-90:\lineGap);
+    % Horizontal arrows
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX + \arrowLen, \lineY - \lineGap) -- (\leftEndX, \lineY - \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX, \lineY + \lineGap) -- (\leftEndX + \arrowLen, \lineY + \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX - \arrowLen, \lineY + \lineGap) -- (\rightEndX, \lineY + \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX, \lineY - \lineGap) -- (\rightEndX - \arrowLen, \lineY - \lineGap);
+}
+% Top row horizontal ring closures and arrows
+\draw[meshline] (\leftEndX, \topLineY - \lineGap) arc (-90:-270:\lineGap);
+\draw[meshline] (\rightEndX, \topLineY + \lineGap) arc (90:-90:\lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX + \arrowLen, \topLineY - \lineGap) -- (\leftEndX, \topLineY - \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX, \topLineY + \lineGap) -- (\leftEndX + \arrowLen, \topLineY + \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX - \arrowLen, \topLineY + \lineGap) -- (\rightEndX, \topLineY + \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX, \topLineY - \lineGap) -- (\rightEndX - \arrowLen, \topLineY - \lineGap);
+
+% Labels for slide 1
+\only<1>{
+\node[font=\scriptsize, orange!80] at (2.4, 0.5) {Horizontal Rings};
+\node[font=\scriptsize, orange!80, rotate=90] at (5.6, -1.7) {Vertical Rings};
+\node[font=\scriptsize, yellow!60!black] at (2.4, -4.0) {Mesh Stops (Routers)};
+}
+
+\end{tikzpicture}
+\end{center}
+
+\column{0.45\textwidth}
+\only<1>{
+\textbf{Mesh Fabric:}
+\begin{itemize}
+\item 2D array of bidirectional rings
+\item Each column forms a vertical ring
+\item Each row forms a horizontal ring
+\item Mesh stops at intersections
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Why Mesh over Ring?}
+\begin{itemize}
+\item Ring limited to $\sim$10 cores
+\item Mesh scales to 28+ cores
+\item Better bandwidth \& latency
+\end{itemize}
+}
+\only<2>{
+\textbf{Tile Types:}
+\begin{itemize}
+\item \textbf{Core/LLC}: CPU + L3 slice
+\item \textbf{Memory Ctrl}: DDR interface
+\item \textbf{I/O}: PCIe, DMI
+\item \textbf{Inter-Socket}: UPI link
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Mesh Stop (Router):}
+\begin{itemize}
+\item Interface: tile $\leftrightarrow$ fabric
+\item Routes packets N/S/E/W
+\item Handles coherency traffic
+\end{itemize}
+}
+\end{columns}
+\end{frame}
+
+% Mesh Routing
+\begin{frame}{Mesh Routing}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Simple XY Routing Algorithm:}
+\begin{enumerate}
+\item Packet originates at source tile
+\item Enters fabric via local mesh stop
+\item \textbf{First: Route vertically} (north or south)
+\begin{itemize}
+\item Takes shortest path on vertical ring
+\item Continues until destination row reached
+\end{itemize}
+\item \textbf{Then: Route horizontally} (east or west)
+\begin{itemize}
+\item Switches to horizontal ring
+\item Continues to destination column
+\end{itemize}
+\item Exits fabric via destination mesh stop
+\end{enumerate}
+
+\vspace{0.2cm}
+\textbf{Note:} Return path may be different (asymmetric)
+
+\column{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape,
+    node/.style={draw, fill=gray!20, minimum size=0.5cm, inner sep=0pt},
+    src/.style={node, fill=green!40},
+    dst/.style={node, fill=red!40},
+    path/.style={->, very thick, blue!70}
+]
+% 4x4 grid of nodes
+\foreach \x in {0,1,2,3} {
+    \foreach \y in {0,1,2,3} {
+        \node[node] (n\x\y) at (\x, \y) {};
+    }
+}
+% Source and destination
+\node[src] at (0,3) {};
+\node[dst] at (3,1) {};
+\node[font=\tiny, above=0.1cm of n03] {Src};
+\node[font=\tiny, below=0.1cm of n31] {Dst};
+
+% Path: vertical first, then horizontal
+\draw[path] (n03.center) -- (n01.center);
+\draw[path] (n01.center) -- (n31.center);
+
+% Labels
+\node[font=\scriptsize, left=0.2cm of n02, blue!70] {1. Vertical};
+\node[font=\scriptsize, below=0.2cm of n11, blue!70] {2. Horizontal};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+\textbf{Benefits:}
+\begin{itemize}
+\item Deadlock-free routing
+\item Predictable latency
+\item Simple hardware
+\end{itemize}
+\end{columns}
+\end{frame}
+
 % Slide 4: Software Implications
 \begin{frame}{NUMA: Software Implications}
 \begin{columns}[T]
