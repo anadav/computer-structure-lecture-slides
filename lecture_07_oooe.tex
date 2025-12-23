@@ -50,6 +50,8 @@
 \tableofcontents
 \end{frame}
 
+\section{Motivation}
+
 \begin{frame}{What's Next}
   \begin{itemize}
     \item \textbf{Goal: minimize CPU Time}
@@ -735,6 +737,8 @@
   \end{columns}
 \end{frame}
 
+\section{Register Renaming}
+
 \begin{frame}{Speculative Execution}
   \begin{columns}
     \begin{column}{0.45\textwidth}
@@ -993,6 +997,8 @@
     \colorbox{green!30}{Later on we will see various schemes for recovering the mapping}
   \end{block}
 \end{frame}
+
+\section{OOO Machine Components}
 
 \begin{frame}{A Superscalar OOO Machine}
   \begin{center}
@@ -1803,6 +1809,8 @@
   \end{columns}
 \end{frame}
 
+\section{Exceptions \& Interrupts}
+
 \begin{frame}{Faults and Exceptions -- Architecture (Reminder)}
   \begin{itemize}
     \item \textbf{Exception}: Event during instruction execution (divide by 0, page fault, etc.)
@@ -2197,12 +2205,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \begin{center}
-    \vspace{3cm}
-    {\Huge \textbf{OOO Execution of Memory Operations}}
-  \end{center}
-\end{frame}
+\section{Memory Operations}
 
 \begin{frame}{OOO Execution of Memory Operations}
   \begin{itemize}
@@ -2682,6 +2685,7 @@
     \fi
 }
 
+\section{OOO Pipeline}
 
 % Slide 1: OOO Machine Pipeline
 \begin{frame}{OOO Machine Pipeline}
@@ -2831,6 +2835,8 @@
         \end{column}
     \end{columns}
 \end{frame}
+
+\section{Misprediction Recovery}
 
 % Slide: Misprediction Recovery Overview
 \begin{frame}{Misprediction Recovery -- Two Approaches}
@@ -3011,61 +3017,53 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Checkpoints: Jump Gets to EXE}
+\begin{frame}{Checkpoints: Jump Executed}
     \centering
     \drawpipelineCustomExt{0}{0}{0}{3}{0}{1}{1}{2}{2}
-    
+
     % Add BPU Update and Clear labels
     \begin{tikzpicture}[overlay, remember picture]
-        \draw[->, red, ultra thick] (ex.north) -- ++(0,0.8) -| 
-          node[red, font=\bfseries\small, below, near start] {Clear} (fetch.north)
+        \draw[->, red, ultra thick] (ex.north) -- ++(0,0.8) -|
+          node[red, font=\bfseries\small, below, near start] {Flush} (fetch.north)
           node[black, font=\scriptsize, near end, left, align=right] {update BPU};
     \end{tikzpicture}
-    
+
     \vspace{0.5cm}
     \begin{itemize}
-        \item[] \textbf{Clear raised on mispredicted jump}
-        \pause
-        \begin{itemize}
-            \item Flush frontend and re-steer it to the correct path
-            \item \textcolor{orange}{Flush all younger instructions in OOO}
-            \begin{itemize}
-                \item Based on age (ROBid) comparison
-            \end{itemize}
-            \item Update BPU
-            \item Block further allocation until the Renamer mapping is recovered
-        \end{itemize}
+        \item Flush frontend and redirect to correct path
+        \item \textcolor{orange}{Flush younger instructions in OOO} (by ROB age comparison)
+        \item Block allocation until Renamer recovered
     \end{itemize}
 \end{frame}
 
-% Slide 17: Checkpoints: Renamer Recovery (first)
-\begin{frame}{Checkpoints: Renamer Recovery}
-    \vspace{1cm}
+% Slide: Checkpoints: Recovering Renamer
+\begin{frame}{Checkpoints: Recovering Renamer}
+    \vspace{0.5cm}
     \centering
     \drawpipelineCustomExt{2}{2}{2}{0}{0}{1}{1}{2}{2}
 
     \begin{tikzpicture}[overlay, remember picture]
         \draw[red, ultra thick] ([yshift=-1mm]alloc.south west) -- ([yshift=1mm]alloc.north west);
     \end{tikzpicture}
-    
+
+    \vspace{0.3cm}
     \begin{itemize}
-        \item Restore Renamer from latest check-point before the jump
-        \item Recover Renamer to its states just after the jump
-        \item Meanwhile front-end starts fetching and decoding instructions from the correct path
+        \item Restore Renamer from latest checkpoint before the jump
+        \item Re-rename instructions from checkpoint to jump
+        \item Frontend fetches correct path (blocked at allocation)
     \end{itemize}
 \end{frame}
 
-% Slide 18: Checkpoints: Renamer Recovery (second)
-\begin{frame}{Checkpoints: Renamer Recovery}
+% Slide: Checkpoints: Recovery Complete
+\begin{frame}{Checkpoints: Recovery Complete}
+    \vspace{0.5cm}
     \centering
     \drawpipelineCustomExt{0}{0}{1}{0}{0}{0}{0}{2}{2}
-    
+
     \vspace{0.5cm}
     \begin{itemize}
-        \item \textbf{Once done restoring the Renamer}
-        \begin{itemize}
-            \item allow allocation of instructions from correct path
-        \end{itemize}
+        \item Renamer restored --- unblock allocation
+        \item Correct-path instructions now flow through
     \end{itemize}
 \end{frame}
 
