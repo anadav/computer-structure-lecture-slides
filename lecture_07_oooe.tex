@@ -252,12 +252,11 @@
     \begin{column}{0.65\textwidth}
       \begin{center}
         \textbf{Data Flow Graph}\\
-        \vspace{0.3cm}
-        \begin{tikzpicture}[scale=0.8, 
-          node distance=1.2cm,
-          inst/.style={circle, draw, minimum size=0.8cm},
+        \vspace{0.2cm}
+        \begin{tikzpicture}[scale=0.6,
+          node distance=1cm,
+          inst/.style={circle, draw, minimum size=0.5cm, font=\small, inner sep=1pt},
           dep/.style={->, thick}]
-          
           % Nodes
           \node[inst] (i1) at (0,2.5) {1};
           \node[inst] (i3) at (2,2.5) {3};
@@ -265,47 +264,62 @@
           \node[inst] (i2) at (1,1) {2};
           \node[inst] (i5) at (3,1) {5};
           \node[inst] (i6) at (2,-0.5) {6};
-          
           % Dependencies with colored labels
-          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\small r1}} (i2);
-          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\small r5}} (i5);
-          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\small r6}} (i5);
-          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\small r8}} (i6);
-          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\small r4}} (i6);
+          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\scriptsize r1}} (i2);
+          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\scriptsize r5}} (i5);
+          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\scriptsize r6}} (i5);
+          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\scriptsize r8}} (i6);
+          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\scriptsize r4}} (i6);
         \end{tikzpicture}
-        
-        \vspace{0.5cm}
-        \small
+
+        \vspace{0.4cm}
+        \scriptsize
         \begin{tabular}{cc}
-          \textbf{In-order execution} & \textbf{Out-of-order execution} \\
-        \begin{tikzpicture}[scale=0.5]
-        % Box 1 (large, left side)
-        \draw[thick, fill=gray!20] (0,1) rectangle (2,1.5) node[midway, font=\tiny] {1};
-        
-        % Box 2 (top right)
-        \draw[thick, fill=white] (2.1,1) rectangle (3,1.5) node[midway, font=\tiny] {2};
-        
-        % Box 3 (middle right)
-        \draw[thick, fill=white] (2.1,0.5) rectangle (3,1) node[midway, font=\tiny] {3};
-        
-        % Box 4 (bottom middle)
-        \draw[thick, fill=white] (2.1,0) rectangle (3,0.5) node[midway, font=\tiny] {4};
-        
-        % Box 5 (right of box 3)
-        \draw[thick, fill=white] (3.1,0.5) rectangle (4,1) node[midway, font=\tiny] {5};
-        
-        % Box 6 (far right)
-        \draw[thick, fill=white] (4.1,0.5) rectangle (5,1) node[midway, font=\tiny] {6};
+        \begin{tikzpicture}[
+            node distance=1pt,
+            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
+            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
+            i2/.style={inst, fill=green!30},
+            i3/.style={inst, fill=yellow!30},
+            i4/.style={inst, fill=orange!30},
+            i5/.style={inst, fill=purple!30},
+            i6/.style={inst, fill=red!30},
+        ]
+            % In-order: 1, then 2,3,4 stacked (dispatched together after 1), then 5, then 6
+            \node[i1] (n1) {1};
+            \node[i2, right=of n1] (n2) {2};
+            \node[i3, below=of n2] (n3) {3};
+            \node[i4, below=of n3] (n4) {4};
+            \node[i5, right=of n2] (n5) {5};
+            \node[i6, right=of n5] (n6) {6};
+            % Timeline
+            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
+            % Title centered above
+            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {In-order execution};
         \end{tikzpicture}
           &
-          \begin{tikzpicture}[scale=0.5]
-            \draw[fill=blue!30] (0,0) rectangle (3,0.5) node[midway] {\tiny 1};
-            \draw[fill=yellow!30] (1,0.6) rectangle (2,1.1) node[midway] {\tiny 3};
-            \draw[fill=orange!30] (1.5,1.2) rectangle (2.5,1.7) node[midway] {\tiny 4};
-            \draw[fill=purple!30] (2.6,0.6) rectangle (3.6,1.1) node[midway] {\tiny 5};
-            \draw[fill=green!30] (3.2,0) rectangle (4.2,0.5) node[midway] {\tiny 2};
-            \draw[fill=red!30] (4.4,0) rectangle (5.4,0.5) node[midway] {\tiny 6};
-          \end{tikzpicture}
+        \begin{tikzpicture}[
+            node distance=1pt,
+            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
+            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
+            i2/.style={inst, fill=green!30},
+            i3/.style={inst, fill=yellow!30},
+            i4/.style={inst, fill=orange!30},
+            i5/.style={inst, fill=purple!30},
+            i6/.style={inst, fill=red!30},
+        ]
+            % OOO: 3,4 below 1 (left-aligned), 5 after 3, then 2 after 1, then 6
+            \node[i1] (n1) {1};
+            \node[i3, below=of n1.south west, anchor=north west] (n3) {3};
+            \node[i4, below=of n3] (n4) {4};
+            \node[i5, right=of n3] (n5) {5};
+            \node[i2, right=of n1] (n2) {2};
+            \node[i6, right=of n2] (n6) {6};
+            % Timeline
+            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
+            % Title centered above (same positioning as in-order)
+            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {Out-of-order execution};
+        \end{tikzpicture}
         \end{tabular}
       \end{center}
     \end{column}
@@ -602,12 +616,11 @@
     \begin{column}{0.65\textwidth}
       \begin{center}
         \textbf{Data Flow Graph}\\
-        \vspace{0.3cm}
-        \begin{tikzpicture}[scale=0.8, 
-          node distance=1.2cm,
-          inst/.style={circle, draw, minimum size=0.8cm},
+        \vspace{0.2cm}
+        \begin{tikzpicture}[scale=0.6,
+          node distance=1cm,
+          inst/.style={circle, draw, minimum size=0.5cm, font=\small, inner sep=1pt},
           dep/.style={->, thick}]
-          
           % Nodes
           \node[inst] (i1) at (0,2.5) {1};
           \node[inst] (i3) at (2,2.5) {3};
@@ -615,47 +628,62 @@
           \node[inst] (i2) at (1,1) {2};
           \node[inst] (i5) at (3,1) {5};
           \node[inst] (i6) at (2,-0.5) {6};
-          
           % Dependencies with colored labels
-          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\small r1}} (i2);
-          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\small r5}} (i5);
-          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\small r6}} (i5);
-          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\small r8}} (i6);
-          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\small r4}} (i6);
+          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\scriptsize r1}} (i2);
+          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\scriptsize r5}} (i5);
+          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\scriptsize r6}} (i5);
+          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\scriptsize r8}} (i6);
+          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\scriptsize r4}} (i6);
         \end{tikzpicture}
-        
-        \vspace{0.5cm}
-        \small
+
+        \vspace{0.4cm}
+        \scriptsize
         \begin{tabular}{cc}
-          \textbf{In-order execution} & \textbf{Out-of-order execution} \\
-        \begin{tikzpicture}[scale=0.5]
-        % Box 1 (large, left side)
-        \draw[thick, fill=gray!20] (0,1) rectangle (2,1.5) node[midway, font=\tiny] {1};
-        
-        % Box 2 (top right)
-        \draw[thick, fill=white] (2.1,1) rectangle (3,1.5) node[midway, font=\tiny] {2};
-        
-        % Box 3 (middle right)
-        \draw[thick, fill=white] (2.1,0.5) rectangle (3,1) node[midway, font=\tiny] {3};
-        
-        % Box 4 (bottom middle)
-        \draw[thick, fill=white] (2.1,0) rectangle (3,0.5) node[midway, font=\tiny] {4};
-        
-        % Box 5 (right of box 3)
-        \draw[thick, fill=white] (3.1,0.5) rectangle (4,1) node[midway, font=\tiny] {5};
-        
-        % Box 6 (far right)
-        \draw[thick, fill=white] (4.1,0.5) rectangle (5,1) node[midway, font=\tiny] {6};
+        \begin{tikzpicture}[
+            node distance=1pt,
+            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
+            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
+            i2/.style={inst, fill=green!30},
+            i3/.style={inst, fill=yellow!30},
+            i4/.style={inst, fill=orange!30},
+            i5/.style={inst, fill=purple!30},
+            i6/.style={inst, fill=red!30},
+        ]
+            % In-order: 1, then 2,3,4 stacked (dispatched together after 1), then 5, then 6
+            \node[i1] (n1) {1};
+            \node[i2, right=of n1] (n2) {2};
+            \node[i3, below=of n2] (n3) {3};
+            \node[i4, below=of n3] (n4) {4};
+            \node[i5, right=of n2] (n5) {5};
+            \node[i6, right=of n5] (n6) {6};
+            % Timeline
+            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
+            % Title centered above
+            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {In-order execution};
         \end{tikzpicture}
           &
-          \begin{tikzpicture}[scale=0.5]
-            \draw[fill=blue!30] (0,0) rectangle (3,0.5) node[midway] {\tiny 1};
-            \draw[fill=yellow!30] (1,0.6) rectangle (2,1.1) node[midway] {\tiny 3};
-            \draw[fill=orange!30] (1.5,1.2) rectangle (2.5,1.7) node[midway] {\tiny 4};
-            \draw[fill=purple!30] (2.6,0.6) rectangle (3.6,1.1) node[midway] {\tiny 5};
-            \draw[fill=green!30] (3.2,0) rectangle (4.2,0.5) node[midway] {\tiny 2};
-            \draw[fill=red!30] (4.4,0) rectangle (5.4,0.5) node[midway] {\tiny 6};
-          \end{tikzpicture}
+        \begin{tikzpicture}[
+            node distance=1pt,
+            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
+            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
+            i2/.style={inst, fill=green!30},
+            i3/.style={inst, fill=yellow!30},
+            i4/.style={inst, fill=orange!30},
+            i5/.style={inst, fill=purple!30},
+            i6/.style={inst, fill=red!30},
+        ]
+            % OOO: 3,4 below 1 (left-aligned), 5 after 3, then 2 after 1, then 6
+            \node[i1] (n1) {1};
+            \node[i3, below=of n1.south west, anchor=north west] (n3) {3};
+            \node[i4, below=of n3] (n4) {4};
+            \node[i5, right=of n3] (n5) {5};
+            \node[i2, right=of n1] (n2) {2};
+            \node[i6, right=of n2] (n6) {6};
+            % Timeline
+            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
+            % Title centered above (same positioning as in-order)
+            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {Out-of-order execution};
+        \end{tikzpicture}
         \end{tabular}
       \end{center}
     \end{column}
