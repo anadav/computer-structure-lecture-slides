@@ -236,6 +236,7 @@
   \begin{tikzpicture}[
     % Common styles
     code/.style={font=\small\ttfamily, anchor=west},
+    titlestyle/.style={font=\small\bfseries},
     inst/.style={circle, draw, minimum size=0.5cm, font=\small, inner sep=1pt},
     dep/.style={->, thick},
     exec/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
@@ -247,24 +248,24 @@
     i6exec/.style={exec, fill=red!30},
   ]
     % === LEFT COLUMN: Example code ===
-    \node[font=\bfseries, anchor=west] at (0,0) {Example:};
-    \node[code] (line1) at (0,-0.5) {1. \textcolor{r1color}{r1} $\leftarrow$ r4 / r7};
-    \node[code] at (0,-1.0) {2. \textcolor{r8color}{r8} $\leftarrow$ \textcolor{r1color}{r1} + r2};
-    \node[code] at (0,-1.5) {3. \textcolor{r5color}{r5} $\leftarrow$ r5 + 1};
-    \node[code] at (0,-2.0) {4. \textcolor{r6color}{r6} $\leftarrow$ r6 - r3};
-    \node[code] at (0,-2.5) {5. \textcolor{r4color}{r4} $\leftarrow$ \textcolor{r5color}{r5} + \textcolor{r6color}{r6}};
-    \node[code] at (0,-3.0) {6. r7 $\leftarrow$ \textcolor{r8color}{r8} * \textcolor{r4color}{r4}};
+    \node[titlestyle, anchor=west] at (-1,0.3) {Example:};
+    \node[code] (line1) at (-1,-0.3) {(1) \textcolor{r1color}{r1} $\leftarrow$ r4 / r7};
+    \node[code] at (-1,-0.8) {(2) \textcolor{r8color}{r8} $\leftarrow$ \textcolor{r1color}{r1} + r2};
+    \node[code] at (-1,-1.3) {(3) \textcolor{r5color}{r5} $\leftarrow$ r5 + 1};
+    \node[code] at (-1,-1.8) {(4) \textcolor{r6color}{r6} $\leftarrow$ r6 - r3};
+    \node[code] at (-1,-2.3) {(5) \textcolor{r4color}{r4} $\leftarrow$ \textcolor{r5color}{r5} + \textcolor{r6color}{r6}};
+    \node[code] at (-1,-2.8) {(6) r7 $\leftarrow$ \textcolor{r8color}{r8} * \textcolor{r4color}{r4}};
 
     % Callout for divide - positioned relative to line1, pointing to /
     \node[ellipse callout, draw, fill=blue!10,
-          callout absolute pointer={($(line1.east)+(-0.3cm,0)$)},
+          callout absolute pointer={($(line1.east)+(-0.3cm,2mm)$)},
           font=\scriptsize, align=center]
           at ($(line1.north)+(0.5cm,1cm)$)
           {Assume divide\\takes multiple cycles};
 
     % === RIGHT COLUMN: Data Flow Graph ===
-    \begin{scope}[shift={(6,0)}]
-      \node[font=\small\bfseries] at (1.2,0.3) {Data Flow Graph};
+    \begin{scope}[shift={(5.5,0.8)}]
+      \node[titlestyle] at (1.2,0.3) {Data Flow Graph};
       % Graph nodes
       \node[inst] (i1) at (0,-0.5) {1};
       \node[inst] (i3) at (1.2,-0.5) {3};
@@ -280,9 +281,9 @@
       \draw[dep] (i5) -- node[right, font=\scriptsize] {\textcolor{r4color}{r4}} (i6);
     \end{scope}
 
-    % === BOTTOM LEFT: In-order execution ===
-    \begin{scope}[shift={(4.5,-3.5)}, node distance=1pt]
-      \node[font=\scriptsize\bfseries] at (0.8,0.8) {In-order execution};
+    % === BOTTOM LEFT: In-order execution (appears on click) ===
+    \only<2->{
+    \begin{scope}[shift={(4,-3.8)}, node distance=1pt]
       \node[i1exec] (io1) at (0,0) {1};
       \node[i2exec, right=of io1] (io2) {2};
       \node[i3exec, below=of io2] (io3) {3};
@@ -290,6 +291,8 @@
       \node[i5exec, right=of io2] (io5) {5};
       \node[i6exec, right=of io5] (io6) {6};
       \draw[->] ([yshift=-2mm]io1.west |- io4.south) -- ([yshift=-2mm]io6.east |- io4.south) node[right, font=\tiny] {t};
+      % Title closer to the diagram
+      \node[titlestyle] at (0.8,0.5) {In-Order Execution};
     \end{scope}
 
     % Callout for in-order - positioned to the left, pointing to instruction 2
@@ -297,11 +300,12 @@
           callout absolute pointer={(io2.west)},
           font=\tiny, text width=3cm, align=center, anchor=east]
           at ($(io1.west)+(-0.3cm,-0.8cm)$)
-          {2 has data dependency on 1, so 3 and 4 must wait (even though independent of 1)};
+          {(2) depends on (1), so (3) and (4) must wait even though they're independent of (1)};
+    }
 
-    % === BOTTOM RIGHT: Out-of-order execution ===
-    \begin{scope}[shift={(9,-3.5)}, node distance=1pt]
-      \node[font=\scriptsize\bfseries] at (0.8,0.8) {Out-of-order execution};
+    % === BOTTOM RIGHT: Out-of-order execution (appears on second click) ===
+    \only<3->{
+    \begin{scope}[shift={(9,-3.8)}, node distance=1pt]
       \node[i1exec] (ooo1) at (0,0) {1};
       \node[i3exec, below=1pt of ooo1.south west, anchor=north west] (ooo3) {3};
       \node[i4exec, below=of ooo3] (ooo4) {4};
@@ -309,7 +313,10 @@
       \node[i2exec, right=of ooo1] (ooo2) {2};
       \node[i6exec, right=of ooo2] (ooo6) {6};
       \draw[->] ([yshift=-2mm]ooo1.west |- ooo4.south) -- ([yshift=-2mm]ooo6.east |- ooo4.south) node[right, font=\tiny] {t};
+      % Title closer to the diagram
+      \node[titlestyle] at (0.8,0.5) {Out-of-Order Execution};
     \end{scope}
+    }
   \end{tikzpicture}
 \end{frame}
 
