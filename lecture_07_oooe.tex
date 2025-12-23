@@ -233,97 +233,84 @@
 \end{frame}
 
 \begin{frame}{Data Flow Analysis}
-  \begin{columns}
-    \begin{column}{0.35\textwidth}
-      \textbf{Example:}
-      \begin{enumerate}
-        \item \texttt{\textcolor{r1color}{r1} $\leftarrow$ r4 / r7}
-        \item \texttt{\textcolor{r8color}{r8} $\leftarrow$ \textcolor{r1color}{r1} + r2}
-        \item \texttt{\textcolor{r5color}{r5} $\leftarrow$ r5 + 1}
-        \item \texttt{\textcolor{r6color}{r6} $\leftarrow$ r6 - r3}
-        \item \texttt{\textcolor{r4color}{r4} $\leftarrow$ \textcolor{r5color}{r5} + \textcolor{r6color}{r6}}
-        \item \texttt{r7 $\leftarrow$ \textcolor{r8color}{r8} * \textcolor{r4color}{r4}}
-      \end{enumerate}
-      
-      \vspace{0.3cm}
-      \small{Assume divide takes multiple cycles}
-    \end{column}
-    
-    \begin{column}{0.65\textwidth}
-      \begin{center}
-        \textbf{Data Flow Graph}\\
-        \vspace{0.2cm}
-        \begin{tikzpicture}[scale=0.6,
-          node distance=1cm,
-          inst/.style={circle, draw, minimum size=0.5cm, font=\small, inner sep=1pt},
-          dep/.style={->, thick}]
-          % Nodes
-          \node[inst] (i1) at (0,2.5) {1};
-          \node[inst] (i3) at (2,2.5) {3};
-          \node[inst] (i4) at (4,2.5) {4};
-          \node[inst] (i2) at (1,1) {2};
-          \node[inst] (i5) at (3,1) {5};
-          \node[inst] (i6) at (2,-0.5) {6};
-          % Dependencies with colored labels
-          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\scriptsize r1}} (i2);
-          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\scriptsize r5}} (i5);
-          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\scriptsize r6}} (i5);
-          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\scriptsize r8}} (i6);
-          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\scriptsize r4}} (i6);
-        \end{tikzpicture}
+  \begin{tikzpicture}[
+    % Common styles
+    code/.style={font=\small\ttfamily, anchor=west},
+    inst/.style={circle, draw, minimum size=0.5cm, font=\small, inner sep=1pt},
+    dep/.style={->, thick},
+    exec/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
+    i1exec/.style={exec, fill=blue!30, minimum width=1.2cm},
+    i2exec/.style={exec, fill=green!30},
+    i3exec/.style={exec, fill=yellow!30},
+    i4exec/.style={exec, fill=orange!30},
+    i5exec/.style={exec, fill=purple!30},
+    i6exec/.style={exec, fill=red!30},
+  ]
+    % === LEFT COLUMN: Example code ===
+    \node[font=\bfseries, anchor=west] at (0,0) {Example:};
+    \node[code] (line1) at (0,-0.5) {1. \textcolor{r1color}{r1} $\leftarrow$ r4 / r7};
+    \node[code] at (0,-1.0) {2. \textcolor{r8color}{r8} $\leftarrow$ \textcolor{r1color}{r1} + r2};
+    \node[code] at (0,-1.5) {3. \textcolor{r5color}{r5} $\leftarrow$ r5 + 1};
+    \node[code] at (0,-2.0) {4. \textcolor{r6color}{r6} $\leftarrow$ r6 - r3};
+    \node[code] at (0,-2.5) {5. \textcolor{r4color}{r4} $\leftarrow$ \textcolor{r5color}{r5} + \textcolor{r6color}{r6}};
+    \node[code] at (0,-3.0) {6. r7 $\leftarrow$ \textcolor{r8color}{r8} * \textcolor{r4color}{r4}};
 
-        \vspace{0.4cm}
-        \scriptsize
-        \begin{tabular}{cc}
-        \begin{tikzpicture}[
-            node distance=1pt,
-            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
-            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
-            i2/.style={inst, fill=green!30},
-            i3/.style={inst, fill=yellow!30},
-            i4/.style={inst, fill=orange!30},
-            i5/.style={inst, fill=purple!30},
-            i6/.style={inst, fill=red!30},
-        ]
-            % In-order: 1, then 2,3,4 stacked (dispatched together after 1), then 5, then 6
-            \node[i1] (n1) {1};
-            \node[i2, right=of n1] (n2) {2};
-            \node[i3, below=of n2] (n3) {3};
-            \node[i4, below=of n3] (n4) {4};
-            \node[i5, right=of n2] (n5) {5};
-            \node[i6, right=of n5] (n6) {6};
-            % Timeline
-            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
-            % Title centered above
-            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {In-order execution};
-        \end{tikzpicture}
-          &
-        \begin{tikzpicture}[
-            node distance=1pt,
-            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
-            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
-            i2/.style={inst, fill=green!30},
-            i3/.style={inst, fill=yellow!30},
-            i4/.style={inst, fill=orange!30},
-            i5/.style={inst, fill=purple!30},
-            i6/.style={inst, fill=red!30},
-        ]
-            % OOO: 3,4 below 1 (left-aligned), 5 after 3, then 2 after 1, then 6
-            \node[i1] (n1) {1};
-            \node[i3, below=of n1.south west, anchor=north west] (n3) {3};
-            \node[i4, below=of n3] (n4) {4};
-            \node[i5, right=of n3] (n5) {5};
-            \node[i2, right=of n1] (n2) {2};
-            \node[i6, right=of n2] (n6) {6};
-            % Timeline
-            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
-            % Title centered above (same positioning as in-order)
-            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {Out-of-order execution};
-        \end{tikzpicture}
-        \end{tabular}
-      \end{center}
-    \end{column}
-  \end{columns}
+    % Callout for divide - positioned relative to line1, pointing to /
+    \node[ellipse callout, draw, fill=blue!10,
+          callout absolute pointer={($(line1.east)+(-0.3cm,0)$)},
+          font=\scriptsize, align=center]
+          at ($(line1.north)+(0.5cm,1cm)$)
+          {Assume divide\\takes multiple cycles};
+
+    % === RIGHT COLUMN: Data Flow Graph ===
+    \begin{scope}[shift={(6,0)}]
+      \node[font=\small\bfseries] at (1.2,0.3) {Data Flow Graph};
+      % Graph nodes
+      \node[inst] (i1) at (0,-0.5) {1};
+      \node[inst] (i3) at (1.2,-0.5) {3};
+      \node[inst] (i4) at (2.4,-0.5) {4};
+      \node[inst] (i2) at (0.6,-1.4) {2};
+      \node[inst] (i5) at (1.8,-1.4) {5};
+      \node[inst] (i6) at (1.2,-2.3) {6};
+      % Dependencies
+      \draw[dep] (i1) -- node[left, font=\scriptsize] {\textcolor{r1color}{r1}} (i2);
+      \draw[dep] (i3) -- node[left, font=\scriptsize] {\textcolor{r5color}{r5}} (i5);
+      \draw[dep] (i4) -- node[right, font=\scriptsize] {\textcolor{r6color}{r6}} (i5);
+      \draw[dep] (i2) -- node[left, font=\scriptsize] {\textcolor{r8color}{r8}} (i6);
+      \draw[dep] (i5) -- node[right, font=\scriptsize] {\textcolor{r4color}{r4}} (i6);
+    \end{scope}
+
+    % === BOTTOM LEFT: In-order execution ===
+    \begin{scope}[shift={(4.5,-3.5)}, node distance=1pt]
+      \node[font=\scriptsize\bfseries] at (0.8,0.8) {In-order execution};
+      \node[i1exec] (io1) at (0,0) {1};
+      \node[i2exec, right=of io1] (io2) {2};
+      \node[i3exec, below=of io2] (io3) {3};
+      \node[i4exec, below=of io3] (io4) {4};
+      \node[i5exec, right=of io2] (io5) {5};
+      \node[i6exec, right=of io5] (io6) {6};
+      \draw[->] ([yshift=-2mm]io1.west |- io4.south) -- ([yshift=-2mm]io6.east |- io4.south) node[right, font=\tiny] {t};
+    \end{scope}
+
+    % Callout for in-order - positioned to the left, pointing to instruction 2
+    \node[ellipse callout, draw, fill=red!10,
+          callout absolute pointer={(io2.west)},
+          font=\tiny, text width=3cm, align=center, anchor=east]
+          at ($(io1.west)+(-0.3cm,-0.8cm)$)
+          {2 has data dependency on 1, so 3 and 4 must wait (even though independent of 1)};
+
+    % === BOTTOM RIGHT: Out-of-order execution ===
+    \begin{scope}[shift={(9,-3.5)}, node distance=1pt]
+      \node[font=\scriptsize\bfseries] at (0.8,0.8) {Out-of-order execution};
+      \node[i1exec] (ooo1) at (0,0) {1};
+      \node[i3exec, below=1pt of ooo1.south west, anchor=north west] (ooo3) {3};
+      \node[i4exec, below=of ooo3] (ooo4) {4};
+      \node[i5exec, right=of ooo3] (ooo5) {5};
+      \node[i2exec, right=of ooo1] (ooo2) {2};
+      \node[i6exec, right=of ooo2] (ooo6) {6};
+      \draw[->] ([yshift=-2mm]ooo1.west |- ooo4.south) -- ([yshift=-2mm]ooo6.east |- ooo4.south) node[right, font=\tiny] {t};
+    \end{scope}
+  \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{OOOE: General Scheme}
@@ -594,100 +581,6 @@
       \item Maintain original program semantics
     \end{itemize}
   \end{itemize}
-\end{frame}
-
-\begin{frame}{Data Flow Analysis}
-  \begin{columns}
-    \begin{column}{0.35\textwidth}
-      \textbf{Example:}
-      \begin{enumerate}
-        \item \texttt{\textcolor{r1color}{r1} $\leftarrow$ r4 / r7}
-        \item \texttt{\textcolor{r8color}{r8} $\leftarrow$ \textcolor{r1color}{r1} + r2}
-        \item \texttt{\textcolor{r5color}{r5} $\leftarrow$ r5 + 1}
-        \item \texttt{\textcolor{r6color}{r6} $\leftarrow$ r6 - r3}
-        \item \texttt{\textcolor{r4color}{r4} $\leftarrow$ \textcolor{r5color}{r5} + \textcolor{r6color}{r6}}
-        \item \texttt{r7 $\leftarrow$ \textcolor{r8color}{r8} * \textcolor{r4color}{r4}}
-      \end{enumerate}
-      
-      \vspace{0.3cm}
-      \small{Assume divide takes multiple cycles}
-    \end{column}
-    
-    \begin{column}{0.65\textwidth}
-      \begin{center}
-        \textbf{Data Flow Graph}\\
-        \vspace{0.2cm}
-        \begin{tikzpicture}[scale=0.6,
-          node distance=1cm,
-          inst/.style={circle, draw, minimum size=0.5cm, font=\small, inner sep=1pt},
-          dep/.style={->, thick}]
-          % Nodes
-          \node[inst] (i1) at (0,2.5) {1};
-          \node[inst] (i3) at (2,2.5) {3};
-          \node[inst] (i4) at (4,2.5) {4};
-          \node[inst] (i2) at (1,1) {2};
-          \node[inst] (i5) at (3,1) {5};
-          \node[inst] (i6) at (2,-0.5) {6};
-          % Dependencies with colored labels
-          \draw[dep] (i1) -- node[left] {\textcolor{r1color}{\scriptsize r1}} (i2);
-          \draw[dep] (i3) -- node[left] {\textcolor{r5color}{\scriptsize r5}} (i5);
-          \draw[dep] (i4) -- node[right] {\textcolor{r6color}{\scriptsize r6}} (i5);
-          \draw[dep] (i2) -- node[left] {\textcolor{r8color}{\scriptsize r8}} (i6);
-          \draw[dep] (i5) -- node[right] {\textcolor{r4color}{\scriptsize r4}} (i6);
-        \end{tikzpicture}
-
-        \vspace{0.4cm}
-        \scriptsize
-        \begin{tabular}{cc}
-        \begin{tikzpicture}[
-            node distance=1pt,
-            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
-            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
-            i2/.style={inst, fill=green!30},
-            i3/.style={inst, fill=yellow!30},
-            i4/.style={inst, fill=orange!30},
-            i5/.style={inst, fill=purple!30},
-            i6/.style={inst, fill=red!30},
-        ]
-            % In-order: 1, then 2,3,4 stacked (dispatched together after 1), then 5, then 6
-            \node[i1] (n1) {1};
-            \node[i2, right=of n1] (n2) {2};
-            \node[i3, below=of n2] (n3) {3};
-            \node[i4, below=of n3] (n4) {4};
-            \node[i5, right=of n2] (n5) {5};
-            \node[i6, right=of n5] (n6) {6};
-            % Timeline
-            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
-            % Title centered above
-            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {In-order execution};
-        \end{tikzpicture}
-          &
-        \begin{tikzpicture}[
-            node distance=1pt,
-            inst/.style={draw, thick, minimum height=0.35cm, minimum width=0.5cm, font=\tiny, inner sep=2pt},
-            i1/.style={inst, fill=blue!30, minimum width=1.2cm},
-            i2/.style={inst, fill=green!30},
-            i3/.style={inst, fill=yellow!30},
-            i4/.style={inst, fill=orange!30},
-            i5/.style={inst, fill=purple!30},
-            i6/.style={inst, fill=red!30},
-        ]
-            % OOO: 3,4 below 1 (left-aligned), 5 after 3, then 2 after 1, then 6
-            \node[i1] (n1) {1};
-            \node[i3, below=of n1.south west, anchor=north west] (n3) {3};
-            \node[i4, below=of n3] (n4) {4};
-            \node[i5, right=of n3] (n5) {5};
-            \node[i2, right=of n1] (n2) {2};
-            \node[i6, right=of n2] (n6) {6};
-            % Timeline
-            \draw[->] ([yshift=-2mm]n1.west |- n4.south) -- ([yshift=-2mm]n6.east |- n4.south) node[right, font=\tiny] {t};
-            % Title centered above (same positioning as in-order)
-            \path (n1.west) -- (n6.east) node[midway, above=3mm of n1.north, font=\tiny\bfseries] {Out-of-order execution};
-        \end{tikzpicture}
-        \end{tabular}
-      \end{center}
-    \end{column}
-  \end{columns}
 \end{frame}
 
 \begin{frame}{Write-After-Write Dependency}
