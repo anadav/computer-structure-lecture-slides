@@ -20,3 +20,9 @@
   5. Common gotcha: Using \\ in TikZ nodes requires align=center in the node style
 
 - Do NOT use "open" command to show generated PDF files to the user after building.
+
+- Tools in `tools/` directory:
+  - `find_overfull.py <file>.tex` - Find pages with overfull boxes (content that doesn't fit). Options: `--vbox-only`, `--min-badness N`, `--pages-only`.
+  - `move_frame.py <file>.tex --list` - List all beamer frames. Use `--from N --to M` to move frames, `--from N-M` for ranges, `-o other.tex` for cross-file moves.
+  - `extract_page.py <file>.pdf <page>` - Extract a single page from PDF as PNG image.
+  - `extract_figs.py` - Extract images from talk.pptx to images_out/ directory.
