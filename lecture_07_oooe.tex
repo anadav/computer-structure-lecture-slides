@@ -2998,12 +2998,13 @@
 \begin{frame}{Backup}
 \end{frame}
 
-\begin{frame}{ROB Designs: P6 vs NetBurst}
+\begin{frame}{ROB Designs: Merged vs Separate Register File}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
       \centering
-      \textbf{Pentium III (P6)}
-      \vspace{0.2cm}
+      \textbf{Merged RF + ROB Status}\\
+      {\small\textit{P6 / Pentium III}}
+      \vspace{0.15cm}
 
       \begin{tikzpicture}[font=\tiny, scale=0.8,
         rat/.style={draw, fill=yellow!30, minimum width=1.0cm, minimum height=0.22cm, inner sep=1pt},
@@ -3026,7 +3027,7 @@
         }
 
         % RRF
-        \node[font=\scriptsize\bfseries] at (1.3, -0.7) {RRF};
+        \node[font=\scriptsize\bfseries] (rrfLabel) at (1.3, -0.7) {RRF};
         \foreach \i in {0,...,3} {
           \node[rrfcell] (rrf\i) at (1.3, -1.0-\i*0.28) {};
         }
@@ -3037,23 +3038,24 @@
         \draw[->, thick] (rat2.east) -- (robd5.west);
         \draw[->, thick] (rat3.east) -- (robd6.west);
 
-        % Arrow from ROB to RRF (copy on retire)
-        \draw[->, blue, thick] (robd7.south) -- ++(0,-0.15) -| (rrf0.north)
-          node[midway, right, font=\tiny, text=blue] {copy};
+        % Arrow from ROB to RRF (copy on retire) - routed left of RRF
+        \draw[->, orange, thick] (robd7.south) |- ++(-0.7,-0.3) |- (rrf0.west)
+          node[pos=0.25, left, font=\tiny, text=orange] {copy};
       \end{tikzpicture}
 
       \vspace{0.2cm}
       \begin{itemize}\setlength{\itemsep}{0pt}\footnotesize
         \item ROB holds speculative values
         \item RRF holds committed values
-        \item \textcolor{red}{Copy data on retirement}
+        \item \textcolor{orange}{Copy data on retirement}
       \end{itemize}
     \end{column}
 
     \begin{column}{0.48\textwidth}
       \centering
-      \textbf{NetBurst (Pentium 4)}
-      \vspace{0.2cm}
+      \textbf{Separate RF + Retirement RAT}\\
+      {\small\textit{NetBurst / Pentium 4}}
+      \vspace{0.15cm}
 
       \begin{tikzpicture}[font=\tiny, scale=0.8,
         rat/.style={draw, fill=yellow!30, minimum width=1.0cm, minimum height=0.22cm, inner sep=1pt},
@@ -3066,10 +3068,10 @@
           \node[rat] (frat\i) at (-1.5, 2.0-\i*0.3) {\reg};
         }
 
-        % Retirement RAT
-        \node[font=\scriptsize\bfseries] at (-1.5, -0.2) {Retirement RAT};
+        % Retirement RAT (moved up slightly)
+        \node[font=\scriptsize\bfseries] at (-1.5, 0.1) {Retirement RAT};
         \foreach \i/\reg in {0/EAX, 1/EBX, 2/ECX, 3/EDX} {
-          \node[rat] (rrat\i) at (-1.5, -0.7-\i*0.3) {\reg};
+          \node[rat] (rrat\i) at (-1.5, -0.4-\i*0.3) {\reg};
         }
 
         % RF (Data) and ROB (Status)
@@ -3093,6 +3095,10 @@
         \draw[->, dotted, thick] (rrat1.east) to[out=0,in=180] (rf2.west);
         \draw[->, dotted, thick] (rrat2.east) to[out=0,in=180] (rf4.west);
         \draw[->, dotted, thick] (rrat3.east) to[out=0,in=180] (rf4.west);
+
+        % Recovery arrow from Retirement RAT to Frontend RAT (west to west, curved left)
+        \draw[->, red, thick] (rrat3.west) to[out=150,in=-150, looseness=1.2] (frat3.west)
+          node[pos=0.5, left=2pt, font=\tiny, text=red, align=right] {copy on\\recovery};
       \end{tikzpicture}
 
       \vspace{0.2cm}
@@ -3100,96 +3106,8 @@
         \item RF holds \textbf{all} values (speculative + committed)
         \item ROB only tracks status (no data)
         \item \textcolor{green!50!black}{No copy on retirement!}
+        \item \textcolor{red}{Copy RRAT$\to$RAT on recovery}
       \end{itemize}
-    \end{column}
-  \end{columns}
-
-  \vspace{0.3cm}
-  \centering
-  \textbf{Benefit:} Eliminates data movement bandwidth on retirement
-\end{frame}
-
-\begin{frame}{Alternative: Retirement RAT (RRAT)}
-  \vspace{-0.3cm}
-  \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \textbf{Two Register Alias Tables:}
-      \begin{itemize}\setlength{\itemsep}{0.05cm}
-        \item \textbf{Frontend RAT} --- speculative mapping
-        \begin{itemize}\setlength{\itemsep}{0pt}
-          \item Updated at rename (allocation)
-          \item May contain wrong-path mappings
-        \end{itemize}
-        \item \textbf{Retirement RAT (RRAT)} --- committed mapping
-        \begin{itemize}\setlength{\itemsep}{0pt}
-          \item Updated only at retirement
-          \item Always reflects architectural state
-        \end{itemize}
-      \end{itemize}
-
-      \vspace{0.15cm}
-      \textbf{Recovery (Flush at Retire):}
-      \begin{itemize}\setlength{\itemsep}{0pt}
-        \item Copy RRAT $\rightarrow$ Frontend RAT
-        \item Single-cycle recovery, no checkpoints needed
-        \item But: must wait for branch to retire
-      \end{itemize}
-
-      \vspace{0.1cm}
-      {\small\textit{Used in Intel NetBurst (Pentium 4) architecture}}
-    \end{column}
-
-    \begin{column}{0.45\textwidth}
-      \centering
-      \begin{tikzpicture}[font=\tiny, scale=0.85,
-        rat/.style={draw, fill=yellow!30, minimum width=1.2cm, minimum height=0.22cm, inner sep=1pt},
-        N/.style={draw, fill=green!20, minimum width=1.0cm, minimum height=0.24cm, inner sep=1pt},
-      ]
-        % Frontend RAT
-        \node[font=\scriptsize\bfseries] at (0,2.8) {Frontend RAT};
-        \foreach \i/\reg in {0/r0, 1/r1, 2/r2, 3/r3} {
-          \node[rat] (frat\i) at (0, 2.3-\i*0.3) {\reg};
-        }
-
-        % Retirement RAT
-        \node[font=\scriptsize\bfseries] (rratLabel) at (0,-0.1) {Retirement RAT};
-        \foreach \i/\reg in {0/r0, 1/r1, 2/r3, 3/r3} {
-          \node[rat] (rrat\i) at (0, -0.6-\i*0.3) {\reg};
-        }
-
-        % ROB as matrix (like Periodic Checkpoints)
-        \node[font=\scriptsize\bfseries] at (3.2,2.8) {ROB};
-        \matrix[matrix of nodes, ampersand replacement=\&, row sep=-\pgflinewidth,
-          nodes={minimum width=1.0cm, minimum height=0.24cm, inner sep=1pt},
-          anchor=north
-        ] (rob) at (3.2,2.5) {
-          |[N]| p0 \\
-          |[N]| p1 \\
-          |[N]| p2 \\
-          |[N]| p3 \\
-          |[N]| p4 \\
-          |[N]| p5 \\
-          |[N]| p6 \\
-          |[N]| p7 \\
-        };
-
-        % Arrows from Frontend RAT to ROB (solid)
-        \draw[->, thick] (frat0.east) -- (rob-2-1.west);
-        \draw[->, thick] (frat1.east) -- (rob-4-1.west);
-        \draw[->, thick] (frat2.east) -- (rob-6-1.west);
-        \draw[->, thick] (frat3.east) -- (rob-7-1.west);
-
-        % Arrows from Retirement RAT to ROB (dotted)
-        \draw[->, dotted, thick] (rrat0.east) to[out=0,in=180] (rob-1-1.west);
-        \draw[->, dotted, thick] (rrat1.east) to[out=0,in=180] (rob-3-1.west);
-        \draw[->, dotted, thick] (rrat2.east) to[out=0,in=180] (rob-5-1.west);
-        \draw[->, dotted, thick] (rrat3.east) to[out=0,in=180] (rob-5-1.west);
-
-        % Recovery arrow (from north of Retirement RAT label)
-        \draw[->, red, ultra thick, dashed] (rratLabel.north) -- (0, 0.9)
-          node[midway, left, font=\tiny\bfseries, text=red, align=right] {Copy on\\recovery};
-
-      \end{tikzpicture}
     \end{column}
   \end{columns}
 \end{frame}
