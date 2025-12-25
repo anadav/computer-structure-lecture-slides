@@ -232,9 +232,9 @@
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{ROP Attack Example:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{nasm}
 ; Gadget 1: pop rdi; ret
-; Gadget 2: pop rsi; ret  
+; Gadget 2: pop rsi; ret
 ; Gadget 3: mov rax, 59; ret
 ; Gadget 4: syscall
 
@@ -245,7 +245,7 @@ Stack Layout:
 [0]
 [addr_gadget3]
 [addr_gadget4]
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \begin{tikzpicture}[scale=0.6]
@@ -347,7 +347,7 @@ Stack Layout:
             \begin{tcolorbox}[colback=green!10]
                 \small
                 \textbf{With ASLR (randomized):}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{console}
 $ ./vuln
 Stack: 0x7ffd8c3a1000
 Heap:  0x56412b8c9000
@@ -357,7 +357,7 @@ $ ./vuln
 Stack: 0x7ffe29f43000
 Heap:  0x55e7d4521000
 Libc:  0x7fc8e1200000
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -394,43 +394,43 @@ Libc:  0x7fc8e1200000
             \begin{tcolorbox}[colback=blue!10]
                 \small
                 \textbf{Vulnerable Function:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{c}
 void vulnerable(char *input) {
     char buffer[64];
     strcpy(buffer, input);
     return;
 }
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \begin{tcolorbox}[colback=green!10]
                 \small
                 \textbf{With Stack Canary:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{nasm}
 vulnerable:
     push rbp
     mov rbp, rsp
     sub rsp, 0x50
-    
+
     ; Place canary
     mov rax, fs:[0x28]
     mov [rbp-0x8], rax
-    
+
     ; Function body
     lea rdi, [rbp-0x48]
     call strcpy
-    
+
     ; Check canary
     mov rax, [rbp-0x8]
     xor rax, fs:[0x28]
     jne .canary_fail
-    
+
     leave
     ret
-    
+
 .canary_fail:
     call __stack_chk_fail
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -565,18 +565,18 @@ vulnerable:
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{Kernel Code Pattern:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{gas}
 copy_from_user:
     STAC        ; Enable access
     mov (%rdi), %rax
     CLAC        ; Disable access
     ret
-    
+
 ; Vulnerability example:
 some_ioctl:
     ; Missing STAC/CLAC!
     mov %rsi, (%rdi)  ; Oops!
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \textbf{EFLAGS.AC bit:}
@@ -877,17 +877,17 @@ some_ioctl:
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{Function Prologue:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{gas}
 PACIASP    ; Sign LR with SP
 STP x29,x30,[sp,#-16]!
-                \end{verbatim}
-                
+\end{minted}
+
                 \textbf{Function Epilogue:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{gas}
 LDP x29,x30,[sp],#16
 AUTIASP    ; Verify LR
 RET        ; Return if valid
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \vspace{0.2cm}
@@ -998,17 +998,17 @@ RET        ; Return if valid
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{Example: Intel CET-IBT}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{nasm}
 valid_target:
     endbranch    ; Mark as valid
     push rbp
     mov rbp, rsp
     ; Function body
-    
+
 invalid_target:  ; No endbranch
     push rbp     ; CPU fault here!
     mov rbp, rsp
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \textbf{Protection Granularity:}
@@ -1053,7 +1053,7 @@ invalid_target:  ; No endbranch
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{BTI Usage Example:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{gas}
 ; Function called via pointer
 func_ptr:
     BTI c      ; Mark as call target
@@ -1074,7 +1074,7 @@ plt_stub:
     adrp x16, GOT_ENTRY
     ldr x17, [x16, #:lo12:GOT_ENTRY]
     br x17
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -1222,16 +1222,16 @@ sensitive_function:
             \begin{tcolorbox}[colback=yellow!10]
                 \small
                 \textbf{Operation Example:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{text}
 CALL func:
   - Push addr to regular stack
   - Push addr to shadow stack
-  
+
 RET:
   - Pop from regular stack -> RAX
   - Pop from shadow stack -> RBX
   - If RAX != RBX -> Fault
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -1269,7 +1269,7 @@ RET:
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{Type Confusion Example:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{cpp}
 class Animal {
   virtual void speak() = 0;
 };
@@ -1288,7 +1288,7 @@ Animal* ptr = getDog();
 // Type confusion happens here!
 Cat* evil = (Cat*)ptr;
 evil->admin(); // Calls wrong vtable!
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \begin{tcolorbox}[colback=red!10]
@@ -1330,11 +1330,11 @@ evil->admin(); // Calls wrong vtable!
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{Function with FineIBT:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{gas}
 ; Type hash prefix
 __cfi_func:
     mov $0x12345678, %r11d
-    
+
 ; Actual function
 func:
     endbranch        ; CET check
@@ -1344,7 +1344,7 @@ func:
 .Lcontinue:
     push rbp
     ; Function body
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
             
             \begin{tcolorbox}[colback=yellow!10]
@@ -2065,16 +2065,16 @@ func:
             \begin{tcolorbox}[colback=green!10]
                 \small
                 \textbf{Freshness Guarantee:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{text}
 On Write:
   1. Update data
   2. Update counter
   3. Recalculate hashes to root
-  
+
 On Read:
   1. Verify path to root
   2. Check counter matches
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
         \end{column}
     \end{columns}
