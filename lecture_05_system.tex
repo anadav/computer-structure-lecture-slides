@@ -15,6 +15,7 @@
 \usepackage{circuitikz}
 \usepackage{tikz-timing}
 \usepackage{tcolorbox}
+\usepackage{minted}
 
 \usetheme{Madrid}
 \usecolortheme{default}
@@ -1596,7 +1597,7 @@ node & 0 & 1 \\
 \textbf{NUMA-Unaware Code:}
 \begin{tcolorbox}[colback=red!5!white, colframe=red!50!black, boxrule=0.5pt, left=1pt, right=1pt, top=1pt, bottom=1pt]
 {\scriptsize
-\begin{verbatim}
+\begin{minted}{c}
 // Thread 0 allocates all data
 float* data = malloc(N * sizeof(float));
 
@@ -1606,12 +1607,12 @@ float* data = malloc(N * sizeof(float));
   int tid = omp_get_thread_num();
   int chunk = N / num_threads;
   int start = tid * chunk;
-  
+
   // Remote memory access!
   for(int i = start; i < start+chunk; i++)
     data[i] = compute(i);
 }
-\end{verbatim}
+\end{minted}
 }
 \end{tcolorbox}
 
@@ -1619,24 +1620,24 @@ float* data = malloc(N * sizeof(float));
 \textbf{NUMA-Aware Code:}
 \begin{tcolorbox}[colback=green!5!white, colframe=green!50!black, boxrule=0.5pt, left=1pt, right=1pt, top=1pt, bottom=1pt]
 {\scriptsize
-\begin{verbatim}
+\begin{minted}{c}
 #pragma omp parallel
 {
   int tid = omp_get_thread_num();
   int chunk = N / num_threads;
-  
+
   // Each thread allocates locally
-  float* local_data = 
+  float* local_data =
     numa_alloc_local(chunk * sizeof(float));
-  
+
   // Access local memory only
   for(int i = 0; i < chunk; i++)
     local_data[i] = compute(tid*chunk + i);
-    
+
   // Copy to global if needed
   memcpy(&data[tid*chunk], local_data, ...);
 }
-\end{verbatim}
+\end{minted}
 }
 \end{tcolorbox}
 \end{columns}
