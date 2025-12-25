@@ -1468,34 +1468,42 @@ func:
 \begin{frame}{ARM TrustZone - Trusted Execution Environment (TEE)}
     \begin{center}
         \begin{tikzpicture}[font=\footnotesize,
-            world/.style={rounded corners, line width=2pt, minimum width=4cm, minimum height=3.8cm},
-            secure world/.style={world, fill=green!20, draw=green!70!black},
-            normal world/.style={world, fill=red!10, draw=red!70!black, dashed},
             level/.style={draw, text width=3.2cm, minimum height=0.55cm, align=center},
-            secure level/.style={level, draw=green!70!black, line width=1pt},
-            normal level/.style={level}]
+            empty/.style={draw=none, text width=3.2cm, minimum height=0.55cm}]
 
-            % Secure World container
-            \node[secure world] (secure) at (-3.2,2) {};
-            \node[anchor=north, font=\footnotesize\bfseries] at (secure.north) {Secure World (TEE)};
+            % Secure World levels as matrix with named label
+            \matrix[matrix of nodes, row sep=0.15cm, nodes={level},
+                    label={[name=slabel, font=\footnotesize\bfseries]above:Secure World (TEE)}] (secure) {
+                |[fill=blue!40]| S-EL3: Monitor \\
+                |[fill=green!50]| S-EL2: S-Hypervisor \\
+                |[fill=yellow!40]| S-EL1: Trusted OS \\
+                |[fill=red!30]| S-EL0: Trusted Apps \\
+            };
 
-            % Secure levels
-            \node[secure level, fill=blue!40] (sel3) at ([yshift=-0.5cm]secure.north) {S-EL3: Monitor};
-            \node[level, fill=green!50, below=0.15cm of sel3] (sel2) {S-EL2: S-Hypervisor};
-            \node[level, fill=yellow!40, below=0.15cm of sel2] (sel1) {S-EL1: Trusted OS};
-            \node[secure level, fill=red!30, below=0.15cm of sel1] (sel0) {S-EL0: Trusted Apps};
+            % Secure World container using fit (includes label)
+            \begin{scope}[on background layer]
+                \node[rounded corners, fill=green!20, draw=green!70!black, line width=2pt,
+                      fit=(slabel)(secure), inner sep=6pt] (scontainer) {};
+            \end{scope}
 
-            % Normal World container
-            \node[normal world] (normal) at (3.2,2) {};
-            \node[anchor=north, font=\footnotesize\bfseries] at (normal.north) {Normal World (REE)};
+            % Normal World levels as matrix with phantom top row
+            \matrix[matrix of nodes, row sep=0.15cm, nodes={level},
+                    right=2cm of secure,
+                    label={[name=nlabel, font=\footnotesize\bfseries]above:Normal World (REE)}] (normal) {
+                |[empty]| \\
+                |[fill=green!30]| EL2: Hypervisor \\
+                |[fill=yellow!40]| EL1: Rich OS \\
+                |[fill=red!50]| EL0: Applications \\
+            };
 
-            % Normal levels - aligned with secure levels
-            \node[normal level, fill=green!30] (el2) at (normal.center |- sel2) {EL2: Hypervisor};
-            \node[normal level, fill=yellow!40, below=0.15cm of el2] (el1) {EL1: Rich OS};
-            \node[normal level, fill=red!50, below=0.15cm of el1] (el0) {EL0: Applications};
+            % Normal World container using fit (includes label)
+            \begin{scope}[on background layer]
+                \node[rounded corners, fill=red!10, draw=red!70!black, line width=2pt, dashed,
+                      fit=(nlabel)(normal), inner sep=6pt] (ncontainer) {};
+            \end{scope}
 
             % SMC transition
-            \draw[<->, thick, blue] (secure.east) -- (normal.west) node[midway, above] {SMC};
+            \draw[<->, thick, blue] (scontainer.east) -- (ncontainer.west) node[midway, above] {SMC};
         \end{tikzpicture}
     \end{center}
 
