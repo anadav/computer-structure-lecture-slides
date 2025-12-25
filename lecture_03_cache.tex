@@ -2009,6 +2009,11 @@ Modified  & Yes & Yes  & No\\
 \newcommand{\mesistate}[2]{% {state}{color}
   \tikz[baseline=(char.base)] \node[circle, draw, thick, fill=#2, minimum size=0.5cm, inner sep=1pt] (char) {\textbf{#1}};
 }
+% Shorthand macros for inline state indicators in text
+\newcommand{\stateM}{\tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=orange!70, minimum size=0.4cm, font=\tiny\bfseries] {M};}}
+\newcommand{\stateE}{\tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=yellow!70, minimum size=0.4cm, font=\tiny\bfseries] {E};}}
+\newcommand{\stateS}{\tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=cyan!70, minimum size=0.4cm, font=\tiny\bfseries] {S};}}
+\newcommand{\stateI}{\tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=red!40, minimum size=0.4cm, font=\tiny\bfseries] {I};}}
 
 % Frame 1: L2 Cache Overview
 \begin{frame}{L2 Cache}
@@ -2162,27 +2167,27 @@ Modified  & Yes & Yes  & No\\
     \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p1) at (p1.center) {L1 cache\\[2pt]#1};
     \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p2) at (p2.center) {L1 cache\\[2pt]#3};
     
-    % State indicators - use actual colors not variable names
+    % State indicators - positioned outside the cache box at lower right corner
     \ifx&#2&\else
       \ifnum\pdfstrcmp{#2}{modifiedcolor}=0
-        \node[circle, draw, thick, fill=orange!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{M}};
+        \node[circle, draw, thick, fill=orange!70, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p1.south east)+(0.1,-0.1)$) {M};
       \else\ifnum\pdfstrcmp{#2}{exclusivecolor}=0
-        \node[circle, draw, thick, fill=yellow!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{E}};
+        \node[circle, draw, thick, fill=yellow!70, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p1.south east)+(0.1,-0.1)$) {E};
       \else\ifnum\pdfstrcmp{#2}{sharedcolor}=0
-        \node[circle, draw, thick, fill=cyan!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{S}};
+        \node[circle, draw, thick, fill=cyan!70, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p1.south east)+(0.1,-0.1)$) {S};
       \else\ifnum\pdfstrcmp{#2}{invalidcolor}=0
-        \node[circle, draw, thick, fill=red!70, minimum size=0.35cm] at ($(l1p1.south east)+(-0.25,0.25)$) {\textbf{I}};
+        \node[circle, draw, thick, fill=red!40, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p1.south east)+(0.1,-0.1)$) {I};
       \fi\fi\fi\fi
     \fi
     \ifx&#4&\else
       \ifnum\pdfstrcmp{#4}{modifiedcolor}=0
-        \node[circle, draw, thick, fill=orange!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{M}};
+        \node[circle, draw, thick, fill=orange!70, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p2.south east)+(0.1,-0.1)$) {M};
       \else\ifnum\pdfstrcmp{#4}{exclusivecolor}=0
-        \node[circle, draw, thick, fill=yellow!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{E}};
+        \node[circle, draw, thick, fill=yellow!70, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p2.south east)+(0.1,-0.1)$) {E};
       \else\ifnum\pdfstrcmp{#4}{sharedcolor}=0
-        \node[circle, draw, thick, fill=cyan!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{S}};
+        \node[circle, draw, thick, fill=cyan!70, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p2.south east)+(0.1,-0.1)$) {S};
       \else\ifnum\pdfstrcmp{#4}{invalidcolor}=0
-        \node[circle, draw, thick, fill=red!70, minimum size=0.35cm] at ($(l1p2.south east)+(-0.25,0.25)$) {\textbf{I}};
+        \node[circle, draw, thick, fill=red!40, minimum size=0.4cm, font=\tiny\bfseries] at ($(l1p2.south east)+(0.1,-0.1)$) {I};
       \fi\fi\fi\fi
     \fi
     
@@ -2203,106 +2208,106 @@ Modified  & Yes & Yes  & No\\
 % Frames 5-12: Multi-processor Example
 \begin{frame}{Multi-processor Example: Step 1}
   \textbf{P1 reads address 1000}
-  
+
   \begin{columns}
-    \column{0.45\textwidth}
+    \column{0.50\textwidth}
     \begin{itemize}
       \item P1 has a cache miss
       \item Data loaded from memory to L2
       \item L2 forwards to P1's L1
-      \item Line marked as Exclusive (E) in P1
+      \item Line marked as \stateE{} Exclusive in P1
     \end{itemize}
-    
-    \column{0.55\textwidth}
-    \mpexample{[1000]: 5}{exclusivecolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{}
+
+    \column{0.50\textwidth}
+    \mpexample{[1000]: 5}{exclusivecolor}{}{}{[1000]: 5}{10}{[1000]: 5}{}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 2}
   \textbf{P1 writes address 1000}
-  
+
   \begin{columns}
-    \column{0.45\textwidth}
+    \column{0.50\textwidth}
     \begin{itemize}
       \item P1 modifies the value: 5 → 6
-      \item Line transitions from E → M (Modified)
+      \item \stateE{} → \stateM{} (Modified)
       \item L2 still has old value (5)
       \item Memory still has old value (5)
     \end{itemize}
-    
-    \column{0.55\textwidth}
+
+    \column{0.50\textwidth}
     \centering
-    \mpexample{[1000]: 6}{modifiedcolor}{}{}{[1000]: 5\\V}{10}{[1000]: 5}{}
+    \mpexample{[1000]: 6}{modifiedcolor}{}{}{[1000]: 5}{10}{[1000]: 5}{}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 3}
   \textbf{P2 reads address 1000}
-  
+
   \begin{columns}
-    \column{0.45\textwidth}
+    \column{0.50\textwidth}
     \begin{itemize}
       \item P2 has a cache miss
       \item L2 snoops address 1000 from P1
       \item P1 writes back modified data (6) to L2
-      \item Both P1 and P2 now have line in Shared (S) state
+      \item P1: \stateM{} → \stateS{}, P2: \stateI{} → \stateS{}
       \item L2 updated with new value (6)
     \end{itemize}
-    
-    \column{0.55\textwidth}
-    \mpexample{[1000]: 6}{sharedcolor}{[1000]: 6}{sharedcolor}{[1000]: 6\\M}{11}{[1000]: 5}{}
+
+    \column{0.50\textwidth}
+    \mpexample{[1000]: 6}{sharedcolor}{[1000]: 6}{sharedcolor}{[1000]: 6}{11}{[1000]: 5}{}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 4}
-  \textbf{P2 requests ownership with write intent for address 1000}
-  
+  \textbf{P2 requests ownership (RFO) for address 1000}
+
   \begin{columns}
-    \column{0.45\textwidth}
+    \column{0.50\textwidth}
     \begin{itemize}
       \item P2 wants to write to address 1000
       \item L2 sends snoop invalidate to P1
-      \item P1 invalidates its copy (S → I)
-      \item L2 grants exclusive ownership to P2 (S → E)
-      \item Core valid bits updated: P1=0, P2=1
+      \item P1: \stateS{} → \stateI{} (invalidated)
+      \item P2: \stateS{} → \stateE{} (granted ownership)
+      \item CVB updated: P1=0, P2=1
     \end{itemize}
-    
-    \column{0.55\textwidth}
-    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 6}{exclusivecolor}{[1000]: 6\\M}{01}{[1000]: 5}{}
+
+    \column{0.50\textwidth}
+    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 6}{exclusivecolor}{[1000]: 6}{01}{[1000]: 5}{}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 5}
   \textbf{P2 writes address 1000}
   \begin{columns}
-    \column{0.45\textwidth}
+    \column{0.50\textwidth}
     \begin{itemize}
       \item P2 modifies the value: 6 → 7
-      \item Line transitions from E → M (Modified) in P2
-      \item P1's copy remains invalid
+      \item P2: \stateE{} → \stateM{} (local write)
+      \item P1 remains \stateI{}
       \item L2 and Memory still have old values
     \end{itemize}
-    
-    \column{0.55\textwidth}
-    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{modifiedcolor}{[1000]: 6\\M}{01}{[1000]: 5}{}
+
+    \column{0.50\textwidth}
+    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{modifiedcolor}{[1000]: 6}{01}{[1000]: 5}{}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Multi-processor Example: Step 6}
   \textbf{L2 evicts address 1000}
-  
+
   \begin{columns}
-    \column{0.45\textwidth}
+    \column{0.50\textwidth}
     \begin{itemize}
-      \item L2 needs to evict line 1000 (e.g., for capacity)
+      \item L2 needs to evict line 1000 (capacity)
       \item L2 sends snoop invalidate to P2
       \item P2 responds with modified data (7)
       \item L2 writes back to memory: 5 → 7
-      \item All caches now invalid for address 1000
+      \item All caches now \stateI{}
     \end{itemize}
-    
-    \column{0.55\textwidth}
-    \mpexample{[1000]: 6}{invalidcolor}{[1000]: 7}{invalidcolor}{[1000]: 7\\I}{00}{[1000]: 7}{}
+
+    \column{0.50\textwidth}
+    \mpexample{--}{invalidcolor}{--}{invalidcolor}{(evicted)}{00}{[1000]: 7}{}
   \end{columns}
 \end{frame}
 

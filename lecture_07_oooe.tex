@@ -321,18 +321,19 @@
 \end{frame}
 
 \begin{frame}{OOOE: General Scheme}
+  \vspace{-3mm}
   \begin{center}
     \begin{tikzpicture}[scale=1.2, every node/.style={font=\small},
-      fetchblock/.style={rectangle, draw, fill=cyan!20, minimum width=2.5cm, minimum height=1cm},
-      block/.style={rectangle, draw, fill=yellow!30, minimum width=2.5cm, minimum height=1cm},
-      pool/.style={rectangle, draw, fill=green!30, minimum width=2.5cm, minimum height=1cm},
-      exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=1cm}]
+      fetchblock/.style={rectangle, draw, fill=cyan!20, minimum width=2.5cm, minimum height=0.7cm},
+      block/.style={rectangle, draw, fill=yellow!30, minimum width=2.5cm, minimum height=0.7cm},
+      pool/.style={rectangle, draw, fill=green!30, minimum width=2.5cm, minimum height=0.7cm},
+      exe/.style={rectangle, draw, fill=purple!30, minimum width=2cm, minimum height=0.7cm}]
 
       % Blocks
-      \node[fetchblock,align=center] (fetch) at (0,0) {Fetch \\\& Decode};
-      \node[pool] (pool) at (4,0) {Instruction pool};
-      \node[exe] (exec) at (4,-1.8) {Execute};
-      \node[block,align=center] (retire) at (8,0) {Retire\\(commit)};
+      \node[fetchblock] (fetch) at (0,0) {Fetch \& Decode};
+      \node[pool] (pool) at (4,0) {Instruction Pool};
+      \node[exe] (exec) at (4,-1.5) {Execute};
+      \node[block] (retire) at (8,0) {Retire (commit)};
       
       % Arrows with multiple lines
       \draw[->, thick] ([yshift=2mm]fetch.east) -- ([yshift=2mm]pool.west);
@@ -351,34 +352,20 @@
         \draw[<-, thick, bend left=20] ([xshift=\x]pool.south) to ([xshift=\x]exec.north);
       }
       % Labels
-      \node[above] at (fetch.north) {\textbf{In-order}};
-      \node[above] at (retire.north) {\textbf{In-order}};
+      \node[below] at (fetch.south) {\textbf{In-order}};
+      \node[below] at (retire.south) {\textbf{In-order}};
       \node[below] at (exec.south) {\textbf{Out-of-order}};
     \end{tikzpicture}
   \end{center}
 
-  \vspace{-1.1cm}
+  \vspace{3mm}
 
   \begin{itemize}
-    \item \textbf{Fetch \& decode instructions in parallel but in-order}
-    \begin{itemize}
-      \item Fill the Instruction Pool
-    \end{itemize}
-    
-    \item \textbf{Execute ready instructions from the instructions pool}
-    \begin{itemize}
-      \item All source data ready + needed execution resources available
-    \end{itemize}
-    
-    \item \textbf{Once an instruction is executed}
-    \begin{itemize}
-      \item Signal all dependent instructions that data is ready
-    \end{itemize}
-    
-    \item \textbf{Commit instructions in parallel but in-order}
-    \begin{itemize}
-      \item State change (memory, register) and fault/exception handling
-    \end{itemize}
+    \item \textbf{Fetch \& decode in-order} --- fill the Instruction Pool
+    \item \textbf{Execute ready instructions} from the Instruction Pool
+      --- source data ready + execution resources available
+    \item \textbf{Once executed} --- signal dependent instructions that data is ready
+    \item \textbf{Commit in-order} --- state changes (memory, register) and exception handling
   \end{itemize}
 \end{frame}
 

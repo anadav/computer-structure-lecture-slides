@@ -9,6 +9,7 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, backgrounds, fit}
+\usepackage[siunitx]{circuitikz}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 \title{Hardware Security Mechanisms}
@@ -1660,7 +1661,7 @@ func:
 
 \begin{frame}{IOMMU - Input/Output Memory Management Unit}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.65\textwidth}
             \textbf{What is IOMMU?}
             \begin{itemize}
                 \item Hardware unit controlling device DMA
@@ -1668,8 +1669,8 @@ func:
                 \item Similar to MMU but for devices
                 \item Intel: VT-d, AMD: AMD-Vi
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.0cm}
             \textbf{Key Features:}
             \begin{itemize}
                 \item \textbf{PASID:} Process Address Space ID
@@ -1680,8 +1681,8 @@ func:
                 \item \textbf{Protection Granularity:} Page-level (4KB)
                 \item \textbf{Interrupt Remapping:} Prevents interrupt injection
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.0cm}
             \textbf{Attacks Prevented:}
             \begin{itemize}
                 \item \textcolor{red}{DMA attacks} (BadUSB, Thunderstrike)
@@ -1689,56 +1690,68 @@ func:
                 \item \textcolor{red}{Driver bugs} corrupting memory
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % CPU and Memory
-                \draw[fill=blue!20] (0,5) rectangle (2,6.5);
-                \node at (1,5.75) {CPU};
-                
-                \draw[fill=green!20] (4,5) rectangle (7,6.5);
-                \node at (5.5,5.75) {Physical Memory};
-                
-                % IOMMU
-                \draw[fill=yellow!30,thick] (2,2) rectangle (5,4);
-                \node at (3.5,3.3) {\textbf{IOMMU}};
-                \node at (3.5,2.5) {\small Page Tables};
-                
-                % Devices
-                \draw[fill=red!20] (-1,0) rectangle (1,1.5);
-                \node at (0,0.75) {\small USB};
-                
-                \draw[fill=red!20] (2,0) rectangle (4,1.5);
-                \node at (3,0.75) {\small NIC};
-                
-                \draw[fill=red!20] (5,0) rectangle (7,1.5);
-                \node at (6,0.75) {\small GPU};
-                
-                % Device attempts
-                \draw[->,thick,red] (0,1.5) -- (0,2.8);
-                \draw[->,thick,red] (3,1.5) -- (3,2);
-                \draw[->,thick,red] (6,1.5) -- (5,2.8);
-                
-                % IOMMU filtering
-                \draw[->,thick,green] (3.5,4) -- (5.5,5);
-                \node[green] at (4.5,4.5) {\small Allowed};
-                
-                % Blocked access
-                \draw[red,ultra thick] (7.5,3) -- (8.5,4);
-                \draw[red,ultra thick] (7.5,4) -- (8.5,3);
-                \node[red] at (9.5,3.5) {\small Blocked};
+        \begin{column}{0.35\textwidth}
+            \vspace{-0.5cm}
+            \begin{tikzpicture}[font=\footnotesize]
+                % Memory at top right
+                \node[inner sep=0pt] (mem)
+                    {\includegraphics[width=1cm]{figures/noun-ram-7483151.png}};
+                \node[font=\tiny, above=1pt of mem] {Memory};
+
+                % MMU as simple rectangle, left of Memory
+                \node[draw, thick, fill=blue!20, minimum width=1.2cm, minimum height=0.6cm,
+                      font=\scriptsize, left=0.4cm of mem] (mmu) {MMU};
+
+                % CPU image left of MMU
+                \node[inner sep=0pt, left=0.4cm of mmu] (cpu)
+                    {\includegraphics[width=1cm]{figures/noun-cpu-8157304.png}};
+                \node[font=\tiny, above=1pt of cpu] {CPU};
+
+                % Wire CPU to MMU to Memory
+                \draw[->, thick, blue] (cpu.east) -- (mmu.west);
+                \draw[->, thick, blue] (mmu.east) -- (mem.west);
+
+                % IOMMU as muxdemux - below MMU, with 3 bottom pins
+                \node[muxdemux, muxdemux def={NB=3, Rh=1.5, Lh=1.5, w=3},
+                      fill=yellow!30, thick, font=\small,
+                      external pins width=0, below=0.8cm of mmu] (iommu) {IOMMU};
+
+                % Wire from IOMMU top to Memory (with label on right)
+                \draw[->, thick, green!60!black] (iommu.top) -- ++(0,0.15) -| (mem.south)
+                    node[pos=0.75, right, font=\scriptsize] {Allowed};
+
+                % Device images at bottom - spread out with explicit x offsets
+                \node[inner sep=0pt, below=0.5cm of iommu.bpin 2] (nic)
+                    {\includegraphics[width=0.8cm]{figures/noun-network-card-7443121.png}};
+                \node[font=\tiny, below=1pt of nic] {NIC};
+
+                \node[inner sep=0pt, left=0.8cm of nic] (usb)
+                    {\includegraphics[width=0.8cm]{figures/noun-usb-8182582.png}};
+                \node[font=\tiny, below=1pt of usb] {USB};
+
+                \node[inner sep=0pt, right=0.8cm of nic] (gpu)
+                    {\includegraphics[width=0.8cm]{figures/noun-graphics-card-1036913.png}};
+                \node[font=\tiny, below=1pt of gpu] {GPU};
+
+                % Device connections to IOMMU (DMA requests)
+                \draw[->, thick, red] (usb.north) -- ++(0,0.15) -| (iommu.bpin 1);
+                \draw[->, thick, red] (nic.north) -- (iommu.bpin 2);
+                \draw[->, thick, red] (gpu.north) -- ++(0,0.15) -| (iommu.bpin 3);
+
+                % Blocked indicator with X image
+                \node[inner sep=0pt, right=0.6cm of iommu.right] (blocked)
+                    {\includegraphics[width=0.5cm]{figures/noun-x-2222229.png}};
+                \node[red, font=\scriptsize, below=1pt of blocked] {Blocked};
+
+                % Show a blocked path attempt
+                \draw[->, thick, red, dashed] (iommu.right) -- (blocked.west);
             \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \begin{tcolorbox}[colback=orange!20]
-                \small
-                \textbf{Rubber Ducky Example:}
-                Malicious USB device attempts to read kernel memory via DMA - blocked by IOMMU
-            \end{tcolorbox}
-            
-            \begin{tcolorbox}[colback=yellow!10]
-                \small
-                \textbf{Challenge:} Buffer sharing requires careful management when protection is page-granular
-            \end{tcolorbox}
+
+%            \vspace{0.2cm}
+%            \begin{tcolorbox}[colback=yellow!10]
+%                \small
+%                \textbf{Challenge:} Buffer sharing requires careful management when protection is page-granular
+%            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
