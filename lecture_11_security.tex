@@ -2383,22 +2383,29 @@ On Read:
         \end{column}
         \begin{column}{0.5\textwidth}
             \textbf{Boot Measurement Chain:}
-            \begin{tikzpicture}[scale=0.6]
-                % Components
-                \node[draw] (bios) at (0,0) {BIOS};
-                \node[draw] (mbr) at (0,-1.5) {Bootloader};
-                \node[draw] (kernel) at (0,-3) {Kernel};
-                \node[draw] (apps) at (0,-4.5) {Applications};
-                
-                % TPM
-                \draw[fill=yellow!30] (3,-2) rectangle (6,-3.5);
-                \node at (4.5,-2.75) {\textbf{TPM}};
-                
-                % Measurements
-                \draw[->,blue] (bios) -- (3,-2.2) node[midway,above] {\tiny PCR0};
-                \draw[->,blue] (mbr) -- (3,-2.5) node[midway,above] {\tiny PCR4};
-                \draw[->,blue] (kernel) -- (3,-2.8) node[midway,below] {\tiny PCR8};
-                \draw[->,blue] (apps) -- (3,-3.3) node[midway,below] {\tiny PCR10};
+            \begin{tikzpicture}[font=\footnotesize,
+                component/.style={draw, fill=gray!10, minimum width=1.2cm},
+                measurement/.style={->, thick, blue}]
+                % Components - start with BIOS as anchor
+                \node[component] (bios) {BIOS};
+                \node[component, below=0.3cm of bios] (mbr) {Bootloader};
+                \node[component, below=0.3cm of mbr] (kernel) {Kernel};
+                \node[component, below=0.3cm of kernel] (apps) {Apps};
+
+                % TPM as muxdemux - further right
+                \node[muxdemux, muxdemux def={NL=4, Rh=2, Lh=2, w=2.5},
+                      fill=yellow!30, thick, font=\small,
+                      external pins width=0, right=3cm of kernel] (tpm) {TPM};
+
+                % Measurements - straight lines to each lpin
+                \draw[measurement] (bios.east) -- (tpm.lpin 1)
+                    node[midway, above, font=\tiny] {PCR0};
+                \draw[measurement] (mbr.east) -- (tpm.lpin 2)
+                    node[midway, above, font=\tiny] {PCR4};
+                \draw[measurement] (kernel.east) -- (tpm.lpin 3)
+                    node[midway, above, font=\tiny] {PCR8};
+                \draw[measurement] (apps.east) -- (tpm.lpin 4)
+                    node[midway, above, font=\tiny] {PCR10};
             \end{tikzpicture}
             
             \vspace{0.3cm}
