@@ -11,6 +11,8 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, backgrounds, fit}
 \usepackage[siunitx]{circuitikz}
 \usepackage{tcolorbox}
+\usepackage{minted}
+\setminted{fontsize=\footnotesize, breaklines}
 \usetheme{Madrid}
 \title{Hardware Security Mechanisms}
 \author{Computer Architecture 2360267}
@@ -1107,39 +1109,31 @@ plt_stub:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-
-            \vspace{-5mm}
-            \begin{tcolorbox}[colback=green!10]
-                \footnotesize
-            \vspace{-2mm}
-                \begin{verbatim}
+            \vspace{-3mm}
+            \begin{tcolorbox}[colback=green!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\scriptsize]{gas}
 sensitive_function:
-    paciasp ; Sign return address
-    
+    paciasp          ; Sign return address
     ; Save frame
     stp x29, x30, [sp, #-16]!
     mov x29, sp
-    
     ; Function body ...
-    
     ; Restore frame
     ldp x29, x30, [sp], #16
-    
     ; Authenticate return address
     autiasp
-    
     ; Return (crashes if auth fails)
-    ret\end{verbatim}
-    \vspace{-6mm}
+    ret
+\end{minted}
             \end{tcolorbox}
-            
+
             \begin{tcolorbox}[colback=yellow!10]
                 \small
                 \textbf{Pointer Format:}
-                \begin{verbatim}
+\begin{minted}[fontsize=\scriptsize]{text}
 [63:56][55:48][47:0]
   PAC   Unused  Address
-                \end{verbatim}
+\end{minted}
             \end{tcolorbox}
         \end{column}
     \end{columns}
