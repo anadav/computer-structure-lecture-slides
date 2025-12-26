@@ -546,6 +546,10 @@
 \begin{column}{0.5\textwidth}
 \centering
 \begin{tikzpicture}[
+    % Address field styles
+    addrfield/.style={draw, thick, minimum height=0.55cm, font=\tiny, text depth=0.1em},
+    tagfield/.style={addrfield, fill=green!20, minimum width=4.5cm},
+    offsetfield/.style={addrfield, fill=orange!20, minimum width=1cm},
     % Cell styles for matrix
     basecell/.style={draw, minimum height=0.2cm, font=\tiny, inner sep=3pt},
     validcell/.style={basecell, minimum width=0.3cm, fill=red!90, text=white},
@@ -558,12 +562,12 @@
 ]
 
 % Address breakdown at top
-\node[draw, thick, fill=green!20, minimum width=4.5cm, minimum height=0.55cm, font=\tiny] (tag_field) {Tag = Block\#};
-\node[label, above=0.5mm of tag_field] (addr_title) {Address};
-\node[draw, thick, fill=orange!20, minimum width=1cm, minimum height=0.55cm, anchor=west, font=\tiny] (offset_field) at (tag_field.east) {Offset};
-\node[label, above] at (tag_field.north west) {31};
-\node[label, above] at (offset_field.west |- tag_field.north) {4};
-\node[label, above] at (offset_field.north east) {0};
+\node[tagfield] (tag_field) {Tag = Block\#};
+\node[offsetfield, anchor=west] (offset_field) at (tag_field.east) {Offset};
+\node[label, anchor=south west] at (tag_field.north west) {31};
+\node[label, anchor=south west] at (offset_field.north west) {4};
+\node[label, anchor=south east] (zero) at (offset_field.north east) {0};
+\node[label, anchor=south] (addr_title) at ([yshift=2mm]$(tag_field.north west)!0.5!(offset_field.north east)$) {Address};
 
 % Valid+Tag matrix - use explicit style on each cell
 \matrix[matrix of nodes,
