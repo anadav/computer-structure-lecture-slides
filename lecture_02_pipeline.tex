@@ -382,7 +382,7 @@
 
 % MEM Stage Components
 \node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
-      external pins width=0, align=center, text depth=6.5ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=2.5cm]ALU.brpin 4) {Data\\Cache};
+      external pins width=0, align=center, text depth=6.5ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=1.5cm]ALU.brpin 4) {Data\\Cache};
 
 % WB Stage
 \node[mux2, anchor=lpin 1] at ([xshift=15mm]DMem.rpin 5) (WBMux) {};
@@ -1040,7 +1040,7 @@
 \draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
 
 % Target Adder to EX/MEM buffer
-\coordinate (calc_target_exmem) at (TargetAdder.brpin 1 -| EXMEM.west);
+\coordinate (calc_target_exmem) at (TargetAdder.brpin 1 -| EXMEM);
 \draw[data_path] (TargetAdder.brpin 1) -- (calc_target_exmem);
 
 % ALU output to EX/MEM buffer (result only, no zero)
@@ -1870,7 +1870,7 @@ then stall
 \draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
 
 % Target Adder to EX/MEM buffer
-\coordinate (calc_target_exmem) at (TargetAdder.brpin 1 -| EXMEM.west);
+\coordinate (calc_target_exmem) at (TargetAdder.brpin 1 -| EXMEM);
 \draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_exmem);
 
 % ALU outputs to EX/MEM buffer
@@ -2003,7 +2003,7 @@ then stall
     % Values
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {12};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {8};
-    \node[latch_target] at ([xshift=-2mm]calc_target_exmem) {50};
+    \node[latch_target] at (calc_target_exmem) {50};
     % Explanation
     \node[explain_box] at (StageExplainPos) {
         Instructions following the branch get into the pipe
