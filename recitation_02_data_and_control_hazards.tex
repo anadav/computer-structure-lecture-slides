@@ -12,6 +12,7 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, automata, matrix}
 \usepackage{tcolorbox}
 \usepackage{listings}
+\usepackage{minted}
 \usepackage{pifont}
 \usetheme{Madrid}
 
@@ -842,7 +843,7 @@ A data hazard occurs when an instruction depends on the result of a previous ins
 \small
 \textbf{ForwardA Logic} (similar for ForwardB using Rt instead of Rs):
 
-\begin{lstlisting}[language=C, basicstyle=\ttfamily\scriptsize]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{c}
 // Priority 1: MEM->EX (most recent)
 if (EX/MEM.RegWrite && EX/MEM.Rd != 0 && EX/MEM.Rd == ID/EX.Rs)
     ForwardA = 10;  // Forward from EX/MEM
@@ -854,7 +855,7 @@ else if (MEM/WB.RegWrite && MEM/WB.Rd != 0 && MEM/WB.Rd == ID/EX.Rs)
 // No forwarding needed
 else
     ForwardA = 00;  // Use Register File
-\end{lstlisting}
+\end{minted}
 
 \textbf{Key Points:}
 \begin{itemize}
@@ -1018,16 +1019,16 @@ Note: Initial state is "not taken" because on first encounter with a branch inst
 \begin{frame}[fragile]{Q1: Branch Prediction}
 \begin{columns}
 \column{0.4\textwidth}
-\begin{lstlisting}[language={[x86masm]Assembler}]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{nasm}
     MOVI R1,2
-loop1: 
+loop1:
     MOV R2,R1
-loop2: 
+loop2:
     DEC R2
     BNEQ R2,R0,loop2
     INC R1
     BLT R1,4,loop1
-\end{lstlisting}
+\end{minted}
 
 \column{0.6\textwidth}
 \textbf{Given:}
@@ -1052,17 +1053,16 @@ loop2:
 \begin{columns}
 \column{0.3\textwidth}
 %\textbf{Program:}
-\begin{lstlisting}[basicstyle=\scriptsize\ttfamily,
-    numbers=none, emph={BNEQ}, emphstyle=\color{red}]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{nasm}
     MOVI R1,2
-loop1: 
+loop1:
     MOV R2,R1
-loop2: 
+loop2:
     DEC R2
     BNEQ R2,R0,loop2
     INC R1
     BLT R1,4,loop1
-\end{lstlisting}
+\end{minted}
 
 \column{0.7\textwidth}
 \textbf{2-bit Predictor (Initial: 01):}
@@ -1385,18 +1385,18 @@ next (correct) & & & & \cellcolor{normalexec!40}IF & \cellcolor{normalexec!40}ID
 \begin{frame}[fragile]{Q3a: BTB and Pipeline Timing}
 \begin{columns}
 \column{0.5\textwidth}
-\begin{lstlisting}[language={[x86masm]Assembler}]
-place2: 
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{nasm}
+place2:
     ADDI R4,R4,#2
     ADDI R4,R4,#2
     LD R10,R4(128)
     ADDI R9,R9,#0
     BEQ R10,R1,place1
     ADDI R7,R7,#1
-place1: 
+place1:
     BNEQ R10,R1,place2
     ADDI R8,R8,#1
-\end{lstlisting}
+\end{minted}
 
 \column{0.5\textwidth}
 \textbf{Given:}

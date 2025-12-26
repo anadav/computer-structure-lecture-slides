@@ -15,6 +15,7 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
 \usepackage{listings}
+\usepackage{minted}
 \usepackage{xcolor}
 
 \usetheme{Madrid}
@@ -968,7 +969,7 @@ Key insight: HBM achieves highest bandwidth through \textbf{wide interface} (102
 \end{frame}
 
 \begin{frame}[fragile]{Pipelining Example: Single Stage}
-\begin{lstlisting}[language=C++, basicstyle=\ttfamily\fontsize{5}{6}\selectfont]
+\begin{minted}[fontsize=\fontsize{5}{6}\selectfont, frame=single, bgcolor=gray!10]{cpp}
 __global__ void with_single_stage(int* global_out, int const* global_in,
                                    size_t size, size_t batch_sz) {
   auto block = cooperative_groups::this_thread_block();
@@ -1000,11 +1001,11 @@ __global__ void with_single_stage(int* global_out, int const* global_in,
     pipeline.consumer_release();
   }
 }
-\end{lstlisting}
+\end{minted}
 \end{frame}
 
 \begin{frame}[fragile]{Pipelining Example: Multi-Stage}
-\begin{lstlisting}[language=C++, basicstyle=\ttfamily\fontsize{5}{6}\selectfont]
+\begin{minted}[fontsize=\fontsize{5}{6}\selectfont, frame=single, bgcolor=gray!10]{cpp}
 template <size_t stages_count = 2>
 __global__ void with_staging(int* global_out, int const* global_in,
                               size_t size, size_t batch_sz) {
@@ -1031,7 +1032,7 @@ __global__ void with_staging(int* global_out, int const* global_in,
     pipeline.consumer_release();
   }
 }
-\end{lstlisting}
+\end{minted}
 \end{frame}
 
 \begin{frame}{Unified Memory}

@@ -5,6 +5,7 @@
 \usepackage{colortbl}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{minted}
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{bytefield}
@@ -676,24 +677,24 @@
 \item CPU retries the access
 \end{itemize}
 \column{0.55\textwidth}
-\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
-// OS: Present bit = 0
-handle_non_present_page(vaddr):
-  vpn = vaddr >> PAGE_BITS
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{python}
+# OS: Present bit = 0
+def handle_non_present_page(vaddr):
+    vpn = vaddr >> PAGE_BITS
 
-  if no_free_physical_page():
-    victim = select_victim()  // LRU, etc.
-    if victim.dirty:
-      write_to_swap(victim)
-    victim.pte.present = 0
+    if no_free_physical_page():
+        victim = select_victim()  # LRU, etc.
+        if victim.dirty:
+            write_to_swap(victim)
+        victim.pte.present = 0
 
-  ppn = allocate_physical_page()
-  read_from_disk(vpn, ppn)
+    ppn = allocate_physical_page()
+    read_from_disk(vpn, ppn)
 
-  pte[vpn].ppn = ppn
-  pte[vpn].present = 1
-  return_to_user()  // retry access
-\end{lstlisting}
+    pte[vpn].ppn = ppn
+    pte[vpn].present = 1
+    return_to_user()  # retry access
+\end{minted}
 \end{columns}
 \end{frame}
 
@@ -712,27 +713,27 @@ handle_non_present_page(vaddr):
     \end{itemize}
 \end{itemize}
 \column{0.55\textwidth}
-\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
-// OS: Access control violation
-handle_protection_violation(vaddr, access):
-  vpn = vaddr >> PAGE_BITS
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{python}
+# OS: Access control violation
+def handle_protection_violation(vaddr, access):
+    vpn = vaddr >> PAGE_BITS
 
-  // Copy-on-Write: shared page,
-  // write triggers private copy
-  if is_cow_page(vpn) && access == WRITE:
-    new_ppn = copy_page(pte[vpn].ppn)
-    pte[vpn].ppn = new_ppn
-    pte[vpn].writable = 1
-    return_to_user()  // retry
+    # Copy-on-Write: shared page,
+    # write triggers private copy
+    if is_cow_page(vpn) and access == WRITE:
+        new_ppn = copy_page(pte[vpn].ppn)
+        pte[vpn].ppn = new_ppn
+        pte[vpn].writable = 1
+        return_to_user()  # retry
 
-  // Dirty tracking for swapping
-  if tracking_dirty(vpn) && access == WRITE:
-    pte[vpn].dirty = 1
-    pte[vpn].writable = 1
-    return_to_user()
+    # Dirty tracking for swapping
+    if tracking_dirty(vpn) and access == WRITE:
+        pte[vpn].dirty = 1
+        pte[vpn].writable = 1
+        return_to_user()
 
-  kill_process(SIGSEGV)  // real violation
-\end{lstlisting}
+    kill_process(SIGSEGV)  # real violation
+\end{minted}
 \end{columns}
 \end{frame}
 
@@ -1255,26 +1256,26 @@ handle_protection_violation(vaddr, access):
 \item Clean pages: just discard
 \end{itemize}
 \column{0.58\textwidth}
-\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
-// OS: Evict page to make room
-evict_page_to_disk(victim_vpn):
-  // 1. TLB shootdown (all cores)
-  tlb_shootdown(victim_vpn)  // IPI to other cores
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{python}
+# OS: Evict page to make room
+def evict_page_to_disk(victim_vpn):
+    # 1. TLB shootdown (all cores)
+    tlb_shootdown(victim_vpn)  # IPI to other cores
 
-  // 2. Update page table
-  pte[victim_vpn].present = 0
+    # 2. Update page table
+    pte[victim_vpn].present = 0
 
-  // 3. Write to disk only if dirty
-  if pte[victim_vpn].dirty:
-    disk_loc = find_swap_slot()
-    pte[victim_vpn].disk_loc = disk_loc
-    paddr = victim_ppn << PAGE_BITS
-    disk_write(disk_loc, paddr, PAGE_SIZE)
-  // else: clean page, just discard
+    # 3. Write to disk only if dirty
+    if pte[victim_vpn].dirty:
+        disk_loc = find_swap_slot()
+        pte[victim_vpn].disk_loc = disk_loc
+        paddr = victim_ppn << PAGE_BITS
+        disk_write(disk_loc, paddr, PAGE_SIZE)
+    # else: clean page, just discard
 
-  // 4. Free physical page
-  free_physical_page(victim_ppn)
-\end{lstlisting}
+    # 4. Free physical page
+    free_physical_page(victim_ppn)
+\end{minted}
 \end{columns}
 \end{frame}
 
@@ -1295,19 +1296,19 @@ evict_page_to_disk(victim_vpn):
     \end{itemize}
 \end{itemize}
 \column{0.58\textwidth}
-\begin{lstlisting}[style=pseudocode, basicstyle=\ttfamily\scriptsize]
-// OS: Switch from process A to process B
-context_switch(proc_A, proc_B):
-  // 1. Save current registers
-  proc_A.regs = save_registers()
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{python}
+# OS: Switch from process A to process B
+def context_switch(proc_A, proc_B):
+    # 1. Save current registers
+    proc_A.regs = save_registers()
 
-  // 2. Load new state (CR3 stored in PCB)
-  write_cr3(proc_B.cr3)  // flushes TLB
-  restore_registers(proc_B.regs)
+    # 2. Load new state (CR3 stored in PCB)
+    write_cr3(proc_B.cr3)  # flushes TLB
+    restore_registers(proc_B.regs)
 
-  // Resume execution in process B
-  return_to_user()
-\end{lstlisting}
+    # Resume execution in process B
+    return_to_user()
+\end{minted}
 \end{columns}
 \end{frame}
 

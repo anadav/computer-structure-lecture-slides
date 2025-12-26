@@ -11,6 +11,7 @@
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, patterns, fit, decorations.pathmorphing, shapes.callouts}
 \usepackage{tcolorbox}
 \usepackage{listings}
+\usepackage{minted}
 \lstset{
     basicstyle=\ttfamily\scriptsize,
     keywordstyle=\color{blue},
@@ -552,25 +553,25 @@ E.g., \textbf{cache thrashing}: the workload run by each thread fits into the ca
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Bad: Busy-wait idle loop}
-\begin{lstlisting}[language=C]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{c}
 void os_idle_loop() {
     while (!work_available) {
         // Spin checking for work
         // Wastes resources!
     }
 }
-\end{lstlisting}
+\end{minted}
 
 \column{0.48\textwidth}
 \textbf{Good: Use HLT}
-\begin{lstlisting}[language=C]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{c}
 void os_idle_loop() {
     while (!work_available) {
         __halt();
         // Wakes on interrupt
     }
 }
-\end{lstlisting}
+\end{minted}
 \end{columns}
 
 \vspace{0.3cm}
@@ -593,7 +594,7 @@ void os_idle_loop() {
 \end{itemize}
 
 \vspace{0.0cm}
-\begin{lstlisting}[language=C, morekeywords={thread_t,cpu_t}]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{c}
 void schedule_thread(thread_t *thread) {
     // First: try to find an idle physical core
     for (cpu_t *cpu : all_physical_cores) {
@@ -609,7 +610,7 @@ void schedule_thread(thread_t *thread) {
     }
     enqueue(thread);  // All CPUs busy, wait in queue
 }
-\end{lstlisting}
+\end{minted}
 \end{frame}
 
 % Slide 13: User-level Thread Optimization
@@ -617,13 +618,13 @@ void schedule_thread(thread_t *thread) {
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Use PAUSE in spin-wait loops:}
-\begin{lstlisting}[language=C]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{c}
 void spin_lock(int *lock) {
     while (*lock != 0) {
         __pause();
     }
 }
-\end{lstlisting}
+\end{minted}
 \begin{itemize}\small
     \item Hints CPU: in spin-wait loop
     \item Saves power, avoids memory order violation penalty
@@ -632,7 +633,7 @@ void spin_lock(int *lock) {
 
 \column{0.48\textwidth}
 \textbf{Set CPU affinity:}
-\begin{lstlisting}[language=C]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{c}
 // Linux: pin thread to CPU 0
 cpu_set_t cpuset;
 CPU_ZERO(&cpuset);
@@ -640,7 +641,7 @@ CPU_SET(0, &cpuset);
 pthread_setaffinity_np(
     thread, sizeof(cpuset),
     &cpuset);
-\end{lstlisting}
+\end{minted}
 \begin{itemize}\small
     \item User can control which logical CPUs a thread runs on
     \item Avoid sibling threads for cache-sensitive workloads

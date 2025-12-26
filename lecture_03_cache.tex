@@ -4,6 +4,7 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{minted}
 \usepackage{tikz}
 \usepackage{xcolor}
 \usepackage{pgfplots}
@@ -1170,12 +1171,13 @@
   \end{itemize}
   
   \begin{block}{Pseudo-code (on access of way $i$)}
-  \begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{python}
 X = Counter[i]
-Counter[i] = k-1          // way i becomes MRU
-for j in [0..k-1]:
-  if j != i and Counter[j] > X: Counter[j]--
-  \end{lstlisting}
+Counter[i] = k-1          # way i becomes MRU
+for j in range(k):
+    if j != i and Counter[j] > X:
+        Counter[j] -= 1
+\end{minted}
   \end{block}
 \end{itemize}
 \end{column}
@@ -1762,20 +1764,20 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \begin{column}{0.65\textwidth}
 \begin{block}{Before: two sequential arrays}
 \small
-\begin{lstlisting}[basicstyle=\ttfamily\small, commentstyle=\color{red}]
+\begin{minted}[fontsize=\small]{c}
 int val[SIZE];
 int key[SIZE];
-\end{lstlisting}
+\end{minted}
 \end{block}
 
 \begin{block}{After: One array of structures}
 \small
-\begin{lstlisting}[basicstyle=\ttfamily\small, commentstyle=\color{green!60!black}]
+\begin{minted}[fontsize=\small]{c}
 struct merge {
     int val;
     int key;
 } merged_array[SIZE];
-\end{lstlisting}
+\end{minted}
 \end{block}
 \end{column}
 
@@ -2500,16 +2502,16 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Processor 0}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{text}
 Store [X] <- 1   // S1
 Store [Y] <- 1   // S2
-\end{lstlisting}
+\end{minted}
 \column{0.48\textwidth}
 \textbf{Processor 1}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{text}
 r1 <- Load [Y]   // L1
 r2 <- Load [X]   // L2
-\end{lstlisting}
+\end{minted}
 \end{columns}
 
 \vspace{0.2cm}
@@ -2528,16 +2530,16 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Processor 0}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{text}
 r1 <- Load [X]   // L1
 Store [Y] <- 1   // S1
-\end{lstlisting}
+\end{minted}
 \column{0.48\textwidth}
 \textbf{Processor 1}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{text}
 r2 <- Load [Y]   // L2
 Store [X] <- 1   // S2
-\end{lstlisting}
+\end{minted}
 \end{columns}
 
 \vspace{0.2cm}
@@ -2558,16 +2560,16 @@ Initial: \texttt{x=y=0}. Outcome \texttt{r1=0, r2=0} is \textbf{allowed}.\\[2pt]
 \begin{columns}[T]
 \column{0.48\textwidth}
 \textbf{Processor 0}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{text}
 Store [X] <- 1   // S1
 r1 <- Load [Y]   // L1
-\end{lstlisting}
+\end{minted}
 \column{0.48\textwidth}
 \textbf{Processor 1}
-\begin{lstlisting}[basicstyle=\ttfamily\small]
+\begin{minted}[fontsize=\small]{text}
 Store [Y] <- 1   // S2
 r2 <- Load [X]   // L2
-\end{lstlisting}
+\end{minted}
 \end{columns}
 
 \vspace{0.2cm}
@@ -2586,21 +2588,21 @@ Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allow
 \begin{columns}[T]
 \column{0.32\textwidth}
 {\footnotesize\textbf{Processor 0}}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{minted}[fontsize=\scriptsize]{text}
 Store [X] <- 1   // S1
-\end{lstlisting}
+\end{minted}
 \column{0.32\textwidth}
 {\footnotesize\textbf{Processor 1}}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{minted}[fontsize=\scriptsize]{text}
 r1 <- Load [X]   // L1
 Store [Y] <- 1   // S2
 r2 <- Load [Y]   // L2
-\end{lstlisting}
+\end{minted}
 \column{0.32\textwidth}
 {\footnotesize\textbf{Processor 2}}
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+\begin{minted}[fontsize=\scriptsize]{text}
 r3 <- Load [X]   // L3
-\end{lstlisting}
+\end{minted}
 \end{columns}
 
 \vspace{0.1cm}

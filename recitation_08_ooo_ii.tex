@@ -11,6 +11,7 @@
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
+\usepackage{minted}
 \usepackage{pgfkeys}
 \usepackage[normalem]{ulem} 
 \usetheme{Madrid}
@@ -507,7 +508,7 @@ Our Out-of-Order Execution system has the following characteristics:
 \begin{frame}[fragile]{Original Program - High Level}
 \begin{columns}
 \column{0.5\textwidth}
-\begin{lstlisting}[language=C]
+\begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{text}
 R0 = 0
 R1 = 0
 L1: R4 = 20
@@ -521,7 +522,7 @@ L1: R4 = 20
     R1 = R1 + 1
     IF (R1 < 100) goto L1
 L2: R4 = 23
-\end{lstlisting}
+\end{minted}
 
 \column{0.5\textwidth}
 \begin{block}{Key Points}
@@ -536,7 +537,7 @@ L2: R4 = 23
 \end{frame}
 
 \begin{frame}[fragile]{Assembly Translation}
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+\begin{minted}[fontsize=\footnotesize, frame=single, bgcolor=gray!10]{nasm}
     ADDI R10, R0, 100      ; Set loop counter limit
     SUB  R1, R1, R1        ; Initialize R1 = 0
 L1: ADDI R4, R0, 20        ; R4 = 20
@@ -550,7 +551,7 @@ L1: ADDI R4, R0, 20        ; R4 = 20
     ADDI R1, R1, 1         ; Increment loop counter
     BNE  R1, R10, L1       ; Branch if R1 != 100
 L2: ADDI R4, R0, 23        ; R4 = 23
-\end{lstlisting}
+\end{minted}
 \end{frame}
 
 \section{Execution Analysis}
@@ -1254,7 +1255,7 @@ The load instruction creates a 5-cycle latency that affects dependent instructio
 \begin{columns}
 \column{0.45\textwidth}
 \textbf{Original Code:}
-\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+\begin{minted}[fontsize=\tiny, frame=single, bgcolor=gray!10]{text}
 R0 = 0
 R1 = 0
 L1: R4 = 20
@@ -1268,11 +1269,11 @@ L1: R4 = 20
     R1 = R1 + 1
     IF (R1 < 100) goto L1
 L2: R4 = 23
-\end{lstlisting}
+\end{minted}
 
 \column{0.45\textwidth}
 \textbf{Optimized Code:}
-\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+\begin{minted}[fontsize=\tiny, frame=single, bgcolor=gray!10]{text}
 R0 = 0
 R1 = 0
 R4 = 20
@@ -1286,7 +1287,7 @@ L1: R5 = load 100(R4)
     IF (R1 < 100) goto L1
 R7 = R5
 L2: R4 = 23
-\end{lstlisting}
+\end{minted}
 \end{columns}
 
 \begin{block}{Optimization: Loop Invariant Code Motion}
