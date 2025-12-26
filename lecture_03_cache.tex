@@ -877,11 +877,11 @@
     tagbox/.style={rectangle, draw, fill=green!30, minimum width=2cm, minimum height=0.6cm, font=\footnotesize},
     setbox/.style={rectangle, draw, fill=cyan!30, minimum width=1.5cm, minimum height=0.6cm, font=\footnotesize},
     offsetbox/.style={rectangle, draw, fill=orange!30, minimum width=2cm, minimum height=0.6cm, font=\footnotesize},
-    cellstyle/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.35cm,
-                     text depth=0.1cm, text height=0.2cm, font=\tiny},
+    cellstyle/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.3cm,
+                     text depth=0.1cm, text height=0.2cm, font=\tiny, inner sep=2pt},
     tagcell/.style={cellstyle, fill=green!30},
+    datacell/.style={cellstyle},
     offsetcell/.style={cellstyle, fill=orange!30, minimum width=2mm},
-    titlecell/.style={cellstyle, font=\tiny},
     decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.5, square pins=0},
                    external pins width=0, fill=cyan!20},
     arrow/.style={->, >=stealth, thick},
@@ -903,95 +903,83 @@
 \node[anchor=south east] at (set.north east) {\footnotesize 5\,4};
 \node[anchor=south east] at (offset.north east) {\footnotesize 0};
 
-% Define base positions for ways (further apart)
-\coordinate (way0base) at ($(set.south) + (-6,-2.5)$);
-\coordinate (way1base) at ($(set.south) + (0,-2.5)$);
+% Way 0 Tag matrix
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north] at ([xshift=-3.5cm, yshift=-2cm]set.south) (tag0) {
+  |[tagcell]| {\scriptsize Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+};
 
-% Way 0 Tag array - using for loop (create first to align demux)
-\coordinate (tag0_start) at ($(way0base) + (2.5,0.5)$);
-\begin{scope}[every node/.style={tagcell}]
-\foreach \i in {0,...,3} {
-    \ifnum\i=0
-        \node[anchor=north] at (tag0_start) (tag0_\i) {\scriptsize Tag};
-    \else
-        \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[below=0cm of tag0_\prev.south, anchor=north] (tag0_\i) {};
-    \fi
-}
-\end{scope}
-
-% Way 0 decoder (demux) - aligned with first tag box using rpin 1, further left
-\node[decoder, anchor=rpin 1] at ($(tag0_0.west) + (-0.5,0)$) (decoder0) {};
+% Way 0 decoder (demux)
+\node[decoder, anchor=rpin 1] at ([xshift=-0.5cm]tag0-1-1.west) (decoder0) {};
 \node[font=\small, anchor=east] at ([xshift=-5mm]decoder0.lpin 1) {Set\#};
 
-% Way 0 Data array - using for loop, positioned relative to tag array
-\coordinate (data0_start) at ($(tag0_0.east) + (0.8,0)$);
-\begin{scope}[every node/.style={cellstyle}]
-\foreach \i in {0,...,3} {
-    \ifnum\i=0
-        \node[anchor=west] at (data0_start) (data0_\i) {\scriptsize Data};
-    \else
-        \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[below=0cm of data0_\prev.south, anchor=north] (data0_\i) {};
-    \fi
-}
-% Draw orange box for line offset only on first data line
-\node[offsetcell, anchor=east] at ([xshift=-1mm]data0_1.east) (thedata0) {};
-\end{scope}
+% Way 0 Data matrix - same y as tag0
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north west] at ([xshift=0.8cm]tag0.north east) (data0) {
+  |[datacell]| {\scriptsize Data} \\
+  |[datacell]| \phantom{Data} \\
+  |[datacell]| \phantom{Data} \\
+  |[datacell]| \phantom{Data} \\
+};
+% Orange box for line offset on second data line
+\node[offsetcell, anchor=east] at ([xshift=-1mm]data0-2-1.east) (thedata0) {};
 
-% Way 0 comparator - using muxdemux rotated 90 degrees
+% Way 0 comparator
 \node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
-      external pins width=0, fill=green!30, rotate=270] at ([xshift=1.5cm, yshift=-0.5cm] tag0_3.south west) (comp0) {};
+      external pins width=0, fill=green!30, rotate=270] at ([xshift=5mm, yshift=-0.5cm]tag0.south east) (comp0) {};
 \node[font=\fontsize{4}{4}\selectfont, rotate=90] at (comp0.center) {=};
 
 % Way 0 label
-\node[above=1mm of tag0_0.north] (way0label) {\textbf{Way 0}};
+\node[above=1mm of tag0-1-1.north] (way0label) {\textbf{Way 0}};
 
-% Way 1 Tag array - using for loop (create first to align demux)
-\coordinate (tag1_start) at ($(way1base) + (2.5,0.5)$);
-\begin{scope}[every node/.style={tagcell}]
-\foreach \i in {0,...,3} {
-    \ifnum\i=0
-        \node[anchor=north] at (tag1_start) (tag1_\i) {\scriptsize Tag};
-    \else
-        \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[below=0cm of tag1_\prev.south, anchor=north] (tag1_\i) {};
-    \fi
-}
-\end{scope}
+% Way 1 Tag matrix
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north] at ([xshift=2.5cm, yshift=-2cm]set.south) (tag1) {
+  |[tagcell]| {\scriptsize Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+};
 
-% Way 1 decoder (demux) - aligned with first tag box using rpin 1, further left
-\node[decoder, anchor=rpin 1] at ($(tag1_0.west) + (-0.5,0)$) (decoder1) {};
+% Way 1 decoder (demux)
+\node[decoder, anchor=rpin 1] at ([xshift=-0.5cm]tag1-1-1.west) (decoder1) {};
 \node[font=\small, anchor=east] at ([xshift=-5mm]decoder1.lpin 1) {Set\#};
 
-% Way 1 Data array - using for loop, positioned relative to tag array
-\coordinate (data1_start) at ($(tag1_0.east) + (0.8,0)$);
-\begin{scope}[every node/.style={cellstyle}]
-\foreach \i in {0,...,3} {
-    \ifnum\i=0
-        \node[anchor=west] at (data1_start) (data1_\i) {\scriptsize Data};
-    \else
-        \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[below=0cm of data1_\prev.south, anchor=north] (data1_\i) {};
-    \fi
-}
-\node[offsetcell, anchor=east] at ([xshift=-1mm]data1_1.east) (thedata1) {};
-\end{scope}
+% Way 1 Data matrix - same y as tag1
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north west] at ([xshift=0.8cm]tag1.north east) (data1) {
+  |[datacell]| {\scriptsize Data} \\
+  |[datacell]| \phantom{Data} \\
+  |[datacell]| \phantom{Data} \\
+  |[datacell]| \phantom{Data} \\
+};
+\node[offsetcell, anchor=east] at ([xshift=-1mm]data1-2-1.east) (thedata1) {};
 
-% Way 1 comparator - using muxdemux rotated 90 degrees
+% Way 1 comparator
 \node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
-      external pins width=0, fill=green!30, rotate=270] at ([xshift=1.5cm, yshift=-5mm] tag1_3.south west) (comp1) {};
+      external pins width=0, fill=green!30, rotate=270] at ([xshift=5mm, yshift=-5mm]tag1.south east) (comp1) {};
 \node[font=\fontsize{4}{4}\selectfont, rotate=90] at (comp1.center) {=};
 
 % Way 1 label
-\node[above=1mm of tag1_0.north] (way1label) {\textbf{Way 1}};
+\node[above=1mm of tag1-1-1.north] (way1label) {\textbf{Way 1}};
 
 % Background for ways
 \begin{pgfonlayer}{background}
-    \node[fit=(way0label)(decoder0)(tag0_0)(tag0_3)(data0_0)(data0_3)(comp0),
+    \node[fit=(way0label)(decoder0)(tag0-1-1)(tag0-4-1)(data0-1-1)(data0-4-1)(comp0),
           fill=gray!10, draw=gray!30, dashed, rounded corners,
           inner sep=3mm] (way0bg) {};
-    \node[fit=(way1label)(decoder1)(tag1_0)(tag1_3)(data1_0)(data1_3)(comp1),
+    \node[fit=(way1label)(decoder1)(tag1-1-1)(tag1-4-1)(data1-1-1)(data1-4-1)(comp1),
           fill=gray!10, draw=gray!30, dashed, rounded corners,
           inner sep=3mm] (way1bg) {};
 \end{pgfonlayer}
@@ -1001,7 +989,7 @@
 
 % MUX - using muxdemux, rotated 270 degrees, positioned relative to data arrays
 \node[muxdemux, muxdemux def={Lh=1, Rh=0.5, NL=2, NB=2, NR=1, w=0.8},
-      external pins width=0, fill=gray!20, rotate=270,anchor=lpin 1] at ([yshift=-1.1cm]data1_3.south) (mux) {};
+      external pins width=0, fill=gray!20, rotate=270,anchor=lpin 1] at ([yshift=-1.1cm]data1-4-1.south) (mux) {};
 
 % Output labels
 \node[below=2mm of orgate.east] (hitmiss) {Hit/Miss};
@@ -1026,29 +1014,28 @@
 \draw[arrow] (offsetjunction) -| (thedata1.north);
 
 % Decoder to tag arrays - straight horizontal lines
-\foreach \i in {0,...,3} {
-    \pgfmathtruncatemacro{\pin}{\i+1}
-    \draw[arrow] (decoder0.rpin 1 |- tag0_\i.west) -- (tag0_\i.west);
-    \draw[arrow] (decoder1.rpin 1 |- tag1_\i.west) -- (tag1_\i.west);
+\foreach \i in {1,...,4} {
+    \draw[arrow] (decoder0.rpin 1 |- tag0-\i-1.west) -- (tag0-\i-1.west);
+    \draw[arrow] (decoder1.rpin 1 |- tag1-\i-1.west) -- (tag1-\i-1.west);
 }
 
 % Dashed lines from tag arrays to data arrays (each row)
-\foreach \i in {0,...,3} {
-    \draw[dasharrow] (tag0_\i.east) -- (data0_\i.west);
-    \draw[dasharrow] (tag1_\i.east) -- (data1_\i.west);
+\foreach \i in {1,...,4} {
+    \draw[dasharrow] (tag0-\i-1.east) -- (data0-\i-1.west);
+    \draw[dasharrow] (tag1-\i-1.east) -- (data1-\i-1.west);
 }
 
-% Selected line highlighting (example: line 1)
-\draw[arrow, thick, orange] (tag0_1.east) -- (data0_1.west);
-\draw[arrow, thick, orange] (tag1_1.east) -- (data1_1.west);
+% Selected line highlighting (example: line 2)
+\draw[arrow, thick, orange] (tag0-2-1.east) -- (data0-2-1.west);
+\draw[arrow, thick, orange] (tag1-2-1.east) -- (data1-2-1.west);
 
 % Tag array output to comparator
-\draw[arrow] (tag0_1.east) -| (comp0.lpin 2);
-\draw[arrow] (tag1_1.east) -| (comp1.lpin 2);
+\draw[arrow] (tag0-2-1.east) -| (comp0.lpin 2);
+\draw[arrow] (tag1-2-1.east) -| (comp1.lpin 2);
 
 % Data array to MUX connections
-\draw[arrow] (data0_3.south) |- ([yshift=3mm]mux.lpin 2) -- (mux.lpin 2);
-\draw[arrow] (data1_3.south) -- (mux.lpin 1);
+\draw[arrow] (data0-4-1.south) |- ([yshift=3mm]mux.lpin 2) -- (mux.lpin 2);
+\draw[arrow] (data1-4-1.south) -- (mux.lpin 1);
 
 % Comparator outputs to OR gate
 \draw[arrow] (comp0.rpin 1) |- ([yshift=3mm]orgate.input 2) -- (orgate.input 2);
