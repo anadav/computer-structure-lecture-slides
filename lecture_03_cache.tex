@@ -1466,17 +1466,15 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 
 \begin{frame}{Fill Buffers}
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}\small
-\begin{itemize}\small
+\begin{column}{0.48\textwidth}
+\begin{itemize}
   \item L2 to L1 bus may be narrower than cache line
-  \begin{itemize}\scriptsize
+  \begin{itemize}
     \item E.g., 16B bus, 64B line $\Rightarrow$ 4 cycles
-    \item Fetch critical chunk (containing missed address) first to reduce latency
+    \item Fetch critical chunk first to reduce latency
   \end{itemize}
   \item Fill buffer accumulates full line, then writes to L1
-  \begin{itemize}\scriptsize
-    \item Searched in parallel with cache
-  \end{itemize}
+  \item Streaming loads: bypass L1 to avoid pollution
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -1507,71 +1505,17 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
     \draw[->, very thick] (b1.west) -- node[above, font=\footnotesize] {64B} (b1.west -| l1.east);
 \end{tikzpicture}
 
-\vspace{0.3cm}
-\small
-\begin{itemize}\small
-  \item Streaming loads (via SW/compiler hints): serve data directly from fill buffer without L1 insertion to avoid pollution
-\end{itemize}
-\end{column}
-\end{columns}
-\end{frame}
-
-% Alternative version with more detail
-\begin{frame}{Fill Buffer Operation}
-\begin{columns}[T]
-\begin{column}{0.6\textwidth}
+\vspace{0.4cm}
 \begin{itemize}
-  \item \textbf{Fill buffers bridge cache levels}
-  \begin{itemize}
-    \item Hold incoming cache lines from L2/memory
-    \item Allow critical word first delivery
-    \item Enable hit-under-miss operation
-  \end{itemize}
-  
-  \vspace{0.3cm}
-  
-  \item \textbf{Key characteristics:}
-  \begin{itemize}
-    \item Typically 4-8 entries
-    \item Each holds one cache line
-    \item Searched in parallel with L1
-    \item Can forward data before line fills complete
-  \end{itemize}
+  \item Typically 4--8 entries
+  \item Searched in parallel with cache
+  \item Can forward data before fill completes
+  \item Enables hit-under-miss
 \end{itemize}
-\end{column}
-
-\begin{column}{0.4\textwidth}
-\begin{tikzpicture}[scale=0.7]
-% Define colors
-\definecolor{l1color}{RGB}{235, 205, 175}
-\definecolor{l2color}{RGB}{200, 230, 180}
-\definecolor{buffercolor}{RGB}{200, 190, 220}
-
-% L1 Cache (smaller)
-\draw[thick, fill=l1color] (0,0) rectangle (1.5,1.8);
-\node[font=\footnotesize] at (0.75,0.9) {L1};
-
-% Fill Buffers
-\node[font=\tiny] at (2.5,2) {Fill Buffers};
-\foreach \y in {0.2, 0.6, 1.0, 1.4} {
-    \draw[fill=buffercolor] (2,\y) rectangle (3,{\y+0.3});
-}
-
-% L2 Cache (smaller)
-\draw[thick, fill=l2color] (3.5,0) rectangle (5,1.8);
-\node[font=\footnotesize] at (4.25,0.9) {L2};
-
-% Arrows
-\draw[->, thick] (1.5,0.9) -- (2,0.9);
-\draw[->, thick] (3,0.9) -- (3.5,0.9);
-
-% Labels
-\node[font=\tiny] at (1.75,1.1) {64B};
-\node[font=\tiny] at (3.25,1.1) {16B};
-\end{tikzpicture}
 \end{column}
 \end{columns}
 \end{frame}
+
 
 
 
