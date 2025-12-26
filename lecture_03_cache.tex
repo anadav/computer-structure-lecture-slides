@@ -248,7 +248,7 @@
 \begin{center}
 \begin{tikzpicture}[
     scale=1,
-    box/.style={font=\scriptsize, minimum height=0.5cm, draw, thick, align=center, inner sep=2pt}
+    box/.style={font=\scriptsize, minimum height=0.5cm, draw, thick, align=center, inner sep=2pt, text depth=0.1em, text height=1em}
 ]
 
   % Bottom row (actual fields, in boxes)
@@ -356,22 +356,22 @@
 \begin{itemize}
   \item \textbf{Cache hit}
   \begin{itemize}
-    \item Block is mapped to the cache —
-    return data according to block's offset
+    \item Block is in the cache ---
+    return data according to offset
   \end{itemize}
 
   \vspace{0.4cm}
 
   \item \textbf{Cache miss}
   \begin{itemize}
-    \item Block is not mapped to the cache
-    \item Do a cache line fill
+    \item Block is not in the cache
+    \item Perform a cache line fill:
     \begin{itemize}
       \item Fetch block into fill buffer
-      \item May require few bus cycles
+      \item May require several bus cycles
       \item Write fill buffer into cache
     \end{itemize}
-    \item May need to evict another block from the cache
+    \item May need to evict another block
     \begin{itemize}
       \item Make room for the new block
     \end{itemize}
@@ -381,17 +381,18 @@
 
 \begin{column}{0.4\textwidth}
 \begin{tikzpicture}[
-  % Define colors (include draw for outline)
-  lightblue/.style={draw, fill=blue!25, minimum width=0.9cm, minimum height=0.22cm},
-  lightgreen/.style={draw, fill=green!25, minimum width=0.9cm, minimum height=0.22cm},
-  lightyellow/.style={draw, fill=yellow!25, minimum width=0.9cm, minimum height=0.22cm},
-  lightpurple/.style={draw, fill=purple!25, minimum width=0.9cm, minimum height=0.22cm},
-  whiteblock/.style={draw, fill=white, minimum width=0.9cm, minimum height=0.22cm},
+  % Define colors
+  lightblue/.style={draw, fill=blue!25},
+  lightgreen/.style={draw, fill=green!25},
+  lightyellow/.style={draw, fill=yellow!25},
+  lightpurple/.style={draw, fill=purple!25},
+  whiteblock/.style={draw, fill=white},
   % Styles
-  membox/.style={draw, minimum width=0.9cm, minimum height=0.22cm, inner sep=1pt},
-  cachebox/.style={draw, minimum width=0.7cm, minimum height=0.22cm, inner sep=1pt},
+  membox/.style={draw, minimum width=1.0cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
+  tagbox/.style={draw, minimum width=0.45cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
+  databox/.style={draw, minimum width=0.8cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
   numcell/.style={font=\tiny, inner sep=1pt},
-  scale=0.9, transform shape
+  scale=0.85, transform shape
 ]
 
   % Memory matrix
@@ -402,18 +403,18 @@
           column 2/.style={membox},
           nodes in empty cells] (mem) {
     |[font=\tiny\bfseries]| \underline{Block \#} \& |[draw=none]| \\
-    0 \& |[whiteblock]| \\
-    1 \& |[whiteblock]| \\
-    2 \& |[lightgreen]| \\
-    3 \& |[whiteblock]| \\
-    4 \& |[lightblue]| \\
-    5 \& |[whiteblock]| \\
-    6 \& |[whiteblock]| \\
+    0 \& |[whiteblock]| - \\
+    1 \& |[whiteblock]| - \\
+    2 \& |[lightgreen]| abc \\
+    3 \& |[whiteblock]| - \\
+    4 \& |[lightblue]| xyz \\
+    5 \& |[whiteblock]| - \\
+    6 \& |[whiteblock]| - \\
     |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
-    90 \& |[lightpurple]| \\
-    91 \& |[whiteblock]| \\
-    92 \& |[lightyellow]| \\
-    93 \& |[whiteblock]| \\
+    90 \& |[lightpurple]| foo \\
+    91 \& |[whiteblock]| - \\
+    92 \& |[lightyellow]| bar \\
+    93 \& |[whiteblock]| - \\
     |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
   };
 
@@ -421,24 +422,28 @@
   \node[anchor=south, font=\footnotesize\bfseries] at (mem-1-2.north) {memory};
 
   % 64B width indicator
-  \node[anchor=north, font=\tiny] at (mem-14-2.south) {$\leftarrow$ 64B $\rightarrow$};
+  \node[anchor=north, font=\tiny, gray] at (mem-14-2.south) {$\leftarrow$ 64B $\rightarrow$};
 
-  % Cache matrix
+  % Cache matrix with tag and data columns
   \matrix[matrix of nodes,
           column sep=0pt, row sep=0pt,
           ampersand replacement=\&,
-          column 1/.style={numcell, anchor=east},
-          column 2/.style={cachebox},
+          column 1/.style={tagbox},
+          column 2/.style={databox},
           right=1.2cm of mem-5-2.east, anchor=west] (cache) {
-    \phantom{00} \& |[draw=none]| \\
-    90 \& |[lightpurple]| \\
-    2 \& |[lightgreen]| \\
-    4 \& |[lightblue]| \\
-    92 \& |[lightyellow]| \\
+    |[draw=none, font=\tiny]| \& |[draw=none]| \\
+    |[lightpurple]| 90 \& |[lightpurple]| foo' \\
+    |[lightgreen]| 2 \& |[lightgreen]| abc' \\
+    |[lightblue]| 4 \& |[lightblue]| xyz' \\
+    |[lightyellow]| 92 \& |[lightyellow]| bar' \\
   };
 
   % Cache title
-  \node[anchor=south, font=\footnotesize\bfseries] at (cache-1-2.north) {cache};
+  \node[anchor=south, font=\footnotesize\bfseries] at ($(cache-1-1.north)!0.5!(cache-1-2.north)$) {cache};
+
+  % Tag/Data labels below cache
+  \node[anchor=north, font=\tiny, gray] at (cache-5-1.south) {tag};
+  \node[anchor=north, font=\tiny, gray] at (cache-5-2.south) {data};
 
   % Arrows from memory to cache
   \draw[->, thick] (mem-10-2.east) to[out=0, in=180] (cache-2-1.west);
