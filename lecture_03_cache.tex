@@ -366,87 +366,72 @@
 \end{column}
 
 \begin{column}{0.4\textwidth}
-\begin{tikzpicture}[scale=0.55]
-  % Define colors
-  \definecolor{lightblue}{RGB}{173,216,230}
-  \definecolor{lightgreen}{RGB}{144,238,144}
-  \definecolor{lightyellow}{RGB}{255,255,224}
-  \definecolor{lightpurple}{RGB}{221,160,221}
-  
-  % Memory column title
-  \node[anchor=south, font=\footnotesize\bfseries] at (1.2, 4.1) {memory};
-  \node[anchor=east, font=\tiny\bfseries] at (0.2, 3.9) {\underline{Block \#}};
-  
-  % Memory blocks with numbers
-  \node[anchor=east, font=\tiny] at (0.2, 3.4) {0};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem0) at (1.2, 3.4) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 2.9) {1};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem1) at (1.2, 2.9) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 2.4) {2};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightgreen] (mem2) at (1.2, 2.4) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 1.9) {3};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem3) at (1.2, 1.9) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 1.4) {4};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightblue] (mem4) at (1.2, 1.4) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 0.9) {5};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem5) at (1.2, 0.9) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, 0.4) {6};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem6) at (1.2, 0.4) {};
-  
-  % Dots
-  \node[font=\tiny] at (0.2, 0.0) {.};
-  \node[font=\tiny] at (0.2, -0.2) {.};
-  \node[font=\tiny] at (1.2, -0.1) {$\sim$};
-  
-  % Bottom memory blocks
-  \node[anchor=east, font=\tiny] at (0.2, -0.8) {90};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightpurple] (mem90) at (1.2, -0.8) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, -1.3) {91};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem91) at (1.2, -1.3) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, -1.8) {92};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=lightyellow] (mem92) at (1.2, -1.8) {};
-  
-  \node[anchor=east, font=\tiny] at (0.2, -2.3) {93};
-  \node[rectangle, draw, minimum width=1.0cm, minimum height=0.35cm, fill=white] (mem93) at (1.2, -2.3) {};
-  
-  % More dots
-  \node[font=\tiny] at (0.2, -2.7) {.};
-  \node[font=\tiny] at (0.2, -2.9) {.};
-  \node[font=\tiny] at (1.2, -2.8) {$\sim$};
-  
+\begin{tikzpicture}[
+  % Define colors (include draw for outline)
+  lightblue/.style={draw, fill=blue!25, minimum width=0.9cm, minimum height=0.22cm},
+  lightgreen/.style={draw, fill=green!25, minimum width=0.9cm, minimum height=0.22cm},
+  lightyellow/.style={draw, fill=yellow!25, minimum width=0.9cm, minimum height=0.22cm},
+  lightpurple/.style={draw, fill=purple!25, minimum width=0.9cm, minimum height=0.22cm},
+  whiteblock/.style={draw, fill=white, minimum width=0.9cm, minimum height=0.22cm},
+  % Styles
+  membox/.style={draw, minimum width=0.9cm, minimum height=0.22cm, inner sep=1pt},
+  cachebox/.style={draw, minimum width=0.7cm, minimum height=0.22cm, inner sep=1pt},
+  numcell/.style={font=\tiny, inner sep=1pt},
+  scale=0.9, transform shape
+]
+
+  % Memory matrix
+  \matrix[matrix of nodes,
+          column sep=0pt, row sep=0pt,
+          ampersand replacement=\&,
+          column 1/.style={numcell, anchor=east},
+          column 2/.style={membox},
+          nodes in empty cells] (mem) {
+    |[font=\tiny\bfseries]| \underline{Block \#} \& |[draw=none]| \\
+    0 \& |[whiteblock]| \\
+    1 \& |[whiteblock]| \\
+    2 \& |[lightgreen]| \\
+    3 \& |[whiteblock]| \\
+    4 \& |[lightblue]| \\
+    5 \& |[whiteblock]| \\
+    6 \& |[whiteblock]| \\
+    |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
+    90 \& |[lightpurple]| \\
+    91 \& |[whiteblock]| \\
+    92 \& |[lightyellow]| \\
+    93 \& |[whiteblock]| \\
+    |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
+  };
+
+  % Memory title
+  \node[anchor=south, font=\footnotesize\bfseries] at (mem-1-2.north) {memory};
+
   % 64B width indicator
-  \node[anchor=center, font=\tiny] at (1.2, -3.3) {$\leftarrow$ 64B $\rightarrow$};
-  
-  % Cache column
-  \node[anchor=south, font=\footnotesize\bfseries] at (4.2, 2.5) {cache};
-  
-  % Cache lines with block numbers
-  \node[font=\tiny] at (3.6, 2.1) {90};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightpurple] (cache90) at (4.6, 2.1) {};
-  
-  \node[font=\tiny] at (3.6, 1.6) {2};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightgreen] (cache2) at (4.6, 1.6) {};
-  
-  \node[font=\tiny] at (3.6, 1.1) {4};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightblue] (cache4) at (4.6, 1.1) {};
-  
-  \node[font=\tiny] at (3.6, 0.6) {92};
-  \node[rectangle, draw, minimum width=0.8cm, minimum height=0.35cm, fill=lightyellow] (cache92) at (4.6, 0.6) {};
-  
+  \node[anchor=north, font=\tiny] at (mem-14-2.south) {$\leftarrow$ 64B $\rightarrow$};
+
+  % Cache matrix
+  \matrix[matrix of nodes,
+          column sep=0pt, row sep=0pt,
+          ampersand replacement=\&,
+          column 1/.style={numcell, anchor=east},
+          column 2/.style={cachebox},
+          right=1.2cm of mem-5-2.east, anchor=west] (cache) {
+    \phantom{00} \& |[draw=none]| \\
+    90 \& |[lightpurple]| \\
+    2 \& |[lightgreen]| \\
+    4 \& |[lightblue]| \\
+    92 \& |[lightyellow]| \\
+  };
+
+  % Cache title
+  \node[anchor=south, font=\footnotesize\bfseries] at (cache-1-2.north) {cache};
+
   % Arrows from memory to cache
-  \draw[->, thick] (mem90.east) to[out=0, in=180] (cache90.west);
-  \draw[->, thick] (mem2.east) to[out=0, in=180] (cache2.west);
-  \draw[->, thick] (mem4.east) to[out=0, in=180] (cache4.west);
-  \draw[->, thick] (mem92.east) to[out=0, in=180] (cache92.west);
-  
+  \draw[->, thick] (mem-10-2.east) to[out=0, in=180] (cache-2-1.west);
+  \draw[->, thick] (mem-4-2.east) to[out=0, in=180] (cache-3-1.west);
+  \draw[->, thick] (mem-6-2.east) to[out=0, in=180] (cache-4-1.west);
+  \draw[->, thick] (mem-12-2.east) to[out=0, in=180] (cache-5-1.west);
+
 \end{tikzpicture}
 \end{column}
 \end{columns}
