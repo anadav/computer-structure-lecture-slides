@@ -690,12 +690,12 @@
 \node[component, fill=blue!30, minimum width=0.8cm] (PC) {IP};
 \node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
 \node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
-\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=17mm]IMem.north west) {};
+\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=20mm]IMem.north west) {};
 \node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
 
 % Pipeline register IF/ID
 \node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
-\node[data_latch, minimum height=2cm] (Instruction) at (IMem.rpin 2 -| IFID) {\rotatebox{90}{Instruction}};
+\node[data_latch, minimum height=2cm] (instruction) at (IMem.rpin 2 -| IFID) {\rotatebox{90}{Instruction}};
 
 % ID Stage Components
 \node[regfile, right=15mm of IFID] (RegFile) {\rotatebox{90}{Register File}};
@@ -791,7 +791,7 @@
 \coordinate (ctrl_memwb_out) at (MEMWB.east |- Decode);
 
 % Control signal lines between latches
-\draw[data_path, orange!80!black] (Decode.east) -- (ctrl_idex_in) node[control_label, above, midway] {Control\\signals};
+\draw[data_path, orange!80!black] (Decode.east) -- (ctrl_idex_in) node[control_label, above=-2pt, midway] {Control\\signals};
 \draw[data_path, orange!80!black] (ctrl_idex_out) -- (ctrl_exmem_in);
 \draw[data_path, orange!80!black] (ctrl_exmem_out) -- (ctrl_memwb_in);
 
@@ -829,7 +829,7 @@
 
 % Target register (dst) path
 \node[font=\scriptsize, below=1mm of SignExt] {dst};
-\draw[data_path] (dst_y_level) -- (dst_idex_in);
+\draw[data_path] ([yshift=4mm]instruction.south east) -- ++(0.5,0) |- (dst_idex_in);
 
 % ID/EX to ALU (top input direct, bottom through MUX)
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);

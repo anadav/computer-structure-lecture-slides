@@ -35,11 +35,46 @@
 \section{Overview}
 
 \begin{frame}{Processor--Memory Gap (summary)}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
 \begin{itemize}
-  \item CPU performance has improved much faster than DRAM latency/bandwidth.
-  \item The performance gap has grown roughly $\sim 50\%$/year historically.
-  \item Motivation: hide long memory access times from the CPU.
+  \item CPU performance improved much faster than DRAM latency/bandwidth
+  \item Performance gap grew $\sim$50\%/year historically
+  \item Motivation: hide long memory access times from the CPU
 \end{itemize}
+\end{column}
+\begin{column}{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.65]
+  % Axes
+  \draw[->, thick] (0,0) -- (6.5,0) node[below] {\footnotesize Time};
+  \draw[->, thick] (0,0) -- (0,4.5) node[left, align=center] {\footnotesize Performance};
+
+  % Y-axis labels (log scale)
+  \foreach \y/\label in {0.5/1, 1.5/10, 2.5/100, 3.5/1000} {
+    \draw (-0.1,\y) -- (0.1,\y);
+    \node[left, font=\tiny] at (-0.1,\y) {\label};
+  }
+
+  % X-axis labels
+  \foreach \x/\label in {0.5/1980, 2/1990, 3.5/2000, 5/2010, 6/2020} {
+    \node[below, font=\tiny] at (\x,-0.1) {\label};
+  }
+
+  % CPU line (steep growth)
+  \draw[thick, blue, line width=1.5pt] (0.5,0.5) -- (6,4);
+  \node[blue, right, font=\scriptsize] at (5.8,4) {CPU};
+
+  % DRAM line (slow growth)
+  \draw[thick, red, line width=1.5pt] (0.5,0.5) -- (6,1.5);
+  \node[red, right, font=\scriptsize] at (5.8,1.5) {DRAM};
+
+  % Gap annotation
+  \draw[<->, thick, green!60!black] (5,2.9) -- (5,1.35);
+  \node[green!60!black, right, font=\tiny, align=left] at (5.1,2.1) {Gap};
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Memory Trade-Offs}
@@ -658,7 +693,7 @@
     tagcell/.style={cellstyle, fill=green!30},
     offsetcell/.style={cellstyle, fill=orange!30, minimum width=2mm},
     titlecell/.style={cellstyle, font=\tiny},
-    decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.8, square pins=0},
+    decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.5, square pins=0},
                    external pins width=0, fill=cyan!20},
     arrow/.style={->, >=stealth, thick},
     dasharrow/.style={dashed, ->, >=stealth},
