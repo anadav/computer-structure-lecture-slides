@@ -373,7 +373,7 @@
       font=\tiny, below=2mm of RegFile.south] (SignExt) {\rotatebox{90}{Sign Ext.}};
 
 % EX Stage Components - ALU and MUX for immediate selection
-\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=4cm]RegFile.brpin 1) {};
+\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=4cm]RegFile.rpin 1) {};
 \node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-6mm]ALU.lpin 2) {};
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 
@@ -433,14 +433,14 @@
 
 % IMem to RegFile and Decode
 \draw[data_path] (IMem.brpin 2) -- ++(1,0) node[data_connector] (InstJunction) {};
-\draw[data_path] (InstJunction) -- (RegFile.blpin 1);
+\draw[data_path] (InstJunction) |- (RegFile.blpin 1);
 \draw[data_path] (InstJunction) |- (RegFile.blpin 2);
 
 % Instruction to Decode
 \draw[data_path] (InstJunction) |- (Decode.west);
 
 % Control signals from Decode
-\draw[data_path, orange!80!black] (Decode.east) -- ++(15mm,0) node[control_label, above=-1pt, pos=0.5] {Control signals};
+\draw[data_path, orange!80!black] (Decode.east) -- (Decode -| WBMux.tpin 1) node[control_label, above=-1pt, pos=0.2] {Control signals};
 
 % ALU source control
 \coordinate (ctrl_alusrc) at (Decode -| ALUMux.tpin 1);
@@ -463,15 +463,15 @@
 \draw[->, >=stealth, thick, orange!80!black] (ctrl_wbsel) -- (WBMux.tpin 1) node[control_label, pos=0.3, right] {WB\\select};
 
 % RegFile to ALU
-\draw[data_path] (RegFile.brpin 1) -- (ALU.blpin 1);
+\draw[data_path] (RegFile.rpin 1) -- (ALU.lpin 1);
 \coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
-\draw[data_path] (RegFile.brpin 2) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+\draw[data_path] (RegFile.rpin 2 |- WriteDataJunction) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
 
 % Write data to DMem
 \draw[data_path] (WriteDataJunction) |- (DMem.lpin 10);
 
 % Sign Extend to ALUMux and Target Adder
-\draw[data_path] (IMem.brpin 2) |- (SignExt.west);
+\draw[data_path] (InstJunction) |- (SignExt.west);
 \coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
 \draw[data_path] (SignExt.east) -| (ImmJunction) -- (ALUMux.lpin 2);
 \node[data_connector] at (ImmJunction) {};
@@ -488,14 +488,13 @@
 
 % ALU result to WB Mux (bypass memory)
 \node[data_connector] (ALUResConn) at ([xshift=5mm]ALU.brpin 4) {};
-\draw[data_path] (ALUResConn) |- ([yshift=-15mm]DMem.south) -| ([xshift=-5mm]WBMux.lpin 2) -- (WBMux.lpin 2);
+\draw[data_path] (ALUResConn) |- ([yshift=-5mm]DMem.south) -| ([xshift=-5mm]WBMux.lpin 2) -- (WBMux.lpin 2);
 
 % WB Mux output to Register File write data
 \coordinate (dst_y_level) at ([yshift=-5mm]SignExt.south);
 \draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([xshift=-3mm]RegFile.blpin 4 |- dst_y_level) -- ([xshift=-3mm]RegFile.blpin 4) -- (RegFile.blpin 4);
 
 % Dst from instruction to RegFile
-\node[font=\scriptsize, below=1mm of SignExt] {dst};
 \draw[data_path] (InstJunction) |- (RegFile.blpin 3);
 
 % Register File labels
@@ -2949,7 +2948,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
 % ID/EX to ALU (top input direct, bottom through MUX)
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
 \coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+\draw[data_path] (IDEX.east |- WriteDataJunction) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
 \draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
 \draw[data_path] (EXMEM.east |- DMem.lpin 10) -- (DMem.lpin 10);
 \draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
