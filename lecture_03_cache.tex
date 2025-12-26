@@ -721,12 +721,17 @@
 \node[offsetbox, right=0pt of set] (offset) {Offset};
 
 % Bit labels - adjacent to boxes
-\node[anchor=south west, font=\tiny] at (tag.north west) {39};
+\node[anchor=south west, font=\tiny] at (tag.north west) (block_end) {39};
 \node[anchor=south east, font=\tiny] at (tag.north east) {14};
 \node[anchor=south west, font=\tiny] at (set.north west) {13};
-\node[anchor=south east, font=\tiny] at (set.north east) {6};
+\node[anchor=south east, font=\tiny] at (set.north east) (block_start) {6};
 \node[anchor=south west, font=\tiny] at (offset.north west) {5};
 \node[anchor=south east, font=\tiny] at (offset.north east) {0};
+
+% Brace above Tag+Set for "Memory block number"
+\draw[decorate, decoration={brace, amplitude=3pt, raise=2pt}]
+    (block_end.north west) -- (block_start.north east)
+    node[midway, above=5pt, font=\tiny] {Memory block \#};
 
 % Tag matrix
 \matrix[matrix of nodes,
