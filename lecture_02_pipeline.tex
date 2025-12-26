@@ -387,12 +387,29 @@
 % WB Stage
 \node[mux2, anchor=lpin 1] at ([xshift=15mm]DMem.rpin 5) (WBMux) {};
 
-% Stage labels
-\node[stage_label] (IF_label) at ([yshift=37mm]IMem.north) {Fetch};
-\node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
-\node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
-\node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
-\node[stage_label] (WB_label) at (IF_label -| WBMux) {WB};
+% Stage boundary X coordinates
+\coordinate (IF_left) at ([xshift=-8mm]PC.west);
+\coordinate (IF_right) at ([xshift=4mm]IMem.east);
+\coordinate (ID_right) at ([xshift=8mm]RegFile.east);
+\coordinate (EX_right) at ([xshift=5mm]ALU.east);
+\coordinate (MEM_right) at ([xshift=5mm]DMem.east);
+\coordinate (WB_right) at ([xshift=12mm]WBMux.east);
+
+% Stage label Y coordinate
+\coordinate (label_y) at ([yshift=37mm]IMem.north);
+
+% Stage labels - centered in shaded areas (using path midway)
+\path (IF_left) -- (IF_right) coordinate[midway] (IF_mid);
+\path (IF_right) -- (ID_right) coordinate[midway] (ID_mid);
+\path (ID_right) -- (EX_right) coordinate[midway] (EX_mid);
+\path (EX_right) -- (MEM_right) coordinate[midway] (MEM_mid);
+\path (MEM_right) -- (WB_right) coordinate[midway] (WB_mid);
+
+\node[stage_label] (IF_label) at (IF_mid |- label_y) {Fetch};
+\node[stage_label] (ID_label) at (ID_mid |- label_y) {Decode};
+\node[stage_label] (EX_label) at (EX_mid |- label_y) {Execute};
+\node[stage_label] (MEM_label) at (MEM_mid |- label_y) {Memory};
+\node[stage_label] (WB_label) at (WB_mid |- label_y) {WB};
 
 % Stage background shades (drawn behind using scopes)
 \begin{scope}[on background layer]
@@ -401,19 +418,19 @@
     \coordinate (stage_bottom) at ([yshift=-8mm]SignExt.south);
 
     % IF stage shade
-    \fill[blue!8] ([xshift=-8mm]PC.west |- stage_top) rectangle ([xshift=4mm]IMem.east |- stage_bottom);
+    \fill[blue!8] (IF_left |- stage_top) rectangle (IF_right |- stage_bottom);
 
     % ID stage shade
-    \fill[green!8] ([xshift=4mm]IMem.east |- stage_top) rectangle ([xshift=8mm]RegFile.east |- stage_bottom);
+    \fill[green!8] (IF_right |- stage_top) rectangle (ID_right |- stage_bottom);
 
     % EX stage shade
-    \fill[blue!8] ([xshift=8mm]RegFile.east |- stage_top) rectangle ([xshift=5mm]ALU.east |- stage_bottom);
+    \fill[blue!8] (ID_right |- stage_top) rectangle (EX_right |- stage_bottom);
 
     % MEM stage shade
-    \fill[green!8] ([xshift=5mm]ALU.east |- stage_top) rectangle ([xshift=5mm]DMem.east |- stage_bottom);
+    \fill[green!8] (EX_right |- stage_top) rectangle (MEM_right |- stage_bottom);
 
     % WB stage shade
-    \fill[blue!8] ([xshift=5mm]DMem.east |- stage_top) rectangle ([xshift=12mm]WBMux.east |- stage_bottom);
+    \fill[blue!8] (MEM_right |- stage_top) rectangle (WB_right |- stage_bottom);
 \end{scope}
 
 % === Data paths ===
