@@ -547,10 +547,11 @@
 \centering
 \begin{tikzpicture}[
     % Cell styles for matrix
-    validcell/.style={draw, minimum width=0.3cm, minimum height=0.2cm, fill=red!90, font=\tiny, inner sep=0pt, text=white},
-    tagcell/.style={draw, minimum width=1.2cm, minimum height=0.2cm, fill=green!20, font=\tiny},
-    datacell/.style={draw, minimum width=2.8cm, minimum height=0.2cm, fill=white, font=\tiny},
-    offsetbox/.style={draw, minimum width=0.5cm, minimum height=0.2cm, fill=orange!20},
+    basecell/.style={draw, minimum height=0.2cm, font=\tiny, inner sep=3pt},
+    validcell/.style={basecell, minimum width=0.3cm, fill=red!90, text=white},
+    tagcell/.style={basecell, minimum width=1.2cm, fill=green!20},
+    datacell/.style={basecell, minimum width=2.8cm, fill=white},
+    offsetbox/.style={basecell, minimum width=0.5cm, fill=orange!20},
     label/.style={font=\tiny},
     data_connector/.style={circle, fill, inner sep=1pt},
     scale=1, transform shape
@@ -579,27 +580,7 @@
   |[validcell]| V \& |[tagcell]| \phantom{Tag} \\
 };
 
-% Data matrix - positioned to align vertically with vtag (same y as vtag-1-2)
-\matrix[matrix of nodes,
-        column sep=0pt, row sep=0pt,
-        ampersand replacement=\&,
-        anchor=north west] (data) at ([xshift=3.5cm]vtag-1-2.north east) {
-  |[datacell]| Line \\
-  |[datacell]| \phantom{Line} \\
-  |[datacell]| \phantom{Line} \\
-  |[datacell]| \phantom{Line} \\
-  |[datacell]| \phantom{Line} \\
-  |[datacell]| \phantom{Line} \\
-  |[datacell]| \phantom{Line} \\
-  |[datacell]| \phantom{Line} \\
-};
 
-% Orange offset box on first data line
-\node[offsetbox, anchor=west] at ([xshift=0.8cm]data-1-1.west) (thedata) {};
-
-% Labels
-\node[label, above=1mm of vtag-1-2.north] {Tag Array};
-\node[label, above=1mm of data-1-1.north] {Data Array};
 
 % Comparators and AND gates for each row
 \foreach \i in {1,...,8} {
@@ -611,7 +592,39 @@
     % AND gate
     \node[and port, number inputs=2, anchor=in 2, external pins width=0, fill=red!90,
       xscale=0.2, yscale=0.2] (and_gate_\i) at ([xshift=3mm]comp\i.rpin 1) {};
+}
 
+
+
+
+% Data matrix - positioned to align vertically with vtag (same y as vtag-1-2)
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt, inner sep=3pt,
+        ampersand replacement=\&,
+        anchor=north west] (data) at ([xshift=1.5cm,yshift=3.25mm]and_gate_1.out) {
+  |[datacell]| Line\phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+};
+
+% Orange offset box on first data line
+\node[offsetbox, anchor=west] at ([xshift=0.8cm]data-1-1.west) (thedata) {};
+
+% Labels
+\node[label, above=1mm of vtag-1-2.north] {Tag Array};
+\node[label, above=1mm of data-1-1.north] {Data Array};
+
+% OR gate for hit/miss
+\node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
+      xscale=0.6, yscale=0.25, rotate=-90, below right=0.7cm and 0.8cm of and_gate_8.south, anchor=out] (or_gate) {};
+
+
+\foreach \i in {1,...,8} {
     % Connections
     \draw[->, >=stealth] (vtag-\i-2.east) -- (comp\i.lpin 2);
     \draw[->, >=stealth] (comp\i.rpin 1) -- (and_gate_\i.in 2);
@@ -626,9 +639,6 @@
 
 \draw[->, >=stealth] (offset_field.south) -- (thedata.north);
 
-% OR gate for hit/miss
-\node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
-      xscale=0.6, yscale=0.25, rotate=-90, below right=0.3cm and 0.4cm of and_gate_8.south, anchor=out] (or_gate) {};
 
 % Connect AND gates to OR gate
 \foreach \i in {1,...,8} {
