@@ -651,11 +651,190 @@
 \end{frame}
 
 \begin{frame}{Direct-Mapped (DM) Cache}
+\begin{columns}[T]
+\begin{column}{0.38\textwidth}
 \begin{itemize}
-  \item Block number $\rightarrow$ \textbf{set} (index) + \textbf{tag}.
-  \item Each block maps to exactly \emph{one} line: single comparator.
-  \item Pros: simple, low power, fast. Cons: more \textbf{conflict} misses.
+  \item Each memory block maps to exactly \textbf{one} cache line
+  \item Block number split into \textbf{set} + \textbf{tag}
+  \item Set: lower $n$ bits $\rightarrow$ selects one of $2^n$ lines
+  \item Tag: upper bits $\rightarrow$ compared with stored tag
+  \item Single comparator needed
 \end{itemize}
+\end{column}
+\begin{column}{0.60\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+    tagbox/.style={rectangle, draw, fill=green!30, minimum width=1.8cm, minimum height=0.5cm, font=\footnotesize},
+    setbox/.style={rectangle, draw, fill=cyan!30, minimum width=1.2cm, minimum height=0.5cm, font=\footnotesize},
+    offsetbox/.style={rectangle, draw, fill=orange!30, minimum width=1.2cm, minimum height=0.5cm, font=\footnotesize},
+    cellstyle/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.3cm, font=\tiny},
+    tagcell/.style={cellstyle, fill=green!30},
+    datacell/.style={cellstyle, minimum width=1.8cm},
+    offsetcell/.style={cellstyle, fill=orange!30, minimum width=2mm},
+    decoder/.style={muxdemux, muxdemux def={Lh=1, Rh=4, NB=0, NL=1, NR=4, w=0.5, square pins=0},
+                   external pins width=0, fill=cyan!20},
+    arrow/.style={->, >=stealth, thick},
+    dasharrow/.style={dashed, ->, >=stealth},
+    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt}
+]
+
+% Address bits at top
+\node[tagbox] at (0,0) (tag) {Tag};
+\node[setbox, right=0pt of tag] (set) {Set};
+\node[offsetbox, right=0pt of set] (offset) {Offset};
+
+% Bit labels
+\node[above=1pt of tag.north west, anchor=south west, font=\tiny] {39};
+\node[above=1pt of tag.north east, anchor=south east, font=\tiny] {14};
+\node[above=1pt of set.north east, anchor=south east, font=\tiny] {6};
+\node[above=1pt of offset.north east, anchor=south east, font=\tiny] {0};
+
+% Tag array position
+\coordinate (tagarray_start) at ($(set.south) + (-0.5,-2.2)$);
+
+% Tag array (256 sets shown as 4 visible rows)
+\foreach \i in {0,...,3} {
+    \ifnum\i=0
+        \node[tagcell, anchor=north] at (tagarray_start) (tagcell_\i) {\scriptsize Tag};
+    \else
+        \pgfmathtruncatemacro{\prev}{\i-1}
+        \node[tagcell, below=0cm of tagcell_\prev.south, anchor=north] (tagcell_\i) {};
+    \fi
+}
+
+% Data array (next to tag array)
+\foreach \i in {0,...,3} {
+    \node[datacell, right=0.6cm of tagcell_\i] (datacell_\i) {\scriptsize Data};
+}
+\node[offsetcell, anchor=east] at ([xshift=-1mm]datacell_1.east) (thedata) {};
+
+% Decoder
+\node[decoder, anchor=rpin 1] at ($(tagcell_0.west) + (-0.5,0)$) (decoder) {};
+
+% Comparator
+\node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
+      external pins width=0, fill=green!30, rotate=270] at ([yshift=-1.2cm]tagcell_3.south) (comp) {};
+\node[font=\fontsize{4}{4}\selectfont, rotate=90] at (comp.center) {=};
+
+% Labels
+\node[left=2mm of decoder.lpin 1, font=\scriptsize] {Set\#};
+\node[above=1mm of tagcell_0.north west, anchor=south west, font=\scriptsize] {Tag Array};
+\node[above=1mm of datacell_0.north west, anchor=south west, font=\scriptsize] {Data Array};
+\node[below=2mm of comp.rpin 1, font=\scriptsize] {Hit/Miss};
+\node[below=2mm of datacell_3.south, font=\scriptsize] {Data Out};
+\node[right=1mm of tagcell_3.east, font=\tiny, text=gray] {$2^8$=256 sets};
+
+% Connections
+% Set to decoder
+\draw[arrow] (set.south) -- ++(0,-0.5) -| (decoder.lpin 1);
+
+% Tag to comparator
+\draw (tag.south) -- ++(0,-0.8) coordinate (tagjunc);
+\node[junction] at (tagjunc) {};
+\draw[arrow] (tagjunc) -| (comp.lpin 1);
+
+% Offset to data
+\draw[arrow] (offset.south) -- ++(0,-0.6) -| (thedata.north);
+
+% Decoder to tag array
+\foreach \i in {0,...,3} {
+    \draw[arrow] (decoder.rpin 1 |- tagcell_\i.west) -- (tagcell_\i.west);
+}
+
+% Tag to data (dashed)
+\foreach \i in {0,...,3} {
+    \draw[dasharrow] (tagcell_\i.east) -- (datacell_\i.west);
+}
+
+% Selected line highlight
+\draw[arrow, thick, orange] (tagcell_1.east) -- (datacell_1.west);
+
+% Tag array to comparator
+\draw[arrow] (tagcell_1.south) -- ++(0,-0.3) -| (comp.lpin 2);
+
+% Comparator output
+\draw[arrow] (comp.rpin 1) -- ++(0,-0.3);
+
+% Data out
+\draw[arrow] (datacell_1.south) -- ++(0,-0.5);
+
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Direct-Mapped Cache -- Properties}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Cache Size Calculation:}
+\begin{itemize}
+  \item Cache size = \#sets $\times$ block size
+  \item Example: $2^8 \times 2^6 = 2^{14}$ bytes = 16KB
+\end{itemize}
+\vspace{0.3cm}
+\textbf{Conflict Behavior:}
+\begin{itemize}
+  \item Two blocks with same set bits $\rightarrow$ map to same line
+  \item Only one can reside at a time
+  \item Min distance between conflicts = cache size
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Advantages:}
+\begin{itemize}
+  \item Low power and area
+  \item Simple replacement -- only one possible victim
+  \item Fast lookup -- single comparator
+\end{itemize}
+\vspace{0.3cm}
+\textbf{Disadvantages:}
+\begin{itemize}
+  \item Lower hit rate than Fully Associative
+  \item \textbf{Conflict misses}: victim needed even when cache not full
+  \item (FA cache has only capacity misses)
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Direct-Mapped Cache -- Example}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\textbf{Given:}
+\begin{itemize}
+  \item Line size: 32 bytes $\rightarrow$ 5 offset bits
+  \item Cache size: 16KB = $2^{14}$ bytes
+  \item \#lines = $\frac{2^{14}}{2^5} = 2^9 = 512$
+  \item \#sets = \#lines = 512
+  \item \#set bits = 9 bits
+  \item \#tag bits = $32 - (9+5) = 18$ bits
+\end{itemize}
+\end{column}
+\begin{column}{0.52\textwidth}
+\textbf{Lookup Address:} \texttt{0x12345678}\\[0.2cm]
+\texttt{\small 0001 0010 0011 0100 0101 0110 0111 1000}\\[0.3cm]
+\centering
+\begin{tikzpicture}[scale=0.9,
+    tagbox/.style={rectangle, draw, fill=green!30, minimum height=0.6cm, font=\small},
+    setbox/.style={rectangle, draw, fill=cyan!30, minimum height=0.6cm, font=\small},
+    offsetbox/.style={rectangle, draw, fill=orange!30, minimum height=0.6cm, font=\small}
+]
+\node[tagbox, minimum width=2.5cm] at (0,0) (tag) {Tag};
+\node[setbox, minimum width=1.5cm, right=0pt of tag] (set) {Set};
+\node[offsetbox, minimum width=1cm, right=0pt of set] (offset) {Offset};
+
+\node[above=1pt of tag.north, font=\tiny] {18 bits};
+\node[above=1pt of set.north, font=\tiny] {9 bits};
+\node[above=1pt of offset.north, font=\tiny] {5 bits};
+
+\node[below=1pt of tag.south, font=\scriptsize] {\texttt{0x048D1}};
+\node[below=1pt of set.south, font=\scriptsize] {\texttt{0x0B3}};
+\node[below=1pt of offset.south, font=\scriptsize] {\texttt{0x18}};
+
+\node[below=0.8cm of set.south, font=\small] {= 179 (set index)};
+\end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{2-Way Set Associative (2W SA)}

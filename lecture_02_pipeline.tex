@@ -3528,26 +3528,32 @@ Assuming 20\% branches, $\sim$50\% taken on average
 
     \vspace{0.3cm}
     \begin{tikzpicture}
-        \draw[thick] (0,0) rectangle (10,0.6);
-        \draw[thick] (2,0) -- (2,0.6);
-        \draw[thick] (4,0) -- (4,0.6);
-        \draw[thick] (6,0) -- (6,0.6);
+        % Main instruction box
+        \node[draw, thick, minimum width=10cm, minimum height=0.6cm, inner sep=0pt] (box) {};
 
-        \node at (1,0.3) {\small op};
-        \node at (3,0.3) {\small rs};
-        \node at (5,0.3) {\small rt};
-        \node at (8,0.3) {\small immediate};
+        % Field dividers
+        \draw[thick] ([xshift=2cm]box.south west) -- ([xshift=2cm]box.north west);
+        \draw[thick] ([xshift=4cm]box.south west) -- ([xshift=4cm]box.north west);
+        \draw[thick] ([xshift=6cm]box.south west) -- ([xshift=6cm]box.north west);
 
-        \node[above, anchor=south west, inner sep=1pt] at (0,0.6) {\footnotesize 31};
-        \node[above, anchor=south, inner sep=1pt] at (2,0.6) {\footnotesize 26};
-        \node[above, anchor=south, inner sep=1pt] at (4,0.6) {\footnotesize 21};
-        \node[above, anchor=south, inner sep=1pt] at (6,0.6) {\footnotesize 16};
-        \node[above, anchor=south east, inner sep=1pt] at (10,0.6) {\footnotesize 0};
+        % Field labels (centered in each field)
+        \node at ([xshift=1cm]box.west) {\small op};
+        \node at ([xshift=3cm]box.west) {\small rs};
+        \node at ([xshift=5cm]box.west) {\small rt};
+        \node at ([xshift=8cm]box.west) {\small immediate};
 
-        \node[below] at (1,0) {\footnotesize 6 bits};
-        \node[below] at (3,0) {\footnotesize 5 bits};
-        \node[below] at (5,0) {\footnotesize 5 bits};
-        \node[below] at (8,0) {\footnotesize 16 bits};
+        % Bit numbers at field boundaries (above)
+        \node[anchor=south west, inner sep=1pt] at (box.north west) {\footnotesize 31};
+        \node[anchor=south east, inner sep=1pt] at ([xshift=2cm]box.north west) {\footnotesize 26};
+        \node[anchor=south east, inner sep=1pt] at ([xshift=4cm]box.north west) {\footnotesize 21};
+        \node[anchor=south east, inner sep=1pt] at ([xshift=6cm]box.north west) {\footnotesize 16};
+        \node[anchor=south east, inner sep=1pt] at (box.north east) {\footnotesize 0};
+
+        % Bit widths (below)
+        \node[anchor=north] at ([xshift=1cm]box.south west) {\footnotesize 6 bits};
+        \node[anchor=north] at ([xshift=3cm]box.south west) {\footnotesize 5 bits};
+        \node[anchor=north] at ([xshift=5cm]box.south west) {\footnotesize 5 bits};
+        \node[anchor=north] at ([xshift=8cm]box.south west) {\footnotesize 16 bits};
     \end{tikzpicture}
     \end{center}
 
@@ -3579,6 +3585,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
 
 %% Slide: Delayed Branch
 \begin{frame}[fragile]{Delayed Branch}
+    \vspace{-2mm}
     \begin{itemize}
         \item \textbf{Define branch to take place AFTER \textit{n} following instruction}
         \begin{itemize}
@@ -3594,28 +3601,32 @@ Assuming 20\% branches, $\sim$50\% taken on average
         \item \textbf{If cannot find independent instructions, put NOP}
     \end{itemize}
 
-    \vspace{0.5cm}
-    \begin{columns}
+    \vspace{-0.7cm}
+    \begin{columns}[T]
         \column{0.45\textwidth}
-        \begin{block}{Original Code}
-            \small\ttfamily
-            r3 = 23\\
-            R4 = R3+R5\\
-            If (r1==r2) goto x\\
-            R1 = R4 + R5\\
-            X: R7 = R1
-        \end{block}
+        \begin{tcolorbox}[title=Original Code, colback=blue!5, colframe=blue!50!black, fonttitle=\bfseries\small]
+            \ttfamily\small
+            \begin{tabular}[t]{@{}l@{}}
+                ~~~r3 = 23 \\
+                ~~~R4 = R3 + R5 \\
+                ~~~If (r1==r2) goto x \\
+                ~~~R1 = R4 + R5 \\
+                X: R7 = R1
+            \end{tabular}
+        \end{tcolorbox}
 
         \column{0.45\textwidth}
-        \begin{block}{New Code}
-            \small\ttfamily
-            If (r1==r2) goto x\\
-            \textcolor{red}{r3 = 23}\\
-            \textcolor{red}{R4 = R3 +R5}\\
-            \textcolor{red}{NOP}\\
-            R1 = R4 + R5\\
-            X: R7 = R1
-        \end{block}
+        \begin{tcolorbox}[title=New Code, colback=green!5, colframe=green!50!black, fonttitle=\bfseries\small]
+            \ttfamily\small
+            \begin{tabular}[t]{@{}l@{}}
+                ~~~If (r1==r2) goto x \\
+                ~~~\textcolor{red}{r3 = 23} \\
+                ~~~\textcolor{red}{R4 = R3 + R5} \\
+                ~~~\textcolor{red}{NOP} \\
+                ~~~R1 = R4 + R5 \\
+                X: R7 = R1
+            \end{tabular}
+        \end{tcolorbox}
     \end{columns}
 \end{frame}
 
