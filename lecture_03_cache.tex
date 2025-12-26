@@ -696,7 +696,7 @@
 \end{column}
 \begin{column}{0.60\textwidth}
 \centering
-\begin{tikzpicture}[scale=0.75, transform shape,
+\begin{tikzpicture}[scale=1, transform shape,
     % Address box styles
     addrbox/.style={rectangle, draw, minimum height=0.5cm, font=\footnotesize, text depth=0.1em},
     tagbox/.style={addrbox, fill=green!30, minimum width=1.8cm},
@@ -723,14 +723,16 @@
 % Bit labels - adjacent to boxes
 \node[anchor=south west, font=\tiny] at (tag.north west) {39};
 \node[anchor=south east, font=\tiny] at (tag.north east) {14};
+\node[anchor=south west, font=\tiny] at (set.north west) {13};
 \node[anchor=south east, font=\tiny] at (set.north east) {6};
+\node[anchor=south west, font=\tiny] at (offset.north west) {5};
 \node[anchor=south east, font=\tiny] at (offset.north east) {0};
 
 % Tag matrix
 \matrix[matrix of nodes,
         column sep=0pt, row sep=0pt,
         ampersand replacement=\&,
-        anchor=north] at ([xshift=-0.5cm, yshift=-2.2cm]set.south) (tagmat) {
+        anchor=north] at ([xshift=-0.5cm, yshift=-1.2cm]set.south) (tagmat) {
   |[tagcell]| {\scriptsize Tag} \\
   |[tagcell, very thick, draw=orange]| \phantom{Tag} \\
   |[tagcell]| \phantom{Tag} \\
@@ -753,7 +755,7 @@
 \node[decoder, anchor=rpin 1] at ([xshift=-0.5cm]tagmat-1-1.west) (decoder) {};
 
 % Comparator
-\node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
+\node[muxdemux, muxdemux def={Lh=0.6, Rh=0.25, NL=2, NB=1, w=0.5},
       external pins width=0, fill=green!30, rotate=270, anchor=lpin 1] at ([yshift=-1cm]tagmat.south) (comp) {};
 \node[font=\fontsize{4}{4}\selectfont, rotate=90] at (comp.center) {=};
 
