@@ -453,70 +453,91 @@
 \begin{column}{0.58\textwidth}
 \centering
 \begin{tikzpicture}[
-    tagbox/.style={draw, thick, minimum width=1.2cm, minimum height=0.32cm, fill=green!20},
-    databox/.style={draw, thick, minimum width=2.8cm, minimum height=0.32cm, fill=white},
-    offsetbox/.style={draw, thick, minimum width=0.5cm, minimum height=0.32cm, fill=orange!20},
+    % Address field styles
+    addrfield/.style={draw, thick, minimum height=0.55cm, font=\tiny, text depth=0.1em},
+    tagfield/.style={addrfield, fill=green!20, minimum width=4.5cm},
+    offsetfield/.style={addrfield, fill=orange!20, minimum width=1cm},
+    % Cell styles for matrix
+    basecell/.style={draw, minimum height=0.2cm, font=\tiny, inner sep=3pt},
+    tagcell/.style={basecell, minimum width=1.2cm, fill=green!20},
+    datacell/.style={basecell, minimum width=2.8cm, fill=white, text width=2.7cm, align=left},
+    offsetbox/.style={basecell, minimum width=0.5cm, fill=orange!20},
     label/.style={font=\tiny},
     data_connector/.style={circle, fill, inner sep=1pt},
     scale=1, transform shape
 ]
 
 % Address breakdown at top
-\node[draw, thick, fill=green!20, minimum width=4.5cm, minimum height=0.55cm, font=\tiny] (tag_field) {Tag = Block\#};
-\node[label, above=0.5mm of tag_field] (addr_title) {Address};
-\node[draw, thick, fill=orange!20, minimum width=1cm, minimum height=0.55cm, anchor=west, font=\tiny] (offset_field) at (tag_field.east) {Offset};
-\node[label, above] at (tag_field.north west) {31};
-\node[label, above] at (offset_field.west |- tag_field.north) {4};
-\node[label, above] at (offset_field.north east) {0};
+\node[tagfield] (tag_field) {Tag = Block\#};
+\node[offsetfield, anchor=west] (offset_field) at (tag_field.east) {Offset};
+\node[label, anchor=south west] at (tag_field.north west) {31};
+\node[label, anchor=south west] at (offset_field.north west) {4};
+\node[label, anchor=south east] (zero) at (offset_field.north east) {0};
+\node[label, anchor=south] (addr_title) at ([yshift=2mm]$(tag_field.north west)!0.5!(offset_field.north east)$) {Address};
 
-% Labels for columns
-\node[label, below=0.3cm of tag_field.south, xshift=0.4cm] (tag_array_label) {Tag Array};
-\node[label, below=0.3cm of offset_field.south, xshift=1.6cm] (data_array_label) {Data Array};
+% Tag matrix
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north] at ([yshift=-8mm]tag_field.south) (tag) {
+  |[tagcell]| Tag \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+};
+\node[label, above=1mm of tag-1-1.north] {Tag Array};
 
-% Create arrays using loops
-\foreach \i in {0,...,7} {
-    % Tag array
-    \ifnum\i=0
-        \node[tagbox, below=0cm of tag_array_label] (tag\i) {};
-        \node[label] at (tag\i.center) {Tag};
-    \else
-        \pgfmathtruncatemacro{\prev}{\i-1}
-        \node[tagbox, below=0cm of tag\prev] (tag\i) {};
-    \fi
-
-    % Comparators using muxdemux
+% Comparators for each row
+\foreach \i in {1,...,8} {
     \node[muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NB=1, w=0.4},
-          external pins width=0, fill=cyan!20, anchor=lpin 2] (comp\i) at ([xshift=0.65cm]tag\i.east) {};
+          external pins width=0, fill=cyan!20, anchor=lpin 2] (comp\i) at ([xshift=0.5cm]tag-\i-1.east) {};
     \node[font=\fontsize{3}{3}\selectfont] at (comp\i.center) {=};
-
-    % Data array
-    \node[databox, right=1cm of comp\i] (data\i) {};
 }
 
-\node[label] at (data0.west) [anchor=west, xshift=0.5mm] {Line};
-% Orange box only on first line
-\node[offsetbox, anchor=west] at ([xshift=0.8cm]data0.west) (thedata) {};
+% Data matrix
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt, inner sep=3pt,
+        ampersand replacement=\&,
+        anchor=north west] (data) at ([xshift=0.7cm,yshift=3.25mm]comp1.rpin 1) {
+  |[datacell]| Line\phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+  |[datacell]| \phantom{Tag} \\
+};
+\node[label, above=1mm of data-1-1.north] {Data Array};
+
+% Orange offset box on first data line
+\node[offsetbox, anchor=west] at ([xshift=0.8cm]data-1-1.west) (thedata) {};
 
 % Connect tag input to all comparators
-\foreach \i in {0,...,7} {
-    \draw[->, >=stealth, thick] ([xshift=2.5mm]tag_field.south -| tag1.east) -- ([xshift=2.5mm]tag\i.east |- comp\i.lpin 1) node[data_connector] {} -- (comp\i.lpin 1);
+\foreach \i in {1,...,8} {
+    \draw[->, >=stealth, thick] ([xshift=2.5mm]tag_field.south -| tag-1-1.east) -- ([xshift=2.5mm]tag-\i-1.east |- comp\i.lpin 1) node[data_connector] {} -- (comp\i.lpin 1);
 }
 
+% Connect offset to data
 \draw[->, >=stealth, thick] (offset_field.south) -- (thedata.north);
 
-% Connect arrays
-\foreach \i in {0,...,7} {
-    \draw[->, >=stealth, thick] (tag\i.east) -- (comp\i.lpin 2);
-    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data\i.west);
+% Connect tag array to comparators, comparators to data array
+\foreach \i in {1,...,8} {
+    \draw[->, >=stealth, thick] (tag-\i-1.east) -- (comp\i.lpin 2);
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (data-\i-1.west);
 }
 
 % OR gate for hit/miss
 \node[or port, number inputs=8, anchor=north, external pins width=0, fill=cyan!20,
-      xscale=0.6, yscale=0.25, rotate=-90, below right=0.4cm and 0.5cm of comp7.south, anchor=out] (or_gate) {};
+      xscale=0.6, yscale=0.25, rotate=-90, below right=0.4cm and 0.5cm of comp8.south, anchor=out] (or_gate) {};
 
 % Connect comparators to OR gate
-\foreach \i in {0,...,7} {
-    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (comp\i.rpin 1 -| or_gate.bin \the\numexpr\i+1\relax) node[data_connector] {} -- (or_gate.bin \the\numexpr\i+1\relax);
+\foreach \i in {1,...,8} {
+    \draw[->, >=stealth, thick] (comp\i.rpin 1) -- (comp\i.rpin 1 -| or_gate.bin \i) node[data_connector] {} -- (or_gate.bin \i);
 }
 
 % Hit/Miss output
@@ -524,8 +545,8 @@
 \draw[->, >=stealth, thick] (or_gate.bout) -- (hit_miss.north);
 
 % Data output
-\node[label, font=\tiny\bfseries, anchor=north] (data_out) at (data7.south |- hit_miss.north east) {Data};
-\draw[->, >=stealth, thick] (data7.south) -- (data_out.north);
+\node[label, font=\tiny\bfseries, anchor=north] (data_out) at (data-8-1.south |- hit_miss.north east) {Data};
+\draw[->, >=stealth, thick] (data-8-1.south) -- (data_out.north);
 
 \end{tikzpicture}
 \end{column}
