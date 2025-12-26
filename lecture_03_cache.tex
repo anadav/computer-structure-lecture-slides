@@ -15,7 +15,7 @@
 \usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 \usetikzlibrary{backgrounds, fit, decorations.pathreplacing, matrix}
-\usetikzlibrary{circuits.logic.US}
+\usetikzlibrary{circuits.logic.US, tikzmark}
 
 % Command for circled numbers
 \newcommand{\circnum}[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=1pt,minimum size=1.2em] (char) {\small #1};}}
@@ -2034,19 +2034,19 @@ for (j = 0; j < 100; j++)
 
 \vspace{0.15cm}
 \begin{codeboxtitle}{Reversing the loop order: accesses are adjacent}
-\begin{minted}[fontsize=\footnotesize]{c}
+\begin{minted}[fontsize=\footnotesize,escapeinside=??]{c}
 /* Improved spatial locality */
-for (i = 0; i < 5000; i++)
-  for (j = 0; j < 100; j++)
+for (i = 0; i < 5000; i++)  ?\tikzmarknode{forI}{\strut}?
+  for (j = 0; j < 100; j++)  ?\tikzmarknode{forJ}{\strut}?
     x[i][j] = 2 * x[i][j];
 \end{minted}
-\end{codeboxtitle}%
-\begin{tikzpicture}[overlay, remember picture]
-  \coordinate (top) at (7.5,1.1);
-  \coordinate (bottom) at (7.5,0.7);
-  \draw[<->, thick, green!70!black, line width=1.5pt, bend right=60]
-    (top) to (bottom);
-  \node[green!70!black, right, font=\scriptsize] at (8.0,0.9) {swap};
+\end{codeboxtitle}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[<->, thick, green!70!black, line width=1.5pt]
+    (forI.east) to[bend right=60]
+    node[right, font=\scriptsize] {swap}
+    (forJ.east);
 \end{tikzpicture}
 \end{frame}
 
