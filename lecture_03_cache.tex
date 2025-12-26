@@ -31,6 +31,82 @@
   fonttitle=\small\bfseries
 }
 
+% Macro for memory-cache illustration (used in Cache: Main Idea and Cache Lookup)
+\newcommand{\memoryCacheIllustration}{%
+\begin{tikzpicture}[
+  % Define colors
+  lightblue/.style={draw, fill=blue!25},
+  lightgreen/.style={draw, fill=green!25},
+  lightyellow/.style={draw, fill=yellow!25},
+  lightpurple/.style={draw, fill=purple!25},
+  whiteblock/.style={draw, fill=white},
+  % Styles
+  membox/.style={draw, minimum width=1.0cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
+  tagbox/.style={draw, minimum width=0.45cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
+  databox/.style={draw, minimum width=0.85cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
+  numcell/.style={font=\tiny, inner sep=1pt},
+  scale=0.85, transform shape
+]
+
+  % Memory matrix
+  \matrix[matrix of nodes,
+          column sep=0pt, row sep=0pt,
+          ampersand replacement=\&,
+          column 1/.style={numcell, anchor=east},
+          column 2/.style={membox},
+          nodes in empty cells] (mem) {
+    |[font=\tiny\bfseries]| \underline{Block \#} \& |[draw=none]| \\
+    0 \& |[whiteblock]| - \\
+    1 \& |[whiteblock]| - \\
+    2 \& |[lightgreen]| abc \\
+    3 \& |[whiteblock]| - \\
+    4 \& |[lightblue]| xyz \\
+    5 \& |[whiteblock]| - \\
+    6 \& |[whiteblock]| - \\
+    |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
+    90 \& |[lightpurple]| foo \\
+    91 \& |[whiteblock]| - \\
+    92 \& |[lightyellow]| bar \\
+    93 \& |[whiteblock]| - \\
+    |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
+  };
+
+  % Memory title
+  \node[anchor=south, font=\footnotesize\bfseries] at (mem-1-2.north) {memory};
+
+  % 64B width indicator
+  \node[anchor=north, font=\tiny, gray] at (mem-14-2.south) {$\leftarrow$ 64B $\rightarrow$};
+
+  % Cache matrix with tag and data columns
+  \matrix[matrix of nodes,
+          column sep=0pt, row sep=0pt,
+          ampersand replacement=\&,
+          column 1/.style={tagbox},
+          column 2/.style={databox},
+          right=1.2cm of mem-5-2.east, anchor=west] (cache) {
+    |[draw=none, font=\tiny]| \& |[draw=none]| \\
+    |[lightpurple]| 90 \& |[lightpurple]| foo' \\
+    |[lightgreen]| 2 \& |[lightgreen]| abc' \\
+    |[lightblue]| 4 \& |[lightblue]| xyz' \\
+    |[lightyellow]| 92 \& |[lightyellow]| bar' \\
+  };
+
+  % Cache title
+  \node[anchor=south, font=\footnotesize\bfseries] at ($(cache-1-1.north)!0.5!(cache-1-2.north)$) {cache};
+
+  % Tag/Data labels below cache
+  \node[anchor=north, font=\tiny, gray] at (cache-5-1.south) {tag};
+  \node[anchor=north, font=\tiny, gray] at (cache-5-2.south) {data};
+
+  % Arrows from memory to cache
+  \draw[->, thick] (mem-10-2.east) to[out=0, in=180] (cache-2-1.west);
+  \draw[->, thick] (mem-4-2.east) to[out=0, in=180] (cache-3-1.west);
+  \draw[->, thick] (mem-6-2.east) to[out=0, in=180] (cache-4-1.west);
+  \draw[->, thick] (mem-12-2.east) to[out=0, in=180] (cache-5-1.west);
+
+\end{tikzpicture}%
+}
+
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
 
@@ -266,86 +342,7 @@
 
 \begin{column}{0.35\textwidth}
 \centering
-\begin{tikzpicture}[scale=0.6]
-  % Define colors
-  \definecolor{lightblue}{RGB}{173,216,230}
-  \definecolor{lightgreen}{RGB}{144,238,144}
-  \definecolor{lightyellow}{RGB}{255,255,224}
-  \definecolor{lightpurple}{RGB}{221,160,221}
-  
-  % Memory blocks (with data)
-  \foreach \i/\y/\color/\data in {
-    0/4/white/-, 
-    1/3.5/white/-, 
-    2/3/lightgreen/abc, 
-    3/2.5/white/-, 
-    4/2/lightblue/xyz, 
-    5/1.5/white/-, 
-    6/1/white/-
-  } {
-    \node[anchor=east, font=\tiny] at (0.3, \y) {\i};
-    \node[font=\tiny, inner sep=0.1pt, rectangle, draw, minimum width=1.2cm, minimum height=0.35cm, fill=\color] (mem\i) at (1.2, \y) {\data};
-  }
-  
-  % Memory title (positioned above the memory blocks)
-  \node[font=\footnotesize\bfseries, anchor=south] at (1.2, 4.2) {memory};
-  
-  % Dots to indicate gap
-  \node at (1.2, 0.5) {$\vdots$};
-  
-  % Bottom memory blocks (with data)
-  \foreach \i/\y/\color/\data in {
-    90/-0.5/lightpurple/foo, 
-    91/-1/white/-, 
-    92/-1.5/lightyellow/bar, 
-    93/-2/white/-
-  } {
-    \node[anchor=east, font=\tiny] at (0.3, \y) {\i};
-    \node[font=\tiny, inner sep=0.1pt, rectangle, draw, minimum width=1.2cm, minimum height=0.35cm, fill=\color] (mem\i) at (1.2, \y) {\data};
-  }
-  
-  % More dots
-  \node[anchor=north] at (mem93) (dots) {$\vdots$};
-  
-  % 64B width indicator at bottom of memory
-  \node[gray, font=\tiny,anchor=north] at (dots.south) {$\leftarrow$ 64B $\rightarrow$};
- 
-  % Cache entries (tag + data boxes)
-  % Each cache line has a tag box (block number) and a data box positioned relative to tag
-\foreach \block/\y/\color/\data in {
-    90/3.5/lightpurple/foo',
-    2/3/lightgreen/abc',
-    4/2.5/lightblue/xyz',
-    92/2/lightyellow/bar'
-  } {
-    % Tag box
-    \node[font=\tiny, rectangle, draw, minimum width=0.5cm, minimum height=0.35cm,
-          fill=\color, anchor=north west, inner sep=0.1pt] (tag\block) at (3.5,\y) {\block};
-
-    % Data box (aligned exactly with tag box)
-    \node[font=\tiny, rectangle, draw, minimum width=1.2cm, minimum height=0.35cm,
-          fill=\color, anchor=north west, inner sep=0.1pt] (data\block) at (tag\block.north east) {\data};
-  }
-  
-  % Cache title (calculated as middle between tag90.west and data90.east)
-  \node[font=\footnotesize\bfseries, anchor=south] at ($(tag90.north west)!0.5!(data90.north east)$) {cache};
-  
-  % Labels for cache structure at the bottom
-  \node[font=\tiny, gray, anchor=north,
-        text height=0.25ex, text depth=0.25ex] 
-        at (tag92.south) (tag_label) {tag};
-
-  \node[font=\tiny, gray,
-        text height=0.25ex, text depth=0.25ex] 
-        at (data92 |- tag_label) {data};
-  
-  % Arrows from memory to cache (pointing to tag boxes)
-  \draw[->, thick] (mem2.east) -- (tag2.west);
-  \draw[->, thick] (mem4.east) -- (tag4.west);
-  \draw[->, thick] (mem90.east) to[out=0, in=180] (tag90.west);
-  \draw[->, thick] (mem92.east) to[out=0, in=180] (tag92.west);
-  
-\end{tikzpicture}
+\memoryCacheIllustration
 \end{column}
 \end{columns}
 \end{frame}
@@ -380,78 +377,7 @@
 \end{column}
 
 \begin{column}{0.4\textwidth}
-\begin{tikzpicture}[
-  % Define colors
-  lightblue/.style={draw, fill=blue!25},
-  lightgreen/.style={draw, fill=green!25},
-  lightyellow/.style={draw, fill=yellow!25},
-  lightpurple/.style={draw, fill=purple!25},
-  whiteblock/.style={draw, fill=white},
-  % Styles
-  membox/.style={draw, minimum width=1.0cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
-  tagbox/.style={draw, minimum width=0.45cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
-  databox/.style={draw, minimum width=0.8cm, minimum height=0.28cm, inner sep=1pt, font=\tiny},
-  numcell/.style={font=\tiny, inner sep=1pt},
-  scale=0.85, transform shape
-]
-
-  % Memory matrix
-  \matrix[matrix of nodes,
-          column sep=0pt, row sep=0pt,
-          ampersand replacement=\&,
-          column 1/.style={numcell, anchor=east},
-          column 2/.style={membox},
-          nodes in empty cells] (mem) {
-    |[font=\tiny\bfseries]| \underline{Block \#} \& |[draw=none]| \\
-    0 \& |[whiteblock]| - \\
-    1 \& |[whiteblock]| - \\
-    2 \& |[lightgreen]| abc \\
-    3 \& |[whiteblock]| - \\
-    4 \& |[lightblue]| xyz \\
-    5 \& |[whiteblock]| - \\
-    6 \& |[whiteblock]| - \\
-    |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
-    90 \& |[lightpurple]| foo \\
-    91 \& |[whiteblock]| - \\
-    92 \& |[lightyellow]| bar \\
-    93 \& |[whiteblock]| - \\
-    |[font=\tiny]| \vdots \& |[draw=none, font=\tiny]| $\sim$ \\
-  };
-
-  % Memory title
-  \node[anchor=south, font=\footnotesize\bfseries] at (mem-1-2.north) {memory};
-
-  % 64B width indicator
-  \node[anchor=north, font=\tiny, gray] at (mem-14-2.south) {$\leftarrow$ 64B $\rightarrow$};
-
-  % Cache matrix with tag and data columns
-  \matrix[matrix of nodes,
-          column sep=0pt, row sep=0pt,
-          ampersand replacement=\&,
-          column 1/.style={tagbox},
-          column 2/.style={databox},
-          right=1.2cm of mem-5-2.east, anchor=west] (cache) {
-    |[draw=none, font=\tiny]| \& |[draw=none]| \\
-    |[lightpurple]| 90 \& |[lightpurple]| foo' \\
-    |[lightgreen]| 2 \& |[lightgreen]| abc' \\
-    |[lightblue]| 4 \& |[lightblue]| xyz' \\
-    |[lightyellow]| 92 \& |[lightyellow]| bar' \\
-  };
-
-  % Cache title
-  \node[anchor=south, font=\footnotesize\bfseries] at ($(cache-1-1.north)!0.5!(cache-1-2.north)$) {cache};
-
-  % Tag/Data labels below cache
-  \node[anchor=north, font=\tiny, gray] at (cache-5-1.south) {tag};
-  \node[anchor=north, font=\tiny, gray] at (cache-5-2.south) {data};
-
-  % Arrows from memory to cache
-  \draw[->, thick] (mem-10-2.east) to[out=0, in=180] (cache-2-1.west);
-  \draw[->, thick] (mem-4-2.east) to[out=0, in=180] (cache-3-1.west);
-  \draw[->, thick] (mem-6-2.east) to[out=0, in=180] (cache-4-1.west);
-  \draw[->, thick] (mem-12-2.east) to[out=0, in=180] (cache-5-1.west);
-
-\end{tikzpicture}
+\memoryCacheIllustration
 \end{column}
 \end{columns}
 \end{frame}
