@@ -1411,59 +1411,6 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 
 \section{Cache Optimization Techniques}
 
-\begin{frame}{Fill Buffer Architecture}
-\begin{center}
-\begin{tikzpicture}[
-    cache/.style={rectangle, draw=black, line width=1.5pt, minimum width=3cm, minimum height=2.2cm, font=\large},
-    buffer/.style={rectangle, draw=black, line width=1pt, minimum width=0.7cm, minimum height=1.3cm, fill=buffercolor},
-    arrow/.style={->, >=stealth, line width=1.2pt, black},
-    label/.style={font=\normalsize, black}
-]
-
-% Define colors that match your presentation style
-\definecolor{l1color}{RGB}{235, 205, 175}
-\definecolor{l2color}{RGB}{200, 230, 180}
-\definecolor{buffercolor}{RGB}{200, 190, 220}
-
-% L1 Cache
-\node[cache, fill=l1color] (l1) at (0,0) {
-    \begin{tabular}{c}
-        \textbf{L1}\\
-        \textbf{cache}
-    \end{tabular}
-};
-
-% Fill Buffers label
-\node[above, font=\large] at (4.5,1.2) {Fill};
-\node[above, font=\large] at (4.5,0.7) {Buffers};
-
-% Individual buffer blocks
-\node[buffer] (buf1) at (3.8,0) {};
-\node[buffer] (buf2) at (4.5,0) {};
-\node[buffer] (buf3) at (5.2,0) {};
-
-% L2 Cache
-\node[cache, fill=l2color] (l2) at (9,0) {
-    \begin{tabular}{c}
-        \textbf{L2}\\
-        \textbf{cache}
-    \end{tabular}
-};
-
-% Arrows with labels (corrected direction: L2 -> buffers -> L1)
-\draw[arrow] (l2.west) -- node[above, label] {16B} (buf3.east);
-\draw[arrow] (buf1.west) -- node[above, label] {64B} (l1.east);
-
-% Optional: Add some detail text below
-\node[below, font=\footnotesize, text width=10cm, align=center] at (4.5,-2) {
-    Fill buffers temporarily hold cache lines during transfer between cache levels.\\
-    They allow non-blocking cache operations and support critical-word-first delivery.
-};
-
-\end{tikzpicture}
-\end{center}
-\end{frame}
-
 \begin{frame}{Fill Buffers}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}

@@ -663,7 +663,7 @@
 \begin{circuitikz}[
     % Component styles
     component/.style={draw, thick, minimum height=0.8cm},
-    pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=5.8cm},
+    pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=6.2cm},
     stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
     imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
                         external pins width=0, align=center, text depth=3ex, fill=yellow!20},
@@ -703,7 +703,6 @@
 % Decode unit (control signal generator)
 \node[ellipse, draw, thick, fill=orange!30, minimum width=1.2cm, minimum height=0.6cm, inner sep=0pt,
       font=\scriptsize] (Decode) at ([yshift=15mm,xshift=-8mm]RegFile.north) {decode};
-\node[control_label, right=2mm of Decode.east, anchor=west] {Control\\signals};
 
 % Sign Extend unit
 \node[ellipse, draw, thick, fill=green!30, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
@@ -713,8 +712,8 @@
 \node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
 
 % EX Stage Components - ALU and MUX for immediate selection
-\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=2cm]RegFile.brpin 1 -| IDEX.east) {};
-\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-4mm]ALU.lpin 2) {};
+\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=2.5cm]RegFile.brpin 1 -| IDEX.east) {};
+\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-6mm]ALU.lpin 2) {};
 \node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
 
 % Target calculation adder
@@ -792,7 +791,7 @@
 \coordinate (ctrl_memwb_out) at (MEMWB.east |- Decode);
 
 % Control signal lines between latches
-\draw[data_path, orange!80!black] (Decode.east) -- (ctrl_idex_in);
+\draw[data_path, orange!80!black] (Decode.east) -- (ctrl_idex_in) node[control_label, above, midway] {Control\\signals};
 \draw[data_path, orange!80!black] (ctrl_idex_out) -- (ctrl_exmem_in);
 \draw[data_path, orange!80!black] (ctrl_exmem_out) -- (ctrl_memwb_in);
 
@@ -800,20 +799,20 @@
 % ALU source (vertical from control line to ALUMux top pin)
 \coordinate (ctrl_alusrc) at (Decode -| ALUMux.tpin 1);
 \node[data_connector, fill=orange!80!black] at (ctrl_alusrc) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.tpin 1) node[control_label, midway, right] {ALU\\source};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.tpin 1) node[control_label, pos=0.2, right] {ALU\\source};
 
 % ALU Control (vertical from control line to ALU top pin)
 \coordinate (ctrl_aluctl) at (Decode -| ALU.tpin 1);
 \node[data_connector, fill=orange!80!black] at (ctrl_aluctl) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ALU.tpin 1) node[control_label, midway, right] {ALU\\Control};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ALU.tpin 1) node[control_label, pos=0.25, right] {ALU\\Control};
 
 % Mem Rd/Wr (vertical from control line to DMem top)
 \coordinate (ctrl_mem) at (Decode -| DMem.north);
 \node[data_connector, fill=orange!80!black] at (ctrl_mem) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_mem) -- (DMem.north) node[control_label, midway, right] {Mem\\Rd/Wr};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_mem) -- (DMem.north) node[control_label, pos=0.25, right] {Mem\\Rd/Wr};
 
 % WB select (from control line at MEMWB east to WBMux top pin)
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_memwb_out) -| (WBMux.tpin 1) node[control_label, midway, right] {WB\\select};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_memwb_out) -| (WBMux.tpin 1) node[control_label, pos=0.55, right] {WB\\select};
 
 % IF/ID to RegFile
 \draw[data_path] (IFID.east |- RegFile.lpin 1) -- (RegFile.blpin 1);
