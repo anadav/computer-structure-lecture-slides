@@ -1579,20 +1579,47 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 
 \begin{frame}{Memory Updates on Writes}
 \begin{columns}[T]
-\begin{column}{0.6\textwidth}
-\textbf{Write-back}
+\column{0.5\textwidth}
+\textbf{Write-back --- cheaper writes}
 \begin{itemize}
-  \item Write hits update only cache; line marked \emph{dirty}
-  \item Evict: write entire line to next level
+  \item Store hits write only to cache
+  \begin{itemize}
+    \item Memory not accessed on write hit
+    \item Line marked as \emph{dirty}
+  \end{itemize}
+  \item Dirty line written to memory only on eviction
+  \begin{itemize}
+    \item Saves accesses when line updated many times
+    \item Must write entire line (no per-byte tracking)
+  \end{itemize}
 \end{itemize}
-\vspace{0.3cm}
-\textbf{Write-through}
+\column{0.5\textwidth}
+\textbf{Write-through --- cheaper evictions}
 \begin{itemize}
-  \item Write hits update cache \emph{and} next level
-  \item Needs a write buffer; evictions are clean
+  \item Store hits write to cache \emph{and} memory
+  \begin{itemize}
+    \item Only changed bytes written (not entire line)
+  \end{itemize}
+  \item Reads:writes ratio $\approx$ 4:1
+  \begin{itemize}
+    \item Processor reads from cache while write proceeds
+  \end{itemize}
+  \item No dirty lines $\Rightarrow$ evictions are free
+  \item Uses write buffer to hide memory latency
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Write Buffer \& Write Combining}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{itemize}
+  \item Buffer decouples CPU stores from DRAM writes
+  \item Combine multiple writes to same line into one buffer entry
+  \item On a miss, also consult write buffer for the most up-to-date bytes
 \end{itemize}
 \end{column}
-\begin{column}{0.38\textwidth}
+\begin{column}{0.42\textwidth}
 \centering
 \begin{tikzpicture}[
     procbox/.style={draw, thick, minimum width=1.3cm, minimum height=1.2cm, inner sep=1pt, align=center, font=\small\bfseries},
@@ -1627,14 +1654,6 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{tikzpicture}
 \end{column}
 \end{columns}
-\end{frame}
-
-\begin{frame}{Write Buffer \& Write Combining}
-\begin{itemize}
-  \item Buffer decouples CPU stores from DRAM writes.
-  \item Combine multiple writes to same line into one buffer entry.
-  \item On a miss, also consult write buffer for the most up-to-date bytes.
-\end{itemize}
 \end{frame}
 
 \begin{frame}{Cache Write Miss}
@@ -1718,10 +1737,11 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{frame}
 
 \begin{frame}{Code Optimizations for Locality}
+We will explore three compiler/programmer techniques to improve cache behavior:
 \begin{itemize}
-  \item \textbf{Merging arrays}: AoS vs SoA trade-offs; reduce conflicts, improve spatial locality.
-  \item \textbf{Loop fusion}: combine loops with same traversal to increase reuse.
-  \item \textbf{Loop interchange}: access arrays in memory order to exploit spatial locality.
+  \item \textbf{Merging arrays}: AoS vs SoA trade-offs; reduce conflicts, improve spatial locality
+  \item \textbf{Loop fusion}: combine loops with same traversal to increase reuse
+  \item \textbf{Loop interchange}: access arrays in memory order to exploit spatial locality
 \end{itemize}
 \end{frame}
 
@@ -1755,8 +1775,8 @@ struct merge {
 
 \begin{column}{0.35\textwidth}
 \begin{itemize}
-  \item[$\diamond$] \textbf{Reduce conflicts between val and key}
-  \item[$\diamond$] \textbf{Improves spatial locality}
+  \item Reduces conflicts between val and key
+  \item Improves spatial locality
 \end{itemize}
 \end{column}
 \end{columns}
@@ -1789,22 +1809,22 @@ struct merge {
 \end{column}
 
 \begin{column}{0.45\textwidth}
-%\textbf{Before Fusion:}
+\textbf{Before Fusion:}
 \begin{itemize}
-  \item[\textcolor{green}{$\diamond$}] First loop: hit in 7/8 of iterations
-  \item[\textcolor{green}{$\diamond$}] Second loop: $\text{array} > \text{cache}$ $\Rightarrow$ same hit rate as in 1\textsuperscript{st} loop
+  \item First loop: hit in 7/8 of iterations
+  \item Second loop: array $>$ cache $\Rightarrow$ same hit rate
 \end{itemize}
 
-\vspace{1cm}
-%\textbf{After Fusion:}
+\vspace{0.5cm}
+\textbf{After Fusion:}
 \begin{itemize}
-  \item[\textcolor{green}{$\diamond$}] First line: hit in 7/8 of iterations
-  \item[\textcolor{green}{$\diamond$}] Second line: hit in all
+  \item First line: hit in 7/8 of iterations
+  \item Second line: hit in all iterations
 \end{itemize}
 
 \vspace{0.2cm}
 \footnotesize
-\textit{Note: Only load accesses are considered for hit rate calculation}
+\textit{Note: Only load accesses considered for hit rate}
 \end{column}
 \end{columns}
 \end{frame}
