@@ -328,14 +328,192 @@
 
 %% Slide: A Basic Processor
 \begin{frame}{A Basic Processor}
-    \centering
-    \begin{tikzpicture}[scale=0.8]
-        % Placeholder for processor diagram
-        \node[draw, rectangle, minimum width=12cm, minimum height=6cm, dashed, align=center] {
-            \Large Processor Pipeline Diagram\\
-            \normalsize (Fetch $\rightarrow$ Decode $\rightarrow$ Execute $\rightarrow$ Memory $\rightarrow$ Write Back)
-        };
-    \end{tikzpicture}
+\begin{center}
+\scalebox{0.58}{
+\begin{circuitikz}[
+    % Component styles (same as Pipelined CPU but without pipeline_reg)
+    component/.style={draw, thick, minimum height=0.8cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
+    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                    external pins width=0, fill=red!20, align=center},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NT=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, fill=green!20, font=\scriptsize},
+    adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+                     external pins width=0, fill=blue!20, font=\scriptsize},
+    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NT=1, w=0.8},
+                 external pins width=0, fill=green!30},
+    pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
+                 external pins width=0, fill=blue!20},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, black},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    control_label/.style={font=\footnotesize, text=orange!80!black, align=center},
+    node distance=5mm and 5mm,
+]
+
+% First pass: place invisible nodes to get coordinates
+% IF Stage Components
+\node[component, fill=blue!30, minimum width=0.8cm] (PC) {IP};
+\node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
+\node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
+\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=20mm]IMem.north west) {};
+\node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
+
+% ID Stage Components
+\node[regfile, right=25mm of IMem] (RegFile) {\rotatebox{90}{Register File}};
+
+% Decode unit (control signal generator)
+\node[ellipse, draw, thick, fill=orange!30, minimum width=1.2cm, minimum height=0.6cm, inner sep=0pt,
+      font=\scriptsize] (Decode) at ([yshift=15mm,xshift=-8mm]RegFile.north) {decode};
+
+% Sign Extend unit
+\node[ellipse, draw, thick, fill=green!30, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
+      font=\tiny, below=2mm of RegFile.south] (SignExt) {\rotatebox{90}{Sign Ext.}};
+
+% EX Stage Components - ALU and MUX for immediate selection
+\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=4cm]RegFile.brpin 1) {};
+\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-6mm]ALU.lpin 2) {};
+\node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
+
+% Target calculation adder
+\node[adder, anchor=lpin 1] (TargetAdder) at ([xshift=-5mm]ALU.west |- PCadder.rpin 1) {+};
+
+% MEM Stage Components
+\node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
+      external pins width=0, align=center, text depth=6.5ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=2.5cm]ALU.brpin 4) {Data\\Cache};
+
+% WB Stage
+\node[mux2, anchor=lpin 1] at ([xshift=15mm]DMem.rpin 5) (WBMux) {};
+
+% Stage labels
+\node[stage_label] (IF_label) at ([yshift=37mm]IMem.north) {Fetch};
+\node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
+\node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
+\node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
+\node[stage_label] (WB_label) at (IF_label -| WBMux) {WB};
+
+% Stage background shades (drawn behind using scopes)
+\begin{scope}[on background layer]
+    % Common Y coordinates for all stages
+    \coordinate (stage_top) at ([yshift=3mm]IF_label.north);
+    \coordinate (stage_bottom) at ([yshift=-8mm]SignExt.south);
+
+    % IF stage shade
+    \fill[blue!8] ([xshift=-8mm]PC.west |- stage_top) rectangle ([xshift=4mm]IMem.east |- stage_bottom);
+
+    % ID stage shade
+    \fill[green!8] ([xshift=4mm]IMem.east |- stage_top) rectangle ([xshift=8mm]RegFile.east |- stage_bottom);
+
+    % EX stage shade
+    \fill[blue!8] ([xshift=8mm]RegFile.east |- stage_top) rectangle ([xshift=5mm]ALU.east |- stage_bottom);
+
+    % MEM stage shade
+    \fill[green!8] ([xshift=5mm]ALU.east |- stage_top) rectangle ([xshift=5mm]DMem.east |- stage_bottom);
+
+    % WB stage shade
+    \fill[blue!8] ([xshift=5mm]DMem.east |- stage_top) rectangle ([xshift=12mm]WBMux.east |- stage_bottom);
+\end{scope}
+
+% === Data paths ===
+% MUX output to PC
+\coordinate (IP_west_conn) at ([xshift=-5mm]PC.west);
+\draw[data_path] (PCSrcMux.lpin 1) -| (IP_west_conn) -- (PC.west);
+\draw[data_path] (PC.east) -- (IMem.blpin 2);
+
+% PC to adder
+\node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
+\draw[data_path] (PC_conn) |- (PCadder.blpin 1);
+\draw[data_path] (four.east) -- (PCadder.blpin 2);
+
+% PC+4 back to mux and to target adder
+\draw[data_path] (PCadder.brpin 1) -- ++(4mm,0) node[data_connector] (NextSeqConn) {} |- (PCSrcMux.rpin 2);
+\draw[data_path] (NextSeqConn) -- ++(0,0) -| ([xshift=-5mm]TargetAdder.lpin 1) -- (TargetAdder.lpin 1);
+
+% IMem to RegFile and Decode
+\draw[data_path] (IMem.brpin 2) -- ++(1,0) node[data_connector] (InstJunction) {};
+\draw[data_path] (InstJunction) -- (RegFile.blpin 1);
+\draw[data_path] (InstJunction) |- (RegFile.blpin 2);
+
+% Instruction to Decode
+\draw[data_path] (InstJunction) |- (Decode.west);
+
+% Control signals from Decode
+\draw[data_path, orange!80!black] (Decode.east) -- ++(15mm,0) node[control_label, above=-1pt, pos=0.5] {Control signals};
+
+% ALU source control
+\coordinate (ctrl_alusrc) at (Decode -| ALUMux.tpin 1);
+\node[data_connector, fill=orange!80!black] at (ctrl_alusrc) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.tpin 1) node[control_label, pos=0.2, right] {ALU\\source};
+
+% ALU Control
+\coordinate (ctrl_aluctl) at (Decode -| ALU.tpin 1);
+\node[data_connector, fill=orange!80!black] at (ctrl_aluctl) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ALU.tpin 1) node[control_label, pos=0.25, right] {ALU\\Control};
+
+% Mem Rd/Wr
+\coordinate (ctrl_mem) at (Decode -| DMem.north);
+\node[data_connector, fill=orange!80!black] at (ctrl_mem) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_mem) -- (DMem.north) node[control_label, pos=0.25, right] {Mem\\Rd/Wr};
+
+% WB select
+\coordinate (ctrl_wbsel) at (Decode -| WBMux.tpin 1);
+\node[data_connector, fill=orange!80!black] at (ctrl_wbsel) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_wbsel) -- (WBMux.tpin 1) node[control_label, pos=0.3, right] {WB\\select};
+
+% RegFile to ALU
+\draw[data_path] (RegFile.brpin 1) -- (ALU.blpin 1);
+\coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
+\draw[data_path] (RegFile.brpin 2) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+
+% Write data to DMem
+\draw[data_path] (WriteDataJunction) |- (DMem.lpin 10);
+
+% Sign Extend to ALUMux and Target Adder
+\draw[data_path] (IMem.brpin 2) |- (SignExt.west);
+\coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
+\draw[data_path] (SignExt.east) -| (ImmJunction) -- (ALUMux.lpin 2);
+\node[data_connector] at (ImmJunction) {};
+\draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
+
+% Target Adder to PC mux
+\draw[data_path] (TargetAdder.brpin 1) -- ++(5mm,0) |- (PCSrcMux.rpin 1);
+
+% ALU to DMem (address)
+\draw[data_path] (ALU.brpin 4) -- (DMem.lpin 5);
+
+% DMem to WB Mux
+\draw[data_path] (DMem.rpin 5) -- (WBMux.blpin 1);
+
+% ALU result to WB Mux (bypass memory)
+\node[data_connector] (ALUResConn) at ([xshift=5mm]ALU.brpin 4) {};
+\draw[data_path] (ALUResConn) |- ([yshift=-15mm]DMem.south) -| ([xshift=-5mm]WBMux.lpin 2) -- (WBMux.lpin 2);
+
+% WB Mux output to Register File write data
+\coordinate (dst_y_level) at ([yshift=-5mm]SignExt.south);
+\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([xshift=-3mm]RegFile.blpin 4 |- dst_y_level) -- ([xshift=-3mm]RegFile.blpin 4) -- (RegFile.blpin 4);
+
+% Dst from instruction to RegFile
+\node[font=\scriptsize, below=1mm of SignExt] {dst};
+\draw[data_path] (InstJunction) |- (RegFile.blpin 3);
+
+% Register File labels
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {src1};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {src2};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {dst};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {data};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 1) {src1\\data};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {src2\\data};
+
+% Data Cache labels
+\node[align=left, font=\tiny] at ([xshift=3mm,yshift=-1mm]DMem.lpin 5) {address};
+\node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {data};
+\node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {data};
+
+\end{circuitikz}
+}
+\end{center}
 \end{frame}
 
 %% Slide: Pipelined Car Assembly - Combined with overlays
