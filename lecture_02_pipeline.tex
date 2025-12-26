@@ -797,30 +797,23 @@
 \draw[data_path, orange!80!black] (ctrl_exmem_out) -- (ctrl_memwb_in);
 
 % Control signal arrows to components with data-connectors
-% ALU source (from ID/EX to ALUMux)
-\coordinate (ctrl_alusrc) at ([xshift=5mm]ctrl_idex_out);
+% ALU source (vertical from control line to ALUMux top pin)
+\coordinate (ctrl_alusrc) at (Decode -| ALUMux.tpin 1);
 \node[data_connector, fill=orange!80!black] at (ctrl_alusrc) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.bpin 1) node[control_label, midway, right] {ALU\\source};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.tpin 1) node[control_label, midway, right] {ALU\\source};
 
-% ALU Control (from ID/EX to ALU)
-\coordinate (ctrl_aluctl) at ([xshift=15mm]ctrl_idex_out);
+% ALU Control (vertical from control line to ALU top pin)
+\coordinate (ctrl_aluctl) at (Decode -| ALU.tpin 1);
 \node[data_connector, fill=orange!80!black] at (ctrl_aluctl) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ctrl_aluctl |- ALU.north) node[control_label, midway, right] {ALU\\Control};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ALU.tpin 1) node[control_label, midway, right] {ALU\\Control};
 
-% MemWr (from EX/MEM to DMem)
-\coordinate (ctrl_memwr) at ([xshift=5mm]ctrl_exmem_out);
-\node[data_connector, fill=orange!80!black] at (ctrl_memwr) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_memwr) -- (ctrl_memwr |- DMem.north) node[control_label, midway, left, xshift=-1mm] {Mem\\Wr};
+% Mem Rd/Wr (vertical from control line to DMem top)
+\coordinate (ctrl_mem) at (Decode -| DMem.north);
+\node[data_connector, fill=orange!80!black] at (ctrl_mem) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_mem) -- (DMem.north) node[control_label, midway, right] {Mem\\Rd/Wr};
 
-% MemRd (from EX/MEM to DMem)
-\coordinate (ctrl_memrd) at ([xshift=20mm]ctrl_exmem_out);
-\node[data_connector, fill=orange!80!black] at (ctrl_memrd) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_memrd) -- (ctrl_memrd |- DMem.north) node[control_label, midway, right, xshift=1mm] {Mem\\Rd};
-
-% WB select (from MEM/WB to WBMux)
-\coordinate (ctrl_wbsel) at ([xshift=5mm]ctrl_memwb_out);
-\node[data_connector, fill=orange!80!black] at (ctrl_wbsel) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_wbsel) -- (WBMux.bpin 1) node[control_label, midway, right] {WB\\select};
+% WB select (from control line at MEMWB east to WBMux top pin)
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_memwb_out) -- (WBMux.tpin 1) node[control_label, midway, right] {WB\\select};
 
 % IF/ID to RegFile
 \draw[data_path] (IFID.east |- RegFile.lpin 1) -- (RegFile.blpin 1);

@@ -1579,18 +1579,53 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 
 \begin{frame}{Memory Updates on Writes}
 \begin{columns}[T]
-\column{0.5\textwidth}
+\begin{column}{0.6\textwidth}
 \textbf{Write-back}
 \begin{itemize}
-  \item Write hits update only cache; line marked \emph{dirty}.
-  \item Evict: write entire line to next level.
+  \item Write hits update only cache; line marked \emph{dirty}
+  \item Evict: write entire line to next level
 \end{itemize}
-\column{0.5\textwidth}
+\vspace{0.3cm}
 \textbf{Write-through}
 \begin{itemize}
-  \item Write hits update cache \emph{and} next level.
-  \item Needs a write buffer; evictions are clean.
+  \item Write hits update cache \emph{and} next level
+  \item Needs a write buffer; evictions are clean
 \end{itemize}
+\end{column}
+\begin{column}{0.38\textwidth}
+\centering
+\begin{tikzpicture}[
+    procbox/.style={draw, thick, minimum width=1.3cm, minimum height=1.2cm, inner sep=1pt, align=center, font=\small\bfseries},
+    cachebox/.style={draw, thick, minimum width=1.3cm, minimum height=0.6cm, inner sep=1pt, align=center, font=\small\bfseries},
+    wbuf/.style={draw, thick, minimum width=0.25cm, minimum height=0.5cm, fill=green!20},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    ]
+    % DRAM as mux (anchor point for positioning)
+    \node[muxdemux, muxdemux def={Lh=3, Rh=3, NL=2, NR=0, NB=0, NT=0, w=2.5},
+          external pins width=0, fill=orange!30, font=\small\bfseries] (dram) {DRAM};
+
+    % Cache positioned relative to DRAM lpin 1
+    \node[cachebox, fill=green!30, left=0.8cm of dram.lpin 1] (cache) {Cache};
+
+    % Processor (taller, same height as DRAM)
+    \node[procbox, fill=orange!30, anchor=north east] (proc) at ([xshift=-8mm]cache.north west) {Processor};
+
+    % Write buffer positioned relative to DRAM lpin 2
+    \matrix[matrix of nodes, nodes={wbuf},
+            column sep=1pt, ampersand replacement=\&] (wbuf) at (dram.lpin 2 -| cache) {
+        |(w1)| \& |(w2)| \& |(w3)| \& |(w4)| \\
+    };
+    \node[below=1mm of wbuf, font=\scriptsize] {Write Buffer};
+
+    % Arrows (all thick)
+    \draw[<->, thick] (proc.east |- cache) -- (cache);
+    \draw[<->, thick] (cache) -- (dram.lpin 1);
+    \draw[->, thick] (w4.east) -- (dram.lpin 2);
+
+    % Data connector from proc-cache line down to write buffer
+    \draw[->, thick] ([xshift=4mm]proc.east |- cache) node[data_connector] (junc) {} |- (w1.west);
+\end{tikzpicture}
+\end{column}
 \end{columns}
 \end{frame}
 
