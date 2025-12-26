@@ -1499,19 +1499,9 @@
       \item 4 ways: 4$\times$2 bits per set; 8 ways: 8$\times$3 bits per set
       \item Many bits $\Rightarrow$ complicated update scheme
     \end{itemize}
-    \item When way $i$ is accessed:
+    \item When way $i$ is accessed: (see next slide)
     \item When replacement is needed: evict the way with counter = 0
   \end{itemize}
-  
-  \begin{block}{Pseudo-code (on access of way $i$)}
-\begin{minted}[fontsize=\small]{python}
-X = Counter[i]
-Counter[i] = k-1          # way i becomes MRU
-for j in range(k):
-    if j != i and Counter[j] > X:
-        Counter[j] -= 1
-\end{minted}
-  \end{block}
 \end{itemize}
 \end{column}
 
@@ -1540,6 +1530,68 @@ Count & 0 & 1 & \textcolor{red}{\textbf{3}} & 2 \\
 \end{tabular}
 
 \vspace{0.4cm}
+\textbf{$\Rightarrow$ Access way 0}\\
+\vspace{0.1cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Way & 0 & 1 & 2 & 3 \\
+\hline
+Count & \textcolor{red}{\textbf{3}} & 0 & 2 & 1 \\
+\hline
+\end{tabular}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{LRU Implementation -- Update Algorithm}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{codeboxtitle}{Pseudo-code (on access of way $i$)}
+\begin{minted}[fontsize=\small]{python}
+X = Counter[i]
+Counter[i] = k-1          # way i becomes MRU
+for j in range(k):
+    if j != i and Counter[j] > X:
+        Counter[j] -= 1
+\end{minted}
+\end{codeboxtitle}
+
+\vspace{0.3cm}
+\textbf{Key idea:}
+\begin{itemize}
+  \item Accessed way gets highest counter value ($k-1$)
+  \item Other ways with higher counter are decremented
+  \item Way with counter = 0 is LRU (eviction candidate)
+\end{itemize}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\small
+\raggedright
+\textbf{Example (4-way):}\\[0.2cm]
+
+\textbf{Initial State}\\
+\vspace{0.1cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Way & 0 & 1 & 2 & 3 \\
+\hline
+Count & 0 & 1 & 2 & 3 \\
+\hline
+\end{tabular}
+
+\vspace{0.3cm}
+\textbf{$\Rightarrow$ Access way 2}\\
+\vspace{0.1cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Way & 0 & 1 & 2 & 3 \\
+\hline
+Count & 0 & 1 & \textcolor{red}{\textbf{3}} & 2 \\
+\hline
+\end{tabular}
+
+\vspace{0.3cm}
 \textbf{$\Rightarrow$ Access way 0}\\
 \vspace{0.1cm}
 \begin{tabular}{|c|c|c|c|c|}
