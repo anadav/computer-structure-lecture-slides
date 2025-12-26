@@ -2042,12 +2042,17 @@ for (i = 0; i < 5000; i++)  ?\tikzmarknode{forI}{\strut}?
 \end{minted}
 \end{codeboxtitle}
 
+\makeatletter
+\@ifundefined{pgf@sh@nt@forI}{}{%
+\@ifundefined{pgf@sh@nt@forJ}{}{%
 \begin{tikzpicture}[remember picture, overlay]
-  \draw[<->, thick, green!70!black, line width=1.5pt]
-    (forI.east) to[bend right=60]
-    node[right, font=\scriptsize] {swap}
-    (forJ.east);
-\end{tikzpicture}
+    \draw[<->, thick, green!70!black, line width=1.2pt]
+      ([xshift=5pt]forI.east) to[out=0, in=0, looseness=2.5]
+      node[right, font=\scriptsize, pos=0.5] {swap}
+      ([xshift=5pt]forJ.east -| forI);
+\end{tikzpicture}%
+}}
+\makeatother
 \end{frame}
 
 \begin{frame}{Improving Cache Performance (summary)}
