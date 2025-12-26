@@ -4,7 +4,7 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{listings}
-\usepackage[outputdir=build]{minted}
+\usepackage{minted}
 \usemintedstyle{tango}
 \usepackage{tcolorbox}
 \tcbuselibrary{minted,skins}
@@ -2018,26 +2018,23 @@ for (i = 0; i < 10000; i++) {
 \end{frame}
 
 \begin{frame}[fragile]{Code Optimizations: Loop Interchange}
-\begin{itemize}
-  \item \textbf{2-dimensional array in memory:}
-\end{itemize}
-
 \small
+\textbf{2D array in memory:}
 \texttt{x[0][0] x[0][1] ... x[0][99] x[1][0] x[1][1] ...}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 \begin{codeboxtitle}{Original program: accesses are 100 bytes apart}
-\begin{minted}[fontsize=\small]{c}
-/* x[0][0] x[1][0] ... x[4999][0] x[0][1] x[1][1] ... */
+\begin{minted}[fontsize=\footnotesize]{c}
+/* x[0][0] x[1][0] ... x[4999][0] x[0][1] ... */
 for (j = 0; j < 100; j++)
   for (i = 0; i < 5000; i++)
     x[i][j] = 2 * x[i][j];
 \end{minted}
 \end{codeboxtitle}
 
-\vspace{0.2cm}
+\vspace{0.15cm}
 \begin{codeboxtitle}{Reversing the loop order: accesses are adjacent}
-\begin{minted}[fontsize=\small]{c}
+\begin{minted}[fontsize=\footnotesize]{c}
 /* Improved spatial locality */
 for (i = 0; i < 5000; i++)
   for (j = 0; j < 100; j++)
@@ -2045,11 +2042,11 @@ for (i = 0; i < 5000; i++)
 \end{minted}
 \end{codeboxtitle}%
 \begin{tikzpicture}[overlay, remember picture]
-  \coordinate (top) at (7.5,0.55);
-  \coordinate (bottom) at (7.5,0.15);
+  \coordinate (top) at (7.5,1.1);
+  \coordinate (bottom) at (7.5,0.7);
   \draw[<->, thick, green!70!black, line width=1.5pt, bend right=60]
     (top) to (bottom);
-  \node[green!70!black, right, font=\scriptsize] at (8.0,0.35) {swap};
+  \node[green!70!black, right, font=\scriptsize] at (8.0,0.9) {swap};
 \end{tikzpicture}
 \end{frame}
 
