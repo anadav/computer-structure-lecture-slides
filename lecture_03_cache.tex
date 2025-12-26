@@ -4,7 +4,10 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{listings}
-\usepackage{minted}
+\usepackage[outputdir=build]{minted}
+\usemintedstyle{tango}
+\usepackage{tcolorbox}
+\tcbuselibrary{minted,skins}
 \usepackage{tikz}
 \usepackage{xcolor}
 \usepackage{pgfplots}
@@ -16,6 +19,17 @@
 
 % Command for circled numbers
 \newcommand{\circnum}[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=1pt,minimum size=1.2em] (char) {\small #1};}}
+
+% Code box style with title (uses regular minted inside)
+\newtcolorbox{codeboxtitle}[1]{%
+  enhanced,
+  colback=gray!5,
+  colframe=structure.fg!70,
+  boxrule=0.5pt,
+  top=2pt,bottom=2pt,left=2pt,right=2pt,
+  title=#1,
+  fonttitle=\small\bfseries
+}
 
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
@@ -1928,23 +1942,21 @@ We will explore three compiler/programmer techniques to improve cache behavior:
 
 \begin{columns}
 \begin{column}{0.65\textwidth}
-\begin{block}{Before: two sequential arrays}
-\small
+\begin{codeboxtitle}{Before: two sequential arrays}
 \begin{minted}[fontsize=\small]{c}
 int val[SIZE];
 int key[SIZE];
 \end{minted}
-\end{block}
+\end{codeboxtitle}
 
-\begin{block}{After: One array of structures}
-\small
+\begin{codeboxtitle}{After: One array of structures}
 \begin{minted}[fontsize=\small]{c}
 struct merge {
     int val;
     int key;
 } merged_array[SIZE];
 \end{minted}
-\end{block}
+\end{codeboxtitle}
 \end{column}
 
 \begin{column}{0.35\textwidth}
@@ -1964,22 +1976,24 @@ struct merge {
 
 \begin{columns}
 \begin{column}{0.55\textwidth}
-\begin{block}{Before Fusion}
-\small
-\texttt{for (i = 0; i < 10000; i++)}\\
-\texttt{~~a[i] = 1 / a[i];}\\
-\texttt{for (i = 0; i < 10000; i++)}\\
-\texttt{~~sum = sum + a[i];}
-\end{block}
+\begin{codeboxtitle}{Before Fusion}
+\begin{minted}[fontsize=\small]{c}
+for (i = 0; i < 10000; i++)
+  a[i] = 1 / a[i];
+for (i = 0; i < 10000; i++)
+  sum = sum + a[i];
+\end{minted}
+\end{codeboxtitle}
 
 \vspace{0.2cm}
-\begin{block}{After Fusion}
-\small
-\texttt{for (i = 0; i < 10000; i++) \{}\\
-\texttt{~~a[i] = 1 / a[i];}\\
-\texttt{~~sum = sum + a[i];}\\
-\texttt{\}}
-\end{block}
+\begin{codeboxtitle}{After Fusion}
+\begin{minted}[fontsize=\small]{c}
+for (i = 0; i < 10000; i++) {
+  a[i] = 1 / a[i];
+  sum = sum + a[i];
+}
+\end{minted}
+\end{codeboxtitle}
 \end{column}
 
 \begin{column}{0.45\textwidth}
@@ -2012,29 +2026,31 @@ struct merge {
 \texttt{x[0][0] x[0][1] ... x[0][99] x[1][0] x[1][1] ...}
 
 \vspace{0.3cm}
-\begin{block}{Original program: accesses are 100 bytes apart}
-\small
-\texttt{/* x[0][0] x[1][0] ... x[4999][0] x[0][1] x[1][1] ... */}\\
-\texttt{for (j = 0; j < 100; j++)}\\
-\texttt{~~for (i = 0; i < 5000; i++)}\\
-\texttt{~~~~x[i][j] = 2 * x[i][j];}
-\end{block}
+\begin{codeboxtitle}{Original program: accesses are 100 bytes apart}
+\begin{minted}[fontsize=\small]{c}
+/* x[0][0] x[1][0] ... x[4999][0] x[0][1] x[1][1] ... */
+for (j = 0; j < 100; j++)
+  for (i = 0; i < 5000; i++)
+    x[i][j] = 2 * x[i][j];
+\end{minted}
+\end{codeboxtitle}
 
 \vspace{0.2cm}
-\begin{block}{Reversing the loop order: accesses are adjacent}
-\small
-\texttt{/* Improved spatial locality */}\\
+\begin{codeboxtitle}{Reversing the loop order: accesses are adjacent}
+\begin{minted}[fontsize=\small]{c}
+/* Improved spatial locality */
+for (i = 0; i < 5000; i++)
+  for (j = 0; j < 100; j++)
+    x[i][j] = 2 * x[i][j];
+\end{minted}
+\end{codeboxtitle}%
 \begin{tikzpicture}[overlay, remember picture]
-  \coordinate (top) at (7.5,0);
-  \coordinate (bottom) at (7.5,-0.4);
-  \draw[<->, thick, green!70!black, line width=1.5pt, bend right=60] 
+  \coordinate (top) at (7.5,0.55);
+  \coordinate (bottom) at (7.5,0.15);
+  \draw[<->, thick, green!70!black, line width=1.5pt, bend right=60]
     (top) to (bottom);
-  \node[green!70!black, right, font=\scriptsize] at (8.0,-0.2) {swap};
+  \node[green!70!black, right, font=\scriptsize] at (8.0,0.35) {swap};
 \end{tikzpicture}
-\texttt{for (i = 0; i < 5000; i++)}\\
-\texttt{~~for (j = 0; j < 100; j++)}\\
-\texttt{~~~~x[i][j] = 2 * x[i][j];}
-\end{block}
 \end{frame}
 
 \begin{frame}{Improving Cache Performance (summary)}
