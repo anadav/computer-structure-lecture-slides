@@ -1967,11 +1967,12 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
     height=6cm,
     clip=false,
 ]
-% Define colors matching reference image
+% Define colors matching reference image (6 colors)
 \definecolor{conflictgreen}{RGB}{0,160,0}
 \definecolor{conflict2blue}{RGB}{0,180,220}
 \definecolor{conflict3magenta}{RGB}{220,0,180}
-\definecolor{capacityyellow}{RGB}{255,220,0}
+\definecolor{conflict4yellow}{RGB}{255,255,0}
+\definecolor{capacityyellow}{RGB}{255,200,0}
 \definecolor{compulsoryred}{RGB}{220,0,0}
 
 % Data: curves from highest (1-way) to lowest (8-way)
@@ -1987,6 +1988,10 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \addplot[name path=eightway, draw=black, thick] coordinates {
     (16,0.068) (32,0.052) (64,0.040) (128,0.030) (256,0.022) (512,0.017) (1024,0.013) (2048,0.0095)
 };
+% Fully associative (capacity + compulsory only, no conflict)
+\addplot[name path=fullassoc, draw=black] coordinates {
+    (16,0.058) (32,0.044) (64,0.034) (128,0.025) (256,0.018) (512,0.014) (1024,0.011) (2048,0.008)
+};
 % Compulsory baseline (constant)
 \addplot[name path=compulsory, draw=black] coordinates {
     (16,0.005) (2048,0.005)
@@ -1997,7 +2002,8 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 
 % Fill areas (bottom to top)
 \addplot[compulsoryred] fill between[of=bottom and compulsory];
-\addplot[capacityyellow] fill between[of=compulsory and eightway];
+\addplot[capacityyellow] fill between[of=compulsory and fullassoc];
+\addplot[conflict4yellow] fill between[of=fullassoc and eightway];
 \addplot[conflict3magenta] fill between[of=eightway and fourway];
 \addplot[conflict2blue] fill between[of=fourway and twoway];
 \addplot[conflictgreen] fill between[of=twoway and oneway];
@@ -2009,19 +2015,19 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 % Associativity labels in white area, arrows pointing left to curves
 \node[lbl, anchor=west] (lbl1) at (axis cs:32,0.128) {1-way};
 \draw[->, thick] (lbl1.west) -- (axis cs:18,0.12);
-\node[lbl, anchor=west] (lbl2) at (axis cs:55,0.092) {2-way};
+\node[lbl, anchor=west] (lbl2) at (axis cs:64,0.092) {2-way};
 \draw[->, thick] (lbl2.west) -- (axis cs:26,0.08);
-\node[lbl, anchor=west] (lbl4) at (axis cs:120,0.064) {4-way};
-\draw[->, thick] (lbl4.west) -- (axis cs:37,0.058);
-\node[lbl, anchor=west] (lbl8) at (axis cs:160,0.042) {8-way};
+\node[lbl, anchor=west] (lbl4) at (axis cs:120,0.07) {4-way};
+\draw[->, thick] (lbl4.west) -- (axis cs:34,0.058);
+\node[lbl, anchor=west] (lbl8) at (axis cs:160,0.058) {8-way};
 \draw[->, thick] (lbl8.west) -- (axis cs:65,0.038);
 
 % Miss type labels (Conflict in upper right, no arrow)
-\node[misslbl, rotate=-32] at (axis cs:280,0.085) {Conflict};
-\node[misslbl, anchor=west] (caplab) at (axis cs:380,0.055) {Capacity};
+\node[misslbl, rotate=-32] at (axis cs:350,0.095) {Conflict};
+\node[misslbl, anchor=west] (caplab) at (axis cs:380,0.06) {Capacity};
 \draw[->, thick] (caplab.west) -- (axis cs:180,0.015);
 \node[misslbl] (complab) at (axis cs:800,0.04) {Compulsory};
-\draw[->, thick] (complab.south) -- (axis cs:650,0.05);
+\draw[->, thick] (complab.south) -- (axis cs:650,0.003);
 \end{axis}
 \end{tikzpicture}
 \end{column}
