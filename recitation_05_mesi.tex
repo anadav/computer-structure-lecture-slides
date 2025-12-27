@@ -10,9 +10,19 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usepackage{circuitikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds, matrix}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
+
+% Happens-before diagram colors and styles
+\colorlet{varX}{blue!70!black}
+\colorlet{varY}{orange!80!black}
+\colorlet{varZ}{green!60!black}
+\tikzset{
+  hbprogorder/.style={->, dashed, gray!70!black, thick},
+  hbcross/.style={->, thick},
+  hblabel/.style={font=\scriptsize\bfseries, fill=white, inner sep=1pt, circle},
+}
 
 \definecolor{cachecolor}{RGB}{200,220,255}
 \definecolor{memcolor}{RGB}{255,220,200}
@@ -615,10 +625,12 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \end{frame}
 
 
-\section{Ring Interconnect}
+% NOTE: Ring Interconnect section hidden until polarity mechanism clarified
+%\section{Ring Interconnect}
 
 %==========================================
-\begin{frame}{Ring Interconnect}
+% NOTE: Ring frames hidden with <0> until polarity mechanism is clarified
+\begin{frame}<0>{Ring Interconnect}
 \begin{center}
 \begin{tikzpicture}[
     scale=0.85,
@@ -699,7 +711,7 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \end{frame}
 
 %==========================================
-\begin{frame}{Ring Architecture Details}
+\begin{frame}<0>{Ring Architecture Details}
 \textbf{Ring Configuration:}
 \begin{itemize}
 \item 2 × 4 rings: Req / Data / Ack / Snoop
@@ -725,7 +737,7 @@ A stop can only pull data from the direction (ring) that matches its polarity in
 \end{frame}
 
 %==========================================
-\begin{frame}{Ring Example - Data Transfer}
+\begin{frame}<0>{Ring Example - Data Transfer}
 \footnotesize
 \textbf{Scenario:} Core 0, Core 1, and GFX issue data read requests
 
@@ -753,7 +765,8 @@ Even/Odd polarity switching per cycle]
 
 %==========================================
 % Ring Example - Data Transfer Animation
-\begin{frame}{Ring Example -- Data Transfer}
+% NOTE: Frame hidden with <0> until polarity mechanism is clarified
+\begin{frame}<0>{Ring Example -- Data Transfer}
 % Top explanation - plain text above the diagram
 \only<1>{\textbf{Initial State:} Ring connects all agents. Each stop has Odd/Even polarity.}%
 \only<2>{Core 0, Core 1 and the GFX issue data read requests}%
@@ -995,23 +1008,298 @@ Even/Odd polarity switching per cycle]
 \end{tikzpicture}
 \end{frame}
 
+\section{Memory Models}
+
+%==========================================
+\begin{frame}{Memory Models and MESI}
+\begin{block}{Connection to MESI}
+Memory models define when stores become \textbf{globally visible} to other processors.
+MESI protocol is the \emph{mechanism} that makes stores visible --- but \textbf{when} they're drained from the store buffer is a memory model decision.
+\end{block}
+
+\vspace{0.5em}
+\textbf{What is a memory model?}
+\begin{itemize}
+\item Contract between hardware and software specifying ordering guarantees
+\item Defines which memory operation reorderings are allowed
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Memory model spectrum:}
+\begin{itemize}
+\item \textbf{Sequential Consistency (SC)}: All operations appear in program order (strongest)
+\item \textbf{Total Store Order (TSO)}: x86 model --- allows load/store reordering
+\item \textbf{Relaxed Models}: ARM, RISC-V --- more reordering (weakest, fastest)
+\end{itemize}
+
+\vspace{0.5em}
+\begin{alertblock}{Key Insight}
+Modern processors reorder instructions and buffer stores for performance.
+The memory model tells you which orderings you can rely on.
+\end{alertblock}
+\end{frame}
+
+%==========================================
+\begin{frame}{The Happens-Before Relation}
+\begin{block}{Definition}
+Happens-before ($\rightarrow$) is a partial order on memory operations.
+If $A \rightarrow B$, then $A$'s effects are visible to $B$, and $A$ cannot be reordered after $B$.
+\end{block}
+
+\vspace{0.5em}
+\textbf{Sources of happens-before:}
+\begin{enumerate}
+\item \textbf{Program order}: Within a thread, some instruction pairs are ordered
+\item \textbf{Cross-processor}: A load that reads a store's value happens-after that store
+\item \textbf{Transitivity}: If $A \rightarrow B$ and $B \rightarrow C$, then $A \rightarrow C$
+\end{enumerate}
+
+\vspace{0.5em}
+\textbf{x86/TSO Rules (simplified):}
+\begin{itemize}
+\item Loads not reordered with loads
+\item Stores not reordered with stores
+\item Stores not reordered with \emph{older} loads
+\item Loads \textbf{may} reorder with older stores to \emph{different} locations
+\end{itemize}
+
+\vspace{0.5em}
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!50!black, top=1mm, bottom=1mm]
+\footnotesize
+\textbf{Proving ``not allowed'':} Show that assuming the outcome creates a happens-before cycle.
+\end{tcolorbox}
+\end{frame}
+
+%==========================================
+\begin{frame}{Memory Model Exercise -- Setup}
+\textbf{Consider a simple memory model with these rules:}
+\begin{enumerate}
+\item Stores to the \textbf{same} location are totally ordered
+\item A load returns the value of the most recent store (in happens-before order) to that location
+\item Within a processor, \textbf{all operations to the same location} are ordered by program order
+\item Operations to \textbf{different locations} may be freely reordered
+\end{enumerate}
+
+\vspace{1em}
+\begin{center}
+\textbf{Initial state:} \texttt{X = 0, Y = 0}
+\vspace{0.5em}
+
+\begin{tabular}{c|c}
+\textbf{Processor 0} & \textbf{Processor 1} \\
+\hline
+\texttt{Store [X] $\leftarrow$ 1} & \texttt{Store [Y] $\leftarrow$ 1} \\
+\texttt{r1 $\leftarrow$ Load [Y]} & \texttt{r2 $\leftarrow$ Load [X]} \\
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+Is the outcome \texttt{r1 = 0, r2 = 0} possible? \textbf{Prove using happens-before analysis.}
+\end{frame}
+
+%==========================================
+\begin{frame}{Memory Model Exercise -- Solution}
+\textbf{Is \texttt{r1 = 0, r2 = 0} possible?}
+
+\pause
+\vspace{0.5em}
+\textbf{Yes, it is possible!}
+
+\vspace{0.5em}
+\textbf{Happens-before analysis:}
+\begin{itemize}
+\item P0's store is to \texttt{X}, P0's load is from \texttt{Y} --- \textbf{different locations}
+\item P1's store is to \texttt{Y}, P1's load is from \texttt{X} --- \textbf{different locations}
+\item By rule 4, operations to different locations may be reordered
+\end{itemize}
+
+\pause
+\vspace{0.5em}
+\textbf{Valid execution order:}
+\begin{enumerate}
+\item P0 executes load from Y $\rightarrow$ reads 0 (r1 = 0)
+\item P1 executes load from X $\rightarrow$ reads 0 (r2 = 0)
+\item P0 executes store to X
+\item P1 executes store to Y
+\end{enumerate}
+
+\pause
+\vspace{0.5em}
+\begin{tcolorbox}[colback=green!10, colframe=green!50!black, top=1mm, bottom=1mm]
+\textbf{Key insight:} No happens-before chain connects P0's store to P1's load (or vice versa).
+The loads ``raced'' ahead of the stores because there's no ordering constraint between operations to different locations.
+\end{tcolorbox}
+\end{frame}
+
+%==========================================
+\begin{frame}{Memory Model Exercise 2 -- Total Store Order}
+\small
+Stores to the same location have a total order visible to all processors.
+\hfill Initial: \texttt{X=0}. Is \texttt{r1=1, r2=2, r3=2, r4=1} allowed?
+
+\begin{center}
+\begin{tikzpicture}[scale=0.82]
+  % Processor 0: p0-1-1 (phantom), p0-1-2 (label), p0-2-1 (S1), p0-2-2 (instruction)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p0) at (0, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{S1} \& |[font=\bfseries\scriptsize]| Processor 0 \\
+    S1 \& Store [\textcolor{varX}{X}] <- 1 \\
+  };
+
+  % Processor 1: p1-2-2 is the store instruction
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p1) at (3.8, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{S2} \& |[font=\bfseries\scriptsize]| Processor 1 \\
+    S2 \& Store [\textcolor{varX}{X}] <- 2 \\
+  };
+
+  % Processor 2: p2-2-2 (L1 instr), p2-4-2 (L2 instr)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p2) at (7.6, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L1} \& |[font=\bfseries\scriptsize]| Processor 2 \\
+    L1 \& r1 <- Load [\textcolor{varX}{X}] \\
+    \rule{0pt}{0.25cm} \& \\
+    L2 \& r2 <- Load [\textcolor{varX}{X}] \\
+  };
+
+  % Processor 3: p3-2-2 (L3 instr), p3-4-2 (L4 instr)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p3) at (11.4, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L3} \& |[font=\bfseries\scriptsize]| Processor 3 \\
+    L3 \& r3 <- Load [\textcolor{varX}{X}] \\
+    \rule{0pt}{0.25cm} \& \\
+    L4 \& r4 <- Load [\textcolor{varX}{X}] \\
+  };
+
+  % Program order arrows (loads not reordered)
+  \draw[hbprogorder] (p2-2-2.south) -- (p2-4-2.north)
+    node[hblabel, midway, left=2pt, draw, thin] {\tiny 1};
+  \draw[hbprogorder] (p3-2-2.south) -- (p3-4-2.north)
+    node[hblabel, midway, left=2pt, draw, thin] {\tiny 2};
+
+  \onslide<2->{
+    % Cross-processor: S1 -> L1 (r1=1)
+    \draw[hbcross, varX] (p0-2-2.east) to[out=10, in=160]
+      node[hblabel, above=0pt, pos=0.5, draw, thin] {\tiny 3} (p2-2-1.west);
+    % Cross-processor: S2 -> L2 (r2=2)
+    \draw[hbcross, varX, densely dashed] (p1-2-2.east) to[out=-10, in=170]
+      node[hblabel, below=0pt, pos=0.5, draw, thin] {\tiny 4} (p2-4-2.west);
+  }
+  \onslide<3->{
+    % Cross-processor: S2 -> L3 (r3=2)
+    \draw[hbcross, varX, densely dashed] (p1-2-2.east) to[out=10, in=160]
+      node[hblabel, above=0pt, pos=0.6, draw, thin] {\tiny 5} (p3-2-2.west);
+    % Cross-processor: S1 -> L4 (r4=1) - this creates the contradiction
+    \draw[hbcross, varX, looseness=1.2] (p0-2-2.east) to[out=-20, in=200]
+      node[hblabel, below=0pt, pos=0.5, draw, thin] {\tiny 6} (p3-4-1.west);
+  }
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.4cm}
+{\footnotesize\textbf{Happens-before analysis:}}
+\begin{enumerate}
+  \footnotesize
+  \item L1 $\rightarrow$ L2, L3 $\rightarrow$ L4 --- loads not reordered within processor
+  \onslide<2->{\item r1=1 $\Rightarrow$ S1 $\rightarrow$ L1; \quad r2=2 $\Rightarrow$ S2 $\rightarrow$ L2; \quad Chain: S1 $\rightarrow$ L1 $\rightarrow$ L2, so S1 before S2}
+  \onslide<3->{\item r3=2 $\Rightarrow$ S2 $\rightarrow$ L3; \quad r4=1 $\Rightarrow$ S1 $\rightarrow$ L4; \quad Chain: S2 $\rightarrow$ L3 $\rightarrow$ L4, so S2 before S1}
+  \onslide<4->{\item \textbf{Contradiction!} S1 before S2 AND S2 before S1 $\Rightarrow$ \textbf{Not allowed.}}
+\end{enumerate}
+\end{frame}
+
+%==========================================
+\begin{frame}{Memory Model Exercise 3 -- Three Processors (x86/TSO)}
+\small
+\textbf{Initial:} \texttt{X = Y = Z = 0}
+\hfill Is \texttt{r1 = 1, r2 = 1, r3 = 0} possible?
+
+\vspace{0.2em}
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+  % Processor 0
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.1cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p0) at (0, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{S0} \& |[font=\bfseries\scriptsize]| P0 \\
+    S0 \& |[alias=s0]| St [\textcolor{varX}{X}] <- 1 \\
+  };
+
+  % Processor 1
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.1cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p1) at (4, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L1} \& |[font=\bfseries\scriptsize]| P1 \\
+    |[alias=l1lbl]| L1 \& |[alias=l1]| r1 <- Ld [\textcolor{varX}{X}] \\
+    \rule{0pt}{0.2cm} \& \\
+    S1 \& |[alias=s1]| St [\textcolor{varY}{Y}] <- 1 \\
+  };
+
+  % Processor 2
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.1cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p2) at (8, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L2} \& |[font=\bfseries\scriptsize]| P2 \\
+    |[alias=l2lbl]| L2 \& |[alias=l2]| r2 <- Ld [\textcolor{varY}{Y}] \\
+    \rule{0pt}{0.2cm} \& \\
+    L3 \& |[alias=l3]| r3 <- Ld [\textcolor{varX}{X}] \\
+  };
+
+  \onslide<2->{
+    % Program order arrows
+    \draw[hbprogorder] (l1.south) -- (s1.north)
+      node[hblabel, midway, left=1pt, draw, thin] {\tiny 1};
+    \draw[hbprogorder] (l2.south) -- (l3.north)
+      node[hblabel, midway, left=1pt, draw, thin] {\tiny 2};
+  }
+  \onslide<3->{
+    % Cross-processor: S0 -> L1 (r1=1 means L1 saw S0)
+    \draw[hbcross, varX] (s0.east) -- (l1.west)
+      node[hblabel, above=0pt, pos=0.5, draw, thin] {\tiny 3};
+    % Cross-processor: S1 -> L2 (r2=1 means L2 saw S1)
+    \draw[hbcross, varY] (s1.east) -- (l2.west)
+      node[hblabel, above=0pt, pos=0.5, draw, thin] {\tiny 4};
+  }
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.2cm}
+\only<1>{\phantom{\textbf{Analysis:}}}%
+\only<2>{\footnotesize\textbf{TSO:} L1$\rightarrow$S1 (load before store), L2$\rightarrow$L3 (loads ordered)}%
+\only<3>{\footnotesize\textbf{Cross-proc:} r1=1 $\Rightarrow$ S0$\rightarrow$L1. \quad r2=1 $\Rightarrow$ S1$\rightarrow$L2.}%
+\only<4->{\footnotesize\textbf{Chain:} S0 $\xrightarrow{3}$ L1 $\xrightarrow{1}$ S1 $\xrightarrow{4}$ L2 $\xrightarrow{2}$ L3. Thus S0 $\rightarrow$ L3, so L3 must see X=1 $\Rightarrow$ r3=1. \textbf{Not possible!}}
+\end{frame}
+
 %==========================================
 \begin{frame}{Summary}
 \begin{itemize}
 \item \textbf{MESI Protocol} ensures cache coherence in multi-processor systems
-\vspace{0.5em}
+\vspace{0.3em}
 \item \textbf{Four States:} Invalid, Shared, Exclusive, Modified
-\vspace{0.5em}
+\vspace{0.3em}
 \item \textbf{Key Mechanisms:}
     \begin{itemize}
-    \item Core Valid Bits (CVB) for tracking
+    \item Core Valid Bits (CVB) for tracking line ownership
     \item Read For Ownership (RFO) for write intent
     \item Global Observation (GO) for state notification
     \end{itemize}
-\vspace{0.5em}
-\item \textbf{Ring Interconnect:} Efficient on-chip communication with polarity-based routing
-\vspace{0.5em}
-\item \textbf{Performance:} Message latencies crucial for overall system performance
+\vspace{0.3em}
+\item \textbf{Memory Models:} Define when stores become globally visible
+    \begin{itemize}
+    \item Happens-before relation for reasoning about orderings
+    \item x86/TSO: Load$\rightarrow$Store preserved, Store$\rightarrow$Load may reorder
+    \item Prove ``not allowed'' by showing happens-before cycle
+    \end{itemize}
 \end{itemize}
 \end{frame}
 
