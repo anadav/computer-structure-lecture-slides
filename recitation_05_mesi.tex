@@ -19,9 +19,9 @@
 \definecolor{exclusivecolor}{RGB}{200,255,200}
 \definecolor{messageblue}{RGB}{70,130,255}
 \definecolor{timecolor}{RGB}{200,100,0}
-\definecolor{stateM}{RGB}{255,200,200}
-\definecolor{stateE}{RGB}{200,255,200}
-\definecolor{stateS}{RGB}{200,200,255}
+\definecolor{stateM}{RGB}{200,50,50}
+\definecolor{stateE}{RGB}{0,150,0}
+\definecolor{stateS}{RGB}{50,50,200}
 
 % Colors for MESI states in diagrams
 \definecolor{invalidcolor}{RGB}{255, 200, 100}
@@ -539,7 +539,9 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 
 %==========================================
 % MESI Coherence Problem - Row by row solution
-\newcommand{\mesiheader}{%
+\newcommand{\mesicellvs}{-3mm}
+\begin{frame}{MESI Coherence Problem}
+\scriptsize
 \begin{columns}[t]
 \column{0.5\textwidth}
 \textbf{System:} 2 proc, MESI, L1 priv, L2 shared incl, direct-map\\
@@ -548,12 +550,8 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \textbf{L1 Mapping:} X1,X2,X3,X4 $\to$ same set; X5 $\to$ different set\\
 \textbf{L2 Mapping:} X1,X2 $\to$ same set; X3,X4,X5 $\to$ different sets
 \end{columns}
-\vspace{-5mm}
-}
-
-\begin{frame}{MESI Coherence Problem}
-\scriptsize
-\mesiheader
+\tiny
+\vspace{-1mm}
 \begin{table}[h]
 \centering
 \setlength{\tabcolsep}{1pt}
@@ -563,18 +561,20 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \hline
 \rowcolor{gray!20}
 \# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{2}{c|}{CVB} & \\
 \hline
-1 & \makecell[l]{P0\\reads X1} & \onslide<2->{\vspace{-4mm}\textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)}} & \onslide<2->{\textcolor{timecolor}{226}} & \onslide<2->{1} & \onslide<2->{0} & \onslide<2->{\textcolor{stateE}{\textbf{E}}} \\
+1 & \makecell[l]{P0\\reads X1} & \onslide<2->{\vspace{\mesicellvs}\textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)}} & \onslide<2->{\textcolor{timecolor}{226}} & \onslide<2->{1} & \onslide<2->{0} & \onslide<2->{\textcolor{stateE}{\textbf{E}}} \\
 \hline
 2 & \makecell[l]{P1\\writes X3} & \textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{226} & 0 & 1 & \textcolor{stateM}{\textbf{M}} \\
 \hline
-3 & \makecell[l]{P1\\writes X4} & \onslide<3->{\vspace{-4mm}\textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 wb} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM wb} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)}} & \onslide<3->{\textcolor{timecolor}{336}} & \onslide<3->{0} & \onslide<3->{1} & \onslide<3->{\textcolor{stateM}{\textbf{M}}} \\
+3 & \makecell[l]{P1\\writes X4} & \onslide<3->{\vspace{\mesicellvs}\textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 wb} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM wb} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)}} & \onslide<3->{\textcolor{timecolor}{336}} & \onslide<3->{0} & \onslide<3->{1} & \onslide<3->{\textcolor{stateM}{\textbf{M}}} \\
 \hline
-4 & \makecell[l]{P1\\writes X5} & \onslide<4->{\vspace{-4mm}\textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$L1 snoop} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$L2 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM wb} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)}} & \onslide<4->{\textcolor{timecolor}{356}} & \onslide<4->{0} & \onslide<4->{1} & \onslide<4->{\textcolor{stateM}{\textbf{M}}} \\
+4 & \makecell[l]{P1\\writes X5} & \onslide<4->{\vspace{\mesicellvs}\textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$L1 snoop} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$L2 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM wb} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)}} & \onslide<4->{\textcolor{timecolor}{356}} & \onslide<4->{0} & \onslide<4->{1} & \onslide<4->{\textcolor{stateM}{\textbf{M}}} \\
 \hline
-5 & \makecell[l]{P0\\reads X5} & \onslide<5->{\vspace{-4mm}\textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$P1 snoop} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{P1$\to$L2 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)}} & \onslide<5->{\textcolor{timecolor}{86}} & \onslide<5->{1} & \onslide<5->{1} & \onslide<5->{\textcolor{stateS}{\textbf{S}}} \\
+5 & \makecell[l]{P0\\reads X5} & \onslide<5->{\vspace{\mesicellvs}\textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$P1 snoop} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{P1$\to$L2 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)}} & \onslide<5->{\textcolor{timecolor}{86}} & \onslide<5->{1} & \onslide<5->{1} & \onslide<5->{\textcolor{stateS}{\textbf{S}}} \\
 \hline
-6 & \makecell[l]{P1\\reads X4} & \onslide<6->{\vspace{-4mm}\textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{\{L2 snoops + L2$\to$MEM wb\}} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 data} \textcolor{timecolor}{(3)}} & \onslide<6->{\textcolor{timecolor}{316}} & \onslide<6->{0} & \onslide<6->{1} & \onslide<6->{\textcolor{stateE}{\textbf{E}}} \\
+6 & \makecell[l]{P1\\reads X4} & \onslide<6->{\vspace{\mesicellvs}\textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{\{L2 snoops + L2$\to$MEM wb\}} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 data} \textcolor{timecolor}{(3)}} & \onslide<6->{\textcolor{timecolor}{316}} & \onslide<6->{0} & \onslide<6->{1} & \onslide<6->{\textcolor{stateE}{\textbf{E}}} \\
 \hline
 \end{tabular}
 }
@@ -589,55 +589,6 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \only<5>{L2 hit but P1 has X5 Modified $\Rightarrow$ snoop gets dirty data. Both become \textbf{S}. Shortest path!}%
 \only<6>{L1+L2 miss $\Rightarrow$ fetch from memory. X5 evicted from L2 $\Rightarrow$ snoop+writeback. \{braces\} = parallel.}%
 \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{MESI Coherence Problem -- Summary}
-\scriptsize
-\mesiheader
-\begin{table}[h]
-\centering
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.2}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
-\hline
-\rowcolor{gray!20}
-\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
-\hline
-1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{226} & 1 & 0 & \textcolor{stateE}{\textbf{E}} \\
-\hline
-2 & \makecell[l]{P1\\writes X3} & \textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{226} & 0 & 1 & \textcolor{stateM}{\textbf{M}} \\
-\hline
-3 & \makecell[l]{P1\\writes X4} & \textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 wb} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM wb} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{336} & 0 & 1 & \textcolor{stateM}{\textbf{M}} \\
-\hline
-4 & \makecell[l]{P1\\writes X5} & \textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$L1 snoop} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$L2 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM wb} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 write} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{356} & 0 & 1 & \textcolor{stateM}{\textbf{M}} \\
-\hline
-5 & \makecell[l]{P0\\reads X5} & \textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$P1 snoop} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{P1$\to$L2 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{86} & 1 & 1 & \textcolor{stateS}{\textbf{S}} \\
-\hline
-6 & \makecell[l]{P1\\reads X4} & \textcolor{messageblue}{P1$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{\{L2 snoops + L2$\to$MEM wb\}} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P1 data} \textcolor{timecolor}{(3)} & \textcolor{timecolor}{316} & 0 & 1 & \textcolor{stateE}{\textbf{E}} \\
-\hline
-\end{tabular}
-}
-\end{table}
-
-\begin{columns}[T]
-\column{0.48\textwidth}
-\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, fonttitle=\footnotesize, title=Key Observations]
-\footnotesize
-\textbullet~\textcolor{timecolor}{(cycles)}: Time for each message\\
-\textbullet~\{Braces\}: Parallel operations\\
-\textbullet~wb = writeback, rd = read\\
-\textbullet~Direct-mapped $\Rightarrow$ frequent evictions
-\end{tcolorbox}
-
-\column{0.48\textwidth}
-\begin{tcolorbox}[colback=blue!10, colframe=blue!60, fonttitle=\footnotesize, title=Critical Paths]
-\footnotesize
-\textbullet~Longest: Step 4 (356ns) -- eviction + snoop + fetch\\
-\textbullet~Shortest: Step 5 (86ns) -- data from modified cache\\
-\textbullet~Memory writes on evictions \& snoops
-\end{tcolorbox}
-\end{columns}
 \end{frame}
 
 
