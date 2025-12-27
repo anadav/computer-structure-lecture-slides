@@ -2216,57 +2216,156 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Prefetching}
+\begin{frame}{Hardware Data Prefetching}
+\textbf{Predict future data accesses based on observed patterns}
+\vspace{0.1em}
+
+% Streaming prefetcher
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
 \begin{itemize}
-  \item \textbf{Hardware Data Prefetching -- predict future data accesses}
+  \item \textbf{Streaming prefetcher}
   \begin{itemize}
-    \item Next sequential / Streaming prefetcher
-    \begin{itemize}
-      \item Triggered by an ascending access to very recently loaded data
-      \item Fetches the next line, assuming a streaming load
-    \end{itemize}
-    \item Stride prefetcher
-    \begin{itemize}
-      \item Tracks individual load instructions, detecting a regular stride
-      \item Prefetch address = current address + stride
-      \item Both forward and backward
-    \end{itemize}
-    \item General pattern prefetcher
-    \begin{itemize}
-      \item Identifies patterns of Load address distances
-    \end{itemize}
-  \end{itemize}
-  
-  \item \textbf{Data has to be prefetched before it is needed}
-  \begin{itemize}
-    \item The prefetcher aggressiveness has to be tuned
-    \item How fast and how far ahead to issue the prefetch request, such that data arrives on time, before it is needed
+    \item Triggered by ascending access to recent data
+    \item Fetches next sequential line(s)
   \end{itemize}
 \end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[baseline=(current bounding box.center),
+  cell/.style={draw, minimum width=0.32cm, minimum height=0.3cm, font=\tiny, inner sep=0pt},
+  acc/.style={cell, fill=green!40},
+  pref/.style={cell, fill=blue!25},
+]
+\matrix[matrix of nodes, column sep=-\pgflinewidth, ampersand replacement=\&,
+  nodes={cell}] (m) {
+  |[acc]| 1 \& |[acc]| 2 \& |[acc]| 3 \& |[acc]| 4 \& |[acc]| 5 \& |[acc]| 6 \& |[pref]| 7 \& |[pref]| 8 \& |[pref]| 9 \& |[pref]| 10 \\
+};
+\draw[->, thick, blue] (m-1-6.south) -- ++(0,-0.08) -| (m-1-10.south);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.15em}
+
+% Stride prefetcher
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+  \item \textbf{Stride prefetcher}
+  \begin{itemize}
+    \item Tracks loads, detects regular stride
+    \item Prefetch = current addr + stride
+  \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[baseline=(current bounding box.center),
+  cell/.style={draw, minimum width=0.32cm, minimum height=0.3cm, font=\tiny, inner sep=0pt},
+  acc/.style={cell, fill=green!40},
+  pref/.style={cell, fill=blue!25},
+]
+\matrix[matrix of nodes, column sep=-\pgflinewidth, ampersand replacement=\&,
+  nodes={cell}] (m) {
+  |[acc]| 1 \& \phantom{0} \& |[acc]| 2 \& \phantom{0} \& |[acc]| 3 \& \phantom{0} \& |[acc]| 4 \& \phantom{0} \& |[pref]| 5 \& |[pref]| \\
+};
+\draw[->, thick, blue, dashed] (m-1-7.south) to[bend right=15] (m-1-9.south);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.15em}
+
+% General pattern prefetcher
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+  \item \textbf{General pattern prefetcher}
+  \begin{itemize}
+    \item Identifies patterns in address distances
+  \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[baseline=(current bounding box.center),
+  cell/.style={draw, minimum width=0.32cm, minimum height=0.3cm, font=\tiny, inner sep=0pt},
+  acc/.style={cell, fill=green!40},
+  pref/.style={cell, fill=blue!25},
+]
+\matrix[matrix of nodes, column sep=-\pgflinewidth, ampersand replacement=\&,
+  nodes={cell}] (m) {
+  |[acc]| 1 \& |[acc]| 2 \& \phantom{0} \& |[acc]| 3 \& |[acc]| 4 \& \phantom{0} \& |[acc]| 5 \& |[acc]| 6 \& \phantom{0} \& |[pref]| 7 \& |[pref]| \\
+};
+\draw[->, thick, blue, densely dotted] (m-1-8.south) -- ++(0,-0.08) -| (m-1-11.south);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.15em}
+
+% DMP prefetcher
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+  \item \textbf{Data memory-dependent (DMP)}
+  \begin{itemize}
+    \item Examines data values in cache
+    \item Values that look like pointers trigger prefetch
+  \end{itemize}
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[baseline=(current bounding box.center),
+  idx/.style={minimum width=0.55cm, minimum height=0.25cm, font=\tiny, inner sep=0pt},
+  cell/.style={draw, minimum width=0.55cm, minimum height=0.35cm, font=\tiny, inner sep=1pt},
+  acc/.style={cell, fill=green!40},
+  pref/.style={cell, fill=blue!25},
+]
+% Top row: cache line indices
+\matrix[matrix of nodes, column sep=-\pgflinewidth, ampersand replacement=\&,
+  nodes={idx}] (idx) at (0,0.3) {
+  1 \& 2 \& 3 \& 4 \& 5 \& 6 \\
+};
+% Bottom row: contents (some look like pointers)
+\matrix[matrix of nodes, column sep=-\pgflinewidth, ampersand replacement=\&,
+  nodes={cell}] (m) at (0,0) {
+  |[acc]| \& |[acc]| 4 \& \phantom{00} \& |[acc]| 6 \& \phantom{00} \& |[pref]| \\
+};
+% Access arrows (green, curved above)
+\draw[->, thick, green!60!black] (m-1-1.north) to[bend left=40] (m-1-2.north);
+\draw[->, thick, green!60!black] (m-1-2.north) to[bend left=40] (m-1-4.north);
+% Prefetch arrow (blue, curved below)
+\draw[->, thick, blue] (m-1-4.south) to[bend right=30] (m-1-6.south);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.1em}
+\hfill{\scriptsize\color{gray} {\color{green!60!black}$\blacksquare$} accessed \quad {\color{blue!50}$\blacksquare$} prefetched}
 \end{frame}
 
-\begin{frame}{Prefetching (cont.)}
+\begin{frame}{Prefetching: Timing and Trade-offs}
 \begin{itemize}
+  \item \textbf{Data must be prefetched before it is needed}
+  \begin{itemize}
+    \item The prefetcher aggressiveness has to be tuned
+    \item How fast and how far ahead to issue requests, so data arrives on time
+  \end{itemize}
+
   \item \textbf{Prefetching relies on extra memory bandwidth}
   \begin{itemize}
-    \item Too aggressive / inaccurate prefetching slows down demand fetches and pollutes the cache
-    \begin{itemize}
-      \item Hurts performance
-    \end{itemize}
+    \item Too aggressive/inaccurate prefetching slows demand fetches and pollutes cache
   \end{itemize}
-  
+
   \item \textbf{Software Prefetching}
   \begin{itemize}
     \item Special prefetching instructions that cannot cause faults
   \end{itemize}
-  
+
   \item \textbf{Instruction Prefetching}
   \begin{itemize}
     \item On a cache miss, prefetch sequential cache lines into stream buffers
-    \item Branch predictor directed prefetching
-    \begin{itemize}
-      \item Let branch predictor run ahead
-    \end{itemize}
+    \item Branch predictor directed prefetching -- let predictor run ahead
   \end{itemize}
 \end{itemize}
 \end{frame}
