@@ -3232,34 +3232,56 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed
 \end{enumerate}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Stores Not Reordered with Older Loads}
-Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed.\\[2pt]
-\begin{columns}[T]
-\column{0.48\textwidth}
-\textbf{Processor 0}
-\begin{minted}[fontsize=\small]{text}
-r1 <- Load [X]   // L1
-Store [Y] <- 1   // S1
-\end{minted}
-\column{0.48\textwidth}
-\textbf{Processor 1}
-\begin{minted}[fontsize=\small]{text}
-r2 <- Load [Y]   // L2
-Store [X] <- 1   // S2
-\end{minted}
-\end{columns}
+\begin{frame}{x86 Ordering: Stores Not Reordered with Older Loads}
+Stores are not reordered with older loads.
 
-\vspace{0.2cm}
-\textbf{Happens-before analysis:}
-\begin{itemize}
-  \item On P0: $\text{L1} \rightarrow \text{S1}$ (store not reordered before load)
-  \item On P1: $\text{L2} \rightarrow \text{S2}$ (store not reordered before load)
-  \item If r1=1, then L1 observed S2, meaning S2 happened
-  \item Since $\text{L2} \rightarrow \text{S2}$, L2 happened before S2
-  \item Since $\text{L1} \rightarrow \text{S1}$, S1 happens after L1 observed S2
-  \item Therefore, L2 should observe S1 (r2=1 or see S1 happen later)
-  \item But if both r1=1 and r2=1, there's a cycle: impossible!
-\end{itemize}
+\vspace{0.15cm}
+Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed.
+
+\begin{center}
+\begin{tikzpicture}
+  % Processor 0 timeline
+  \node[font=\bfseries] (p0) at (0.8, 0) {Processor 0};
+  \node[font=\scriptsize, gray] at (-1.3, -0.8) {L1};
+  \node[hbinstr] (l1) at (-0.8, -0.8) {r1 <- Load [\textcolor{varX}{X}]};
+  \node[font=\scriptsize, gray] at (-1.3, -2.0) {S1};
+  \node[hbinstr] (s1) at (-0.8, -2.0) {Store [\textcolor{varY}{Y}] <- 1};
+
+  % Processor 1 timeline
+  \node[font=\bfseries] (p1) at (8, 0) {Processor 1};
+  \node[hbinstr] (l2) at (6.2, -0.8) {r2 <- Load [\textcolor{varY}{Y}]};
+  \node[font=\scriptsize, gray] at (9.5, -0.8) {L2};
+  \node[hbinstr] (s2) at (6.2, -2.0) {Store [\textcolor{varX}{X}] <- 1};
+  \node[font=\scriptsize, gray] at (9.5, -2.0) {S2};
+
+  % Arrow 1: L1 -> S1 (program order)
+  \draw[hbprogorder] ([xshift=-0.3cm]l1.south) -- ([xshift=-0.3cm]s1.north)
+    node[hblabel, midway, left=2pt, draw, thin] {1};
+
+  % Arrow 2: L2 -> S2 (program order)
+  \draw[hbprogorder] ([xshift=-0.3cm]l2.south) -- ([xshift=-0.3cm]s2.north)
+    node[hblabel, midway, left=2pt, draw, thin] {2};
+
+  % Arrow 3: S2 -> L1 (cross-processor, X variable)
+  \draw[hbcross, varX] (s2.west) to[out=170, in=-10]
+    node[hblabel, below=1pt, pos=0.5, draw, thin] {3} (l1.east);
+
+  % Arrow 4: S1 -> L2 (cross-processor, Y variable)
+  \draw[hbcross, varY] (s1.east) to[out=10, in=190]
+    node[hblabel, above=1pt, pos=0.5, draw, thin] {4} (l2.west);
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.1cm}
+{\footnotesize\textbf{Happens-before analysis:}}
+\begin{enumerate}[itemsep=0pt, topsep=2pt, leftmargin=1.5em]
+  \footnotesize
+  \item L1 $\rightarrow$ S1 --- program order (store after load)
+  \item L2 $\rightarrow$ S2 --- program order (store after load)
+  \item S2 $\rightarrow$ L1 --- L1 reads X=1 from S2 (if r1=1)
+  \item S1 $\rightarrow$ L2 --- L2 reads Y=1 from S1 (if r2=1)
+  \item Cycle: S2 $\rightarrow$ L1 $\rightarrow$ S1 $\rightarrow$ L2 $\rightarrow$ S2 --- happens-before cannot cycle!
+\end{enumerate}
 \end{frame}
 
 \begin{frame}[fragile]{x86 Ordering: Loads May Reorder with Older Stores to Different Locations}
