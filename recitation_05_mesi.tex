@@ -408,7 +408,7 @@ P0 reads X & S & I & I & S & 1001 \\
 \vspace{-3mm}
 }
 
-\begin{frame}{Three-Core MESI Problem -- Step 1}
+\begin{frame}{Three-Core MESI Problem}
 \mesitwohdr
 \begin{table}[h]
 \centering
@@ -423,56 +423,17 @@ P0 reads X & S & I & I & S & 1001 \\
 \hline
 Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
 \hline
-\rowcolor{yellow!20}
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
+P2 reads A & \onslide<1->{I} & \onslide<1->{E} & \onslide<1->{I} & \onslide<1->{0} & \onslide<1->{1} & \onslide<1->{0} & \onslide<1->{220} & \onslide<1->{\vspace{-3mm}\textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data}} \\
 \hline
-P2 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
+P2 writes A & \onslide<2->{I} & \onslide<2->{M} & \onslide<2->{I} & \onslide<2->{0} & \onslide<2->{1} & \onslide<2->{0} & \onslide<2->{0} & \onslide<2->{\vspace{-3mm}\textcolor{messageblue}{No messages (silent E$\to$M transition)}} \\
 \hline
-P1 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+P1 reads A & \onslide<3->{S} & \onslide<3->{S} & \onslide<3->{I} & \onslide<3->{1} & \onslide<3->{1} & \onslide<3->{0} & \onslide<3->{40} & \onslide<3->{\vspace{-3mm}\textcolor{messageblue}{L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1}} \\
 \hline
-P2 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+P2 reads A & \onslide<4->{S} & \onslide<4->{S} & \onslide<4->{I} & \onslide<4->{1} & \onslide<4->{1} & \onslide<4->{0} & \onslide<4->{0} & \onslide<4->{\vspace{-3mm}\textcolor{messageblue}{Cache hit -- no messages}} \\
 \hline
-P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+P3 reads A & \onslide<5->{S} & \onslide<5->{S} & \onslide<5->{S} & \onslide<5->{1} & \onslide<5->{1} & \onslide<5->{1} & \onslide<5->{20} & \onslide<5->{\vspace{-3mm}\textcolor{messageblue}{L1 miss $\to$ L2, L2 hit $\to$ P3 data}} \\
 \hline
-P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-\end{tabular}
-}
-\end{table}
-
-\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
-\footnotesize
-Cold miss $\Rightarrow$ full memory round-trip. \textbf{E} state since P2 is the only holder.
-\end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Three-Core MESI Problem -- Step 2}
-\mesitwohdr
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.1}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
-\hline
-\rowcolor{gray!20}
-\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
-\rowcolor{gray!20}
- & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
-\hline
-Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
-\hline
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
-\hline
-\rowcolor{yellow!20}
-P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
-\hline
-P1 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-P2 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
+P3 writes A & \onslide<6->{I} & \onslide<6->{I} & \onslide<6->{M} & \onslide<6->{0} & \onslide<6->{0} & \onslide<6->{1} & \onslide<6->{30} & \onslide<6->{\vspace{-3mm}\textcolor{messageblue}{RFO $\to$ L2, L2 snoop invalidate P1+P2, L2 $\to$ P3 grant}} \\
 \hline
 \end{tabular}
 }
@@ -480,159 +441,12 @@ P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
 
 \begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
 \footnotesize
-\textbf{E$\to$M is free!} Silent transition, no bus traffic. Key advantage of Exclusive state.
-\end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Three-Core MESI Problem -- Step 3}
-\mesitwohdr
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.1}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
-\hline
-\rowcolor{gray!20}
-\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
-\rowcolor{gray!20}
- & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
-\hline
-Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
-\hline
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
-\hline
-P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
-\hline
-\rowcolor{yellow!20}
-P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
-\hline
-P2 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-\end{tabular}
-}
-\end{table}
-
-\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
-\footnotesize
-P2 has Modified $\Rightarrow$ L2 snoops, P2 returns dirty data. Both become \textbf{S}.
-\end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Three-Core MESI Problem -- Step 4}
-\mesitwohdr
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.1}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
-\hline
-\rowcolor{gray!20}
-\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
-\rowcolor{gray!20}
- & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
-\hline
-Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
-\hline
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
-\hline
-P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
-\hline
-P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
-\hline
-\rowcolor{yellow!20}
-P2 reads A & S & S & I & 1 & 1 & 0 & 0 & \textcolor{messageblue}{Cache hit -- no messages} \\
-\hline
-P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-\end{tabular}
-}
-\end{table}
-
-\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
-\footnotesize
-L1 cache hit! Data served directly, no bus traffic.
-\end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Three-Core MESI Problem -- Step 5}
-\mesitwohdr
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.1}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
-\hline
-\rowcolor{gray!20}
-\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
-\rowcolor{gray!20}
- & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
-\hline
-Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
-\hline
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
-\hline
-P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
-\hline
-P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
-\hline
-P2 reads A & S & S & I & 1 & 1 & 0 & 0 & \textcolor{messageblue}{Cache hit -- no messages} \\
-\hline
-\rowcolor{yellow!20}
-P3 reads A & S & S & S & 1 & 1 & 1 & 20 & \textcolor{messageblue}{P3: L1 miss $\to$ L2, L2 hit $\to$ P3 data} \\
-\hline
-P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
-\hline
-\end{tabular}
-}
-\end{table}
-
-\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
-\footnotesize
-L2 hit on clean data $\Rightarrow$ no snoop needed. All three now in \textbf{S}.
-\end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Three-Core MESI Problem -- Step 6}
-\mesitwohdr
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.1}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
-\hline
-\rowcolor{gray!20}
-\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
-\rowcolor{gray!20}
- & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
-\hline
-Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
-\hline
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
-\hline
-P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
-\hline
-P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
-\hline
-P2 reads A & S & S & I & 1 & 1 & 0 & 0 & \textcolor{messageblue}{Cache hit -- no messages} \\
-\hline
-P3 reads A & S & S & S & 1 & 1 & 1 & 20 & \textcolor{messageblue}{P3: L1 miss $\to$ L2, L2 hit $\to$ P3 data} \\
-\hline
-\rowcolor{yellow!20}
-P3 writes A & I & I & M & 0 & 0 & 1 & 30 & \textcolor{messageblue}{P3: RFO $\to$ L2, L2 snoop invalidate P1+P2, L2 $\to$ P3 grant} \\
-\hline
-\end{tabular}
-}
-\end{table}
-
-\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
-\footnotesize
-S$\to$M requires RFO $\Rightarrow$ L2 invalidates P1+P2. P3 gets exclusive ownership.
+\only<1>{Cold miss $\Rightarrow$ full memory round-trip. \textbf{E} state since P2 is the only holder.}%
+\only<2>{\textbf{E$\to$M is free!} Silent transition, no bus traffic. Key advantage of Exclusive state.}%
+\only<3>{P2 has Modified $\Rightarrow$ L2 snoops, P2 returns dirty data. Both become \textbf{S}.}%
+\only<4>{L1 cache hit! Data served directly, no bus traffic.}%
+\only<5>{L2 hit on clean data $\Rightarrow$ no snoop needed. All three now in \textbf{S}.}%
+\only<6>{S$\to$M requires RFO $\Rightarrow$ L2 invalidates P1+P2. P3 gets exclusive ownership.}%
 \end{tcolorbox}
 \end{frame}
 
