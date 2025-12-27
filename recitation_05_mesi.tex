@@ -96,6 +96,12 @@
 \begin{document}
 \frame{\titlepage}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Cache Coherence Basics}
+
 %==========================================
 \begin{frame}{Multi-processor System}
 \begin{block}{Memory System Coherence}
@@ -296,32 +302,26 @@ The L2 cache must guarantee that all L1 cache lines are included in L2
 \end{frame}
 
 %==========================================
-\begin{frame}{MESI Protocol States - Summary}
-\begin{table}[h]
-\centering
-\begin{tabular}{|c|c|c|c|}
-\hline
-\rowcolor{blue!20}
-\textbf{State} & \textbf{Valid} & \textbf{Modified} & \textbf{Copies may exist} \\
-& & & \textbf{in other processors} \\
-\hline
-Invalid & No & N.A. & N.A. \\
-\hline
-Shared & Yes & No & Yes \\
-\hline
-Exclusive & Yes & No & No \\
-\hline
-Modified & Yes & Yes & No \\
-\hline
+\begin{frame}{MESI Protocol States -- Summary}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+State & Valid & Modified & Copies elsewhere?\\
+\midrule
+\textbf{\textcolor{invalidcolor}{I}}nvalid   & No  & N/A  & possibly\\
+\textbf{\textcolor{sharedcolor}{S}}hared    & Yes & No   & possibly\\
+\textbf{\textcolor{exclusivecolor}{E}}xclusive & Yes & No   & No\\
+\textbf{\textcolor{modifiedcolor}{M}}odified  & Yes & Yes  & No\\
+\bottomrule
 \end{tabular}
-\end{table}
+\end{center}
 
 \vspace{1em}
-\begin{block}{Important Rule}
-A modified line must be exclusive
+\begin{block}{Write Requires Ownership}
+A modified line must be exclusive:
 \begin{itemize}
 \item Otherwise, another processor with the line will be using stale data
-\item Therefore, before modifying a line, a processor must request ownership
+\item To modify, a core must first obtain \textbf{ownership} (no other sharers)
 \end{itemize}
 \end{block}
 \end{frame}
@@ -361,12 +361,14 @@ P0 reads X & S & I & I & S & 1001 \\
 \end{itemize}
 \end{frame}
 
+\section{Question 1: Three-Core MESI}
+
 %==========================================
-\begin{frame}{MESI Question 2 - Setup}
+\begin{frame}{Three-Core MESI Problem -- Setup}
 \textbf{System Configuration:}
 \begin{itemize}
-\item 3 Core processor with MESI
-\item Each core has an L1 cache, L2 cache is shared
+\item 3 Core processor with MESI protocol
+\item Each core has an L1 cache, L2 cache is shared (inclusive)
 \end{itemize}
 
 \textbf{Message Types:}
@@ -375,7 +377,7 @@ P0 reads X & S & I & I & S & 1001 \\
 \textbf{L1 $\rightarrow$ L2:}
 \begin{itemize}
 \item Read Address (A)
-\item RFO (A) - Request for Ownership
+\item RFO (A) -- Request for Ownership
 \item Data (A)
 \end{itemize}
 
@@ -384,7 +386,7 @@ P0 reads X & S & I & I & S & 1001 \\
 \begin{itemize}
 \item Read Address (A) to memory
 \item Data (A) to L1 with MESI state
-\item RFO (A) - after RFO from L1
+\item RFO (A) -- after RFO from L1
 \item Snoop (A) to L1
 \end{itemize}
 \end{columns}
@@ -398,35 +400,243 @@ P0 reads X & S & I & I & S & 1001 \\
 \end{frame}
 
 %==========================================
-\begin{frame}{MESI Question 2 - Solution}
-\tiny
+% Three-Core MESI Problem - Row by row solution
+\newcommand{\mesitwohdr}{%
+\footnotesize
+\textbf{System:} 3-core MESI, L1 private, L2 shared inclusive\hfill
+\textbf{Latencies:} L1$\leftrightarrow$L2: 10ns, L2$\leftrightarrow$Mem: 100ns
+\vspace{-3mm}
+}
+
+\begin{frame}{Three-Core MESI Problem -- Step 1}
+\mesitwohdr
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{1.5cm}|c|c|c|c|c|c|c|p{5cm}|}
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
 \hline
-\rowcolor{blue!20}
-\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \multicolumn{3}{c|}{\textbf{CVBs}} & \textbf{Time} & \textbf{Messages} \\
-\cline{5-7}
-& & & & P1 & P2 & P3 & & \\
+\rowcolor{gray!20}
+\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
 \hline
-Initial & I & I & I & 0 & 0 & 0 & 0 & - \\
+Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
 \hline
-P2 reads A & I & E & I & 0 & 1 & 0 & 220 & L1 miss/req to L2, L2 Miss/req to Mem, Mem data to L2, L2 data to L1 \\
+\rowcolor{yellow!20}
+P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
 \hline
-P2 writes A & I & M & I & 0 & 1 & 0 & 0 & No messages (local operation) \\
+P2 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
 \hline
-P1 reads A & S & S & I & 1 & 1 & 0 & 40 & P1: miss/req to L2, P2: L2→L1 snoop, P2: L1 to L2 data, P1: L2 to L1 data \\
+P1 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
 \hline
-P2 reads A & S & S & I & 1 & 1 & 0 & 0 & Hit in cache \\
+P2 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
 \hline
-P3 reads A & S & S & S & 1 & 1 & 1 & 20 & P3: L1 miss/Req to L2, L2 to P3 data \\
+P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
 \hline
-P3 writes A & I & I & M & 0 & 0 & 1 & 30 & P3: L1 to L2 RFO, L2 snoop P1+P2, L2 to P3 RFO granted \\
+P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
 \hline
 \end{tabular}
+}
 \end{table}
-\normalsize
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
+\footnotesize
+Cold miss $\Rightarrow$ full memory round-trip. \textbf{E} state since P2 is the only holder.
+\end{tcolorbox}
 \end{frame}
+
+\begin{frame}{Three-Core MESI Problem -- Step 2}
+\mesitwohdr
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\rowcolor{gray!20}
+\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
+\hline
+Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
+\hline
+P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
+\hline
+\rowcolor{yellow!20}
+P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
+\hline
+P1 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+P2 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
+\footnotesize
+\textbf{E$\to$M is free!} Silent transition, no bus traffic. Key advantage of Exclusive state.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Three-Core MESI Problem -- Step 3}
+\mesitwohdr
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\rowcolor{gray!20}
+\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
+\hline
+Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
+\hline
+P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
+\hline
+P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
+\hline
+\rowcolor{yellow!20}
+P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
+\hline
+P2 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
+\footnotesize
+P2 has Modified $\Rightarrow$ L2 snoops, P2 returns dirty data. Both become \textbf{S}.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Three-Core MESI Problem -- Step 4}
+\mesitwohdr
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\rowcolor{gray!20}
+\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
+\hline
+Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
+\hline
+P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
+\hline
+P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
+\hline
+P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
+\hline
+\rowcolor{yellow!20}
+P2 reads A & S & S & I & 1 & 1 & 0 & 0 & \textcolor{messageblue}{Cache hit -- no messages} \\
+\hline
+P3 reads A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
+\footnotesize
+L1 cache hit! Data served directly, no bus traffic.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Three-Core MESI Problem -- Step 5}
+\mesitwohdr
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\rowcolor{gray!20}
+\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
+\hline
+Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
+\hline
+P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
+\hline
+P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
+\hline
+P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
+\hline
+P2 reads A & S & S & I & 1 & 1 & 0 & 0 & \textcolor{messageblue}{Cache hit -- no messages} \\
+\hline
+\rowcolor{yellow!20}
+P3 reads A & S & S & S & 1 & 1 & 1 & 20 & \textcolor{messageblue}{P3: L1 miss $\to$ L2, L2 hit $\to$ P3 data} \\
+\hline
+P3 writes A & ? & ? & ? & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
+\footnotesize
+L2 hit on clean data $\Rightarrow$ no snoop needed. All three now in \textbf{S}.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{Three-Core MESI Problem -- Step 6}
+\mesitwohdr
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|c|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\rowcolor{gray!20}
+\textbf{Operation} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Time} & \textbf{Messages} \\
+\rowcolor{gray!20}
+ & & & & \multicolumn{3}{c|}{CVB} & (ns) & \\
+\hline
+Initial & I & I & I & 0 & 0 & 0 & 0 & -- \\
+\hline
+P2 reads A & I & E & I & 0 & 1 & 0 & 220 & \textcolor{messageblue}{L1 miss $\to$ L2, L2 miss $\to$ Mem, Mem $\to$ L2 data, L2 $\to$ L1 data} \\
+\hline
+P2 writes A & I & M & I & 0 & 1 & 0 & 0 & \textcolor{messageblue}{No messages (silent E$\to$M transition)} \\
+\hline
+P1 reads A & S & S & I & 1 & 1 & 0 & 40 & \textcolor{messageblue}{P1: L1 miss $\to$ L2, L2 snoop $\to$ P2, P2 data $\to$ L2, L2 data $\to$ P1} \\
+\hline
+P2 reads A & S & S & I & 1 & 1 & 0 & 0 & \textcolor{messageblue}{Cache hit -- no messages} \\
+\hline
+P3 reads A & S & S & S & 1 & 1 & 1 & 20 & \textcolor{messageblue}{P3: L1 miss $\to$ L2, L2 hit $\to$ P3 data} \\
+\hline
+\rowcolor{yellow!20}
+P3 writes A & I & I & M & 0 & 0 & 1 & 30 & \textcolor{messageblue}{P3: RFO $\to$ L2, L2 snoop invalidate P1+P2, L2 $\to$ P3 grant} \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black, top=1mm, bottom=1mm]
+\footnotesize
+S$\to$M requires RFO $\Rightarrow$ L2 invalidates P1+P2. P3 gets exclusive ownership.
+\end{tcolorbox}
+\end{frame}
+
+\section{Protocol Mechanisms}
 
 %==========================================
 \begin{frame}{Read For Ownership (RFO)}
@@ -443,7 +653,7 @@ A signal from private to shared cache (L1$\rightarrow$L2) requesting cache line 
 \end{enumerate}
 
 \vspace{1em}
-\begin{alertblock}{Key Point}
+\begin{alertblock}{RFO Guarantees Coherence}
 RFO ensures exclusive access before modification, maintaining cache coherence
 \end{alertblock}
 \end{frame}
@@ -464,7 +674,7 @@ L2 sends a notification to all processors before delivering the actual data to t
 \end{enumerate}
 
 \vspace{0.2em}
-\begin{alertblock}{Note}
+\begin{alertblock}{GO and Fill Timing}
 GO and data may be sent at different cycles:
 \vspace{-0.3em}
 \begin{columns}
@@ -480,8 +690,10 @@ GO and data may be sent at different cycles:
 \end{alertblock}
 \end{frame}
 
+\section{Question 2: MESI Coherence}
+
 %==========================================
-\begin{frame}{MESI Question 3 - Exam Problem Setup}
+\begin{frame}{MESI Coherence Problem -- Setup}
 \footnotesize
 \textbf{System Configuration:}
 \begin{itemize}
@@ -504,248 +716,367 @@ GO and data may be sent at different cycles:
 \item X1-X4 map to same L1 set, X5 to different L1 set
 \item X1-X2 map to same L2 set, X3-X5 to different L2 set
 \end{itemize}
+
+\vspace{0.5em}
+\begin{tcolorbox}[colback=blue!5, colframe=blue!50, fonttitle=\footnotesize, title=Problem]
+For each operation, determine: messages sent, time taken, CVB values, and final MESI state.
+\end{tcolorbox}
 \end{frame}
 
-\begin{frame}{MESI Question 3 - Solution}
-\tiny
-\vspace{-0.1cm}
+%==========================================
+% MESI Coherence Problem - Row by row solution
+\newcommand{\mesiheader}{%
 \begin{columns}[t]
 \column{0.5\textwidth}
 \textbf{System:} 2 proc, MESI, L1 priv, L2 shared incl, direct-map\\
 \textbf{Latencies:} L1: 3ns, L1$\leftrightarrow$L2: 20ns, L2$\leftrightarrow$Mem: 90ns
 \column{0.5\textwidth}
-\textbf{L1 Mapping:} X1,X2,X3,X4 → same set; X5 → different set\\
-\textbf{L2 Mapping:} X1,X2 → same set; X3,X4,X5 → different set
+\textbf{L1 Mapping:} X1,X2,X3,X4 $\to$ same set; X5 $\to$ different set\\
+\textbf{L2 Mapping:} X1,X2 $\to$ same set; X3,X4,X5 $\to$ different sets
 \end{columns}
+\vspace{-5mm}
+}
 
-\vspace{-0.2cm}
+\begin{frame}{MESI Coherence Problem -- Step 1}
+\scriptsize
+\mesiheader
 \begin{table}[h]
 \centering
-\renewcommand{\arraystretch}{1.6}
+\renewcommand{\arraystretch}{1.4}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{8cm}|c|c|c|c|}
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
 \hline
 \rowcolor{gray!20}
-\# & \textbf{Op} & \textbf{Messages Sent} & \textbf{Time} & \multicolumn{2}{c|}{\textbf{CVB}} & \textbf{State} \\
-\cline{5-6}
-\rowcolor{gray!20}
- & & & (ns) & P0 & P1 & \\
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
 \hline
-1 & P0 reads X1 &
-\only<2->{\textcolor{messageblue}{P0→L1~miss, P0-L1→L2~read~miss, L2→MEM~read, MEM→L2~data, L2→P0-L1~data, P0→data}} &
-\only<2->{\textcolor{timecolor}{226}} &
-\only<2->{1} &
-\only<2->{0} &
-\only<2->{\cellcolor{stateE}E} \\
+\rowcolor{yellow!20}
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
 \hline
-2 & P1~writes~X3 &
-P1→L1~miss, P1-L1→L2~read~miss, L2→MEM~read, MEM→L2~data, L2→P1-L1~data, P1~write &
-226 &
-0 &
-1 &
-\cellcolor{stateM}M \\
+2 & P1 writes X3 & ? & ? & ? & ? & ? \\
 \hline
-
-3 & P1~writes~X4 &
-\only<2->{\textcolor{messageblue}{P1→L1~miss, \underline{P1-L1→L2~wr~X3}, P1-L1→L2~rd~miss, \underline{L2→MEM~wr}, L2→MEM~rd, MEM→L2, L2→P1-L1, P1~wr}} &
-\only<2->{\textcolor{timecolor}{336}} &
-\only<2->{0} &
-\only<2->{1} &
-\only<2->{\cellcolor{stateM}M} \\
+3 & P1 writes X4 & ? & ? & ? & ? & ? \\
 \hline
-4 & P1~writes~X5 &
-\only<2->{\textcolor{messageblue}{P1→L1~miss, P1-L1→L2~rd~miss, \underline{L2→P1~snoop~X4}, \underline{P1→L2~data}, \underline{L2→MEM~wr}, L2→MEM~rd, MEM→L2, L2→P1, P1~wr}} &
-\only<2->{\textcolor{timecolor}{356}} &
-\only<2->{0} &
-\only<2->{1} &
-\only<2->{\cellcolor{stateM}M} \\
+4 & P1 writes X5 & ? & ? & ? & ? & ? \\
 \hline
-5 & P0~reads~X5 &
-\only<2->{\textcolor{messageblue}{P0→L1~miss, P0-L1→L2~rd~miss, \textbf{L2→P1~snoop}, \textbf{P1→L2~data}, L2→P0~data, P0~read}} &
-\only<2->{\textcolor{timecolor}{86}} &
-\only<2->{1} &
-\only<2->{1} &
-\only<2->{\cellcolor{stateS}S} \\
+5 & P0 reads X5 & ? & ? & ? & ? & ? \\
 \hline
-6 & P1~reads~X4 &
-\only<2->{\textcolor{messageblue}{P1→L1~miss, P1-L1→L2~rd~miss, \{L2→P1+P0~snoop, L2→MEM~wr~X5\}, L2→MEM~rd, MEM→L2, L2→P1, P1~rd}} &
-\only<2->{\textcolor{timecolor}{316}} &
-\only<2->{0} &
-\only<2->{1} &
-\only<2->{\cellcolor{stateE}E} \\
+6 & P1 reads X4 & ? & ? & ? & ? & ? \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-\pause
-\vspace{-0.2cm}
-\visible<3->{
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black]
+\footnotesize
+Cold miss $\Rightarrow$ full memory round-trip. \textbf{E} state since P0 is the only holder.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{MESI Coherence Problem -- Step 2}
+\scriptsize
+\mesiheader
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\hline
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
+\hline
+\rowcolor{yellow!20}
+2 & P1 writes X3 & \textcolor{messageblue}{P1$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data, write} & \textcolor{timecolor}{226} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+3 & P1 writes X4 & ? & ? & ? & ? & ? \\
+\hline
+4 & P1 writes X5 & ? & ? & ? & ? & ? \\
+\hline
+5 & P0 reads X5 & ? & ? & ? & ? & ? \\
+\hline
+6 & P1 reads X4 & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black]
+\footnotesize
+Cold miss for X3 $\Rightarrow$ fetch from memory, then write locally. \textbf{M} state (dirty).
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{MESI Coherence Problem -- Step 3}
+\scriptsize
+\mesiheader
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\hline
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
+\hline
+2 & P1 writes X3 & \textcolor{messageblue}{P1$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data, write} & \textcolor{timecolor}{226} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+\rowcolor{yellow!20}
+3 & P1 writes X4 & \textcolor{messageblue}{L1 miss, \underline{L1$\to$L2 wb X3}, L1$\to$L2 rd miss, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{336} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+4 & P1 writes X5 & ? & ? & ? & ? & ? \\
+\hline
+5 & P0 reads X5 & ? & ? & ? & ? & ? \\
+\hline
+6 & P1 reads X4 & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black]
+\footnotesize
+X3/X4 same L1 set $\Rightarrow$ evict X3 (Modified $\Rightarrow$ writeback). \underline{Underlined} = eviction writes.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{MESI Coherence Problem -- Step 4}
+\scriptsize
+\mesiheader
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\hline
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
+\hline
+2 & P1 writes X3 & \textcolor{messageblue}{P1$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data, write} & \textcolor{timecolor}{226} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+3 & P1 writes X4 & \textcolor{messageblue}{L1 miss, \underline{L1$\to$L2 wb X3}, L1$\to$L2 rd miss, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{336} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+\rowcolor{yellow!20}
+4 & P1 writes X5 & \textcolor{messageblue}{L1 miss, L1$\to$L2 rd miss, \underline{L2$\to$L1 snoop X4}, \underline{L1$\to$L2 data}, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{356} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+5 & P0 reads X5 & ? & ? & ? & ? & ? \\
+\hline
+6 & P1 reads X4 & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black]
+\footnotesize
+L2 miss $\Rightarrow$ \textbf{Inclusion}: L2 snoops P1 for X4 (modified), gets writeback. Longest path!
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{MESI Coherence Problem -- Step 5}
+\scriptsize
+\mesiheader
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\hline
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
+\hline
+2 & P1 writes X3 & \textcolor{messageblue}{P1$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data, write} & \textcolor{timecolor}{226} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+3 & P1 writes X4 & \textcolor{messageblue}{L1 miss, \underline{L1$\to$L2 wb X3}, L1$\to$L2 rd miss, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{336} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+4 & P1 writes X5 & \textcolor{messageblue}{L1 miss, L1$\to$L2 rd miss, \underline{L2$\to$L1 snoop X4}, \underline{L1$\to$L2 data}, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{356} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+\rowcolor{yellow!20}
+5 & P0 reads X5 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 rd hit, \textbf{L2$\to$P1 snoop}, \textbf{P1$\to$L2 data}, L2$\to$P0 data} & \textcolor{timecolor}{86} & 1 & 1 & \cellcolor{stateS}S \\
+\hline
+6 & P1 reads X4 & ? & ? & ? & ? & ? \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black]
+\footnotesize
+L2 hit but P1 has X5 Modified $\Rightarrow$ snoop gets dirty data. Both become \textbf{S}. Shortest path!
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{MESI Coherence Problem -- Step 6}
+\scriptsize
+\mesiheader
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\hline
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
+\hline
+2 & P1 writes X3 & \textcolor{messageblue}{P1$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data, write} & \textcolor{timecolor}{226} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+3 & P1 writes X4 & \textcolor{messageblue}{L1 miss, \underline{L1$\to$L2 wb X3}, L1$\to$L2 rd miss, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{336} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+4 & P1 writes X5 & \textcolor{messageblue}{L1 miss, L1$\to$L2 rd miss, \underline{L2$\to$L1 snoop X4}, \underline{L1$\to$L2 data}, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{356} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+5 & P0 reads X5 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 rd hit, \textbf{L2$\to$P1 snoop}, \textbf{P1$\to$L2 data}, L2$\to$P0 data} & \textcolor{timecolor}{86} & 1 & 1 & \cellcolor{stateS}S \\
+\hline
+\rowcolor{yellow!20}
+6 & P1 reads X4 & \textcolor{messageblue}{L1 miss, L1$\to$L2 rd miss, \{L2$\to$P0+P1 snoop, L2$\to$MEM wb X5\}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$P1} & \textcolor{timecolor}{316} & 0 & 1 & \cellcolor{stateE}E \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50!black]
+\footnotesize
+L1+L2 miss $\Rightarrow$ fetch from memory. X5 evicted from L2 $\Rightarrow$ snoop+writeback. \{braces\} = parallel.
+\end{tcolorbox}
+\end{frame}
+
+\begin{frame}{MESI Coherence Problem -- Summary}
+\scriptsize
+\mesiheader
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|l|>{\raggedright\arraybackslash}p{9cm}|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time (ns)} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
+\hline
+1 & P0 reads X1 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data} & \textcolor{timecolor}{226} & 1 & 0 & \cellcolor{stateE}E \\
+\hline
+2 & P1 writes X3 & \textcolor{messageblue}{P1$\to$L1 miss, L1$\to$L2 read miss, L2$\to$MEM read, MEM$\to$L2 data, L2$\to$L1 data, write} & \textcolor{timecolor}{226} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+3 & P1 writes X4 & \textcolor{messageblue}{L1 miss, \underline{L1$\to$L2 wb X3}, L1$\to$L2 rd miss, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{336} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+4 & P1 writes X5 & \textcolor{messageblue}{L1 miss, L1$\to$L2 rd miss, \underline{L2$\to$L1 snoop X4}, \underline{L1$\to$L2 data}, \underline{L2$\to$MEM wb}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$L1, wr} & \textcolor{timecolor}{356} & 0 & 1 & \cellcolor{stateM}M \\
+\hline
+5 & P0 reads X5 & \textcolor{messageblue}{P0$\to$L1 miss, L1$\to$L2 rd hit, \textbf{L2$\to$P1 snoop}, \textbf{P1$\to$L2 data}, L2$\to$P0 data} & \textcolor{timecolor}{86} & 1 & 1 & \cellcolor{stateS}S \\
+\hline
+6 & P1 reads X4 & \textcolor{messageblue}{L1 miss, L1$\to$L2 rd miss, \{L2$\to$P0+P1 snoop, L2$\to$MEM wb X5\}, L2$\to$MEM rd, MEM$\to$L2, L2$\to$P1} & \textcolor{timecolor}{316} & 0 & 1 & \cellcolor{stateE}E \\
+\hline
+\end{tabular}
+}
+\end{table}
+
 \begin{columns}[T]
 \column{0.48\textwidth}
-\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, fonttitle=\tiny, title=Key Observations]
-\vspace{-0.2cm}
-\tiny
-• \underline{Underlined}: Eviction writes\\
-• \textbf{Bold}: Modified data snoops\\
-• \{\}: Parallel operations\\
-• Row 3: X3 evicted for X4\\
-• Row 4: X4 evicted for X5
-\vspace{-0.2cm}
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, fonttitle=\footnotesize, title=Key Observations]
+\footnotesize
+\textbullet~\underline{Underlined}: Eviction writebacks\\
+\textbullet~\textbf{Bold}: Modified data snoops\\
+\textbullet~\{Braces\}: Parallel operations\\
+\textbullet~Direct-mapped $\Rightarrow$ frequent evictions
 \end{tcolorbox}
 
 \column{0.48\textwidth}
-\begin{tcolorbox}[colback=blue!10, colframe=blue!60, fonttitle=\tiny, title=Critical Paths]
-\tiny
-• Longest: Row 4 (356ns) - eviction + snoop + fetch\\
-• Shortest: Row 5 (86ns) - data from P1's modified cache\\
-• Memory writes happen on evictions \& snoops
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, fonttitle=\footnotesize, title=Critical Paths]
+\footnotesize
+\textbullet~Longest: Step 4 (356ns) -- eviction + snoop + fetch\\
+\textbullet~Shortest: Step 5 (86ns) -- data from modified cache\\
+\textbullet~Memory writes on evictions \& snoops
 \end{tcolorbox}
 \end{columns}
-}
-
 \end{frame}
 
 
-\begin{frame}{Multi-processor System: Example (Part 1)}
-\begin{columns}[T]
-\column{0.45\textwidth}
-\textbf{Sequence of operations:}
-\begin{enumerate}
-\item P1 reads address [1000]
-\item P1 writes to address [1000]
-\end{enumerate}
-
-\vspace{1em}
-\textbf{Initial state:}
-\begin{itemize}
-\item Memory[1000] = 5
-\item Both L1 caches empty (Invalid)
-\item L2 cache empty
-\end{itemize}
-
-\pause
-\vspace{1em}
-\textbf{\color{blue}After operations:}
-\begin{itemize}
-\item<2-> \textcolor{blue}{P1 cache: Modified state}
-\item<3-> \textcolor{blue}{Value changed: 5 → 6}
-\item<4-> \textcolor{blue}{P2 cache: Still Invalid}
-\end{itemize}
-
-\column{0.55\textwidth}
-\pause
-\begin{tikzpicture}[scale=0.8, transform shape]
-% Define colors
-\definecolor{cachecolor}{rgb}{0.9, 0.95, 0.9}
-\definecolor{memcolor}{rgb}{1.0, 0.95, 0.85}
-
-% Define styles
-\tikzstyle{processor} = [rectangle, draw, fill=blue!20, minimum width=2.5cm, minimum height=1cm]
-\tikzstyle{cache} = [rectangle, draw, fill=cachecolor, minimum width=3cm, minimum height=1.5cm]
-\tikzstyle{memory} = [rectangle, draw, fill=memcolor, minimum width=4cm, minimum height=1cm]
-\tikzstyle{arrow} = [->, thick, >=stealth]
-
-% Processors
-\node[processor] (p1) at (0,4) {Processor 1};
-\node[processor] (p2) at (5,4) {Processor 2};
-
-% L1 Caches
-\node[cache] (l1p1) at (0,2) {L1 Cache};
-\node[cache] (l1p2) at (5,2) {L1 Cache};
-
-% L2 Cache
-\node[cache, minimum width=6cm, fill=cachecolor!70] (l2) at (2.5,0) {L2 Cache (Shared)};
-
-% Memory
-\node[memory, minimum width=6cm] (mem) at (2.5,-2) {Memory};
-
-% Connections
-\draw[arrow] (p1) -- (l1p1);
-\draw[arrow] (p2) -- (l1p2);
-\draw[arrow] (l1p1) -- (l2);
-\draw[arrow] (l1p2) -- (l2);
-\draw[arrow] (l2) -- (mem);
-
-% Cache contents - shown after pause
-\visible<3->{
-    % P1 L1 content
-    \node[draw=red, thick, fill=modifiedcolor, font=\small] at (0,2) {
-        \begin{tabular}{c}
-        [1000]: 6\\
-        \textbf{M}
-        \end{tabular}
-    };
-}
-
-\visible<4->{
-    % P2 L1 content
-    \node[draw=gray, dashed, font=\small] at (5,2) {
-        \begin{tabular}{c}
-        Invalid\\
-        \textbf{I}
-        \end{tabular}
-    };
-}
-
-\visible<5->{
-    % L2 content with CVB
-    \node[font=\small] at (2.5,0) {
-        \begin{tabular}{c}
-        [1000]: 5 (stale)\\
-        CVB: 001
-        \end{tabular}
-    };
-}
-
-\visible<6->{
-    % Memory content
-    \node[font=\small] at (2.5,-2) {
-        \begin{tabular}{c}
-        [1000]: 5\\
-        (not updated)
-        \end{tabular}
-    };
-}
-
-% Annotations
-\visible<3->{
-    \node[text=red, font=\footnotesize] at (-2,1.5) {Modified};
-    \draw[->, red, thick] (-1.5,1.5) -- (-0.5,2);
-}
-
-\visible<7->{
-    % Transaction flow arrows
-    \node[text=blue, font=\footnotesize, align=center] at (-2.5,3) {1. Read\\miss};
-    \draw[->, blue, thick, dashed] (-1.5,3) -- (-0.3,3) -- (-0.3,2.5);
-    
-    \node[text=green!60!black, font=\footnotesize, align=center] at (-2.5,0.5) {2. Fetch\\from L2};
-    \draw[->, green!60!black, thick, dashed] (-1.5,0.5) -- (-0.3,0.5) -- (-0.3,1.5);
-}
-
-\end{tikzpicture}
-
-\pause[8]
-\vspace{0.5em}
-\begin{tcolorbox}[colback=yellow!10, colframe=orange!50, fonttitle=\footnotesize]
-\textbf{Key Point:} First write after read transitions from E→M locally (no bus transaction needed)
-\end{tcolorbox}
-
-\end{columns}
-\end{frame}
+\section{Ring Interconnect}
 
 %==========================================
 \begin{frame}{Ring Interconnect}
 \begin{center}
-% Placeholder for ring interconnect diagram
-\framebox[0.8\textwidth][c]{
-\parbox{0.75\textwidth}{\centering
-[Diagram: Ring Interconnect Architecture\\
-Cores 0-3 with LLC slices\\
-System Agent, Graphics, IMC, DMI, PCI Express\\
-Connected in ring topology]
-}}
+\begin{tikzpicture}[
+    scale=0.85,
+    % Node styles
+    core/.style={rectangle, draw, thick, fill=blue!30, minimum width=2cm, minimum height=0.8cm, font=\footnotesize\bfseries},
+    llc/.style={rectangle, draw, thick, fill=green!30, minimum width=2cm, minimum height=0.8cm, font=\footnotesize\bfseries},
+    sysagent/.style={rectangle, draw, thick, fill=gray!30, minimum width=2.2cm, minimum height=0.7cm, font=\scriptsize\bfseries},
+    peripheral/.style={rectangle, draw, thick, fill=purple!20, minimum width=1.8cm, minimum height=0.7cm, font=\scriptsize\bfseries},
+    ring/.style={line width=3pt, orange!80!yellow},
+]
+
+% Core + LLC blocks (using relative positioning)
+\node[core] (core0) at (0, 0) {Core 0};
+\node[llc, below=0pt of core0] (llc0) {LLC 0};
+
+\node[core] (core1) at (2.8, 0) {Core 1};
+\node[llc, below=0pt of core1] (llc1) {LLC 1};
+
+\node[core] (core2) at (5.6, 0) {Core 2};
+\node[llc, below=0pt of core2] (llc2) {LLC 2};
+
+\node[core] (core3) at (8.4, 0) {Core 3};
+\node[llc, below=0pt of core3] (llc3) {LLC 3};
+
+% Ring path coordinates
+\coordinate (ring-tl) at ([xshift=-0.5cm, yshift=0.3cm]core0.north west);
+\coordinate (ring-tr) at ([xshift=0.5cm, yshift=0.3cm]core3.north east);
+\coordinate (ring-bl) at ([xshift=-0.5cm, yshift=-0.3cm]llc0.south west);
+\coordinate (ring-br) at ([xshift=0.5cm, yshift=-0.3cm]llc3.south east);
+
+% Draw ring (rectangular path)
+\draw[ring, rounded corners=8pt]
+    (ring-tl) -- (ring-tr) -- (ring-br) -- (ring-bl) -- cycle;
+
+% Ring label
+\node[fill=orange!20, font=\scriptsize\bfseries, rounded corners=2pt] at ([yshift=0.6cm]core1.north east) {Ring Bus};
+
+% Bottom components - System Agent side (left)
+\node[sysagent] (sa) at (0, -2.5) {System Agent};
+\node[peripheral, right=0.2cm of sa] (gfx) {Graphics};
+\node[peripheral, right=0.2cm of gfx] (imc) {IMC};
+
+% Bottom components - I/O side (right)
+\node[peripheral] (dmi) at (6.5, -2.5) {DMI};
+\node[peripheral, right=0.2cm of dmi] (pcie) {PCI Express};
+
+% Connections from ring to bottom components
+\draw[thick, gray] ([yshift=-0.3cm]llc0.south) -- (sa.north);
+\draw[thick, gray] ([yshift=-0.3cm]llc1.south) -- (gfx.north);
+\draw[thick, gray] ([yshift=-0.3cm, xshift=0.3cm]llc1.south) -- (imc.north);
+\draw[thick, gray] ([yshift=-0.3cm]llc2.south) -- (dmi.north);
+\draw[thick, gray] ([yshift=-0.3cm]llc3.south) -- (pcie.north);
+
+% Labels for ring connections
+\node[font=\tiny, text=gray] at (1.4, -1.8) {$\uparrow$ Ring Stop};
+
+\end{tikzpicture}
 \end{center}
+
+\vspace{-0.3cm}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\footnotesize
+\textbf{Ring Components:}
+\begin{itemize}
+\item 4 Core/LLC slices as ring stops
+\item Bidirectional ring for data transfer
+\end{itemize}
+
+\column{0.5\textwidth}
+\footnotesize
+\textbf{Connected Agents:}
+\begin{itemize}
+\item System Agent, Graphics, IMC (memory)
+\item DMI (chipset), PCIe (expansion)
+\end{itemize}
+\end{columns}
 \end{frame}
 
 %==========================================
