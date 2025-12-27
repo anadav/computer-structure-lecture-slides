@@ -2216,13 +2216,17 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \end{itemize}
 \end{frame}
 
+\newcommand{\prefetchTextCol}{0.7\textwidth}
+\newcommand{\prefetchFigCol}{0.3\textwidth}
+\newcommand{\prefetchLooseness}{2.5}
+
 \begin{frame}{Hardware Data Prefetching}
 \textbf{Predict future data accesses based on observed patterns}
-\vspace{0.1em}
+\vspace{4mm}
 
 % Streaming prefetcher
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
+\begin{column}{\prefetchTextCol}
 \begin{itemize}
   \item \textbf{Streaming prefetcher}
   \begin{itemize}
@@ -2231,34 +2235,37 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
   \end{itemize}
 \end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
+\begin{column}{\prefetchFigCol}
 \begin{tikzpicture}[baseline=(current bounding box.center),
-  idx/.style={minimum width=0.38cm, font=\scriptsize, inner sep=0pt},
-  cell/.style={draw, minimum width=0.38cm, minimum height=0.38cm, inner sep=0pt},
+  idx/.style={minimum width=0.35cm, font=\scriptsize, inner sep=0pt},
+  cell/.style={draw, minimum width=0.35cm, minimum height=0.35cm, inner sep=0pt},
   acc/.style={cell, fill=green!40},
   pref/.style={cell, fill=blue!25},
+  gacc/.style={->, thick, green!60!black, looseness=\prefetchLooseness, out=-60, in=-120},
+  gpref/.style={->, thick, blue, looseness=\prefetchLooseness, out=-60, in=-120},
 ]
-\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0pt, ampersand replacement=\&] (m) {
-  |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
-  |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \\
+\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0.08cm, ampersand replacement=\&] (m) {
+  |[idx]| 0 \& |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
+  |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \\
 };
-\draw[->, thick, green!60!black] (m-2-1.south) to[bend right=25] (m-2-2.south);
-\draw[->, thick, green!60!black] (m-2-2.south) to[bend right=25] (m-2-3.south);
-\draw[->, thick, green!60!black] (m-2-3.south) to[bend right=25] (m-2-4.south);
-\draw[->, thick, green!60!black] (m-2-4.south) to[bend right=25] (m-2-5.south);
-\draw[->, thick, blue] (m-2-5.south) to[bend right=25] (m-2-6.south);
-\draw[->, thick, blue] (m-2-6.south) to[bend right=25] (m-2-7.south);
-\draw[->, thick, blue] (m-2-7.south) to[bend right=25] (m-2-8.south);
-\draw[->, thick, blue] (m-2-8.south) to[bend right=25] (m-2-9.south);
+\draw[gacc] (m-2-1.south) to (m-2-2.south);
+\draw[gacc] (m-2-2.south) to (m-2-3.south);
+\draw[gacc] (m-2-3.south) to (m-2-4.south);
+\draw[gacc] (m-2-4.south) to (m-2-5.south);
+\draw[gacc] (m-2-5.south) to (m-2-6.south);
+\draw[gpref] (m-2-6.south) to (m-2-7.south);
+\draw[gpref] (m-2-7.south) to (m-2-8.south);
+\draw[gpref] (m-2-8.south) to (m-2-9.south);
+\draw[gpref] (m-2-9.south) to (m-2-10.south);
 \end{tikzpicture}
 \end{column}
 \end{columns}
 
-\vspace{0.15em}
+\vspace{4mm}
 
 % Stride prefetcher
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
+\begin{column}{\prefetchTextCol}
 \begin{itemize}
   \item \textbf{Stride prefetcher}
   \begin{itemize}
@@ -2267,30 +2274,32 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
   \end{itemize}
 \end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
+\begin{column}{\prefetchFigCol}
 \begin{tikzpicture}[baseline=(current bounding box.center),
-  idx/.style={minimum width=0.38cm, font=\scriptsize, inner sep=0pt},
-  cell/.style={draw, minimum width=0.38cm, minimum height=0.38cm, inner sep=0pt},
+  idx/.style={minimum width=0.35cm, font=\scriptsize, inner sep=0pt},
+  cell/.style={draw, minimum width=0.35cm, minimum height=0.35cm, inner sep=0pt},
   acc/.style={cell, fill=green!40},
   pref/.style={cell, fill=blue!25},
+  gacc/.style={->, thick, green!60!black, looseness=\prefetchLooseness, out=-60, in=-120},
+  gpref/.style={->, thick, blue, looseness=\prefetchLooseness, out=-60, in=-120},
 ]
-\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0pt, ampersand replacement=\&] (m) {
-  |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
-  |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[pref]| \phantom{0} \\
+\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0.08cm, ampersand replacement=\&] (m) {
+  |[idx]| 0 \& |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
+  |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \& |[cell]| \phantom{0} \& |[cell]| \phantom{0} \\
 };
-\draw[->, thick, green!60!black] (m-2-1.south) to[bend right=30] (m-2-3.south);
-\draw[->, thick, green!60!black] (m-2-3.south) to[bend right=30] (m-2-5.south);
-\draw[->, thick, green!60!black] (m-2-5.south) to[bend right=30] (m-2-7.south);
-\draw[->, thick, blue] (m-2-7.south) to[bend right=30] (m-2-9.south);
+\draw[gacc] (m-2-1.south) to (m-2-3.south);
+\draw[gacc] (m-2-3.south) to (m-2-5.south);
+\draw[gpref] (m-2-5.south) to (m-2-7.south);
+\draw[gpref] (m-2-7.south) to (m-2-8.south);
 \end{tikzpicture}
 \end{column}
 \end{columns}
 
-\vspace{0.15em}
+\vspace{4mm}
 
 % General pattern prefetcher
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
+\begin{column}{\prefetchTextCol}
 \begin{itemize}
   \item \textbf{General pattern prefetcher}
   \begin{itemize}
@@ -2298,32 +2307,34 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
   \end{itemize}
 \end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
+\begin{column}{\prefetchFigCol}
 \begin{tikzpicture}[baseline=(current bounding box.center),
-  idx/.style={minimum width=0.38cm, font=\scriptsize, inner sep=0pt},
-  cell/.style={draw, minimum width=0.38cm, minimum height=0.38cm, inner sep=0pt},
+  idx/.style={minimum width=0.35cm, font=\scriptsize, inner sep=0pt},
+  cell/.style={draw, minimum width=0.35cm, minimum height=0.35cm, inner sep=0pt},
   acc/.style={cell, fill=green!40},
   pref/.style={cell, fill=blue!25},
+  gacc/.style={->, thick, green!60!black, looseness=\prefetchLooseness, out=-60, in=-120},
+  gpref/.style={->, thick, blue, looseness=\prefetchLooseness, out=-60, in=-120},
 ]
-\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0pt, ampersand replacement=\&] (m) {
-  |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
-  |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[pref]| \phantom{0} \\
+\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0.08cm, ampersand replacement=\&] (m) {
+  |[idx]| 0 \& |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
+  |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[acc]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| \phantom{0} \& |[pref]| \phantom{0} \& |[pref]| \phantom{0} \& |[cell]| \phantom{0} \\
 };
-\draw[->, thick, green!60!black] (m-2-1.south) to[bend right=25] (m-2-2.south);
-\draw[->, thick, green!60!black] (m-2-2.south) to[bend right=35] (m-2-4.south);
-\draw[->, thick, green!60!black] (m-2-4.south) to[bend right=25] (m-2-5.south);
-\draw[->, thick, green!60!black] (m-2-5.south) to[bend right=35] (m-2-7.south);
-\draw[->, thick, green!60!black] (m-2-7.south) to[bend right=25] (m-2-8.south);
-\draw[->, thick, blue] (m-2-8.south) to[bend right=25] (m-2-9.south);
+\draw[gacc] (m-2-1.south) to (m-2-2.south);
+\draw[gacc] (m-2-2.south) to (m-2-4.south);
+\draw[gacc] (m-2-4.south) to (m-2-5.south);
+\draw[gacc] (m-2-5.south) to (m-2-7.south);
+\draw[gpref] (m-2-7.south) to (m-2-8.south);
+\draw[gpref] (m-2-8.south) to (m-2-9.south);
 \end{tikzpicture}
 \end{column}
 \end{columns}
 
-\vspace{0.15em}
+\vspace{4mm}
 
 % DMP prefetcher
 \begin{columns}[T]
-\begin{column}{0.48\textwidth}
+\begin{column}{\prefetchTextCol}
 \begin{itemize}
   \item \textbf{Data memory-dependent (DMP)}
   \begin{itemize}
@@ -2332,20 +2343,22 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
   \end{itemize}
 \end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
+\begin{column}{\prefetchFigCol}
 \begin{tikzpicture}[baseline=(current bounding box.center),
-  idx/.style={minimum width=0.38cm, font=\scriptsize, inner sep=0pt},
-  cell/.style={draw, minimum width=0.38cm, minimum height=0.38cm, font=\scriptsize, inner sep=0pt},
+  idx/.style={minimum width=0.35cm, font=\scriptsize, inner sep=0pt},
+  cell/.style={draw, minimum width=0.35cm, minimum height=0.35cm, font=\scriptsize, inner sep=0pt},
   acc/.style={cell, fill=green!40},
   pref/.style={cell, fill=blue!25},
+  gacc/.style={->, thick, green!60!black, looseness=\prefetchLooseness, out=-60, in=-120},
+  gpref/.style={->, thick, blue, looseness=\prefetchLooseness, out=-60, in=-120},
 ]
-\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0pt, ampersand replacement=\&] (m) {
-  |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
-  |[acc]| 3 \& |[cell]| \phantom{0} \& |[acc]| 6 \& |[cell]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| 9 \& |[cell]| \phantom{0} \& |[cell]| \phantom{0} \& |[pref]| \phantom{0} \\
+\matrix[matrix of nodes, column sep=-\pgflinewidth, row sep=0.08cm, ampersand replacement=\&] (m) {
+  |[idx]| 0 \& |[idx]| 1 \& |[idx]| 2 \& |[idx]| 3 \& |[idx]| 4 \& |[idx]| 5 \& |[idx]| 6 \& |[idx]| 7 \& |[idx]| 8 \& |[idx]| 9 \\
+  |[acc]| 3 \& |[cell]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| 6 \& |[cell]| \phantom{0} \& |[cell]| \phantom{0} \& |[acc]| 9 \& |[cell]| \phantom{0} \& |[cell]| \phantom{0} \& |[pref]| \phantom{0} \\
 };
-\draw[->, thick, green!60!black] (m-2-1.south) to[bend right=35] (m-2-3.south);
-\draw[->, thick, green!60!black] (m-2-3.south) to[bend right=40] (m-2-6.south);
-\draw[->, thick, blue] (m-2-6.south) to[bend right=40] (m-2-9.south);
+\draw[gacc] (m-2-1.south) to (m-2-4.south);
+\draw[gacc] (m-2-4.south) to (m-2-7.south);
+\draw[gpref] (m-2-7.south) to (m-2-10.south);
 \end{tikzpicture}
 \end{column}
 \end{columns}
