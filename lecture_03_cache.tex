@@ -3194,11 +3194,11 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed
 \begin{center}
 \begin{tikzpicture}
   % Processor 0 timeline
-  \node[font=\bfseries] (p0) at (0, 0) {Processor 0};
+  \node[font=\bfseries] (p0) at (0.8, 0) {Processor 0};
+  \node[font=\scriptsize, gray] at (-1.3, -0.8) {S1};
   \node[hbinstr] (s1) at (-0.8, -0.8) {Store [\textcolor{varX}{X}] <- 1};
-  \node[font=\scriptsize, gray] at (2.5, -0.8) {S1};
+  \node[font=\scriptsize, gray] at (-1.3, -2.0) {S2};
   \node[hbinstr] (s2) at (-0.8, -2.0) {Store [\textcolor{varY}{Y}] <- 1};
-  \node[font=\scriptsize, gray] at (2.5, -2.0) {S2};
 
   % Processor 1 timeline
   \node[font=\bfseries] (p1) at (8, 0) {Processor 1};
@@ -3209,15 +3209,15 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed
 
   % Arrow 1: S1 -> S2 (program order)
   \draw[hbprogorder] ([xshift=-0.3cm]s1.south) -- ([xshift=-0.3cm]s2.north)
-    node[hblabel, midway, left=2pt] {1};
+    node[hblabel, midway, left=2pt, draw, thin] {1};
 
   % Arrow 2: L1 -> L2 (program order)
   \draw[hbprogorder] ([xshift=-0.3cm]l1.south) -- ([xshift=-0.3cm]l2.north)
-    node[hblabel, midway, left=2pt] {2};
+    node[hblabel, midway, left=2pt, draw, thin] {2};
 
   % Arrow 3: S2 -> L1 (cross-processor, Y variable)
   \draw[hbcross, varY] (s2.east) to[out=15, in=165]
-    node[hblabel, above=1pt, pos=0.5] {3} (l1.west);
+    node[hblabel, above=1pt, pos=0.5, draw, thin] {3} (l1.west);
 \end{tikzpicture}
 \end{center}
 
@@ -3227,9 +3227,8 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed
   \footnotesize
   \item On P0: S1 $\rightarrow$ S2 (stores in program order)
   \item On P1: L1 $\rightarrow$ L2 (loads in program order)
-  \item If L1 reads S2's value (r1=1), then S2 $\rightarrow$ L1
-  \item Transitivity: S1 $\rightarrow$ S2 $\rightarrow$ L1 $\rightarrow$ L2, so L2 must see S1 $\Rightarrow$ r2=1
-  \item Therefore r1=1, r2=0 violates happens-before
+  \item If L1 reads r1=1 (from S2), then S2 $\rightarrow$ L1
+  \item Chain: S1 $\rightarrow$ S2 $\rightarrow$ L1 $\rightarrow$ L2 forces L2 to see X=1, so r2=1
 \end{enumerate}
 \end{frame}
 
