@@ -3223,7 +3223,7 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed
 
 \vspace{-0.1cm}
 {\footnotesize\textbf{Happens-before analysis:}}
-\begin{enumerate}[itemsep=0pt, topsep=2pt, leftmargin=1.5em]
+\begin{enumerate}
   \footnotesize
   \item S1 $\rightarrow$ S2 --- program order (stores)
   \item L1 $\rightarrow$ L2 --- program order (loads)
@@ -3274,7 +3274,7 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed
 
 \vspace{-0.1cm}
 {\footnotesize\textbf{Happens-before analysis:}}
-\begin{enumerate}[itemsep=0pt, topsep=2pt, leftmargin=1.5em]
+\begin{enumerate}
   \footnotesize
   \item L1 $\rightarrow$ S1 --- program order (store after load)
   \item L2 $\rightarrow$ S2 --- program order (store after load)
@@ -3284,68 +3284,103 @@ Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=1} is \textbf{not} allowed
 \end{enumerate}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Loads May Reorder with Older Stores to Different Locations}
-Initial: \texttt{x=y=0}. Outcome \texttt{r1=0, r2=0} is \textbf{allowed}.\\[2pt]
-\begin{columns}[T]
-\column{0.48\textwidth}
-\textbf{Processor 0}
-\begin{minted}[fontsize=\small]{text}
-Store [X] <- 1   // S1
-r1 <- Load [Y]   // L1
-\end{minted}
-\column{0.48\textwidth}
-\textbf{Processor 1}
-\begin{minted}[fontsize=\small]{text}
-Store [Y] <- 1   // S2
-r2 <- Load [X]   // L2
-\end{minted}
-\end{columns}
+\begin{frame}{x86 Ordering: Loads May Reorder with \emph{Different} Older Stores}
+Loads may reorder with older stores to \emph{different} locations (but not the same).
 
-\vspace{0.2cm}
-\textbf{Happens-before analysis:}
-\begin{itemize}
-  \item On P0: S1 and L1 access \emph{different} locations $\Rightarrow$ \textbf{no} happens-before!
-  \item On P1: S2 and L2 access \emph{different} locations $\Rightarrow$ \textbf{no} happens-before!
-  \item Without happens-before, loads can execute before stores
-  \item Possible execution: L1 and L2 both execute first (see 0), then S1 and S2
-  \item This outcome (r1=0, r2=0) is allowed because no happens-before is violated
-\end{itemize}
+\vspace{0.15cm}
+Initial: \texttt{x=y=0}. Outcome \texttt{r1=0, r2=0} is \textbf{allowed}.
+
+\begin{center}
+\begin{tikzpicture}
+  % Processor 0 timeline
+  \node[font=\bfseries] (p0) at (0.8, 0) {Processor 0};
+  \node[font=\scriptsize, gray] at (-1.3, -0.8) {S1};
+  \node[hbinstr] (s1) at (-0.8, -0.8) {Store [\textcolor{varX}{X}] <- 1};
+  \node[font=\scriptsize, gray] at (-1.3, -2.0) {L1};
+  \node[hbinstr] (l1) at (-0.8, -2.0) {r1 <- Load [\textcolor{varY}{Y}]};
+
+  % Processor 1 timeline
+  \node[font=\bfseries] (p1) at (8, 0) {Processor 1};
+  \node[hbinstr] (s2) at (6.2, -0.8) {Store [\textcolor{varY}{Y}] <- 1};
+  \node[font=\scriptsize, gray] at (9.5, -0.8) {S2};
+  \node[hbinstr] (l2) at (6.2, -2.0) {r2 <- Load [\textcolor{varX}{X}]};
+  \node[font=\scriptsize, gray] at (9.5, -2.0) {L2};
+
+  % NO program order arrows - that's the point!
+  % Show crossed-out arrows to emphasize no ordering
+  \draw[gray!50, dashed, thick] ([xshift=-0.3cm]s1.south) -- ([xshift=-0.3cm]l1.north);
+  \node[font=\scriptsize, red!70!black] at (-1.6, -1.4) {\texttimes};
+
+  \draw[gray!50, dashed, thick] ([xshift=-0.3cm]s2.south) -- ([xshift=-0.3cm]l2.north);
+  \node[font=\scriptsize, red!70!black] at (5.6, -1.4) {\texttimes};
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.1cm}
+{\footnotesize\textbf{Happens-before analysis:}}
+\begin{enumerate}
+  \footnotesize
+  \item S1 accesses \textcolor{varX}{X}, L1 accesses \textcolor{varY}{Y} --- different locations, no ordering!
+  \item S2 accesses \textcolor{varY}{Y}, L2 accesses \textcolor{varX}{X} --- different locations, no ordering!
+  \item Without ordering, loads may execute before stores
+  \item Possible: L1, L2 execute first (see 0), then S1, S2 --- allowed
+\end{enumerate}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Causality and Transitive Visibility}
-Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allowed.\\[2pt]
-\begin{columns}[T]
-\column{0.32\textwidth}
-{\footnotesize\textbf{Processor 0}}
-\begin{minted}[fontsize=\scriptsize]{text}
-Store [X] <- 1   // S1
-\end{minted}
-\column{0.32\textwidth}
-{\footnotesize\textbf{Processor 1}}
-\begin{minted}[fontsize=\scriptsize]{text}
-r1 <- Load [X]   // L1
-Store [Y] <- 1   // S2
-r2 <- Load [Y]   // L2
-\end{minted}
-\column{0.32\textwidth}
-{\footnotesize\textbf{Processor 2}}
-\begin{minted}[fontsize=\scriptsize]{text}
-r3 <- Load [X]   // L3
-\end{minted}
-\end{columns}
+\begin{frame}{x86 Ordering: Causality and Transitive Visibility}
+Causality: if a processor observes an effect, all ``downstream'' effects must also be visible.
 
 \vspace{0.1cm}
-{\small
-\textbf{Happens-before analysis (transitivity):}
-\begin{itemize}
-  \item If r1=1: L1 observed S1 $\Rightarrow$ $\text{S1} \rightarrow \text{L1}$
-  \item On P1: $\text{L1} \rightarrow \text{S2} \rightarrow \text{L2}$ (program order)
-  \item If r2=1: L2 observed S2 $\Rightarrow$ $\text{S2} \rightarrow \text{L2}$
-  \item By transitivity: $\text{S1} \rightarrow \text{L1} \rightarrow \text{S2} \rightarrow \text{L2}$
-  \item Since L2 observed S2, and S2 happened after S1, any subsequent load must see S1
-  \item Therefore L3 must see S1 $\Rightarrow$ r3=1 (r3=0 violates transitivity)
-\end{itemize}
-}
+Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allowed.
+
+\begin{center}
+\begin{tikzpicture}[xscale=0.95]
+  % Processor 0 timeline
+  \node[font=\bfseries\footnotesize] (p0) at (-0.2, 0) {Processor 0};
+  \node[font=\scriptsize, gray] at (-2.0, -0.8) {S1};
+  \node[hbinstr, font=\ttfamily\footnotesize] (s1) at (-1.6, -0.8) {Store [\textcolor{varX}{X}] <- 1};
+
+  % Processor 1 timeline (3 instructions)
+  \node[font=\bfseries\footnotesize] (p1) at (4.5, 0) {Processor 1};
+  \node[font=\scriptsize, gray] at (2.7, -0.8) {L1};
+  \node[hbinstr, font=\ttfamily\footnotesize] (l1) at (3.1, -0.8) {r1 <- Load [\textcolor{varX}{X}]};
+  \node[font=\scriptsize, gray] at (2.7, -1.7) {S2};
+  \node[hbinstr, font=\ttfamily\footnotesize] (s2) at (3.1, -1.7) {Store [\textcolor{varY}{Y}] <- 1};
+  \node[font=\scriptsize, gray] at (2.7, -2.6) {L2};
+  \node[hbinstr, font=\ttfamily\footnotesize] (l2) at (3.1, -2.6) {r2 <- Load [\textcolor{varY}{Y}]};
+
+  % Processor 2 timeline
+  \node[font=\bfseries\footnotesize] (p2) at (9.2, 0) {Processor 2};
+  \node[hbinstr, font=\ttfamily\footnotesize] (l3) at (8.0, -0.8) {r3 <- Load [\textcolor{varX}{X}]};
+  \node[font=\scriptsize, gray] at (10.5, -0.8) {L3};
+
+  % Arrow 1: S1 -> L1 (cross-processor, X variable)
+  \draw[hbcross, varX] (s1.east) to[out=0, in=180]
+    node[hblabel, above=0pt, pos=0.5, draw, thin] {1} (l1.west);
+
+  % Arrow 2: L1 -> S2 (program order)
+  \draw[hbprogorder] ([xshift=-0.15cm]l1.south) -- ([xshift=-0.15cm]s2.north)
+    node[hblabel, midway, left=1pt, draw, thin] {2};
+
+  % Arrow 3: S2 -> L2 (program order / reads-from Y)
+  \draw[hbprogorder] ([xshift=-0.15cm]s2.south) -- ([xshift=-0.15cm]l2.north)
+    node[hblabel, midway, left=1pt, draw, thin] {3};
+
+  % Arrow 4: implied S1 -> L3 (transitivity forces this)
+  \draw[hbcross, varX, densely dotted] (s1.south east) to[out=-20, in=160]
+    node[hblabel, below=0pt, pos=0.4, draw, thin] {4} (l3.west);
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.2cm}
+{\footnotesize\textbf{Happens-before analysis:}}
+\begin{enumerate}
+  \footnotesize
+  \item S1 $\rightarrow$ L1 --- L1 reads X=1 from S1 (r1=1)
+  \item L1 $\rightarrow$ S2 --- program order on P1
+  \item S2 $\rightarrow$ L2 --- L2 reads Y=1 from S2 (r2=1)
+  \item S1 $\rightarrow$ L3 --- transitivity: S1 visible to system $\Rightarrow$ L3 must see X=1, so r3=1
+\end{enumerate}
 \end{frame}
 
 \end{document}
