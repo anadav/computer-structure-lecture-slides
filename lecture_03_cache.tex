@@ -372,6 +372,16 @@
 \end{tikzpicture}%
 }
 
+% Happens-before diagram colors and styles
+\colorlet{varX}{blue!70!black}
+\colorlet{varY}{orange!80!black}
+\tikzset{
+  hbinstr/.style={font=\ttfamily\small, anchor=west},
+  hbprogorder/.style={->, dashed, gray!70!black, thick},
+  hbcross/.style={->, thick},
+  hblabel/.style={font=\scriptsize\bfseries, fill=white, inner sep=1pt, circle},
+}
+
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
 
@@ -3175,35 +3185,52 @@ Modified  & Yes & Yes  & No\\
 \end{enumerate}
 \end{frame}
 
-\begin{frame}[fragile]{x86 Ordering: Loads and Stores Keep Their Own Order}
-\begin{itemize}
-  \item I.e., loads are seen in program order, and stores are seen in program order
-\end{itemize}
-Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed.\\[2pt]
-\begin{columns}[T]
-\column{0.48\textwidth}
-\textbf{Processor 0}
-\begin{minted}[fontsize=\small]{text}
-Store [X] <- 1   // S1
-Store [Y] <- 1   // S2
-\end{minted}
-\column{0.48\textwidth}
-\textbf{Processor 1}
-\begin{minted}[fontsize=\small]{text}
-r1 <- Load [Y]   // L1
-r2 <- Load [X]   // L2
-\end{minted}
-\end{columns}
+\begin{frame}{x86 Ordering: Loads and Stores Keep Their Own Order}
+Loads are seen in program order, and stores are seen in program order.
 
-\vspace{0.2cm}
-\textbf{Happens-before analysis:}
-\begin{itemize}
-  \item On P0: $\text{S1} \rightarrow \text{S2}$ (stores in program order)
-  \item On P1: $\text{L1} \rightarrow \text{L2}$ (loads in program order)
-  \item If L1 reads S2's value (r1=1), then S2 happened, so S1 must have happened too
-  \item Since $\text{L1} \rightarrow \text{L2}$, L2 must see S1's effect $\Rightarrow$ r2=1
+\vspace{0.15cm}
+Initial: \texttt{x=y=0}. The outcome \texttt{r1=1, r2=0} is \textbf{not} allowed.
+
+\begin{center}
+\begin{tikzpicture}
+  % Processor 0 timeline
+  \node[font=\bfseries] (p0) at (0, 0) {Processor 0};
+  \node[hbinstr] (s1) at (-0.8, -0.8) {Store [\textcolor{varX}{X}] <- 1};
+  \node[font=\scriptsize, gray] at (2.5, -0.8) {S1};
+  \node[hbinstr] (s2) at (-0.8, -2.0) {Store [\textcolor{varY}{Y}] <- 1};
+  \node[font=\scriptsize, gray] at (2.5, -2.0) {S2};
+
+  % Processor 1 timeline
+  \node[font=\bfseries] (p1) at (8, 0) {Processor 1};
+  \node[hbinstr] (l1) at (6.2, -0.8) {r1 <- Load [\textcolor{varY}{Y}]};
+  \node[font=\scriptsize, gray] at (9.5, -0.8) {L1};
+  \node[hbinstr] (l2) at (6.2, -2.0) {r2 <- Load [\textcolor{varX}{X}]};
+  \node[font=\scriptsize, gray] at (9.5, -2.0) {L2};
+
+  % Arrow 1: S1 -> S2 (program order)
+  \draw[hbprogorder] ([xshift=-0.3cm]s1.south) -- ([xshift=-0.3cm]s2.north)
+    node[hblabel, midway, left=2pt] {1};
+
+  % Arrow 2: L1 -> L2 (program order)
+  \draw[hbprogorder] ([xshift=-0.3cm]l1.south) -- ([xshift=-0.3cm]l2.north)
+    node[hblabel, midway, left=2pt] {2};
+
+  % Arrow 3: S2 -> L1 (cross-processor, Y variable)
+  \draw[hbcross, varY] (s2.east) to[out=15, in=165]
+    node[hblabel, above=1pt, pos=0.5] {3} (l1.west);
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.1cm}
+{\footnotesize\textbf{Happens-before analysis:}}
+\begin{enumerate}[itemsep=0pt, topsep=2pt, leftmargin=1.5em]
+  \footnotesize
+  \item On P0: S1 $\rightarrow$ S2 (stores in program order)
+  \item On P1: L1 $\rightarrow$ L2 (loads in program order)
+  \item If L1 reads S2's value (r1=1), then S2 $\rightarrow$ L1
+  \item Transitivity: S1 $\rightarrow$ S2 $\rightarrow$ L1 $\rightarrow$ L2, so L2 must see S1 $\Rightarrow$ r2=1
   \item Therefore r1=1, r2=0 violates happens-before
-\end{itemize}
+\end{enumerate}
 \end{frame}
 
 \begin{frame}[fragile]{x86 Ordering: Stores Not Reordered with Older Loads}
