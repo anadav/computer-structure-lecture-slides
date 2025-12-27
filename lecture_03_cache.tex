@@ -3334,52 +3334,63 @@ Causality: if a processor observes an effect, all ``downstream'' effects must al
 Initial: \texttt{x=y=0}. Outcome \texttt{r1=1, r2=1, r3=0} is \textbf{not} allowed.
 
 \begin{center}
-\begin{tikzpicture}[xscale=0.95]
-  % Processor 0 timeline
-  \node[font=\bfseries\footnotesize] (p0) at (-0.2, 0) {Processor 0};
-  \node[font=\scriptsize, gray] at (-2.0, -0.8) {S1};
-  \node[hbinstr, font=\ttfamily\footnotesize] (s1) at (-1.6, -0.8) {Store [\textcolor{varX}{X}] <- 1};
+\begin{tikzpicture}
+  % Processor 0
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.1cm, row sep=0.2cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\footnotesize, anchor=west}
+  ] (p0) at (0, 0) {
+    |[font=\bfseries\footnotesize]| \phantom{S1} \& |[font=\bfseries\footnotesize]| Processor 0 \\
+    S1 \& |[alias=s1]| Store [\textcolor{varX}{X}] <- 1 \\
+  };
 
-  % Processor 1 timeline (3 instructions)
-  \node[font=\bfseries\footnotesize] (p1) at (4.5, 0) {Processor 1};
-  \node[font=\scriptsize, gray] at (2.7, -0.8) (l1label) {L1};
-  \node[hbinstr, font=\ttfamily\footnotesize] (l1) at (3.1, -0.8) {r1 <- Load [\textcolor{varX}{X}]};
-  \node[font=\scriptsize, gray] at (2.7, -1.7) {S2};
-  \node[hbinstr, font=\ttfamily\footnotesize] (s2) at (3.1, -1.7) {Store [\textcolor{varY}{Y}] <- 1};
-  \node[font=\scriptsize, gray] at (2.7, -2.6) {L2};
-  \node[hbinstr, font=\ttfamily\footnotesize] (l2) at (3.1, -2.6) {r2 <- Load [\textcolor{varY}{Y}]};
+  % Processor 1 (2 instructions)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.1cm, row sep=0.2cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\footnotesize, anchor=west}
+  ] (p1) at (5, 0) {
+    |[font=\bfseries\footnotesize]| \phantom{L1} \& |[font=\bfseries\footnotesize]| Processor 1 \\
+    |[alias=l1lbl]| L1 \& |[alias=l1]| r1 <- Load [\textcolor{varX}{X}] \\
+    S2 \& |[alias=s2]| Store [\textcolor{varY}{Y}] <- 1 \\
+  };
 
-  % Processor 2 timeline
-  \node[font=\bfseries\footnotesize] (p2) at (9.2, 0) {Processor 2};
-  \node[hbinstr, font=\ttfamily\footnotesize] (l3) at (8.0, -0.8) {r3 <- Load [\textcolor{varX}{X}]};
-  \node[font=\scriptsize, gray] at (10.5, -0.8) {L3};
+  % Processor 2 (2 instructions)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.1cm, row sep=0.2cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\footnotesize, anchor=west}
+  ] (p2) at (10, 0) {
+    |[font=\bfseries\footnotesize]| \phantom{L2} \& |[font=\bfseries\footnotesize]| Processor 2 \\
+    |[alias=l2lbl]| L2 \& |[alias=l2]| r2 <- Load [\textcolor{varY}{Y}] \\
+    L3 \& |[alias=l3]| r3 <- Load [\textcolor{varX}{X}] \\
+  };
 
   % Arrow 1: S1 -> L1 (cross-processor, X variable)
   \draw[hbcross, varX] (s1.east) to[out=0, in=180]
-    node[hblabel, above=0pt, pos=0.5, draw, thin] {1} (l1label.west);
+    node[hblabel, above=0pt, pos=0.5, draw, thin] {1} (l1lbl.west);
 
-  % Arrow 2: L1 -> S2 (program order)
-  \draw[hbprogorder] ([xshift=-0.15cm]l1.south) -- ([xshift=-0.15cm]s2.north)
-    node[hblabel, midway, left=1pt, draw, thin] {2};
+  % Arrow 2: L1 -> S2 (program order on P1)
+  \draw[hbprogorder] (l1.south) -- (s2.north)
+    node[hblabel, midway, left=3pt, draw, thin] {2};
 
-  % Arrow 3: S2 -> L2 (program order / reads-from Y)
-  \draw[hbprogorder] ([xshift=-0.15cm]s2.south) -- ([xshift=-0.15cm]l2.north)
-    node[hblabel, midway, left=1pt, draw, thin] {3};
+  % Arrow 3: S2 -> L2 (cross-processor, Y variable)
+  \draw[hbcross, varY] (s2.east) to[out=0, in=180]
+    node[hblabel, above=2pt, pos=0.5, draw, thin] {3} (l2lbl.west);
 
-  % Arrow 4: implied S1 -> L3 (transitivity forces this)
-  \draw[hbcross, varX, densely dotted] (s1.south east) to[out=-20, in=160]
-    node[hblabel, below=0pt, pos=0.4, draw, thin] {4} (l3.west);
+  % Arrow 4: L2 -> L3 (program order on P2)
+  \draw[hbprogorder] (l2.south) -- (l3.north)
+    node[hblabel, midway, left=3pt, draw, thin] {4};
 \end{tikzpicture}
 \end{center}
 
-\vspace{-0.2cm}
+\vspace{-0.3cm}
 {\footnotesize\textbf{Happens-before analysis:}}
 \begin{enumerate}
   \footnotesize
   \item S1 $\rightarrow$ L1 --- L1 reads X=1 from S1 (r1=1)
   \item L1 $\rightarrow$ S2 --- program order on P1
   \item S2 $\rightarrow$ L2 --- L2 reads Y=1 from S2 (r2=1)
-  \item S1 $\rightarrow$ L3 --- transitivity: S1 visible to system $\Rightarrow$ L3 must see X=1, so r3=1
+  \item L2 $\rightarrow$ L3 --- program order on P2 (loads not reordered)
+  \item Chain: S1 $\rightarrow$ L1 $\rightarrow$ S2 $\rightarrow$ L2 $\rightarrow$ L3 $\Rightarrow$ L3 must see X=1, so r3=1
 \end{enumerate}
 \end{frame}
 
