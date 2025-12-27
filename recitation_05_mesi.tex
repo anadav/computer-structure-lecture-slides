@@ -9,6 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
+\usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
@@ -770,16 +771,16 @@ Even/Odd polarity switching per cycle]
     every node/.style={font=\small},
     % Base style for all system agent components
     sysbase/.style={draw=black, thick, minimum height=0.85cm, font=\small\bfseries},
+    % Core label - black text on light background
+    corebox/.style={draw=black, thick, fill=white!90!ringSlateBlue, minimum width=1.4cm, minimum height=0.9cm, font=\normalsize\bfseries, rounded corners=2pt},
     % L2 box - soft green for private cache
     l2box/.style={draw=black, thick, fill=ringGreen, minimum width=1.2cm, minimum height=0.8cm, font=\normalsize\bfseries},
-    % LLC box - warm sand for shared cache
-    llcbox/.style={draw=black, thick, fill=ringSand, minimum width=1.8cm, minimum height=1.4cm, font=\normalsize\bfseries},
+    % LLC box - warm sand for shared cache (fits within row height ~1.5)
+    llcbox/.style={draw=black, thick, fill=ringSand, minimum width=1.6cm, minimum height=1.2cm, font=\normalsize\bfseries},
     % System agent components - charcoal with white text
     sysbox/.style={sysbase, fill=ringCharcoal, minimum width=1.4cm, text=white},
     % iMPH - peach accent (the ring hub)
     imphbox/.style={sysbase, fill=ringPeach, minimum width=2.0cm, minimum height=1.0cm, font=\normalsize\bfseries},
-    % External IO/DDR - lavender for off-die
-    extbox/.style={draw=black, thick, fill=ringLavender, minimum width=1.1cm, minimum height=4.0cm, font=\Large\bfseries},
     % Polarity markers - coral/salmon tones visible on blue
     polaritymark/.style={circle, draw=white, line width=1.5pt, minimum size=0.6cm, font=\normalsize\bfseries, text=black},
     pOdd/.style={polaritymark, fill=ringCoral},
@@ -811,17 +812,17 @@ Even/Odd polarity switching per cycle]
 \draw[black, line width=1.2pt] (-0.3, -2.5) -- (9.3, -2.5);
 
 % === CORE 0 ROW ===
-\node[font=\large\bfseries, text=white] at (0.8, 0.3) {Core 0};
+\node[corebox] at (0.8, 0.3) {Core 0};
 \node[l2box] (l2c0) at (2.2, 0.3) {L2};
 \node[llcbox] (llc0) at (8.0, 0.3) {LLC0};
 
 % === CORE 1 ROW ===
-\node[font=\large\bfseries, text=white] at (0.8, -1.5) {Core 1};
+\node[corebox] at (0.8, -1.5) {Core 1};
 \node[l2box] (l2c1) at (2.2, -1.5) {L2};
 \node[llcbox] (llc1) at (8.0, -1.5) {LLC1};
 
 % === GFX ROW ===
-\node[font=\large\bfseries, text=white] at (0.8, -3.55) {GFX};
+\node[corebox] at (0.8, -3.55) {GFX};
 \node[l2box] (l2gfx) at (2.2, -3.55) {};
 
 % === RING STRUCTURE ===
@@ -853,38 +854,42 @@ Even/Odd polarity switching per cycle]
 \coordinate (ringbottom) at (4.8, -4.25);
 \draw[ringarrow] (ring2r.south) |- (ringbottom) -| (ring2l.south);
 
-% === EXTERNAL: IO (left) ===
-\node[extbox] (io) at (-1.4, -1.3) {IO};
-\draw[{Triangle[width=7pt,length=6pt]}-, line width=3.5pt, green!50!black] ([yshift=6pt]io.east) -- ++(0.5, 0);
-\draw[-{Triangle[width=7pt,length=6pt]}, line width=3.5pt, green!50!black] ([yshift=-6pt]io.east) -- ++(0.5, 0);
+% === EXTERNAL: IO (left) - connected to system agent ===
+\node[muxdemux, muxdemux def={Lh=1.5, Rh=1.5, NL=2, NR=2, w=2.0}, external pins width=0,
+      fill=ringLavender, font=\normalsize\bfseries, xscale=-1] (io) at (-1.6, 1.55) {};
+\node[font=\normalsize\bfseries] at (io.center) {IO};
+\draw[-{Triangle[width=5pt,length=4pt]}, line width=2pt, green!50!black] (io.brpin 1) -- ++(0.4, 0);
+\draw[{Triangle[width=5pt,length=4pt]}-, line width=2pt, green!50!black] (io.brpin 2) -- ++(0.4, 0);
 
-% === EXTERNAL: DDR (right) ===
-\node[extbox] (ddr) at (10.5, -1.3) {DDR};
-\draw[{Triangle[width=7pt,length=6pt]}-, line width=3.5pt, green!50!black] ([yshift=6pt]ddr.west) -- ++(-0.5, 0);
-\draw[-{Triangle[width=7pt,length=6pt]}, line width=3.5pt, green!50!black] ([yshift=-6pt]ddr.west) -- ++(-0.5, 0);
+% === EXTERNAL: DDR (right) - connected to system agent ===
+\node[muxdemux, muxdemux def={Lh=1.5, Rh=1.5, NL=2, NR=2, w=2.0}, external pins width=0,
+      fill=ringLavender, font=\normalsize\bfseries] (ddr) at (10.7, 1.55) {};
+\node[font=\normalsize\bfseries] at (ddr.center) {DDR};
+\draw[{Triangle[width=5pt,length=4pt]}-, line width=2pt, green!50!black] (ddr.blpin 1) -- ++(-0.4, 0);
+\draw[-{Triangle[width=5pt,length=4pt]}, line width=2pt, green!50!black] (ddr.blpin 2) -- ++(-0.4, 0);
 
-% === LEGEND (left side) - marker sample + label ===
+% === LEGEND (bottom left) - marker sample + label ===
 % Legend box background
-\node[draw=black, fill=white, rounded corners=3pt, minimum width=1.6cm, minimum height=2.2cm, anchor=north] (legendbg) at (-1.4, 1.9) {};
+\node[draw=black, fill=white, rounded corners=3pt, minimum width=1.6cm, minimum height=2.2cm, anchor=north] (legendbg) at (-1.6, -0.2) {};
 % Marker samples with labels
-\node[circle, draw=red!80, very thick, fill=red!60, minimum size=0.4cm] (legReq) at (-1.75, 1.55) {};
-\node[font=\scriptsize, anchor=west] at (-1.5, 1.55) {Request};
-\node[circle, draw=gray!60, very thick, fill=gray!45, minimum size=0.4cm] (legGO) at (-1.75, 1.0) {};
-\node[font=\scriptsize, anchor=west] at (-1.5, 1.0) {GO};
-\node[circle, draw=magenta!70, very thick, fill=magenta!35, minimum size=0.4cm] (legData) at (-1.75, 0.45) {};
-\node[font=\scriptsize, anchor=west] at (-1.5, 0.45) {Data};
+\node[circle, draw=red!80, very thick, fill=red!60, minimum size=0.4cm] (legReq) at (-1.95, -0.55) {};
+\node[font=\scriptsize, anchor=west] at (-1.7, -0.55) {Request};
+\node[circle, draw=gray!60, very thick, fill=gray!45, minimum size=0.4cm] (legGO) at (-1.95, -1.1) {};
+\node[font=\scriptsize, anchor=west] at (-1.7, -1.1) {GO};
+\node[circle, draw=magenta!60, very thick, fill=ringDataPink, minimum size=0.4cm] (legData) at (-1.95, -1.65) {};
+\node[font=\scriptsize, anchor=west] at (-1.7, -1.65) {Data};
 
 % === CYCLE INDICATOR (bottom) ===
 \node[font=\normalsize\bfseries] at (4.5, -5.0) {%
-    \only<1>{Initial state}%
-    \only<2>{Cycle 1: up ring E, down ring O}%
-    \only<3>{Cycle 2: up ring O, down ring E}%
-    \only<4>{Cycle 3: up ring E, down ring O}%
-    \only<5>{Cycle 4: up ring O, down ring E}%
-    \only<6>{Cycle 5: up ring E, down ring O}%
-    \only<7>{Cycle 7: up ring E, down ring O}%
-    \only<8>{Cycle 9: up ring E, down ring O}%
-    \only<9>{Cycle 11: up ring E, down ring O}%
+    \only<1>{}%
+    \only<2>{Cycle 1 (O phase): O stops can receive}%
+    \only<3>{Cycle 2 (E phase): E stops can receive}%
+    \only<4>{Cycle 3 (O phase): O stops can receive}%
+    \only<5>{Cycle 4 (E phase): E stops can receive}%
+    \only<6>{Cycle 5 (O phase): O stops can receive}%
+    \only<7>{Cycle 7 (O phase)}%
+    \only<8>{Cycle 9 (O phase)}%
+    \only<9>{Cycle 11 (O phase): Transfer complete}%
 };
 
 % === SLIDE 1: Initial state with callouts ===
