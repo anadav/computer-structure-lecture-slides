@@ -456,23 +456,24 @@
 \begin{tikzpicture}
   \matrix[matrix of nodes,
     column sep=0pt,
-    row sep=0pt,
+    row sep=-3pt,
     ampersand replacement=\&,
     nodes={anchor=center, text height=1.5ex, text depth=0.5ex},
-    column 1/.style={nodes={font=\bfseries, anchor=east, minimum width=1.5cm}},
+    column 1/.style={nodes={font=\bfseries, anchor=east, minimum width=1.5cm, align=right}},
     column 2/.style={nodes={anchor=east, minimum width=2cm}},
-    column 3/.style={nodes={minimum width=10cm}},
+    column 3/.style={nodes={minimum width=4cm}},
     column 4/.style={nodes={anchor=west, minimum width=2cm}},
   ] (m) {
-    Speed: \& \textcolor{green!70!black}{Fastest} \& \& \textcolor{red!80!black}{Slowest} \\
-    Size: \& \textcolor{red!80!black}{Smallest} \& \& \textcolor{green!70!black}{Biggest} \\
-    Cost: \& \textcolor{red!80!black}{Highest} \& \& \textcolor{green!70!black}{Lowest} \\
-    Power: \& \textcolor{red!80!black}{Highest} \& \& \textcolor{green!70!black}{Lowest} \\
+    Speed: \& \textcolor{green!70!black}{Fastest} \& \phantom{spacer} \& \textcolor{red!80!black}{Slowest} \\[0.3em]
+    Size: \& \textcolor{red!80!black}{Smallest} \& \phantom{spacer} \& \textcolor{green!70!black}{Biggest} \\[0.3em]
+    Cost: \& \textcolor{red!80!black}{Highest} \& \phantom{spacer} \& \textcolor{green!70!black}{Lowest} \\[0.3em]
+    Power: \& \textcolor{red!80!black}{Highest} \& \phantom{spacer} \& \textcolor{green!70!black}{Lowest} \\
   };
-  % Draw arrows
-  \foreach \row in {1,2,3,4} {
-    \draw[->, thick, gray] (m-\row-2.east) ++(0.2,0) -- ($(m-\row-4.west)+(-0.2,0)$);
-  }
+  % Draw arrows individually for direction control
+  \draw[<-, thick, gray] (m-1-2.east) ++(0.2,0) -- ($(m-1-4.west)+(-0.2,0)$); % Speed: Slowest -> Fastest
+  \draw[->, thick, gray] (m-2-2.east) ++(0.2,0) -- ($(m-2-4.west)+(-0.2,0)$); % Size: Smallest -> Biggest
+  \draw[->, thick, gray] (m-3-2.east) ++(0.2,0) -- ($(m-3-4.west)+(-0.2,0)$); % Cost: Highest -> Lowest
+  \draw[->, thick, gray] (m-4-2.east) ++(0.2,0) -- ($(m-4-4.west)+(-0.2,0)$); % Power: Highest -> Lowest
 \end{tikzpicture}
 \end{center}
 \end{frame}
