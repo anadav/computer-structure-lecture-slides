@@ -113,7 +113,7 @@
   \end{tikzpicture}
 }
 
-\title{MESI Protocol}
+\title{MESI Protocol and Memory Models}
 \author{Computer Architecture 2360267}
 \date{2025, Recitation \#5}
 \begin{document}
@@ -129,8 +129,6 @@
 \begin{frame}{Multi-processor System}
 \begin{block}{Memory System Coherence}
 A memory system is coherent if:
-\end{block}
-
 \begin{enumerate}
 \item If P1 writes to address X, and later on, P2 reads X, and there are no other writes to X in between
     \begin{itemize}
@@ -141,6 +139,7 @@ A memory system is coherent if:
     \item Two writes to location X are seen in the same order by all processors
     \end{itemize}
 \end{enumerate}
+\end{block}
 
 \vspace{1em}
 \begin{center}
@@ -384,6 +383,59 @@ P0 reads X & S & I & I & S & 1001 \\
 \end{itemize}
 \end{frame}
 
+\section{Protocol Mechanisms}
+
+%==========================================
+\begin{frame}{Read For Ownership (RFO)}
+\begin{block}{RFO Request}
+A signal from private to shared cache (L1$\rightarrow$L2) requesting cache line exclusivity for write intent
+\end{block}
+
+\textbf{RFO Process:}
+\begin{enumerate}
+\item L1 sends RFO to L2/LLC
+\item MLC/LLC invalidates cache line in other L1s
+\item MLC/LLC responds to L1 that RFO has been granted
+\item L1 can now modify cache line
+\end{enumerate}
+
+\vspace{1em}
+\begin{alertblock}{RFO Guarantees Coherence}
+RFO ensures exclusive access before modification, maintaining cache coherence
+\end{alertblock}
+\end{frame}
+%==========================================
+\begin{frame}{Global Observation (GO)}
+\begin{block}{Global Observation}
+L2 sends a notification to all processors before delivering the actual data to the requesting L1 cache. This notification informs all processors that a specific cache line is being accessed.
+\end{block}
+
+\textbf{The Global Observation message indicates the MESI state (E or S) for the requested line}
+
+\vspace{0.2em}
+\textbf{Two-step L1$\rightarrow$L2 line request:}
+\begin{enumerate}
+\item \textbf{GO} - Global Observation with MESI state
+\item \textbf{Fill} - Actual data transfer
+\end{enumerate}
+
+\vspace{0.2em}
+\begin{alertblock}{GO and Fill Timing}
+GO and data may be sent at different cycles:
+\vspace{-0.3em}
+\begin{columns}
+\column{0.5\textwidth}
+\begin{itemize}
+\item GO is the outcome of a tag-hit
+\end{itemize}
+\column{0.5\textwidth}
+\begin{itemize}
+\item Data comes from the data array
+\end{itemize}
+\end{columns}
+\end{alertblock}
+\end{frame}
+
 \section{Question 1: MESI Coherence}
 
 %==========================================
@@ -481,60 +533,6 @@ P3 writes A & \onslide<6->{I} & \onslide<6->{I} & \onslide<6->{\textcolor{stateM
 \only<5>{L2 hit on clean data $\Rightarrow$ no snoop needed. All three now in \textbf{S}.}%
 \only<6>{S$\to$M requires RFO $\Rightarrow$ L2 invalidates P1+P2. P3 gets exclusive ownership.}%
 \end{tcolorbox}
-\end{frame}
-
-\section{Protocol Mechanisms}
-
-%==========================================
-\begin{frame}{Read For Ownership (RFO)}
-\begin{block}{RFO Request}
-A signal from private to shared cache (L1$\rightarrow$L2) requesting cache line exclusivity for write intent
-\end{block}
-
-\textbf{RFO Process:}
-\begin{enumerate}
-\item L1 sends RFO to L2/LLC
-\item MLC/LLC invalidates cache line in other L1s
-\item MLC/LLC responds to L1 that RFO has been granted
-\item L1 can now modify cache line
-\end{enumerate}
-
-\vspace{1em}
-\begin{alertblock}{RFO Guarantees Coherence}
-RFO ensures exclusive access before modification, maintaining cache coherence
-\end{alertblock}
-\end{frame}
-
-%==========================================
-\begin{frame}{Global Observation (GO)}
-\begin{block}{Global Observation}
-L2 sends a notification to all processors before delivering the actual data to the requesting L1 cache. This notification informs all processors that a specific cache line is being accessed.
-\end{block}
-
-\textbf{The Global Observation message indicates the MESI state (E or S) for the requested line}
-
-\vspace{0.2em}
-\textbf{Two-step L1$\rightarrow$L2 line request:}
-\begin{enumerate}
-\item \textbf{GO} - Global Observation with MESI state
-\item \textbf{Fill} - Actual data transfer
-\end{enumerate}
-
-\vspace{0.2em}
-\begin{alertblock}{GO and Fill Timing}
-GO and data may be sent at different cycles:
-\vspace{-0.3em}
-\begin{columns}
-\column{0.5\textwidth}
-\begin{itemize}
-\item GO is the outcome of a tag-hit
-\end{itemize}
-\column{0.5\textwidth}
-\begin{itemize}
-\item Data comes from the data array
-\end{itemize}
-\end{columns}
-\end{alertblock}
 \end{frame}
 
 \section{Question 2: MESI Coherence}
@@ -1011,17 +1009,12 @@ Even/Odd polarity switching per cycle]
 \section{Memory Models}
 
 %==========================================
-\begin{frame}{Memory Models and MESI}
-\begin{block}{Connection to MESI}
-Memory models define when stores become \textbf{globally visible} to other processors.
-MESI protocol is the \emph{mechanism} that makes stores visible --- but \textbf{when} they're drained from the store buffer is a memory model decision.
-\end{block}
-
-\vspace{0.5em}
+\begin{frame}{Memory Models}
 \textbf{What is a memory model?}
 \begin{itemize}
 \item Contract between hardware and software specifying ordering guarantees
 \item Defines which memory operation reorderings are allowed
+\item Modern processors reorder instructions and buffer stores for performance
 \end{itemize}
 
 \vspace{0.5em}
@@ -1033,10 +1026,11 @@ MESI protocol is the \emph{mechanism} that makes stores visible --- but \textbf{
 \end{itemize}
 
 \vspace{0.5em}
-\begin{alertblock}{Key Insight}
-Modern processors reorder instructions and buffer stores for performance.
-The memory model tells you which orderings you can rely on.
-\end{alertblock}
+\textbf{Connection to MESI:}
+\begin{itemize}
+\item MESI is the \emph{mechanism} for cache coherence --- a basic memory model guarantee
+\item Memory models define \emph{when} stores are drained from the store buffer and become globally visible
+\end{itemize}
 \end{frame}
 
 %==========================================
@@ -1070,6 +1064,87 @@ If $A \rightarrow B$, then $A$'s effects are visible to $B$, and $A$ cannot be r
 \end{tcolorbox}
 \end{frame}
 
+\section{Question 3: Memory Model (TSO)}
+
+%==========================================
+\begin{frame}{Question 3: Total Store Order}
+\small
+($\star$) Stores to the same location have a total order visible to all processors.
+\hfill Initial: \texttt{X=0}. Is \texttt{r1=1, r2=2, r3=2, r4=1} allowed?
+
+\begin{center}
+\begin{tikzpicture}[scale=0.82]
+  % Processor 0: p0-1-1 (phantom), p0-1-2 (label), p0-2-1 (S1), p0-2-2 (instruction)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p0) at (0, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{S1} \& |[font=\bfseries\scriptsize]| Processor 0 \\
+    S1 \& Store [\textcolor{varX}{X}] <- 1 \\
+  };
+
+  % Processor 1: p1-2-2 is the store instruction
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p1) at (3.8, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{S2} \& |[font=\bfseries\scriptsize]| Processor 1 \\
+    S2 \& Store [\textcolor{varX}{X}] <- 2 \\
+  };
+
+  % Processor 2: p2-2-2 (L1 instr), p2-4-2 (L2 instr)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p2) at (7.6, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L1} \& |[font=\bfseries\scriptsize]| Processor 2 \\
+    L1 \& r1 <- Load [\textcolor{varX}{X}] \\
+    \rule{0pt}{0.25cm} \& \\
+    L2 \& r2 <- Load [\textcolor{varX}{X}] \\
+  };
+
+  % Processor 3: p3-2-2 (L3 instr), p3-4-2 (L4 instr)
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p3) at (11.4, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L3} \& |[font=\bfseries\scriptsize]| Processor 3 \\
+    L3 \& r3 <- Load [\textcolor{varX}{X}] \\
+    \rule{0pt}{0.25cm} \& \\
+    L4 \& r4 <- Load [\textcolor{varX}{X}] \\
+  };
+
+  % Program order arrows (loads not reordered) - no labels
+  \draw[hbprogorder] (p2-2-2.south) -- (p2-4-2.north);
+  \draw[hbprogorder] (p3-2-2.south) -- (p3-4-2.north);
+
+  % Slide 2: Show S1 -> S2 arrow (total order implied by P2's view)
+  \onslide<2->{
+    \draw[->, red, very thick] (p0-2-2.north) to[out=60, in=120]
+      node[above, font=\scriptsize\bfseries, red] {S1 $<$ S2} (p1-2-2.north);
+  }
+
+  % Slide 3: Show S2 -> S1 arrow (total order implied by P3's view) - creates cycle
+  \onslide<3->{
+    \draw[->, red!60!black, very thick, dashed] (p1-2-2.south) to[out=-120, in=-60]
+      node[below, font=\scriptsize\bfseries, red!60!black] {S2 $<$ S1} (p0-2-2.south);
+  }
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.3cm}
+{\footnotesize\textbf{Analysis:}}
+\begin{enumerate}
+  \footnotesize
+  \item L1 $\rightarrow$ L2, L3 $\rightarrow$ L4 --- loads not reordered within processor
+  \onslide<2->{\item P2 sees r1=1 then r2=2 $\Rightarrow$ P2 observes S1 before S2 $\Rightarrow$ S1 $<$ S2 by ($\star$)}
+  \onslide<3->{\item P3 sees r3=2 then r4=1 $\Rightarrow$ P3 observes S2 before S1 $\Rightarrow$ S2 $<$ S1 by ($\star$)}
+  \onslide<4->{\item \textbf{Cycle in total store order!} S1 $<$ S2 $<$ S1 $\Rightarrow$ \textbf{Not allowed.}}
+\end{enumerate}
+\end{frame}
+
+\section{Question 4: Memory Model (Release-Consistency)}
+
 %==========================================
 \begin{frame}{Release-Consistency Primitives}
 \textbf{Weaker memory models} (ARM, RISC-V) provide explicit synchronization instructions:
@@ -1085,11 +1160,6 @@ Load from \texttt{X}. All \textbf{subsequent memory operations} by this processo
 
 \vspace{0.5em}
 \textbf{Key property:} Release-acquire creates \textbf{pairwise synchronization} between the releasing and acquiring processors.
-
-\vspace{0.5em}
-\begin{alertblock}{But...}
-What about a \textbf{third processor} that wasn't part of the release-acquire chain?
-\end{alertblock}
 \end{frame}
 
 %==========================================
@@ -1195,82 +1265,6 @@ P1's \emph{observation} of A=1 is not ``passed along'' to P2.
 Release-acquire doesn't propagate what was \emph{observed}, only what was \emph{written}.
 \end{frame}
 
-%==========================================
-\begin{frame}{Memory Model Exercise 2 -- Total Store Order}
-\small
-($\star$) Stores to the same location have a total order visible to all processors.
-\hfill Initial: \texttt{X=0}. Is \texttt{r1=1, r2=2, r3=2, r4=1} allowed?
-
-\begin{center}
-\begin{tikzpicture}[scale=0.82]
-  % Processor 0: p0-1-1 (phantom), p0-1-2 (label), p0-2-1 (S1), p0-2-2 (instruction)
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p0) at (0, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{S1} \& |[font=\bfseries\scriptsize]| Processor 0 \\
-    S1 \& Store [\textcolor{varX}{X}] <- 1 \\
-  };
-
-  % Processor 1: p1-2-2 is the store instruction
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p1) at (3.8, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{S2} \& |[font=\bfseries\scriptsize]| Processor 1 \\
-    S2 \& Store [\textcolor{varX}{X}] <- 2 \\
-  };
-
-  % Processor 2: p2-2-2 (L1 instr), p2-4-2 (L2 instr)
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p2) at (7.6, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{L1} \& |[font=\bfseries\scriptsize]| Processor 2 \\
-    L1 \& r1 <- Load [\textcolor{varX}{X}] \\
-    \rule{0pt}{0.25cm} \& \\
-    L2 \& r2 <- Load [\textcolor{varX}{X}] \\
-  };
-
-  % Processor 3: p3-2-2 (L3 instr), p3-4-2 (L4 instr)
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.15cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p3) at (11.4, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{L3} \& |[font=\bfseries\scriptsize]| Processor 3 \\
-    L3 \& r3 <- Load [\textcolor{varX}{X}] \\
-    \rule{0pt}{0.25cm} \& \\
-    L4 \& r4 <- Load [\textcolor{varX}{X}] \\
-  };
-
-  % Program order arrows (loads not reordered) - no labels
-  \draw[hbprogorder] (p2-2-2.south) -- (p2-4-2.north);
-  \draw[hbprogorder] (p3-2-2.south) -- (p3-4-2.north);
-
-  % Slide 2: Show S1 -> S2 arrow (total order implied by P2's view)
-  \onslide<2->{
-    \draw[->, red, very thick] (p0-2-2.north) to[out=60, in=120]
-      node[above, font=\scriptsize\bfseries, red] {S1 $<$ S2} (p1-2-2.north);
-  }
-
-  % Slide 3: Show S2 -> S1 arrow (total order implied by P3's view) - creates cycle
-  \onslide<3->{
-    \draw[->, red!60!black, very thick, dashed] (p1-2-2.south) to[out=-120, in=-60]
-      node[below, font=\scriptsize\bfseries, red!60!black] {S2 $<$ S1} (p0-2-2.south);
-  }
-\end{tikzpicture}
-\end{center}
-
-\vspace{-0.3cm}
-{\footnotesize\textbf{Analysis:}}
-\begin{enumerate}
-  \footnotesize
-  \item L1 $\rightarrow$ L2, L3 $\rightarrow$ L4 --- loads not reordered within processor
-  \onslide<2->{\item P2 sees r1=1 then r2=2 $\Rightarrow$ P2 observes S1 before S2 $\Rightarrow$ S1 $<$ S2 by ($\star$)}
-  \onslide<3->{\item P3 sees r3=2 then r4=1 $\Rightarrow$ P3 observes S2 before S1 $\Rightarrow$ S2 $<$ S1 by ($\star$)}
-  \onslide<4->{\item \textbf{Cycle in total store order!} S1 $<$ S2 $<$ S1 $\Rightarrow$ \textbf{Not allowed.}}
-\end{enumerate}
-\end{frame}
 
 %==========================================
 \begin{frame}{Summary}
