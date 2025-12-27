@@ -1071,70 +1071,134 @@ If $A \rightarrow B$, then $A$'s effects are visible to $B$, and $A$ cannot be r
 \end{frame}
 
 %==========================================
-\begin{frame}{Memory Model Exercise -- Setup}
-\textbf{Consider a simple memory model with these rules:}
-\begin{enumerate}
-\item Stores to the \textbf{same} location are totally ordered
-\item A load returns the value of the most recent store (in happens-before order) to that location
-\item Within a processor, \textbf{all operations to the same location} are ordered by program order
-\item Operations to \textbf{different locations} may be freely reordered
-\end{enumerate}
-
-\vspace{1em}
-\begin{center}
-\textbf{Initial state:} \texttt{X = 0, Y = 0}
-\vspace{0.5em}
-
-\begin{tabular}{c|c}
-\textbf{Processor 0} & \textbf{Processor 1} \\
-\hline
-\texttt{Store [X] $\leftarrow$ 1} & \texttt{Store [Y] $\leftarrow$ 1} \\
-\texttt{r1 $\leftarrow$ Load [Y]} & \texttt{r2 $\leftarrow$ Load [X]} \\
-\end{tabular}
-\end{center}
+\begin{frame}{Release-Consistency Primitives}
+\textbf{Weaker memory models} (ARM, RISC-V) provide explicit synchronization instructions:
 
 \vspace{0.5em}
-Is the outcome \texttt{r1 = 0, r2 = 0} possible? \textbf{Prove using happens-before analysis.}
+\begin{block}{Store-Release: \texttt{st.rel(X, v)}}
+Store value \texttt{v} to \texttt{X}. All \textbf{prior stores} by this processor become visible to other processors \textbf{before} this store becomes visible.
+\end{block}
+
+\begin{block}{Load-Acquire: \texttt{ld.acq(X)}}
+Load from \texttt{X}. All \textbf{subsequent memory operations} by this processor are ordered after any stores that happened-before the release we're reading.
+\end{block}
+
+\vspace{0.5em}
+\textbf{Key property:} Release-acquire creates \textbf{pairwise synchronization} between the releasing and acquiring processors.
+
+\vspace{0.5em}
+\begin{alertblock}{But...}
+What about a \textbf{third processor} that wasn't part of the release-acquire chain?
+\end{alertblock}
 \end{frame}
 
 %==========================================
-\begin{frame}{Memory Model Exercise -- Solution}
-\textbf{Is \texttt{r1 = 0, r2 = 0} possible?}
+\begin{frame}{Release-Consistency Exercise}
+\small
+\textbf{Initial:} A = 0, B = 0, flag = 0
 
-\pause
-\vspace{0.5em}
-\textbf{Yes, it is possible!}
+\vspace{0.3em}
+\begin{center}
+\begin{tikzpicture}[scale=0.82]
+  % Processor 0
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.12cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p0) at (0, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{S0} \& |[font=\bfseries\scriptsize]| P0 \\
+    S0 \& store(A, 1) \\
+  };
 
-\vspace{0.5em}
-\textbf{Happens-before analysis:}
+  % Processor 1
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.12cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p1) at (4.5, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L1} \& |[font=\bfseries\scriptsize]| P1 \\
+    L1 \& r0 <- load(A) \\
+    S1 \& store(B, r0) \\
+    S2 \& \textcolor{blue!70!black}{st.rel(flag, 1)} \\
+  };
+
+  % Processor 2
+  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.12cm,
+    column 1/.style={font=\scriptsize, gray, anchor=east},
+    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
+  ] (p2) at (9.5, 0) {
+    |[font=\bfseries\scriptsize]| \phantom{L2} \& |[font=\bfseries\scriptsize]| P2 \\
+    L2 \& \textcolor{blue!70!black}{r1 <- ld.acq(flag)} \\
+    L3 \& r2 <- load(A) \\
+    L4 \& r3 <- load(B) \\
+  };
+
+  % Note about P0
+  \node[font=\scriptsize, red!70!black, anchor=north] at (p0.south) {No release!};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3em}
+Is the outcome \texttt{r1=1, r2=0, r3=1} possible?
+
+\vspace{0.3em}
+\textbf{Interpretation:}
 \begin{itemize}
-\item P0's store is to \texttt{X}, P0's load is from \texttt{Y} --- \textbf{different locations}
-\item P1's store is to \texttt{Y}, P1's load is from \texttt{X} --- \textbf{different locations}
-\item By rule 4, operations to different locations may be reordered
+\item r1=1: P2 acquired flag (saw P1's release)
+\item r3=1: P2 saw B=1, meaning P1 wrote B=1, meaning P1 read A=1 (r0=1)
+\item r2=0: P2 did \textbf{not} see A=1, even though P1 did!
 \end{itemize}
+\end{frame}
+
+%==========================================
+\begin{frame}{Release-Consistency Exercise -- Solution}
+\textbf{Is \texttt{r1=1, r2=0, r3=1} possible?}
 
 \pause
-\vspace{0.5em}
-\textbf{Valid execution order:}
+\vspace{0.3em}
+\textbf{Under x86/TSO:} No --- strong ordering guarantees transitivity.
+
+\pause
+\vspace{0.3em}
+\textbf{Under Release-Consistency (ARM/RISC-V):} \textbf{Yes!}
+
+\vspace{0.3em}
+\textbf{Analysis:}
 \begin{enumerate}
-\item P0 executes load from Y $\rightarrow$ reads 0 (r1 = 0)
-\item P1 executes load from X $\rightarrow$ reads 0 (r2 = 0)
-\item P0 executes store to X
-\item P1 executes store to Y
+\item P2's \texttt{ld.acq(flag)} syncs with P1's \texttt{st.rel(flag)} $\Rightarrow$ P2 sees P1's prior \textbf{writes}
+\item P1 wrote B = r0, so if r3=1, then P1's r0=1, meaning P1 saw A=1 \checkmark
+\item But P1's \textbf{read} of A doesn't create synchronization!
+\item P0's store to A was \textbf{never released} --- no sync chain to P2
+\item P2's view of A is independent of the P1-P2 synchronization
 \end{enumerate}
 
 \pause
-\vspace{0.5em}
-\begin{tcolorbox}[colback=green!10, colframe=green!50!black, top=1mm, bottom=1mm]
-\textbf{Key insight:} No happens-before chain connects P0's store to P1's load (or vice versa).
-The loads ``raced'' ahead of the stores because there's no ordering constraint between operations to different locations.
+\vspace{0.3em}
+\begin{tcolorbox}[colback=red!10, colframe=red!50!black, top=1mm, bottom=1mm]
+\textbf{Key insight:} Release-acquire only synchronizes \textbf{writes} in the chain.
+P1's \emph{observation} of A=1 is not ``passed along'' to P2.
 \end{tcolorbox}
+\end{frame}
+
+%==========================================
+\begin{frame}{Release-Consistency Exercise -- Hardware Intuition}
+\textbf{Why can this happen in hardware?}
+
+\vspace{0.5em}
+\begin{itemize}
+\item P1's load of A may come via cache-to-cache transfer (P0's cache $\to$ P1's cache)
+\item P1's \texttt{st.rel} flushes P1's write buffer to LLC/memory (makes B, flag visible)
+\item But P0's store to A is still in P0's write buffer --- never flushed!
+\item P2 reads A from LLC/memory $\Rightarrow$ sees old value 0
+\end{itemize}
+
+\vspace{1em}
+\textbf{The ``broken chain'':} P0 $\to$ P1 was via a \emph{read}, not a synchronized write.
+Release-acquire doesn't propagate what was \emph{observed}, only what was \emph{written}.
 \end{frame}
 
 %==========================================
 \begin{frame}{Memory Model Exercise 2 -- Total Store Order}
 \small
-Stores to the same location have a total order visible to all processors.
+($\star$) Stores to the same location have a total order visible to all processors.
 \hfill Initial: \texttt{X=0}. Is \texttt{r1=1, r2=2, r3=2, r4=1} allowed?
 
 \begin{center}
@@ -1179,105 +1243,33 @@ Stores to the same location have a total order visible to all processors.
     L4 \& r4 <- Load [\textcolor{varX}{X}] \\
   };
 
-  % Program order arrows (loads not reordered)
-  \draw[hbprogorder] (p2-2-2.south) -- (p2-4-2.north)
-    node[hblabel, midway, left=2pt, draw, thin] {\tiny 1};
-  \draw[hbprogorder] (p3-2-2.south) -- (p3-4-2.north)
-    node[hblabel, midway, left=2pt, draw, thin] {\tiny 2};
+  % Program order arrows (loads not reordered) - no labels
+  \draw[hbprogorder] (p2-2-2.south) -- (p2-4-2.north);
+  \draw[hbprogorder] (p3-2-2.south) -- (p3-4-2.north);
 
+  % Slide 2: Show S1 -> S2 arrow (total order implied by P2's view)
   \onslide<2->{
-    % Cross-processor: S1 -> L1 (r1=1)
-    \draw[hbcross, varX] (p0-2-2.east) to[out=10, in=160]
-      node[hblabel, above=0pt, pos=0.5, draw, thin] {\tiny 3} (p2-2-1.west);
-    % Cross-processor: S2 -> L2 (r2=2)
-    \draw[hbcross, varX, densely dashed] (p1-2-2.east) to[out=-10, in=170]
-      node[hblabel, below=0pt, pos=0.5, draw, thin] {\tiny 4} (p2-4-2.west);
+    \draw[->, red, very thick] (p0-2-2.north) to[out=60, in=120]
+      node[above, font=\scriptsize\bfseries, red] {S1 $<$ S2} (p1-2-2.north);
   }
+
+  % Slide 3: Show S2 -> S1 arrow (total order implied by P3's view) - creates cycle
   \onslide<3->{
-    % Cross-processor: S2 -> L3 (r3=2)
-    \draw[hbcross, varX, densely dashed] (p1-2-2.east) to[out=10, in=160]
-      node[hblabel, above=0pt, pos=0.6, draw, thin] {\tiny 5} (p3-2-2.west);
-    % Cross-processor: S1 -> L4 (r4=1) - this creates the contradiction
-    \draw[hbcross, varX, looseness=1.2] (p0-2-2.east) to[out=-20, in=200]
-      node[hblabel, below=0pt, pos=0.5, draw, thin] {\tiny 6} (p3-4-1.west);
+    \draw[->, red!60!black, very thick, dashed] (p1-2-2.south) to[out=-120, in=-60]
+      node[below, font=\scriptsize\bfseries, red!60!black] {S2 $<$ S1} (p0-2-2.south);
   }
 \end{tikzpicture}
 \end{center}
 
-\vspace{-0.4cm}
-{\footnotesize\textbf{Happens-before analysis:}}
+\vspace{-0.3cm}
+{\footnotesize\textbf{Analysis:}}
 \begin{enumerate}
   \footnotesize
   \item L1 $\rightarrow$ L2, L3 $\rightarrow$ L4 --- loads not reordered within processor
-  \onslide<2->{\item r1=1 $\Rightarrow$ S1 $\rightarrow$ L1; \quad r2=2 $\Rightarrow$ S2 $\rightarrow$ L2; \quad Chain: S1 $\rightarrow$ L1 $\rightarrow$ L2, so S1 before S2}
-  \onslide<3->{\item r3=2 $\Rightarrow$ S2 $\rightarrow$ L3; \quad r4=1 $\Rightarrow$ S1 $\rightarrow$ L4; \quad Chain: S2 $\rightarrow$ L3 $\rightarrow$ L4, so S2 before S1}
-  \onslide<4->{\item \textbf{Contradiction!} S1 before S2 AND S2 before S1 $\Rightarrow$ \textbf{Not allowed.}}
+  \onslide<2->{\item P2 sees r1=1 then r2=2 $\Rightarrow$ P2 observes S1 before S2 $\Rightarrow$ S1 $<$ S2 by ($\star$)}
+  \onslide<3->{\item P3 sees r3=2 then r4=1 $\Rightarrow$ P3 observes S2 before S1 $\Rightarrow$ S2 $<$ S1 by ($\star$)}
+  \onslide<4->{\item \textbf{Cycle in total store order!} S1 $<$ S2 $<$ S1 $\Rightarrow$ \textbf{Not allowed.}}
 \end{enumerate}
-\end{frame}
-
-%==========================================
-\begin{frame}{Memory Model Exercise 3 -- Three Processors (x86/TSO)}
-\small
-\textbf{Initial:} \texttt{X = Y = Z = 0}
-\hfill Is \texttt{r1 = 1, r2 = 1, r3 = 0} possible?
-
-\vspace{0.2em}
-\begin{center}
-\begin{tikzpicture}[scale=0.85]
-  % Processor 0
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.1cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p0) at (0, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{S0} \& |[font=\bfseries\scriptsize]| P0 \\
-    S0 \& |[alias=s0]| St [\textcolor{varX}{X}] <- 1 \\
-  };
-
-  % Processor 1
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.1cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p1) at (4, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{L1} \& |[font=\bfseries\scriptsize]| P1 \\
-    |[alias=l1lbl]| L1 \& |[alias=l1]| r1 <- Ld [\textcolor{varX}{X}] \\
-    \rule{0pt}{0.2cm} \& \\
-    S1 \& |[alias=s1]| St [\textcolor{varY}{Y}] <- 1 \\
-  };
-
-  % Processor 2
-  \matrix[matrix of nodes, ampersand replacement=\&, anchor=north, column sep=0.05cm, row sep=0.1cm,
-    column 1/.style={font=\scriptsize, gray, anchor=east},
-    column 2/.style={font=\ttfamily\scriptsize, anchor=west}
-  ] (p2) at (8, 0) {
-    |[font=\bfseries\scriptsize]| \phantom{L2} \& |[font=\bfseries\scriptsize]| P2 \\
-    |[alias=l2lbl]| L2 \& |[alias=l2]| r2 <- Ld [\textcolor{varY}{Y}] \\
-    \rule{0pt}{0.2cm} \& \\
-    L3 \& |[alias=l3]| r3 <- Ld [\textcolor{varX}{X}] \\
-  };
-
-  \onslide<2->{
-    % Program order arrows
-    \draw[hbprogorder] (l1.south) -- (s1.north)
-      node[hblabel, midway, left=1pt, draw, thin] {\tiny 1};
-    \draw[hbprogorder] (l2.south) -- (l3.north)
-      node[hblabel, midway, left=1pt, draw, thin] {\tiny 2};
-  }
-  \onslide<3->{
-    % Cross-processor: S0 -> L1 (r1=1 means L1 saw S0)
-    \draw[hbcross, varX] (s0.east) -- (l1.west)
-      node[hblabel, above=0pt, pos=0.5, draw, thin] {\tiny 3};
-    % Cross-processor: S1 -> L2 (r2=1 means L2 saw S1)
-    \draw[hbcross, varY] (s1.east) -- (l2.west)
-      node[hblabel, above=0pt, pos=0.5, draw, thin] {\tiny 4};
-  }
-\end{tikzpicture}
-\end{center}
-
-\vspace{-0.2cm}
-\only<1>{\phantom{\textbf{Analysis:}}}%
-\only<2>{\footnotesize\textbf{TSO:} L1$\rightarrow$S1 (load before store), L2$\rightarrow$L3 (loads ordered)}%
-\only<3>{\footnotesize\textbf{Cross-proc:} r1=1 $\Rightarrow$ S0$\rightarrow$L1. \quad r2=1 $\Rightarrow$ S1$\rightarrow$L2.}%
-\only<4->{\footnotesize\textbf{Chain:} S0 $\xrightarrow{3}$ L1 $\xrightarrow{1}$ S1 $\xrightarrow{4}$ L2 $\xrightarrow{2}$ L3. Thus S0 $\rightarrow$ L3, so L3 must see X=1 $\Rightarrow$ r3=1. \textbf{Not possible!}}
 \end{frame}
 
 %==========================================
