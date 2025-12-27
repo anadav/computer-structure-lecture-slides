@@ -392,11 +392,21 @@ P0 reads X & S & I & I & S & 1001 \\
 \end{columns}
 
 \vspace{1em}
+\begin{columns}[t]
+\column{0.5\textwidth}
 \textbf{Timing:}
 \begin{itemize}
 \item L1 $\leftrightarrow$ L2: 10ns
 \item L2 $\leftrightarrow$ Memory: 100ns
 \end{itemize}
+
+\column{0.5\textwidth}
+\textbf{CVB (Core Valid Bits):}
+\begin{itemize}
+\item L2 tracks which cores have each line
+\item 1 bit per core per cache line
+\end{itemize}
+\end{columns}
 \end{frame}
 
 %==========================================
@@ -562,7 +572,7 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \rowcolor{gray!20}
 \# & \textbf{Operation} & \textbf{Messages Sent} & \textbf{Time} & \textbf{P0} & \textbf{P1} & \textbf{State} \\
 \rowcolor{gray!20}
- & & & & \multicolumn{2}{c|}{CVB} & \\
+ & & & (ns) & \multicolumn{2}{c|}{CVB} & (accessor) \\
 \hline
 1 & \makecell[l]{P0\\reads X1} & \onslide<2->{\vspace{\mesicellvs}\textcolor{messageblue}{P0$\to$L1 miss} \textcolor{timecolor}{(3)}, \textcolor{messageblue}{L1$\to$L2 rd miss} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L2$\to$MEM rd} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{MEM$\to$L2 data} \textcolor{timecolor}{(90)}, \textcolor{messageblue}{L2$\to$L1 data} \textcolor{timecolor}{(20)}, \textcolor{messageblue}{L1$\to$P0 data} \textcolor{timecolor}{(3)}} & \onslide<2->{\textcolor{timecolor}{226}} & \onslide<2->{1} & \onslide<2->{0} & \onslide<2->{\textcolor{stateE}{\textbf{E}}} \\
 \hline
@@ -585,8 +595,8 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \only<1>{\textbf{Given:} Row 2 result. Work backwards to understand row 1, then forward for rows 3--6.}%
 \only<2>{Cold miss $\Rightarrow$ full memory round-trip. \textbf{E} state since P0 is the only holder.}%
 \only<3>{X3/X4 same L1 set $\Rightarrow$ evict X3 (Modified $\Rightarrow$ writeback). \underline{Underlined} = eviction writes.}%
-\only<4>{L2 miss $\Rightarrow$ \textbf{Inclusion}: L2 snoops P1 for X4 (modified), gets writeback. Longest path!}%
-\only<5>{L2 hit but P1 has X5 Modified $\Rightarrow$ snoop gets dirty data. Both become \textbf{S}. Shortest path!}%
+\only<4>{L2 miss $\Rightarrow$ \textbf{Inclusion}: L2 snoops P1 for X4 (modified), gets writeback.}%
+\only<5>{L2 hit but P1 has X5 Modified $\Rightarrow$ snoop gets dirty data. Both become \textbf{S}.}%
 \only<6>{L1+L2 miss $\Rightarrow$ fetch from memory. X5 evicted from L2 $\Rightarrow$ snoop+writeback. \{braces\} = parallel.}%
 \end{tcolorbox}
 \end{frame}
