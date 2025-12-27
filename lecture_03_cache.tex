@@ -15,7 +15,7 @@
 \usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 \usetikzlibrary{backgrounds, fit, decorations.pathreplacing, matrix}
-\usetikzlibrary{circuits.logic.US, tikzmark}
+\usetikzlibrary{circuits.logic.US, tikzmark, shapes.callouts}
 
 % Command for circled numbers
 \newcommand{\circnum}[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=1pt,minimum size=1.2em] (char) {\small #1};}}
@@ -455,22 +455,22 @@
 \begin{tikzpicture}
   \matrix[matrix of nodes,
     column sep=0pt,
-    row sep=2pt,
+    row sep=0pt,
     ampersand replacement=\&,
     nodes={anchor=center, text height=1.5ex, text depth=0.5ex},
-    column 1/.style={nodes={font=\bfseries, anchor=east, minimum width=1.2cm}},
-    column 2/.style={nodes={anchor=west}},
-    column 3/.style={nodes={minimum width=5cm}},
-    column 4/.style={nodes={anchor=east}},
+    column 1/.style={nodes={font=\bfseries, anchor=east, minimum width=1.5cm}},
+    column 2/.style={nodes={anchor=east, minimum width=2cm}},
+    column 3/.style={nodes={minimum width=10cm}},
+    column 4/.style={nodes={anchor=west, minimum width=2cm}},
   ] (m) {
-    Speed: \& Fastest \& \& Slowest \\
-    Size: \& Smallest \& \& Biggest \\
-    Cost: \& Highest \& \& Lowest \\
-    Power: \& Highest \& \& Lowest \\
+    Speed: \& \textcolor{green!70!black}{Fastest} \& \& \textcolor{red!80!black}{Slowest} \\
+    Size: \& \textcolor{red!80!black}{Smallest} \& \& \textcolor{green!70!black}{Biggest} \\
+    Cost: \& \textcolor{red!80!black}{Highest} \& \& \textcolor{green!70!black}{Lowest} \\
+    Power: \& \textcolor{red!80!black}{Highest} \& \& \textcolor{green!70!black}{Lowest} \\
   };
   % Draw arrows
   \foreach \row in {1,2,3,4} {
-    \draw[->, thick] (m-\row-2.east) -- (m-\row-4.west);
+    \draw[->, thick, gray] (m-\row-2.east) ++(0.2,0) -- ($(m-\row-4.west)+(-0.2,0)$);
   }
 \end{tikzpicture}
 \end{center}
@@ -1099,7 +1099,7 @@
 
 \begin{frame}[fragile]{2-Way Set Associative (2W SA)}
 \begin{center}
-\begin{tikzpicture}[scale=1, transform shape,
+\begin{tikzpicture}[scale=0.8, transform shape,
     % Style definitions
     addrbox/.style={rectangle, draw, minimum height=0.6cm, font=\footnotesize, text depth=0.1em},
     tagbox/.style={addrbox, fill=green!30, minimum width=2cm},
@@ -1522,76 +1522,78 @@
   \definecolor{lightred}{RGB}{255,200,200}
 
   % Row height and dimensions
-  \def\rowh{0.4}
+  \def\rowh{0.32}
   \def\colw{1.6}
-  \def\nsets{3}  % sets per cache-size or way-size
+  \def\nrows{12}    % total rows to show
+  \def\dmsets{6}    % sets for direct map
+  \def\sasets{3}    % sets per way for 2-way
+  \def\waysize{3}   % way size
+  \def\cachesize{6} % cache size (2 ways)
+
+  % Callout: explain what the figure shows (pointing to east of right 2-way S.A.)
+  \node[rectangle callout, callout absolute pointer={(10.6+\colw, \nrows*\rowh/2)},
+        draw, fill=yellow!20, font=\scriptsize, align=left, text width=2.2cm, anchor=west]
+        at (10.6+\colw+0.5, \nrows*\rowh/2) {Each column shows how memory blocks map to cache sets (number = set \#)};
 
   % ==================== LEFT GROUP: Different sets - both OK ====================
 
   % --- Direct Map (different sets) ---
   \begin{scope}[shift={(0,0)}]
-    \node[anchor=south, align=center, font=\small] at (\colw/2, 9*\rowh+0.9) {Different sets, so\\both can reside\\in the cache};
-    \node[font=\small, anchor=south] at (\colw/2, 9*\rowh+0.1) {Direct Map};
+    \node[anchor=south, align=center, font=\small] at (\colw/2, \nrows*\rowh+0.9) {Different sets,\\both can reside\\in the cache};
+    \node[font=\small, anchor=south] at (\colw/2, \nrows*\rowh+0.1) {Direct Map};
 
-    \draw[thick] (0, 0) rectangle (\colw, 9*\rowh);
+    \draw[thick] (0, 0) rectangle (\colw, \nrows*\rowh);
 
-    % Draw rows with repeating set numbers (0,1,2,0,1,2,0,1,2)
-    \foreach \i in {0, 1, ..., 8} {
+    % Draw rows with set numbers (0-5 repeating)
+    \foreach \i in {0, 1, ..., 11} {
       \pgfmathsetmacro{\y}{\i * \rowh}
-      \pgfmathtruncatemacro{\setnum}{mod(\i, \nsets)}
+      \pgfmathtruncatemacro{\setnum}{mod(\i, \dmsets)}
       \draw (0, \y) -- (\colw, \y);
       \node[font=\scriptsize] at (\colw/2, \y + \rowh/2) {\setnum};
     }
 
-    % Highlight different sets (green) - row 1 (set 1) and row 5 (set 2)
+    % Highlight different sets (green) - row 1 (set 1) and row 5 (set 5)
     \fill[lightgreen] (0, 1*\rowh) rectangle (\colw, 2*\rowh);
     \node[font=\scriptsize] at (\colw/2, 1*\rowh + \rowh/2) {1};
     \fill[lightgreen] (0, 5*\rowh) rectangle (\colw, 6*\rowh);
-    \node[font=\scriptsize] at (\colw/2, 5*\rowh + \rowh/2) {2};
+    \node[font=\scriptsize] at (\colw/2, 5*\rowh + \rowh/2) {5};
 
-    % Cache Size labels (spans 6 rows = twice way size)
-    \draw[<->, thick] (-0.2, 0) -- (-0.2, 6*\rowh);
+    % Cache Size label (6 rows)
+    \draw[<->, thick] (-0.2, 0) -- (-0.2, \cachesize*\rowh);
     \node[anchor=east, font=\tiny, align=center] at (-0.25, 3*\rowh) {Cache\\Size};
-    \draw[<->, thick] (-0.2, 6*\rowh) -- (-0.2, 9*\rowh);
+    \draw[<->, thick] (-0.2, \cachesize*\rowh) -- (-0.2, \nrows*\rowh);
 
     \node at (\colw/2, -0.3) {$\vdots$};
   \end{scope}
 
   % --- 2-way S.A. (different sets) ---
-  \begin{scope}[shift={(2.5,0)}]
-    \node[anchor=south, align=center, font=\small] at (\colw/2, 9*\rowh+0.9) {Same set, still\\both can reside\\in the cache};
-    \node[font=\small, anchor=south] at (\colw/2, 9*\rowh+0.1) {2-way S.A.};
+  \begin{scope}[shift={(3.2,0)}]
+    \node[anchor=south, align=center, font=\small] at (\colw/2, \nrows*\rowh+0.9) {Different sets,\\both can reside\\in the cache};
+    \node[font=\small, anchor=south] at (\colw/2, \nrows*\rowh+0.1) {2-way S.A.};
 
-    \draw[thick] (0, 0) rectangle (\colw, 9*\rowh);
+    \draw[thick] (0, 0) rectangle (\colw, \nrows*\rowh);
 
-    % Draw rows with set numbers repeating (0,1,2,0,1,2,0,1,2)
-    \foreach \i in {0, 1, ..., 8} {
+    % Draw rows with set numbers (0-2 repeating)
+    \foreach \i in {0, 1, ..., 11} {
       \pgfmathsetmacro{\y}{\i * \rowh}
-      \pgfmathtruncatemacro{\setnum}{mod(\i, \nsets)}
+      \pgfmathtruncatemacro{\setnum}{mod(\i, \sasets)}
       \draw (0, \y) -- (\colw, \y);
       \node[font=\scriptsize] at (\colw/2, \y + \rowh/2) {\setnum};
     }
 
-    % Highlight same set in different ways (green) - row 1 (set 1) and row 4 (set 1)
+    % Highlight same rows as direct map (green) - row 1 (set 1) and row 5 (set 2)
     \fill[lightgreen] (0, 1*\rowh) rectangle (\colw, 2*\rowh);
     \node[font=\scriptsize] at (\colw/2, 1*\rowh + \rowh/2) {1};
-    \fill[lightgreen] (0, 4*\rowh) rectangle (\colw, 5*\rowh);
-    \node[font=\scriptsize] at (\colw/2, 4*\rowh + \rowh/2) {1};
+    \fill[lightgreen] (0, 5*\rowh) rectangle (\colw, 6*\rowh);
+    \node[font=\scriptsize] at (\colw/2, 5*\rowh + \rowh/2) {2};
 
-    % Arrow connecting same-set rows
-    \draw[->, thick, blue] (\colw+0.15, 1.5*\rowh) -- (\colw+0.15, 4.5*\rowh);
-
-    % Way Size labels (inner)
-    \foreach \w in {0, 1, 2} {
-      \pgfmathsetmacro{\ybot}{\w * 3 * \rowh}
-      \pgfmathsetmacro{\ytop}{(\w + 1) * 3 * \rowh}
+    % Way Size labels (inner) - no Cache Size for 2-way
+    \foreach \w in {0, 1, 2, 3} {
+      \pgfmathsetmacro{\ybot}{\w * \waysize * \rowh}
+      \pgfmathsetmacro{\ytop}{(\w + 1) * \waysize * \rowh}
       \draw[<->, thick] (-0.2, \ybot) -- (-0.2, \ytop);
       \node[anchor=east, font=\tiny, align=center] at (-0.25, \ybot + 1.5*\rowh) {Way\\Size};
     }
-
-    % Cache Size label (outer, spans 6 rows = 2 ways)
-    \draw[<->, thick] (-0.65, 0) -- (-0.65, 6*\rowh);
-    \node[anchor=east, font=\tiny, align=center] at (-0.7, 3*\rowh) {Cache\\Size};
 
     \node at (\colw/2, -0.3) {$\vdots$};
   \end{scope}
@@ -1599,86 +1601,73 @@
   % ==================== RIGHT GROUP: Same set - DM conflict, 2-way OK ====================
 
   % --- Direct Map (same set - CONFLICT) ---
-  \begin{scope}[shift={(6.5,0)}]
-    \node[anchor=south, align=center, font=\small] at (\colw/2, 9*\rowh+0.9) {Same set, both\\\underline{cannot} reside in\\the cache};
-    \node[font=\small, anchor=south] at (\colw/2, 9*\rowh+0.1) {Direct Map};
+  \begin{scope}[shift={(7.4,0)}]
+    \node[anchor=south, align=center, font=\small] at (\colw/2, \nrows*\rowh+0.9) {Same set,\\\textcolor{red}{\underline{conflict}}\\$\Rightarrow$ eviction};
+    \node[font=\small, anchor=south] at (\colw/2, \nrows*\rowh+0.1) {Direct Map};
 
-    \draw[thick] (0, 0) rectangle (\colw, 9*\rowh);
+    \draw[thick] (0, 0) rectangle (\colw, \nrows*\rowh);
 
-    % Draw rows with repeating set numbers
-    \foreach \i in {0, 1, ..., 8} {
+    % Draw rows with set numbers (0-5 repeating)
+    \foreach \i in {0, 1, ..., 11} {
       \pgfmathsetmacro{\y}{\i * \rowh}
-      \pgfmathtruncatemacro{\setnum}{mod(\i, \nsets)}
+      \pgfmathtruncatemacro{\setnum}{mod(\i, \dmsets)}
       \draw (0, \y) -- (\colw, \y);
       \node[font=\scriptsize] at (\colw/2, \y + \rowh/2) {\setnum};
     }
 
-    % Highlight conflict (red) - two rows mapping to same set (rows 2 and 5, both set 2)
+    % Highlight conflict (red) - row 2 (set 2) and row 8 (set 2)
     \fill[lightred] (0, 2*\rowh) rectangle (\colw, 3*\rowh);
     \node[font=\scriptsize] at (\colw/2, 2*\rowh + \rowh/2) {2};
-    \fill[lightred] (0, 5*\rowh) rectangle (\colw, 6*\rowh);
-    \node[font=\scriptsize] at (\colw/2, 5*\rowh + \rowh/2) {2};
+    \fill[lightred] (0, 8*\rowh) rectangle (\colw, 9*\rowh);
+    \node[font=\scriptsize] at (\colw/2, 8*\rowh + \rowh/2) {2};
 
-    % Arrow showing conflict between same-set rows
-    \draw[<->, thick, red] (\colw+0.15, 2.5*\rowh) -- (\colw+0.15, 5.5*\rowh);
-    \node[font=\tiny, red, anchor=west] at (\colw+0.2, 4*\rowh) {conflict};
-
-    % Cache Size labels (spans 6 rows = twice way size)
-    \draw[<->, thick] (-0.2, 0) -- (-0.2, 6*\rowh);
+    % Cache Size label (6 rows)
+    \draw[<->, thick] (-0.2, 0) -- (-0.2, \cachesize*\rowh);
     \node[anchor=east, font=\tiny, align=center] at (-0.25, 3*\rowh) {Cache\\Size};
-    \draw[<->, thick] (-0.2, 6*\rowh) -- (-0.2, 9*\rowh);
+    \draw[<->, thick] (-0.2, \cachesize*\rowh) -- (-0.2, \nrows*\rowh);
 
     \node at (\colw/2, -0.3) {$\vdots$};
   \end{scope}
 
   % --- 2-way S.A. (same set - OK) ---
-  \begin{scope}[shift={(9.5,0)}]
-    \node[anchor=south, align=center, font=\small] at (\colw/2, 9*\rowh+0.9) {Same set, still\\both can reside\\in the cache};
-    \node[font=\small, anchor=south] at (\colw/2, 9*\rowh+0.1) {2-way S.A.};
+  \begin{scope}[shift={(10.6,0)}]
+    \node[anchor=south, align=center, font=\small] at (\colw/2, \nrows*\rowh+0.9) {Same set,\\different ways\\$\Rightarrow$ both fit};
+    \node[font=\small, anchor=south] at (\colw/2, \nrows*\rowh+0.1) {2-way S.A.};
 
-    \draw[thick] (0, 0) rectangle (\colw, 9*\rowh);
+    \draw[thick] (0, 0) rectangle (\colw, \nrows*\rowh);
 
-    % Draw rows with set numbers repeating (0,1,2,0,1,2,0,1,2)
-    \foreach \i in {0, 1, ..., 8} {
+    % Draw rows with set numbers (0-2 repeating)
+    \foreach \i in {0, 1, ..., 11} {
       \pgfmathsetmacro{\y}{\i * \rowh}
-      \pgfmathtruncatemacro{\setnum}{mod(\i, \nsets)}
+      \pgfmathtruncatemacro{\setnum}{mod(\i, \sasets)}
       \draw (0, \y) -- (\colw, \y);
       \node[font=\scriptsize] at (\colw/2, \y + \rowh/2) {\setnum};
     }
 
-    % Highlight same set in different ways (green) - row 2 (set 2) and row 5 (set 2)
+    % Highlight same rows as direct map but green - row 2 (set 2) and row 8 (set 2)
     \fill[lightgreen] (0, 2*\rowh) rectangle (\colw, 3*\rowh);
     \node[font=\scriptsize] at (\colw/2, 2*\rowh + \rowh/2) {2};
-    \fill[lightgreen] (0, 5*\rowh) rectangle (\colw, 6*\rowh);
-    \node[font=\scriptsize] at (\colw/2, 5*\rowh + \rowh/2) {2};
+    \fill[lightgreen] (0, 8*\rowh) rectangle (\colw, 9*\rowh);
+    \node[font=\scriptsize] at (\colw/2, 8*\rowh + \rowh/2) {2};
 
-    % Arrow connecting same-set rows (OK because different ways)
-    \draw[->, thick, green!60!black] (\colw+0.15, 2.5*\rowh) -- (\colw+0.15, 5.5*\rowh);
-    \node[font=\tiny, green!60!black, anchor=west] at (\colw+0.2, 4*\rowh) {OK};
-
-    % Way Size labels (inner)
-    \foreach \w in {0, 1, 2} {
-      \pgfmathsetmacro{\ybot}{\w * 3 * \rowh}
-      \pgfmathsetmacro{\ytop}{(\w + 1) * 3 * \rowh}
+    % Way Size labels (inner) - no Cache Size for 2-way
+    \foreach \w in {0, 1, 2, 3} {
+      \pgfmathsetmacro{\ybot}{\w * \waysize * \rowh}
+      \pgfmathsetmacro{\ytop}{(\w + 1) * \waysize * \rowh}
       \draw[<->, thick] (-0.2, \ybot) -- (-0.2, \ytop);
       \node[anchor=east, font=\tiny, align=center] at (-0.25, \ybot + 1.5*\rowh) {Way\\Size};
     }
-
-    % Cache Size label (outer, spans 6 rows = 2 ways)
-    \draw[<->, thick] (-0.65, 0) -- (-0.65, 6*\rowh);
-    \node[anchor=east, font=\tiny, align=center] at (-0.7, 3*\rowh) {Cache\\Size};
 
     \node at (\colw/2, -0.3) {$\vdots$};
   \end{scope}
 
 \end{tikzpicture}
 
-\vspace{0.15cm}
+\vspace{-6mm}
 \small
 \begin{itemize}
-  \item Memory blocks map to cache sets: set = block\# mod \#sets. Set numbers repeat every cache/way size.
-  \item \textbf{Direct-mapped}: blocks mapping to same set $\Rightarrow$ conflict (only one can reside)
-  \item \textbf{2-way S.A.}: same set has 2 ways $\Rightarrow$ two blocks can coexist
+  \item \textbf{Direct Map}: Two accesses map to set 2 $\Rightarrow$ conflict, one must be evicted
+  \item \textbf{2-way S.A.}: Two accesses map to set 2, but each set has 2 ways $\Rightarrow$ both fit
 \end{itemize}
 
 \end{frame}
@@ -2780,65 +2769,6 @@ State & Valid & Modified & Copies elsewhere?\\
       \node[text width=4cm, align=center] at (2,-3) {\small Must return same value};
     \end{tikzpicture}
   \end{center}
-\end{frame}
-
-% Frame 4: MESI Protocol
-\begin{frame}{MESI Protocol}
-\begin{columns}[T]
-\begin{column}{0.55\textwidth}
-  \textbf{Each cache line can be in one of 4 states:}
-
-  \vspace{0.3cm}
-
-  \begin{tikzpicture}[every node/.style={font=\normalsize}]
-    \node[draw, thick, fill=invalidcolor, minimum width=6.5cm, minimum height=0.9cm, align=left] (invalid) at (0,0) {
-      \mesistate{I}{invalidcolor} \textbf{Invalid} -- Data is not valid
-    };
-
-    \node[draw, thick, fill=sharedcolor, minimum width=6.5cm, minimum height=0.9cm, align=left] (shared) at (0,-1.1) {
-      \mesistate{S}{sharedcolor} \textbf{Shared} -- Valid, clean, may have copies
-    };
-
-    \node[draw, thick, fill=exclusivecolor, minimum width=6.5cm, minimum height=0.9cm, align=left] (exclusive) at (0,-2.2) {
-      \mesistate{E}{exclusivecolor} \textbf{Exclusive} -- Valid, clean, no copies
-    };
-
-    \node[draw, thick, fill=modifiedcolor, minimum width=6.5cm, minimum height=0.9cm, align=left] (modified) at (0,-3.3) {
-      \mesistate{M}{modifiedcolor} \textbf{Modified} -- Valid, dirty, no copies
-    };
-  \end{tikzpicture}
-\end{column}
-
-\begin{column}{0.45\textwidth}
-  \centering
-  \textbf{State Properties:}
-  \vspace{0.2cm}
-
-  \begin{tikzpicture}[
-    cell/.style={minimum width=1.3cm, minimum height=0.6cm, align=center, font=\small},
-    headercell/.style={cell, fill=gray!30, font=\small\bfseries},
-  ]
-    \matrix[matrix of nodes,
-      column sep=0pt, row sep=0pt,
-      ampersand replacement=\&,
-      nodes={cell, draw=gray},
-      column 1/.style={nodes={headercell, minimum width=1.5cm}},
-      row 1/.style={nodes={headercell}},
-    ] (m) {
-      State \& Valid \& Dirty \& Copies? \\
-      |[fill=invalidcolor]| I \& No \& -- \& maybe \\
-      |[fill=sharedcolor]| S \& Yes \& No \& maybe \\
-      |[fill=exclusivecolor]| E \& Yes \& No \& No \\
-      |[fill=modifiedcolor]| M \& Yes \& Yes \& No \\
-    };
-  \end{tikzpicture}
-
-  \vspace{0.4cm}
-  \small
-  \textbf{Key insight:}\\
-  To modify data, must first obtain \textcolor{red}{\textbf{ownership}} (transition to M or E state)
-\end{column}
-\end{columns}
 \end{frame}
 
 % Macro for the multi-processor example frames
