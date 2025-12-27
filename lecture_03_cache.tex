@@ -184,7 +184,7 @@
 
 % PLRU Tree showing path to accessed way (for example slide)
 % Usage: \plrutreepath{bit0}{bit1}{bit2}{accessed-way}
-% Highlight: 0-3 = access way, 5 = victim (way 3), 9 = no highlight
+% Highlight: 0-3 = access way, 5 = victim path to way 3, 9 = no highlight
 \newcommand{\plrutreepath}[4]{%
 \begin{tikzpicture}[
   scale=0.55,
@@ -193,6 +193,7 @@
   accessedleaf/.style={circle, fill=green!50, minimum size=0.45cm, inner sep=0pt, font=\scriptsize\bfseries},
   victimleaf/.style={circle, fill=red!50, minimum size=0.45cm, inner sep=0pt, font=\scriptsize\bfseries},
   pathedge/.style={->, >=Stealth, orange, line width=1.2pt},
+  victimedge/.style={->, >=Stealth, red!70!black, line width=1.2pt},
   normaledge/.style={gray, line width=0.5pt},
 ]
   % Root node (bit0)
@@ -229,8 +230,17 @@
     \node[leaf] (w3) at (2.2,-2.15) {3};
   \fi\fi
 
-  % Draw edges - highlight path to accessed way (if #4 < 4)
-  \ifnum#4<4
+  % Draw edges based on mode
+  \ifnum#4=5
+    % Victim path: follow OPPOSITE of bit values (0→right, 1→left)
+    % bits are 0,1,0 so: bit0=0→right to bit2, bit2=0→right to way3
+    \draw[normaledge] (bit0) -- (bit1);
+    \draw[victimedge] (bit0) -- (bit2);
+    \draw[normaledge] (bit1) -- (w0);
+    \draw[normaledge] (bit1) -- (w1);
+    \draw[normaledge] (bit2) -- (w2);
+    \draw[victimedge] (bit2) -- (w3);
+  \else\ifnum#4<4
     % Way 0,1: left from root; Way 2,3: right from root
     \ifnum#4<2
       \draw[pathedge] (bit0) -- (bit1);
@@ -269,7 +279,7 @@
     \draw[normaledge] (bit1) -- (w1);
     \draw[normaledge] (bit2) -- (w2);
     \draw[normaledge] (bit2) -- (w3);
-  \fi
+  \fi\fi
 \end{tikzpicture}%
 }
 
@@ -1749,7 +1759,7 @@ for j in range(k):
 
 \begin{frame}{Pseudo LRU (PLRU)}
 \begin{columns}
-\begin{column}{0.75\textwidth}
+\begin{column}{0.70\textwidth}
 \begin{itemize}
   \item \textbf{PLRU records partial order using tree structure}
   \begin{itemize}
@@ -1768,38 +1778,53 @@ for j in range(k):
   
   \vspace{0.2cm}
   
-  \item \textbf{Update on access: point to accessed way}
-  \begin{itemize}
-    \item 0=left, 1=right
-    \item After accessing 0→3→2→1:
-    \begin{itemize}
-      \item bit$_0$=0 → pair with way 1 (MRU)
-      \item bit$_1$=1 → way 1 (MRU)
-      \item bit$_2$=0 → way 2 over way 3
-    \end{itemize}
-  \end{itemize}
-  
+  \item \textbf{Update on access:}\\
+  Set bits along path to point toward accessed way
+
   \vspace{0.2cm}
-  
-  \item \textbf{Victim selection: follow opposite direction}
-  \begin{itemize}
-    \item 0=right, 1=left
-    \item \textcolor{red}{May not select true LRU}
-  \end{itemize}
+
+  \item \textbf{Victim selection:}\\
+  Follow \emph{opposite} of bit values\\
+  {\small (bit=0 $\Rightarrow$ go right, bit=1 $\Rightarrow$ go left)}
+
+  \vspace{0.1cm}
+  {\small \textcolor{red}{May not select true LRU}}
 \end{itemize}
 \end{column}
 
-\begin{column}{0.25\textwidth}
+\begin{column}{0.28\textwidth}
 \centering
-\vspace{0.5cm}
+\vspace{0.3cm}
 
-\textbf{Tree:}\\[0.3cm]
-\plrutree{-}{-}{-}{}
+\begin{tikzpicture}[scale=0.85]
+  % Tree structure
+  \node[circle, fill=gray!60, minimum size=0.6cm, inner sep=0pt, font=\scriptsize\bfseries] (bit0) at (0,0) {--};
+  \node[left=0.15cm of bit0, font=\scriptsize] {bit$_0$};
 
-\vspace{0.5cm}
-\small
-\textit{0 = go left}\\
-\textit{1 = go right}
+  \node[circle, fill=gray!60, minimum size=0.6cm, inner sep=0pt, font=\scriptsize\bfseries] (bit1) at (-1.2,-1.2) {--};
+  \node[left=0.15cm of bit1, font=\scriptsize] {bit$_1$};
+  \node[circle, fill=gray!60, minimum size=0.6cm, inner sep=0pt, font=\scriptsize\bfseries] (bit2) at (1.2,-1.2) {--};
+  \node[left=0.15cm of bit2, font=\scriptsize] {bit$_2$};
+
+  \node[circle, fill=blue!25, minimum size=0.6cm, inner sep=0pt, font=\small\bfseries] (w0) at (-1.8,-2.5) {0};
+  \node[circle, fill=blue!25, minimum size=0.6cm, inner sep=0pt, font=\small\bfseries] (w1) at (-0.6,-2.5) {1};
+  \node[circle, fill=blue!25, minimum size=0.6cm, inner sep=0pt, font=\small\bfseries] (w2) at (0.6,-2.5) {2};
+  \node[circle, fill=blue!25, minimum size=0.6cm, inner sep=0pt, font=\small\bfseries] (w3) at (1.8,-2.5) {3};
+
+  % Edges with 0/1 labels
+  \draw[thick] (bit0) -- (bit1) node[midway, above left, font=\scriptsize] {0};
+  \draw[thick] (bit0) -- (bit2) node[midway, above right, font=\scriptsize] {1};
+  \draw[thick] (bit1) -- (w0) node[midway, left, font=\scriptsize] {0};
+  \draw[thick] (bit1) -- (w1) node[midway, right, font=\scriptsize] {1};
+  \draw[thick] (bit2) -- (w2) node[midway, left, font=\scriptsize] {0};
+  \draw[thick] (bit2) -- (w3) node[midway, right, font=\scriptsize] {1};
+\end{tikzpicture}
+
+\vspace{0.3cm}
+\footnotesize
+\textbf{Edge labels:}\\
+0 = left branch\\
+1 = right branch
 \end{column}
 \end{columns}
 \end{frame}
