@@ -1904,26 +1904,24 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
   \item \textbf{MPI — misses per instruction}
   \begin{itemize}
     \item MPI = $\frac{\text{\#cache misses}}{\text{\#instructions}} = \frac{\text{\#cache misses}}{\text{\#mem accesses}} \times \frac{\text{\#mem accesses}}{\text{\#instructions}}$
-    \item More correlative to performance than cache miss rate
-    \begin{itemize}
-      \item Takes into account also frequency of memory accesses
-    \end{itemize}
+    \item More correlative to performance than miss rate
+    \item Accounts for memory access frequency
   \end{itemize}
-  
-  \vspace{0.4cm}
-  
-  \item[\textcolor{blue}{$\diamond$}] \textbf{Memory stall cycles}
+
+  \vspace{0.3cm}
+
+  \item \textbf{Memory stall cycles}
   \begin{itemize}
-    \item[] = \#memory accesses $\times$ miss rate $\times$ miss penalty
-    \item[] = IC $\times$ MPI $\times$ miss penalty
+    \item = \#memory accesses $\times$ miss rate $\times$ miss penalty
+    \item = IC $\times$ MPI $\times$ miss penalty
   \end{itemize}
-  
-  \vspace{0.4cm}
-  
-  \item[\textcolor{blue}{$\diamond$}] \textbf{CPU time}
+
+  \vspace{0.3cm}
+
+  \item \textbf{CPU time}
   \begin{itemize}
-    \item[] = (CPU execution cycles + Memory stall cycles) $\times$ cycle time
-    \item[] = IC $\times$ (CPI$_{\text{execution}}$ + MPI $\times$ Miss penalty) $\times$ cycle time
+    \item = (CPU execution cycles + Memory stall cycles) $\times$ cycle time
+    \item = IC $\times$ (CPI$_{\text{execution}}$ + MPI $\times$ Miss penalty) $\times$ cycle time
   \end{itemize}
 \end{itemize}
 
@@ -1965,8 +1963,8 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
     scaled y ticks=false,
     tick label style={font=\scriptsize},
     label style={font=\small},
-    width=6.5cm,
-    height=5.5cm,
+    width=7cm,
+    height=6cm,
     clip=false,
 ]
 % Define colors matching reference image
@@ -2004,22 +2002,26 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \addplot[conflict2blue] fill between[of=fourway and twoway];
 \addplot[conflictgreen] fill between[of=twoway and oneway];
 
-% Associativity labels with arrows pointing to curves (inside plot area)
-\node[font=\scriptsize, anchor=south west] (lbl1) at (axis cs:17,0.118) {1-way};
-\draw[->, thick] (lbl1.south east) -- (axis cs:26,0.112);
-\node[font=\scriptsize, anchor=south west] (lbl2) at (axis cs:22,0.082) {2-way};
-\draw[->, thick] (lbl2.south east) -- (axis cs:38,0.070);
-\node[font=\scriptsize, anchor=south west] (lbl4) at (axis cs:32,0.057) {4-way};
-\draw[->, thick] (lbl4.south east) -- (axis cs:55,0.048);
-\node[font=\scriptsize, anchor=south west] (lbl8) at (axis cs:50,0.042) {8-way};
-\draw[->, thick] (lbl8.south east) -- (axis cs:85,0.035);
+% Label style with tight inner sep
+\tikzset{lbl/.style={font=\scriptsize, inner sep=1pt}}
+\tikzset{misslbl/.style={font=\small\bfseries, inner sep=1pt}}
+
+% Associativity labels in white area, arrows pointing left to curves
+\node[lbl, anchor=west] (lbl1) at (axis cs:32,0.128) {1-way};
+\draw[->, thick] (lbl1.west) -- (axis cs:18,0.12);
+\node[lbl, anchor=west] (lbl2) at (axis cs:55,0.092) {2-way};
+\draw[->, thick] (lbl2.west) -- (axis cs:26,0.08);
+\node[lbl, anchor=west] (lbl4) at (axis cs:120,0.064) {4-way};
+\draw[->, thick] (lbl4.west) -- (axis cs:37,0.058);
+\node[lbl, anchor=west] (lbl8) at (axis cs:160,0.042) {8-way};
+\draw[->, thick] (lbl8.west) -- (axis cs:65,0.038);
 
 % Miss type labels (Conflict in upper right, no arrow)
-\node[font=\small\bfseries, rotate=-32] at (axis cs:120,0.105) {Conflict};
-\node[font=\small\bfseries] at (axis cs:450,0.040) {Capacity};
-\draw[->, thick] (axis cs:520,0.034) -- (axis cs:650,0.018);
-\node[font=\small\bfseries] at (axis cs:1200,0.020) {Compulsory};
-\draw[->, thick] (axis cs:1350,0.015) -- (axis cs:1500,0.005);
+\node[misslbl, rotate=-32] at (axis cs:280,0.085) {Conflict};
+\node[misslbl, anchor=west] (caplab) at (axis cs:380,0.055) {Capacity};
+\draw[->, thick] (caplab.west) -- (axis cs:180,0.015);
+\node[misslbl] (complab) at (axis cs:800,0.04) {Compulsory};
+\draw[->, thick] (complab.south) -- (axis cs:650,0.05);
 \end{axis}
 \end{tikzpicture}
 \end{column}
