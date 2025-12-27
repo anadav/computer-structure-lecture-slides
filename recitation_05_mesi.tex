@@ -9,7 +9,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 
@@ -30,6 +30,18 @@
 \definecolor{modifiedcolor}{RGB}{255, 150, 150}
 \definecolor{l2bgcolor}{RGB}{255, 220, 180}
 \definecolor{membgcolor}{RGB}{180, 200, 255}
+
+% Ring diagram color palette (cohesive blue-gray theme)
+\definecolor{ringSlateBlue}{RGB}{74, 103, 133}      % Main compute die area
+\definecolor{ringSteelBlue}{RGB}{107, 140, 174}     % System agent bar
+\definecolor{ringGreen}{RGB}{124, 184, 124}         % L2 private cache
+\definecolor{ringSand}{RGB}{212, 184, 150}          % LLC shared cache
+\definecolor{ringCharcoal}{RGB}{61, 79, 95}         % System components
+\definecolor{ringPeach}{RGB}{232, 168, 124}         % iMPH hub
+\definecolor{ringLavender}{RGB}{184, 169, 201}      % External I/O
+\definecolor{ringCoral}{RGB}{240, 180, 170}         % Polarity marker (odd)
+\definecolor{ringCoralLight}{RGB}{255, 220, 210}    % Polarity marker (even)
+\definecolor{ringDataPink}{RGB}{220, 150, 200}      % Data message marker
 
 % Macro for the multi-processor example frames
 % Arguments: {p1-cache}{p1-state}{p2-cache}{p2-state}{l2-content}{cvb-bits}{memory}
@@ -692,11 +704,11 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 \item 2 × 4 rings: Req / Data / Ack / Snoop
 \item Packets always use the shortest path
 \item Static Even/Odd polarity per station
-\item Each ring switches polarity on each cycle
+\item Each ring switches polarity on each cycle --- simplifies arbitration at each stop
 \end{itemize}
 
 \vspace{1em}
-\begin{block}{Key Mechanism}
+\begin{block}{Polarity-Based Flow Control}
 A stop can only pull data from the direction (ring) that matches its polarity in the current cycle
 \begin{itemize}
 \item[$\Rightarrow$] Sender must ensure data can be pulled by receiver when it arrives
@@ -736,6 +748,246 @@ Even/Odd polarity switching per cycle]
 \item LLC sends GO with MESI state (E/S)
 \item LLC sends second chunk to complete transfer
 \end{enumerate}
+\end{frame}
+
+%==========================================
+% Ring Example - Data Transfer Animation
+\begin{frame}{Ring Example -- Data Transfer}
+% Top explanation - plain text above the diagram
+\only<1>{\textbf{Initial State:} Ring connects all agents. Each stop has Odd/Even polarity.}%
+\only<2>{Core 0, Core 1 and the GFX issue data read requests}%
+\only<3>{Requests travel on ring. GFX delayed: odd polarity, must wait for Even cycle}%
+\only<4>{Both Core requests hit in LLC. CVBs show no snoop needed}%
+\only<5>{GFX request arrives at LLC1}%
+\only<6>{LLC sends GO (Global Observation) with MESI state to cores}%
+\only<7>{LLC sends first data chunk (D1 = 32B, half cache line)}%
+\only<8>{LLC sends second chunk (D2). GFX receives GO.}%
+\only<9>{All cores received full cache line. Transfer complete.}%
+\vspace{1mm}
+\centering
+\begin{tikzpicture}[
+    scale=0.78,
+    every node/.style={font=\small},
+    % Base style for all system agent components
+    sysbase/.style={draw=black, thick, minimum height=0.85cm, font=\small\bfseries},
+    % L2 box - soft green for private cache
+    l2box/.style={draw=black, thick, fill=ringGreen, minimum width=1.2cm, minimum height=0.8cm, font=\normalsize\bfseries},
+    % LLC box - warm sand for shared cache
+    llcbox/.style={draw=black, thick, fill=ringSand, minimum width=1.8cm, minimum height=1.4cm, font=\normalsize\bfseries},
+    % System agent components - charcoal with white text
+    sysbox/.style={sysbase, fill=ringCharcoal, minimum width=1.4cm, text=white},
+    % iMPH - peach accent (the ring hub)
+    imphbox/.style={sysbase, fill=ringPeach, minimum width=2.0cm, minimum height=1.0cm, font=\normalsize\bfseries},
+    % External IO/DDR - lavender for off-die
+    extbox/.style={draw=black, thick, fill=ringLavender, minimum width=1.1cm, minimum height=4.0cm, font=\Large\bfseries},
+    % Polarity markers - coral/salmon tones visible on blue
+    polaritymark/.style={circle, draw=white, line width=1.5pt, minimum size=0.6cm, font=\normalsize\bfseries, text=black},
+    pOdd/.style={polaritymark, fill=ringCoral},
+    pEven/.style={polaritymark, fill=ringCoralLight},
+    % Ring arrows - white on blue background
+    ringarrow/.style={-{Triangle[width=7pt,length=6pt]}, line width=3.5pt, white},
+    % Message markers - semantic colors
+    request/.style={circle, draw=red!80, very thick, fill=red!65, minimum size=0.65cm, font=\tiny\bfseries, text=white, align=center},
+    gomark/.style={circle, draw=gray!70, very thick, fill=gray!50, minimum size=0.6cm, font=\tiny\bfseries, align=center},
+    datamark/.style={circle, draw=magenta!60, very thick, fill=ringDataPink, minimum size=0.6cm, font=\tiny\bfseries, align=center},
+    % Callout style
+    callout/.style={draw=black!60, fill=white, rounded corners=2pt, font=\scriptsize, align=left, inner sep=3pt},
+]
+
+% === MAIN BLUE CONTAINER (slate blue) ===
+\fill[ringSlateBlue, rounded corners=2pt] (-0.3, -4.6) rectangle (9.3, 2.0);
+
+% === SYSTEM AGENT BAR (steel blue - lighter) ===
+\fill[ringSteelBlue] (-0.3, 1.1) rectangle (9.3, 2.0);
+\node[font=\scriptsize\bfseries, text=white, align=center] at (0.7, 1.55) {System\\Agent};
+\node[sysbox] (ncu) at (2.0, 1.55) {NCU};
+\node[font=\scriptsize, text=white] at (2.0, 0.95) {PEG/DMI};
+\node[imphbox] (imph) at (4.5, 1.5) {iMPH};
+\node[sysbox, minimum width=1.6cm] (mc) at (7.2, 1.55) {MC};
+
+% === ROW SEPARATORS ===
+\draw[black, line width=1.2pt] (-0.3, 1.1) -- (9.3, 1.1);
+\draw[black, line width=1.2pt] (-0.3, -0.5) -- (9.3, -0.5);
+\draw[black, line width=1.2pt] (-0.3, -2.5) -- (9.3, -2.5);
+
+% === CORE 0 ROW ===
+\node[font=\large\bfseries, text=white] at (0.8, 0.3) {Core 0};
+\node[l2box] (l2c0) at (2.2, 0.3) {L2};
+\node[llcbox] (llc0) at (8.0, 0.3) {LLC0};
+
+% === CORE 1 ROW ===
+\node[font=\large\bfseries, text=white] at (0.8, -1.5) {Core 1};
+\node[l2box] (l2c1) at (2.2, -1.5) {L2};
+\node[llcbox] (llc1) at (8.0, -1.5) {LLC1};
+
+% === GFX ROW ===
+\node[font=\large\bfseries, text=white] at (0.8, -3.55) {GFX};
+\node[l2box] (l2gfx) at (2.2, -3.55) {};
+
+% === RING STRUCTURE ===
+% Ring connection point from iMPH
+\node[pOdd, fill=pink!50] (imphring) at (4.5, 0.75) {};
+\draw[ringarrow] (imph.south) -- (imphring.north);
+
+% Left column (down ring) - polarity markers with labels
+\node[pOdd] (ring0l) at (3.8, 0.3) {O};
+\node[pEven] (ring1l) at (3.8, -1.5) {e};
+\node[pOdd] (ring2l) at (3.8, -3.55) {O};
+
+% Right column (up ring) - polarity matches row (same as left column)
+\node[pOdd] (ring0r) at (5.8, 0.3) {O};
+\node[pEven] (ring1r) at (5.8, -1.5) {e};
+\node[pOdd] (ring2r) at (5.8, -3.55) {O};
+
+% Up ring arrows (left column, going up)
+\draw[ringarrow] (ring2l.north) -- (ring1l.south);
+\draw[ringarrow] (ring1l.north) -- (ring0l.south);
+\draw[ringarrow] (ring0l.north) -- ++(-0.3, 0.15) -- (imphring.south west);
+
+% Down ring arrows (right column, going down)
+\draw[ringarrow] (imphring.south east) -- ++(0.3,-0.15) -- (ring0r.north);
+\draw[ringarrow] (ring0r.south) -- (ring1r.north);
+\draw[ringarrow] (ring1r.south) -- (ring2r.north);
+
+% Bottom connection between left and right columns (right to left)
+\coordinate (ringbottom) at (4.8, -4.25);
+\draw[ringarrow] (ring2r.south) |- (ringbottom) -| (ring2l.south);
+
+% === EXTERNAL: IO (left) ===
+\node[extbox] (io) at (-1.4, -1.3) {IO};
+\draw[{Triangle[width=7pt,length=6pt]}-, line width=3.5pt, green!50!black] ([yshift=6pt]io.east) -- ++(0.5, 0);
+\draw[-{Triangle[width=7pt,length=6pt]}, line width=3.5pt, green!50!black] ([yshift=-6pt]io.east) -- ++(0.5, 0);
+
+% === EXTERNAL: DDR (right) ===
+\node[extbox] (ddr) at (10.5, -1.3) {DDR};
+\draw[{Triangle[width=7pt,length=6pt]}-, line width=3.5pt, green!50!black] ([yshift=6pt]ddr.west) -- ++(-0.5, 0);
+\draw[-{Triangle[width=7pt,length=6pt]}, line width=3.5pt, green!50!black] ([yshift=-6pt]ddr.west) -- ++(-0.5, 0);
+
+% === LEGEND (left side) - marker sample + label ===
+% Legend box background
+\node[draw=black, fill=white, rounded corners=3pt, minimum width=1.6cm, minimum height=2.2cm, anchor=north] (legendbg) at (-1.4, 1.9) {};
+% Marker samples with labels
+\node[circle, draw=red!80, very thick, fill=red!60, minimum size=0.4cm] (legReq) at (-1.75, 1.55) {};
+\node[font=\scriptsize, anchor=west] at (-1.5, 1.55) {Request};
+\node[circle, draw=gray!60, very thick, fill=gray!45, minimum size=0.4cm] (legGO) at (-1.75, 1.0) {};
+\node[font=\scriptsize, anchor=west] at (-1.5, 1.0) {GO};
+\node[circle, draw=magenta!70, very thick, fill=magenta!35, minimum size=0.4cm] (legData) at (-1.75, 0.45) {};
+\node[font=\scriptsize, anchor=west] at (-1.5, 0.45) {Data};
+
+% === CYCLE INDICATOR (bottom) ===
+\node[font=\normalsize\bfseries] at (4.5, -5.0) {%
+    \only<1>{Initial state}%
+    \only<2>{Cycle 1: up ring E, down ring O}%
+    \only<3>{Cycle 2: up ring O, down ring E}%
+    \only<4>{Cycle 3: up ring E, down ring O}%
+    \only<5>{Cycle 4: up ring O, down ring E}%
+    \only<6>{Cycle 5: up ring E, down ring O}%
+    \only<7>{Cycle 7: up ring E, down ring O}%
+    \only<8>{Cycle 9: up ring E, down ring O}%
+    \only<9>{Cycle 11: up ring E, down ring O}%
+};
+
+% === SLIDE 1: Initial state with callouts ===
+\only<1>{
+    % --- LEFT SIDE CALLOUTS ---
+    % Callout for Odd polarity - points to ring0l (O)
+    \node[callout] (calloutOdd) at (-2.8, 0.3) {\textbf{O} = Odd polarity};
+    \draw[->, black!60, thick] (calloutOdd.east) -- (ring0l.west);
+
+    % Callout for Even polarity - points to ring1l (e)
+    \node[callout] (calloutEven) at (-2.8, -1.5) {\textbf{e} = Even polarity};
+    \draw[->, black!60, thick] (calloutEven.east) -- (ring1l.west);
+
+    % --- RIGHT SIDE CALLOUTS (system components) ---
+    % iMPH callout
+    \node[callout, anchor=west] (calloutIMPH) at (10.0, 1.5) {%
+        \textbf{iMPH}: Memory Protocol Hub\\
+        Ring interconnect hub};
+    \draw[->, black!60, thick] (calloutIMPH.west) -- (imph.east);
+
+    % MC callout
+    \node[callout, anchor=west] (calloutMC) at (10.0, 0.5) {%
+        \textbf{MC}: Memory Controller\\
+        Interfaces with DDR};
+    \draw[->, black!60, thick] (calloutMC.west) -| ([xshift=3pt]mc.east);
+
+    % NCU callout (left side, above IO)
+    \node[callout, anchor=east] (calloutNCU) at (-2.8, 1.5) {%
+        \textbf{NCU}: Non-Core Unit\\
+        System functions};
+    \draw[->, black!60, thick] (calloutNCU.east) -- (ncu.west);
+
+    % PEG/DMI note
+    \node[callout, anchor=east] (calloutPEG) at (-2.8, -2.8) {%
+        \textbf{PEG}: PCIe Graphics\\
+        \textbf{DMI}: Direct Media I/F};
+    \draw[->, black!60, thick] (calloutPEG.north east) -- (2.0, 0.95);
+
+    % Note about alternation
+    \node[font=\scriptsize, text=white] at (4.8, -4.6) {Polarity alternates each ring cycle};
+}
+
+% === CYCLE 2: Requests issued ===
+\only<2>{
+    \node[request] at ([xshift=14pt]l2c0.east) {DRd\\[-1pt]0$\to$1};
+    \node[request] at ([xshift=14pt]l2c1.east) {DRd\\[-1pt]1$\to$0};
+    \node[request] at ([xshift=14pt]l2gfx.east) {DRd\\[-1pt]G$\to$1};
+}
+
+% === CYCLE 3: Requests moving ===
+\only<3>{
+    \node[request] at ([xshift=12pt]ring0r.east) {DRd\\[-1pt]0$\to$1};
+    \node[request] at ([xshift=-12pt]ring1l.west) {DRd\\[-1pt]1$\to$0};
+    \node[request] at ([xshift=14pt]l2gfx.east) {DRd\\[-1pt]G$\to$1};
+}
+
+% === CYCLE 4: LLC hits ===
+\only<4>{
+    \node[request] at ([xshift=-12pt]ring1l.west) {DRd\\[-1pt]G$\to$1};
+    \node[font=\scriptsize\bfseries, fill=yellow!80, draw=red!70, rounded corners=2pt, inner sep=2pt] at ([xshift=-20pt]llc0.west) {Hit};
+    \node[font=\scriptsize\bfseries, fill=yellow!80, draw=red!70, rounded corners=2pt, inner sep=2pt] at ([xshift=-20pt]llc1.west) {Hit};
+}
+
+% === CYCLE 5: GFX arrives ===
+\only<5>{
+    \node[request] at ([xshift=-12pt]llc1.west) {DRd\\[-1pt]G$\to$1};
+}
+
+% === CYCLE 6: GO sent ===
+\only<6>{
+    \node[gomark] at ([xshift=-12pt]ring0l.west) {GO\\[-1pt]1};
+    \node[gomark] at ([xshift=12pt]ring1r.east) {GO\\[-1pt]0};
+}
+
+% === CYCLE 7: First data chunk ===
+\only<7>{
+    \node[gomark] at ([xshift=-10pt]l2c0.west) {GO};
+    \node[gomark] at ([xshift=-10pt]l2c1.west) {GO};
+    \node[datamark] at ([xshift=-12pt]ring0l.west) {D1\\[-1pt]1};
+    \node[datamark] at ([xshift=12pt]ring1r.east) {D1\\[-1pt]0};
+}
+
+% === CYCLE 8: Second chunk + GFX GO ===
+\only<8>{
+    \node[datamark] at ([xshift=-10pt]l2c0.west) {D1};
+    \node[datamark] at ([xshift=-10pt]l2c1.west) {D1};
+    \node[datamark] at ([xshift=-12pt]ring0l.west) {D2\\[-1pt]1};
+    \node[datamark] at ([xshift=12pt]ring1r.east) {D2\\[-1pt]0};
+    \node[gomark] at ([xshift=-12pt]ring2l.west) {GO\\[-1pt]G};
+    \node[datamark] at ([xshift=10pt]llc1.east) {D2\\[-1pt]0};
+}
+
+% === CYCLE 9: All data delivered ===
+\only<9>{
+    \node[datamark] at ([xshift=-10pt, yshift=7pt]l2c0.west) {D1};
+    \node[datamark] at ([xshift=-10pt, yshift=-7pt]l2c0.west) {D2};
+    \node[datamark] at ([xshift=-10pt, yshift=7pt]l2c1.west) {D1};
+    \node[datamark] at ([xshift=-10pt, yshift=-7pt]l2c1.west) {D2};
+    \node[gomark] at ([xshift=-10pt]l2gfx.west) {GO};
+    \node[datamark] at ([xshift=-12pt]ring2l.west) {D1\\[-1pt]G};
+}
+
+\end{tikzpicture}
 \end{frame}
 
 %==========================================
