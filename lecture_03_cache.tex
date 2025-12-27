@@ -12,6 +12,7 @@
 \usepackage{xcolor}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
 \usepackage{circuitikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 \usetikzlibrary{backgrounds, fit, decorations.pathreplacing, matrix}
@@ -1934,22 +1935,22 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
 \small
 \begin{itemize}
   \item \textbf{Compulsory}: first reference to a block
-  \begin{itemize}\scriptsize
-    \item Solution: prefetch
+  \begin{itemize}
+    \item[\footnotesize$\rightarrow$] \footnotesize Prefetch
   \end{itemize}
   \item \textbf{Capacity}: working set $>$ cache size
-  \begin{itemize}\scriptsize
-    \item Solution: increase size, stream buffers
+  \begin{itemize}
+    \item[\footnotesize$\rightarrow$] \footnotesize Larger cache, stream buffers
   \end{itemize}
   \item \textbf{Conflict}: set mapping causes evictions
-  \begin{itemize}\scriptsize
-    \item Solution: higher associativity, victim cache
+  \begin{itemize}
+    \item[\footnotesize$\rightarrow$] \footnotesize Higher associativity, victim cache
   \end{itemize}
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
 \centering
-\begin{tikzpicture}[scale=0.65]
+\begin{tikzpicture}
 \begin{axis}[
     xlabel={Cache Size (KB)},
     ylabel={Miss Rate},
@@ -1957,39 +1958,68 @@ $t_{\text{avg}} = t_{hit}\times(1-\text{MR}) + t_{miss}\times \text{MR}$
     log basis x=2,
     xmin=16, xmax=2048,
     ymin=0, ymax=0.14,
-    xtick={16,32,64,128,256,512,1024,2048},
-    xticklabels={16,32,64,128,256,512,1K,2K},
-    ytick={0,0.02,0.04,0.06,0.08,0.10,0.12,0.14},
-    legend pos=north east,
-    legend style={font=\tiny, fill=white, fill opacity=0.8},
-    grid=major,
-    grid style={gray!30},
-    width=7cm,
+    xtick={16,64,256,1024},
+    xticklabels={16,64,256,1024},
+    ytick={0,0.04,0.08,0.12},
+    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+    scaled y ticks=false,
+    tick label style={font=\scriptsize},
+    label style={font=\small},
+    width=6.5cm,
     height=5.5cm,
+    clip=false,
 ]
-% 1-way (highest miss rate)
-\addplot[blue, thick, mark=square*, mark size=1.5pt] coordinates {
-    (16,0.12) (32,0.095) (64,0.072) (128,0.052) (256,0.038) (512,0.028) (1024,0.021) (2048,0.016)
-};
-% 2-way
-\addplot[red, thick, mark=triangle*, mark size=1.5pt] coordinates {
-    (16,0.095) (32,0.072) (64,0.052) (128,0.038) (256,0.028) (512,0.021) (1024,0.016) (2048,0.013)
-};
-% 4-way
-\addplot[orange, thick, mark=diamond*, mark size=1.5pt] coordinates {
-    (16,0.082) (32,0.060) (64,0.043) (128,0.032) (256,0.024) (512,0.018) (1024,0.014) (2048,0.011)
-};
-% 8-way
-\addplot[teal, thick, mark=o, mark size=1.5pt] coordinates {
-    (16,0.075) (32,0.054) (64,0.039) (128,0.029) (256,0.022) (512,0.017) (1024,0.013) (2048,0.010)
-};
-\legend{1-way, 2-way, 4-way, 8-way}
+% Define colors matching reference image
+\definecolor{conflictgreen}{RGB}{0,160,0}
+\definecolor{conflict2blue}{RGB}{0,180,220}
+\definecolor{conflict3magenta}{RGB}{220,0,180}
+\definecolor{capacityyellow}{RGB}{255,220,0}
+\definecolor{compulsoryred}{RGB}{220,0,0}
 
-% Annotations for miss types
-\node[font=\tiny, blue!70!black] at (axis cs:40,0.008) {Compulsory};
-\draw[<-, thin, blue!70!black] (axis cs:100,0.010) -- (axis cs:60,0.008);
-\node[font=\tiny, orange!80!black] at (axis cs:700,0.045) {Capacity};
-\node[font=\tiny, red!70!black] at (axis cs:25,0.105) {Conflict};
+% Data: curves from highest (1-way) to lowest (8-way)
+\addplot[name path=oneway, draw=black, thick] coordinates {
+    (16,0.135) (32,0.105) (64,0.078) (128,0.055) (256,0.038) (512,0.026) (1024,0.018) (2048,0.012)
+};
+\addplot[name path=twoway, draw=black, thick] coordinates {
+    (16,0.105) (32,0.080) (64,0.058) (128,0.042) (256,0.030) (512,0.022) (1024,0.016) (2048,0.011)
+};
+\addplot[name path=fourway, draw=black, thick] coordinates {
+    (16,0.082) (32,0.062) (64,0.046) (128,0.034) (256,0.025) (512,0.019) (1024,0.014) (2048,0.010)
+};
+\addplot[name path=eightway, draw=black, thick] coordinates {
+    (16,0.068) (32,0.052) (64,0.040) (128,0.030) (256,0.022) (512,0.017) (1024,0.013) (2048,0.0095)
+};
+% Compulsory baseline (constant)
+\addplot[name path=compulsory, draw=black] coordinates {
+    (16,0.005) (2048,0.005)
+};
+\addplot[name path=bottom, draw=none] coordinates {
+    (16,0) (2048,0)
+};
+
+% Fill areas (bottom to top)
+\addplot[compulsoryred] fill between[of=bottom and compulsory];
+\addplot[capacityyellow] fill between[of=compulsory and eightway];
+\addplot[conflict3magenta] fill between[of=eightway and fourway];
+\addplot[conflict2blue] fill between[of=fourway and twoway];
+\addplot[conflictgreen] fill between[of=twoway and oneway];
+
+% Associativity labels with arrows pointing to curves (inside plot area)
+\node[font=\scriptsize, anchor=south west] (lbl1) at (axis cs:17,0.118) {1-way};
+\draw[->, thick] (lbl1.south east) -- (axis cs:26,0.112);
+\node[font=\scriptsize, anchor=south west] (lbl2) at (axis cs:22,0.082) {2-way};
+\draw[->, thick] (lbl2.south east) -- (axis cs:38,0.070);
+\node[font=\scriptsize, anchor=south west] (lbl4) at (axis cs:32,0.057) {4-way};
+\draw[->, thick] (lbl4.south east) -- (axis cs:55,0.048);
+\node[font=\scriptsize, anchor=south west] (lbl8) at (axis cs:50,0.042) {8-way};
+\draw[->, thick] (lbl8.south east) -- (axis cs:85,0.035);
+
+% Miss type labels (Conflict in upper right, no arrow)
+\node[font=\small\bfseries, rotate=-32] at (axis cs:120,0.105) {Conflict};
+\node[font=\small\bfseries] at (axis cs:450,0.040) {Capacity};
+\draw[->, thick] (axis cs:520,0.034) -- (axis cs:650,0.018);
+\node[font=\small\bfseries] at (axis cs:1200,0.020) {Compulsory};
+\draw[->, thick] (axis cs:1350,0.015) -- (axis cs:1500,0.005);
 \end{axis}
 \end{tikzpicture}
 \end{column}
@@ -2583,13 +2613,11 @@ for (i = 0; i < 5000; i++)  ?\tikzmarknode{forI}{\strut}?
 \definecolor{exclusivecolor}{RGB}{100, 150, 220}
 \definecolor{modifiedcolor}{RGB}{220, 100, 100}
 
-\begin{frame}{Coherence Basics}
-\begin{itemize}
-  \item Coherent if: (1) a later read returns the last written value; (2) all processors see stores to the same address in the same order
-\end{itemize}
-\end{frame}
-
 \begin{frame}{MESI Protocol: States}
+\begin{itemize}
+  \item \textbf{Coherent if:} (1) a read returns the last written value; (2) all processors see stores to the same address in the same order
+\end{itemize}
+\vspace{0.2cm}
 \begin{center}
 \begin{tabular}{lccc}
 \toprule
@@ -3039,6 +3067,8 @@ State & Valid & Modified & Copies elsewhere?\\
 \end{tabular}
 \end{center}
 \end{frame}
+
+\section{Memory Models}
 
 \begin{frame}{Memory Models}
 \begin{itemize}
