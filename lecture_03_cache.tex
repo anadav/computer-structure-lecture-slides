@@ -2967,7 +2967,7 @@ State & Valid & Modified & Copies elsewhere?\\
 \end{columns}
 \end{frame}
 
-\begin{frame}{Multi-processor System: Write Serialization (1/2)}
+\begin{frame}{Multi-processor System: Write Serialization}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \textbf{A memory system is \emph{coherent} if:}
@@ -2976,27 +2976,29 @@ State & Valid & Modified & Copies elsewhere?\\
         and there are no other writes to X in between
         $\Rightarrow$ P2's read returns the value written by P1's write
   \vspace{0.2cm}
-  \item Writes to the same location are serialized:
+  \item Writes to the \underline{same} location are serialized:
         two writes to location X are seen in the same order
         by all processors
 \end{itemize}
 \end{column}
 \begin{column}{0.52\textwidth}
 \centering
+% Slide 1: X=0
+\only<1>{%
 \begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
   % L2 Cache
   \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=0.9cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)};
 
   % Processor 1
-  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.9cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
   \node[above] at (p1.north) {\textbf{Processor 1}};
-  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p1) at (p1.center) {L1 cache};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.2cm, text depth=0.55cm] (l1p1) at (p1.center) {L1 cache};
   \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x1) at ([yshift=1mm]l1p1.south) {X=0};
 
   % Processor 2
-  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.9cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
   \node[above] at (p2.north) {\textbf{Processor 2}};
-  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p2) at (p2.center) {L1 cache};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.2cm, text depth=0.55cm] (l1p2) at (p2.center) {L1 cache};
   \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x2) at ([yshift=1mm]l1p2.south) {X=0};
 
   % Memory
@@ -3010,45 +3012,28 @@ State & Valid & Modified & Copies elsewhere?\\
   % Callouts pointing to X values
   \node[rectangle callout, callout absolute pointer={(x1.west)}, draw, fill=yellow!20,
         font=\scriptsize, align=center, text width=1.4cm, anchor=east]
-        at (p1.west) {P1 writes\\X$\leftarrow$0};
+        at (p1.west) {P1 \textcolor{red!70!black}{writes}\\X$\leftarrow$0};
   \node[rectangle callout, callout absolute pointer={(x2.east)}, draw, fill=yellow!20,
         font=\scriptsize, align=center, text width=1.4cm, anchor=west]
-        at (p2.east) {P2 sees\\X=0};
-\end{tikzpicture}
-\end{column}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Multi-processor System: Write Serialization (2/2)}
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{A memory system is \emph{coherent} if:}
-\begin{itemize}
-  \item If P1 writes to address X, and later on P2 reads X,
-        and there are no other writes to X in between
-        $\Rightarrow$ P2's read returns the value written by P1's write
-  \vspace{0.2cm}
-  \item Writes to the same location are serialized:
-        two writes to location X are seen in the same order
-        by all processors
-\end{itemize}
-\end{column}
-\begin{column}{0.52\textwidth}
-\centering
+        at ([yshift=-1cm]p2.east) {P2 \textcolor{blue!70!black}{sees}\\X=0};
+\end{tikzpicture}%
+}%
+% Slide 2: X=1
+\only<2>{%
 \begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
   % L2 Cache
   \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=0.9cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)};
 
   % Processor 1
-  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.9cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
   \node[above] at (p1.north) {\textbf{Processor 1}};
-  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p1) at (p1.center) {L1 cache};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.2cm, text depth=0.55cm] (l1p1) at (p1.center) {L1 cache};
   \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x1) at ([yshift=1mm]l1p1.south) {X=1};
 
   % Processor 2
-  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.9cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
   \node[above] at (p2.north) {\textbf{Processor 2}};
-  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p2) at (p2.center) {L1 cache};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.2cm, text depth=0.55cm] (l1p2) at (p2.center) {L1 cache};
   \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x2) at ([yshift=1mm]l1p2.south) {X=1};
 
   % Memory
@@ -3062,23 +3047,26 @@ State & Valid & Modified & Copies elsewhere?\\
   % Callouts pointing to X values
   \node[rectangle callout, callout absolute pointer={(x1.west)}, draw, fill=yellow!20,
         font=\scriptsize, align=center, text width=1.4cm, anchor=east]
-        at (p1.west) {P1 sees\\X=1};
+        at ([yshift=-1cm]p1.west) {P1 \textcolor{blue!70!black}{sees}\\X=1};
   \node[rectangle callout, callout absolute pointer={(x2.east)}, draw, fill=yellow!20,
         font=\scriptsize, align=center, text width=1.4cm, anchor=west]
-        at (p2.east) {P2 writes\\X$\leftarrow$1};
-\end{tikzpicture}
+        at (p2.east) {P2 \textcolor{red!70!black}{writes}\\X$\leftarrow$1};
+\end{tikzpicture}%
+}%
 \end{column}
 \end{columns}
 
+\only<2>{%
 \vspace{0.3cm}
 \begin{center}
 \begin{tikzpicture}
-  \node[draw, fill=red!15, rounded corners, font=\small, text width=9cm, align=center] {
-    \textbf{Coherence guarantee:} All processors see writes in the same order\\[2pt]
-    Both saw X: 0 $\rightarrow$ 1. ~P2 seeing 1 $\rightarrow$ 0 is \textbf{not allowed}.
+  \node[draw, fill=red!15, rounded corners, font=\small, text width=14cm, align=center] {
+    \textbf{Coherence guarantee:} All processors see writes in the same order.\\[2pt]
+    P1 saw X: 0$\rightarrow$1. ~~P2 seeing 1$\rightarrow$0 would violate coherence.
   };
 \end{tikzpicture}
 \end{center}
+}
 \end{frame}
 
 % Macro for the multi-processor example frames
