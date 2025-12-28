@@ -1221,12 +1221,6 @@
       (n7b.south west) -- (n8.south east)
       node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0x18}\\[-2pt]{\tiny Offset (5b)}};
 \end{tikzpicture}
-
-\vspace{0.1cm}
-\footnotesize
-\begin{tabular}{ll}
-\textcolor{setcolor}{\textbf{Set Index:}} & $\mathtt{0xB3} = 179$\\
-\end{tabular}
 \end{column}
 \end{columns}
 \end{frame}
@@ -1631,18 +1625,35 @@
 
 \vspace{0.3cm}
 \textbf{Example:} Address \texttt{0x12345678}\\[2pt]
-{\texttt{%
-\textcolor{tagcolor}{0001 0010 0011 0100 010}%
-\textcolor{setcolor}{1 0110 011}%
-\textcolor{offsetcolor}{1 1000}}}\\[4pt]
 
-\footnotesize
-\begin{tabular}{ll}
-\textcolor{offsetcolor}{\textbf{Offset:}} & \texttt{11000} $= \mathtt{0x18}$\\
-\textcolor{setcolor}{\textbf{Set:}} & \texttt{10110011} $= \mathtt{0xB3}$\\
-\textcolor{tagcolor}{\textbf{Tag:}} & \texttt{0001001000110100010}\\
-                     & $= \mathtt{0x091A2}$\\
-\end{tabular}
+% Binary bits with braces pointing to hex values
+% 19-bit tag, 8-bit set, 5-bit offset splits nibbles 5 and 7
+\begin{tikzpicture}
+  % Place nibbles individually for precise brace positioning
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at (0,0) (n1) {0001};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n1.east) (n2) {0010};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n2.east) (n3) {0011};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n3.east) (n4) {0100};
+  % Nibble 5 splits: 010 (tag) + 1 (set)
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n4.east) (n5a) {010};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=setcolor] at (n5a.east) (n5b) {1};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=setcolor] at ([xshift=2pt]n5b.east) (n6) {0110};
+  % Nibble 7 splits: 011 (set) + 1 (offset)
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=setcolor] at ([xshift=2pt]n6.east) (n7a) {011};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=offsetcolor] at (n7a.east) (n7b) {1};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=offsetcolor] at ([xshift=2pt]n7b.east) (n8) {1000};
+
+  % Braces below pointing to hex values
+  \draw[decorate, decoration={brace, amplitude=2pt, mirror, raise=1pt}, tagcolor]
+      (n1.south west) -- (n5a.south east)
+      node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0x091A2}\\[-2pt]{\tiny Tag (19b)}};
+  \draw[decorate, decoration={brace, amplitude=2pt, mirror, raise=1pt}, setcolor]
+      (n5b.south west) -- (n7a.south east)
+      node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0xB3}\\[-2pt]{\tiny Set (8b)}};
+  \draw[decorate, decoration={brace, amplitude=2pt, mirror, raise=1pt}, offsetcolor]
+      (n7b.south west) -- (n8.south east)
+      node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0x18}\\[-2pt]{\tiny Offset (5b)}};
+\end{tikzpicture}
 \end{column}
 \end{columns}
 \end{frame}
@@ -2908,36 +2919,166 @@ State & Valid & Modified & Copies elsewhere?\\
 
 % Frame 3: Memory Coherence Definition
 \begin{frame}{Multi-processor System: Memory Coherence}
-  \textbf{A memory system is coherent if:}
-  
-  \vspace{0.3cm}
-  
-  \begin{enumerate}
-    \item \textbf{Read-after-Write Consistency:}\\
-    If P1 writes to address X, and later P2 reads X,\\
-    and there are no other writes to X in between\\
-    $\Rightarrow$ P2's read returns the value written by P1
-    
-    \vspace{0.3cm}
-    
-    \item \textbf{Write Serialization:}\\
-    Two writes to location X are seen in the same order by all processors
-  \end{enumerate}
-  
-  \begin{center}
-    \begin{tikzpicture}[scale=0.7]
-      % Scenario 1
-      \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=1.5cm] (p1) at (0,0) {Processor 1};
-      \node[draw, thick, fill=green!20, minimum width=2cm, minimum height=1.5cm] (p2) at (4,0) {Processor 2};
-      
-      \node[draw, fill=red!20, rounded corners] at (0,-1.5) {Write X};
-      \node[draw, fill=blue!20, rounded corners] at (4,-1.5) {Read X};
-      
-      \draw[->, thick, red] (0,-2) -- node[above] {time} (4,-2);
-      
-      \node[text width=4cm, align=center] at (2,-3) {\small Must return same value};
-    \end{tikzpicture}
-  \end{center}
+\begin{columns}[T]
+\begin{column}{0.52\textwidth}
+\textbf{A memory system is \emph{coherent} if:}
+\begin{itemize}
+  \item If P1 writes to address X,\\
+        and later on P2 reads X,\\
+        and there are no other writes to X in between\\
+        $\Rightarrow$ P2's read returns the value written by P1's write
+\end{itemize}
+
+\vspace{0.3cm}
+% Callout on left
+\begin{tikzpicture}
+  \node[rectangle callout, callout absolute pointer={(3.5, 0.3)}, draw, fill=yellow!20,
+        font=\small, align=left, text width=4.5cm]
+        {Return the same value written to X by P1};
+\end{tikzpicture}
+\end{column}
+\begin{column}{0.48\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
+  % L2 Cache
+  \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=0.9cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)};
+
+  % Processor 1
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.8cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
+  \node[above] at (p1.north) {\textbf{Processor 1}};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p1) at (p1.center) {L1 cache};
+  \node[draw, thick, fill=red!20, rounded corners=2pt, font=\scriptsize] at ([yshift=-2mm]l1p1.south) {Write X};
+
+  % Processor 2
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.8cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
+  \node[above] at (p2.north) {\textbf{Processor 2}};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p2) at (p2.center) {L1 cache};
+  \node[draw, thick, fill=blue!20, rounded corners=2pt, font=\scriptsize] at ([yshift=-2mm]l1p2.south) {Read X};
+
+  % Memory
+  \node[draw, thick, fill=blue!20, minimum width=3.8cm, minimum height=0.8cm, align=center, anchor=north] (mem) at ([yshift=-15]l2.south) {Memory};
+
+  % Connections
+  \draw[<->, thick] (p1.south) -- (p1.south |- l2.north);
+  \draw[<->, thick] (p2.south) -- (p2.south |- l2.north);
+  \draw[<->, thick] (l2.south) -- (mem.north);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Multi-processor System: Write Serialization (1/2)}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{A memory system is \emph{coherent} if:}
+\begin{itemize}
+  \item If P1 writes to address X, and later on P2 reads X,
+        and there are no other writes to X in between
+        $\Rightarrow$ P2's read returns the value written by P1's write
+  \vspace{0.2cm}
+  \item Writes to the same location are serialized:
+        two writes to location X are seen in the same order
+        by all processors
+\end{itemize}
+\end{column}
+\begin{column}{0.52\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
+  % L2 Cache
+  \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=0.9cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)};
+
+  % Processor 1
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
+  \node[above] at (p1.north) {\textbf{Processor 1}};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p1) at (p1.center) {L1 cache};
+  \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x1) at ([yshift=1mm]l1p1.south) {X=0};
+
+  % Processor 2
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
+  \node[above] at (p2.north) {\textbf{Processor 2}};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p2) at (p2.center) {L1 cache};
+  \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x2) at ([yshift=1mm]l1p2.south) {X=0};
+
+  % Memory
+  \node[draw, thick, fill=blue!20, minimum width=3.8cm, minimum height=0.8cm, align=center, anchor=north] (mem) at ([yshift=-15]l2.south) {Memory};
+
+  % Connections
+  \draw[<->, thick] (p1.south) -- (p1.south |- l2.north);
+  \draw[<->, thick] (p2.south) -- (p2.south |- l2.north);
+  \draw[<->, thick] (l2.south) -- (mem.north);
+
+  % Callouts pointing to X values
+  \node[rectangle callout, callout absolute pointer={(x1.west)}, draw, fill=yellow!20,
+        font=\scriptsize, align=center, text width=1.4cm, anchor=east]
+        at (p1.west) {P1 writes\\X$\leftarrow$0};
+  \node[rectangle callout, callout absolute pointer={(x2.east)}, draw, fill=yellow!20,
+        font=\scriptsize, align=center, text width=1.4cm, anchor=west]
+        at (p2.east) {P2 sees\\X=0};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Multi-processor System: Write Serialization (2/2)}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{A memory system is \emph{coherent} if:}
+\begin{itemize}
+  \item If P1 writes to address X, and later on P2 reads X,
+        and there are no other writes to X in between
+        $\Rightarrow$ P2's read returns the value written by P1's write
+  \vspace{0.2cm}
+  \item Writes to the same location are serialized:
+        two writes to location X are seen in the same order
+        by all processors
+\end{itemize}
+\end{column}
+\begin{column}{0.52\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
+  % L2 Cache
+  \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=0.9cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)};
+
+  % Processor 1
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south west] (p1) at ([yshift=15]l2.north west) {};
+  \node[above] at (p1.north) {\textbf{Processor 1}};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p1) at (p1.center) {L1 cache};
+  \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x1) at ([yshift=1mm]l1p1.south) {X=1};
+
+  % Processor 2
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=2.4cm, align=center, anchor=south east] (p2) at ([yshift=15]l2.north east) {};
+  \node[above] at (p2.north) {\textbf{Processor 2}};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.5cm, text depth=0.9cm] (l1p2) at (p2.center) {L1 cache};
+  \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] (x2) at ([yshift=1mm]l1p2.south) {X=1};
+
+  % Memory
+  \node[draw, thick, fill=blue!20, minimum width=3.8cm, minimum height=0.8cm, align=center, anchor=north] (mem) at ([yshift=-15]l2.south) {Memory};
+
+  % Connections
+  \draw[<->, thick] (p1.south) -- (p1.south |- l2.north);
+  \draw[<->, thick] (p2.south) -- (p2.south |- l2.north);
+  \draw[<->, thick] (l2.south) -- (mem.north);
+
+  % Callouts pointing to X values
+  \node[rectangle callout, callout absolute pointer={(x1.west)}, draw, fill=yellow!20,
+        font=\scriptsize, align=center, text width=1.4cm, anchor=east]
+        at (p1.west) {P1 sees\\X=1};
+  \node[rectangle callout, callout absolute pointer={(x2.east)}, draw, fill=yellow!20,
+        font=\scriptsize, align=center, text width=1.4cm, anchor=west]
+        at (p2.east) {P2 writes\\X$\leftarrow$1};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{center}
+\begin{tikzpicture}
+  \node[draw, fill=red!15, rounded corners, font=\small, text width=9cm, align=center] {
+    \textbf{Coherence guarantee:} All processors see writes in the same order\\[2pt]
+    Both saw X: 0 $\rightarrow$ 1. ~P2 seeing 1 $\rightarrow$ 0 is \textbf{not allowed}.
+  };
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 % Macro for the multi-processor example frames
