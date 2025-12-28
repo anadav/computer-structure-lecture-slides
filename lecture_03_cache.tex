@@ -1059,42 +1059,174 @@
 \end{columns}
 \end{frame}
 
-\begin{frame}{Direct-Mapped Cache -- Example}
+\begin{frame}[fragile]{Direct-Mapped Cache -- Example}
+% Use same colors as the DM illustration
+\definecolor{tagcolor}{HTML}{90EE90}    % Green (matches green!30)
+\definecolor{setcolor}{HTML}{00CED1}    % Cyan (matches cyan!30)
+\definecolor{offsetcolor}{HTML}{FFA500} % Orange (matches orange!30)
+
 \begin{columns}[T]
-\begin{column}{0.45\textwidth}
-\textbf{Given:}
-\begin{itemize}
-  \item Line size: 32 bytes $\rightarrow$ 5 offset bits
-  \item Cache size: 16KB = $2^{14}$ bytes
-  \item \#lines = $\frac{2^{14}}{2^5} = 2^9 = 512$
-  \item \#sets = \#lines = 512
-  \item \#set bits = 9 bits
-  \item \#tag bits = $32 - (9+5) = 18$ bits
-\end{itemize}
-\end{column}
-\begin{column}{0.52\textwidth}
-\textbf{Lookup Address:} \texttt{0x12345678}\\[0.2cm]
-\texttt{\small 0001 0010 0011 0100 0101 0110 0111 1000}\\[0.3cm]
+\begin{column}{0.48\textwidth}
 \centering
-\begin{tikzpicture}[scale=0.9,
-    tagbox/.style={rectangle, draw, fill=green!30, minimum height=0.6cm, font=\small},
-    setbox/.style={rectangle, draw, fill=cyan!30, minimum height=0.6cm, font=\small},
-    offsetbox/.style={rectangle, draw, fill=orange!30, minimum height=0.6cm, font=\small}
+\vspace{-4mm}
+\begin{tikzpicture}[scale=0.95, transform shape,
+    % Address box styles
+    addrbox/.style={rectangle, draw, minimum height=0.5cm, font=\footnotesize, text depth=0.1em},
+    tagbox/.style={addrbox, fill=green!30, minimum width=1.6cm},
+    setbox/.style={addrbox, fill=cyan!30, minimum width=1.2cm},
+    offsetbox/.style={addrbox, fill=orange!30, minimum width=1cm},
+    % Cell styles for matrices
+    cellstyle/.style={rectangle, draw, minimum width=0.9cm, minimum height=0.3cm,
+                     text depth=0.1cm, text height=0.2cm, font=\tiny, inner sep=2pt},
+    tagcell/.style={cellstyle, fill=green!30},
+    datacell/.style={cellstyle, minimum width=1.2cm},
+    offsetcell/.style={cellstyle, fill=orange!30, minimum width=2mm},
+    decoder/.style={muxdemux, muxdemux def={Lh=1.5, Rh=3.2, NB=0, NL=1, NR=4, w=0.5, square pins=0},
+                   external pins width=0, fill=cyan!20},
+    arrow/.style={->, >=stealth, thick},
+    dasharrow/.style={dashed, ->, >=stealth},
+    junction/.style={circle, fill=black, inner sep=0pt, minimum size=3pt}
 ]
-\node[tagbox, minimum width=2.5cm] at (0,0) (tag) {Tag};
-\node[setbox, minimum width=1.5cm, right=0pt of tag] (set) {Set};
-\node[offsetbox, minimum width=1cm, right=0pt of set] (offset) {Offset};
 
-\node[above=1pt of tag.north, font=\tiny] {18 bits};
-\node[above=1pt of set.north, font=\tiny] {9 bits};
-\node[above=1pt of offset.north, font=\tiny] {5 bits};
+% Address bits at top
+\node[tagbox] at (0,0) (tag) {Tag};
+\node[setbox, right=0pt of tag] (set) {Set};
+\node[offsetbox, right=0pt of set] (offset) {Offset};
 
-\node[below=1pt of tag.south, font=\scriptsize] {\texttt{0x048D1}};
-\node[below=1pt of set.south, font=\scriptsize] {\texttt{0x0B3}};
-\node[below=1pt of offset.south, font=\scriptsize] {\texttt{0x18}};
+% Bit labels - adjacent to boxes
+\node[anchor=south west, font=\tiny] at (tag.north west) {31};
+\node[anchor=south east, font=\tiny] at (tag.north east) {14};
+\node[anchor=south west, font=\tiny] at (set.north west) {13};
+\node[anchor=south east, font=\tiny] at (set.north east) {5};
+\node[anchor=south west, font=\tiny] at (offset.north west) {4};
+\node[anchor=south east, font=\tiny] at (offset.north east) {0};
 
-\node[below=0.8cm of set.south, font=\small] {= 179 (set index)};
+% Tag matrix
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north] at ([xshift=-0.3cm, yshift=-1.5cm]set.south) (tagmat) {
+  |[tagcell]| {\scriptsize Tag} \\
+  |[tagcell, very thick, draw=orange]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+  |[tagcell]| \phantom{Tag} \\
+};
+
+% Data matrix - same y as tag
+\matrix[matrix of nodes,
+        column sep=0pt, row sep=0pt,
+        ampersand replacement=\&,
+        anchor=north west] at ([xshift=5mm]tagmat.north east) (datamat) {
+  |[datacell]| {\scriptsize Data} \\
+  |[datacell, very thick, draw=orange]| \phantom{Data} \\
+  |[datacell]| \phantom{Data} \\
+  |[datacell]| \phantom{Data} \\
+};
+\node[offsetcell, anchor=east] at ([xshift=-1mm]datamat-2-1.east) (thedata) {};
+
+% Decoder
+\node[decoder, anchor=rpin 1] at ([xshift=-4mm]tagmat-1-1.west) (decoder) {};
+
+% Comparator
+\node[muxdemux, muxdemux def={Lh=0.6, Rh=0.3, NL=2, NB=1, w=0.5},
+      external pins width=0, fill=green!30, rotate=270] at ([xshift=2mm, yshift=-5mm]tagmat.south east) (comp) {};
+\node[font=\fontsize{4}{4}\selectfont, rotate=90] at (comp.center) {=};
+
+% Labels
+\node[above=-1mm of tagmat.north, anchor=south, font=\scriptsize] {Tag Array};
+\node[above=-1mm of datamat.north, anchor=south, font=\scriptsize] {Data Array};
+\node[below=2mm of comp.rpin 1, font=\scriptsize] (hitmiss) {Hit/Miss};
+\node[font=\scriptsize] at (hitmiss -| datamat) (dataout) {Data Out};
+\node[right=1mm of datamat-4-1.east, font=\tiny, text=gray] {512 sets};
+
+% Connections
+% Set to decoder
+\draw[arrow] (set.south) -- ++(0,-0.6) -| ([xshift=-3mm]decoder.lpin 1) -- (decoder.lpin 1);
+
+% Tag to comparator
+\draw[arrow] (tag.south) -- ++(0,-4mm) -| ([xshift=-5mm]decoder.lpin 1 |- tagmat-4-1.south) -- ++(0,-3mm) -| (comp.lpin 2);
+
+% Offset to data
+\draw[arrow] (offset.south) -- ++(0,-0.7) -| (thedata.north);
+
+% Decoder to tag array
+\foreach \i in {1,...,4} {
+    \draw[arrow] (decoder.rpin 1 |- tagmat-\i-1.west) -- (tagmat-\i-1.west);
+}
+
+% Tag to data (dashed)
+\foreach \i in {1,...,4} {
+    \draw[dasharrow] (tagmat-\i-1.east) -- (datamat-\i-1.west);
+}
+
+% Selected line highlight (row 2)
+\draw[arrow, thick, orange] (tagmat-2-1.east) -- (datamat-2-1.west);
+
+% Tag array to comparator (from south of matrix)
+\draw[arrow] (tagmat-2-1.east) -| (comp.lpin 1);
+
+% Comparator output
+\draw[arrow] (comp.rpin 1) -- ++(0,-0.3);
+
+% Data out (from bottom of matrix)
+\draw[arrow] (datamat-4-1.south) -- (dataout.north);
+
 \end{tikzpicture}
+\end{column}
+
+\begin{column}{0.52\textwidth}
+\footnotesize
+\begin{tabular}{ll}
+\textbf{Line Size:} & $32$ bytes $= 2^5$ bytes\\
+\textbf{Cache Size:} & $16$ KB $= 2^{14}$ bytes\\
+\textbf{\# Lines:} & $\frac{\text{cache size}}{\text{line size}} = \frac{2^{14}}{2^5} = 512$ lines\\
+\textbf{\# Sets:} & $\frac{\text{\#lines}}{\text{\#ways}} = 512$ sets
+\end{tabular}
+
+\vspace{0.2cm}
+\begin{tabular}{ll}
+\textcolor{offsetcolor}{\textbf{Offset bits:}} & $\log_2(\text{line size}) = 5$ bits\\
+\textcolor{setcolor}{\textbf{Set bits:}} & $\log_2(\text{\#sets}) = 9$ bits\\
+\textcolor{tagcolor}{\textbf{Tag bits:}} & $32 - (5+9) = 18$ bits\\
+\end{tabular}
+
+\vspace{0.3cm}
+\textbf{Example:} Address \texttt{0x12345678}\\[2pt]
+
+% Binary bits with braces pointing to hex values
+% 18-bit tag, 9-bit set, 5-bit offset splits nibbles 5 and 7
+\begin{tikzpicture}
+  % Place nibbles individually for precise brace positioning
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at (0,0) (n1) {0001};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n1.east) (n2) {0010};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n2.east) (n3) {0011};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n3.east) (n4) {0100};
+  % Nibble 5 splits: 01 (tag) + 01 (set)
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=tagcolor] at ([xshift=2pt]n4.east) (n5a) {01};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=setcolor] at (n5a.east) (n5b) {01};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=setcolor] at ([xshift=2pt]n5b.east) (n6) {0110};
+  % Nibble 7 splits: 011 (set) + 1 (offset)
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=setcolor] at ([xshift=2pt]n6.east) (n7a) {011};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=offsetcolor] at (n7a.east) (n7b) {1};
+  \node[font=\ttfamily\footnotesize, inner sep=0, anchor=west, text=offsetcolor] at ([xshift=2pt]n7b.east) (n8) {1000};
+
+  % Braces below pointing to hex values
+  \draw[decorate, decoration={brace, amplitude=2pt, mirror, raise=1pt}, tagcolor]
+      (n1.south west) -- (n5a.south east)
+      node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0x048D1}\\[-2pt]{\tiny Tag (18b)}};
+  \draw[decorate, decoration={brace, amplitude=2pt, mirror, raise=1pt}, setcolor]
+      (n5b.south west) -- (n7a.south east)
+      node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0x0B3}\\[-2pt]{\tiny Set (9b)}};
+  \draw[decorate, decoration={brace, amplitude=2pt, mirror, raise=1pt}, offsetcolor]
+      (n7b.south west) -- (n8.south east)
+      node[midway, below=4pt, font=\scriptsize, text=black, align=center] {\texttt{0x18}\\[-2pt]{\tiny Offset (5b)}};
+\end{tikzpicture}
+
+\vspace{0.1cm}
+\footnotesize
+\begin{tabular}{ll}
+\textcolor{setcolor}{\textbf{Set Index:}} & $\mathtt{0xB3} = 179$\\
+\end{tabular}
 \end{column}
 \end{columns}
 \end{frame}
