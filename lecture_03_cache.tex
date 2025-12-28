@@ -3073,20 +3073,29 @@ State & Valid & Modified & Copies elsewhere?\\
 \newcommand{\mpexample}[8]{% {p1-cache}{p1-state}{p2-cache}{p2-state}{l2-content}{l2-bits}{memory}{description}
   \centering
   \begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
-    % L2 Cache - split into two lines
-    \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=1cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)\\[2pt]#5};
- 
+    % L2 Cache with white rectangle for content
+    \node[draw, thick, fill=brown!20, minimum width=4.5cm, minimum height=1.2cm, text depth=0.5cm] (l2) at (1.5,-2.5) {L2 cache (shared)};
+    \ifx&#5&\else
+      \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] at ([yshift=1mm]l2.south) {#5};
+    \fi
+
     % Processor 1 - direct code instead of macro
     \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.8cm, align=center, anchor=south west] (p1) at ([yshift=20]l2.north west) {};
     \node[above] at (p1.north) {\textbf{Processor 1}};
-    
+
     % Processor 2 - direct code instead of macro
     \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.8cm, align=center, anchor=south east] (p2) at ([yshift=20]l2.north east) {};
     \node[above] at (p2.north) {\textbf{Processor 2}};
-    
-    % L1 Caches with content - split into two lines
-    \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p1) at (p1.center) {L1 cache\\[2pt]#1};
-    \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.9cm, align=center] (l1p2) at (p2.center) {L1 cache\\[2pt]#3};
+
+    % L1 Caches with white rectangles for content
+    \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.1cm, text depth=0.45cm] (l1p1) at (p1.center) {L1 cache};
+    \ifx&#1&\else
+      \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] at ([yshift=1mm]l1p1.south) {#1};
+    \fi
+    \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=1.1cm, text depth=0.45cm] (l1p2) at (p2.center) {L1 cache};
+    \ifx&#3&\else
+      \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] at ([yshift=1mm]l1p2.south) {#3};
+    \fi
     
     % State indicators - positioned outside the cache box at lower right corner
     \ifx&#2&\else
@@ -3116,8 +3125,11 @@ State & Valid & Modified & Copies elsewhere?\\
     % Core valid bits
     \node[draw, thick, minimum width=1cm, minimum height=0.6cm, align=center] at ($(l2.east)+(0.9,0)$) {\tiny P1 P2\\[-1pt]#6};
     
-    % Memory - split into two lines
-    \node[draw, thick, fill=blue!20, minimum width=3.8cm, minimum height=0.9cm, align=center, anchor=north] (mem) at ([yshift=-20]l2.south) {Memory\\[2pt]#7};
+    % Memory with white rectangle for content
+    \node[draw, thick, fill=blue!20, minimum width=3.8cm, minimum height=1.1cm, text depth=0.45cm, anchor=north] (mem) at ([yshift=-20]l2.south) {Memory};
+    \ifx&#7&\else
+      \node[draw, fill=white, font=\scriptsize\ttfamily, anchor=south] at ([yshift=1mm]mem.south) {#7};
+    \fi
     
     % Arrows with straight lines using |- syntax
     \draw[<->, thick] (p1.south) -- (p1 |- l2.north);
