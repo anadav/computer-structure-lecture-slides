@@ -857,13 +857,15 @@ Note: No Table cache needed as TLB stores complete translations
 \node[pml4cachestyle, below=0.2cm of pdpcache] (pml4cache) {PML4 cache};
 
 % PMH and Page Walk Logic
-\node[rectangle, draw, thick, fill=yellow!20, minimum height=3cm, minimum width=1.5cm, 
+\node[rectangle, draw, thick, fill=yellow!20, minimum height=3cm, minimum width=1.5cm,
       right=2.5cm of stlb, yshift=-1.2cm] (pmh) {};
-\node[align=center, anchor=south west] (pmhlabel) at (pmh.north) {PMH};
+\node[boxlabel, anchor=south west] (pmhlabel) at (pmh.north) {PMH};
 \node[align=center] (pwllabel) at (pmh.center) {Page\\Walk\\Logic};
 
 % Fit box around translation caches
-\node[bigbox, fit=(stlb)(pdecache)(pdpcache)(pml4cache)(pmh)(pmhlabel)] (transbox) {};
+\begin{scope}[on background layer]
+\node[bigbox, fill=gray!10, fit=(stlb)(pdecache)(pdpcache)(pml4cache)(pmh)(pmhlabel)] (transbox) {};
+\end{scope}
 
 % L2, L3, and Memory
 \node[cache, fill=gray!30, right=of l1data, minimum width=1cm] (l2) {L2};
