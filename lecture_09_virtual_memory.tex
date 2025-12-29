@@ -2344,10 +2344,211 @@ PML4 cache & [47:39] & PML4 entry & PDP, PDE, and PTE \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Cache and Translation Structures}
+\begin{frame}{Caches and Translation Structures}
+\begin{tikzpicture}[
+    cache/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=2cm},
+    tlb/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=1.8cm},
+    bigbox/.style={rectangle, draw, thick},
+    arrow/.style={->, >=stealth, thick,},
+    label/.style={font=\tiny},
+    arrowlabel/.style={font=\tiny, above=-3pt},
+    boxlabel/.style={font=\scriptsize\bfseries},
+    font=\scriptsize,
+    % Muxdemux styles for translation caches
+    muxcache/.style={muxdemux, muxdemux def={Lh=1, Rh=1, NR=2, NL=0, NB=0, NT=0},
+        external pins width=0, font=\scriptsize},
+    stlbcache/.style={muxdemux, muxdemux def={Lh=1, Rh=1, NR=2, NL=0, NB=0, NT=2},
+        external pins width=0, font=\scriptsize, fill=white},
+    pdecachestyle/.style={muxcache, fill=white},
+    pdpcachestyle/.style={muxcache, fill=white},
+    pml4cachestyle/.style={muxcache, fill=white}
+]
+
+% L1 Caches
+\node[cache, fill=blue!30] (l1inst) {L1 Inst. cache};
+\node[cache, fill=orange!30, right=1cm of l1inst, minimum width=3cm] (l1data) {L1 data cache};
+
+% TLBs
+\node[tlb, fill=cyan!30, below=0.6cm of l1inst] (insttlb) {Inst. TLB};
+\node[tlb, fill=violet!30, below=0.6cm of l1data.south west, anchor=north west] (datatlb) {Data TLB};
+
+% Translation caches using muxdemux
+\node[stlbcache, below=1.1cm of insttlb, xshift=1cm] (stlb) {STLB};
+\node[pdecachestyle, below=0.2cm of stlb] (pdecache) {PDE cache};
+\node[pdpcachestyle, below=0.2cm of pdecache] (pdpcache) {PDP cache};
+\node[pml4cachestyle, below=0.2cm of pdpcache] (pml4cache) {PML4 cache};
+
+% PMH and Page Walk Logic
+\node[rectangle, draw, thick, fill=yellow!20, minimum height=3cm, minimum width=1.5cm,
+      right=2.5cm of stlb, yshift=-1.2cm] (pmh) {};
+\node[boxlabel, anchor=south west] (pmhlabel) at (pmh.north) {PMH};
+\node[align=center] (pwllabel) at (pmh.center) {Page\\Walk\\Logic};
+
+% Fit box around translation caches
+\begin{scope}[on background layer]
+\node[bigbox, fill=gray!10, fit=(stlb)(pdecache)(pdpcache)(pml4cache)(pmh)(pmhlabel)] (transbox) {};
+\end{scope}
+
+% L2, L3, and Memory
+\node[cache, fill=gray!30, right=of l1data, minimum width=1cm] (l2) {L2};
+\node[cache, fill=green!20, right=of l2, minimum width=1cm] (l3) {L3};
+\node[cache, fill=green!30, right=0.8cm of l3, minimum width=1.5cm] (memory) {Memory};
+
+% Labels above components
+\node[boxlabel, anchor=south west] at ([yshift=1mm]l1inst.north west) (corelabel) {Core};
+\node[boxlabel, above=0.1cm of l3] (ondielabel) {On-die};
+\node[boxlabel, above=0.1cm of memory] (platformlabel) {Platform};
+
+% Core box
+\node[bigbox, fit=(corelabel)(l1inst)(l1data)(insttlb)(datatlb)(transbox)(pmhlabel)(l2),
+      inner sep=0.3cm] (corebox) {};
+
+% On-die box
+\node[bigbox, fit=(ondielabel)(l3), inner sep=0.2cm] (ondiebox) {};
+
+% Platform box
+\node[bigbox, fit=(platformlabel)(memory), inner sep=0.2cm] (platformbox) {};
+
+% Arrows and connections
+\draw[arrow, blue] ([yshift=-1mm]l2.north west) to[bend right=13] node[above, label] {Instruction bytes} ([yshift=-1mm]l1inst.north east);
+\draw[arrow, cyan] (insttlb) -- (l1inst) node[midway, left, label] {translation};
+\draw[arrow, violet] (datatlb) -- (l1data) node[midway, left, label] {translation};
+
+% PTE connections from STLB to TLBs
+\draw[arrow] (stlb.tpin 1) to[bend left=15] node[near end, left, label] {PTE} (insttlb);
+\draw[arrow] (stlb.tpin 2) to[bend right=15] node[near end, right, label] {PTE} (datatlb);
+
+% VA from translation caches to PMH (using rpin 1 of muxdemux)
+\draw[arrow] (stlb.rpin 1) -- node[arrowlabel] {VA[47:12]} (pmh.west |- stlb.rpin 1);
+\draw[arrow] (pdecache.rpin 1) -- node[arrowlabel] {VA[47:21]} (pmh.west |- pdecache.rpin 1);
+\draw[arrow] (pdpcache.rpin 1) -- node[arrowlabel] {VA[47:30]} (pmh.west |- pdpcache.rpin 1);
+\draw[arrow] (pml4cache.rpin 1) -- node[arrowlabel] {VA[47:39]} (pmh.west |- pml4cache.rpin 1);
+
+% From PMH to translation caches (using rpin 2 of muxdemux)
+\draw[arrow, red, thick] (pmh.west |- stlb.rpin 2) -- node[arrowlabel] {PTE}
+      (stlb.rpin 2);
+\draw[arrow, red, thick] (pmh.west |- pdecache.rpin 2) -- node[arrowlabel] {PDE entry}
+      (pdecache.rpin 2);
+\draw[arrow, red, thick] (pmh.west |- pdpcache.rpin 2) -- node[arrowlabel] {PDP entry}
+      (pdpcache.rpin 2);
+\draw[arrow, red, thick] (pmh.west |- pml4cache.rpin 2) -- node[arrowlabel] {PML4 entry}
+      (pml4cache.rpin 2);
+
+% VA labels on the right side of PMH
+%\node[label, right=0.1cm of pmh.east, yshift=1.2cm] {VA[47:12]};
+%\node[label, right=0.1cm of pmh.east, yshift=0.4cm] {VA[47:21]};
+%\node[label, right=0.1cm of pmh.east, yshift=-0.4cm] {VA[47:30]};
+%\node[label, right=0.1cm of pmh.east, yshift=-1.2cm] {VA[47:39]};
+
+% PMH to L1 data cache
+%\draw[arrow, red, thick] (pmh.north) to[out=90, in=270] (l1data.south);
+\draw[arrow, red, thick] 
+  ($(pmh.north -| l1data.east) + (-3mm,0)$) --  
+  node[right, align=center] {Load} 
+  ($(l1data.south east) + (-3mm,0)$);
+
+
+% L1 data cache to L2
+\draw[arrow, blue, thick] (l2.west) -- (l1data.east);
+
+% L2 to L3 to Memory
+\draw[<->, thick] (l2.east) -- (l3.west);
+\draw[<->, thick] (l3.east) -- (memory.west);
+
+\end{tikzpicture}
+\end{frame}
+\begin{frame}{Real-World Example: Intel Xeon Gold 5420+ (Sapphire Rapids)}
+\scriptsize
+\textbf{Cache Hierarchy}\tikzmark{cachetableleft}
+
 \begin{center}
-[Diagram showing Core with PMH, L1 I\$ 32KB 8 ways, L1 D\$ 32KB 8 ways, MLC 256KB 4 ways, LLC 2MB per core, DRAM 8GB, and various TLB structures]
+\begin{tabular}{llrrll}
+\toprule
+Level & Type & Size & Line & Assoc. & Comments \\
+\midrule
+L1 & Instruction & 32 KB & 64 B & 8-way & Per-core \\
+L1 & Data & 48 KB & 64 B & 12-way & Per-core \\
+L2 & \tikzmark{unified}Unified & 2 MB & 64 B & 16-way & Per-core \\
+L3 & Unified & 52.5 MB \tikzmark{l3size} & 64 B & 15-way & Shared, complex indexing \\
+\bottomrule
+\end{tabular}\tikzmark{cachetablebelow}
 \end{center}
+
+\vspace{0.3em}
+\textbf{TLB Hierarchy}
+
+\begin{columns}[T]
+\begin{column}{0.1\textwidth}
+\end{column}
+\begin{column}{0.45\textwidth}
+\hspace{1cm}%
+\begin{minipage}[t]{0.85\textwidth}
+\centering
+\textbf{L1 TLBs}
+
+\begin{tabular}{llrl}
+\toprule
+Type & Page Size & Entries & Assoc. \\
+\midrule
+Instruction & 4 KB & 256 & 8-way \\
+Instruction & 2/4 MB\tikzmark{largepage} & 32 & 8-way \\
+\tikzmark{loadtlb}Load & 4 KB & 64 & 4-way \\
+Load & 2/4 MB & 32 & 4-way \\
+Load & 1 GB & 8 & Full \\
+\tikzmark{storetlb}Store & All sizes & 16 & Full\tikzmark{l1tlbse} \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{column}
+\begin{column}{0.45\textwidth}
+\centering
+\tikzmark{stlbabove}\textbf{L2 STLB (Unified)}\tikzmark{stlb}
+
+\begin{tabular}{lrl}
+\toprule
+Page Sizes & Entries & Assoc. \\
+\midrule
+4 KB / 2 MB / 4 MB & 1024 & 8-way \\
+4 KB / 1 GB & 1024 & 8-way \\
+\bottomrule
+\end{tabular}
+\end{column}
+\end{columns}
+
+\pause
+\begin{tikzpicture}[remember picture, overlay]
+\node[rectangle callout, draw, fill=yellow!20, font=\scriptsize,
+    callout absolute pointer={(pic cs:loadtlb)}, anchor=south east, align=left]
+    at ([shift={(-1mm,1mm)}]pic cs:storetlb) {Split L1 TLBs for\\load/store};
+\end{tikzpicture}
+
+\pause
+\begin{tikzpicture}[remember picture, overlay]
+\node[rectangle callout, draw, fill=green!20, font=\scriptsize, anchor=south west,
+    callout absolute pointer={(pic cs:largepage)}]
+    at ([shift={(3mm,-2mm)}]pic cs:l1tlbse) {Large pages reduce TLB pressure};
+\end{tikzpicture}
+
+\pause
+\begin{tikzpicture}[remember picture, overlay]
+\node[rectangle callout, draw, fill=cyan!20, font=\scriptsize,
+    callout absolute pointer={(pic cs:stlb)}]
+    at ([shift={(3cm,5mm)}]pic cs:stlbabove) {Backs up all L1 TLB misses};
+\end{tikzpicture}
+
+\pause
+\begin{tikzpicture}[remember picture, overlay]
+\node[rectangle callout, draw, fill=orange!20, font=\scriptsize, anchor=east,
+    callout absolute pointer={(pic cs:unified)}]
+    at ([shift={(-1.5cm,2mm)}]pic cs:unified) {Instruction + Data};
+\end{tikzpicture}
+
+\pause
+\begin{tikzpicture}[remember picture, overlay]
+\node[rectangle callout, draw, fill=red!20, font=\scriptsize,
+    callout absolute pointer={(pic cs:l3size)}]
+    at ([shift={(2cm,-8mm)}]pic cs:l3size) {Memory is $\sim$1000$\times$ larger!};
+\end{tikzpicture}
 \end{frame}
 
 % Additional advanced topics
