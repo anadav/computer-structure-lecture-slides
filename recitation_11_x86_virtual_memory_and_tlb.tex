@@ -120,6 +120,11 @@
   color/.estore in = \fieldcolor
 }
 
+% Macro for table cell content with overlay - fixes spacing in p{} columns
+\newlength{\tablecellvspace}
+\setlength{\tablecellvspace}{-3mm}
+\newcommand{\cellonslide}[2]{\onslide<#1>{\vspace*{\tablecellvspace}#2}}
+
 % Unified macro for virtual address breakdown with up to 6 fields
 % Usage: \vmaddressbreakdown{signbits}{pml4bits}{pdpbits}{dirbits}{tablebits}{offsetbits}
 % Pass 0 for fields that should be skipped
@@ -625,12 +630,9 @@ Core similar to x86 in 64-bit mode:
 \section{Virtual Address Translation Caching}
 
 \begin{frame}{Question 1c: Page Table Allocation}
-We access a sequence of virtual addresses.
+A process accesses the following virtual addresses in order:
 
 \vspace{0.5em}
-For each address, what is the \textbf{minimal number of tables} that were added in all the hierarchies?
-
-\vspace{1em}
 \begin{enumerate}
 \item \texttt{0x00000D382FFE2B25}
 \item \texttt{0x00000D382FFE2349}
@@ -638,6 +640,9 @@ For each address, what is the \textbf{minimal number of tables} that were added 
 \item \texttt{0x00000D3822849C00}
 \item \texttt{0x000007146B554622}
 \end{enumerate}
+
+\vspace{0.5em}
+For each access, how many \textbf{new page tables} must be allocated?
 \end{frame}
 
 \begin{frame}{Question 1c (Page Table Allocation): Visualization}
@@ -921,9 +926,9 @@ For each address, what is the \textbf{minimal number of tables} that were added 
 };}
 \visible<11->{\node[alloclabel] at ([xshift=2mm,yshift=4mm]addr5.south west) {3 new tables + 1 page};}
 
-% Note about 8 bits
-\node[font=\scriptsize, draw=black, thick, fill=red!10, align=center, text width=2.5cm,
-      rectangle callout, callout absolute pointer={(-0.2,11.3)}] at (-2.5,9.5) {8 bits per level instead of 9 for example purposes only};
+% Note about question parameters (only on first stage)
+\visible<1>{\node[font=\scriptsize, draw=black, thick, fill=red!10, align=center, text width=2.8cm,
+      rectangle callout, callout absolute pointer={(-0.2,11.3)}] at (-2.5,9.5) {Using Question 1 parameters:\\ 256 entries per table\\ (8-bit indices)};}
 
 
 \end{tikzpicture}
@@ -960,53 +965,75 @@ For each address, what is the \textbf{minimal number of tables} that were added 
 \begin{columns}[T]
 \begin{column}{0.6\textwidth}
 \begin{itemize}
-    \item Page table resides in memory\\
-    $\Rightarrow$ each translation requires extra memory access
-    \item TLB caches recently used PTEs
+    \item The page table resides in memory\\
+    $\Rightarrow$ each translation requires an extra memory access
+    \item The TLB caches recently used PTEs
     \begin{itemize}
-        \item Speed up translation
+        \item Speeds up translation
         \item Separate L1 instruction TLB (iTLB) and data TLB (dTLB)
-        \item Typically 64-128 entries per L1 TLB
-        \item 4-8 way associative
+        \item Typically 64--128 entries per L1 TLB
+        \item 4--8 way associative
     \end{itemize}
     \item \textbf{TLB Indexing:}
-\end{itemize}
-\vspace{0.2cm}
-\begin{tikzpicture}[scale=0.8]
-    \draw[thick] (0,0) rectangle (4,0.5);
-    \draw[thick] (2.5,0) -- (2.5,0.5);
-    \node at (1.25,0.25) {\small Virtual Page Number};
-    \node at (3.25,0.25) {\small DISP};
 
-    \draw[thick] (0,-0.8) rectangle (4,-0.3);
-    \draw[thick] (1.5,-0.8) -- (1.5,-0.3);
-    \draw[thick] (2.5,-0.8) -- (2.5,-0.3);
-    \node at (0.75,-0.55) {\small Tag};
-    \node at (2,-0.55) {\small Set};
-    \node at (3.25,-0.55) {\small DISP};
+\begin{tikzpicture}[scale=0.85]
+    % Virtual address breakdown
+    \draw[thick] (0,0) rectangle (5.5,0.6);
+    \draw[thick] (4,0) -- (4,0.6);
+
+    % Fill colors
+    \fill[blue!20] (0,0) rectangle (4,0.6);
+    \fill[orange!20] (4,0) rectangle (5.5,0.6);
+
+    % Labels
+    \node at (2,0.3) {\small Virtual Page Number};
+    \node at (4.75,0.3) {\small Offset};
+
+    % Tag and Set subdivision
+    \draw[thick] (0,-0.8) rectangle (4,-0.2);
+    \draw[thick] (2.4,-0.8) -- (2.4,-0.2);
+
+    \fill[green!20] (0,-0.8) rectangle (2.4,-0.2);
+    \fill[yellow!20] (2.4,-0.8) rectangle (4,-0.2);
+
+    \node at (1.2,-0.5) {\small Tag};
+    \node at (3.2,-0.5) {\small Set};
+
+    % Dotted lines connecting
+    \draw[dotted, thick] (0,0) -- (0,-0.2);
+    \draw[dotted, thick] (4,0) -- (4,-0.2);
 \end{tikzpicture}
 
-\textbf{On TLB miss:}\\
-Page Miss Handler (PMH) gets PTE from memory
+    \item \textbf{On a TLB miss:}\\
+    Page Miss Handler (PMH) gets the PTE from memory
+\end{itemize}
 \end{column}
 
 \begin{column}{0.4\textwidth}
 \begin{center}
-\begin{tikzpicture}[node distance=0.8cm, auto]
-    \scriptsize
+\begin{tikzpicture}[
+    node distance=5mm,
+    box/.style={rectangle, draw, thick, minimum width=1cm, minimum height=0.7cm, text centered, font=\tiny},
+    decision/.style={diamond, draw, thick, minimum width=1.8cm, minimum height=1cm, text centered, font=\tiny},
+    oval/.style={ellipse, draw, thick, minimum width=1cm, minimum height=0.8cm, text centered, font=\tiny, text width=1cm},
+    arrow/.style={->, thick}]
+    \tiny
     % Nodes
-    \node[draw, ellipse] (va) {Virtual Address};
-    \node[draw, rectangle, below=of va] (tlb) {TLB Access};
-    \node[draw, diamond, below=of tlb, aspect=2] (hit) {TLB Hit?};
-    \node[draw, rectangle, left=of hit, align=center] (pt) {Access\\Page Table\\in Memory};
-    \node[draw, ellipse, below=of hit, align=center] (pa) {Physical\\Address};
-    
+    \node[oval, align=center] (va) {Virtual Address};
+    \node[box, align=center, below=of va] (tlb) {TLB Access};
+    \node[decision, below=of tlb] (hit) {TLB Hit?};
+    \node[box, fill=yellow!10, align=center, left=of hit, text width=2.5cm] (pmh) {PMH gets PTE from Page Table in memory};
+    \node[box, align=center, below=of pmh, text width=2.5cm] (insert) {Insert PTE into TLB (may need a victim)};
+    \node[oval, align=center, below=of hit] (pa) {Physical Addresses};
+
     % Arrows
-    \draw[->, thick] (va) -- (tlb);
-    \draw[->, thick] (tlb) -- (hit);
-    \draw[->, thick] (hit) -- node[right] {Yes} (pa);
-    \draw[->, thick] (hit) -- node[above] {No} (pt);
-    \draw[->, thick] (pt) |- (pa);
+    \draw[arrow] (va) -- (tlb);
+    \draw[arrow] (tlb) -- (hit);
+    \draw[arrow] (hit) -- node[above] {No} (pmh);
+    \draw[arrow] (hit) -- node[right] {Yes} (pa);
+    \draw[arrow] (pmh) -- (insert);
+    \draw[arrow] (pmh) -- (pa);
+
 \end{tikzpicture}
 \end{center}
 \end{column}
@@ -1016,19 +1043,20 @@ Page Miss Handler (PMH) gets PTE from memory
 % Slide 10: STLB - Secondary TLB
 \begin{frame}{STLB (Secondary TLB)}
 \begin{itemize}
-    \item Second-level TLB (L2 TLB) shared between instruction and data paths
-    \item Checked on L1 TLB miss before performing full page walk
-    \item On STLB hit: PTE copied to appropriate L1 TLB (iTLB or dTLB)
-    \item On STLB miss: PMH performs full page walk
+    \item The second-level TLB (L2 TLB) is shared between instruction and data paths
+    \item Checked on an L1 TLB miss before performing a full page walk
+    \item On an STLB hit: the PTE is copied to the appropriate L1 TLB (iTLB or dTLB)
+    \item On an STLB miss: the PMH performs a full page walk
 \end{itemize}
 
 \vspace{1em}
 \begin{center}
-\begin{tabular}{|l|c|c|}
+\begin{tabular}{|>{\cellcolor{gray!20}}l|c|c|}
 \hline
+\rowcolor{gray!20}
 \textbf{Property} & \textbf{L1 TLB} & \textbf{L2 TLB (STLB)} \\
 \hline
-Entries & 64-128 & 1024-2048 \\
+Entries & 64--128 & 1024--2048 \\
 \hline
 Accessed & First & Second (on L1 miss) \\
 \hline
@@ -1271,6 +1299,7 @@ Note: No Table cache needed as TLB stores complete translations
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
+\rowcolor{gray!20}
 \textbf{Virtual Address} & \textbf{Memory Accesses} & \textbf{Explanation} \\
 \hline
 \textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{666} & ? & \\
@@ -1294,13 +1323,14 @@ Note: No Table cache needed as TLB stores complete translations
 \begin{center}
 \begin{tabular}{|l|c|p{6cm}|}
 \hline
+\rowcolor{gray!20}
 \textbf{Virtual Address} & \textbf{Accesses} & \textbf{Explanation} \\
 \hline
-\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{666} & 4 & Need to access memory for each of the 4 translation tables \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{666} & \onslide<2->{4} & \cellonslide{2-}{Need to access memory for each of the 4 translation tables} \\
 \hline
-\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & 0 & Same page as above $\Rightarrow$ TLB hit $\Rightarrow$ No memory access \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{33}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & \onslide<3->{0} & \cellonslide{3-}{Same page as above $\Rightarrow$ TLB hit $\Rightarrow$ No memory access} \\
 \hline
-\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{88}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & 3 & Hit in PML4 cache, then miss in PDP. Need to access memory 3 times: PDP, DIR, PTE \\
+\textcolor{signcolor}{0x00000}\textcolor{pml4color}{22}\textcolor{pdpcolor}{88}\textcolor{dircolor}{44}\textcolor{tablecolor}{55}\textcolor{offsetcolor}{777} & \onslide<4->{3} & \cellonslide{4-}{Hit in PML4 cache, then miss in PDP. Need to access memory 3 times: PDP, DIR, PTE} \\
 \hline
 \end{tabular}
 \end{center}

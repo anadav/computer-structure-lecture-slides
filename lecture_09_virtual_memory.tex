@@ -639,9 +639,9 @@
 
     % Dashed lines from page table boxes to contiguous Page Table frames
     \draw[dashed, thick, blue!50] (ptAbox.east) -- (ptAphys.west)
-        node[midway, above, font=\tiny, text=black] {resides in};
+        node[midway, above, font=\tiny, text=blue!50] {resides in};
     \draw[dashed, thick, green!50] (ptBbox.east) -- (ptBphys.west)
-        node[midway, below, font=\tiny, text=black] {resides in};
+        node[midway, below, font=\tiny, text=green!50] {resides in};
 
     % Straight arrows from Process A PTEs to data frames
     \draw[arrowstyle, blue!70!black] (ptA1.east) -- (f2.west);
@@ -761,7 +761,10 @@ def handle_protection_violation(vaddr, access):
 
 \section{TLB and Cache Design}
 
-\begin{frame}{Translation Look aside Buffer (TLB)}
+\begin{frame}{Translation Lookaside Buffer (TLB)}
+\begin{columns}[T]
+\column{0.28\textwidth}
+\small
 \begin{itemize}
 \item With virtual memory, before each cache access, need to first get the physical address
     \begin{itemize}
@@ -769,13 +772,145 @@ def handle_protection_violation(vaddr, access):
     \end{itemize}
 \item The TLB is a cache for recent address translations
 \end{itemize}
-\begin{center}
-[Diagram: TLB caching page table entries]
-\end{center}
+
+\column{0.72\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.75, every node/.style={scale=0.75},
+    % Base style for all table cells
+    cell/.style={draw, minimum height=0.32cm, inner sep=0pt, font=\tiny, text depth=0pt, text height=0.22cm, anchor=center},
+    % TLB cells
+    tlbvalid/.style={cell, fill=green!30, minimum width=0.45cm},
+    tlbinvalid/.style={cell, fill=gray!20, minimum width=0.45cm},
+    tlbtag/.style={cell, fill=green!30, minimum width=0.8cm},
+    tlbtaginvalid/.style={cell, fill=gray!20, minimum width=0.8cm},
+    tlbpfn/.style={cell, fill=green!30, minimum width=1.1cm},
+    tlbpfninvalid/.style={cell, fill=gray!20, minimum width=1.1cm},
+    % Page table cells
+    ptgreen/.style={cell, fill=green!30, minimum width=0.45cm},
+    ptred/.style={cell, fill=red!30, minimum width=0.45cm},
+    ptdatagreen/.style={cell, fill=green!30, minimum width=1.1cm},
+    ptdatared/.style={cell, fill=red!30, minimum width=1.1cm},
+    % Physical memory
+    ppage/.style={cell, fill=green!30, minimum width=1.3cm},
+    % Labels
+    mytitle/.style={font=\small\bfseries, text=gray!70!black},
+    colheader/.style={font=\tiny\bfseries, text=gray!70!black, minimum height=0.28cm},
+    arrow/.style={-Stealth, thick},
+    dotarrow/.style={{Circle[length=2pt]}-Stealth, thick},
+    orangearrow/.style={-Stealth, thick, orange}
+]
+
+% Virtual Page Number box - positioned on the left
+\node[draw, fill=blue!15, minimum width=2cm, minimum height=0.5cm, font=\scriptsize] (vpn)
+    {Virtual page number};
+
+% TLB - positioned to the right of VPN
+\matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
+    right=1.2cm of vpn,
+    label={[mytitle, label distance=-1mm]above:TLB}] (tlb) {
+    |[colheader]| Valid \& |[colheader]| Tag \& |[colheader]| Physical Page \\
+    |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbpfninvalid]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
+    |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbpfninvalid]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
+};
+
+% Page Table - positioned below TLB
+\matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
+    below=0.6cm of tlb,
+    label={[mytitle, label distance=-1mm]above:Page Table}] (pt) {
+    |[colheader]| P \& |[colheader, minimum width=1.1cm]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+};
+
+% Physical Memory - positioned to the right
+\matrix[matrix of nodes, row sep=-\pgflinewidth, ampersand replacement=\&,
+    right=1.8cm of tlb.north east, anchor=north west,
+    label={[mytitle, label distance=-1mm]above:Physical Memory}] (pp) {
+    |[ppage]| \\
+    |[ppage]| \\
+    |[ppage]| \\
+    |[ppage]| \\
+    |[ppage]| \\
+    |[ppage]| \\
+    |[ppage]| \\
+    |[ppage]| \\
+};
+
+% Disk - positioned below Physical Memory
+\node[mytitle, below=0.3cm of pp] (disklabel) {Disk};
+\begin{scope}[shift={(disklabel.south)}, yshift=-0.2cm]
+    \draw[thick, fill=blue!10] (0, 0) ellipse (0.9cm and 0.22cm);
+    \draw[thick, fill=blue!10] (-0.9, 0) -- (-0.9, -1.2);
+    \draw[thick, fill=blue!10] (0.9, 0) -- (0.9, -1.2);
+    \draw[thick, fill=blue!10] (0, -1.2) ellipse (0.9cm and 0.22cm);
+    % Disk slots (red for swapped pages)
+    \fill[red!30] (-0.85, -0.25) rectangle (0.85, -0.5);
+    \draw (-0.85, -0.25) rectangle (0.85, -0.5);
+    \fill[red!30] (-0.85, -0.55) rectangle (0.85, -0.8);
+    \draw (-0.85, -0.55) rectangle (0.85, -0.8);
+    \fill[red!30] (-0.85, -0.85) rectangle (0.85, -1.1);
+    \draw (-0.85, -0.85) rectangle (0.85, -1.1);
+\end{scope}
+
+% "Physical Page Or Disk Address" label for Page Table
+\node[font=\tiny, text=gray!70!black, align=center, rotate=90, anchor=south]
+    at ($(pt.west) + (-0.4, -0.5)$) {Physical Page\\Or Disk Address};
+
+% Connection from VPN - dot at the split point
+\coordinate (splitpoint) at ($(vpn.east) + (0.4, 0)$);
+\draw[thick] (vpn.east) -- (splitpoint);
+\fill (splitpoint) circle (2pt);
+
+% VPN to TLB
+\draw[arrow] (splitpoint) -- (splitpoint |- tlb.west) -- (tlb.west);
+
+% VPN to Page Table
+\draw[arrow] (splitpoint) |- (pt.west);
+
+% Orange arrows from TLB (valid entries) to Physical Memory
+\draw[orangearrow] (tlb-3-3.east) -- (pp-2-1.west);
+\draw[orangearrow] (tlb-4-3.east) -- (pp-4-1.west);
+\draw[orangearrow] (tlb-5-3.east) -- (pp-3-1.west);
+\draw[orangearrow] (tlb-6-3.east) -- (pp-5-1.west);
+\draw[orangearrow] (tlb-8-3.east) -- (pp-6-1.west);
+
+% Black arrows from Page Table (present=1) to Physical Memory
+\draw[dotarrow] (pt-2-2.east) -- (pp-1-1.west);
+\draw[dotarrow] (pt-3-2.east) -- (pp-3-1.west);
+\draw[dotarrow] (pt-4-2.east) -- (pp-2-1.west);
+\draw[dotarrow] (pt-5-2.east) -- (pp-5-1.west);
+\draw[dotarrow] (pt-7-2.east) -- (pp-7-1.west);
+\draw[dotarrow] (pt-8-2.east) -- (pp-4-1.west);
+\draw[dotarrow] (pt-10-2.east) -- (pp-6-1.west);
+\draw[dotarrow] (pt-11-2.east) -- (pp-8-1.west);
+\draw[dotarrow] (pt-12-2.east) -- (pp-7-1.west);
+
+% Dashed arrows from Page Table (present=0) to Disk
+\coordinate (diskslot1) at ($(disklabel.south) + (-0.85, -0.6)$);
+\coordinate (diskslot2) at ($(disklabel.south) + (-0.85, -0.95)$);
+\draw[dotarrow, dashed] (pt-6-2.east) -- ++(0.3, 0) |- (diskslot1);
+\draw[dotarrow, dashed] (pt-9-2.east) -- ++(0.5, 0) |- (diskslot2);
+
+\end{tikzpicture}
+\end{columns}
 \end{frame}
 
 
-\begin{frame}{Translation Look aside Buffer (TLB)}
+\begin{frame}{TLB Operation}
 \begin{columns}[T]
 \begin{column}{0.57\textwidth}
 \begin{itemize}
@@ -795,7 +930,7 @@ def handle_protection_violation(vaddr, access):
     \fill[orange!20] (4,0) rectangle (5.5,0.6);
     
     % Labels
-    \node at (2,0.3) {\small Virtual page number};
+    \node at (2,0.3) {\small Virtual Page Number};
     \node at (4.75,0.3) {\small Offset};
     
     % Tag and Set subdivision
