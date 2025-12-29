@@ -763,28 +763,26 @@ def handle_protection_violation(vaddr, access):
 
 \begin{frame}{Translation Lookaside Buffer (TLB)}
 \begin{columns}[T]
-\column{0.28\textwidth}
+\column{0.37\textwidth}
 \small
 \begin{itemize}
 \item With virtual memory, before each cache access, need to first get the physical address
-    \begin{itemize}
-    \item The page table resides in memory $\rightarrow$ each translation requires an extra memory access
-    \end{itemize}
+\item The page table resides in memory $\rightarrow$ each translation requires an extra memory access
 \item The TLB is a cache for recent address translations
 \end{itemize}
 
-\column{0.72\textwidth}
+\column{0.63\textwidth}
 \centering
 \begin{tikzpicture}[scale=0.75, every node/.style={scale=0.75},
     % Base style for all table cells
     cell/.style={draw, minimum height=0.32cm, inner sep=0pt, font=\tiny, text depth=0pt, text height=0.22cm, anchor=center},
-    % TLB cells
-    tlbvalid/.style={cell, fill=green!30, minimum width=0.45cm},
-    tlbinvalid/.style={cell, fill=gray!20, minimum width=0.45cm},
-    tlbtag/.style={cell, fill=green!30, minimum width=0.8cm},
-    tlbtaginvalid/.style={cell, fill=gray!20, minimum width=0.8cm},
-    tlbpfn/.style={cell, fill=green!30, minimum width=1.1cm},
-    tlbpfninvalid/.style={cell, fill=gray!20, minimum width=1.1cm},
+    % TLB cells - widths sized to fit header text
+    tlbvalid/.style={cell, fill=green!30, minimum width=0.7cm},
+    tlbinvalid/.style={cell, fill=gray!20, minimum width=0.7cm},
+    tlbtag/.style={cell, fill=green!30, minimum width=0.6cm},
+    tlbtaginvalid/.style={cell, fill=gray!20, minimum width=0.6cm},
+    tlbpfn/.style={cell, fill=green!30, minimum width=1.4cm},
+    tlbpfninvalid/.style={cell, fill=gray!20, minimum width=1.4cm},
     % Page table cells
     ptgreen/.style={cell, fill=green!30, minimum width=0.45cm},
     ptred/.style={cell, fill=red!30, minimum width=0.45cm},
@@ -800,13 +798,8 @@ def handle_protection_violation(vaddr, access):
     orangearrow/.style={-Stealth, thick, orange}
 ]
 
-% Virtual Page Number box - positioned on the left
-\node[draw, fill=blue!15, minimum width=2cm, minimum height=0.5cm, font=\scriptsize] (vpn)
-    {Virtual page number};
-
-% TLB - positioned to the right of VPN
+% TLB - positioned first as reference
 \matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
-    right=1.2cm of vpn,
     label={[mytitle, label distance=-1mm]above:TLB}] (tlb) {
     |[colheader]| Valid \& |[colheader]| Tag \& |[colheader]| Physical Page \\
     |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbpfninvalid]| \\
@@ -818,10 +811,15 @@ def handle_protection_violation(vaddr, access):
     |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
 };
 
+% Virtual Page Number box - positioned above-left, so connector goes down then splits
+\node[draw, fill=blue!15, minimum width=2cm, minimum height=0.5cm, font=\scriptsize,
+    left=2mm of tlb.north west, anchor=south east] (vpn)
+    {Virtual page number};
+
 % Page Table - positioned below TLB
 \matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
     below=0.6cm of tlb,
-    label={[mytitle, label distance=-1mm]above:Page Table}] (pt) {
+    label={[mytitle, label distance=-2mm]above:Page Table}] (pt) {
     |[colheader]| P \& |[colheader, minimum width=1.1cm]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
@@ -832,13 +830,13 @@ def handle_protection_violation(vaddr, access):
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
     |[ptred]| 0 \& |[ptdatared]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptgreen]| 1 \& |[ptdatared]| \\
+    |[ptred]| 0 \& |[ptdatared]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
 };
 
-% Physical Memory - positioned to the right
+% Physical Memory - positioned to the right, lower (centered between TLB and PT)
 \matrix[matrix of nodes, row sep=-\pgflinewidth, ampersand replacement=\&,
-    right=1.8cm of tlb.north east, anchor=north west,
+    right=1.8cm of tlb.south east, anchor=north west, yshift=6mm,
     label={[mytitle, label distance=-1mm]above:Physical Memory}] (pp) {
     |[ppage]| \\
     |[ppage]| \\
@@ -866,19 +864,15 @@ def handle_protection_violation(vaddr, access):
     \draw (-0.85, -0.85) rectangle (0.85, -1.1);
 \end{scope}
 
-% "Physical Page Or Disk Address" label for Page Table
-\node[font=\tiny, text=gray!70!black, align=center, rotate=90, anchor=south]
-    at ($(pt.west) + (-0.4, -0.5)$) {Physical Page\\Or Disk Address};
-
-% Connection from VPN - dot at the split point
-\coordinate (splitpoint) at ($(vpn.east) + (0.4, 0)$);
-\draw[thick] (vpn.east) -- (splitpoint);
+% Connection from VPN - line goes down, then splits right to TLB and down to PT
+\coordinate (splitpoint) at (vpn |- tlb);
+\draw[thick] (vpn.south) -- (splitpoint);
 \fill (splitpoint) circle (2pt);
 
-% VPN to TLB
-\draw[arrow] (splitpoint) -- (splitpoint |- tlb.west) -- (tlb.west);
+% VPN to TLB - go right to TLB
+\draw[arrow] (splitpoint) -- (tlb.west);
 
-% VPN to Page Table
+% VPN to Page Table - go down then right to PT
 \draw[arrow] (splitpoint) |- (pt.west);
 
 % Orange arrows from TLB (valid entries) to Physical Memory
@@ -896,14 +890,15 @@ def handle_protection_violation(vaddr, access):
 \draw[dotarrow] (pt-7-2.east) -- (pp-7-1.west);
 \draw[dotarrow] (pt-8-2.east) -- (pp-4-1.west);
 \draw[dotarrow] (pt-10-2.east) -- (pp-6-1.west);
-\draw[dotarrow] (pt-11-2.east) -- (pp-8-1.west);
 \draw[dotarrow] (pt-12-2.east) -- (pp-7-1.west);
 
-% Dashed arrows from Page Table (present=0) to Disk
+% Dashed arrows from Page Table (present=0) to Disk - straight lines
 \coordinate (diskslot1) at ($(disklabel.south) + (-0.85, -0.6)$);
 \coordinate (diskslot2) at ($(disklabel.south) + (-0.85, -0.95)$);
-\draw[dotarrow, dashed] (pt-6-2.east) -- ++(0.3, 0) |- (diskslot1);
-\draw[dotarrow, dashed] (pt-9-2.east) -- ++(0.5, 0) |- (diskslot2);
+\coordinate (diskslot3) at ($(disklabel.south) + (-0.85, -1.3)$);
+\draw[dotarrow, dashed] (pt-6-2.center) -- (diskslot1);
+\draw[dotarrow, dashed] (pt-9-2.center) -- (diskslot2);
+\draw[dotarrow, dashed] (pt-11-2.center) -- (diskslot3);
 
 \end{tikzpicture}
 \end{columns}
@@ -1132,7 +1127,7 @@ def handle_protection_violation(vaddr, access):
 ]
 
 % Virtual Address at top - using current page as reference
-\node[addr, fill=blue!20, minimum width=3cm] (vpn) at (current page.center) {Virtual page number};
+\node[addr, fill=blue!20, minimum width=3cm] (vpn) at (current page.center) {Virtual Page Number};
 \node[addr, fill=yellow!20, minimum width=1.5cm, right=0pt of vpn] (poffset) {Page offset};
 
 % Tag and Set below VPN
