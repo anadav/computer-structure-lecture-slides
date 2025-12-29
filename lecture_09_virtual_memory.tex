@@ -1013,13 +1013,96 @@ def handle_protection_violation(vaddr, access):
     \end{itemize}
 \end{itemize}
 \begin{center}
-[Diagram: Core with L1 I\$, L1 D\$, ITLB, DTLB, STLB, L2, L3, and Memory hierarchy]
+
+\begin{tikzpicture}[
+    cache/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=2cm},
+    tlb/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=1.8cm},
+    bigbox/.style={rectangle, draw, thick},
+    arrow/.style={->, >=stealth, thick,},
+    label/.style={font=\tiny},
+    arrowlabel/.style={font=\tiny, above=-3pt},
+    boxlabel/.style={font=\scriptsize\bfseries},
+    font=\scriptsize,
+    % Muxdemux style for STLB
+    stlbcache/.style={muxdemux, muxdemux def={Lh=1, Rh=1, NR=2, NL=0, NB=0, NT=2},
+        external pins width=0, font=\scriptsize, fill=white},
+]
+
+% L1 Caches
+\node[cache, fill=blue!30] (l1inst) {L1 Inst. cache};
+\node[cache, fill=orange!30, right=1cm of l1inst, minimum width=3cm] (l1data) {L1 data cache};
+
+% TLBs
+\node[tlb, fill=cyan!30, below=0.6cm of l1inst] (insttlb) {Inst. TLB};
+\node[tlb, fill=violet!30, below=0.6cm of l1data.south west, anchor=north west] (datatlb) {Data TLB};
+
+% STLB in PMH box
+\node[stlbcache, below=1.1cm of insttlb, xshift=1cm] (stlb) {STLB};
+
+% PMH and Page Walk Logic
+\node[rectangle, draw, thick, fill=yellow!20, minimum height=1.2cm, minimum width=1.5cm,
+      right=2.5cm of stlb] (pmh) {};
+\node[boxlabel, anchor=south west] (pmhlabel) at (pmh.north) {PMH};
+\node[align=center] (pwllabel) at (pmh.center) {Page\\Walk\\Logic};
+
+% Fit box around STLB and PMH
+\begin{scope}[on background layer]
+\node[bigbox, fill=gray!10, fit=(stlb)(pmh)(pmhlabel), inner sep=3mm] (transbox) {};
+\end{scope}
+
+% L2, L3, and Memory
+\node[cache, fill=gray!30, right=of l1data, minimum width=1cm] (l2) {L2};
+\node[cache, fill=green!20, right=of l2, minimum width=1cm] (l3) {L3};
+\node[cache, fill=green!30, right=0.8cm of l3, minimum width=1.5cm] (memory) {Memory};
+
+% Labels above components
+\node[boxlabel, anchor=south west] at ([yshift=1mm]l1inst.north west) (corelabel) {Core};
+\node[boxlabel, above=0.1cm of l3] (ondielabel) {On-die};
+\node[boxlabel, above=0.1cm of memory] (platformlabel) {Platform};
+
+% Core box
+\node[bigbox, fit=(corelabel)(l1inst)(l1data)(insttlb)(datatlb)(transbox)(pmhlabel)(l2),
+      inner sep=0.3cm] (corebox) {};
+
+% On-die box
+\node[bigbox, fit=(ondielabel)(l3), inner sep=0.2cm] (ondiebox) {};
+
+% Platform box
+\node[bigbox, fit=(platformlabel)(memory), inner sep=0.2cm] (platformbox) {};
+
+% Arrows and connections
+\draw[arrow, blue] ([yshift=-1mm]l2.north west) to[bend right=13] node[above, label] {Instruction bytes} ([yshift=-1mm]l1inst.north east);
+\draw[arrow, cyan] (insttlb) -- (l1inst) node[midway, left, label] {translation};
+\draw[arrow, violet] (datatlb) -- (l1data) node[midway, left, label] {translation};
+
+% PTE connections from STLB to TLBs
+\draw[arrow] (stlb.tpin 1) to[bend left=15] node[near end, left, label] {PTE} (insttlb);
+\draw[arrow] (stlb.tpin 2) to[bend right=15] node[near end, right, label] {PTE} (datatlb);
+
+% VA from STLB to PMH
+\draw[arrow] (stlb.rpin 1) -- node[arrowlabel] {VA} (pmh.west |- stlb.rpin 1);
+
+% PTE from PMH to STLB
+\draw[arrow, red, thick] (pmh.west |- stlb.rpin 2) -- node[arrowlabel] {PTE} (stlb.rpin 2);
+
+% Load arrow from L1 data cache to PMH (Page Walk Logic)
+\draw[arrow, red, thick] (l1data.south) -- ++(0,-3mm) -| node[near start, right, label] {Load} (pmh.north);
+
+% L1 data cache to L2
+\draw[arrow, blue, thick] (l2.west) -- (l1data.east);
+
+% L2 to L3 to Memory
+\draw[<->, thick] (l2.east) -- (l3.west);
+\draw[<->, thick] (l3.east) -- (memory.west);
+
+\end{tikzpicture}
 \end{center}
 \end{frame}
-
 \begin{frame}{Virtual Memory and Cache}
 \centering
+
 \begin{tikzpicture}[
+    scale=0.5,
     node distance=3mm,
     decision/.style={diamond, draw, fill=blue!10, text width=1cm, align=center, inner sep=1pt, minimum height=0.3cm, aspect=3, font=\tiny},
     process/.style={rectangle, draw, fill=green!10, text width=1.5cm, align=center, minimum height=0.5cm, inner sep=2pt, font=\tiny},
@@ -1061,7 +1144,7 @@ def handle_protection_violation(vaddr, access):
 % Arrows
 \draw[arrow] (vpn) -- (tlb);
 \draw[arrow] (tlb) -- node[right] {No} (stlb);
-\draw[arrow] (tlb) -- ++(1,0) |- node[right] {Yes} (pfn);
+\draw[arrow] (tlb.east) -- ++(0.3,0) |- node[right] {Yes} (pfn);
 \draw[arrow] (stlb.west) -- ++(-0.5, 0) |- node[right] {No} (pmh.east);
 \draw[arrow] (stlb.south) -- node[right] {Yes} (pfn);
 %\draw[arrow] (pmh) -- (l1);
@@ -1843,7 +1926,7 @@ def context_switch(proc_A, proc_B):
     % CR3 to PML4 Table
     \draw[dashedarrow] (cr3.east) -| (pml4.south);
     \draw[thick] ($(cr3.east) + (0.15,0.05)$) -- ($(cr3.east) + (0.25,-0.05)$);
-    \node[font=\tiny] at ($(cr3.east) + (1.0,-0.3)$) {M-12 (4KB aligned)};
+    \node[font=\tiny] at ($(cr3.east) + (1.2,-0.3)$) {M-12 (4KB aligned)};
 
     % PML4 en to PDP Table
     \draw[dashedarrow] (pml4en.east) -| (pdp.south);
@@ -1966,7 +2049,7 @@ def context_switch(proc_A, proc_B):
     % CR3 to PML4 Table
     \draw[dashedarrow] (cr3.east) -| (pml4.south);
     \draw[thick] ($(cr3.east) + (0.15,0.05)$) -- ($(cr3.east) + (0.25,-0.05)$);
-    \node[font=\tiny] at ($(cr3.east) + (1.0,-0.3)$) {M-12 (4KB aligned)};
+    \node[font=\tiny] at ($(cr3.east) + (1.2,-0.3)$) {M-12 (4KB aligned)};
 
     % PML4 en to PDP Table
     \draw[dashedarrow] (pml4en.east) -| (pdp.south);
