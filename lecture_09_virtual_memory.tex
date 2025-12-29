@@ -1001,15 +1001,15 @@ def handle_protection_violation(vaddr, access):
 
 \begin{frame}{Processor Caches and TLBs}
 \begin{itemize}
-\item Each of L1 I\$ and L1 D\$ has its own TLB – ITLB and DTLB
+\item L1 caches have \alert{separate TLBs}: ITLB (for I\$) and DTLB (for D\$)
     \begin{itemize}
-    \item Similar to the I\$ and the D\$, the ITLB and DTLB are accessed in different pipe-stages
+    \item Accessed in different pipeline stages
     \end{itemize}
-\item In case of either ITLB or DTLB miss: access the STLB (second level TLB)
-\item In case of STLB miss
+\item TLB miss $\rightarrow$ check \alert{STLB} (Second-Level TLB)
+\item STLB miss $\rightarrow$ \alert{Page Walk}:
     \begin{itemize}
-    \item PMH (page miss handler) injects a load to get the PTE from the page table (page walk)
-    \item This load, like any other load, starts by a lookup in the L1 D\$
+    \item PMH (Page Miss Handler) fetches PTE from page table
+    \item Uses regular memory loads: L1 D\$ $\rightarrow$ L2 $\rightarrow$ \ldots
     \end{itemize}
 \end{itemize}
 \begin{center}
@@ -1051,7 +1051,7 @@ def handle_protection_violation(vaddr, access):
 \end{scope}
 
 % L2, L3, and Memory
-\node[cache, fill=gray!30, right=of l1data, minimum width=1cm] (l2) {L2};
+\node[cache, fill=gray!30, right=1.7cm of l1data, minimum width=1cm] (l2) {L2};
 \node[cache, fill=green!20, right=of l2, minimum width=1cm] (l3) {L3};
 \node[cache, fill=green!30, right=of l3, minimum width=1.5cm] (memory) {Memory};
 
@@ -1062,13 +1062,13 @@ def handle_protection_violation(vaddr, access):
 
 % Core box
 \node[bigbox, fit=(corelabel)(l1inst)(l1data)(insttlb)(datatlb)(transbox)(pmhlabel)(l2),
-      inner sep=1mm] (corebox) {};
+      inner ysep=1mm, inner xsep=3mm] (corebox) {};
 
 % On-die box
-\node[bigbox, fit=(ondielabel)(l3), inner sep=1mm] (ondiebox) {};
+\node[bigbox, fit=(ondielabel)(l3), inner ysep=1mm, inner xsep=3mm] (ondiebox) {};
 
 % Platform box
-\node[bigbox, fit=(platformlabel)(memory), inner sep=1mm] (platformbox) {};
+\node[bigbox, fit=(platformlabel)(memory), inner ysep=1mm, inner xsep=3mm] (platformbox) {};
 
 % Arrows and connections
 \draw[arrow, blue] ([yshift=-1mm]l2.north west) to[bend right=13] node[near start, right=4mm, label] {Instruction bytes} ([yshift=-1mm]l1inst.north east);
