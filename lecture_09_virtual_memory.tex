@@ -2690,7 +2690,7 @@ Page Sizes & Entries & Assoc. \\
 
 \begin{frame}{Contiguous PTE (ContPTE) - ARM Feature}
 \begin{columns}[T]
-\begin{column}{0.45\textwidth}
+\begin{column}{0.55\textwidth}
 \textbf{Problem:} TLB pressure
 \begin{itemize}
 \item One TLB entry per 4KB page
@@ -2720,13 +2720,13 @@ Page Sizes & Entries & Assoc. \\
 \end{itemize}
 \end{column}
 
-\begin{column}{0.55\textwidth}
+\begin{column}{0.45\textwidth}
 \vspace{-5mm}
 \begin{center}
 \begin{tikzpicture}[
     pte cell/.style={draw, thick, minimum height=2.5mm, font=\tiny, inner sep=1pt, anchor=center},
     idx cell/.style={pte cell, minimum width=5mm},
-    pfn cell/.style={pte cell, minimum width=22mm},
+    pfn cell/.style={pte cell, minimum width=16mm},
     flag cell/.style={pte cell, minimum width=5mm},
     tlb_entry/.style={draw, thick, minimum width=20mm, minimum height=3.5mm, font=\tiny},
     section_title/.style={font=\tiny, anchor=south west}
@@ -2735,21 +2735,33 @@ Page Sizes & Entries & Assoc. \\
     \node[draw, thick, minimum width=50mm, minimum height=6mm, inner sep=0pt] (va) at (0,0) {};
     \node[above, font=\tiny] at (va.north) {Virtual Address (48-bit)};
 
-    % VA fields
-    \fill[blue!20] (va.north west) rectangle ([xshift=15mm]va.south west);
-    \fill[orange!20] ([xshift=15mm]va.north west) rectangle ([xshift=32.5mm]va.south west);
-    \fill[yellow!20] ([xshift=32.5mm]va.north west) rectangle ([xshift=39mm]va.south west);
-    \fill[gray!20] ([xshift=39mm]va.north west) rectangle (va.south east);
+    % VA fields as nodes for referencing
+    \node[fill=blue!20, minimum height=6mm, minimum width=15mm, inner sep=0pt, anchor=west]
+        (va_upper) at (va.west) {};
+    \node[fill=orange!20, minimum height=6mm, minimum width=17.5mm, inner sep=0pt, anchor=west]
+        (va_vpn) at (va_upper.east) {};
+    \node[fill=yellow!20, minimum height=6mm, minimum width=6.5mm, inner sep=0pt, anchor=west]
+        (va_idx) at (va_vpn.east) {};
+    \node[fill=gray!20, minimum height=6mm, minimum width=11mm, inner sep=0pt, anchor=west]
+        (va_offset) at (va_idx.east) {};
 
-    \node[font=\tiny] at ([xshift=7.5mm]va.west) {Upper bits};
-    \node[font=\tiny] at ([xshift=23.75mm]va.west) {VPN[15:4]};
-    \node[font=\tiny] at ([xshift=35.75mm]va.west) {[3:0]};
-    \node[font=\tiny] at ([xshift=44.5mm]va.west) {Offset};
+    \node[font=\tiny] at (va_upper.center) {Upper bits};
+    \node[font=\tiny] at (va_vpn.center) {VPN[15:4]};
+    \node[font=\tiny] at (va_idx.center) {[3:0]};
+    \node[font=\tiny] at (va_offset.center) {Offset};
+
+    % Outline around VPN[15:4] and [3:0]
+    \node[draw, thick, red, fit=(va_vpn)(va_idx), inner sep=0pt] (va_contpte) {};
+
+    % Callout for [3:0] - offset within 64KB
+    \node[rectangle callout, draw, fill=yellow!20, font=\tiny, align=center,
+        callout absolute pointer={(va_idx.north)}]
+        at ([yshift=8mm, xshift=8mm]va_idx.north) {Offset within\\64KB entry};
 
     % Bit positions
     \node[below, font=\tiny] at (va.south west) {47};
-    \node[below, font=\tiny] at ([xshift=32.5mm]va.south west) {16};
-    \node[below, font=\tiny] at ([xshift=39mm]va.south west) {12};
+    \node[below, font=\tiny] at (va_idx.south west) {16};
+    \node[below, font=\tiny] at (va_offset.south west) {12};
     \node[below, font=\tiny] at (va.south east) {0};
 
     % Combined page table matrix with vdots
@@ -2762,7 +2774,7 @@ Page Sizes & Entries & Assoc. \\
         column 1/.style={nodes={idx cell}},
         column 2/.style={nodes={pfn cell}},
         column 3/.style={nodes={flag cell}},
-    ] (pte_matrix) at (-1.5,-1.0) {
+    ] (pte_matrix) at (-1.5,-1.4) {
         |[fill=gray!20]| 0 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
         |[fill=gray!20]| 1 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
         |[fill=gray!20]| 2 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
@@ -2789,12 +2801,12 @@ Page Sizes & Entries & Assoc. \\
 
     % TLB entries using matrix
     \matrix[matrix of nodes,
-        anchor=north,
+        anchor=north west,
         row sep=1mm,
         column sep=-\pgflinewidth,
         ampersand replacement=\&,
         nodes={tlb_entry},
-    ] (tlb_matrix) at (3.5,-1.0) {
+    ] (tlb_matrix) at ([xshift=1.5cm]pte_matrix.north east) {
         |[fill=gray!20]| 4KB page \\
         |[fill=gray!20]| 4KB page \\
         |[fill=gray!20]| 4KB page \\
@@ -2818,8 +2830,10 @@ Page Sizes & Entries & Assoc. \\
         at ([yshift=-8mm]tlb_matrix-4-1.south) {1 entry for\\PTEs 16-31};
 
     % Lookup arrows from VA to Page Table and TLB
-    \draw[->, thick, blue] ([xshift=-4mm]va.south) -- ++(0,-5mm) node[pos=0.7, below=2pt, font=\tiny] {Page-walk} -| (pte_matrix.north);
-    \draw[->, thick, blue] ([xshift=4mm]va.south) -- ++(0,-5mm) node[pos=0.98, below, font=\tiny] {Lookup} -| (tlb_box.north);
+    \draw[->, thick, blue] ([xshift=-2mm]va_contpte.south) -- ++(0,-8mm) -| (pte_matrix.north)
+        node[pos=0.25, above=-2pt, font=\tiny] {Page walk};
+    \draw[->, thick, blue] ([xshift=2mm]va_contpte.south) -- ++(0,-8mm) -| (tlb_box.north)
+        node[pos=0.25, above=-2pt, font=\tiny] {TLB lookup};
 \end{tikzpicture}
 \end{center}
 \end{column}
