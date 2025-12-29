@@ -776,18 +776,31 @@ def handle_protection_violation(vaddr, access):
 \begin{tikzpicture}[scale=0.75, every node/.style={scale=0.75},
     % Base style for all table cells
     cell/.style={draw, minimum height=0.32cm, inner sep=0pt, font=\tiny, text depth=0pt, text height=0.22cm, anchor=center},
-    % TLB cells - widths sized to fit header text
-    tlbvalid/.style={cell, fill=green!30, minimum width=0.8cm, inner sep=0pt},
-    tlbinvalid/.style={cell, fill=gray!20, minimum width=0.8cm, inner sep=0pt},
-    tlbtag/.style={cell, fill=green!30, minimum width=0.6cm},
-    tlbtaginvalid/.style={cell, fill=gray!20, minimum width=0.6cm},
-    tlbpfn/.style={cell, fill=green!30, minimum width=1.7cm, inner sep=0pt},
-    tlbpfninvalid/.style={cell, fill=gray!20, minimum width=1.7cm, inner sep=0pt},
-    % Page table cells
-    ptgreen/.style={cell, fill=green!30, minimum width=1cm, inner sep=0},
-    ptred/.style={cell, fill=red!30, minimum width=1cm, inner sep=0},
-    ptdatagreen/.style={cell, fill=green!30, minimum width=1.1cm},
-    ptdatared/.style={cell, fill=red!30, minimum width=1.1cm},
+    % TLB base column styles
+    tlbvalidbase/.style={cell, minimum width=0.8cm, inner sep=0pt},
+    tlbtagbase/.style={cell, minimum width=0.6cm},
+    tlbacbase/.style={cell, minimum width=0.7cm},
+    tlbpfnbase/.style={cell, minimum width=1.5cm, inner sep=0pt},
+    % TLB valid/invalid variants
+    tlbvalid/.style={tlbvalidbase, fill=green!30},
+    tlbinvalid/.style={tlbvalidbase, fill=gray!20},
+    tlbtag/.style={tlbtagbase, fill=green!30},
+    tlbtaginvalid/.style={tlbtagbase, fill=gray!20},
+    tlbac/.style={tlbacbase, fill=green!30},
+    tlbacinvalid/.style={tlbacbase, fill=gray!20},
+    tlbpfn/.style={tlbpfnbase, fill=green!30},
+    tlbpfninvalid/.style={tlbpfnbase, fill=gray!20},
+    % Page table base column styles
+    ptpresentbase/.style={cell, minimum width=1cm, inner sep=0},
+    ptacbase/.style={cell, minimum width=0.7cm},
+    ptdatabase/.style={cell, minimum width=1.6cm},
+    % Page table valid/invalid variants
+    ptgreen/.style={ptpresentbase, fill=green!30},
+    ptred/.style={ptpresentbase, fill=red!30},
+    ptacgreen/.style={ptacbase, fill=green!30},
+    ptacred/.style={ptacbase, fill=red!30},
+    ptdatagreen/.style={ptdatabase, fill=green!30},
+    ptdatared/.style={ptdatabase, fill=red!30},
     % Physical memory
     ppage/.style={cell, fill=green!30, minimum width=1.7cm},
     % Labels
@@ -801,14 +814,14 @@ def handle_protection_violation(vaddr, access):
 % TLB - positioned first as reference
 \matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
     label={[mytitle, label distance=-1mm]above:TLB}] (tlb) {
-    |[colheader]| Valid \& |[colheader]| Tag \& |[colheader]| PFN \\
-    |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbpfninvalid]| \\
-    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
-    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
-    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
-    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
-    |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbpfninvalid]| \\
-    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
+    |[colheader]| Valid \& |[colheader]| Tag \& |[colheader]| AC \& |[colheader]| PFN \\
+    |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbacinvalid]| \& |[tlbpfninvalid]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbac]| \& |[tlbpfn]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbac]| \& |[tlbpfn]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbac]| \& |[tlbpfn]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbac]| \& |[tlbpfn]| \\
+    |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbacinvalid]| \& |[tlbpfninvalid]| \\
+    |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbac]| \& |[tlbpfn]| \\
 };
 
 % Virtual Page Number box - positioned above-left, so connector goes down then splits
@@ -820,18 +833,18 @@ def handle_protection_violation(vaddr, access):
 \matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
     below=0.6cm of tlb,
     label={[mytitle, label distance=-2mm]above:Page Table}] (pt) {
-    |[colheader]| Present \& |[colheader, minimum width=1.1cm]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptred]| 0 \& |[ptdatared]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptred]| 0 \& |[ptdatared]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
-    |[ptred]| 0 \& |[ptdatared]| \\
-    |[ptgreen]| 1 \& |[ptdatagreen]| \\
+    |[colheader]| Present \& |[colheader]| AC \& |[colheader]| PFN/Disk \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptacred]| \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptacred]| \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
+    |[ptred]| 0 \& |[ptacred]| \& |[ptdatared]| \\
+    |[ptgreen]| 1 \& |[ptacgreen]| \& |[ptdatagreen]| \\
 };
 
 % Physical Memory - positioned to the right, lower (centered between TLB and PT)
@@ -875,30 +888,30 @@ def handle_protection_violation(vaddr, access):
 % VPN to Page Table - go down then right to PT
 \draw[arrow] (splitpoint) |- (pt.west);
 
-% Orange arrows from TLB (valid entries) to Physical Memory
-\draw[orangearrow] (tlb-3-3.east) -- (pp-2-1.west);
-\draw[orangearrow] (tlb-4-3.east) -- (pp-4-1.west);
-\draw[orangearrow] (tlb-5-3.east) -- (pp-3-1.west);
-\draw[orangearrow] (tlb-6-3.east) -- (pp-5-1.west);
-\draw[orangearrow] (tlb-8-3.east) -- (pp-6-1.west);
+% Orange arrows from TLB (valid entries) to Physical Memory (PFN is now column 4)
+\draw[orangearrow] (tlb-3-4.east) -- (pp-2-1.west);
+\draw[orangearrow] (tlb-4-4.east) -- (pp-4-1.west);
+\draw[orangearrow] (tlb-5-4.east) -- (pp-3-1.west);
+\draw[orangearrow] (tlb-6-4.east) -- (pp-5-1.west);
+\draw[orangearrow] (tlb-8-4.east) -- (pp-6-1.west);
 
-% Black arrows from Page Table (present=1) to Physical Memory
-\draw[dotarrow] (pt-2-2.east) -- (pp-1-1.west);
-\draw[dotarrow] (pt-3-2.east) -- (pp-3-1.west);
-\draw[dotarrow] (pt-4-2.east) -- (pp-2-1.west);
-\draw[dotarrow] (pt-5-2.east) -- (pp-5-1.west);
-\draw[dotarrow] (pt-7-2.east) -- (pp-7-1.west);
-\draw[dotarrow] (pt-8-2.east) -- (pp-4-1.west);
-\draw[dotarrow] (pt-10-2.east) -- (pp-6-1.west);
-\draw[dotarrow] (pt-12-2.east) -- (pp-7-1.west);
+% Black arrows from Page Table (present=1) to Physical Memory (data is now column 3)
+\draw[dotarrow] (pt-2-3.east) -- (pp-1-1.west);
+\draw[dotarrow] (pt-3-3.east) -- (pp-3-1.west);
+\draw[dotarrow] (pt-4-3.east) -- (pp-2-1.west);
+\draw[dotarrow] (pt-5-3.east) -- (pp-5-1.west);
+\draw[dotarrow] (pt-7-3.east) -- (pp-7-1.west);
+\draw[dotarrow] (pt-8-3.east) -- (pp-4-1.west);
+\draw[dotarrow] (pt-10-3.east) -- (pp-6-1.west);
+\draw[dotarrow] (pt-12-3.east) -- (pp-7-1.west);
 
-% Dashed arrows from Page Table (present=0) to Disk - straight lines
+% Dashed arrows from Page Table (present=0) to Disk - straight lines (data is now column 3)
 \coordinate (diskslot1) at ($(disklabel.south) + (-0.85, -0.6)$);
 \coordinate (diskslot2) at ($(disklabel.south) + (-0.85, -0.95)$);
 \coordinate (diskslot3) at ($(disklabel.south) + (-0.85, -1.3)$);
-\draw[dotarrow, dashed] (pt-6-2.center) -- (diskslot1);
-\draw[dotarrow, dashed] (pt-9-2.center) -- (diskslot2);
-\draw[dotarrow, dashed] (pt-11-2.center) -- (diskslot3);
+\draw[dotarrow, dashed] (pt-6-3.center) -- (diskslot1);
+\draw[dotarrow, dashed] (pt-9-3.center) -- (diskslot2);
+\draw[dotarrow, dashed] (pt-11-3.center) -- (diskslot3);
 
 \end{tikzpicture}
 \end{columns}
@@ -1374,8 +1387,8 @@ def handle_protection_violation(vaddr, access):
 \column{0.42\textwidth}
 \textbf{OS updates the Page Table}
 \begin{itemize}
-\item Invalidate page from TLBs: invalidate on all cores
 \item Mark page as not present in PTE
+\item Invalidate page from TLBs: invalidate on all cores
 \item MESI keeps cached PTEs coherent
 \item Store disk location in PTE
 \end{itemize}
@@ -1389,11 +1402,11 @@ def handle_protection_violation(vaddr, access):
 \begin{minted}[fontsize=\scriptsize, frame=single, bgcolor=gray!10]{python}
 # OS: Evict page to make room
 def evict_page_to_disk(victim_vpn):
-    # 1. TLB shootdown (all cores)
-    tlb_shootdown(victim_vpn)  # IPI to other cores
-
-    # 2. Update page table
+    # 1. Update page table
     pte[victim_vpn].present = 0
+
+    # 2. TLB shootdown (all cores)
+    tlb_shootdown(victim_vpn)  # IPI to other cores
 
     # 3. Write to disk only if dirty
     if pte[victim_vpn].dirty:
