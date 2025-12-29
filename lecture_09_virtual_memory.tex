@@ -784,12 +784,12 @@ def handle_protection_violation(vaddr, access):
     tlbpfn/.style={cell, fill=green!30, minimum width=1.7cm, inner sep=0pt},
     tlbpfninvalid/.style={cell, fill=gray!20, minimum width=1.7cm, inner sep=0pt},
     % Page table cells
-    ptgreen/.style={cell, fill=green!30, minimum width=0.45cm},
-    ptred/.style={cell, fill=red!30, minimum width=0.45cm},
+    ptgreen/.style={cell, fill=green!30, minimum width=1cm, inner sep=0},
+    ptred/.style={cell, fill=red!30, minimum width=1cm, inner sep=0},
     ptdatagreen/.style={cell, fill=green!30, minimum width=1.1cm},
     ptdatared/.style={cell, fill=red!30, minimum width=1.1cm},
     % Physical memory
-    ppage/.style={cell, fill=green!30, minimum width=1.3cm},
+    ppage/.style={cell, fill=green!30, minimum width=1.7cm},
     % Labels
     mytitle/.style={font=\small\bfseries, text=gray!70!black},
     colheader/.style={font=\tiny\bfseries, text=gray!70!black, minimum height=0.28cm},
@@ -801,7 +801,7 @@ def handle_protection_violation(vaddr, access):
 % TLB - positioned first as reference
 \matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
     label={[mytitle, label distance=-1mm]above:TLB}] (tlb) {
-    |[colheader]| Valid \& |[colheader]| Tag \& |[colheader]| Physical Page \\
+    |[colheader]| Valid \& |[colheader]| Tag \& |[colheader]| PFN \\
     |[tlbinvalid]| 0 \& |[tlbtaginvalid]| \& |[tlbpfninvalid]| \\
     |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
     |[tlbvalid]| 1 \& |[tlbtag]| \& |[tlbpfn]| \\
@@ -820,7 +820,7 @@ def handle_protection_violation(vaddr, access):
 \matrix[matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, ampersand replacement=\&,
     below=0.6cm of tlb,
     label={[mytitle, label distance=-2mm]above:Page Table}] (pt) {
-    |[colheader]| P \& |[colheader, minimum width=1.1cm]| \\
+    |[colheader]| Present \& |[colheader, minimum width=1.1cm]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
     |[ptgreen]| 1 \& |[ptdatagreen]| \\
@@ -837,7 +837,7 @@ def handle_protection_violation(vaddr, access):
 % Physical Memory - positioned to the right, lower (centered between TLB and PT)
 \matrix[matrix of nodes, row sep=-\pgflinewidth, ampersand replacement=\&,
     right=1.8cm of tlb.south east, anchor=north west, yshift=6mm,
-    label={[mytitle, label distance=-1mm]above:Physical Memory}] (pp) {
+    label={[mytitle, label distance=-1mm, align=center]above:Physical\\Memory}] (pp) {
     |[ppage]| \\
     |[ppage]| \\
     |[ppage]| \\
