@@ -7,7 +7,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, shapes.arrows, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, shapes.arrows, backgrounds, shapes.callouts}
 \usepackage[siunitx]{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{array}
@@ -624,6 +624,253 @@ Core similar to x86 in 64-bit mode:
 
 \section{Virtual Address Translation}
 
+\begin{frame}{Example: Page Table Hierarchy}
+\begin{tikzpicture}[scale=0.6, transform shape,
+    % Table styles for different levels
+    pml4table/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.016cm, fill=yellow!40},
+    pdptable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.016cm, fill=red!30},
+    dirtable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.016cm, fill=blue!20},
+    pagetable/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.016cm, fill=blue!40},
+    page/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.016cm, fill=orange!40},
+    % Entry styles for each level (smaller boxes with thick border)
+    pml4entry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.35cm, fill=yellow!40, anchor=south},
+    pdpentry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.35cm, fill=red!30, anchor=south},
+    direntry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.35cm, fill=blue!20, anchor=south},
+    pageentry/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.35cm, fill=blue!40, anchor=south},
+    pageoffset/.style={rectangle, draw=black, line width=1.5pt, minimum width=1.2cm, minimum height=0.35cm, fill=orange!40, anchor=south},
+    arrow/.style={->, black},
+    entrytag/.style={pos=0.6, above, font=\footnotesize},
+    pml4tag/.style={pos=0.6, above, font=\footnotesize, text=yellow!40!black},
+    pdptag/.style={pos=0.6, above, font=\footnotesize, text=red!40!black},
+    dirtag/.style={pos=0.6, above, font=\footnotesize, text=blue!20!black},
+    ptetag/.style={pos=0.6, above, font=\footnotesize, text=blue!40!black},
+    offsettag/.style={pos=0.6, above, font=\footnotesize, text=orange!60!black}
+]
+
+% Top: Virtual Address breakdown
+\draw[thick] (0,10.5) rectangle (13.5,11.3);
+
+% Address field colors
+\fill[green!20] (0,10.5) rectangle (2.5,11.3);
+\fill[yellow!40] (2.5,10.5) rectangle (4.5,11.3);
+\fill[red!30] (4.5,10.5) rectangle (6.5,11.3);
+\fill[blue!20] (6.5,10.5) rectangle (8.5,11.3);
+\fill[blue!40] (8.5,10.5) rectangle (10.5,11.3);
+\fill[orange!40] (10.5,10.5) rectangle (13.5,11.3);
+
+% Field separators
+\draw[thick] (2.5,10.5) -- (2.5,11.3);
+\draw[thick] (4.5,10.5) -- (4.5,11.3);
+\draw[thick] (6.5,10.5) -- (6.5,11.3);
+\draw[thick] (8.5,10.5) -- (8.5,11.3);
+\draw[thick] (10.5,10.5) -- (10.5,11.3);
+
+% Field labels above
+\node[above, font=\scriptsize] at (0,11.3) {63};
+\node[above, font=\scriptsize] at (2.5,11.3) {43};
+\node[above, font=\scriptsize] at (4.4,11.3) {36 35};
+\node[above, font=\scriptsize] at (6.4,11.3) {28 27};
+\node[above, font=\scriptsize] at (8.4,11.3) {20 19};
+\node[above, font=\scriptsize] at (10.4,11.3) {12 11};
+\node[above, font=\scriptsize] at (13.5,11.3) {0};
+
+% Field names inside
+\node[font=\scriptsize] at (1.25,10.9) {sign ext.};
+\node[font=\scriptsize] (pml4label) at (3.5,10.9) {PML4};
+\node[font=\scriptsize] (pdplabel) at (5.5,10.9) {PDP};
+\node[font=\scriptsize] (dirlabel) at (7.5,10.9) {DIR};
+\node[font=\scriptsize] (tablelabel) at (9.5,10.9) {TABLE};
+\node[font=\scriptsize] (offsetlabel) at (12,10.9) {OFFSET};
+
+% Vertical alignment of tables (from left to right)
+% PML4 Table
+\node[pml4table] (pml4base) at (1,5) {};
+\node[font=\scriptsize, anchor=south, align=center] at (pml4base.north) {PML4\\ Table};
+\node[pml4entry] (pml4d3) at ($(pml4base.south)!0.78!(pml4base.north)$) {}; % D3 = 211/255, reduced by 15%
+\node[pml4entry] (pml471) at ($(pml4base.south)!0.44!(pml4base.north)$) {}; % 71 = 113/255
+
+% PTBR register pointing to PML4
+\node[rectangle, draw=black, thick, fill=gray!20, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize, anchor=east] (cr3) at ([xshift=-3mm]pml4base.south west) {PTBR};
+\draw[arrow] (cr3) -- (pml4base.south west);
+
+% Address calculation label
+\node[font=\scriptsize, draw=black, thick, fill=yellow!20, align=center,
+      rectangle callout, callout absolute pointer={(cr3.east)}] at (-1.5,1.5) {Address=\\ PTBR+D3$\times$8};
+
+% PDP Table (2 instances)
+\node[pdptable] (pdp82base) at (4,6.5) {};
+\node[font=\scriptsize, anchor=south, align=center] at (pdp82base.north) {PDP\\ Table};
+\node[pdpentry] (pdp82) at ($(pdp82base.south)!0.51!(pdp82base.north)$) {}; % 82 = 130/255
+
+\node[pdptable] (pdp46base) at (4,3.5) {};
+\node[pdpentry] (pdp46) at ($(pdp46base.south)!0.28!(pdp46base.north)$) {}; % 46 = 70/255
+
+% Page Dir instances
+\node[dirtable] (dirffbase) at (7,7) {};
+\node[font=\scriptsize, anchor=south, align=center] at (dirffbase.north) {Dir\\ Table};
+\node[direntry] (dirff) at ($(dirffbase.south)!0.85!(dirffbase.north)$) {}; % FF = 255/255, reduced by 15%
+\node[direntry] (dir28) at ($(dirffbase.south)!0.16!(dirffbase.north)$) {}; % 28 = 40/255
+
+\node[dirtable] (dirb5base) at (7,2.5) {};
+\node[font=\scriptsize, anchor=south, align=center] at (dirb5base.north) {Dir\\ Table};
+\node[direntry] (dirb5) at ($(dirb5base.south)!0.71!(dirb5base.north)$) {}; % B5 = 181/255
+
+% Page Table instances
+\node[pagetable] (pte2base) at (10,8) {};
+\node[font=\scriptsize, anchor=south, align=center] at (pte2base.north) {Page\\ Table};
+\node[pageentry] (ptee2) at ($(pte2base.south)!0.74!(pte2base.north)$) {}; % E2 = 226/255, reduced by 15%
+\node[pageentry] (pte68) at ($(pte2base.south)!0.41!(pte2base.north)$) {}; % 68 = 104/255
+
+\node[pagetable] (pte49base) at (10,5) {};
+\node[pageentry] (pte49) at ($(pte49base.south)!0.29!(pte49base.north)$) {}; % 49 = 73/255
+
+\node[pagetable] (pte54base) at (10,2.5) {};
+\node[pageentry] (pte54) at ($(pte54base.south)!0.33!(pte54base.north)$) {}; % 54 = 84/255
+
+% 4KB Pages with offsets
+\node[page] (pageb25base) at (13,8.8) {};
+\node[font=\scriptsize, anchor=south] at (pageb25base.north) {4KB Page};
+\node[pageoffset] (pageb25) at ($(pageb25base.south)!0.70!(pageb25base.north)$) {}; % B25 = 2853/4095
+\node[pageoffset] (page349) at ($(pageb25base.south)!0.21!(pageb25base.north)$) {}; % 349 = 841/4095
+
+\node[page] (page937base) at (13,5.8) {};
+\node[pageoffset] (page937) at ($(page937base.south)!0.58!(page937base.north)$) {}; % 937 = 2359/4095
+
+\node[page] (pagec00base) at (13,3.5) {};
+\node[pageoffset] (pagec00) at ($(pagec00base.south)!0.75!(pagec00base.north)$) {}; % C00 = 3072/4095
+
+\node[page] (page622base) at (13,1.2) {};
+\node[pageoffset] (page622) at ($(page622base.south)!0.38!(page622base.north)$) {}; % 622 = 1570/4095
+
+% Paths from address fields to table entries
+% PML4 entries
+\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml4d3.west) -- (pml4d3.west) node[pml4tag] {D3};
+\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml471.west) -- (pml471.west) node[pml4tag] {71};
+
+% PDP entries
+\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp82.west) -- (pdp82.west) node[pdptag] {82};
+\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp46.west) -- (pdp46.west) node[pdptag] {46};
+
+% DIR entries
+\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirff.west) -- (dirff.west) node[dirtag] {FF};
+\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dir28.west) -- (dir28.west) node[dirtag] {28};
+\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirb5.west) -- (dirb5.west) node[dirtag] {B5};
+
+% TABLE entries
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]ptee2.west) -- (ptee2.west) node[ptetag] {E2};
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte68.west) -- (pte68.west) node[ptetag] {68};
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte49.west) -- (pte49.west) node[ptetag] {49};
+\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte54.west) -- (pte54.west) node[ptetag] {54};
+
+% OFFSET entries
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pageb25.west) -- (pageb25.west) node[offsettag] {B25};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page349.west) -- (page349.west) node[offsettag] {349};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page937.west) -- (page937.west) node[offsettag] {937};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pagec00.west) -- (pagec00.west) node[offsettag] {C00};
+\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page622.west) -- (page622.west) node[offsettag] {622};
+
+% Arrows connecting the hierarchy
+% PML4[D3] -> PDP[82]
+\draw[arrow] (pml4d3.east) -- ++(0.3, 0) |- (pdp82base.south west);
+% PML4[71] -> PDP[46]
+\draw[arrow] (pml471.east) -- ++(0.3, 0) |- (pdp46base.south west);
+
+% PDP[82] -> Dir[FF,28]
+\draw[arrow] (pdp82.east) -- ++(0.3, 0) |- (dirffbase.south west);
+% PDP[46] -> Dir[B5]
+\draw[arrow] (pdp46.east) -- ++(0.3, 0) |- (dirb5base.south west);
+
+% Dir[FF] -> PT[E2,68]
+\draw[arrow] (dirff.east) -- ++(0.3, 0) |- (pte2base.south west);
+% Dir[28] -> PT[49]
+\draw[arrow] (dir28.east) -- ++(0.3, 0) |- (pte49base.south west);
+% Dir[B5] -> PT[54]
+\draw[arrow] (dirb5.east) -- ++(0.3, 0) |- (pte54base.south west);
+
+% PT[E2] -> Page[B25,349]
+\draw[arrow] (ptee2.east) -- ++(0.5, 0) |- (pageb25base.south west);
+% PT[68] -> Page[937]
+\draw[arrow] (pte68.east) -- ++(0.3, 0) |- (page937base.south west);
+% PT[49] -> Page[C00]
+\draw[arrow] (pte49.east) -- ++(0.3, 0) |- (pagec00base.south west);
+% PT[54] -> Page[622]
+\draw[arrow] (pte54.east) -- ++(0.3, 0) |- (page622base.south west);
+
+% Right side: Complete virtual addresses (color-coded) - positioned relative to page entries
+% First address with labels (2-row matrix)
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, row sep=0.5pt, ampersand replacement=\&] (addr1) at ([xshift=7mm,yshift=-3mm]pageb25.south east) {
+    |[font=\fontsize{4pt}{5pt}\selectfont]| {} \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=yellow!40!black]| PML4 \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=red!40!black]| PDP \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=blue!20!black]| DIR \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=blue!40!black]| PTE \&
+    |[font=\fontsize{4pt}{5pt}\selectfont, text=orange!60!black]| offset \\
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| FF \&
+    |[text=blue!40!black]| E2 \&
+    |[text=orange!60!black]| B25 \\
+};
+
+% Other addresses (single-row matrices)
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]page349.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| FF \&
+    |[text=blue!40!black]| E2 \&
+    |[text=orange!60!black]| 349 \\
+};
+
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]page937.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| FF \&
+    |[text=blue!40!black]| 68 \&
+    |[text=orange!60!black]| 937 \\
+};
+
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]pagec00.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| D3 \&
+    |[text=red!40!black]| 82 \&
+    |[text=blue!20!black]| 28 \&
+    |[text=blue!40!black]| 49 \&
+    |[text=orange!60!black]| C00 \\
+};
+
+\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+        column sep=0.5pt, ampersand replacement=\&] at ([xshift=7mm,yshift=-3mm]page622.south east) {
+    |[text=green!40!black]| 00000 \&
+    |[text=yellow!40!black]| 71 \&
+    |[text=red!40!black]| 46 \&
+    |[text=blue!20!black]| B5 \&
+    |[text=blue!40!black]| 54 \&
+    |[text=orange!60!black]| 622 \\
+};
+
+% Note about 8 bits
+\node[font=\scriptsize, draw=black, thick, fill=red!10, align=center, text width=2.5cm,
+      rectangle callout, callout absolute pointer={(-0.2,11.3)}] at (-2.5,9.5) {8 bits per level instead of 9 for example purposes only};
+
+% Bottom left: Note about OS dynamic allocation
+\node[font=\scriptsize, text width=4cm, align=left] at (-2.5,5.5) {
+This example shows\\
+how the OS dynamically\\
+allocates page tables in\\
+the page table hierarchy,\\
+as more addresses are\\
+requested by a process
+};
+
+\end{tikzpicture}
+\end{frame}
 % Slide 8: Translation Overview
 \begin{frame}{Virtual Address Translation Flow}
 \textbf{Translation Process:}
