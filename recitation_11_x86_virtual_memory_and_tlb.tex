@@ -897,21 +897,21 @@ Note: No Table cache needed as TLB stores complete translations
 \draw[arrow] (stlb.tpin 1) to[bend left=15] node[near end, left, label] {PTE} (insttlb);
 \draw[arrow] (stlb.tpin 2) to[bend right=15] node[near end, right, label] {PTE} (datatlb);
 
-% VA inputs to translation caches (using rpin 1 of muxdemux)
-\draw[arrow] (pmh.west |- stlb.rpin 1) -- node[arrowlabel] {VA[47:12]} (stlb.rpin 1);
-\draw[arrow] (pmh.west |- pdecache.rpin 1) -- node[arrowlabel] {VA[47:21]} (pdecache.rpin 1);
-\draw[arrow] (pmh.west |- pdpcache.rpin 1) -- node[arrowlabel] {VA[47:30]} (pdpcache.rpin 1);
-\draw[arrow] (pmh.west |- pml4cache.rpin 1) -- node[arrowlabel] {VA[47:39]} (pml4cache.rpin 1);
+% VA from translation caches to PMH (using rpin 1 of muxdemux)
+\draw[arrow] (stlb.rpin 1) -- node[arrowlabel] {VA[47:12]} (pmh.west |- stlb.rpin 1);
+\draw[arrow] (pdecache.rpin 1) -- node[arrowlabel] {VA[47:21]} (pmh.west |- pdecache.rpin 1);
+\draw[arrow] (pdpcache.rpin 1) -- node[arrowlabel] {VA[47:30]} (pmh.west |- pdpcache.rpin 1);
+\draw[arrow] (pml4cache.rpin 1) -- node[arrowlabel] {VA[47:39]} (pmh.west |- pml4cache.rpin 1);
 
-% From translation caches to PMH (using rpin 2 of muxdemux)
-\draw[arrow, red, thick] (stlb.rpin 2) -- node[arrowlabel] {PTE}
-      (pmh.west |- stlb.rpin 2);
-\draw[arrow, red, thick] (pdecache.rpin 2) -- node[arrowlabel] {PDE entry}
-      (pmh.west |- pdecache.rpin 2);
-\draw[arrow, red, thick] (pdpcache.rpin 2) -- node[arrowlabel] {PDP entry}
-      (pmh.west |- pdpcache.rpin 2);
-\draw[arrow, red, thick] (pml4cache.rpin 2) -- node[arrowlabel] {PML4 entry}
-      (pmh.west |- pml4cache.rpin 2);
+% From PMH to translation caches (using rpin 2 of muxdemux)
+\draw[arrow, red, thick] (pmh.west |- stlb.rpin 2) -- node[arrowlabel] {PTE}
+      (stlb.rpin 2);
+\draw[arrow, red, thick] (pmh.west |- pdecache.rpin 2) -- node[arrowlabel] {PDE entry}
+      (pdecache.rpin 2);
+\draw[arrow, red, thick] (pmh.west |- pdpcache.rpin 2) -- node[arrowlabel] {PDP entry}
+      (pdpcache.rpin 2);
+\draw[arrow, red, thick] (pmh.west |- pml4cache.rpin 2) -- node[arrowlabel] {PML4 entry}
+      (pml4cache.rpin 2);
 
 % VA labels on the right side of PMH
 %\node[label, right=0.1cm of pmh.east, yshift=1.2cm] {VA[47:12]};
