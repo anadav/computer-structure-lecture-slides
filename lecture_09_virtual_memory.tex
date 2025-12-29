@@ -1015,6 +1015,7 @@ def handle_protection_violation(vaddr, access):
 \begin{center}
 
 \begin{tikzpicture}[
+    scale=0.4,
     cache/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=2cm},
     tlb/.style={rectangle, draw, thick, minimum height=0.6cm, minimum width=1.8cm},
     bigbox/.style={rectangle, draw, thick},
@@ -1030,48 +1031,47 @@ def handle_protection_violation(vaddr, access):
 
 % L1 Caches
 \node[cache, fill=blue!30] (l1inst) {L1 Inst. cache};
-\node[cache, fill=orange!30, right=1cm of l1inst, minimum width=3cm] (l1data) {L1 data cache};
+\node[cache, fill=orange!30, right=0.7cm of l1inst, minimum width=2.5cm] (l1data) {L1 data cache};
 
 % TLBs
-\node[tlb, fill=cyan!30, below=0.6cm of l1inst] (insttlb) {Inst. TLB};
-\node[tlb, fill=violet!30, below=0.6cm of l1data.south west, anchor=north west] (datatlb) {Data TLB};
+\node[tlb, fill=cyan!30, below=0.4cm of l1inst] (insttlb) {Inst. TLB};
+\node[tlb, fill=violet!30, below=0.4cm of l1data.south west, anchor=north west] (datatlb) {Data TLB};
 
 % STLB in PMH box
-\node[stlbcache, below=1.1cm of insttlb, xshift=1cm] (stlb) {STLB};
+\node[stlbcache, below=0.5cm of insttlb, xshift=1cm] (stlb) {STLB};
 
 % PMH and Page Walk Logic
-\node[rectangle, draw, thick, fill=yellow!20, minimum height=1.2cm, minimum width=1.5cm,
-      right=2.5cm of stlb] (pmh) {};
-\node[boxlabel, anchor=south west] (pmhlabel) at (pmh.north) {PMH};
-\node[align=center] (pwllabel) at (pmh.center) {Page\\Walk\\Logic};
+\node[rectangle, draw, thick, fill=yellow!20, minimum height=0.8cm, minimum width=1.5cm,
+      right=2.5cm of stlb, inner sep=0pt, align=center] (pmh) {Page\\Walker};
+\node[boxlabel, anchor=north west] (pmhlabel) at (pmh.north east) {PMH};
 
 % Fit box around STLB and PMH
 \begin{scope}[on background layer]
-\node[bigbox, fill=gray!10, fit=(stlb)(pmh)(pmhlabel), inner sep=3mm] (transbox) {};
+\node[bigbox, fill=gray!10, fit=(stlb)(pmh)(pmhlabel), inner sep=0.5pt] (transbox) {};
 \end{scope}
 
 % L2, L3, and Memory
 \node[cache, fill=gray!30, right=of l1data, minimum width=1cm] (l2) {L2};
 \node[cache, fill=green!20, right=of l2, minimum width=1cm] (l3) {L3};
-\node[cache, fill=green!30, right=0.8cm of l3, minimum width=1.5cm] (memory) {Memory};
+\node[cache, fill=green!30, right=of l3, minimum width=1.5cm] (memory) {Memory};
 
 % Labels above components
-\node[boxlabel, anchor=south west] at ([yshift=1mm]l1inst.north west) (corelabel) {Core};
-\node[boxlabel, above=0.1cm of l3] (ondielabel) {On-die};
-\node[boxlabel, above=0.1cm of memory] (platformlabel) {Platform};
+\node[boxlabel, anchor=south west] at ([yshift=0mm]l1inst.north west) (corelabel) {Core};
+\node[boxlabel, above=0mm of l3] (ondielabel) {On-die};
+\node[boxlabel, above=0mm of memory] (platformlabel) {Platform};
 
 % Core box
 \node[bigbox, fit=(corelabel)(l1inst)(l1data)(insttlb)(datatlb)(transbox)(pmhlabel)(l2),
-      inner sep=0.3cm] (corebox) {};
+      inner sep=1mm] (corebox) {};
 
 % On-die box
-\node[bigbox, fit=(ondielabel)(l3), inner sep=0.2cm] (ondiebox) {};
+\node[bigbox, fit=(ondielabel)(l3), inner sep=1mm] (ondiebox) {};
 
 % Platform box
-\node[bigbox, fit=(platformlabel)(memory), inner sep=0.2cm] (platformbox) {};
+\node[bigbox, fit=(platformlabel)(memory), inner sep=1mm] (platformbox) {};
 
 % Arrows and connections
-\draw[arrow, blue] ([yshift=-1mm]l2.north west) to[bend right=13] node[above, label] {Instruction bytes} ([yshift=-1mm]l1inst.north east);
+\draw[arrow, blue] ([yshift=-1mm]l2.north west) to[bend right=13] node[near start, right=4mm, label] {Instruction bytes} ([yshift=-1mm]l1inst.north east);
 \draw[arrow, cyan] (insttlb) -- (l1inst) node[midway, left, label] {translation};
 \draw[arrow, violet] (datatlb) -- (l1data) node[midway, left, label] {translation};
 
@@ -1086,7 +1086,7 @@ def handle_protection_violation(vaddr, access):
 \draw[arrow, red, thick] (pmh.west |- stlb.rpin 2) -- node[arrowlabel] {PTE} (stlb.rpin 2);
 
 % Load arrow from L1 data cache to PMH (Page Walk Logic)
-\draw[arrow, red, thick] (l1data.south) -- ++(0,-3mm) -| node[near start, right, label] {Load} (pmh.north);
+\draw[arrow, red, thick] ([xshift=-3mm]l1data.south east) -- ++(0,-8mm) -| node[near end, right, label] {Load} (pmh.north);
 
 % L1 data cache to L2
 \draw[arrow, blue, thick] (l2.west) -- (l1data.east);
@@ -1145,7 +1145,7 @@ def handle_protection_violation(vaddr, access):
 \draw[arrow] (vpn) -- (tlb);
 \draw[arrow] (tlb) -- node[right] {No} (stlb);
 \draw[arrow] (tlb.east) -- ++(0.3,0) |- node[right] {Yes} (pfn);
-\draw[arrow] (stlb.west) -- ++(-0.5, 0) |- node[right] {No} (pmh.east);
+\draw[arrow] (stlb.west) -- ++(-0.5, 0) |- node[above] {No} (pmh.east);
 \draw[arrow] (stlb.south) -- node[right] {Yes} (pfn);
 %\draw[arrow] (pmh) -- (l1);
 \draw[arrow] (l1) -- node[right] {No} (l2);
