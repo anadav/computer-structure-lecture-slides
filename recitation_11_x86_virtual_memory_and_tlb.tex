@@ -622,9 +622,25 @@ Core similar to x86 in 64-bit mode:
 \end{enumerate}
 \end{frame}
 
-\section{Virtual Address Translation}
+\section{Virtual Address Translation Caching}
 
-\begin{frame}{Example: Page Table Hierarchy}
+\begin{frame}{Question 1c: Page Table Allocation}
+We access a sequence of virtual addresses.
+
+\vspace{0.5em}
+For each address, what is the \textbf{minimal number of tables} that were added in all the hierarchies?
+
+\vspace{1em}
+\begin{enumerate}
+\item \texttt{0x00000D382FFE2B25}
+\item \texttt{0x00000D382FFE2349}
+\item \texttt{0x00000D382FF68937}
+\item \texttt{0x00000D3822849C00}
+\item \texttt{0x000007146B554622}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Question 1c (Page Table Allocation): Visualization}
 \begin{tikzpicture}[scale=0.6, transform shape,
     % Table styles for different levels
     pml4table/.style={rectangle, draw=black, thick, minimum width=1.2cm, minimum height=2.016cm, fill=yellow!40},
@@ -645,7 +661,10 @@ Core similar to x86 in 64-bit mode:
     dirtag/.style={pos=0.6, above, font=\footnotesize, text=blue!20!black},
     ptetag/.style={pos=0.6, above, font=\footnotesize, text=blue!40!black},
     offsettag/.style={pos=0.6, above, font=\footnotesize, text=orange!60!black},
-    alloclabel/.style={font=\scriptsize, text=mygreen, anchor=north west}
+    alloclabel/.style={font=\scriptsize, text=mygreen, anchor=north west},
+    % Highlight style for address values in the bar
+    addrval/.style={font=\scriptsize\ttfamily, minimum height=0.35cm},
+    addrhighlight/.style={addrval, fill=yellow!60, draw=yellow!80!black, rounded corners=2pt, inner sep=2pt}
 ]
 
 % Top: Virtual Address breakdown
@@ -675,131 +694,170 @@ Core similar to x86 in 64-bit mode:
 \node[above, font=\scriptsize] at (10.4,11.3) {12 11};
 \node[above, font=\scriptsize] at (13.5,11.3) {0};
 
-% Field names inside
-\node[font=\scriptsize] at (1.25,10.9) {sign ext.};
-\node[font=\scriptsize] (pml4label) at (3.5,10.9) {PML4};
-\node[font=\scriptsize] (pdplabel) at (5.5,10.9) {PDP};
-\node[font=\scriptsize] (dirlabel) at (7.5,10.9) {DIR};
-\node[font=\scriptsize] (tablelabel) at (9.5,10.9) {TABLE};
-\node[font=\scriptsize] (offsetlabel) at (12,10.9) {OFFSET};
+% Field names inside (top row)
+\node[font=\scriptsize] at (1.25,11.05) {sign ext.};
+\node[font=\scriptsize] (pml4label) at (3.5,11.05) {PML4};
+\node[font=\scriptsize] (pdplabel) at (5.5,11.05) {PDP};
+\node[font=\scriptsize] (dirlabel) at (7.5,11.05) {DIR};
+\node[font=\scriptsize] (tablelabel) at (9.5,11.05) {TABLE};
+\node[font=\scriptsize] (offsetlabel) at (12,11.05) {OFFSET};
+
+% Address value row (bottom of address bar) - shows current address being translated
+% Address 1: D3-82-FF-E2-B25 (stages 2-3)
+\visible<2>{\node[addrhighlight] at (3.5,10.65) {D3};}
+\visible<3->{\node[addrval] at (3.5,10.65) {D3};}
+\visible<2>{\node[addrhighlight] at (5.5,10.65) {82};}
+\visible<3->{\node[addrval] at (5.5,10.65) {82};}
+\visible<2>{\node[addrhighlight] at (7.5,10.65) {FF};}
+\visible<3->{\node[addrval] at (7.5,10.65) {FF};}
+\visible<2>{\node[addrhighlight] at (9.5,10.65) {E2};}
+\visible<3->{\node[addrval] at (9.5,10.65) {E2};}
+\visible<2>{\node[addrhighlight] at (12,10.65) {B25};}
+\visible<3->{\node[addrval] at (12,10.65) {B25};}
+
+% Address 2: same but offset=349 (stages 4-5) - only offset changes
+\visible<4>{\node[addrhighlight] at (12,10.65) {349};}
+\visible<5>{\node[addrval] at (12,10.65) {349};}
+
+% Address 3: D3-82-FF-68-937 (stages 6-7) - PTE and offset change
+\visible<6>{\node[addrhighlight] at (9.5,10.65) {68};}
+\visible<7>{\node[addrval] at (9.5,10.65) {68};}
+\visible<6>{\node[addrhighlight] at (12,10.65) {937};}
+\visible<7>{\node[addrval] at (12,10.65) {937};}
+
+% Address 4: D3-82-28-49-C00 (stages 8-9) - DIR, PTE, offset change
+\visible<8>{\node[addrhighlight] at (7.5,10.65) {28};}
+\visible<9>{\node[addrval] at (7.5,10.65) {28};}
+\visible<8>{\node[addrhighlight] at (9.5,10.65) {49};}
+\visible<9>{\node[addrval] at (9.5,10.65) {49};}
+\visible<8>{\node[addrhighlight] at (12,10.65) {C00};}
+\visible<9>{\node[addrval] at (12,10.65) {C00};}
+
+% Address 5: 71-46-B5-54-622 (stages 10-11) - all change
+\visible<10>{\node[addrhighlight] at (3.5,10.65) {71};}
+\visible<11->{\node[addrval] at (3.5,10.65) {71};}
+\visible<10>{\node[addrhighlight] at (5.5,10.65) {46};}
+\visible<11->{\node[addrval] at (5.5,10.65) {46};}
+\visible<10>{\node[addrhighlight] at (7.5,10.65) {B5};}
+\visible<11->{\node[addrval] at (7.5,10.65) {B5};}
+\visible<10>{\node[addrhighlight] at (9.5,10.65) {54};}
+\visible<11->{\node[addrval] at (9.5,10.65) {54};}
+\visible<10>{\node[addrhighlight] at (12,10.65) {622};}
+\visible<11->{\node[addrval] at (12,10.65) {622};}
 
 % Vertical alignment of tables (from left to right)
 % PML4 Table
 \node[pml4table] (pml4base) at (1,5) {};
 \node[font=\scriptsize, anchor=south, align=center] at (pml4base.north) {PML4\\ Table};
-\visible<2->{\node[pml4entry] (pml4d3) at ($(pml4base.south)!0.78!(pml4base.north)$) {};} % D3 = 211/255, reduced by 15%
-\visible<6->{\node[pml4entry] (pml471) at ($(pml4base.south)!0.44!(pml4base.north)$) {};} % 71 = 113/255
+\visible<3->{\node[pml4entry] (pml4d3) at ($(pml4base.south)!0.78!(pml4base.north)$) {};} % D3 = 211/255, reduced by 15%
+\visible<11->{\node[pml4entry] (pml471) at ($(pml4base.south)!0.44!(pml4base.north)$) {};} % 71 = 113/255
 
 % PTBR register pointing to PML4
 \node[rectangle, draw=black, thick, fill=gray!20, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize, anchor=east] (cr3) at ([xshift=-3mm]pml4base.south west) {PTBR};
 \draw[arrow] (cr3) -- (pml4base.south west);
 
-% Address calculation label
-\visible<2->{\node[font=\scriptsize, draw=black, thick, fill=yellow!20, align=center,
-      rectangle callout, callout absolute pointer={(cr3.east)}] at (-1.5,1.5) {Address=\\ PTBR+D3$\times$8};}
-
 % PDP Table (2 instances)
-\visible<2->{\node[pdptable] (pdp82base) at (4,6.5) {};
+\visible<3->{\node[pdptable] (pdp82base) at (4,6.5) {};
 \node[font=\scriptsize, anchor=south, align=center] at (pdp82base.north) {PDP\\ Table};
 \node[pdpentry] (pdp82) at ($(pdp82base.south)!0.51!(pdp82base.north)$) {};} % 82 = 130/255
 
-\visible<6->{\node[pdptable] (pdp46base) at (4,3.5) {};
+\visible<11->{\node[pdptable] (pdp46base) at (4,3.5) {};
 \node[pdpentry] (pdp46) at ($(pdp46base.south)!0.28!(pdp46base.north)$) {};} % 46 = 70/255
 
 % Page Dir instances
-\visible<2->{\node[dirtable] (dirffbase) at (7,7) {};
+\visible<3->{\node[dirtable] (dirffbase) at (7,7) {};
 \node[font=\scriptsize, anchor=south, align=center] at (dirffbase.north) {Dir\\ Table};
 \node[direntry] (dirff) at ($(dirffbase.south)!0.85!(dirffbase.north)$) {};} % FF = 255/255, reduced by 15%
-\visible<5->{\node[direntry] (dir28) at ($(dirffbase.south)!0.16!(dirffbase.north)$) {};} % 28 = 40/255
+\visible<9->{\node[direntry] (dir28) at ($(dirffbase.south)!0.16!(dirffbase.north)$) {};} % 28 = 40/255
 
-\visible<6->{\node[dirtable] (dirb5base) at (7,2.5) {};
+\visible<11->{\node[dirtable] (dirb5base) at (7,2.5) {};
 \node[font=\scriptsize, anchor=south, align=center] at (dirb5base.north) {Dir\\ Table};
 \node[direntry] (dirb5) at ($(dirb5base.south)!0.71!(dirb5base.north)$) {};} % B5 = 181/255
 
 % Page Table instances
-\visible<2->{\node[pagetable] (pte2base) at (10,8) {};
+\visible<3->{\node[pagetable] (pte2base) at (10,8) {};
 \node[font=\scriptsize, anchor=south, align=center] at (pte2base.north) {Page\\ Table};
 \node[pageentry] (ptee2) at ($(pte2base.south)!0.74!(pte2base.north)$) {};} % E2 = 226/255, reduced by 15%
-\visible<4->{\node[pageentry] (pte68) at ($(pte2base.south)!0.41!(pte2base.north)$) {};} % 68 = 104/255
+\visible<7->{\node[pageentry] (pte68) at ($(pte2base.south)!0.41!(pte2base.north)$) {};} % 68 = 104/255
 
-\visible<5->{\node[pagetable] (pte49base) at (10,5) {};
+\visible<9->{\node[pagetable] (pte49base) at (10,5) {};
 \node[pageentry] (pte49) at ($(pte49base.south)!0.29!(pte49base.north)$) {};} % 49 = 73/255
 
-\visible<6->{\node[pagetable] (pte54base) at (10,2.5) {};
+\visible<11->{\node[pagetable] (pte54base) at (10,2.5) {};
 \node[pageentry] (pte54) at ($(pte54base.south)!0.33!(pte54base.north)$) {};} % 54 = 84/255
 
 % 4KB Pages with offsets
-\visible<2->{\node[page] (pageb25base) at (13,8.8) {};
+\visible<3->{\node[page] (pageb25base) at (13,8.8) {};
 \node[font=\scriptsize, anchor=south] at (pageb25base.north) {4KB Page};
 \node[pageoffset] (pageb25) at ($(pageb25base.south)!0.70!(pageb25base.north)$) {};} % B25 = 2853/4095
-\visible<3->{\node[pageoffset] (page349) at ($(pageb25base.south)!0.21!(pageb25base.north)$) {};} % 349 = 841/4095
+\visible<5->{\node[pageoffset] (page349) at ($(pageb25base.south)!0.21!(pageb25base.north)$) {};} % 349 = 841/4095
 
-\visible<4->{\node[page] (page937base) at (13,5.8) {};
+\visible<7->{\node[page] (page937base) at (13,5.8) {};
 \node[pageoffset] (page937) at ($(page937base.south)!0.58!(page937base.north)$) {};} % 937 = 2359/4095
 
-\visible<5->{\node[page] (pagec00base) at (13,3.5) {};
+\visible<9->{\node[page] (pagec00base) at (13,3.5) {};
 \node[pageoffset] (pagec00) at ($(pagec00base.south)!0.75!(pagec00base.north)$) {};} % C00 = 3072/4095
 
-\visible<6->{\node[page] (page622base) at (13,1.2) {};
+\visible<11->{\node[page] (page622base) at (13,1.2) {};
 \node[pageoffset] (page622) at ($(page622base.south)!0.38!(page622base.north)$) {};} % 622 = 1570/4095
 
 % Paths from address fields to table entries
 % PML4 entries
-\visible<2->{\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml4d3.west) -- (pml4d3.west) node[pml4tag] {D3};}
-\visible<6->{\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml471.west) -- (pml471.west) node[pml4tag] {71};}
+\visible<3->{\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml4d3.west) -- (pml4d3.west) node[pml4tag] {D3};}
+\visible<11->{\draw[arrow] (pml4label) -- ++(0, -0.8) -| ([xshift=-10mm]pml471.west) -- (pml471.west) node[pml4tag] {71};}
 
 % PDP entries
-\visible<2->{\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp82.west) -- (pdp82.west) node[pdptag] {82};}
-\visible<6->{\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp46.west) -- (pdp46.west) node[pdptag] {46};}
+\visible<3->{\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp82.west) -- (pdp82.west) node[pdptag] {82};}
+\visible<11->{\draw[arrow] (pdplabel) -- ++(0, -0.9) -| ([xshift=-10mm]pdp46.west) -- (pdp46.west) node[pdptag] {46};}
 
 % DIR entries
-\visible<2->{\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirff.west) -- (dirff.west) node[dirtag] {FF};}
-\visible<5->{\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dir28.west) -- (dir28.west) node[dirtag] {28};}
-\visible<6->{\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirb5.west) -- (dirb5.west) node[dirtag] {B5};}
+\visible<3->{\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirff.west) -- (dirff.west) node[dirtag] {FF};}
+\visible<9->{\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dir28.west) -- (dir28.west) node[dirtag] {28};}
+\visible<11->{\draw[arrow] (dirlabel) -- ++(0, -1) -| ([xshift=-10mm]dirb5.west) -- (dirb5.west) node[dirtag] {B5};}
 
 % TABLE entries
-\visible<2->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]ptee2.west) -- (ptee2.west) node[ptetag] {E2};}
-\visible<4->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte68.west) -- (pte68.west) node[ptetag] {68};}
-\visible<5->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte49.west) -- (pte49.west) node[ptetag] {49};}
-\visible<6->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte54.west) -- (pte54.west) node[ptetag] {54};}
+\visible<3->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]ptee2.west) -- (ptee2.west) node[ptetag] {E2};}
+\visible<7->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte68.west) -- (pte68.west) node[ptetag] {68};}
+\visible<9->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte49.west) -- (pte49.west) node[ptetag] {49};}
+\visible<11->{\draw[arrow] (tablelabel) -- ++(0, -0.8) -| ([xshift=-10mm]pte54.west) -- (pte54.west) node[ptetag] {54};}
 
 % OFFSET entries
-\visible<2->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pageb25.west) -- (pageb25.west) node[offsettag] {B25};}
-\visible<3->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page349.west) -- (page349.west) node[offsettag] {349};}
-\visible<4->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page937.west) -- (page937.west) node[offsettag] {937};}
-\visible<5->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pagec00.west) -- (pagec00.west) node[offsettag] {C00};}
-\visible<6->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page622.west) -- (page622.west) node[offsettag] {622};}
+\visible<3->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pageb25.west) -- (pageb25.west) node[offsettag] {B25};}
+\visible<5->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page349.west) -- (page349.west) node[offsettag] {349};}
+\visible<7->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page937.west) -- (page937.west) node[offsettag] {937};}
+\visible<9->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]pagec00.west) -- (pagec00.west) node[offsettag] {C00};}
+\visible<11->{\draw[arrow] (offsetlabel) -- ++(0, -0.8) -| ([xshift=-10mm]page622.west) -- (page622.west) node[offsettag] {622};}
 
 % Arrows connecting the hierarchy
 % PML4[D3] -> PDP[82]
-\visible<2->{\draw[arrow] (pml4d3.east) -- ++(0.3, 0) |- (pdp82base.south west);}
+\visible<3->{\draw[arrow] (pml4d3.east) -- ++(0.3, 0) |- (pdp82base.south west);}
 % PML4[71] -> PDP[46]
-\visible<6->{\draw[arrow] (pml471.east) -- ++(0.3, 0) |- (pdp46base.south west);}
+\visible<11->{\draw[arrow] (pml471.east) -- ++(0.3, 0) |- (pdp46base.south west);}
 
 % PDP[82] -> Dir[FF,28]
-\visible<2->{\draw[arrow] (pdp82.east) -- ++(0.3, 0) |- (dirffbase.south west);}
+\visible<3->{\draw[arrow] (pdp82.east) -- ++(0.3, 0) |- (dirffbase.south west);}
 % PDP[46] -> Dir[B5]
-\visible<6->{\draw[arrow] (pdp46.east) -- ++(0.3, 0) |- (dirb5base.south west);}
+\visible<11->{\draw[arrow] (pdp46.east) -- ++(0.3, 0) |- (dirb5base.south west);}
 
 % Dir[FF] -> PT[E2,68]
-\visible<2->{\draw[arrow] (dirff.east) -- ++(0.3, 0) |- (pte2base.south west);}
+\visible<3->{\draw[arrow] (dirff.east) -- ++(0.3, 0) |- (pte2base.south west);}
 % Dir[28] -> PT[49]
-\visible<5->{\draw[arrow] (dir28.east) -- ++(0.3, 0) |- (pte49base.south west);}
+\visible<9->{\draw[arrow] (dir28.east) -- ++(0.3, 0) |- (pte49base.south west);}
 % Dir[B5] -> PT[54]
-\visible<6->{\draw[arrow] (dirb5.east) -- ++(0.3, 0) |- (pte54base.south west);}
+\visible<11->{\draw[arrow] (dirb5.east) -- ++(0.3, 0) |- (pte54base.south west);}
 
 % PT[E2] -> Page[B25,349]
-\visible<2->{\draw[arrow] (ptee2.east) -- ++(0.5, 0) |- (pageb25base.south west);}
+\visible<3->{\draw[arrow] (ptee2.east) -- ++(0.5, 0) |- (pageb25base.south west);}
 % PT[68] -> Page[937]
-\visible<4->{\draw[arrow] (pte68.east) -- ++(0.3, 0) |- (page937base.south west);}
+\visible<7->{\draw[arrow] (pte68.east) -- ++(0.3, 0) |- (page937base.south west);}
 % PT[49] -> Page[C00]
-\visible<5->{\draw[arrow] (pte49.east) -- ++(0.3, 0) |- (pagec00base.south west);}
+\visible<9->{\draw[arrow] (pte49.east) -- ++(0.3, 0) |- (pagec00base.south west);}
 % PT[54] -> Page[622]
-\visible<6->{\draw[arrow] (pte54.east) -- ++(0.3, 0) |- (page622base.south west);}
+\visible<11->{\draw[arrow] (pte54.east) -- ++(0.3, 0) |- (page622base.south west);}
 
 % Right side: Complete virtual addresses (color-coded) - positioned relative to page entries
 % First address with labels (2-row matrix)
-\visible<2->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+\visible<3->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
         column sep=0.5pt, row sep=0.5pt, ampersand replacement=\&] (addr1) at ([xshift=7mm,yshift=-3mm]pageb25.south east) {
     |[font=\fontsize{4pt}{5pt}\selectfont]| {} \&
     |[font=\fontsize{4pt}{5pt}\selectfont, text=yellow!40!black]| PML4 \&
@@ -817,7 +875,7 @@ Core similar to x86 in 64-bit mode:
 \node[alloclabel] at ([xshift=2mm,yshift=4mm]addr1.south west) {3 new tables + 1 page};}
 
 % Other addresses (single-row matrices)
-\visible<3->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+\visible<5->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
         column sep=0.5pt, ampersand replacement=\&] (addr2) at ([xshift=7mm,yshift=-3mm]page349.south east) {
     |[text=green!40!black]| 00000 \&
     |[text=yellow!40!black]| D3 \&
@@ -828,7 +886,7 @@ Core similar to x86 in 64-bit mode:
 };
 \node[alloclabel] at ([xshift=2mm,yshift=4mm]addr2.south west) {0 new tables};}
 
-\visible<4->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+\visible<7->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
         column sep=0.5pt, ampersand replacement=\&] (addr3) at ([xshift=7mm,yshift=-3mm]page937.south east) {
     |[text=green!40!black]| 00000 \&
     |[text=yellow!40!black]| D3 \&
@@ -839,7 +897,7 @@ Core similar to x86 in 64-bit mode:
 };
 \node[alloclabel] at ([xshift=2mm,yshift=4mm]addr3.south west) {0 new tables + 1 page};}
 
-\visible<5->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+\visible<9->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
         column sep=0.5pt, ampersand replacement=\&] (addr4) at ([xshift=7mm,yshift=-3mm]pagec00.south east) {
     |[text=green!40!black]| 00000 \&
     |[text=yellow!40!black]| D3 \&
@@ -850,7 +908,7 @@ Core similar to x86 in 64-bit mode:
 };
 \node[alloclabel] at ([xshift=2mm,yshift=4mm]addr4.south west) {1 new table + 1 page};}
 
-\visible<6->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
+\visible<11->{\matrix[anchor=south west, matrix of nodes, nodes={draw=none, inner sep=1pt, font=\footnotesize\ttfamily},
         column sep=0.5pt, ampersand replacement=\&] (addr5) at ([xshift=7mm,yshift=-3mm]page622.south east) {
     |[text=green!40!black]| 00000 \&
     |[text=yellow!40!black]| 71 \&
@@ -865,15 +923,6 @@ Core similar to x86 in 64-bit mode:
 \node[font=\scriptsize, draw=black, thick, fill=red!10, align=center, text width=2.5cm,
       rectangle callout, callout absolute pointer={(-0.2,11.3)}] at (-2.5,9.5) {8 bits per level instead of 9 for example purposes only};
 
-% Bottom left: Note about sequence of allocations
-\node[font=\scriptsize, text width=4cm, align=left] at (-2.5,5.5) {
-\textbf{Question 1:}\\
-sequence of allocations\\[0.3em]
-Shows how the OS\\
-dynamically allocates\\
-page tables as more\\
-addresses are requested
-};
 
 \end{tikzpicture}
 \end{frame}
@@ -963,7 +1012,7 @@ Page Miss Handler (PMH) gets PTE from memory
 \end{frame}
 
 % Slide 10: STLB - Secondary TLB
-\begin{frame}{STLB - Secondary TLB}
+\begin{frame}{STLB (Secondary TLB)}
 \begin{itemize}
     \item Second-level TLB (L2 TLB) shared between instruction and data paths
     \item Checked on L1 TLB miss before performing full page walk
@@ -1278,7 +1327,7 @@ Note: No Table cache needed as TLB stores complete translations
 \end{frame}
 
 % Slide 15b: Cache Access Solution with Diagram
-\begin{frame}{Question 3: Virtually-Indexed Cache (Solution)}
+\begin{frame}{Question 3 (Virtually-Indexed Cache): Solution}
 
 \begin{columns}[T]
 % Left column - Analysis with progressive reveal
