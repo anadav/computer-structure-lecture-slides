@@ -2728,8 +2728,8 @@ Page Sizes & Entries & Assoc. \\
     idx cell/.style={pte cell, minimum width=5mm},
     pfn cell/.style={pte cell, minimum width=22mm},
     flag cell/.style={pte cell, minimum width=5mm},
-    tlb_entry/.style={draw, thick, minimum width=25mm, minimum height=3.5mm, font=\tiny},
-    section_title/.style={font=\tiny, anchor=south}
+    tlb_entry/.style={draw, thick, minimum width=20mm, minimum height=3.5mm, font=\tiny},
+    section_title/.style={font=\tiny, anchor=south west}
 ]
     % Virtual Address at top (style from TLB Lookup slide)
     \node[draw, thick, minimum width=50mm, minimum height=6mm, inner sep=0pt] (va) at (0,0) {};
@@ -2752,117 +2752,74 @@ Page Sizes & Entries & Assoc. \\
     \node[below, font=\tiny] at ([xshift=39mm]va.south west) {12};
     \node[below, font=\tiny] at (va.south east) {0};
 
-    % Page table title
-    \node[section_title] (pt_title) at (-1.5,-0.8) {Page Table};
-
-    % Regular PTEs (0-15) using matrix
+    % Combined page table matrix with vdots
     \matrix[matrix of nodes,
         anchor=north,
         row sep=-\pgflinewidth,
         column sep=-\pgflinewidth,
         ampersand replacement=\&,
-        nodes={pte cell, fill=gray!20},
+        nodes={pte cell},
         column 1/.style={nodes={idx cell}},
         column 2/.style={nodes={pfn cell}},
         column 3/.style={nodes={flag cell}},
-    ] (pte_reg) at ([yshift=-1mm]pt_title.south) {
-        0 \& PFN \& {} \\
-        1 \& PFN \& {} \\
-        2 \& PFN \& {} \\
-        3 \& PFN \& {} \\
-        4 \& PFN \& {} \\
-        5 \& PFN \& {} \\
-        6 \& PFN \& {} \\
-        7 \& PFN \& {} \\
-        8 \& PFN \& {} \\
-        9 \& PFN \& {} \\
-        10 \& PFN \& {} \\
-        11 \& PFN \& {} \\
-        12 \& PFN \& {} \\
-        13 \& PFN \& {} \\
-        14 \& PFN \& {} \\
-        15 \& PFN \& {} \\
+    ] (pte_matrix) at (-1.5,-1.0) {
+        |[fill=gray!20]| 0 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
+        |[fill=gray!20]| 1 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
+        |[fill=gray!20]| 2 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
+        |[draw=none, fill=none]| \vdots \& |[draw=none, fill=none]| \vdots \& |[draw=none, fill=none]| {} \\
+        |[fill=gray!20]| 15 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
+        |[fill=yellow!30]| 16 \& |[fill=yellow!30]| PFN$_{64K}$+0 \& |[fill=red!40]| C \\
+        |[fill=yellow!30]| 17 \& |[fill=yellow!30]| PFN$_{64K}$+1 \& |[fill=red!40]| C \\
+        |[draw=none, fill=none]| \vdots \& |[draw=none, fill=none]| \vdots \& |[draw=none, fill=none]| {} \\
+        |[fill=yellow!30]| 30 \& |[fill=yellow!30]| PFN$_{64K}$+14 \& |[fill=red!40]| C \\
+        |[fill=yellow!30]| 31 \& |[fill=yellow!30]| PFN$_{64K}$+15 \& |[fill=red!40]| C \\
+        |[fill=gray!20]| 32 \& |[fill=gray!20]| PFN \& |[fill=gray!20]| {} \\
+        |[draw=none, fill=none]| \vdots \& |[draw=none, fill=none]| \vdots \& |[draw=none, fill=none]| {} \\
     };
 
-    % Contiguous PTEs (16-31) using matrix
-    \matrix[matrix of nodes,
-        anchor=north,
-        row sep=-\pgflinewidth,
-        column sep=-\pgflinewidth,
-        ampersand replacement=\&,
-        nodes={pte cell, fill=yellow!30},
-        column 1/.style={nodes={idx cell}},
-        column 2/.style={nodes={pfn cell}},
-        column 3/.style={nodes={flag cell, fill=red!40}},
-    ] (pte_contig) at ([yshift=-1mm]pte_reg.south) {
-        16 \& PFN+0 \& C \\
-        17 \& PFN+1 \& C \\
-        18 \& PFN+2 \& C \\
-        19 \& PFN+3 \& C \\
-        20 \& PFN+4 \& C \\
-        21 \& PFN+5 \& C \\
-        22 \& PFN+6 \& C \\
-        23 \& PFN+7 \& C \\
-        24 \& PFN+8 \& C \\
-        25 \& PFN+9 \& C \\
-        26 \& PFN+10 \& C \\
-        27 \& PFN+11 \& C \\
-        28 \& PFN+12 \& C \\
-        29 \& PFN+13 \& C \\
-        30 \& PFN+14 \& C \\
-        31 \& PFN+15 \& C \\
-    };
+    % Page table title (positioned relative to matrix)
+    \node[section_title] (pt_title) at ([yshift=-2mm]pte_matrix.north west) {Page Table};
 
-    % Red border around contiguous block
+    % Red border around contiguous block (rows 6-10)
     \draw[thick, red, line width=1.2pt]
-        ([shift={(-0.5mm,0.5mm)}]pte_contig.north west) rectangle
-        ([shift={(0.5mm,-0.5mm)}]pte_contig.south east);
+        ([shift={(-0.5mm,0.5mm)}]pte_matrix-6-1.north west) rectangle
+        ([shift={(0.5mm,-0.5mm)}]pte_matrix-10-3.south east);
 
-    % More regular PTEs (32+) using matrix
+%    \node[font=\tiny, red, align=center] at ([xshift=10mm]pte_matrix-6-3.east) {64KB\\aligned};
+
+    % TLB entries using matrix
     \matrix[matrix of nodes,
         anchor=north,
-        row sep=-\pgflinewidth,
+        row sep=1mm,
         column sep=-\pgflinewidth,
         ampersand replacement=\&,
-        nodes={pte cell, fill=gray!20},
-        column 1/.style={nodes={idx cell}},
-        column 2/.style={nodes={pfn cell}},
-        column 3/.style={nodes={flag cell}},
-    ] (pte_more) at ([yshift=-1mm]pte_contig.south) {
-        32 \& PFN \& {} \\
-        33 \& PFN \& {} \\
-        34 \& PFN \& {} \\
-        35 \& PFN \& {} \\
+        nodes={tlb_entry},
+    ] (tlb_matrix) at (3.5,-1.0) {
+        |[fill=gray!20]| 4KB page \\
+        |[fill=gray!20]| 4KB page \\
+        |[fill=gray!20]| 4KB page \\
+        |[fill=yellow!30, line width=1.2pt, minimum height=5mm]| 64KB coalesced \\
     };
 
-    % Arrow with label for contiguous block
-    \draw[->, thick, orange] (pte_contig.east |- pte_contig-8-1) -- ++(8mm,0)
-        node[midway, above, font=\tiny, align=center] {16 aligned\\4KB pages\\= 64KB};
-    \node[font=\tiny, red] at ([xshift=8mm, yshift=-1mm]pte_contig.north east) {Aligned at 16};
+   % Arrow with label for contiguous block
+    \draw[->, thick, orange, dashed] (pte_matrix-8-3.east) -- 
+        node[midway, above, font=\tiny, align=center] {16 aligned\\4KB pages\\= 64KB} (tlb_matrix-4-1.west);
 
-    % TLB
-    \node[section_title] (tlb_title) at (3.5,-0.8) {TLB};
 
-    % TLB box
-    \node[draw, thick, minimum width=30mm, minimum height=35mm, anchor=north] (tlb_box) at (tlb_title.south) {};
+    % TLB title (positioned relative to matrix)
+    \node[section_title, anchor=south east] (tlb_title) at (tlb_matrix.north east) {TLB};
 
-    % Regular TLB entries
-    \node[tlb_entry, fill=gray!20, anchor=north] (tlb0) at ([yshift=-2mm]tlb_title.south) {4KB page};
-    \node[tlb_entry, fill=gray!20, anchor=north] (tlb1) at ([yshift=-1mm]tlb0.south) {4KB page};
-    \node[tlb_entry, fill=gray!20, anchor=north] (tlb2) at ([yshift=-1mm]tlb1.south) {4KB page};
+    % TLB box around matrix (tighter fit)
+    \node[draw, thick, fit=(tlb_matrix), inner sep=1pt] (tlb_box) {};
 
-    % Coalesced entry (emphasized)
-    \node[tlb_entry, fill=yellow!30, line width=1.2pt, minimum height=5mm, anchor=north]
-        (tlb_coal) at ([yshift=-5mm]tlb2.south) {64KB coalesced};
-
-    % Annotation
-    \node[font=\tiny, align=center] at ([yshift=-2mm]tlb_coal.south) {1 entry for\\PTEs 16-31};
+    % Callout for coalesced entry (above, pointing to south)
+    \node[rectangle callout, draw, fill=yellow!20, font=\tiny, align=center,
+        callout absolute pointer={(tlb_matrix-4-1.south)}]
+        at ([yshift=-8mm]tlb_matrix-4-1.south) {1 entry for\\PTEs 16-31};
 
     % Lookup arrows from VA to Page Table and TLB
-    \draw[->, thick, blue] ([xshift=-8mm]va.south) -- ++(0,-2mm) -| (pte_reg.north)
-        node[pos=0.25, left, font=\tiny] {Lookup};
-    \draw[->, thick, blue] ([xshift=8mm]va.south) -- ++(0,-2mm) -| (tlb_box.north)
-        node[pos=0.25, right, font=\tiny] {TLB check};
+    \draw[->, thick, blue] ([xshift=-4mm]va.south) -- ++(0,-5mm) node[pos=0.7, below=2pt, font=\tiny] {Page-walk} -| (pte_matrix.north);
+    \draw[->, thick, blue] ([xshift=4mm]va.south) -- ++(0,-5mm) node[pos=0.98, below, font=\tiny] {Lookup} -| (tlb_box.north);
 \end{tikzpicture}
 \end{center}
 \end{column}
