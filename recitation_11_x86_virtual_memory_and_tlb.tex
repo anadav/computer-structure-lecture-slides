@@ -836,7 +836,8 @@ Note: No Table cache needed as TLB stores complete translations
     % Muxdemux styles for translation caches
     muxcache/.style={muxdemux, muxdemux def={Lh=1, Rh=1, NR=2, NL=0, NB=0, NT=0},
         external pins width=0, font=\scriptsize},
-    stlbcache/.style={muxcache, fill=white},
+    stlbcache/.style={muxdemux, muxdemux def={Lh=1, Rh=1, NR=2, NL=0, NB=0, NT=2},
+        external pins width=0, font=\scriptsize, fill=white},
     pdecachestyle/.style={muxcache, fill=white},
     pdpcachestyle/.style={muxcache, fill=white},
     pml4cachestyle/.style={muxcache, fill=white}
@@ -848,7 +849,7 @@ Note: No Table cache needed as TLB stores complete translations
 
 % TLBs
 \node[tlb, fill=cyan!30, below=0.6cm of l1inst] (insttlb) {Inst. TLB};
-\node[tlb, fill=violet!30, below=0.6cm of l1data.south west, anchor=north west] (datatlb) {Data. TLB};
+\node[tlb, fill=violet!30, below=0.6cm of l1data.south west, anchor=north west] (datatlb) {Data TLB};
 
 % Translation caches using muxdemux
 \node[stlbcache, below=1.1cm of insttlb, xshift=1cm] (stlb) {STLB};
@@ -888,13 +889,13 @@ Note: No Table cache needed as TLB stores complete translations
 \node[bigbox, fit=(platformlabel)(memory), inner sep=0.2cm] (platformbox) {};
 
 % Arrows and connections
-\draw[arrow, blue] (l1inst) to[bend left=20] node[above, near end, label] {Instruction bytes} (l1data);
+\draw[arrow, blue] ([yshift=-1mm]l2.north west) to[bend right=13] node[above, label] {Instruction bytes} ([yshift=-1mm]l1inst.north east);
 \draw[arrow, cyan] (insttlb) -- (l1inst) node[midway, left, label] {translation};
 \draw[arrow, violet] (datatlb) -- (l1data) node[midway, left, label] {translation};
 
-% PTE connections from TLBs to STLB
-\draw[arrow] (insttlb) to[bend right=15] node[near start, left, label] {PTE} (stlb.north west);
-\draw[arrow] (datatlb) to[bend left=15] node[near start, left, label] {PTE} (stlb.north east);
+% PTE connections from STLB to TLBs
+\draw[arrow] (stlb.tpin 1) to[bend left=15] node[near end, left, label] {PTE} (insttlb);
+\draw[arrow] (stlb.tpin 2) to[bend right=15] node[near end, right, label] {PTE} (datatlb);
 
 % VA inputs to translation caches (using rpin 1 of muxdemux)
 \draw[arrow] (pmh.west |- stlb.rpin 1) -- node[arrowlabel] {VA[47:12]} (stlb.rpin 1);
