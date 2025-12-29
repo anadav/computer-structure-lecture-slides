@@ -2702,7 +2702,7 @@ Page Sizes & Entries & Assoc. \\
 \begin{itemize}
 \item 16 consecutive PTEs marked "contiguous"
 \item Maps 64KB (16 × 4KB)
-\item Hardware coalesces into single TLB entry
+\item Hardware coalesces into a single TLB entry
 \end{itemize}
 
 \textbf{Requirements:}
@@ -2838,90 +2838,6 @@ Page Sizes & Entries & Assoc. \\
 \end{center}
 \end{column}
 \end{columns}
-\end{frame}
-
-\begin{frame}{ContPTE: TLB Lookup Mechanism}
-\begin{center}
-\begin{tikzpicture}[scale=0.85]
-    % Virtual Address
-    \draw[thick] (0,6) rectangle (8,6.6);
-    \node[above, font=\small] at (4,6.6) {Virtual Address (48-bit)};
-    
-    % VA fields
-    \fill[blue!20] (0,6) rectangle (3,6.6);
-    \fill[orange!20] (3,6) rectangle (5.5,6.6);
-    \fill[yellow!20] (5.5,6) rectangle (6.5,6.6);
-    \fill[gray!20] (6.5,6) rectangle (8,6.6);
-    
-    \node[font=\tiny] at (1.5,6.3) {Upper bits};
-    \node[font=\tiny] at (4.25,6.3) {VPN[15:4]};
-    \node[font=\tiny] at (6,6.3) {VPN[3:0]};
-    \node[font=\tiny] at (7.25,6.3) {Offset};
-    
-    % Bit positions
-    \node[below, font=\tiny] at (0,6) {47};
-    \node[below, font=\tiny] at (5.5,6) {16};
-    \node[below, font=\tiny] at (6.5,6) {12};
-    \node[below, font=\tiny] at (8,6) {0};
-    
-    % TLB lookup paths
-    \node[font=\small] at (4,5.2) {TLB Lookup Logic};
-    
-    % Regular 4KB lookup
-    \draw[thick] (0.5,4.8) rectangle (3.5,3.8);
-    \node[font=\small] at (2,4.5) {Regular 4KB};
-    \node[font=\tiny] at (2,4.2) {Match full VPN};
-    \draw[->] (4.25,5.9) -- (4.25,5) -- (2,5) -- (2,4.8);
-    
-    % ContPTE 64KB lookup
-    \draw[thick] (4.5,4.8) rectangle (7.5,3.8);
-    \node[font=\small] at (6,4.5) {ContPTE 64KB};
-    \node[font=\tiny] at (6,4.2) {Match VPN[47:16]};
-    \node[font=\tiny] at (6,3.95) {Ignore VPN[15:12]};
-    \draw[->] (4.25,5.9) -- (4.25,5.3) -- (6,5.3) -- (6,4.8);
-    
-    % Show which bits are matched
-    \draw[thick, red] (3,5.5) rectangle (5.5,5.1);
-    \node[font=\tiny, red] at (4.25,5.3) {Matched for ContPTE};
-    
-    \draw[thick, dashed, red] (5.5,5.5) rectangle (6.5,5.1);
-    \node[font=\tiny, red] at (6,5.3) {Ignored};
-    
-    % TLB entry format
-    \node[font=\small] at (4,3.2) {TLB Entry Formats:};
-    
-    % 4KB entry
-    \draw[thick] (0,2.5) rectangle (8,2);
-    \fill[blue!20] (0,2.5) rectangle (5.5,2);
-    \fill[green!20] (5.5,2.5) rectangle (7.5,2);
-    \fill[red!20] (7.5,2.5) rectangle (8,2);
-    \node[font=\tiny] at (2.75,2.25) {Full VPN Tag};
-    \node[font=\tiny] at (6.5,2.25) {PFN};
-    \node[font=\tiny] at (7.75,2.25) {F};
-    \node[left, font=\tiny] at (0,2.25) {4KB:};
-    
-    % 64KB entry
-    \draw[thick] (0,1.5) rectangle (8,1);
-    \fill[blue!20] (0,1.5) rectangle (4,1);
-    \fill[green!20] (4,1.5) rectangle (7,1);
-    \fill[yellow!20] (7,1.5) rectangle (7.5,1);
-    \fill[red!20] (7.5,1.5) rectangle (8,1);
-    \node[font=\tiny] at (2,1.25) {VPN[47:16] Tag};
-    \node[font=\tiny] at (5.5,1.25) {PFN (64KB aligned)};
-    \node[font=\tiny] at (7.25,1.25) {C};
-    \node[font=\tiny] at (7.75,1.25) {F};
-    \node[left, font=\tiny] at (0,1.25) {64KB:};
-    
-    % Legend
-    \node[font=\tiny] at (1,0.5) {F = Flags};
-    \node[font=\tiny] at (2.5,0.5) {C = Contiguous};
-    \node[font=\tiny] at (4.5,0.5) {PFN = Physical Frame};
-    
-    % Bottom note
-    \node[below, font=\small, align=center] at (4,0) {ContPTE: Single TLB entry covers 16 × 4KB = 64KB};
-    \node[below, font=\tiny, align=center] at (4,-0.4) {Hardware automatically detects contiguous bit pattern};
-\end{tikzpicture}
-\end{center}
 \end{frame}
 
 \begin{frame}{TLB Shootdown: Maintaining Coherency}
