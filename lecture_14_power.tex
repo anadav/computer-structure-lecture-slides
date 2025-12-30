@@ -685,7 +685,7 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \begin{tikzpicture}[scale=0.7,
     % Styles
     core/.style={fill=corecolor, minimum width=1cm, minimum height=1.8cm, inner sep=0, anchor=south west},
-    boosted core/.style={fill=corecolor, minimum width=1cm, minimum height=2.3cm, inner sep=0, anchor=south west},
+    boost part/.style={fill=corecolor!70, pattern=north east lines, pattern color=blue, minimum width=1cm, minimum height=4mm, inner sep=0, anchor=south west},
     idle core/.style={fill=idlecolor, minimum width=1cm, minimum height=0.2cm, inner sep=0, anchor=south west},
     core label/.style={white, font=\scriptsize},
     section title/.style={font=\small\bfseries},
@@ -712,36 +712,39 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
         node[tdp label, right] {TDP};
 
     % X-axis for No Turbo section
-    \draw[->] ([xshift=-3mm]nt-core-0.south west) -- ([xshift=5mm]nt-core-3.south east);
+    \draw ([xshift=-3mm]nt-core-0.south west) -- ([xshift=5mm]nt-core-3.south east);
 
     % === With Turbo Section ===
-    % Boosted cores 0,1 (taller) - positioned below first section
-    \node[boosted core, below=12mm of nt-core-0.south west, anchor=north west] (t-core-0) {};
-    \node[boosted core, core gap] (t-core-1) at (t-core-0.south east) {};
+    % Base cores 0,1 (same height as No Turbo) - positioned below first section
+    \node[core, below=17mm of nt-core-0.south west, anchor=north west] (t-core-0) {};
+    \node[core, core gap] (t-core-1) at (t-core-0.south east) {};
     \node[core label] at (t-core-0) {0};
     \node[core label] at (t-core-1) {1};
+
+    % Boost portions on top (with pattern) - positioned at north west of base cores
+    \node[boost part, minimum height=0.5cm] (boost-0) at (t-core-0.north west) {};
+    \node[boost part, minimum height=0.5cm] (boost-1) at (t-core-1.north west) {};
 
     % Idle cores 2,3 (power gated - flat) - same bottom alignment
     \node[idle core, core gap] (t-core-2) at (t-core-1.south east) {};
     \node[idle core, core gap] (t-core-3) at (t-core-2.south east) {};
     \node[font=\scriptsize, above=1mm of t-core-2] {2};
     \node[font=\scriptsize, above=1mm of t-core-3] {3};
-    \node[font=\tiny, gray, below=2mm of $(t-core-2.south)!0.5!(t-core-3.south)$] {(off)};
+    \node[font=\tiny, gray, below=0.5mm of $(t-core-2.south)!0.5!(t-core-3.south)$] {(idle)};
 
-    % Section title at same x as "No Turbo", close to boosted cores
-    \node[section title] at (no-turbo-title |- t-core-0.north) [above=1mm] {With Turbo};
+    % Section title at same x as "No Turbo", above boosted cores
+    \node[section title] at (no-turbo-title |- boost-0.north) [above=1mm] {With Turbo};
 
-    % TDP line higher (at 2cm from bottom instead of 1.8cm)
-    \draw[tdp line] ([xshift=-2mm]t-core-0.south west) ++(0, 2cm) coordinate (tdp-start) --
-        ([xshift=2mm]t-core-3.south east |- tdp-start) coordinate (tdp-end)
+    % TDP line at top of base cores (same as No Turbo height)
+    \draw[tdp line] ([xshift=-2mm]t-core-0.north west) -- ([xshift=2mm]t-core-3.south east |- t-core-0.north)
         node[tdp label, right] {TDP};
 
     % X-axis for With Turbo section
-    \draw[->] ([xshift=-3mm]t-core-0.south west) -- ([xshift=5mm]t-core-3.south east);
+    \draw ([xshift=-3mm]t-core-0.south west) -- ([xshift=5mm]t-core-3.south east);
 
-    % Boost arrow from TDP line to top of boosted core (4mm right)
+    % Boost arrow relative to boost bar (xshift from south east to north east)
     \draw[->, green!60!black, very thick]
-        ([xshift=4mm]tdp-start -| t-core-1.east) -- ([xshift=4mm]t-core-1.north east)
+        ([xshift=3mm]boost-1.south east) -- ([xshift=3mm]boost-1.north east)
         node[right, font=\scriptsize, green!60!black, midway] {Boost!};
 \end{tikzpicture}
 \end{column}
