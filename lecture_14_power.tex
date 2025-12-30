@@ -724,31 +724,41 @@ Sum of max power $>$ Total package power\\
 (realistic concurrent max is lower)
 \end{column}
 \begin{column}{0.5\textwidth}
-\begin{tikzpicture}[scale=0.6]
-    % Total budget bar
-    \draw[thick] (0, 0) rectangle (5, 0.8);
-    \node[above, font=\small] at (2.5, 0.8) {Total Package Power};
+\begin{tikzpicture}[
+    % Styles
+    cpu bar/.style={fill=blue!70, minimum height=7mm, anchor=west, inner sep=0},
+    gfx bar/.style={fill=green!60!black, minimum height=7mm, anchor=west, inner sep=0},
+    bar label/.style={white, font=\scriptsize},
+    scenario label/.style={font=\scriptsize, anchor=east},
+]
+    % Total bar width
+    \def\totalwidth{5.5cm}
 
-    % Heavy CPU scenario
-    \node[font=\tiny, left] at (-0.2, -1) {Heavy CPU:};
-    \fill[blue!70] (0, -1.5) rectangle (4, -0.7);
-    \fill[green!60!black] (4, -1.5) rectangle (5, -0.7);
-    \node[white, font=\tiny] at (2, -1.1) {CPU};
-    \node[white, font=\tiny] at (4.5, -1.1) {GFX};
+    % Heavy CPU scenario (first row, used as reference)
+    \node[cpu bar, minimum width=0.8*\totalwidth] (cpu1) {};
+    \node[gfx bar, minimum width=0.2*\totalwidth] (gfx1) at (cpu1.east) {};
+    \node[bar label] at (cpu1.center) {CPU};
+    \node[bar label] at (gfx1.center) {GFX};
+    \node[scenario label, left=1mm of cpu1.west] {Heavy CPU:};
+
+    % Total Package Power label with arrows
+    \node[above=6mm of cpu1.north, anchor=south, xshift=0.1*\totalwidth, font=\small] (total-label) {Total Package Power};
+    \draw[->, thick] (total-label.west) -- (total-label.west -| cpu1.west);
+    \draw[->, thick] (total-label.east) -- (total-label.east -| gfx1.east);
 
     % Heavy GFX scenario
-    \node[font=\tiny, left] at (-0.2, -2.5) {Heavy GFX:};
-    \fill[blue!70] (0, -3) rectangle (1.5, -2.2);
-    \fill[green!60!black] (1.5, -3) rectangle (5, -2.2);
-    \node[white, font=\tiny] at (0.75, -2.6) {CPU};
-    \node[white, font=\tiny] at (3.25, -2.6) {Graphics};
+    \node[cpu bar, minimum width=0.3*\totalwidth, below=3mm of cpu1.south west, anchor=north west] (cpu2) {};
+    \node[gfx bar, minimum width=0.7*\totalwidth] (gfx2) at (cpu2.east) {};
+    \node[bar label] at (cpu2.center) {CPU};
+    \node[bar label] at (gfx2.center) {Graphics};
+    \node[scenario label, left=1mm of cpu2.west] {Heavy GFX:};
 
-    % Balanced
-    \node[font=\tiny, left] at (-0.2, -4) {Balanced:};
-    \fill[blue!70] (0, -4.5) rectangle (2.5, -3.7);
-    \fill[green!60!black] (2.5, -4.5) rectangle (5, -3.7);
-    \node[white, font=\tiny] at (1.25, -4.1) {CPU};
-    \node[white, font=\tiny] at (3.75, -4.1) {GFX};
+    % Balanced scenario
+    \node[cpu bar, minimum width=0.5*\totalwidth, below=3mm of cpu2.south west, anchor=north west] (cpu3) {};
+    \node[gfx bar, minimum width=0.5*\totalwidth] (gfx3) at (cpu3.east) {};
+    \node[bar label] at (cpu3.center) {CPU};
+    \node[bar label] at (gfx3.center) {Graphics};
+    \node[scenario label, left=1mm of cpu3.west] {Balanced:};
 \end{tikzpicture}
 \end{column}
 \end{columns}
