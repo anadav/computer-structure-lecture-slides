@@ -103,19 +103,16 @@ Including low-activity and idle time\\
 \begin{tcolorbox}[colback=yellow!10, colframe=orange!80, title={\small Fun Fact}, boxsep=1mm]
 \footnotesize
 \begin{center}
-\includegraphics[width=1cm]{figures/noun-search-web-8026310.png}
-$\approx$
-\includegraphics[width=1cm]{figures/noun-bulb-6991141.png}
+\begin{tikzpicture}[baseline=0]
+    \node[inner sep=0] (search) at (0,0) {\includegraphics[width=1cm]{figures/noun-search-web-8026310.png}};
+    \node[font=\large] at (1.1,0) {$\approx$};
+    \node[inner sep=0] (bulb) at (2.2,0) {\includegraphics[width=1cm]{figures/noun-bulb-6991141.png}};
+\end{tikzpicture}
 \end{center}
 1 web search $\approx$ 11W bulb for 1 hour\\
 Emits $\sim$7g CO$_2$\\
 \textbf{4 billion} searches daily!
 \end{tcolorbox}
-
-\begin{center}
-\includegraphics[width=1.8cm]{figures/noun-battery-7847279.png}\\
-{\scriptsize Battery Life}
-\end{center}
 \end{column}
 \end{columns}
 \end{frame}
@@ -143,7 +140,7 @@ Emits $\sim$7g CO$_2$\\
 
     % CPU: 118.8 to 154.8 (10%)
     \fill[blue!70] (0,0) -- (118.8:\radius) arc (118.8:154.8:\radius) -- cycle;
-    \node[font=\tiny, blue!80!black] at (136.8:1.5) {CPU 10\%};
+    \node[font=\tiny, white] at (136.8:1.5) {CPU 10\%};
 
     % PSU: 154.8 to 190.8 (10%)
     \fill[green!60] (0,0) -- (154.8:\radius) arc (154.8:190.8:\radius) -- cycle;
@@ -186,12 +183,69 @@ Emits $\sim$7g CO$_2$\\
     \item Many fixed power consumers
     \item Optimizing CPU alone has limited impact
 \end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Server Platform Power
+\begin{frame}{Server Platform Power}
+\begin{center}
+\textbf{In servers, CPU dominates platform power}
+\end{center}
+
+\vspace{1mm}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=1.1]
+    \def\radius{2}
+
+    % CPUs: 61% (0 to 219.6)
+    \fill[blue!70] (0,0) -- (0:\radius) arc (0:219.6:\radius) -- cycle;
+    \node[font=\small, white] at (109.8:1.2) {\textbf{CPUs}};
+    \node[font=\small\bfseries, white] at (109.8:1.6) {61\%};
+
+    % DRAM: 18% (219.6 to 284.4)
+    \fill[red!50] (0,0) -- (219.6:\radius) arc (219.6:284.4:\radius) -- cycle;
+    \node[font=\tiny] at (252:1.5) {DRAM 18\%};
+
+    % Power overhead: 7% (284.4 to 309.6)
+    \fill[green!60] (0,0) -- (284.4:\radius) arc (284.4:309.6:\radius) -- cycle;
+    \node[font=\tiny] at (297:1.7) {Power 7\%};
+
+    % Networking: 5% (309.6 to 327.6)
+    \fill[cyan!60] (0,0) -- (309.6:\radius) arc (309.6:327.6:\radius) -- cycle;
+
+    % Misc: 4% (327.6 to 342)
+    \fill[gray!50] (0,0) -- (327.6:\radius) arc (327.6:342:\radius) -- cycle;
+
+    % Cooling: 3% (342 to 352.8)
+    \fill[purple!50] (0,0) -- (342:\radius) arc (342:352.8:\radius) -- cycle;
+
+    % Storage: 2% (352.8 to 360)
+    \fill[yellow!70] (0,0) -- (352.8:\radius) arc (352.8:360:\radius) -- cycle;
+
+    % Draw outline
+    \draw[thick] (0,0) circle (\radius);
+\end{tikzpicture}
+\end{center}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{itemize}
+    \item \textbf{CPUs} dominate (61\%)
+    \item DRAM significant (18\%)
+    \item Power+cooling overhead (10\%)
+    \item Storage, networking minimal
+\end{itemize}
 
 \vspace{2mm}
 \begin{tcolorbox}[colback=blue!5, colframe=blue!50, boxsep=1mm]
 \small
-For servers: CPU power is much larger fraction of total platform power
+CPU optimization has major impact on server TCO!
 \end{tcolorbox}
+
+\vspace{1mm}
+\hfill{\tiny Barroso et al., \textit{The Datacenter as a Computer}, 2018 (2017 servers)}
 \end{column}
 \end{columns}
 \end{frame}
@@ -424,7 +478,9 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 % C0
 \begin{columns}
 \begin{column}{0.55\textwidth}
-\textbf{C0: Active} -- CPU executing, P-states effective
+\begin{itemize}
+    \item \textbf{C0: Active} -- CPU executing, P-states effective
+\end{itemize}
 \end{column}
 \begin{column}{0.45\textwidth}
 \begin{tikzpicture}[scale=0.8]
@@ -435,11 +491,13 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \end{column}
 \end{columns}
 
-\vspace{1mm}
+\vspace{-2mm}
 % C1
 \begin{columns}
 \begin{column}{0.55\textwidth}
-\textbf{C1: Halt} -- Stop pipeline \& most clocks; caches respond to snoops
+\begin{itemize}
+    \item \textbf{C1: Halt} -- Stop pipeline \& most clocks
+\end{itemize}
 \end{column}
 \begin{column}{0.45\textwidth}
 \begin{tikzpicture}[scale=0.8]
@@ -450,11 +508,13 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \end{column}
 \end{columns}
 
-\vspace{1mm}
+\vspace{-2mm}
 % C3
 \begin{columns}
 \begin{column}{0.55\textwidth}
-\textbf{C3: Deep Sleep} -- Stop all clocks, flush caches
+\begin{itemize}
+    \item \textbf{C3: Deep Sleep} -- Stop all clocks, flush caches
+\end{itemize}
 \end{column}
 \begin{column}{0.45\textwidth}
 \begin{tikzpicture}[scale=0.8]
@@ -464,11 +524,13 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \end{column}
 \end{columns}
 
-\vspace{1mm}
+\vspace{-2mm}
 % C6
 \begin{columns}
 \begin{column}{0.55\textwidth}
-\textbf{C6: Power Gate} -- Save state, power off, $P \approx 0$
+\begin{itemize}
+    \item \textbf{C6: Power Gate} -- Save state, power off, $P \approx 0$
+\end{itemize}
 \end{column}
 \begin{column}{0.45\textwidth}
 \begin{tikzpicture}[scale=0.8]
@@ -477,7 +539,7 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \end{column}
 \end{columns}
 
-\vspace{3mm}
+\vspace{2mm}
 % Legend
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
@@ -550,14 +612,14 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 %% Slide: Turbo Mode
 \begin{frame}{Turbo Mode}
 \begin{columns}
-\begin{column}{0.5\textwidth}
+\begin{column}{0.55\textwidth}
 \textbf{Without Turbo:}
 \begin{itemize}
     \item All cores run at same frequency
     \item Frequency limited by TDP
 \end{itemize}
 
-\vspace{3mm}
+\vspace{2mm}
 \textbf{With Turbo Mode:}
 \begin{itemize}
     \item Cores without threads $\rightarrow$ deep C-state (power gated)
@@ -567,40 +629,47 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 
 \vspace{2mm}
 \small
-\textit{OS schedules threads; cores without work sleep.\\
-Turbo uses the freed thermal headroom.}
+\textbf{Two turbo levels:}
+\begin{itemize}
+    \item \textbf{Guaranteed:} based on \# active cores
+    \item \textbf{Opportunistic:} if thermal/power headroom
+\end{itemize}
 \end{column}
-\begin{column}{0.5\textwidth}
-\begin{tikzpicture}[scale=0.55]
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.7]
     % No Turbo
-    \node[font=\small\bfseries] at (2, 4.5) {No Turbo};
+    \node[font=\small\bfseries] at (2.2, 3.2) {No Turbo};
     \foreach \i in {0,1,2,3} {
-        \fill[corecolor] (\i*1.1, 0) rectangle (\i*1.1+1, 2.5);
-        \node[white, font=\tiny] at (\i*1.1+0.5, 1.25) {Core \i};
+        \fill[corecolor] (\i*1.2, 0) rectangle (\i*1.2+1, 2.5);
     }
-    \draw[dashed, red] (-0.2, 2.5) -- (4.6, 2.5);
-    \node[right, font=\tiny, red] at (4.7, 2.5) {TDP limit};
+    \node[white, font=\scriptsize] at (0.5, 1.25) {0};
+    \node[white, font=\scriptsize] at (1.7, 1.25) {1};
+    \node[white, font=\scriptsize] at (2.9, 1.25) {2};
+    \node[white, font=\scriptsize] at (4.1, 1.25) {3};
+    \draw[dashed, red] (-0.2, 2.5) -- (5.2, 2.5);
+    \node[right, font=\tiny, red] at (5.3, 2.5) {TDP};
 
     % Turbo - shifted down
-    \node[font=\small\bfseries] at (2, -0.8) {With Turbo};
+    \node[font=\small\bfseries] at (2.2, -0.5) {With Turbo};
     % Cores 2,3 inactive (power gated)
-    \fill[idlecolor] (2.2, -5) rectangle (3.2, -4.8);
-    \fill[idlecolor] (3.3, -5) rectangle (4.3, -4.8);
-    \node[font=\tiny] at (2.7, -4.4) {off};
-    \node[font=\tiny] at (3.8, -4.4) {off};
+    \fill[idlecolor] (2.4, -4) rectangle (3.4, -3.8);
+    \fill[idlecolor] (3.6, -4) rectangle (4.6, -3.8);
+    \node[font=\scriptsize, above] at (2.9, -3.8) {2};
+    \node[font=\scriptsize, above] at (4.1, -3.8) {3};
+    \node[font=\tiny, gray] at (3.5, -4.3) {(off)};
 
     % Cores 0,1 boosted
-    \fill[corecolor] (0, -5) rectangle (1, -1.5);
-    \fill[corecolor] (1.1, -5) rectangle (2.1, -1.5);
-    \node[white, font=\tiny, rotate=90] at (0.5, -3.25) {Core 0};
-    \node[white, font=\tiny, rotate=90] at (1.6, -3.25) {Core 1};
+    \fill[corecolor] (0, -4) rectangle (1, -1);
+    \fill[corecolor] (1.2, -4) rectangle (2.2, -1);
+    \node[white, font=\scriptsize] at (0.5, -2.5) {0};
+    \node[white, font=\scriptsize] at (1.7, -2.5) {1};
 
-    \draw[dashed, red] (-0.2, -2.5) -- (4.6, -2.5);
-    \node[right, font=\tiny, red] at (4.7, -2.5) {TDP limit};
+    \draw[dashed, red] (-0.2, -2) -- (5.2, -2);
+    \node[right, font=\tiny, red] at (5.3, -2) {TDP};
 
-    % Boost arrow
-    \draw[->, green!60!black, very thick] (1.5, -2.7) -- (1.5, -1.7);
-    \node[font=\tiny, green!60!black] at (2.5, -2) {Boost!};
+    % Boost arrow and label - to the right
+    \draw[->, green!60!black, very thick] (2.5, -2.2) -- (2.5, -1.2);
+    \node[font=\scriptsize, green!60!black, right] at (2.6, -1.7) {Boost!};
 \end{tikzpicture}
 \end{column}
 \end{columns}
@@ -629,22 +698,22 @@ Sum of max power $>$ Total package power\\
 
     % Heavy CPU scenario
     \node[font=\tiny, left] at (-0.2, -1) {Heavy CPU:};
-    \fill[blue!60] (0, -1.5) rectangle (4, -0.7);
-    \fill[green!40] (4, -1.5) rectangle (5, -0.7);
+    \fill[blue!70] (0, -1.5) rectangle (4, -0.7);
+    \fill[green!60!black] (4, -1.5) rectangle (5, -0.7);
     \node[white, font=\tiny] at (2, -1.1) {CPU};
-    \node[font=\tiny] at (4.5, -1.1) {GFX};
+    \node[white, font=\tiny] at (4.5, -1.1) {GFX};
 
     % Heavy GFX scenario
     \node[font=\tiny, left] at (-0.2, -2.5) {Heavy GFX:};
-    \fill[blue!40] (0, -3) rectangle (1.5, -2.2);
-    \fill[green!60] (1.5, -3) rectangle (5, -2.2);
-    \node[font=\tiny] at (0.75, -2.6) {CPU};
+    \fill[blue!70] (0, -3) rectangle (1.5, -2.2);
+    \fill[green!60!black] (1.5, -3) rectangle (5, -2.2);
+    \node[white, font=\tiny] at (0.75, -2.6) {CPU};
     \node[white, font=\tiny] at (3.25, -2.6) {Graphics};
 
     % Balanced
     \node[font=\tiny, left] at (-0.2, -4) {Balanced:};
-    \fill[blue!50] (0, -4.5) rectangle (2.5, -3.7);
-    \fill[green!50] (2.5, -4.5) rectangle (5, -3.7);
+    \fill[blue!70] (0, -4.5) rectangle (2.5, -3.7);
+    \fill[green!60!black] (2.5, -4.5) rectangle (5, -3.7);
     \node[white, font=\tiny] at (1.25, -4.1) {CPU};
     \node[white, font=\tiny] at (3.75, -4.1) {GFX};
 \end{tikzpicture}
@@ -862,54 +931,70 @@ Multi-threaded: $2 \times \frac{3.0}{3.8} = 1.58\times$ speedup (not $2\times$!)
 \footnotesize
 \textbf{Problem:} Design MP system with 60W envelope ($\frac{2}{3}$ for cores = 40W)
 
-\vspace{1mm}
-\begin{columns}
-\begin{column}{0.4\textwidth}
-\begin{tabular}{lcc}
+\vspace{2mm}
+\begin{center}
+\begin{tabular}{lccc}
 \toprule
-& \textbf{Big} & \textbf{Small} \\
+& \textbf{Big Core} & \textbf{Small Core} & \textbf{Given} \\
 \midrule
-Area & 4mm$^2$ & 2mm$^2$ \\
-IPC & 3 & 2 \\
+Area & 4mm$^2$ & 2mm$^2$ & Leakage: 0.25W/mm$^2$ \\
+IPC & 3 & 2 & $C = \text{IPC} \times 750$pF \\
+Freq @ $V_{\text{min}}=0.7$V & 1.35GHz & 1.45GHz & \\
 \bottomrule
 \end{tabular}
+\end{center}
 
-Leakage: 0.25W/mm$^2$, $C = \text{IPC} \times 750$pF
-\end{column}
-\begin{column}{0.6\textwidth}
-At $V_{\text{min}} = 0.7$V: Big $f=1.35$GHz, Small $f=1.45$GHz
-
-\vspace{1mm}
-\textbf{Solution:}
+\vspace{2mm}
+\textbf{Power per core:} $P = C \cdot V^2 \cdot f + P_{\text{leak}}$
 \begin{itemize}
-    \item Big: $P = 2.25 \times 0.49 \times 1.35 + 1 = 2.49$W $\Rightarrow$ 16 cores
-    \item Small: $P = 1.5 \times 0.49 \times 1.45 + 0.5 = 1.57$W $\Rightarrow$ 25 cores
+    \item Big: $P = 2.25\text{nF} \times 0.49 \times 1.35 + 1\text{W} = 2.49$W \quad $\Rightarrow$ \textbf{16 cores} fit in 40W
+    \item Small: $P = 1.5\text{nF} \times 0.49 \times 1.45 + 0.5\text{W} = 1.57$W \quad $\Rightarrow$ \textbf{25 cores} fit in 40W
 \end{itemize}
-\end{column}
-\end{columns}
 
-\vspace{1mm}
-\textbf{MP Perf:} Big: $16 \times 3 \times 1.35 = 64.8$ Ginst/s \quad Small: $25 \times 2 \times 1.45 = \mathbf{72.5}$ Ginst/s
+\vspace{2mm}
+\begin{tcolorbox}[colback=green!5, colframe=green!60, boxsep=1mm]
+\textbf{Throughput:} Big: $16 \times 3 \times 1.35 = 64.8$ Ginst/s \quad Small: $25 \times 2 \times 1.45 = \mathbf{72.5}$ Ginst/s
+\end{tcolorbox}
 \end{frame}
 
 %% Slide: Race to Halt vs Slow and Steady
 \begin{frame}{Total Platform Energy: Race to Halt?}
-\small
+\footnotesize
 \begin{columns}
 \begin{column}{0.55\textwidth}
-Platform has fixed power components
+Platform has fixed power components ($P_{\text{SYS}}$)
 
 \vspace{1mm}
-\textbf{DVFS impact:} $E_{\text{CPU}} \sim f^2$, $E_{\text{SYS}} \sim \frac{1}{f}$
-
-\vspace{2mm}
-\textbf{System-dominated:} \textbf{Race to Halt} (run fast, idle quickly)
+\textbf{Derivation} (for fixed work, $T \sim \frac{1}{f}$):
+\begin{itemize}
+    \item $P_{\text{CPU}} \sim f^3$ $\Rightarrow$ $E_{\text{CPU}} = P \times T \sim f^3 \times \frac{1}{f} = f^2$
+    \item $P_{\text{SYS}} = K$ $\Rightarrow$ $E_{\text{SYS}} = K \times T \sim \frac{1}{f}$
+\end{itemize}
 
 \vspace{1mm}
-\textbf{CPU-dominated:} \textbf{Lowest frequency} is best
+\textbf{System-dominated:} \textbf{Race to Halt}\\
+{\scriptsize (run fast $\rightarrow$ short $T$ $\rightarrow$ less $E_{\text{SYS}}$)}
 
-\vspace{2mm}
-$\Rightarrow$ Total energy may have \textbf{optimal frequency}
+\vspace{1mm}
+\textbf{CPU-dominated:} \textbf{Lowest frequency}\\
+{\scriptsize (slow $\rightarrow$ less $E_{\text{CPU}}$)}
+
+\vspace{1mm}
+$\Rightarrow$ Total energy has \textbf{optimal frequency}
+
+\vspace{1mm}
+\textbf{Example:} $P_{\text{SYS}}=10$W, $P_{\text{CPU}}=4$W @ 2GHz
+
+{\scriptsize
+\begin{tabular}{lcc}
+& \textbf{2GHz} & \textbf{1GHz} \\
+$T$ & 1s & 2s \\
+$E_{\text{CPU}}$ & 4J & 1J \\
+$E_{\text{SYS}}$ & 10J & 20J \\
+\textbf{Total} & \textbf{14J} & 21J \\
+\end{tabular}
+$\Rightarrow$ Race to Halt wins!
+}
 \end{column}
 \begin{column}{0.45\textwidth}
 \begin{tikzpicture}[scale=0.55]
