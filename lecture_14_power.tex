@@ -1,0 +1,983 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+\usepackage{ragged2e}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage[normalem]{ulem}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, backgrounds, matrix, fit, patterns, shapes.callouts}
+\usetheme{Madrid}
+
+% Colors
+\definecolor{myblue}{RGB}{0,0,255}
+\definecolor{mygreen}{RGB}{0,128,0}
+\definecolor{myorange}{RGB}{255,140,0}
+\definecolor{lightgreen}{RGB}{144,238,144}
+\definecolor{lightblue}{RGB}{173,216,230}
+\definecolor{corecolor}{RGB}{100,149,237}
+\definecolor{idlecolor}{RGB}{200,200,200}
+
+\title{Power and Power Management}
+\author{Computer Architecture 2360267}
+\date{2025, Lecture \#14}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%% Slide: Thermal Design Point
+\begin{frame}{Thermal Design Point (TDP)}
+\begin{columns}
+\begin{column}{0.65\textwidth}
+\textbf{TDP Power} = Maximum heat that thermal solution must dissipate
+
+\vspace{3mm}
+\textbf{Calculated as:}
+\begin{itemize}
+    \item Rolling average of 5-second power
+    \item Of highest real existing applications
+    \item \textbf{Excludes} power viruses
+\end{itemize}
+
+\vspace{3mm}
+\textbf{Power virus protection:}
+\begin{itemize}
+    \item Throttles core when detected
+    \item Limits fetch/rename bandwidth
+    \item Limits high-energy operations
+\end{itemize}
+\end{column}
+\begin{column}{0.35\textwidth}
+\begin{center}
+\begin{tikzpicture}
+    % Fan (larger, at top)
+    \node (fan) at (0.8, 4.2) {\includegraphics[width=2.2cm]{figures/noun-cpu-fan-968178.png}};
+    \node[font=\scriptsize, left] at (-0.5, 4.2) {Fan};
+
+    % Heatsink (middle, more space)
+    \node (heatsink) at (0.8, 2.2) {\includegraphics[width=1.8cm]{figures/noun-heatsink-3003201.png}};
+    \node[font=\scriptsize, left] at (-0.5, 2.2) {Heatsink};
+
+    % CPU (bottom)
+    \node (cpu) at (0.8, 0) {\includegraphics[width=1.8cm]{figures/noun-cpu-8157304.png}};
+    \node[font=\scriptsize, left] at (-0.5, 0) {CPU};
+
+    % Heat arrows
+    \draw[->, red, very thick] (1.8, 0.5) -- (1.8, 1.5);
+    \draw[->, red, very thick] (1.8, 2.9) -- (1.8, 3.5);
+    \node[red, font=\tiny, right] at (1.9, 1) {heat};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+
+\textbf{TDP impacts:} Guaranteed frequency, form factor, cooling cost, acoustic noise
+\end{frame}
+
+%% Slide: Average Power
+\begin{frame}{Average Power}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\[
+\text{Average Power} = \frac{\text{Total Energy}}{\text{Total Time}}
+\]
+
+\vspace{2mm}
+Including low-activity and idle time\\
+($\sim$90\% idle time for client systems)
+
+\vspace{4mm}
+\textbf{Average Power determines:}
+\begin{itemize}
+    \item \textbf{Battery life} -- for mobile devices
+    \item \textbf{Electricity bill}
+    \item \textbf{Air conditioning bill}
+    \item \textbf{Air pollution / CO$_2$ emissions}
+    \item \textbf{Total Cost of Ownership} (servers)
+\end{itemize}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!80, title={\small Fun Fact}, boxsep=1mm]
+\footnotesize
+\begin{center}
+\includegraphics[width=1cm]{figures/noun-search-web-8026310.png}
+$\approx$
+\includegraphics[width=1cm]{figures/noun-bulb-6991141.png}
+\end{center}
+1 web search $\approx$ 11W bulb for 1 hour\\
+Emits $\sim$7g CO$_2$\\
+\textbf{4 billion} searches daily!
+\end{tcolorbox}
+
+\begin{center}
+\includegraphics[width=1.8cm]{figures/noun-battery-7847279.png}\\
+{\scriptsize Battery Life}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Laptop Platform Power
+\begin{frame}{Laptop Platform Power}
+\begin{center}
+\textbf{Processor average power is $<$10\% of the platform (client)}
+\end{center}
+
+\vspace{1mm}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=1.1]
+    % Pie chart - angles calculated from percentages (percent * 3.6)
+    % Display 33%, CPU 10%, PSU 10%, MCH 9%, Misc 8%, GFX 8%, HDD 8%, CLK 5%, ICH 3%, Other 6%
+    \def\radius{2}
+
+    % Draw slices - cumulative angles
+    % Display: 0 to 118.8 (33%)
+    \fill[orange!70] (0,0) -- (0:\radius) arc (0:118.8:\radius) -- cycle;
+    \node[font=\tiny] at (59.4:1.3) {Display};
+    \node[font=\tiny\bfseries] at (59.4:1.7) {33\%};
+
+    % CPU: 118.8 to 154.8 (10%)
+    \fill[blue!70] (0,0) -- (118.8:\radius) arc (118.8:154.8:\radius) -- cycle;
+    \node[font=\tiny, blue!80!black] at (136.8:1.5) {CPU 10\%};
+
+    % PSU: 154.8 to 190.8 (10%)
+    \fill[green!60] (0,0) -- (154.8:\radius) arc (154.8:190.8:\radius) -- cycle;
+    \node[font=\tiny] at (172.8:1.5) {PSU};
+
+    % MCH: 190.8 to 223.2 (9%)
+    \fill[red!50] (0,0) -- (190.8:\radius) arc (190.8:223.2:\radius) -- cycle;
+    \node[font=\tiny] at (207:1.5) {MCH};
+
+    % Misc: 223.2 to 252 (8%)
+    \fill[purple!50] (0,0) -- (223.2:\radius) arc (223.2:252:\radius) -- cycle;
+    \node[font=\tiny] at (237.6:1.6) {Misc};
+
+    % GFX: 252 to 280.8 (8%)
+    \fill[cyan!60] (0,0) -- (252:\radius) arc (252:280.8:\radius) -- cycle;
+    \node[font=\tiny] at (266.4:1.5) {GFX};
+
+    % HDD: 280.8 to 309.6 (8%)
+    \fill[yellow!70] (0,0) -- (280.8:\radius) arc (280.8:309.6:\radius) -- cycle;
+    \node[font=\tiny] at (295.2:1.5) {HDD};
+
+    % CLK: 309.6 to 327.6 (5%)
+    \fill[pink!70] (0,0) -- (309.6:\radius) arc (309.6:327.6:\radius) -- cycle;
+
+    % ICH: 327.6 to 338.4 (3%)
+    \fill[brown!50] (0,0) -- (327.6:\radius) arc (327.6:338.4:\radius) -- cycle;
+
+    % Other: 338.4 to 360 (6%)
+    \fill[gray!50] (0,0) -- (338.4:\radius) arc (338.4:360:\radius) -- cycle;
+
+    % Draw outline
+    \draw[thick] (0,0) circle (\radius);
+\end{tikzpicture}
+\end{center}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{itemize}
+    \item \textbf{Display} dominates (33\%)
+    \item CPU only 10\%
+    \item Many fixed power consumers
+    \item Optimizing CPU alone has limited impact
+\end{itemize}
+
+\vspace{2mm}
+\begin{tcolorbox}[colback=blue!5, colframe=blue!50, boxsep=1mm]
+\small
+For servers: CPU power is much larger fraction of total platform power
+\end{tcolorbox}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: CPU Power Components
+\begin{frame}{CPU Power Components}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Dynamic Power:} $P_{\text{dyn}} = C \cdot V^2 \cdot f$
+\begin{itemize}
+    \item $C$ -- capacitance of toggling transistors/wires
+    \item $V$ -- voltage
+    \item $f$ -- frequency
+\end{itemize}
+
+\textbf{Key insight:} $V \sim f$ $\Rightarrow$ $P \sim f^3$
+
+\textbf{X\% frequency $\Rightarrow$ $\sim$3X\% power!}
+
+\vspace{1mm}
+\textbf{Leakage:} function of size, $V$, temp.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title={\small Example}, boxsep=1mm]
+\footnotesize
+$C = 1$nF, $V = 1$V, $f = 1$GHz, $P = 1$W\\[1mm]
+$f$ increases 1\% to 1.01GHz\\
+$V$ increases 1\% to 1.01V\\[1mm]
+$P = 1.01^2 \times 1.01 = 1.03$W\\
+\textbf{Power increases $\sim$3\%!}
+\end{tcolorbox}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.6]
+    \draw[->] (0,0) -- (3.5,0) node[right] {\small $f$};
+    \draw[->] (0,0) -- (0,2.5) node[above] {\small $P$};
+    \draw[blue, very thick, domain=0:1.35, samples=50] plot (\x*2.2, {(\x)^3 * 1.5});
+    \node[draw, fill=yellow!20, rounded corners, font=\scriptsize,
+          callout absolute pointer={(2.5, 1.5)}] at (0.8, 2.2) {$P \sim f^3$};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Performance per Watt
+\begin{frame}{Performance per Watt}
+\small
+\textbf{Goal:} Maximum performance at given power envelope (laptops, servers)
+
+\vspace{2mm}
+\textbf{When adding a new feature to increase IPC by Y\%:}
+\begin{enumerate}
+    \item New hardware adds power (dynamic + leakage)
+    \item Added IPC causes entire core to toggle more (increases $C_{\text{dyn}}$)
+\end{enumerate}
+
+\vspace{2mm}
+\begin{tcolorbox}[colback=red!5, colframe=red!60, boxsep=1mm]
+\small
+If feature increases $C$ by X\%, for fixed power must reduce frequency by $\frac{X}{3}$\%\\[1mm]
+\textbf{Net performance gain} $\approx$ Y\% $-$ $\frac{X}{3}$\%\\[1mm]
+$C_{\text{dyn}}$:IPC ratio -- if $\geq 3$ $\Rightarrow$ \textbf{net performance loss!}
+\end{tcolorbox}
+
+At $V_{\text{min}}$: if $C_{\text{dyn}}$:IPC $\geq 1$ $\Rightarrow$ loss
+\end{frame}
+
+%% Slide: Energy Efficiency
+\begin{frame}{Energy Efficiency}
+\[
+E_{\text{active}} = P_{\text{active}} \times T_{\text{active}} \approx \frac{P_{\text{active}}}{\text{Perf}_{\text{active}}}
+\]
+
+\vspace{3mm}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Energy-efficient feature:}\\
+1:1 performance : power ratio
+
+\vspace{4mm}
+\textbf{Most energy-efficient work point:}\\
+Maximum frequency at $V_{\text{min}}$
+
+\vspace{2mm}
+Above that frequency: need to increase $V$ as well
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[scale=0.7]
+    \draw[->] (0,0) -- (5,0) node[right] {\small $f$};
+    \draw[->] (0,0) -- (0,4) node[above] {\small Energy};
+
+    % Energy curve (U-shaped)
+    \draw[blue, very thick, domain=0.5:4, samples=50]
+        plot (\x, {0.5*(\x-2)^2 + 1});
+
+    % Mark optimal point
+    \fill[red] (2, 1) circle (3pt);
+    \node[below, font=\small] at (2, 0) {$f_{\text{opt}}$};
+    \node[right, font=\small, red] at (2.2, 1) {Optimal};
+
+    % Vmin line
+    \draw[dashed, orange] (2, 0) -- (2, 4);
+    \node[above, font=\tiny, orange] at (2, 3.8) {$V_{\text{min}}$};
+
+    % Annotations
+    \node[font=\tiny, align=center] at (1, 3) {Too slow\\(fixed costs)};
+    \node[font=\tiny, align=center] at (3.5, 3) {$V$ must\\increase};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Managing Power Overview
+\begin{frame}{Managing Power}
+\begin{center}
+\textbf{Typical CPU usage varies over time}
+
+\vspace{2mm}
+Bursts of high utilization \& long idle periods ($\sim$90\% idle for client)
+\end{center}
+
+\vspace{2mm}
+\begin{tikzpicture}[scale=0.85]
+    \draw[->] (0,0) -- (12,0) node[right] {Time};
+    \draw[->] (0,0) -- (0,3) node[above] {Usage};
+
+    % Usage pattern
+    \draw[blue, very thick]
+        (0,0.3) -- (1,0.3) -- (1,2.5) -- (1.5,2.5) -- (1.5,0.3) --
+        (3,0.3) -- (3,2) -- (3.3,2) -- (3.3,0.3) --
+        (5,0.3) -- (5,2.8) -- (5.8,2.8) -- (5.8,0.3) --
+        (8,0.3) -- (8,1.8) -- (8.5,1.8) -- (8.5,0.3) --
+        (10,0.3) -- (10,2.2) -- (10.4,2.2) -- (10.4,0.3) -- (11.5,0.3);
+
+    % Labels
+    \node[font=\tiny, blue] at (1.25, 2.8) {burst};
+    \node[font=\tiny, gray] at (2.2, 0.6) {idle};
+    \node[font=\tiny, gray] at (6.8, 0.6) {idle};
+\end{tikzpicture}
+
+\vspace{2mm}
+\textbf{Goal:} High power when needed; low power at idle
+\end{frame}
+
+%% Slide: P-States (DVFS)
+\begin{frame}{Managing Power: P-States (DVFS)}
+\small
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\textbf{Multiple voltage/frequency operating points}\\
+OS changes frequency based on performance needs
+
+\vspace{1mm}
+\textbf{P-States:} P0 (max freq) $\rightarrow$ Pn ($V_{\text{min}}$, energy efficient)
+
+\vspace{1mm}
+\textbf{DVFS} = Dynamic Voltage and Frequency Scaling
+
+$P = CV^2f$; $f = kV$ $\Rightarrow$ $P \sim f^3$, $E \sim f^2$
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.6]
+    \draw[->] (0,0) -- (5,0) node[right] {\tiny Freq};
+    \draw[->] (0,0) -- (0,4) node[above] {\tiny Power};
+
+    % Cubic curve P = k*f^3, with k chosen so curve passes through (4.5, 3.5)
+    % k = 3.5/4.5^3 = 0.0384, so y = 0.0384 * x^3
+    \draw[blue, very thick, domain=0:4.5, samples=50]
+        plot (\x, {0.0384*(\x)^3});
+
+    % P-state points ON the curve
+    \fill[red] (4.5, 3.5) circle (3pt);
+    \node[right, font=\tiny] at (4.6, 3.5) {P0};
+
+    \fill[orange] (3, 1.04) circle (3pt);
+    \node[right, font=\tiny] at (3.1, 1.04) {P1};
+
+    \fill[green!70!black] (1.5, 0.13) circle (3pt);
+    \node[right, font=\tiny] at (1.6, 0.13) {Pn};
+
+    \draw[->, thick, purple] (4, 2.8) to[bend right=20] (1.8, 0.35);
+\end{tikzpicture}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!50, boxsep=0.5mm]
+\footnotesize
+Small $f$ reduction $\Rightarrow$ Large $P$ savings
+\end{tcolorbox}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: C-States Overview
+\begin{frame}{Managing Power: C-States (Sleep States)}
+\begin{itemize}
+    \item OS notifies CPU when no tasks are ready (using \texttt{MWAIT} instruction)
+    \item CPU enters \textbf{sleep state} (C-state)
+    \item \textbf{Tradeoff:} Deeper sleep $\Rightarrow$ more power savings, longer wakeup
+\end{itemize}
+
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % C-state boxes
+    \node[draw, thick, fill=green!40, minimum width=2cm, minimum height=1cm] (c0) at (0,0) {C0};
+    \node[draw, thick, fill=yellow!40, minimum width=2cm, minimum height=1cm] (c1) at (3,0) {C1};
+    \node[draw, thick, fill=orange!40, minimum width=2cm, minimum height=1cm] (c3) at (6,0) {C3};
+    \node[draw, thick, fill=red!40, minimum width=2cm, minimum height=1cm] (c6) at (9,0) {C6};
+
+    \node[below, font=\small] at (c0.south) {Active};
+    \node[below, font=\small] at (c1.south) {Halt};
+    \node[below, font=\small] at (c3.south) {Deep Sleep};
+    \node[below, font=\small] at (c6.south) {Power Off};
+
+    % Arrows
+    \draw[->, thick] (c0) -- (c1);
+    \draw[->, thick] (c1) -- (c3);
+    \draw[->, thick] (c3) -- (c6);
+
+    % Labels
+    \node[above, font=\tiny] at (4.5, 0.8) {Deeper sleep $\rightarrow$};
+    \node[below, font=\tiny, align=center] at (4.5, -1.2) {More power savings\\Longer wakeup latency};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+%% Slide: C-States Details
+\begin{frame}{C-State Details}
+\small
+% C0
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\textbf{C0: Active} -- CPU executing, P-states effective
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.8]
+    \fill[red!60] (0, 0) rectangle (1, 0.5);
+    \fill[orange!60] (1, 0) rectangle (2.5, 0.5);
+    \fill[blue!60] (2.5, 0) rectangle (5, 0.5);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{1mm}
+% C1
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\textbf{C1: Halt} -- Stop pipeline \& most clocks; caches respond to snoops
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.8]
+    \fill[red!60] (0, 0) rectangle (1, 0.5);
+    \fill[orange!60] (1, 0) rectangle (2.5, 0.5);
+    \fill[gray!30] (2.5, 0) rectangle (5, 0.5);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{1mm}
+% C3
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\textbf{C3: Deep Sleep} -- Stop all clocks, flush caches
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.8]
+    \fill[red!60] (0, 0) rectangle (1, 0.5);
+    \fill[gray!30] (1, 0) rectangle (5, 0.5);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{1mm}
+% C6
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\textbf{C6: Power Gate} -- Save state, power off, $P \approx 0$
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.8]
+    \fill[gray!30] (0, 0) rectangle (5, 0.5);
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{3mm}
+% Legend
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \fill[red!60] (0, 0) rectangle (0.4, 0.3);
+    \node[right, font=\small] at (0.5, 0.15) {Leakage};
+    \fill[orange!60] (2.5, 0) rectangle (2.9, 0.3);
+    \node[right, font=\small] at (3, 0.15) {Clocks};
+    \fill[blue!60] (5, 0) rectangle (5.4, 0.3);
+    \node[right, font=\small] at (5.5, 0.15) {Logic};
+    \fill[gray!30] (7.5, 0) rectangle (7.9, 0.3);
+    \node[right, font=\small] at (8, 0.15) {Off};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+%% Slide: Putting it Together - Animation 1
+\begin{frame}{Putting it Together: P-States and C-States}
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    \draw[->] (0,0) -- (11,0) node[right] {Time};
+    \draw[->] (0,0) -- (0,4) node[above] {Power};
+
+    % Power levels
+    \draw[dashed, gray] (0, 3.5) -- (10.5, 3.5) node[right, font=\tiny] {P0 (max)};
+    \draw[dashed, gray] (0, 2.5) -- (10.5, 2.5) node[right, font=\tiny] {P1};
+    \draw[dashed, gray] (0, 1.5) -- (10.5, 1.5) node[right, font=\tiny] {P2};
+
+    % Active periods at P0
+    \fill[blue!60] (0.5, 0) rectangle (2, 3.5);
+    \node[white, font=\tiny] at (1.25, 1.75) {C0/P0};
+
+    % C1 dip
+    \fill[green!40] (2, 0) rectangle (2.5, 0.5);
+    \node[font=\tiny] at (2.25, 0.8) {C1};
+
+    % Back to P0
+    \fill[blue!60] (2.5, 0) rectangle (3.5, 3.5);
+    \node[white, font=\tiny] at (3, 1.75) {C0/P0};
+
+    % Longer idle - deeper C-states
+    \fill[green!40] (3.5, 0) rectangle (4, 0.5);
+    \fill[yellow!60] (4, 0) rectangle (4.5, 0.3);
+    \fill[orange!60] (4.5, 0) rectangle (5.5, 0.15);
+    \node[font=\tiny] at (3.75, 0.8) {C1};
+    \node[font=\tiny] at (4.25, 0.6) {C3};
+    \node[font=\tiny] at (5, 0.45) {C6};
+
+    % Lower P-state operation
+    \fill[cyan!60] (5.5, 0) rectangle (7, 2.5);
+    \node[white, font=\tiny] at (6.25, 1.25) {C0/P1};
+
+    % More idle
+    \fill[green!40] (7, 0) rectangle (7.5, 0.4);
+    \fill[yellow!60] (7.5, 0) rectangle (8.5, 0.25);
+
+    % Even lower P-state
+    \fill[purple!40] (8.5, 0) rectangle (10, 1.5);
+    \node[white, font=\tiny] at (9.25, 0.75) {C0/P2};
+\end{tikzpicture}
+\end{center}
+
+\vspace{2mm}
+\begin{itemize}
+    \item OS tracks CPU utilization history
+    \item Switches to lower P-state when low activity detected
+    \item Enters deeper C-states during idle periods
+\end{itemize}
+\end{frame}
+
+%% Slide: Turbo Mode
+\begin{frame}{Turbo Mode}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Without Turbo:}
+\begin{itemize}
+    \item All cores run at same frequency
+    \item Frequency limited by TDP
+\end{itemize}
+
+\vspace{3mm}
+\textbf{With Turbo Mode:}
+\begin{itemize}
+    \item Cores without threads $\rightarrow$ deep C-state (power gated)
+    \item Use thermal budget of \textbf{idle} cores
+    \item Boost frequency of \textbf{active} cores
+\end{itemize}
+
+\vspace{2mm}
+\small
+\textit{OS schedules threads; cores without work sleep.\\
+Turbo uses the freed thermal headroom.}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[scale=0.55]
+    % No Turbo
+    \node[font=\small\bfseries] at (2, 4.5) {No Turbo};
+    \foreach \i in {0,1,2,3} {
+        \fill[corecolor] (\i*1.1, 0) rectangle (\i*1.1+1, 2.5);
+        \node[white, font=\tiny] at (\i*1.1+0.5, 1.25) {Core \i};
+    }
+    \draw[dashed, red] (-0.2, 2.5) -- (4.6, 2.5);
+    \node[right, font=\tiny, red] at (4.7, 2.5) {TDP limit};
+
+    % Turbo - shifted down
+    \node[font=\small\bfseries] at (2, -0.8) {With Turbo};
+    % Cores 2,3 inactive (power gated)
+    \fill[idlecolor] (2.2, -5) rectangle (3.2, -4.8);
+    \fill[idlecolor] (3.3, -5) rectangle (4.3, -4.8);
+    \node[font=\tiny] at (2.7, -4.4) {off};
+    \node[font=\tiny] at (3.8, -4.4) {off};
+
+    % Cores 0,1 boosted
+    \fill[corecolor] (0, -5) rectangle (1, -1.5);
+    \fill[corecolor] (1.1, -5) rectangle (2.1, -1.5);
+    \node[white, font=\tiny, rotate=90] at (0.5, -3.25) {Core 0};
+    \node[white, font=\tiny, rotate=90] at (1.6, -3.25) {Core 1};
+
+    \draw[dashed, red] (-0.2, -2.5) -- (4.6, -2.5);
+    \node[right, font=\tiny, red] at (4.7, -2.5) {TDP limit};
+
+    % Boost arrow
+    \draw[->, green!60!black, very thick] (1.5, -2.7) -- (1.5, -1.7);
+    \node[font=\tiny, green!60!black] at (2.5, -2) {Boost!};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Core and Graphics Power Budgeting
+\begin{frame}{Core and Graphics Power Budgeting}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+    \item Cores and Graphics on same die
+    \item Separate voltage/frequency controls
+    \item Tight HW control
+    \item \textbf{Power budget can shift} between cores and graphics
+\end{itemize}
+
+\vspace{3mm}
+Sum of max power $>$ Total package power\\
+(realistic concurrent max is lower)
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[scale=0.6]
+    % Total budget bar
+    \draw[thick] (0, 0) rectangle (5, 0.8);
+    \node[above, font=\small] at (2.5, 0.8) {Total Package Power};
+
+    % Heavy CPU scenario
+    \node[font=\tiny, left] at (-0.2, -1) {Heavy CPU:};
+    \fill[blue!60] (0, -1.5) rectangle (4, -0.7);
+    \fill[green!40] (4, -1.5) rectangle (5, -0.7);
+    \node[white, font=\tiny] at (2, -1.1) {CPU};
+    \node[font=\tiny] at (4.5, -1.1) {GFX};
+
+    % Heavy GFX scenario
+    \node[font=\tiny, left] at (-0.2, -2.5) {Heavy GFX:};
+    \fill[blue!40] (0, -3) rectangle (1.5, -2.2);
+    \fill[green!60] (1.5, -3) rectangle (5, -2.2);
+    \node[font=\tiny] at (0.75, -2.6) {CPU};
+    \node[white, font=\tiny] at (3.25, -2.6) {Graphics};
+
+    % Balanced
+    \node[font=\tiny, left] at (-0.2, -4) {Balanced:};
+    \fill[blue!50] (0, -4.5) rectangle (2.5, -3.7);
+    \fill[green!50] (2.5, -4.5) rectangle (5, -3.7);
+    \node[white, font=\tiny] at (1.25, -4.1) {CPU};
+    \node[white, font=\tiny] at (3.75, -4.1) {GFX};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Heterogeneous Processors
+\begin{frame}{Heterogeneous Processors}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\textbf{Combining ``big'' and ``small'' cores}
+
+\vspace{3mm}
+\textbf{Big cores:}
+\begin{itemize}
+    \item High-performance, high-power
+    \item For demanding compute tasks
+    \item Excel on single-threaded workloads
+\end{itemize}
+
+\vspace{2mm}
+\textbf{Small cores:}
+\begin{itemize}
+    \item Energy-efficient
+    \item Excel on low QoS workloads
+    \item Many small cores = efficient multi-threaded
+\end{itemize}
+
+\vspace{3mm}
+\textbf{ISA compatible} between big and small\\
+$\Rightarrow$ Threads can migrate between core types
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.7]
+    % Big cores
+    \fill[blue!60] (0, 2) rectangle (1.5, 4);
+    \fill[blue!60] (1.8, 2) rectangle (3.3, 4);
+    \node[white, font=\small] at (0.75, 3) {Big};
+    \node[white, font=\small] at (2.55, 3) {Big};
+
+    % Small cores
+    \fill[green!50] (0, 0) rectangle (0.7, 1.4);
+    \fill[green!50] (0.9, 0) rectangle (1.6, 1.4);
+    \fill[green!50] (1.8, 0) rectangle (2.5, 1.4);
+    \fill[green!50] (2.7, 0) rectangle (3.4, 1.4);
+    \node[font=\tiny] at (0.35, 0.7) {S};
+    \node[font=\tiny] at (1.25, 0.7) {S};
+    \node[font=\tiny] at (2.15, 0.7) {S};
+    \node[font=\tiny] at (3.05, 0.7) {S};
+
+    % Labels
+    \node[font=\tiny] at (1.65, 4.3) {High performance};
+    \node[font=\tiny] at (1.65, -0.3) {Energy efficient};
+
+    % Migration arrows
+    \draw[->, thick, orange] (0.75, 2) to[bend right=30] (0.35, 1.4);
+    \draw[->, thick, orange] (2.55, 2) to[bend left=30] (3.05, 1.4);
+\end{tikzpicture}
+
+\vspace{3mm}
+\begin{tcolorbox}[colback=gray!10, boxsep=1mm]
+\small
+Example: ARM big.LITTLE (2011)\\
+Cortex-A15 (big) + Cortex-A7 (little)
+\end{tcolorbox}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Heterogeneous Processor Scheduling
+\begin{frame}{Heterogeneous Processor: Scheduling Approaches}
+\begin{columns}
+\begin{column}{0.33\textwidth}
+\textbf{Clustered Switching}
+\begin{tikzpicture}[scale=0.45]
+    \fill[blue!40] (0, 2) rectangle (0.8, 3.2);
+    \fill[blue!40] (1, 2) rectangle (1.8, 3.2);
+    \fill[green!40] (0, 0) rectangle (0.6, 0.9);
+    \fill[green!40] (0.7, 0) rectangle (1.3, 0.9);
+
+    % OS sees one
+    \draw[thick, red, dashed] (-0.2, 1.8) rectangle (2, 3.4);
+    \node[font=\tiny, red] at (0.9, 3.6) {OR};
+    \draw[thick, red, dashed] (-0.2, -0.2) rectangle (1.5, 1.1);
+\end{tikzpicture}
+
+\vspace{1mm}
+\footnotesize
+OS sees one cluster at a time. Switch entire cluster based on load.
+\end{column}
+\begin{column}{0.33\textwidth}
+\textbf{In-Kernel Switching}
+\begin{tikzpicture}[scale=0.45]
+    \fill[blue!40] (0, 1.5) rectangle (0.8, 2.5);
+    \fill[green!40] (0, 0) rectangle (0.5, 0.8);
+    \draw[<->, thick] (0.4, 0.9) -- (0.4, 1.4);
+
+    \fill[blue!40] (1.2, 1.5) rectangle (2, 2.5);
+    \fill[green!40] (1.2, 0) rectangle (1.7, 0.8);
+    \draw[<->, thick] (1.6, 0.9) -- (1.6, 1.4);
+
+    \draw[thick, orange, dashed] (-0.2, -0.3) rectangle (1, 2.7);
+    \draw[thick, orange, dashed] (1, -0.3) rectangle (2.2, 2.7);
+    \node[font=\tiny] at (0.4, -0.5) {vCore1};
+    \node[font=\tiny] at (1.6, -0.5) {vCore2};
+\end{tikzpicture}
+
+\vspace{1mm}
+\footnotesize
+Paired cores form virtual cores. One active at a time per pair.
+\end{column}
+\begin{column}{0.33\textwidth}
+\textbf{Global Scheduling}
+\begin{tikzpicture}[scale=0.45]
+    \fill[blue!40] (0, 1.5) rectangle (0.8, 2.5);
+    \fill[blue!40] (1, 1.5) rectangle (1.8, 2.5);
+    \fill[green!40] (0, 0) rectangle (0.5, 0.8);
+    \fill[green!40] (0.6, 0) rectangle (1.1, 0.8);
+    \fill[green!40] (1.2, 0) rectangle (1.7, 0.8);
+    \fill[green!40] (1.8, 0) rectangle (2.3, 0.8);
+\end{tikzpicture}
+
+\vspace{1mm}
+\footnotesize
+OS sees all cores. Direct task migration. Most flexible.
+\end{column}
+\end{columns}
+
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+    \draw[->, thick] (0,0) -- (8,0);
+    \node[below, font=\small] at (0, -0.2) {Simple};
+    \node[below, font=\small] at (8, -0.2) {Flexible};
+    \node[above, font=\tiny] at (1.5, 0.1) {Clustered};
+    \node[above, font=\tiny] at (4, 0.1) {In-Kernel};
+    \node[above, font=\tiny] at (6.5, 0.1) {Global};
+    \fill (1.5, 0) circle (3pt);
+    \fill (4, 0) circle (3pt);
+    \fill (6.5, 0) circle (3pt);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+%% Slide: Turbo Boost 2.0
+\begin{frame}{Intel Turbo Boost Technology 2.0}
+\footnotesize
+\begin{columns}
+\begin{column}{0.55\textwidth}
+After idle, system accumulates ``energy budget'' to accommodate high power for short bursts. In steady state, power stabilizes at TDP.
+
+\vspace{2mm}
+\textbf{P-State ranges:}
+\begin{itemize}
+    \item \textbf{P1}: Guaranteed freq (worst case)
+    \item \textbf{P0}: Max turbo freq
+    \item \textbf{P1--P0}: HW controlled
+    \item \textbf{Pn}: Energy efficient
+\end{itemize}
+
+OS treats P0 as any other P-state; P1 to P0 is HW controlled
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.55]
+    \draw[->] (0,0) -- (7,0) node[right] {\tiny Time};
+    \draw[->] (0,0) -- (0,5) node[above] {\tiny Power};
+
+    % TDP line
+    \draw[dashed, red, thick] (0, 2.5) -- (6.5, 2.5);
+    \node[right, font=\tiny, red] at (6.6, 2.5) {TDP};
+
+    % Power trace
+    \draw[blue, very thick]
+        (0, 0.5) -- (1, 0.5) -- (1, 4) -- (2, 3.5) -- (2.5, 2.8) -- (3, 2.5) --
+        (4, 2.5) -- (4.5, 0.5) -- (5.5, 0.5) -- (5.5, 4.2) -- (6, 3) -- (6.5, 2.5);
+
+    % Labels
+    \node[font=\tiny, blue] at (1.5, 4.3) {Turbo};
+    \node[font=\tiny] at (5, 0.8) {Idle};
+
+    % Budget buildup
+    \draw[->, green!60!black, thick] (4.5, 1) -- (5.5, 1);
+    \node[font=\tiny, green!60!black, below] at (5, 0.9) {Budget};
+\end{tikzpicture}
+
+\vspace{1mm}
+\colorbox{blue!10}{\parbox{0.95\linewidth}{\scriptsize Use accumulated budget to enhance responsiveness}}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: CMP Performance vs Power
+\begin{frame}{CMP: Performance vs Power}
+\small
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!70, boxsep=1mm]
+$2\times$ CPUs $\neq$ $2\times$ performance; $2\times$ CPUs $\Rightarrow$ $\frac{1}{2}$ power each
+\end{tcolorbox}
+
+\vspace{2mm}
+\textbf{Example:} CPU at 3.8GHz for 100W. \textbf{Dual-core:} 50W per CPU
+
+\vspace{1mm}
+$P \sim V^3$: $\frac{V_{\text{orig}}^3}{V_{\text{CMP}}^3} = \frac{100}{50}$ $\Rightarrow$ $V_{\text{CMP}} = 0.8 V_{\text{orig}}$
+
+$f \sim V$: $f_{\text{CMP}} = 0.8 \times 3.8 = 3.0$GHz
+
+\vspace{2mm}
+\textbf{Result:} 2 cores @ 3.0GHz vs 1 core @ 3.8GHz\\
+Multi-threaded: $2 \times \frac{3.0}{3.8} = 1.58\times$ speedup (not $2\times$!)
+\end{frame}
+
+%% Slide: Example Problem
+\begin{frame}{Example: Power/Performance Trade-off}
+\footnotesize
+\textbf{Problem:} Design MP system with 60W envelope ($\frac{2}{3}$ for cores = 40W)
+
+\vspace{1mm}
+\begin{columns}
+\begin{column}{0.4\textwidth}
+\begin{tabular}{lcc}
+\toprule
+& \textbf{Big} & \textbf{Small} \\
+\midrule
+Area & 4mm$^2$ & 2mm$^2$ \\
+IPC & 3 & 2 \\
+\bottomrule
+\end{tabular}
+
+Leakage: 0.25W/mm$^2$, $C = \text{IPC} \times 750$pF
+\end{column}
+\begin{column}{0.6\textwidth}
+At $V_{\text{min}} = 0.7$V: Big $f=1.35$GHz, Small $f=1.45$GHz
+
+\vspace{1mm}
+\textbf{Solution:}
+\begin{itemize}
+    \item Big: $P = 2.25 \times 0.49 \times 1.35 + 1 = 2.49$W $\Rightarrow$ 16 cores
+    \item Small: $P = 1.5 \times 0.49 \times 1.45 + 0.5 = 1.57$W $\Rightarrow$ 25 cores
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{1mm}
+\textbf{MP Perf:} Big: $16 \times 3 \times 1.35 = 64.8$ Ginst/s \quad Small: $25 \times 2 \times 1.45 = \mathbf{72.5}$ Ginst/s
+\end{frame}
+
+%% Slide: Race to Halt vs Slow and Steady
+\begin{frame}{Total Platform Energy: Race to Halt?}
+\small
+\begin{columns}
+\begin{column}{0.55\textwidth}
+Platform has fixed power components
+
+\vspace{1mm}
+\textbf{DVFS impact:} $E_{\text{CPU}} \sim f^2$, $E_{\text{SYS}} \sim \frac{1}{f}$
+
+\vspace{2mm}
+\textbf{System-dominated:} \textbf{Race to Halt} (run fast, idle quickly)
+
+\vspace{1mm}
+\textbf{CPU-dominated:} \textbf{Lowest frequency} is best
+
+\vspace{2mm}
+$\Rightarrow$ Total energy may have \textbf{optimal frequency}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.55]
+    \draw[->] (0,0) -- (5,0) node[right] {\tiny $f$};
+    \draw[->] (0,0) -- (0,4) node[above] {\tiny Energy};
+
+    % E_CPU ~ f^2
+    \draw[blue, thick, domain=0.3:2, samples=30]
+        plot (\x*2, {0.5*\x*\x});
+    \node[blue, font=\tiny, right] at (4.2, 2.2) {$E_{\text{CPU}}$};
+
+    % E_SYS ~ 1/f (displayed as fraction)
+    \draw[red, thick, domain=0.5:2, samples=30]
+        plot (\x*2, {1.5/\x});
+    \node[red, font=\tiny, right] at (4.2, 0.9) {$E_{\text{SYS}}$};
+
+    % Total
+    \draw[purple, very thick, domain=0.5:2, samples=30]
+        plot (\x*2, {0.5*\x*\x + 1.5/\x});
+    \node[purple, font=\tiny, right] at (4.2, 3.5) {$E_{\text{total}}$};
+
+    % Optimal point
+    \fill[green!70!black] (2, 2) circle (3pt);
+    \node[below, font=\tiny, green!70!black] at (2, 0) {$f_{\text{opt}}$};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Summary
+\begin{frame}{Summary}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Power Fundamentals:}
+\begin{itemize}
+    \item $P_{\text{dyn}} = CV^2f \sim f^3$
+    \item TDP vs Average Power
+    \item Performance per Watt
+    \item Energy efficiency at $V_{\text{min}}$
+\end{itemize}
+
+\vspace{3mm}
+\textbf{Power Management:}
+\begin{itemize}
+    \item P-States (DVFS)
+    \item C-States (sleep)
+    \item Turbo Mode
+    \item Core/Graphics budgeting
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\textbf{Advanced Topics:}
+\begin{itemize}
+    \item Heterogeneous processors
+    \item big.LITTLE architecture
+    \item Scheduling approaches
+    \item CMP power trade-offs
+\end{itemize}
+
+\vspace{3mm}
+\begin{tcolorbox}[colback=green!10, colframe=green!60]
+\textbf{Key Insight:}\\
+Power management is about\\
+\textbf{right power at right time}\\
+High when needed, low otherwise
+\end{tcolorbox}
+\end{column}
+\end{columns}
+\end{frame}
+
+\end{document}
