@@ -28,6 +28,12 @@
 
 \frame{\titlepage}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Power Fundamentals}
+
 %% Slide: Thermal Design Point
 \begin{frame}{Thermal Design Point (TDP)}
 \begin{columns}
@@ -117,6 +123,14 @@ Emits $\sim$7g CO$_2$\\
 \end{columns}
 \end{frame}
 
+%% Slide: Battery Life Comparison
+\begin{frame}{Battery Life: Why Power Matters}
+\begin{center}
+\includegraphics[width=0.75\textwidth]{figures/best-gaming-laptop-battery-life-2023-2048x1152.png}\\[-1mm]
+{\tiny Source: \href{https://jarrods.tech/these-gaming-laptops-have-the-best-battery-life-in-2023/}{jarrods.tech} (2023)}
+\end{center}
+\end{frame}
+
 %% Slide: Laptop Platform Power
 \begin{frame}{Laptop Platform Power}
 \begin{center}
@@ -183,6 +197,36 @@ Emits $\sim$7g CO$_2$\\
     \item Many fixed power consumers
     \item Optimizing CPU alone has limited impact
 \end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+%% Slide: Smartphone Platform Power
+\begin{frame}{Smartphone Platform Power}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\begin{center}
+\includegraphics[width=\textwidth]{figures/odpm.png}
+\end{center}
+\end{column}
+\begin{column}{0.45\textwidth}
+\textbf{Average power for 1-minute activities:}
+\begin{itemize}
+    \item YouTube 720p video
+    \item Google Meet video call
+    \item Instagram feed scrolling
+    \item Clash of Clans gaming
+    \item Idle standby
+\end{itemize}
+
+\vspace{2mm}
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!70, boxsep=1mm]
+\small
+\textbf{Cellular radio} often dominates power -- even more than display or CPU!
+\end{tcolorbox}
+
+\vspace{1mm}
+{\tiny Gupta et al., ``3 W's of smartphone power consumption'', 2024}
 \end{column}
 \end{columns}
 \end{frame}
@@ -263,7 +307,7 @@ CPU optimization has major impact on server TCO!
 
 \textbf{Key insight:} $V \sim f$ $\Rightarrow$ $P \sim f^3$
 
-\textbf{X\% frequency $\Rightarrow$ $\sim$3X\% power!}
+\textbf{+X\% frequency $\Rightarrow$ $\sim$+3X\% power!}
 
 \vspace{1mm}
 \textbf{Leakage:} function of size, $V$, temp.
@@ -358,6 +402,8 @@ Above that frequency: need to increase $V$ as well
 \end{column}
 \end{columns}
 \end{frame}
+
+\section{Power Management}
 
 %% Slide: Managing Power Overview
 \begin{frame}{Managing Power}
@@ -721,6 +767,8 @@ Sum of max power $>$ Total package power\\
 \end{columns}
 \end{frame}
 
+\section{Heterogeneous and Multi-Core}
+
 %% Slide: Heterogeneous Processors
 \begin{frame}{Heterogeneous Processors}
 \begin{columns}
@@ -933,14 +981,22 @@ Multi-threaded: $2 \times \frac{3.0}{3.8} = 1.58\times$ speedup (not $2\times$!)
 
 \vspace{2mm}
 \begin{center}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-& \textbf{Big Core} & \textbf{Small Core} & \textbf{Given} \\
+\rowcolor{gray!30} & \textbf{Big Core} & \textbf{Small Core} \\
 \midrule
-Area & 4mm$^2$ & 2mm$^2$ & Leakage: 0.25W/mm$^2$ \\
-IPC & 3 & 2 & $C = \text{IPC} \times 750$pF \\
-Freq @ $V_{\text{min}}=0.7$V & 1.35GHz & 1.45GHz & \\
+Area & 4mm$^2$ & 2mm$^2$ \\
+IPC & 3 & 2 \\
+Freq @ $V_{\text{min}}=0.7$V & 1.35GHz & 1.45GHz \\
 \bottomrule
+\end{tabular}
+\hspace{5mm}
+\begin{tabular}{l}
+\rowcolor{gray!30} \textbf{Given} \\
+\midrule
+Leakage: 0.25W/mm$^2$ \\
+$C = \text{IPC} \times 750$pF \\
+\\
 \end{tabular}
 \end{center}
 
@@ -961,7 +1017,7 @@ Freq @ $V_{\text{min}}=0.7$V & 1.35GHz & 1.45GHz & \\
 \begin{frame}{Total Platform Energy: Race to Halt?}
 \footnotesize
 \begin{columns}
-\begin{column}{0.55\textwidth}
+\begin{column}{0.5\textwidth}
 Platform has fixed power components ($P_{\text{SYS}}$)
 
 \vspace{1mm}
@@ -981,13 +1037,38 @@ Platform has fixed power components ($P_{\text{SYS}}$)
 
 \vspace{1mm}
 $\Rightarrow$ Total energy has \textbf{optimal frequency}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[scale=0.7]
+    \draw[->] (0,0) -- (5,0) node[right] {\small $f$};
+    \draw[->] (0,0) -- (0,3.5) node[above] {\small Energy};
+
+    % E_CPU ~ f^2
+    \draw[blue, thick, domain=0.3:2, samples=30]
+        plot (\x*2, {0.4*\x*\x});
+    \node[blue, font=\small, right] at (4.2, 1.8) {$E_{\text{CPU}}$};
+
+    % E_SYS ~ 1/f (displayed as fraction)
+    \draw[red, thick, domain=0.5:2, samples=30]
+        plot (\x*2, {1.2/\x});
+    \node[red, font=\small, right] at (4.2, 0.7) {$E_{\text{SYS}}$};
+
+    % Total
+    \draw[purple, very thick, domain=0.5:2, samples=30]
+        plot (\x*2, {0.4*\x*\x + 1.2/\x});
+    \node[purple, font=\small, right] at (4.2, 2.8) {$E_{\text{total}}$};
+
+    % Optimal point
+    \fill[green!70!black] (2, 1.6) circle (4pt);
+    \node[below, font=\small, green!70!black] at (2, 0) {$f_{\text{opt}}$};
+\end{tikzpicture}
 
 \vspace{1mm}
 \textbf{Example:} $P_{\text{SYS}}=10$W, $P_{\text{CPU}}=4$W @ 2GHz
 
 {\scriptsize
 \begin{tabular}{lcc}
-& \textbf{2GHz} & \textbf{1GHz} \\
+\rowcolor{gray!30} & \textbf{2GHz} & \textbf{1GHz} \\
 $T$ & 1s & 2s \\
 $E_{\text{CPU}}$ & 4J & 1J \\
 $E_{\text{SYS}}$ & 10J & 20J \\
@@ -995,31 +1076,6 @@ $E_{\text{SYS}}$ & 10J & 20J \\
 \end{tabular}
 $\Rightarrow$ Race to Halt wins!
 }
-\end{column}
-\begin{column}{0.45\textwidth}
-\begin{tikzpicture}[scale=0.55]
-    \draw[->] (0,0) -- (5,0) node[right] {\tiny $f$};
-    \draw[->] (0,0) -- (0,4) node[above] {\tiny Energy};
-
-    % E_CPU ~ f^2
-    \draw[blue, thick, domain=0.3:2, samples=30]
-        plot (\x*2, {0.5*\x*\x});
-    \node[blue, font=\tiny, right] at (4.2, 2.2) {$E_{\text{CPU}}$};
-
-    % E_SYS ~ 1/f (displayed as fraction)
-    \draw[red, thick, domain=0.5:2, samples=30]
-        plot (\x*2, {1.5/\x});
-    \node[red, font=\tiny, right] at (4.2, 0.9) {$E_{\text{SYS}}$};
-
-    % Total
-    \draw[purple, very thick, domain=0.5:2, samples=30]
-        plot (\x*2, {0.5*\x*\x + 1.5/\x});
-    \node[purple, font=\tiny, right] at (4.2, 3.5) {$E_{\text{total}}$};
-
-    % Optimal point
-    \fill[green!70!black] (2, 2) circle (3pt);
-    \node[below, font=\tiny, green!70!black] at (2, 0) {$f_{\text{opt}}$};
-\end{tikzpicture}
 \end{column}
 \end{columns}
 \end{frame}
