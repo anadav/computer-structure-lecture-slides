@@ -682,40 +682,61 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \end{itemize}
 \end{column}
 \begin{column}{0.45\textwidth}
-\begin{tikzpicture}[scale=0.7]
-    % No Turbo
-    \node[font=\small\bfseries] at (2.2, 3.2) {No Turbo};
-    \foreach \i in {0,1,2,3} {
-        \fill[corecolor] (\i*1.2, 0) rectangle (\i*1.2+1, 2.5);
-    }
-    \node[white, font=\scriptsize] at (0.5, 1.25) {0};
-    \node[white, font=\scriptsize] at (1.7, 1.25) {1};
-    \node[white, font=\scriptsize] at (2.9, 1.25) {2};
-    \node[white, font=\scriptsize] at (4.1, 1.25) {3};
-    \draw[dashed, red] (-0.2, 2.5) -- (5.2, 2.5);
-    \node[right, font=\tiny, red] at (5.3, 2.5) {TDP};
+\begin{tikzpicture}[scale=0.7,
+    % Styles
+    core/.style={fill=corecolor, minimum width=1cm, minimum height=1.8cm, inner sep=0, anchor=south west},
+    boosted core/.style={fill=corecolor, minimum width=1cm, minimum height=2.3cm, inner sep=0, anchor=south west},
+    idle core/.style={fill=idlecolor, minimum width=1cm, minimum height=0.2cm, inner sep=0, anchor=south west},
+    core label/.style={white, font=\scriptsize},
+    section title/.style={font=\small\bfseries},
+    tdp line/.style={dashed, red},
+    tdp label/.style={font=\tiny, red},
+    core gap/.style={xshift=2mm},
+]
+    % === No Turbo Section ===
+    % Draw 4 equal cores - each relative to previous with gap
+    \node[core] (nt-core-0) at (0, 0) {};
+    \node[core, core gap] (nt-core-1) at (nt-core-0.south east) {};
+    \node[core, core gap] (nt-core-2) at (nt-core-1.south east) {};
+    \node[core, core gap] (nt-core-3) at (nt-core-2.south east) {};
+    \node[core label] at (nt-core-0) {0};
+    \node[core label] at (nt-core-1) {1};
+    \node[core label] at (nt-core-2) {2};
+    \node[core label] at (nt-core-3) {3};
 
-    % Turbo - shifted down
-    \node[font=\small\bfseries] at (2.2, -0.5) {With Turbo};
-    % Cores 2,3 inactive (power gated)
-    \fill[idlecolor] (2.4, -4) rectangle (3.4, -3.8);
-    \fill[idlecolor] (3.6, -4) rectangle (4.6, -3.8);
-    \node[font=\scriptsize, above] at (2.9, -3.8) {2};
-    \node[font=\scriptsize, above] at (4.1, -3.8) {3};
-    \node[font=\tiny, gray] at (3.5, -4.3) {(off)};
+    % Section title centered above all cores
+    \node[section title, above=3mm of $(nt-core-1.north)!0.5!(nt-core-2.north)$] (no-turbo-title) {No Turbo};
 
-    % Cores 0,1 boosted
-    \fill[corecolor] (0, -4) rectangle (1, -1);
-    \fill[corecolor] (1.2, -4) rectangle (2.2, -1);
-    \node[white, font=\scriptsize] at (0.5, -2.5) {0};
-    \node[white, font=\scriptsize] at (1.7, -2.5) {1};
+    % TDP line at top of cores
+    \draw[tdp line] ([xshift=-2mm]nt-core-0.north west) -- ([xshift=2mm]nt-core-3.north east)
+        node[tdp label, right] {TDP};
 
-    \draw[dashed, red] (-0.2, -2) -- (5.2, -2);
-    \node[right, font=\tiny, red] at (5.3, -2) {TDP};
+    % === With Turbo Section ===
+    % Boosted cores 0,1 (taller) - positioned below first section
+    \node[boosted core, below=12mm of nt-core-0.south west, anchor=north west] (t-core-0) {};
+    \node[boosted core, core gap] (t-core-1) at (t-core-0.south east) {};
+    \node[core label] at (t-core-0) {0};
+    \node[core label] at (t-core-1) {1};
 
-    % Boost arrow and label - to the right
-    \draw[->, green!60!black, very thick] (2.5, -2.2) -- (2.5, -1.2);
-    \node[font=\scriptsize, green!60!black, right] at (2.6, -1.7) {Boost!};
+    % Idle cores 2,3 (power gated - flat) - same bottom alignment
+    \node[idle core, core gap] (t-core-2) at (t-core-1.south east) {};
+    \node[idle core, core gap] (t-core-3) at (t-core-2.south east) {};
+    \node[font=\scriptsize, above=1mm of t-core-2] {2};
+    \node[font=\scriptsize, above=1mm of t-core-3] {3};
+    \node[font=\tiny, gray, below=2mm of $(t-core-2.south)!0.5!(t-core-3.south)$] {(off)};
+
+    % Section title at same x as "No Turbo", above boosted cores
+    \node[section title] at (no-turbo-title |- t-core-0.north) [above=3mm] {With Turbo};
+
+    % TDP line at normal core height (1.8cm from bottom, boosted cores exceed it)
+    \draw[tdp line] ([xshift=-2mm]t-core-0.south west) ++(0, 1.8cm) coordinate (tdp-start) --
+        ([xshift=2mm]t-core-3.south east |- tdp-start) coordinate (tdp-end)
+        node[tdp label, right] {TDP};
+
+    % Boost arrow from TDP line to top of boosted core
+    \draw[->, green!60!black, very thick]
+        ([xshift=2mm]tdp-start -| t-core-1.east) -- ([xshift=2mm]t-core-1.north east)
+        node[right, font=\scriptsize, green!60!black, midway] {Boost!};
 \end{tikzpicture}
 \end{column}
 \end{columns}
