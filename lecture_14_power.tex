@@ -601,6 +601,46 @@ Small $f$ reduction $\Rightarrow$ Large $P$ savings
 \end{center}
 \end{frame}
 
+%% Slide: C-State Power Table
+\begin{frame}{C-State Power (Intel Skylake-SP Server)}
+\small
+\begin{center}
+\begin{tabular}{llccc}
+\toprule
+\rowcolor{gray!30} \textbf{C-State} & \textbf{Description} & \textbf{Transition} & \textbf{Target} & \textbf{Power/} \\
+\rowcolor{gray!30} & & \textbf{time} & \textbf{residency} & \textbf{core} \\
+\midrule
+C0 (P1) & Active, base freq & --- & --- & $\sim$4 W \\
+C0 (Pn) & Active, $V_{\text{min}}$ freq & --- & --- & $\sim$1 W \\
+\rowcolor{yellow!20} C1 (P1) & Clock-gated (halt) & 2 $\mu$s & 2 $\mu$s & 1.44 W \\
+\rowcolor{yellow!20} C1E (Pn) & Clock-gated + $V_{\text{min}}$ & 10 $\mu$s & 20 $\mu$s & 0.88 W \\
+\rowcolor{orange!20} C6 & Power-gated, caches flushed & 133 $\mu$s & 600 $\mu$s & $\sim$0.1 W \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{2mm}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\footnotesize
+\textbf{Key observations:}
+\begin{itemize}
+    \item C6 saves $\sim$40$\times$ power vs C0
+    \item 600$\mu$s residency to amortize transition
+    \item C1E: good balance for short idle periods
+\end{itemize}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{tcolorbox}[colback=blue!5, colframe=blue!50, boxsep=1mm]
+\footnotesize
+\textbf{Target residency}: min.\ time in state to justify transition energy
+\end{tcolorbox}
+\end{column}
+\end{columns}
+
+\hfill{\tiny Haj-Yahya et al., ``AgileWatts'', MICRO 2022}
+\end{frame}
+
 %% Slide: Putting it Together - Animation 1
 \begin{frame}{Putting it Together: P-States and C-States}
 \begin{center}
@@ -880,6 +920,9 @@ Cortex-A15 (big) + Cortex-A7 (little)
     desc/.style={font=\scriptsize, text width=3cm, align=center, anchor=north},
     % Cluster box style
     cluster box/.style={draw, thick, dashed, rounded corners=2pt, inner sep=1.5mm},
+    % Callout base style (pointer set per-node)
+    callout base/.style={rectangle callout, draw, fill=yellow!20, font=\scriptsize,
+                    text width=2.8cm, align=left, rounded corners=1pt},
 ]
     % === Column positions (spread wider) ===
     \coordinate (col1) at (0, 0);
@@ -899,7 +942,7 @@ Cortex-A15 (big) + Cortex-A7 (little)
     \node[fit=(clust-lit1)(clust-lit2), cluster box, red] (clust-lit-box) {};
 
     % OR label
-    \node[font=\scriptsize, red] at ($(clust-big-box.south)!0.5!(clust-lit-box.north)$) {OR};
+    \node[font=\scriptsize, red] (clust-or) at ($(clust-big-box.south)!0.5!(clust-lit-box.north)$) {OR};
 
     % Title - use inner sep=0 fit node for consistent positioning
     \node[approach title, above=2mm of clust-bigs.north] {Clustered Switching};
@@ -927,6 +970,9 @@ Cortex-A15 (big) + Cortex-A7 (little)
     \node[fit=(inker-big1)(inker-big2), inner sep=0] (inker-bigs) {};
     \node[approach title, above=2mm of inker-bigs.north] {In-Kernel Switching};
 
+    % Fit node for both vcores (for callout pointer)
+    \node[fit=(inker-vcore1)(inker-vcore2), inner sep=0] (inker-vcores) {};
+
     % Description
     \node[desc] at ([yshift=-15mm]col2) {Paired big+little form virtual cores. One active per pair.};
 
@@ -941,12 +987,15 @@ Cortex-A15 (big) + Cortex-A7 (little)
     \node[little core, right=1mm of glob-lit2] (glob-lit3) {};
     \node[little core, right=1mm of glob-lit3] (glob-lit4) {};
 
+    % Fit node for all global cores (for callout pointer)
+    \node[fit=(glob-big1)(glob-big2)(glob-lit1)(glob-lit4), inner sep=0] (glob-all) {};
+
     % Title - close to illustration
     \node[fit=(glob-big1)(glob-big2), inner sep=0] (glob-bigs) {};
-    \node[approach title, above=2mm of glob-bigs.north] {Global Scheduling};
+    \node[approach title, above=2mm of glob-bigs.north] {HMP};
 
     % Description
-    \node[desc] at ([yshift=-15mm]col3) {OS sees all cores. Direct task migration. Most flexible.};
+    \node[desc] at ([yshift=-15mm]col3) {Heterogeneous Multi-Processing. All cores visible.};
 
     % ============ FLEXIBILITY SCALE ============
     \coordinate (scale-y) at (0, -3.4);
@@ -956,12 +1005,43 @@ Cortex-A15 (big) + Cortex-A7 (little)
 
     \fill (col1 |- scale-y) circle (2.5pt);
     \node[above=1mm, font=\tiny] at (col1 |- scale-y) {Clustered};
+    \node[below=1mm, font=\tiny, gray, align=center] at (col1 |- scale-y) {Galaxy S4\\2013};
 
     \fill (col2 |- scale-y) circle (2.5pt);
     \node[above=1mm, font=\tiny] at (col2 |- scale-y) {In-Kernel};
+    \node[below=1mm, font=\tiny, gray, align=center] at (col2 |- scale-y) {Galaxy S4\\w/ Linux};
 
     \fill (col3 |- scale-y) circle (2.5pt);
-    \node[above=1mm, font=\tiny] at (col3 |- scale-y) {Global};
+    \node[above=1mm, font=\tiny] at (col3 |- scale-y) {HMP};
+    \node[below=1mm, font=\tiny, gray, align=center] at (col3 |- scale-y) {Galaxy S5+\\2014};
+
+    % ============ CALLOUTS (one at a time using \only) ============
+    % Clustered callout (overlay 2 only)
+    \only<2>{
+        \node[callout base, callout absolute pointer={(clust-or.east)}, anchor=west,
+              text width=3.5cm]
+            at ([xshift=5mm]clust-lit-box.east)
+            {\textbf{Transparent} to OS\\[1pt]
+             Hypervisor switches clusters;\\data passes through L2};
+    }
+
+    % In-Kernel callout (overlay 3 only) - positioned relative to right vcore
+    \only<3>{
+        \node[callout base, callout absolute pointer={(inker-vcore2.east)}, anchor=west,
+              text width=3.5cm]
+            at ([xshift=5mm]inker-vcore2.east)
+            {\textbf{One core} active per pair\\[1pt]
+             Can use existing DVFS interface (e.g., cpufreq)};
+    }
+
+    % HMP callout (overlay 4+) - left of leftmost small core
+    \visible<4->{
+        \node[callout base, callout absolute pointer={(glob-lit1.west)}, anchor=east,
+              text width=3.2cm]
+            at ([xshift=-5mm]glob-lit1.west)
+            {\textbf{All cores} visible to OS\\[1pt]
+             Direct task migration between any cores};
+    }
 \end{tikzpicture}
 \end{center}
 \end{frame}
