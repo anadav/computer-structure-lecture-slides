@@ -1586,28 +1586,134 @@
 \end{center}
 \end{frame}
 
-%% Slide: RAW Dependency
-\begin{frame}{RAW Dependency}
-    \begin{columns}
+%% Slide: Data Hazards Introduction
+\begin{frame}{Data Hazards}
+    \textbf{Data Hazard:} An instruction depends on the result of a previous instruction still in the pipeline
+
+    \vspace{0.5cm}
+    \begin{columns}[T]
         \column{0.5\textwidth}
-        Program execution order:
+        \textbf{Three types of data hazards:}
+        \begin{itemize}
+            \item \textbf{RAW} (Read After Write) -- most common
+            \item \textbf{WAR} (Write After Read) -- anti-dependency
+            \item \textbf{WAW} (Write After Write) -- output dependency
+        \end{itemize}
+
+        \vspace{0.3cm}
+        In a simple 5-stage pipeline, only \textbf{RAW} hazards can occur
+
+        \column{0.5\textwidth}
+        \begin{tcolorbox}[colback=blue!5, colframe=blue!60!black, title=Why only RAW?]
+            \small
+            \begin{itemize}
+                \item Reads happen in ID (stage 2)
+                \item Writes happen in WB (stage 5)
+                \item Instructions execute in order
+                \item $\Rightarrow$ Reads always before writes in program order
+            \end{itemize}
+        \end{tcolorbox}
+    \end{columns}
+\end{frame}
+
+%% Slide: RAW Dependency
+\begin{frame}{RAW Dependency Example}
+    \begin{columns}[T]
+        \column{0.35\textwidth}
+        \textbf{Program:}
         \begin{enumerate}
-            \item \texttt{sub R2, R1, R3}
+            \item \texttt{sub \textcolor{blue}{R2}, R1, R3}
             \item \texttt{and R12, \textcolor{red}{R2}, R5}
             \item \texttt{or R13, R6, \textcolor{red}{R2}}
             \item \texttt{add R14, \textcolor{red}{R2}, \textcolor{red}{R2}}
             \item \texttt{sw R15, 100(\textcolor{red}{R2})}
         \end{enumerate}
-        
-        \column{0.5\textwidth}
+
+        \vspace{0.3cm}
+        \small
+        \textcolor{blue}{R2} is written by sub\\
+        \textcolor{red}{R2} is read by subsequent instructions
+
+        \column{0.65\textwidth}
+        \textbf{Pipeline Timing Diagram:}
+        \vspace{0.2cm}
+
         \centering
-        \begin{tikzpicture}[scale=0.5]
-            % Pipeline stages showing dependency
-            \node[draw, fill=red!30, minimum width=6cm, minimum height=3cm] {
-                RAW Hazard Area
+        \begin{tikzpicture}[
+            stage/.style={minimum width=7mm, minimum height=5mm, font=\tiny\ttfamily},
+            if_stage/.style={stage, fill=blue!30},
+            id_stage/.style={stage, fill=yellow!40},
+            ex_stage/.style={stage, fill=green!30},
+            mem_stage/.style={stage, fill=orange!30},
+            wb_stage/.style={stage, fill=red!30},
+            hazard/.style={stage, fill=red!60, text=white},
+            label_style/.style={font=\tiny\ttfamily, align=right, anchor=east},
+            cycle_label/.style={font=\tiny\bfseries},
+        ]
+            % Cycle labels
+            \foreach \c in {1,...,9} {
+                \node[cycle_label] at (\c*0.8, 0.4) {\c};
+            }
+
+            % Instruction labels
+            \node[label_style] at (0, -0.0) {sub};
+            \node[label_style] at (0, -0.6) {and};
+            \node[label_style] at (0, -1.2) {or};
+            \node[label_style] at (0, -1.8) {add};
+            \node[label_style] at (0, -2.4) {sw};
+
+            % sub R2, R1, R3 - produces R2
+            \node[if_stage] at (1*0.8, 0) {IF};
+            \node[id_stage] at (2*0.8, 0) {ID};
+            \node[ex_stage] at (3*0.8, 0) {EX};
+            \node[mem_stage] at (4*0.8, 0) {ME};
+            \node[wb_stage] at (5*0.8, 0) {WB};
+
+            % and R12, R2, R5 - needs R2 at cycle 3 (ID)
+            \node[if_stage] at (2*0.8, -0.6) {IF};
+            \node[hazard] at (3*0.8, -0.6) {ID};
+            \node[ex_stage] at (4*0.8, -0.6) {EX};
+            \node[mem_stage] at (5*0.8, -0.6) {ME};
+            \node[wb_stage] at (6*0.8, -0.6) {WB};
+
+            % or R13, R6, R2 - needs R2 at cycle 4 (ID)
+            \node[if_stage] at (3*0.8, -1.2) {IF};
+            \node[hazard] at (4*0.8, -1.2) {ID};
+            \node[ex_stage] at (5*0.8, -1.2) {EX};
+            \node[mem_stage] at (6*0.8, -1.2) {ME};
+            \node[wb_stage] at (7*0.8, -1.2) {WB};
+
+            % add R14, R2, R2 - needs R2 at cycle 5 (ID)
+            \node[if_stage] at (4*0.8, -1.8) {IF};
+            \node[hazard] at (5*0.8, -1.8) {ID};
+            \node[ex_stage] at (6*0.8, -1.8) {EX};
+            \node[mem_stage] at (7*0.8, -1.8) {ME};
+            \node[wb_stage] at (8*0.8, -1.8) {WB};
+
+            % sw R15, 100(R2) - needs R2 at cycle 6 (ID) - OK!
+            \node[if_stage] at (5*0.8, -2.4) {IF};
+            \node[id_stage] at (6*0.8, -2.4) {ID};
+            \node[ex_stage] at (7*0.8, -2.4) {EX};
+            \node[mem_stage] at (8*0.8, -2.4) {ME};
+            \node[wb_stage] at (9*0.8, -2.4) {WB};
+
+            % Draw dependency arrows
+            \draw[->, thick, red!70!black] (5*0.8, -0.15) -- (3*0.8, -0.45);
+            \draw[->, thick, red!70!black] (5*0.8, -0.15) -- (4*0.8, -1.05);
+            \draw[->, thick, red!70!black] (5*0.8, -0.15) -- (5*0.8, -1.65);
+
+            % Legend
+            \node[font=\tiny, align=left, anchor=north west] at (0.3, -3.0) {
+                \textcolor{red!70!black}{Red ID} = needs R2 before it's written
             };
         \end{tikzpicture}
     \end{columns}
+
+    \vspace{0.3cm}
+    \begin{tcolorbox}[colback=red!5, colframe=red!60!black, title=RAW Hazard (Read After Write)]
+        \small
+        A \textbf{RAW hazard} occurs when an instruction tries to \textbf{read} a register that a previous instruction hasn't \textbf{written} yet. The reading instruction must wait or use \textbf{forwarding/bypass} to get the correct value.
+    \end{tcolorbox}
 \end{frame}
 
 %% Slide: Using Bypass to Solve RAW Dependency
