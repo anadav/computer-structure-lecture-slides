@@ -718,24 +718,20 @@ some_ioctl:
             \node[defense, fill=red!30, above=0.3cm of y2020] (cet) {CET};
 
             % Attack nodes above defenses - close to the mechanism that stops them
-            \node[attack, above=0.4cm of nx] (inject) {Code Injection};
+            \node[attack, above=0.4cm of nx] (inject) {\sout{Code Injection}};
             \draw[mitigates] (nx) -- (inject);
-            \draw[crossout] ([shift={(-0.4,-0.15)}]inject.center) -- ([shift={(0.4,0.15)}]inject.center);
 
             \node[attack, above=0.4cm of aslr] (rop) {Basic ROP};
             \draw[mitigates, orange] (aslr) -- (rop);
 
-            \node[attack, above=0.4cm of smep] (ret2user) {ret2user};
+            \node[attack, above=0.4cm of smep] (ret2user) {\sout{ret2user}};
             \draw[mitigates] (smep) -- (ret2user);
-            \draw[crossout] ([shift={(-0.4,-0.15)}]ret2user.center) -- ([shift={(0.4,0.15)}]ret2user.center);
 
-            \node[attack, above=0.4cm of smap] (pivot) {Stack Pivot};
+            \node[attack, above=0.4cm of smap] (pivot) {\sout{Stack Pivot}};
             \draw[mitigates] (smap) -- (pivot);
-            \draw[crossout] ([shift={(-0.4,-0.15)}]pivot.center) -- ([shift={(0.4,0.15)}]pivot.center);
 
-            \node[attack, above=0.4cm of cet] (advanced) {Advanced ROP};
+            \node[attack, above=0.4cm of cet] (advanced) {\sout{Advanced ROP}};
             \draw[mitigates] (cet) -- (advanced);
-            \draw[crossout] ([shift={(-0.4,-0.15)}]advanced.center) -- ([shift={(0.4,0.15)}]advanced.center);
         \end{tikzpicture}
     \end{center}
     
@@ -1243,9 +1239,9 @@ sensitive_function:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[font=\footnotesize,
-                stack title/.style={font=\footnotesize\bfseries},
-                stack cell/.style={draw, minimum width=2.2cm, minimum height=0.6cm, anchor=north},
+            \begin{tikzpicture}[font=\scriptsize,
+                stack title/.style={font=\scriptsize\bfseries},
+                stack cell/.style={draw, minimum width=2cm, minimum height=0.5cm, anchor=north, inner sep=2pt},
                 stack container/.style={draw, fill=#1, rounded corners=2pt},
                 stack container/.default=blue!20]
 
@@ -1258,22 +1254,22 @@ sensitive_function:
                     |[fill=yellow!30]| Return Addr \\
                     |[fill=gray!20]| Saved RBP \\
                 };
-                \node[stack title, above=0.2cm of regstack] {Regular Stack};
+                \node[stack title, above=0.15cm of regstack] {Regular Stack};
                 \begin{scope}[on background layer]
-                    \node[stack container=blue!20, fit=(regstack), inner sep=4pt] {};
+                    \node[stack container=blue!20, fit=(regstack), inner sep=2pt] {};
                 \end{scope}
 
                 % Shadow Stack using matrix
                 \matrix[matrix of nodes,
                     nodes={stack cell},
                     row sep=-\pgflinewidth,
-                    right=1.5cm of regstack] (shadowstack) {
+                    right=1.3cm of regstack] (shadowstack) {
                     |[fill=green!40]| Return Addr \\
                 };
-                \node[stack title, above=0.2cm of shadowstack] {Shadow Stack};
+                \node[stack title, above=0.15cm of shadowstack] {Shadow Stack};
                 \begin{scope}[on background layer]
                     \node[stack container=green!20, draw=green!60!black, thick,
-                          fit=(shadowstack), inner sep=4pt] {};
+                          fit=(shadowstack), inner sep=2pt] {};
                 \end{scope}
 
                 % Protection label
@@ -1401,6 +1397,7 @@ evil->admin(); // Calls wrong vtable!
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
+            \vspace{-3mm}
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{Function with FineIBT:}
@@ -1989,7 +1986,7 @@ func:
 \section{Trusted Execution Environments}
 
 \begin{frame}{Why Trusted Execution Environments (TEEs)?}
-    \begin{columns}
+    \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{The Problem:}
             \begin{itemize}
@@ -2083,6 +2080,178 @@ func:
                     \item CPU manufacturer's PKI
                 \end{itemize}
                 }
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{TEE Memory Protection Approaches}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \textbf{1. Access Control Based:}
+            \begin{itemize}
+                \item CPU enforces access restrictions
+                \item Hypervisor/OS \textcolor{red}{blocked} from accessing TEE memory
+                \item Page table attributes control access
+                \item Fast (no encryption overhead)
+            \end{itemize}
+
+            \vspace{0.2cm}
+            {\small \textbf{Examples:}
+            \begin{itemize}
+                \item Intel SGX: EPCM (Enclave Page Cache Map)
+                \item ARM TrustZone: NS bit (secure/non-secure)
+            \end{itemize}
+            }
+
+            \vspace{0.2cm}
+            {\small \textcolor{red}{\textbf{Limitation:}} Vulnerable to physical attacks (cold boot, bus snooping)}
+
+            \vspace{0.3cm}
+            \textbf{2. Encryption Based:}
+            \begin{itemize}
+                \item Memory encrypted in DRAM
+                \item Each TEE has unique key
+                \item Hardware encrypts/decrypts on memory bus
+                \item Protects against physical attacks
+            \end{itemize}
+
+            \vspace{0.2cm}
+            {\small \textbf{Examples:}
+            \begin{itemize}
+                \item AMD SEV: Per-VM encryption keys
+                \item Intel MKTME: Multi-key total memory encryption
+            \end{itemize}
+            }
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{3. Hybrid Approaches:}
+
+            \vspace{0.2cm}
+            Combine both for defense in depth:
+            \begin{itemize}
+                \item Access control prevents software attacks
+                \item Encryption prevents physical attacks
+            \end{itemize}
+
+            \vspace{0.2cm}
+            {\small \textbf{Examples:}
+            \begin{itemize}
+                \item AMD SEV-SNP: Encryption + RMP (Reverse Map Table)
+                \item Intel TDX: Encryption + SEPT (Secure EPT)
+            \end{itemize}
+            }
+
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=blue!10, title={\small Memory Protection Trade-offs}]
+                {\scriptsize
+                \textbf{Access Control Only:}
+                \begin{itemize}
+                    \item $\checkmark$ Fast, no encryption overhead
+                    \item $\times$ Physical attacks possible
+                \end{itemize}
+
+                \vspace{0.1cm}
+                \textbf{Encryption Only:}
+                \begin{itemize}
+                    \item $\checkmark$ Protects against physical attacks
+                    \item $\times$ Performance overhead (5-15\%)
+                    \item $\times$ Complex key management
+                \end{itemize}
+
+                \vspace{0.1cm}
+                \textbf{Hybrid:}
+                \begin{itemize}
+                    \item $\checkmark$ Defense in depth
+                    \item $\times$ Complexity + overhead
+                \end{itemize}
+                }
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Secure VMs vs Secure Enclaves}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \textbf{Secure Enclaves (Process-Level):}
+
+            \vspace{0.2cm}
+            \textbf{Concept:}
+            \begin{itemize}
+                \item Isolate parts of an application
+                \item Trust boundary \textit{within} a VM/OS
+                \item Small trusted computing base (TCB)
+                \item Application explicitly uses enclave
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Threat Model:}
+            \begin{itemize}
+                \item Untrusted OS/kernel
+                \item Untrusted applications
+                \item Privileged software is adversary
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Examples:}
+            \begin{itemize}
+                \item \textbf{Intel SGX}: x86 enclave instructions
+                \item \textbf{ARM TrustZone}: Secure/Normal worlds
+                \item \textbf{AMD SEV-ES}: Single VM encryption
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Use Cases:}
+            \begin{itemize}
+                \item Protect cryptographic keys
+                \item Secure password verification
+                \item DRM (Digital Rights Management)
+                \item Biometric authentication
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Secure VMs (VM-Level):}
+
+            \vspace{0.2cm}
+            \textbf{Concept:}
+            \begin{itemize}
+                \item Isolate entire virtual machines
+                \item Trust boundary at hypervisor level
+                \item Large TCB (entire VM)
+                \item Transparent to guest OS
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Threat Model:}
+            \begin{itemize}
+                \item Untrusted hypervisor
+                \item Untrusted cloud provider
+                \item Physical access attacks
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Examples:}
+            \begin{itemize}
+                \item \textbf{Intel TDX}: Trust Domain Extensions
+                \item \textbf{AMD SEV-SNP}: Secure Nested Paging
+                \item \textbf{ARM CCA}: Confidential Compute Architecture
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Use Cases:}
+            \begin{itemize}
+                \item Confidential computing in public cloud
+                \item Lift-and-shift existing workloads
+                \item Multi-tenant isolation
+                \item Regulatory compliance (GDPR, HIPAA)
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \begin{tcolorbox}[colback=green!10]
+                {\scriptsize \textbf{Key Difference:}\\
+                Enclaves require application changes.\\
+                Secure VMs work with unmodified OS.}
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -2446,52 +2615,114 @@ On Read:
 % Section 5: Boot Security
 \section{Boot Security}
 
-\begin{frame}{Secure Boot}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{UEFI Secure Boot Chain:}
-            \begin{enumerate}
-                \item Platform Key (PK)
-                \item Key Exchange Keys (KEK)
-                \item Signature Database (db)
-                \item Forbidden Signatures (dbx)
-            \end{enumerate}
-            
-            \vspace{0.3cm}
-            \textbf{Boot Stages:}
+\begin{frame}{Secure Boot - Implementing Chain of Trust}
+    \begin{columns}[T]
+        \begin{column}{0.45\textwidth}
+            \textbf{Chain of Trust Implementation:}
             \begin{itemize}
-                \item SEC: Security phase
-                \item PEI: Pre-EFI Init
-                \item DXE: Driver Execution
-                \item BDS: Boot Device Select
-                \item OS Loader verification
+                \item Each stage verifies the next
+                \item Cryptographic signatures (UEFI)
+                \item Hash measurements (TPM)
+                \item Extends from boot to runtime
             \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{UEFI Keys:}
+            \begin{itemize}
+                \item \textbf{PK}: Platform Key (OEM)
+                \item \textbf{KEK}: Key Exchange Key
+                \item \textbf{db}: Signature Database
+                \item \textbf{dbx}: Revoked Signatures
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{TPM Role:}
+            \begin{itemize}
+                \item Stores measurements in PCRs
+                \item PCR0-7: Firmware/Boot
+                \item PCR8-15: OS/Runtime
+                \item Enables remote attestation
+            \end{itemize}
+
+            \vspace{0.2cm}
+            {\small \textbf{IMA (Integrity Measurement Architecture):}
+            \begin{itemize}
+                \item Linux kernel subsystem
+                \item Measures files before execution
+                \item Extends PCR10
+                \item Runtime integrity verification
+            \end{itemize}
+            }
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.65]
-                % Boot chain
-                \node[draw,fill=red!30] (hw) at (0,0) {Hardware};
-                \node[draw,fill=orange!30] (uefi) at (0,-1.5) {UEFI Firmware};
-                \node[draw,fill=yellow!30] (shim) at (0,-3) {Shim Loader};
-                \node[draw,fill=green!30] (grub) at (0,-4.5) {GRUB};
-                \node[draw,fill=blue!30] (kernel) at (0,-6) {OS Kernel};
-                
-                % Verification arrows
-                \draw[->,thick] (hw) -- (uefi) node[midway,right] {\small Verify};
-                \draw[->,thick] (uefi) -- (shim) node[midway,right] {\small Verify};
-                \draw[->,thick] (shim) -- (grub) node[midway,right] {\small Verify};
-                \draw[->,thick] (grub) -- (kernel) node[midway,right] {\small Verify};
-                
-                % Keys
-                \node[draw,fill=gray!30] (pk) at (4,0) {PK};
-                \node[draw,fill=gray!30] (kek) at (4,-1.5) {KEK};
-                \node[draw,fill=gray!30] (db) at (4,-3) {db};
-                
-                % Key relationships
-                \draw[dashed,->] (pk) -- (uefi);
-                \draw[dashed,->] (kek) -- (shim);
-                \draw[dashed,->] (db) -- (grub);
+        \begin{column}{0.55\textwidth}
+            \begin{tikzpicture}[
+                chainlink/.style={draw, thick, minimum width=2.5cm, minimum height=0.7cm,
+                                 align=center, font=\small, rounded corners=2pt},
+                key/.style={draw, thick, minimum width=1.2cm, minimum height=0.5cm,
+                           align=center, font=\tiny, fill=gray!30, rounded corners=1pt},
+                verify/.style={->, thick, green!60!black},
+                measure/.style={->, thick, blue!60, dashed}]
+
+                % Boot Chain - left side
+                \node[chainlink, fill=red!30] (hw) {Hardware Root};
+                \node[chainlink, fill=orange!30, below=0.3cm of hw] (uefi) {UEFI Firmware};
+                \node[chainlink, fill=yellow!30, below=0.3cm of uefi] (bootloader) {Bootloader};
+                \node[chainlink, fill=green!30, below=0.3cm of bootloader] (kernel) {OS Kernel};
+                \node[chainlink, fill=purple!20, below=0.3cm of kernel] (ima) {IMA\\{\tiny (Runtime)}};
+
+                % Keys - right side
+                \node[key, right=1.5cm of hw] (pk) {PK};
+                \node[key, right=1.5cm of uefi] (kek) {KEK};
+                \node[key, right=1.5cm of bootloader] (db) {db};
+
+                % TPM with PCR matrix - far right
+                \matrix[matrix of nodes,
+                    nodes={draw, minimum width=0.9cm, minimum height=0.35cm,
+                           font=\tiny, fill=green!20, inner sep=1pt},
+                    row sep=-\pgflinewidth,
+                    right=0.8cm of kek] (pcrs) {
+                    PCR0 \\
+                    PCR1 \\
+                    PCR2 \\
+                    |[fill=gray!20]| ... \\
+                    PCR10 \\
+                };
+
+                % TPM container around PCRs
+                \node[font=\tiny\bfseries, above=1pt of pcrs] {TPM};
+                \begin{scope}[on background layer]
+                    \node[draw, thick, fill=blue!10, rounded corners=2pt,
+                          fit={(pcrs) ([yshift=2pt]pcrs.north)}, inner sep=2pt] (tpm) {};
+                \end{scope}
+
+                % Verification arrows (green)
+                \draw[verify] (hw.south) -- (uefi.north) node[midway, left, font=\tiny] {Verify};
+                \draw[verify] (uefi.south) -- (bootloader.north) node[midway, left, font=\tiny] {Verify};
+                \draw[verify] (bootloader.south) -- (kernel.north) node[midway, left, font=\tiny] {Verify};
+                \draw[verify] (kernel.south) -- (ima.north) node[midway, left, font=\tiny] {Extend};
+
+                % Key usage (dashed to chain)
+                \draw[dashed, ->, gray] (pk.west) -- (uefi.east);
+                \draw[dashed, ->, gray] (kek.west) -- (bootloader.east);
+                \draw[dashed, ->, gray] (db.west) -- (kernel.east);
+
+                % TPM measurement arrows (blue dashed) to specific PCRs - staircase routing
+                \draw[measure] (uefi.east) -| ([xshift=-13mm]pcrs-1-1.west) -- (pcrs-1-1.west);
+                \draw[measure] (bootloader.east) -| ([xshift=-11mm]pcrs-2-1.west) -- (pcrs-2-1.west);
+                \draw[measure] (kernel.east) -| ([xshift=-9mm]pcrs-3-1.west) -- (pcrs-3-1.west);
+                \draw[measure] (ima.east) -| ([xshift=-7mm]pcrs-5-1.west) -- (pcrs-5-1.west);
+
+                % Labels
+                \node[font=\tiny, text=green!60!black, right=2pt] at (hw.south east) {Boot};
+                \node[font=\tiny, text=purple!60!black, right=2pt] at (kernel.south east) {Runtime};
             \end{tikzpicture}
+
+            \vspace{0.2cm}
+            \begin{tcolorbox}[colback=blue!10, fontupper=\scriptsize]
+                \textbf{Full Chain:} Hardware → Firmware → Bootloader → Kernel → IMA\\[1pt]
+                \textbf{Verification:} Each stage checks signature of next\\[1pt]
+                \textbf{Measurement:} TPM records hash of each stage
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -2696,7 +2927,7 @@ On Read:
 \section{Summary}
 
 \begin{frame}{Hardware Security Evolution}
-    {\centering
+    \begin{center}
     \begin{tikzpicture}[scale=0.8,
             timeline label/.style={font=\tiny, text depth=0.25ex},
             feature/.style={draw, fill=blue!20, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex}]
@@ -2723,9 +2954,9 @@ On Read:
             \node[feature, right=0.6cm of tdx] (mte) {MTE/PAC};
             \node[timeline label, below=2pt of mte] {2022};
         \end{tikzpicture}
-    \par}
+    \end{center}
 
-    \vspace{0.5cm}
+    \vspace{0.3cm}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{Current Trends:}
