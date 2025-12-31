@@ -1597,85 +1597,47 @@
     \centering
     \begin{tikzpicture}[
         stage/.style={draw, minimum width=9mm, minimum height=6mm, font=\scriptsize\ttfamily},
-        if_stage/.style={stage, fill=blue!25},
-        id_stage/.style={stage, fill=yellow!35},
-        ex_stage/.style={stage, fill=green!25},
-        mem_stage/.style={stage, fill=orange!25},
-        wb_stage/.style={stage, fill=purple!25},
-        hazard/.style={stage, fill=red!50, text=white},
-        inst_label/.style={font=\scriptsize\ttfamily, align=left, anchor=east},
-        cycle_label/.style={font=\scriptsize\bfseries, text depth=0.25ex},
+        IF/.style={stage, fill=blue!25},
+        ID/.style={stage, fill=yellow!35},
+        EX/.style={stage, fill=green!25},
+        MEM/.style={stage, fill=orange!25},
+        WB/.style={stage, fill=purple!25},
+        HZ/.style={stage, fill=red!50, text=white},
+        PH/.style={minimum width=9mm, minimum height=6mm},  % phantom cell
+        inst/.style={font=\scriptsize\ttfamily, anchor=east, text width=2.8cm, align=right},
+        hdr/.style={font=\scriptsize\bfseries, text depth=0.25ex},
         ann_callout/.style={ellipse callout, draw, fill=white, font=\scriptsize, inner sep=2pt},
     ]
-        % Cycle labels
-        \node[cycle_label] at (0, 0.6) {Cycle:};
-        \foreach \c in {1,...,9} {
-            \node[cycle_label] at (\c*1.0, 0.6) {\c};
+        % Pipeline timing matrix: col 1 = instruction, cols 2-10 = cycles
+        \matrix (m) [
+            matrix of nodes,
+            ampersand replacement=\&,
+            column sep=1mm,
+            row sep=2mm,
+            column 1/.style={nodes={inst}},
+            row 1/.style={nodes={hdr}},
+        ] {
+            Cycle: \& 1 \& 2 \& 3 \& 4 \& 5 \& 6 \& 7 \& 8 \& 9 \\
+            sub \textcolor{blue}{R2}, R1, R3 \& |[IF]| IF \& |[ID]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WB, name=sub_wb]| WB \& |[PH]| \& |[PH]| \& |[PH]| \& |[PH]| \\
+            and R12, \textcolor{red}{R2}, R5 \& |[PH]| \& |[IF]| IF \& |[HZ, name=and_id]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WB]| WB \& |[PH]| \& |[PH]| \& |[PH]| \\
+            or R13, R6, \textcolor{red}{R2} \& |[PH]| \& |[PH]| \& |[IF]| IF \& |[HZ, name=or_id]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WB]| WB \& |[PH]| \& |[PH]| \\
+            add R14, \textcolor{red}{R2}, \textcolor{red}{R2} \& |[PH]| \& |[PH]| \& |[PH]| \& |[IF]| IF \& |[HZ, name=add_id]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WB]| WB \& |[PH]| \\
+            sw R15, 100(\textcolor{red}{R2}) \& |[PH]| \& |[PH]| \& |[PH]| \& |[PH]| \& |[IF]| IF \& |[ID, name=sw_id]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WB]| WB \\
+        };
+
+        % Dependency arrows with white outline
+        \foreach \target in {and_id, or_id, add_id} {
+            \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
+                (sub_wb.south) -- (\target.north);
+            \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
+                (sub_wb.south) -- (\target.north);
         }
-
-        % Instructions with full text
-        \node[inst_label] at (-0.15, 0) {sub \textcolor{blue}{R2}, R1, R3};
-        \node[inst_label] at (-0.15, -0.7) {and R12, \textcolor{red}{R2}, R5};
-        \node[inst_label] at (-0.15, -1.4) {or R13, R6, \textcolor{red}{R2}};
-        \node[inst_label] at (-0.15, -2.1) {add R14, \textcolor{red}{R2}, \textcolor{red}{R2}};
-        \node[inst_label] at (-0.15, -2.8) {sw R15, 100(\textcolor{red}{R2})};
-
-        % sub R2, R1, R3 - produces R2
-        \node[if_stage] at (1*1.0, 0) {IF};
-        \node[id_stage] at (2*1.0, 0) {ID};
-        \node[ex_stage] at (3*1.0, 0) {EX};
-        \node[mem_stage] at (4*1.0, 0) {MEM};
-        \node[wb_stage] (sub_wb) at (5*1.0, 0) {WB};
-
-        % and R12, R2, R5 - needs R2 at cycle 3 (ID)
-        \node[if_stage] at (2*1.0, -0.7) {IF};
-        \node[hazard] (and_id) at (3*1.0, -0.7) {ID};
-        \node[ex_stage] at (4*1.0, -0.7) {EX};
-        \node[mem_stage] at (5*1.0, -0.7) {MEM};
-        \node[wb_stage] at (6*1.0, -0.7) {WB};
-
-        % or R13, R6, R2 - needs R2 at cycle 4 (ID)
-        \node[if_stage] at (3*1.0, -1.4) {IF};
-        \node[hazard] (or_id) at (4*1.0, -1.4) {ID};
-        \node[ex_stage] at (5*1.0, -1.4) {EX};
-        \node[mem_stage] at (6*1.0, -1.4) {MEM};
-        \node[wb_stage] at (7*1.0, -1.4) {WB};
-
-        % add R14, R2, R2 - needs R2 at cycle 5 (ID)
-        \node[if_stage] at (4*1.0, -2.1) {IF};
-        \node[hazard] (add_id) at (5*1.0, -2.1) {ID};
-        \node[ex_stage] at (6*1.0, -2.1) {EX};
-        \node[mem_stage] at (7*1.0, -2.1) {MEM};
-        \node[wb_stage] at (8*1.0, -2.1) {WB};
-
-        % sw R15, 100(R2) - needs R2 at cycle 6 (ID) - after WB, no hazard
-        \node[if_stage] at (5*1.0, -2.8) {IF};
-        \node[id_stage] (sw_id) at (6*1.0, -2.8) {ID};
-        \node[ex_stage] at (7*1.0, -2.8) {EX};
-        \node[mem_stage] at (8*1.0, -2.8) {MEM};
-        \node[wb_stage] at (9*1.0, -2.8) {WB};
-
-        % Draw dependency arrows with white outline for visibility
-        \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
-            (sub_wb.south) -- (and_id.north);
-        \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
-            (sub_wb.south) -- (and_id.north);
-
-        \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
-            (sub_wb.south) -- (or_id.north);
-        \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
-            (sub_wb.south) -- (or_id.north);
-
-        \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
-            (sub_wb.south) -- (add_id.north);
-        \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
-            (sub_wb.south) -- (add_id.north);
 
         % Callout annotations
         \node[ann_callout, callout absolute pointer={(sub_wb.east)}, anchor=west, text=blue!70!black]
-            at ([xshift=8mm, yshift=0mm]sub_wb.east) {R2 written};
-        \node[ann_callout, callout absolute pointer={(sw_id.east)}, anchor=north, text=green!50!black]
-            at ([yshift=5mm,xshift=2cm]sw_id.east) {No hazard};
+            at ([xshift=8mm]sub_wb.east) {R2 written};
+        \node[ann_callout, callout absolute pointer={(sw_id.south)}, anchor=north, text=green!50!black]
+            at ([yshift=-5mm]sw_id.south) {No hazard};
     \end{tikzpicture}
 
     \vspace{0.15cm}
