@@ -1112,12 +1112,15 @@
 \coordinate (inst_memory_pos) at (MEMWB.center |- Decode);
 \coordinate (inst_wb_pos) at ([xshift=12mm]MEMWB.center |- Decode);
 
-% Data value positions
-\coordinate (src1_data_pos) at ([xshift=5mm]RegFile.brpin 1);
-\coordinate (src2_data_pos) at ([xshift=5mm]RegFile.brpin 2);
-\coordinate (imm_pos) at ([xshift=5mm]SignExt.east);
-\coordinate (alu_result_pos) at ([xshift=5mm]ALU.east);
-\coordinate (mem_data_pos) at ([xshift=5mm]DMem.rpin 5);
+% Data value positions using (latch |- line) pattern
+% Decode outputs (at IDEX latch)
+\coordinate (src1_data_pos) at (IDEX |- RegFile.brpin 1);
+\coordinate (src2_data_pos) at (IDEX |- RegFile.brpin 2);
+\coordinate (imm_pos) at (IDEX |- SignExt);
+% Execute output (at EXMEM latch)
+\coordinate (alu_result_pos) at (EXMEM |- ALU);
+% Memory output (at MEMWB latch)
+\coordinate (mem_data_pos) at (MEMWB |- DMem.rpin 5);
 
 % Dst register propagation coordinates (use same Y level as dst path)
 % These align with where the dst arrow goes through each latch
