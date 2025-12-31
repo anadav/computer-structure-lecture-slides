@@ -492,10 +492,10 @@
 \coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
 \draw[data_path] (SignExt.east) -| (ImmJunction) -- (ALUMux.lpin 2);
 \node[data_connector] at (ImmJunction) {};
-\draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
+\draw[data_path] (ImmJunction) |- (TargetAdder.lpin 2);
 
 % Target Adder to PC mux
-\draw[data_path] (TargetAdder.brpin 1) -- ++(5mm,0) |- (PCSrcMux.rpin 1);
+\draw[data_path] (TargetAdder.rpin 1) -- ++(5mm,0) |- (PCSrcMux.rpin 1);
 
 % ALU to DMem (address)
 \draw[data_path] (ALU.brpin 4) -- (DMem.lpin 5);
@@ -1037,10 +1037,10 @@
 \coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
 \draw[data_path] (SignExt -| IDEX.east) -| (ImmJunction) -- (ALUMux.lpin 2);
 \node[data_connector] at (ImmJunction) {};
-\draw[data_path] (ImmJunction) |- (TargetAdder.blpin 2);
+\draw[data_path] (ImmJunction) |- (TargetAdder.lpin 2);
 
 % Target Adder to EX/MEM buffer
-\coordinate (calc_target_exmem) at (TargetAdder.brpin 1 -| EXMEM);
+\coordinate (calc_target_exmem) at (TargetAdder.rpin 1 -| EXMEM.west);
 \draw[data_path] (TargetAdder.brpin 1) -- (calc_target_exmem);
 
 % ALU output to EX/MEM buffer (result only, no zero)
@@ -2021,7 +2021,7 @@ then stall
     % Values
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {16};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {12};
-    \node[latch_target] at ([xshift=-2mm]calc_target_exmem) {50};
+    \node[latch_target] at (calc_target_exmem) {50};
     % Cond value
     \node[draw=orange!60!black, line width=1pt, fill=orange!25, rounded corners=3pt,
           font=\small\bfseries, inner sep=3pt] at (EXMEM.center |- exmem_alu_zero) {cond};

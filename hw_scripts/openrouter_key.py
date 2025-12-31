@@ -128,12 +128,29 @@ def create_keys(
         Tuple of (created_keys, failed_keys)
     """
     headers = get_headers()
-    
+
+    # Load existing keys from CSV if it exists
+    existing_keys = []
+    existing_names = set()
+    if os.path.exists(output_csv):
+        with open(output_csv, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                existing_keys.append(row)
+                existing_names.add(row.get("name", ""))
+        if existing_names:
+            print(f"Found {len(existing_names)} existing keys in {output_csv}")
+
     created_keys = []
     failed = []
-    
+    skipped = 0
+
     for i in range(1, n + 1):
         name = f"{name_prefix}_{i:03d}"
+
+        if name in existing_names:
+            skipped += 1
+            continue
         
         payload = {
             "name": name,
@@ -177,17 +194,25 @@ def create_keys(
             failed.append({"name": name, "error": error_msg})
             print(f"✗ Failed to create key {i}/{n}: {name} - {error_msg}")
     
-    # Save to CSV
-    if created_keys:
+    # Save to CSV (merge existing + new)
+    all_keys = existing_keys + created_keys
+    if all_keys:
         with open(output_csv, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["name", "key", "hash", "limit_usd", "limit_reset", "created_at"])
             writer.writeheader()
-            writer.writerows(created_keys)
-        print(f"\n✓ Saved {len(created_keys)} keys to {output_csv}")
-    
+            writer.writerows(all_keys)
+
+    # Summary
+    print()
+    if skipped:
+        print(f"⏭ Skipped {skipped} existing keys")
+    if created_keys:
+        print(f"✓ Created {len(created_keys)} new keys")
     if failed:
-        print(f"\n✗ {len(failed)} keys failed to create")
-    
+        print(f"✗ {len(failed)} keys failed to create")
+    if all_keys:
+        print(f"📄 Saved {len(all_keys)} total keys to {output_csv}")
+
     return created_keys, failed
 
 
