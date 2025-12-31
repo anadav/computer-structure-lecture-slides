@@ -850,8 +850,9 @@
 \end{frame}
 
 
-%% Slide: Pipelined CPU
-\begin{frame}{Pipelined CPU}
+%% Slide: Pipelined CPU (with label for againframe)
+%% Overlay 1: plain CPU diagram; overlays 2-6: pipeline example cycles (shown via againframe)
+\begin{frame}<1>[label=pipelined-cpu]{Pipelined CPU}
 \begin{center}
 \scalebox{0.58}{
 \begin{circuitikz}[
@@ -972,8 +973,8 @@
 % IMem to IF/ID
 \draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
 
-% Instruction to Decode (straight line at same Y)
-\draw[data_path] (IFID.east |- Decode) -- (Decode.west);
+% Instruction to Decode (from instruction latch to decode unit)
+\draw[data_path] ([yshift=-1pt]instruction.north east) -- ++(0.3,0) |- (Decode.west);
 
 % === Control signal paths (propagate through pipeline latches) ===
 % Control signals Y coordinate (same as Decode)
@@ -1086,6 +1087,159 @@
 \node[align=left, font=\tiny] at ([xshift=3mm,yshift=-1mm]DMem.lpin 5) {address};
 \node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {data};
 \node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {data};
+
+% === Styles for pipeline example (matching Control Hazard on Branches) ===
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
+    data_value/.style={draw=orange!60!black, line width=1pt, fill=orange!20,
+                       rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    dst_value/.style={draw=green!60!black, line width=1pt, fill=green!20,
+                      rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    ip_value/.style={font=\small\bfseries, text=blue!70!black},
+    explain_box/.style={draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+                        font=\small, inner sep=8pt, align=left},
+}
+
+% === Coordinates for instruction and data placement ===
+% Instruction positions: shown at the latch OUTPUT (next stage's input)
+% Fetch output: at instruction.south (on IF/ID latch)
+% Other stages: at next latch using (latch |- Decode) pattern
+\coordinate (inst_fetch_pos) at (instruction.south);
+\coordinate (inst_decode_pos) at (IDEX.center |- Decode);
+\coordinate (inst_execute_pos) at (EXMEM.center |- Decode);
+\coordinate (inst_memory_pos) at (MEMWB.center |- Decode);
+\coordinate (inst_wb_pos) at ([xshift=12mm]MEMWB.center |- Decode);
+
+% Data value positions
+\coordinate (src1_data_pos) at ([xshift=5mm]RegFile.brpin 1);
+\coordinate (src2_data_pos) at ([xshift=5mm]RegFile.brpin 2);
+\coordinate (imm_pos) at ([xshift=5mm]SignExt.east);
+\coordinate (alu_result_pos) at ([xshift=5mm]ALU.east);
+\coordinate (mem_data_pos) at ([xshift=5mm]DMem.rpin 5);
+
+% Dst register propagation coordinates (use same Y level as dst path)
+% These align with where the dst arrow goes through each latch
+\coordinate (dst_idex_pos) at (dst_y_level -| IDEX);
+\coordinate (dst_exmem_pos) at (dst_y_level -| EXMEM);
+\coordinate (dst_memwb_pos) at (dst_y_level -| MEMWB);
+
+% Explanation box position (1cm lower than before)
+\coordinate (ExplainPos) at ([yshift=-40mm]IMem.south -| ALU);
+
+% === Program listing at bottom left (shown on overlays 2+) ===
+\only<2->{
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
+    \begin{tabular}{rl}
+    0: & \textcolor{blue}{lw} R10,9(R1)\\
+    4: & \textcolor{blue}{sub} R11,R2,R3\\
+    8: & \textcolor{blue}{and} R12,R4,R5\\
+    12: & \textcolor{blue}{or} R13,R6,R7\\
+    \end{tabular}
+};
+}
+
+% === PC value display (below IP box) ===
+\only<2>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {0};}
+\only<3>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {4};}
+\only<4>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {8};}
+\only<5>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {12};}
+\only<6>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {16};}
+
+% === Cycle indicator (nice box 2cm left of Fetch label) ===
+\tikzset{
+    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
+                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt,
+                      anchor=east},
+}
+\only<2>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 1};}
+\only<3>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 2};}
+\only<4>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 3};}
+\only<5>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 4};}
+\only<6>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};}
+
+% === Cycle 1 (overlay 2): lw in Fetch ===
+\only<2>{
+    \node[latch_inst] at (inst_fetch_pos) {lw};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Cycle 1:} \texttt{lw} fetched from I-Cache. PC $\leftarrow$ PC + 4
+    };
+}
+
+% === Cycle 2 (overlay 3): lw in Decode, sub in Fetch ===
+\only<3>{
+    \node[latch_inst] at (inst_fetch_pos) {sub};
+    \node[latch_inst] at (inst_decode_pos) {lw};
+    % lw decoding: read R1, sign-extend 9
+    \node[data_value] at (src1_data_pos) {[R1]};
+    \node[data_value] at (imm_pos) {9};
+    \node[dst_value] at (dst_idex_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Cycle 2:} \texttt{lw} decodes: read R1, sign-extend offset 9, dst=R10
+    };
+}
+
+% === Cycle 3 (overlay 4): lw in Execute, sub in Decode, and in Fetch ===
+\only<4>{
+    \node[latch_inst] at (inst_fetch_pos) {and};
+    \node[latch_inst] at (inst_decode_pos) {sub};
+    \node[latch_inst] at (inst_execute_pos) {lw};
+    % sub decoding: read R2, R3
+    \node[data_value] at (src1_data_pos) {[R2]};
+    \node[data_value] at (src2_data_pos) {[R3]};
+    \node[dst_value] at (dst_idex_pos) {R11};
+    % lw executing: compute address
+    \node[data_value] at (alu_result_pos) {[R1]+9};
+    \node[dst_value] at (dst_exmem_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Cycle 3:} \texttt{lw} executes: ALU computes address [R1]+9
+    };
+}
+
+% === Cycle 4 (overlay 5): lw in Memory, sub in Execute, and in Decode, or in Fetch ===
+\only<5>{
+    \node[latch_inst] at (inst_fetch_pos) {or};
+    \node[latch_inst] at (inst_decode_pos) {and};
+    \node[latch_inst] at (inst_execute_pos) {sub};
+    \node[latch_inst] at (inst_memory_pos) {lw};
+    % and decoding: read R4, R5
+    \node[data_value] at (src1_data_pos) {[R4]};
+    \node[data_value] at (src2_data_pos) {[R5]};
+    \node[dst_value] at (dst_idex_pos) {R12};
+    % sub executing
+    \node[data_value] at (alu_result_pos) {[R2]-[R3]};
+    \node[dst_value] at (dst_exmem_pos) {R11};
+    % lw in memory
+    \node[dst_value] at (dst_memwb_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Cycle 4:} \texttt{lw} accesses D-Cache at address [R1]+9
+    };
+}
+
+% === Cycle 5 (overlay 6): lw in WB, sub in Memory, and in Execute, or in Decode ===
+\only<6>{
+    \node[latch_inst] at (inst_decode_pos) {or};
+    \node[latch_inst] at (inst_execute_pos) {and};
+    \node[latch_inst] at (inst_memory_pos) {sub};
+    \node[latch_inst] at (inst_wb_pos) {lw};
+    % or decoding: read R6, R7
+    \node[data_value] at (src1_data_pos) {[R6]};
+    \node[data_value] at (src2_data_pos) {[R7]};
+    \node[dst_value] at (dst_idex_pos) {R13};
+    % and executing
+    \node[data_value] at (alu_result_pos) {[R4]\&[R5]};
+    \node[dst_value] at (dst_exmem_pos) {R12};
+    % sub in memory (passes through)
+    \node[dst_value] at (dst_memwb_pos) {R11};
+    % lw writeback - show data being written
+    \node[data_value] at ([xshift=8mm]WBMux.east) {M[..]};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Cycle 5:} \texttt{lw} writes M[[R1]+9] to R10. First instruction completes!
+    };
+}
 
 \end{circuitikz}
 }
@@ -1370,30 +1524,12 @@
 \end{center}
 \end{frame}
 
-%% Slide: Pipeline Example
-\begin{frame}{Pipeline Example: cycle 1}
-    \begin{columns}
-        \column{0.4\textwidth}
-        \begin{tabular}{ll}
-            0 & \texttt{lw R10,9(R1)}\\
-            4 & \texttt{sub R11,R2,R3}\\
-            8 & \texttt{and R12,R4,R5}\\
-            12 & \texttt{or R13,R6,R7}
-        \end{tabular}
-        
-        \column{0.6\textwidth}
-        \centering
-        PC = 0
-        \vspace{0.5cm}
-        
-        \begin{tikzpicture}[scale=0.6]
-            \node[draw, dashed, minimum width=8cm, minimum height=3cm, align=center] {
-                Pipeline State Diagram\\
-                (Cycle 1)
-            };
-        \end{tikzpicture}
-    \end{columns}
-\end{frame}
+%% Slide: Pipeline Example - using againframe to show cycles 1-5
+\againframe<2>{pipelined-cpu}
+\againframe<3>{pipelined-cpu}
+\againframe<4>{pipelined-cpu}
+\againframe<5>{pipelined-cpu}
+\againframe<6>{pipelined-cpu}
 
 %% Slide: RAW Dependency
 \begin{frame}{RAW Dependency}
