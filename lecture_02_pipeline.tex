@@ -1352,6 +1352,12 @@
             \draw[line] (Reg2.east) -- ++(0.6,0);
         \end{tikzpicture}
     \end{columns}
+
+    \vspace{0.3cm}
+    \begin{tcolorbox}[colback=orange!5, colframe=orange!60!black, title=Structural Hazard, fonttitle=\bfseries]
+        A \textbf{structural hazard} occurs when two instructions need the \textbf{same hardware resource} in the same cycle.
+        Solution: \textbf{duplicate resources} (e.g., separate I\$ and D\$, multi-port register file).
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Pipeline Architecture}
@@ -1586,133 +1592,99 @@
 \end{center}
 \end{frame}
 
-%% Slide: Data Hazards Introduction
-\begin{frame}{Data Hazards}
-    \textbf{Data Hazard:} An instruction depends on the result of a previous instruction still in the pipeline
+%% Slide: RAW Dependency Example
+\begin{frame}{RAW Dependency}
+    \centering
+    \begin{tikzpicture}[
+        stage/.style={draw, minimum width=9mm, minimum height=6mm, font=\scriptsize\ttfamily},
+        if_stage/.style={stage, fill=blue!25},
+        id_stage/.style={stage, fill=yellow!35},
+        ex_stage/.style={stage, fill=green!25},
+        mem_stage/.style={stage, fill=orange!25},
+        wb_stage/.style={stage, fill=purple!25},
+        hazard/.style={stage, fill=red!50, text=white},
+        inst_label/.style={font=\scriptsize\ttfamily, align=left, anchor=east},
+        cycle_label/.style={font=\scriptsize\bfseries, text depth=0.25ex},
+        ann_callout/.style={ellipse callout, draw, fill=white, font=\scriptsize, inner sep=2pt},
+    ]
+        % Cycle labels
+        \node[cycle_label] at (0, 0.6) {Cycle:};
+        \foreach \c in {1,...,9} {
+            \node[cycle_label] at (\c*1.0, 0.6) {\c};
+        }
 
-    \vspace{0.5cm}
-    \begin{columns}[T]
-        \column{0.5\textwidth}
-        \textbf{Three types of data hazards:}
-        \begin{itemize}
-            \item \textbf{RAW} (Read After Write) -- most common
-            \item \textbf{WAR} (Write After Read) -- anti-dependency
-            \item \textbf{WAW} (Write After Write) -- output dependency
-        \end{itemize}
+        % Instructions with full text
+        \node[inst_label] at (-0.15, 0) {sub \textcolor{blue}{R2}, R1, R3};
+        \node[inst_label] at (-0.15, -0.7) {and R12, \textcolor{red}{R2}, R5};
+        \node[inst_label] at (-0.15, -1.4) {or R13, R6, \textcolor{red}{R2}};
+        \node[inst_label] at (-0.15, -2.1) {add R14, \textcolor{red}{R2}, \textcolor{red}{R2}};
+        \node[inst_label] at (-0.15, -2.8) {sw R15, 100(\textcolor{red}{R2})};
 
-        \vspace{0.3cm}
-        In a simple 5-stage pipeline, only \textbf{RAW} hazards can occur
+        % sub R2, R1, R3 - produces R2
+        \node[if_stage] at (1*1.0, 0) {IF};
+        \node[id_stage] at (2*1.0, 0) {ID};
+        \node[ex_stage] at (3*1.0, 0) {EX};
+        \node[mem_stage] at (4*1.0, 0) {MEM};
+        \node[wb_stage] (sub_wb) at (5*1.0, 0) {WB};
 
-        \column{0.5\textwidth}
-        \begin{tcolorbox}[colback=blue!5, colframe=blue!60!black, title=Why only RAW?]
-            \small
-            \begin{itemize}
-                \item Reads happen in ID (stage 2)
-                \item Writes happen in WB (stage 5)
-                \item Instructions execute in order
-                \item $\Rightarrow$ Reads always before writes in program order
-            \end{itemize}
-        \end{tcolorbox}
-    \end{columns}
-\end{frame}
+        % and R12, R2, R5 - needs R2 at cycle 3 (ID)
+        \node[if_stage] at (2*1.0, -0.7) {IF};
+        \node[hazard] (and_id) at (3*1.0, -0.7) {ID};
+        \node[ex_stage] at (4*1.0, -0.7) {EX};
+        \node[mem_stage] at (5*1.0, -0.7) {MEM};
+        \node[wb_stage] at (6*1.0, -0.7) {WB};
 
-%% Slide: RAW Dependency
-\begin{frame}{RAW Dependency Example}
-    \begin{columns}[T]
-        \column{0.35\textwidth}
-        \textbf{Program:}
-        \begin{enumerate}
-            \item \texttt{sub \textcolor{blue}{R2}, R1, R3}
-            \item \texttt{and R12, \textcolor{red}{R2}, R5}
-            \item \texttt{or R13, R6, \textcolor{red}{R2}}
-            \item \texttt{add R14, \textcolor{red}{R2}, \textcolor{red}{R2}}
-            \item \texttt{sw R15, 100(\textcolor{red}{R2})}
-        \end{enumerate}
+        % or R13, R6, R2 - needs R2 at cycle 4 (ID)
+        \node[if_stage] at (3*1.0, -1.4) {IF};
+        \node[hazard] (or_id) at (4*1.0, -1.4) {ID};
+        \node[ex_stage] at (5*1.0, -1.4) {EX};
+        \node[mem_stage] at (6*1.0, -1.4) {MEM};
+        \node[wb_stage] at (7*1.0, -1.4) {WB};
 
-        \vspace{0.3cm}
+        % add R14, R2, R2 - needs R2 at cycle 5 (ID)
+        \node[if_stage] at (4*1.0, -2.1) {IF};
+        \node[hazard] (add_id) at (5*1.0, -2.1) {ID};
+        \node[ex_stage] at (6*1.0, -2.1) {EX};
+        \node[mem_stage] at (7*1.0, -2.1) {MEM};
+        \node[wb_stage] at (8*1.0, -2.1) {WB};
+
+        % sw R15, 100(R2) - needs R2 at cycle 6 (ID) - after WB, no hazard
+        \node[if_stage] at (5*1.0, -2.8) {IF};
+        \node[id_stage] (sw_id) at (6*1.0, -2.8) {ID};
+        \node[ex_stage] at (7*1.0, -2.8) {EX};
+        \node[mem_stage] at (8*1.0, -2.8) {MEM};
+        \node[wb_stage] at (9*1.0, -2.8) {WB};
+
+        % Draw dependency arrows with white outline for visibility
+        \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
+            (sub_wb.south) -- (and_id.north);
+        \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
+            (sub_wb.south) -- (and_id.north);
+
+        \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
+            (sub_wb.south) -- (or_id.north);
+        \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
+            (sub_wb.south) -- (or_id.north);
+
+        \draw[white, line width=3pt, shorten >=2pt, shorten <=2pt]
+            (sub_wb.south) -- (add_id.north);
+        \draw[->, red!70!black, line width=1.5pt, shorten >=2pt, shorten <=2pt]
+            (sub_wb.south) -- (add_id.north);
+
+        % Callout annotations
+        \node[ann_callout, callout absolute pointer={(sub_wb.east)}, anchor=west, text=blue!70!black]
+            at ([xshift=8mm, yshift=0mm]sub_wb.east) {R2 written};
+        \node[ann_callout, callout absolute pointer={(sw_id.east)}, anchor=north, text=green!50!black]
+            at ([yshift=5mm,xshift=1cm]sw_id.east) {No hazard};
+    \end{tikzpicture}
+
+    \vspace{0.15cm}
+    \begin{tcolorbox}[colback=red!5, colframe=red!60!black, title=Data Hazard: RAW (Read After Write), fonttitle=\bfseries]
         \small
-        \textcolor{blue}{R2} is written by sub\\
-        \textcolor{red}{R2} is read by subsequent instructions
-
-        \column{0.65\textwidth}
-        \textbf{Pipeline Timing Diagram:}
-        \vspace{0.2cm}
-
-        \centering
-        \begin{tikzpicture}[
-            stage/.style={minimum width=7mm, minimum height=5mm, font=\tiny\ttfamily},
-            if_stage/.style={stage, fill=blue!30},
-            id_stage/.style={stage, fill=yellow!40},
-            ex_stage/.style={stage, fill=green!30},
-            mem_stage/.style={stage, fill=orange!30},
-            wb_stage/.style={stage, fill=red!30},
-            hazard/.style={stage, fill=red!60, text=white},
-            label_style/.style={font=\tiny\ttfamily, align=right, anchor=east},
-            cycle_label/.style={font=\tiny\bfseries},
-        ]
-            % Cycle labels
-            \foreach \c in {1,...,9} {
-                \node[cycle_label] at (\c*0.8, 0.4) {\c};
-            }
-
-            % Instruction labels
-            \node[label_style] at (0, -0.0) {sub};
-            \node[label_style] at (0, -0.6) {and};
-            \node[label_style] at (0, -1.2) {or};
-            \node[label_style] at (0, -1.8) {add};
-            \node[label_style] at (0, -2.4) {sw};
-
-            % sub R2, R1, R3 - produces R2
-            \node[if_stage] at (1*0.8, 0) {IF};
-            \node[id_stage] at (2*0.8, 0) {ID};
-            \node[ex_stage] at (3*0.8, 0) {EX};
-            \node[mem_stage] at (4*0.8, 0) {ME};
-            \node[wb_stage] at (5*0.8, 0) {WB};
-
-            % and R12, R2, R5 - needs R2 at cycle 3 (ID)
-            \node[if_stage] at (2*0.8, -0.6) {IF};
-            \node[hazard] at (3*0.8, -0.6) {ID};
-            \node[ex_stage] at (4*0.8, -0.6) {EX};
-            \node[mem_stage] at (5*0.8, -0.6) {ME};
-            \node[wb_stage] at (6*0.8, -0.6) {WB};
-
-            % or R13, R6, R2 - needs R2 at cycle 4 (ID)
-            \node[if_stage] at (3*0.8, -1.2) {IF};
-            \node[hazard] at (4*0.8, -1.2) {ID};
-            \node[ex_stage] at (5*0.8, -1.2) {EX};
-            \node[mem_stage] at (6*0.8, -1.2) {ME};
-            \node[wb_stage] at (7*0.8, -1.2) {WB};
-
-            % add R14, R2, R2 - needs R2 at cycle 5 (ID)
-            \node[if_stage] at (4*0.8, -1.8) {IF};
-            \node[hazard] at (5*0.8, -1.8) {ID};
-            \node[ex_stage] at (6*0.8, -1.8) {EX};
-            \node[mem_stage] at (7*0.8, -1.8) {ME};
-            \node[wb_stage] at (8*0.8, -1.8) {WB};
-
-            % sw R15, 100(R2) - needs R2 at cycle 6 (ID) - OK!
-            \node[if_stage] at (5*0.8, -2.4) {IF};
-            \node[id_stage] at (6*0.8, -2.4) {ID};
-            \node[ex_stage] at (7*0.8, -2.4) {EX};
-            \node[mem_stage] at (8*0.8, -2.4) {ME};
-            \node[wb_stage] at (9*0.8, -2.4) {WB};
-
-            % Draw dependency arrows
-            \draw[->, thick, red!70!black] (5*0.8, -0.15) -- (3*0.8, -0.45);
-            \draw[->, thick, red!70!black] (5*0.8, -0.15) -- (4*0.8, -1.05);
-            \draw[->, thick, red!70!black] (5*0.8, -0.15) -- (5*0.8, -1.65);
-
-            % Legend
-            \node[font=\tiny, align=left, anchor=north west] at (0.3, -3.0) {
-                \textcolor{red!70!black}{Red ID} = needs R2 before it's written
-            };
-        \end{tikzpicture}
-    \end{columns}
-
-    \vspace{0.3cm}
-    \begin{tcolorbox}[colback=red!5, colframe=red!60!black, title=RAW Hazard (Read After Write)]
-        \small
-        A \textbf{RAW hazard} occurs when an instruction tries to \textbf{read} a register that a previous instruction hasn't \textbf{written} yet. The reading instruction must wait or use \textbf{forwarding/bypass} to get the correct value.
+        A \textbf{data hazard} occurs when an instruction depends on the result of a previous instruction still in the pipeline.
+        \textbf{RAW} is the most common -- reading a register before it's written.
+        Solution: \textbf{stall} or \textbf{forwarding/bypass}.
+        {\footnotesize (Other types: WAR, WAW -- discussed in Out-of-Order Execution)}
     \end{tcolorbox}
 \end{frame}
 
