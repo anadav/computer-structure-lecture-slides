@@ -248,11 +248,22 @@ Stack Layout:
 \end{minted}
             \end{tcolorbox}
             
-            \begin{tikzpicture}[scale=0.6]
-                \node[draw,fill=red!30] at (0,0) {XD/NX Active};
-                \draw[->,thick] (0,-0.5) -- (0,-1.5);
-                \node[draw,fill=orange!30] at (0,-2) {Code Reuse};
-                \node at (3,-2) {Still Works!};
+            \begin{tikzpicture}[
+                box/.style={draw, thick, minimum width=2cm, minimum height=0.7cm,
+                           align=center, font=\small, rounded corners=2pt},
+                arrow/.style={->, thick}]
+
+                % XD/NX Active box at top
+                \node[box, fill=red!30] (xd) {XD/NX Active};
+
+                % Arrow pointing down
+                \draw[arrow] (xd.south) -- ++(0, -0.6cm);
+
+                % Code Reuse box below
+                \node[box, fill=orange!30, below=0.6cm of xd] (reuse) {Code Reuse};
+
+                % "Still Works!" annotation
+                \node[font=\small, right=0.8cm of reuse] {Still Works!};
             \end{tikzpicture}
         \end{column}
     \end{columns}
@@ -504,33 +515,40 @@ vulnerable:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % Memory layout
-                \draw[fill=blue!30] (0,4) rectangle (4,7);
-                \node at (2,6.5) {\textbf{Kernel Space}};
-                \node at (2,6) {CPL = 0};
-                \node at (2,5.5) {U = 0};
-                
-                \draw[fill=green!30] (0,0) rectangle (4,3.5);
-                \node at (2,3) {\textbf{User Space}};
-                \node at (2,2.5) {CPL = 3};
-                \node at (2,2) {U = 1};
-                \node at (2,1) {Shellcode};
-                
-                % Attack attempt
-                \draw[->,thick,red] (2,4.5) -- (2,3.5);
-                \node[red] at (2,4) {ret2user};
-                
-                % SMEP blocks
-                \draw[thick,red] (1,3.7) -- (3,3.7);
-                \draw[thick,red] (1.2,3.9) -- (2.8,3.9);
-                \node[red] at (5.5,3.8) {SMEP Blocks!};
-                
-                % Without SMEP
-                \node at (7,5) {\textbf{Without SMEP:}};
-                \node at (7,4.5) {Kernel jumps to};
-                \node at (7,4) {user shellcode};
-                \node[red] at (7,3.5) {= root shell};
+            \begin{tikzpicture}[
+                space/.style={draw, thick, minimum width=4cm, minimum height=2.5cm,
+                            align=center, font=\small, rounded corners=2pt},
+                label/.style={draw, fill=white, rounded corners=2pt, font=\tiny,
+                            inner sep=2pt, align=center}]
+
+                % Kernel Space at top
+                \node[space, fill=purple!15] (kernel)
+                    {\textbf{Kernel Space}};
+                \node[label, below=2mm of kernel.north] (cpl0) {CPL = 0};
+                \node[label, below=1mm of cpl0] {U = 0};
+
+                % User Space below kernel
+                \node[space, fill=cyan!10, below=1.2cm of kernel.south] (user)
+                    {\textbf{User Space}};
+                \node[label, below=2mm of user.north] (cpl3) {CPL = 3};
+                \node[label, below=1mm of cpl3] (u1) {U = 1};
+                \node[font=\small, below=1mm of u1, fill=red!20, rounded corners=2pt,
+                      inner sep=2pt] {Shellcode};
+
+                % Attack attempt with X mark
+                \draw[->, thick, red, dashed] (kernel.south) -- ++(0, -0.5cm);
+                \node[red, font=\small, left=2pt] at ([yshift=-2mm]kernel.south) {ret2user};
+                \node[inner sep=0pt] at ([yshift=-5mm]kernel.south)
+                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+                \node[red, font=\tiny, below=6mm of kernel.south] {SMEP Blocks!};
+
+                % Consequence box
+                \node[draw, fill=yellow!10, rounded corners=2pt, font=\tiny,
+                      align=left, right=0.5cm of user.east, anchor=west, text width=2cm]
+                    {\textbf{Without SMEP:}\\
+                     Kernel jumps to\\
+                     user shellcode\\
+                     \textcolor{red}{= root shell}};
             \end{tikzpicture}
         \end{column}
     \end{columns}
@@ -591,55 +609,56 @@ some_ioctl:
 
 \begin{frame}{SMEP + SMAP Combined Protection}
     \begin{center}
-        \begin{tikzpicture}[scale=0.9]
-            % Kernel space
-            \draw[fill=blue!20] (0,3) rectangle (8,6);
-            \node at (4,5.5) {\textbf{Kernel Space (Ring 0)}};
-            
-            % User space
-            \draw[fill=green!20] (0,0) rectangle (8,2.5);
-            \node at (4,2) {\textbf{User Space (Ring 3)}};
-            
-            % Protection barriers
-            \draw[ultra thick, red] (0,2.7) -- (8,2.7);
-            \node[red] at (9,2.7) {SMEP/SMAP};
-            
-            % Attack scenarios
-            % 1. Code execution attempt
-            \draw[->,thick,orange] (1,3.5) -- (1,2.5);
-            \node[orange] at (1,3.8) {\small Execute};
-            \draw[thick,red] (0.5,2.6) -- (1.5,2.6);
-            \draw[thick,red] (0.5,2.8) -- (1.5,2.8);
-            \node[red] at (1,2.3) {\tiny SMEP};
-            
-            % 2. Data read attempt
-            \draw[->,thick,orange] (3,3.5) -- (3,2.5);
-            \node[orange] at (3,3.8) {\small Read};
-            \draw[thick,red] (2.5,2.6) -- (3.5,2.6);
-            \draw[thick,red] (2.5,2.8) -- (3.5,2.8);
-            \node[red] at (3,2.3) {\tiny SMAP};
-            
-            % 3. Data write attempt
-            \draw[->,thick,orange] (5,3.5) -- (5,2.5);
-            \node[orange] at (5,3.8) {\small Write};
-            \draw[thick,red] (4.5,2.6) -- (5.5,2.6);
-            \draw[thick,red] (4.5,2.8) -- (5.5,2.8);
-            \node[red] at (5,2.3) {\tiny SMAP};
-            
-            % 4. Legitimate access
-            \draw[->,thick,green!60!black] (7,3.5) -- (7,2.5);
-            \node[green!60!black] at (7,3.8) {\small STAC};
-            \node[green!60!black] at (7,2.3) {\tiny OK};
-            
-            % User data/code
-            \draw[fill=yellow!30] (0.5,0.5) rectangle (2.5,1.5);
-            \node at (1.5,1) {\small User Code};
-            
-            \draw[fill=orange!30] (3,0.5) rectangle (5,1.5);
-            \node at (4,1) {\small User Data};
-            
-            \draw[fill=red!30] (5.5,0.5) rectangle (7.5,1.5);
-            \node at (6.5,1) {\small ROP Chain};
+        \begin{tikzpicture}[
+            space/.style={draw, thick, minimum width=8cm, minimum height=1.2cm,
+                         align=center, font=\small},
+            useritem/.style={draw, thick, minimum width=1.8cm, minimum height=0.8cm,
+                           align=center, font=\small, rounded corners=2pt},
+            attack/.style={->, thick, orange!70, dashed},
+            allowed/.style={->, thick, green!60!black}]
+
+            % Kernel Space at top - smaller and more compact
+            \node[space, fill=purple!15] (kernel) {\textbf{Kernel Space (Ring 0)}};
+
+            % Protection barrier
+            \coordinate (barrier-left) at ([xshift=-4cm]kernel.south);
+            \coordinate (barrier-right) at ([xshift=4cm]kernel.south);
+            \draw[ultra thick, red!70, dashed] (barrier-left) -- (barrier-right);
+            \node[red!70, font=\small, right=2pt of barrier-right] {SMEP/SMAP};
+
+            % User Space below barrier
+            \node[space, fill=cyan!10, below=0.5cm of kernel.south] (user)
+                {\textbf{User Space (Ring 3)}};
+
+            % User components inside user space
+            \node[useritem, fill=blue!20, above=0.2cm of user.south west, anchor=south west,
+                  xshift=0.5cm] (code) {User Code};
+            \node[useritem, fill=yellow!20, right=0.3cm of code] (data) {User Data};
+            \node[useritem, fill=red!20, right=0.3cm of data] (rop) {ROP Chain};
+
+            % Attack attempts from kernel
+            \draw[attack] ([xshift=-2.5cm]kernel.south) -- ++(0, -0.4cm);
+            \node[inner sep=0pt] at ([xshift=-2.5cm, yshift=-2mm]kernel.south)
+                {\includegraphics[width=0.35cm]{figures/noun-x-2222229.png}};
+            \node[orange!70, font=\tiny, above=1pt] at ([xshift=-2.5cm]kernel.south) {Execute};
+            \node[red!70, font=\tiny, below=3mm] at ([xshift=-2.5cm]kernel.south) {SMEP};
+
+            \draw[attack] ([xshift=-0.8cm]kernel.south) -- ++(0, -0.4cm);
+            \node[inner sep=0pt] at ([xshift=-0.8cm, yshift=-2mm]kernel.south)
+                {\includegraphics[width=0.35cm]{figures/noun-x-2222229.png}};
+            \node[orange!70, font=\tiny, above=1pt] at ([xshift=-0.8cm]kernel.south) {Read};
+            \node[red!70, font=\tiny, below=3mm] at ([xshift=-0.8cm]kernel.south) {SMAP};
+
+            \draw[attack] ([xshift=0.8cm]kernel.south) -- ++(0, -0.4cm);
+            \node[inner sep=0pt] at ([xshift=0.8cm, yshift=-2mm]kernel.south)
+                {\includegraphics[width=0.35cm]{figures/noun-x-2222229.png}};
+            \node[orange!70, font=\tiny, above=1pt] at ([xshift=0.8cm]kernel.south) {Write};
+            \node[red!70, font=\tiny, below=3mm] at ([xshift=0.8cm]kernel.south) {SMAP};
+
+            % Legitimate access with STAC
+            \draw[allowed] ([xshift=2.5cm]kernel.south) -- ++(0, -0.4cm);
+            \node[green!60!black, font=\tiny, above=1pt] at ([xshift=2.5cm]kernel.south) {STAC};
+            \node[green!60!black, font=\small, below=2mm] at ([xshift=2.5cm]kernel.south) {$\checkmark$};
         \end{tikzpicture}
     \end{center}
     
@@ -851,6 +870,61 @@ some_ioctl:
                 \item Hardware tag checking
                 \item Synchronous/async exceptions
             \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{ARM MTE - How It Works}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Memory Granularity:}
+            \begin{itemize}
+                \item Each 16-byte memory granule has a 4-bit tag
+                \item Tags stored in dedicated tag memory
+                \item Tag memory not directly accessible
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{Hardware Tag Checking:}
+            \begin{itemize}
+                \item On every load/store: compare pointer tag with memory tag
+                \item If mismatch $\rightarrow$ exception
+                \item Synchronous or asynchronous mode
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{Software Behavior:}
+            \begin{itemize}
+                \item \texttt{malloc()}: assigns random tag to allocation
+                \item \texttt{free()}: changes memory tag
+                \item Old pointers become invalid
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Use-After-Free Detection Example:}
+            \begin{tcolorbox}[colback=gray!10]
+{\scriptsize
+\begin{minted}{c}
+// Allocation - tag = 0x5
+char *ptr = malloc(64);
+// ptr = 0x5_00001000 (tag in bits 59:56)
+// Memory at 0x1000 tagged with 0x5
+
+strcpy(ptr, "hello");  // OK: tags match
+
+free(ptr);  // Memory retagged to 0x7
+            // ptr still has tag 0x5
+
+// Use-after-free attempt:
+strcpy(ptr, "bad");  // EXCEPTION!
+                     // ptr tag (0x5) !=
+                     // memory tag (0x7)
+\end{minted}
+}
+            \end{tcolorbox}
+
+            \vspace{0.2cm}
+            {\tiny Note: Tags are random, not sequential}
         \end{column}
     \end{columns}
 \end{frame}
@@ -1546,46 +1620,108 @@ func:
         \begin{column}{0.5\textwidth}
             \begin{tikzpicture}[
                 box/.style={draw, thick, minimum width=3.2cm, minimum height=1cm, align=center, font=\small},
-                vm/.style={box, minimum height=1.8cm, minimum width=1.5cm, rounded corners=3pt},
-                connection/.style={<->, thick, blue!70!black},
-                label/.style={font=\scriptsize, text=blue!70!black}]
+                vm/.style={draw, thick, minimum width=1.5cm, minimum height=0.8cm, rounded corners=3pt,
+                          align=center, font=\small, text depth=0.3cm},
+                guestos/.style={draw, thick, minimum width=1.5cm, minimum height=0.6cm,
+                               fill=white, align=center, font=\scriptsize, rounded corners=2pt}]
 
                 % Hardware (bottom layer)
                 \node[box, fill=black!20, minimum width=5.2cm] (hw) {\textbf{Hardware}};
 
-                % Hypervisor (middle layer) - privileged mode
+                % Hypervisor (Host) - middle layer
                 \node[box, fill=orange!30, minimum width=5.2cm, above=0.6cm of hw] (vmm)
-                    {\textbf{Hypervisor (VMM)}};
+                    {\textbf{Hypervisor (Host)}};
 
-                % VMs (top layer) - isolated guests
-                \node[vm, fill=blue!30, above left=0.8cm and 0.3cm of vmm.north] (vm1)
-                    {\textbf{VM1}\\[-2pt]\small Guest OS};
-                \node[vm, fill=green!30, above right=0.8cm and 0.3cm of vmm.north] (vm2)
-                    {\textbf{VM2}\\[-2pt]\small Guest OS};
-
-                % Privilege boundary with labels
+                % Guest/Host boundary
                 \coordinate (boundary-left) at ([xshift=-2.6cm]vmm.north);
                 \coordinate (boundary-right) at ([xshift=2.6cm]vmm.north);
 
-                % Dashed line
                 \draw[very thick, red!70, dashed, line cap=round]
-                    (boundary-left) -- (boundary-right);
+                    (boundary-left) -- (boundary-right)
+                    node[pos=0.05, above=2pt, font=\small, text=blue!70, fill=white, inner sep=2pt] {Guest}
+                    node[pos=0.95, below=2pt, font=\small, text=red!70, fill=white, inner sep=2pt] {Host};
 
-                % Mode labels on the boundary
-                \node[font=\scriptsize, text=blue!70, fill=white, inner sep=2pt,
-                      above=2pt of boundary-left, anchor=south west] {Guest};
-                \node[font=\scriptsize, text=red!70, fill=white, inner sep=2pt,
-                      below=2pt of boundary-right, anchor=north east] {VMM};
+                % VM containers (top layer)
+                \node[vm, fill=blue!30, above left=1.2cm and 0.3cm of vmm.north] (vm1) {\textbf{VM1}};
+                \node[vm, fill=green!30, above right=1.2cm and 0.3cm of vmm.north] (vm2) {\textbf{VM2}};
 
-                % EPT connections
-                \draw[connection] (vm1.south) -- (vm1.south |- vmm.north)
-                    node[midway, label, left, xshift=-1pt] {EPT};
-                \draw[connection] (vm2.south) -- (vm2.south |- vmm.north)
-                    node[midway, label, right, xshift=1pt] {EPT};
+                % Guest OS nodes - anchored to south of VMs
+                \node[guestos, below=2mm of vm1.south, anchor=north] (gos1) {Guest OS};
+                \node[guestos, below=2mm of vm2.south, anchor=north] (gos2) {Guest OS};
+
+                % EPT connections with organogram icons
+                \draw[thick, blue!70!black] (gos1.south) -- (gos1.south |- vmm.north);
+                \node[inner sep=0pt] at ($(gos1.south)!0.5!(gos1.south |- vmm.north)$)
+                    {\includegraphics[width=0.4cm]{figures/noun-organogram-5851660.png}};
+
+                \draw[thick, blue!70!black] (gos2.south) -- (gos2.south |- vmm.north);
+                \node[inner sep=0pt] at ($(gos2.south)!0.5!(gos2.south |- vmm.north)$)
+                    {\includegraphics[width=0.4cm]{figures/noun-organogram-5851660.png}};
 
                 % VMM to Hardware connection
                 \draw[<->, thick, gray!70] (vmm.south) -- (hw.north);
             \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{EPT/NPT - Nested Page Tables}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Problem:}
+            \begin{itemize}
+                \item Guest OS manages its own page tables
+                \item Guest thinks it controls physical memory
+                \item Hypervisor must translate guest physical $\rightarrow$ host physical
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{Solution: EPT/NPT}
+            \begin{itemize}
+                \item \textbf{EPT}: Intel's Extended Page Tables
+                \item \textbf{NPT}: AMD's Nested Page Tables
+                \item Hardware-accelerated 2D page walk
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{Address Translation:}
+            \begin{enumerate}
+                \item Guest Virtual $\rightarrow$ Guest Physical (guest page tables)
+                \item Guest Physical $\rightarrow$ Host Physical (EPT/NPT)
+            \end{enumerate}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Performance Impact:}
+
+            \begin{tcolorbox}[colback=yellow!10, title={\small Native (No Virtualization)}]
+                {\scriptsize
+                \textbf{4-level page walk:}
+                \begin{itemize}
+                    \item 4 memory accesses
+                    \item CR3 $\rightarrow$ PML4 $\rightarrow$ PDP $\rightarrow$ PD $\rightarrow$ PT
+                \end{itemize}
+                }
+            \end{tcolorbox}
+
+            \vspace{0.2cm}
+            \begin{tcolorbox}[colback=red!10, title={\small With EPT (Nested)}]
+                {\scriptsize
+                \textbf{Each guest PTE access needs EPT walk!}
+                \begin{itemize}
+                    \item Guest walk: 4 accesses
+                    \item Each access $\times$ 4 EPT walks
+                    \item \textbf{Total: up to $4 \times 5 = 20$ memory accesses}
+                \end{itemize}
+
+                \vspace{0.1cm}
+                \textbf{Mitigations:}
+                \begin{itemize}
+                    \item TLB caching (both guest and EPT)
+                    \item Large pages (2MB/1GB)
+                    \item Typically 2-3$\times$ slowdown
+                \end{itemize}
+                }
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -1621,43 +1757,43 @@ func:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.8]
-                % Main CPU
-                \draw[fill=blue!20] (0,4) rectangle (4,6);
-                \node at (2,5) {Main CPU};
-                \node at (2,4.3) {\small Ring 0-3};
-                
-                % ME
-                \draw[fill=red!30,thick,dashed] (-1,0) rectangle (5,3.5);
-                \node at (2,2.8) {\textbf{Intel ME}};
-                \node at (2,2.3) {\small Ring -3};
-                
-                % Resources
-                \draw[fill=green!20] (6,5) rectangle (8,6);
-                \node at (7,5.5) {\small RAM};
-                
-                \draw[fill=yellow!20] (6,3.5) rectangle (8,4.5);
-                \node at (7,4) {\small Network};
-                
-                \draw[fill=orange!20] (6,2) rectangle (8,3);
-                \node at (7,2.5) {\small Storage};
-                
-                % ME access arrows
-                \draw[->,thick,red] (5,2.5) -- (6,5.5);
-                \draw[->,thick,red] (5,2.5) -- (6,4);
-                \draw[->,thick,red] (5,2.5) -- (6,2.5);
-                
+            \begin{tikzpicture}[
+                resource/.style={draw, thick, minimum width=1.8cm, minimum height=0.3cm,
+                               align=center, font=\small, rounded corners=2pt, inner sep=1pt},
+                cpu/.style={draw, thick, minimum width=2.5cm, minimum height=1.2cm,
+                           fill=blue!20, align=center, font=\small},
+                connection/.style={->, thick, red!70}]
+
+                % Intel ME as muxdemux (center-left) - wider and shorter
+                \node[muxdemux, muxdemux def={NL=1, NR=4, Rh=2, Lh=2, w=3},
+                      fill=red!30, thick, dashed, font=\small, external pins width=0] (me)
+                    {Intel ME};
+
+                % Ring privilege level label (clearer)
+                \node[font=\tiny, below=1pt of me.center, anchor=north, text=red!80]
+                    {(Ring -3)};
+
+                % Main CPU above ME
+                \node[cpu, above=1.2cm of me.top] (cpu)
+                    {Main CPU\\[-2pt]{\tiny Ring 0-3}};
+
+                % Resources on the right side - RAM moved higher, others stacked below
+                \node[resource, fill=green!20, above=1.3cm, right=1.5cm of me.rpin 1] (ram) {RAM};
+                \node[resource, fill=yellow!20, below=0.3cm of ram] (network) {Network};
+                \node[resource, fill=orange!20, below=0.3cm of network] (storage) {Storage};
+                \node[resource, fill=gray!20, below=0.3cm of storage] (power) {Power};
+
+                % ME connections to resources
+                \draw[connection] (me.rpin 1) -- (ram.west);
+                \draw[connection] (me.rpin 2) -- (network.west);
+                \draw[connection] (me.rpin 3) -- (storage.west);
+                \draw[connection] (me.rpin 4) -- (power.west);
+
                 % ME controls CPU
-                \draw[->,ultra thick,red] (2,3.5) -- (2,4);
-                \node[red] at (3.2,3.7) {\small Controls};
-                
-                % Power state
-                \draw[fill=gray!20] (6,0.5) rectangle (8,1.5);
-                \node at (7,1) {\small Power};
-                \draw[->,thick] (6,1) -- (2,1.5);
-                \node at (4,0.7) {\small Always On};
+                \draw[connection, ultra thick] (me.top) -- (cpu.south)
+                    node[midway, right, font=\scriptsize, text=red!70] {Controls};
             \end{tikzpicture}
-            
+
             \vspace{0.3cm}
             \begin{tcolorbox}[colback=yellow!20]
                 \small
@@ -1852,6 +1988,106 @@ func:
 % Section 4: Trusted Execution
 \section{Trusted Execution Environments}
 
+\begin{frame}{Why Trusted Execution Environments (TEEs)?}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The Problem:}
+            \begin{itemize}
+                \item Cloud computing $\rightarrow$ running on untrusted infrastructure
+                \item Cloud provider has physical access
+                \item Hypervisor has full control over VMs
+                \item Can read memory, modify code, inject malware
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{Trust Boundary Shift:}
+            \begin{itemize}
+                \item Traditional: Trust the cloud provider
+                \item TEE: Trust only the hardware/CPU
+                \item Provider is explicitly \textcolor{red}{untrusted}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Use Cases:}
+            \begin{itemize}
+                \item Confidential computing in public cloud
+                \item Processing sensitive data (medical, financial)
+                \item Multi-party computation
+                \item Secure enclaves for ML models
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=blue!10, title={\small Goal}]
+                \textbf{Run code on someone else's hardware without them being able to:}
+                \begin{itemize}
+                    \item Read your data
+                    \item Modify your code
+                    \item Tamper with execution
+                \end{itemize}
+                Even with physical access!
+            \end{tcolorbox}
+
+            \vspace{0.2cm}
+            {\small \textit{Different targets:}
+            \begin{itemize}
+                \item \textbf{Intel TDX/AMD SEV}: Full VM isolation
+                \item \textbf{Intel SGX/ARM TrustZone}: Process-level isolation
+            \end{itemize}
+            }
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{TEE Requirements - How Do We Achieve This?}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{1. Memory Encryption:}
+            \begin{itemize}
+                \item Encrypt all TEE memory
+                \item Each TEE has unique encryption key
+                \item Hardware encrypts/decrypts transparently
+                \item Prevents physical memory dumps
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{2. Hardware-Enforced Isolation:}
+            \begin{itemize}
+                \item CPU enforces access control
+                \item Hypervisor \textcolor{red}{cannot} access TEE memory
+                \item DMA attacks blocked (IOMMU protection)
+                \item Hardware prevents tampering
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{3. Remote Attestation:}
+            \begin{itemize}
+                \item Prove you're running in genuine TEE
+                \item Relies on secure boot chain
+                \item CPU signs measurement report
+                \item Client verifies before sending secrets
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \begin{tcolorbox}[colback=green!10, title={\small Attestation Flow}]
+                {\scriptsize
+                \textbf{1.} TEE measures code/data (hash)\\
+                \textbf{2.} CPU signs measurement with private key\\
+                \textbf{3.} Client verifies signature with CPU's public key\\
+                \textbf{4.} If valid $\rightarrow$ client sends encrypted secrets\\
+                \vspace{0.1cm}
+
+                \textit{Relies on:}
+                \begin{itemize}
+                    \item Secure boot (chain of trust)
+                    \item Hardware root of trust (TPM/fused keys)
+                    \item CPU manufacturer's PKI
+                \end{itemize}
+                }
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Intel TDX (Trust Domain Extensions)}
     \begin{columns}
         \begin{column}{0.5\textwidth}
@@ -1952,40 +2188,46 @@ func:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % Untrusted hypervisor
-                \draw[fill=red!20,dashed] (0,0) rectangle (8,2);
-                \node at (4,1) {\textbf{Untrusted Hypervisor}};
-                
-                % Protected VMs
-                \draw[fill=green!30,thick] (0.5,3) rectangle (3.5,5);
-                \node at (2,4.5) {\textbf{VM1}};
-                \node at (2,4) {\small Encrypted};
-                \node at (2,3.5) {\tiny Key1};
-                
-                \draw[fill=blue!30,thick] (4.5,3) rectangle (7.5,5);
-                \node at (6,4.5) {\textbf{VM2}};
-                \node at (6,4) {\small Encrypted};
-                \node at (6,3.5) {\tiny Key2};
-                
-                % Memory controller
-                \draw[fill=yellow!30,thick] (2,6) rectangle (6,7.5);
-                \node at (4,6.75) {\textbf{AMD SP}};
-                
-                % Protection
-                \draw[<->,thick,green] (2,5) -- (4,6);
-                \draw[<->,thick,blue] (6,5) -- (4,6);
-                
-                % Attacks blocked
-                \draw[->,thick,red] (1,2) -- (1,3);
-                \draw[red,ultra thick] (0.5,2.5) -- (1.5,2.5);
-                \node[red,rotate=90] at (0,2.5) {\tiny Read};
-                
-                \draw[->,thick,red] (7,2) -- (7,3);
-                \draw[red,ultra thick] (6.5,2.5) -- (7.5,2.5);
-                \node[red,rotate=90] at (8,2.5) {\tiny Modify};
+            \begin{tikzpicture}[
+                vm/.style={draw, thick, minimum width=2.2cm, minimum height=1.8cm,
+                          align=center, font=\small, rounded corners=2pt},
+                amd sp/.style={draw, thick, fill=yellow!30, minimum width=3.5cm,
+                              minimum height=0.8cm, align=center, font=\small, inner sep=2pt},
+                connection/.style={<->, thick},
+                attack/.style={->, thick, red, dashed}]
+
+                % AMD Security Processor at top
+                \node[amd sp] (amdsp) {\textbf{AMD SP}};
+
+                % Protected VMs below AMD SP
+                \node[vm, fill=green!30, below left=1cm and 0.3cm of amdsp.south] (vm1)
+                    {\textbf{VM1}\\[-2pt]\small Encrypted\\[-2pt]{\tiny Key1}};
+                \node[vm, fill=blue!30, below right=1cm and 0.3cm of amdsp.south] (vm2)
+                    {\textbf{VM2}\\[-2pt]\small Encrypted\\[-2pt]{\tiny Key2}};
+
+                % Protection connections
+                \draw[connection, green!70!black] (vm1.north) -- (amdsp.south);
+                \draw[connection, blue!70!black] (vm2.north) -- (amdsp.south);
+
+                % Untrusted Cloud Provider at bottom
+                \node[inner sep=0pt, below=2cm of amdsp.south] (cloud)
+                    {\includegraphics[width=1.8cm]{figures/noun-cloud-5095064.png}};
+                \node[font=\tiny, below=1pt of cloud] {Cloud Provider (Untrusted)};
+
+                % Blocked attack attempts with X marks
+                \draw[attack] (cloud.north) -- ++(0, 0.6cm);
+                \node[inner sep=0pt] at ([yshift=3mm]cloud.north)
+                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+
+                \draw[attack] ([xshift=-8mm]cloud.north) -- ++(0, 0.6cm);
+                \node[inner sep=0pt] at ([xshift=-8mm, yshift=3mm]cloud.north)
+                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
+
+                % Attack labels
+                \node[red, font=\tiny, left] at ([xshift=-8mm, yshift=3mm]cloud.north) {Read};
+                \node[red, font=\tiny, right] at ([xshift=8mm, yshift=3mm]cloud.north) {Modify};
             \end{tikzpicture}
-            
+
             \vspace{0.3cm}
             \begin{tcolorbox}[colback=yellow!20]
                 \textbf{RMP (Reverse Map Table):}
@@ -2119,28 +2361,33 @@ On Read:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % Application
-                \draw[fill=gray!20] (0,0) rectangle (6,5);
-                \node at (3,4.5) {\textbf{Application}};
-                
-                % Enclave
-                \draw[fill=green!40,thick] (1,1) rectangle (5,3.5);
-                \node at (3,3) {\textbf{SGX Enclave}};
-                \node at (3,2.5) {\small Trusted Code};
-                \node at (3,2) {\small Encrypted Data};
-                \node at (3,1.5) {\textbf{[Lock]}};
-                
-                % Untrusted part
-                \node at (3,0.5) {\small Untrusted Code};
-                
-                % EPC
-                \draw[<-,thick] (5,2) -- (6.5,2) node[right] {EPC Memory};
+            \begin{tikzpicture}[
+                app/.style={draw, thick, minimum width=5cm, minimum height=4.5cm,
+                           fill=gray!15, rounded corners=3pt},
+                enclave/.style={draw, very thick, minimum width=3.5cm, minimum height=2.5cm,
+                              fill=green!30, rounded corners=3pt, align=center}]
+
+                % Application container
+                \node[app] (app) {};
+                \node[font=\small\bfseries, below=2pt of app.north] {Application};
+
+                % SGX Enclave - protected region
+                \node[enclave] (enclave) at (app.center)
+                    {\textbf{SGX Enclave}\\[-2pt]
+                     \small Trusted Code\\[-2pt]
+                     \small Encrypted Data\\[2pt]
+                     \includegraphics[width=0.4cm]{figures/noun-lock-locked-4020631.png}};
+
+                % Untrusted code region
+                \node[font=\small, above=2pt of app.south] {Untrusted Code};
+
+                % EPC Memory connection
+                \draw[<-, thick, blue!70] (enclave.east) -- ++(1.5cm, 0)
+                    node[right, font=\small] {EPC Memory};
             \end{tikzpicture}
-            
+
             \vspace{0.3cm}
-            \textbf{Page Types:}
-            REG, TCS, SECS, VA
+            \textbf{Page Types:} REG, TCS, SECS, VA
         \end{column}
     \end{columns}
 \end{frame}
@@ -2278,28 +2525,34 @@ On Read:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % Chain links
-                \node[draw,fill=green!30] (hw) at (0,0) {Hardware Root};
-                \node[draw,fill=yellow!30] (uefi) at (0,-1.5) {UEFI Firmware};
-                \node[draw,fill=orange!30] (boot) at (0,-3) {Bootloader};
-                \node[draw,fill=blue!30] (os) at (0,-4.5) {OS Kernel};
-                \node[draw,fill=gray!30] (app) at (0,-6) {Applications};
-                
-                % Trust flow
-                \draw[->,thick,green] (hw) -- (uefi);
-                \draw[->,thick,yellow] (uefi) -- (boot);
-                \draw[->,thick,orange] (boot) -- (os);
-                \draw[->,thick,blue] (os) -- (app);
-                
-                % Attack point
-                \node[red,thick] at (2.5,-1.5) {\Large \textbf{X}};
-                \draw[->,red,thick] (2.5,-1.5) -- (0.5,-1.5);
-                \node[red] at (4,-1.5) {\small Attack Point};
-                
-                % Broken chain
-                \draw[red,thick,dashed] (0,-2) -- (0,-2.5);
-                \node[red] at (2,-3.5) {\small Trust Broken};
+            \begin{tikzpicture}[
+                chainlink/.style={draw, thick, minimum width=2.8cm, minimum height=0.8cm,
+                                 align=center, font=\small, rounded corners=2pt},
+                trustflow/.style={->, thick},
+                attack/.style={->, thick, red, dashed}]
+
+                % Chain links - positioned relative to each other
+                \node[chainlink, fill=green!30] (hw) {Hardware Root};
+                \node[chainlink, fill=yellow!30, below=0.4cm of hw] (uefi) {UEFI Firmware};
+                \node[chainlink, fill=orange!30, below=0.4cm of uefi] (boot) {Bootloader};
+                \node[chainlink, fill=blue!30, below=0.4cm of boot] (os) {OS Kernel};
+                \node[chainlink, fill=gray!30, below=0.4cm of os] (app) {Applications};
+
+                % Trust flow arrows
+                \draw[trustflow, green!70!black] (hw.south) -- (uefi.north);
+                \draw[trustflow, yellow!70!black] (uefi.south) -- (boot.north);
+                \draw[trustflow, orange!70!black] (boot.south) -- (os.north);
+                \draw[trustflow, blue!70!black] (os.south) -- (app.north);
+
+                % Attack point with X icon
+                \node[inner sep=0pt, right=1.2cm of uefi] (xmark)
+                    {\includegraphics[width=0.5cm]{figures/noun-x-2222229.png}};
+                \node[red, font=\tiny, below=1pt of xmark] {Attack Point};
+                \draw[attack] (xmark.west) -- (uefi.east);
+
+                % Broken chain indicator
+                \draw[red, ultra thick, dashed] ([yshift=-2mm]uefi.south) -- ([yshift=2mm]boot.north);
+                \node[red, font=\tiny, right=0.5cm of boot.east, anchor=west, align=center] {Trust Broken\\Below};
             \end{tikzpicture}
             
             \vspace{0.3cm}
@@ -2344,31 +2597,31 @@ On Read:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.7]
-                % TPM Chip
-                \draw[fill=yellow!30,thick] (0,0) rectangle (5,4);
-                \node at (2.5,3.5) {\textbf{TPM Chip}};
-                
-                % Components
-                \draw[fill=blue!20] (0.3,2.5) rectangle (2.3,3.2);
-                \node at (1.3,2.85) {\tiny Crypto Engine};
-                
-                \draw[fill=green!20] (2.7,2.5) rectangle (4.7,3.2);
-                \node at (3.7,2.85) {\tiny Key Storage};
-                
-                \draw[fill=orange!20] (0.3,1.6) rectangle (2.3,2.3);
-                \node at (1.3,1.95) {\tiny RNG};
-                
-                \draw[fill=red!20] (2.7,1.6) rectangle (4.7,2.3);
-                \node at (3.7,1.95) {\tiny PCRs};
-                
-                \draw[fill=gray!20] (0.3,0.7) rectangle (4.7,1.4);
-                \node at (2.5,1.05) {\tiny Non-Volatile Storage};
-                
-                % External connections
-                \draw[<->,thick] (5,2) -- (6,2) node[right] {LPC/SPI};
+            \begin{tikzpicture}[
+                component/.style={draw, thick, minimum width=1.8cm, minimum height=0.6cm,
+                                align=center, font=\tiny, rounded corners=1pt},
+                tpm outline/.style={draw, thick, fill=yellow!30, rounded corners=3pt,
+                                   inner sep=4pt}]
+
+                % TPM internal components - position relative to each other
+                \node[component, fill=blue!20] (crypto) {Crypto Engine};
+                \node[component, fill=green!20, right=0.2cm of crypto] (keys) {Key Storage};
+                \node[component, fill=orange!20, below=0.2cm of crypto] (rng) {RNG};
+                \node[component, fill=red!20, below=0.2cm of keys] (pcr) {PCRs};
+                \node[component, fill=gray!20, minimum width=3.8cm, below=0.2cm of rng.south west,
+                      anchor=north west] (nvstorage) {Non-Volatile Storage};
+
+                % TPM Chip outline using fit and background
+                \begin{scope}[on background layer]
+                    \node[tpm outline, fit={(crypto) (keys) (pcr) (nvstorage)},
+                          label={[font=\small\bfseries, yshift=-3pt]north:TPM Chip}] (tpm) {};
+                \end{scope}
+
+                % External connection
+                \draw[<->, thick] (tpm.east) -- ++(1.2cm, 0)
+                    node[right, font=\small] {LPC/SPI};
             \end{tikzpicture}
-            
+
             \vspace{0.3cm}
             \textbf{Use Cases:}
             \begin{itemize}
@@ -2443,8 +2696,8 @@ On Read:
 \section{Summary}
 
 \begin{frame}{Hardware Security Evolution}
-    \begin{center}
-        \begin{tikzpicture}[scale=0.8,
+    {\centering
+    \begin{tikzpicture}[scale=0.8,
             timeline label/.style={font=\tiny, text depth=0.25ex},
             feature/.style={draw, fill=blue!20, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex}]
 
@@ -2470,8 +2723,8 @@ On Read:
             \node[feature, right=0.6cm of tdx] (mte) {MTE/PAC};
             \node[timeline label, below=2pt of mte] {2022};
         \end{tikzpicture}
-    \end{center}
-    
+    \par}
+
     \vspace{0.5cm}
     \begin{columns}
         \begin{column}{0.5\textwidth}

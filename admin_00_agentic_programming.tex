@@ -128,27 +128,41 @@ Unlike simple chatbots, agentic AI can:
 \end{frame}
 
 %======================================================================
-\begin{frame}[fragile]{Configuration: Setting Up Claude Code}
+\begin{frame}[fragile]{Installing Claude Code}
 
-\textbf{Install Claude Code} (macOS/Linux/WSL); 
+\textbf{macOS / Linux / WSL:}
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
 curl -fsSL https://claude.ai/install.sh | bash
 \end{minted}
-\vspace{-3mm}
-{\tiny(see \url{https://code.claude.com/docs/en/setup})}
-\normalfont
-\vspace{0.1cm}
 
-\textbf{Option A:} Shell variables (\texttt{.bashrc}/\texttt{.zshrc}):
-\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
-export ANTHROPIC_AUTH_TOKEN="sk-or-v1-..."
-export ANTHROPIC_API_KEY=""
-export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+\vspace{0.2cm}
+
+\textbf{Windows PowerShell:}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{powershell}
+irm https://claude.ai/install.ps1 | iex
 \end{minted}
 
-\vspace{0.1cm}
+\vspace{0.2cm}
 
-\textbf{Option B:} Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
+\textbf{Alternative --- npm (requires Node.js 18+):}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+npm install -g @anthropic-ai/claude-code
+\end{minted}
+
+\vspace{0.3cm}
+
+{\footnotesize
+\textbf{Documentation:}\\
+\url{https://code.claude.com/docs/en/setup}\\
+\url{https://openrouter.ai/docs/guides/claude-code-integration}
+}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}[fragile]{Configuring Claude Code for OpenRouter}
+
+Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
 {
   "env": {
@@ -160,9 +174,13 @@ export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
 }
 \end{minted}
 
+\vspace{0.3cm}
+
+{\small \textcolor{codeorange}{\textbf{Note:}} \texttt{ANTHROPIC\_API\_KEY} must be explicitly empty (not omitted).}
+
 \begin{tikzpicture}[remember picture, overlay]
 \node[rectangle callout, draw=red, fill=calloutbg, text width=2.8cm, font=\small, align=center,
-      callout absolute pointer={([xshift=-1.2cm, yshift=1cm]current page.center)}]
+      callout absolute pointer={([xshift=-1.2cm, yshift=1.1cm]current page.center)}]
       at ([xshift=4cm, yshift=1cm]current page.center) {
     Replace \texttt{...} with your key from \href{https://webcourse.cs.technion.ac.il/02360267}{Webcourse}!
 };
@@ -171,10 +189,50 @@ export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
 \end{frame}
 
 %======================================================================
-\begin{frame}[fragile]{Checking Your Budget}\label{frame:budget}
+\begin{frame}[fragile]{Verifying Your Setup}
+
+\textbf{Step 1:} Open a terminal and run:
+\begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{bash}
+claude
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Step 2:} Inside Claude Code, type \colorbox{lightgray}{\texttt{/status}} to verify configuration:
+
+\begin{minted}[fontsize=\tiny,bgcolor=lightgray]{text}
+> /status
+ Version: 2.0.76
+ Session ID: 12345678-abcd-1234-efgh-567890abcdef
+ cwd: /home/user/project
+ Auth token: ANTHROPIC_AUTH_TOKEN
+ Anthropic base URL: https://openrouter.ai/api
+
+ Model: moonshotai/kimi-k2
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Check these fields:}
+\begin{itemize}
+    \item \texttt{Auth token}: Should say \texttt{ANTHROPIC\_AUTH\_TOKEN}
+    \item \texttt{Anthropic base URL}: Should be \texttt{https://openrouter.ai/api}
+    \item \texttt{Model}: Should be \texttt{moonshotai/kimi-k2}
+\end{itemize}
+
+\vspace{0.1cm}
+
+{\small If model shows \texttt{claude-sonnet} instead $\rightarrow$ check your \colorbox{lightgray}{\texttt{settings.json}} configuration.}
+
+\end{frame}
+
+%======================================================================
+% Hidden slide: Manual budget checking via curl (requires shell variables)
+\iffalse
+\begin{frame}[fragile]{Checking Your Budget (Manual)}\label{frame:budget}
 
 \vspace{-0.2cm}
-To check your remaining budget, run:
+If you have \texttt{ANTHROPIC\_AUTH\_TOKEN} exported in your shell, run:
 \begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{bash}
 curl https://openrouter.ai/api/v1/auth/key \
      -H "Authorization: bearer $ANTHROPIC_AUTH_TOKEN" | jq
@@ -203,33 +261,100 @@ Example output:
     \item \texttt{limit\_remaining}: How much budget you have left
 \end{itemize}
 
-%\vspace{0.2cm}
+\end{frame}
+\fi
 
-{\small \textcolor{codeorange}{\textbf{Note:}} \colorbox{lightgray}{\texttt{/cost}} in Claude Code won't show correct costs --- use the curl command above.}
+%======================================================================
+\begin{frame}[fragile]{Checking Your Budget: Status Line (1/2)}
+
+\textbf{Show your remaining budget directly in Claude Code's status bar.}
+
+\vspace{0.2cm}
+
+\textbf{Step 1: Install \texttt{jq}} (JSON parser)
+\begin{itemize}
+    \item \textbf{macOS:} \colorbox{lightgray}{\texttt{brew install jq}}
+    \item \textbf{Ubuntu/Debian/WSL:} \colorbox{lightgray}{\texttt{sudo apt install jq}}
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Step 2: Create \colorbox{lightgray}{\texttt{\textasciitilde/.claude/statusline.sh}}}
+\begin{minted}[fontsize=\tiny,bgcolor=lightgray]{bash}
+#!/bin/bash
+input=$(cat)
+or_response=$(curl -s -H "Authorization: Bearer $ANTHROPIC_AUTH_TOKEN" \
+  "https://openrouter.ai/api/v1/key" 2>/dev/null)
+remaining=$(echo "$or_response" | jq -r '.data.limit_remaining // 0')
+limit=$(echo "$or_response" | jq -r '.data.limit // 0')
+model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
+printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' \
+       "$model" "$remaining" "$limit"
+\end{minted}
+
+\vspace{0.1cm}
+
+\textbf{Step 3: Make executable:} \colorbox{lightgray}{\texttt{chmod +x \textasciitilde/.claude/statusline.sh}}
+
+\vspace{0.1cm}
+
+{\small \textcolor{codeorange}{\textbf{Windows users:}} This script requires WSL or Git Bash.}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}[fragile]{Checking Your Budget: Status Line (2/2)}
+
+\textbf{Step 4: Add \texttt{statusLine} to your existing \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
+{
+  "env": { ... },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
+  }
+}
+\end{minted}
+{\small Add the \texttt{statusLine} block after your existing \texttt{env} block (don't forget the comma after \texttt{\}}).}
+
+\vspace{0.3cm}
+
+\textbf{Result in status bar:}
+\begin{center}
+\colorbox{black}{\texttt{\textcolor{cyan}{moonshotai/kimi-k2} \textcolor{white}{|} \textcolor{green}{\$9.51}\textcolor{white}{/}\textcolor{yellow}{\$10}}}
+\end{center}
+
+\vspace{0.2cm}
+
+{\small \textcolor{codeorange}{\textbf{Note:}} \colorbox{lightgray}{\texttt{/cost}} in Claude Code won't show correct costs with OpenRouter.}
 
 \end{frame}
 
 %======================================================================
 \begin{frame}[fragile]{IDE Integration}
 
-\textbf{Option 1: Run CLI inside VSCode terminal}
-\begin{itemize}
-    \item Open new terminal: \colorbox{keybg}{\texttt{Ctrl+Shift+`}}
-    \item Run \colorbox{lightgray}{\texttt{claude --model "moonshotai/kimi-k2"}}
-    \item Works with either Option A or B configuration
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textbf{Option 2: VSCode Extension (recommended)}
+\textbf{Option 1: VSCode Extension}
 \begin{enumerate}
     \item Install ``Claude Code'' from VSCode Marketplace
-    \item Configure \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}} (Option B)
-    \item In extension settings: \textbf{Claude Code: Use Terminal} $\rightarrow$ \texttt{integrated}
+    \item Configure \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}} (see ``Configuring'' slide)
+    \item In extension settings: enable \textbf{Claude Code: Use Terminal} (checkbox)
     \item Click the Claude logo in the sidebar: \raisebox{-0.3em}{\includegraphics[height=1.2em]{figures/claude.png}}
 \end{enumerate}
 
+\vspace{0.3cm}
+
+\textbf{Option 2: Run CLI directly in terminal}
+\begin{itemize}
+    \item Open new terminal: \colorbox{keybg}{\texttt{Ctrl+Shift+`}}
+    \item Run \colorbox{lightgray}{\texttt{claude --model "moonshotai/kimi-k2"}}
+\end{itemize}
+
 \vspace{0.2cm}
+
+{\small Both options are functionally identical --- the extension just adds sidebar integration.}
+
+\vspace{0.1cm}
 
 \textbf{Benefits:} Claude sees your open files, workspace context, and you can review changes in VSCode's diff view.
 
