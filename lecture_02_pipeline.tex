@@ -319,6 +319,270 @@
 \end{tikzpicture}
 }
 
+% === Pipelined CPU Core Macro ===
+% Draws the core pipelined CPU diagram (components, coordinates, data paths)
+% Must be called inside a circuitikz environment with appropriate styles
+% Defines coordinates for overlay content: inst_fetch_pos, inst_decode_pos, etc.
+\newcommand{\PipelinedCPUCore}{%
+% IF Stage Components
+\node[component, fill=blue!30, minimum width=0.8cm] (PC) {IP};
+\node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
+\node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
+\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=20mm]IMem.north west) {};
+\node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
+
+% Pipeline register IF/ID
+\node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
+\node[data_latch, minimum height=2cm] (instruction) at (IMem.rpin 2 -| IFID) {\rotatebox{90}{Instruction}};
+
+% ID Stage Components
+\node[regfile, right=15mm of IFID] (RegFile) {\rotatebox{90}{Register File}};
+
+% Decode unit (control signal generator)
+\node[ellipse, draw, thick, fill=orange!30, minimum width=1.2cm, minimum height=0.6cm, inner sep=0pt,
+      font=\scriptsize] (Decode) at ([yshift=15mm,xshift=-8mm]RegFile.north) {decode};
+
+% Sign Extend unit
+\node[ellipse, draw, thick, fill=green!30, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
+      font=\tiny, below=2mm of RegFile.south] (SignExt) {\rotatebox{90}{Sign Ext.}};
+
+% Pipeline register ID/EX
+\node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
+
+% EX Stage Components - ALU and MUX for immediate selection
+\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=2.5cm]RegFile.brpin 1 -| IDEX.east) {};
+\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-6mm]ALU.lpin 2) {};
+\node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
+
+% Target calculation adder
+\node[adder, anchor=lpin 1] (TargetAdder) at ([xshift=-5mm]ALU.west |- PCadder.rpin 1) {+};
+
+
+% Pipeline register EX/MEM
+\node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
+
+% MEM Stage Components
+\node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
+      external pins width=0, align=center, text depth=6.5ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
+
+
+% Pipeline register MEM/WB
+\node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
+
+% WB Stage
+\node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 5) (WBMux) {};
+
+
+% Stage labels
+\node[stage_label] (IF_label) at ([yshift=37mm]IMem.north) {Fetch};
+\node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
+\node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
+\node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
+\node[stage_label] (WB_label) at (IF_label -| WBMux) {WB};
+
+% === Routing coordinates for pipeline signal propagation ===
+% Next sequential address coordinates
+\coordinate (fetch_out_next_seq) at (PCadder.brpin 1 -| IFID.west);
+\coordinate (decode_in_next_seq) at (IFID.east |- fetch_out_next_seq);
+\coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
+\coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
+
+% Target register (dst) coordinates - unified Y level at 5mm below SignExt.south
+\coordinate (dst_y_level) at ([yshift=-5mm]SignExt.south);
+\coordinate (dst_idex_in) at (IDEX.west |- dst_y_level);
+\coordinate (dst_idex_out) at (IDEX.east |- dst_y_level);
+\coordinate (dst_exmem_in) at (EXMEM.west |- dst_y_level);
+\coordinate (dst_exmem_out) at (EXMEM.east |- dst_y_level);
+\coordinate (dst_memwb_in) at (MEMWB.west |- dst_y_level);
+\coordinate (dst_memwb_out) at (MEMWB.east |- dst_y_level);
+
+% === Data paths ===
+% MUX output to PC
+\coordinate (IP_west_conn) at ([xshift=-5mm]PC.west);
+\draw[data_path] (PCSrcMux.lpin 1) -| (IP_west_conn) -- (PC.west);
+\draw[data_path] (PC.east) -- (IMem.blpin 2);
+
+% PC to adder
+\node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
+\draw[data_path] (PC_conn) |- (PCadder.blpin 1);
+\draw[data_path] (four.east) -- (PCadder.blpin 2);
+
+% === Next sequential address ===
+\draw[data_path] (PCadder.brpin 1) -- ++(4mm,0) node[data_connector] (NextSeqConn) {} -- ++(0.1,0) |- (fetch_out_next_seq);
+\draw[data_path] (NextSeqConn) |- (PCSrcMux.rpin 2);
+\draw[data_path] (decode_in_next_seq) -- (decode_out_next_seq);
+\draw[data_path] (execute_in_next_seq) |- (TargetAdder.lpin 1);
+
+% IMem to IF/ID
+\draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
+
+% Instruction to Decode (from instruction latch to decode unit)
+\draw[data_path] ([yshift=-1pt]instruction.north east) -- ++(0.3,0) |- (Decode.west);
+
+% === Control signal paths (propagate through pipeline latches) ===
+% Control signals Y coordinate (same as Decode)
+\coordinate (ctrl_idex_in) at (IDEX.west |- Decode);
+\coordinate (ctrl_idex_out) at (IDEX.east |- Decode);
+\coordinate (ctrl_exmem_in) at (EXMEM.west |- Decode);
+\coordinate (ctrl_exmem_out) at (EXMEM.east |- Decode);
+\coordinate (ctrl_memwb_in) at (MEMWB.west |- Decode);
+\coordinate (ctrl_memwb_out) at (MEMWB.east |- Decode);
+
+% Control signal lines between latches
+\draw[data_path, orange!80!black] (Decode.east) -- (ctrl_idex_in) node[control_label, above=-2pt, midway] {Control\\signals};
+\draw[data_path, orange!80!black] (ctrl_idex_out) -- (ctrl_exmem_in);
+\draw[data_path, orange!80!black] (ctrl_exmem_out) -- (ctrl_memwb_in);
+
+% Control signal arrows to components with data-connectors
+% ALU source (vertical from control line to ALUMux top pin)
+\coordinate (ctrl_alusrc) at (Decode -| ALUMux.tpin 1);
+\node[data_connector, fill=orange!80!black] at (ctrl_alusrc) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.tpin 1) node[control_label, pos=0.2, right] {ALU\\source};
+
+% ALU Control (vertical from control line to ALU top pin)
+\coordinate (ctrl_aluctl) at (Decode -| ALU.tpin 1);
+\node[data_connector, fill=orange!80!black] at (ctrl_aluctl) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ALU.tpin 1) node[control_label, pos=0.25, right] {ALU\\Control};
+
+% Mem Rd/Wr (vertical from control line to DMem top)
+\coordinate (ctrl_mem) at (Decode -| DMem.north);
+\node[data_connector, fill=orange!80!black] at (ctrl_mem) {};
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_mem) -- (DMem.north) node[control_label, pos=0.25, right] {Mem\\Rd/Wr};
+
+% WB select (from control line at MEMWB east to WBMux top pin)
+\draw[->, >=stealth, thick, orange!80!black] (ctrl_memwb_out) -| (WBMux.tpin 1) node[control_label, pos=0.55, right] {WB\\select};
+
+% IF/ID to RegFile
+\draw[data_path] (IFID.east |- RegFile.lpin 1) -- (RegFile.blpin 1);
+\draw[data_path] (IFID.east |- RegFile.lpin 2) -- (RegFile.blpin 2);
+
+% RegFile to ID/EX
+\draw[data_path] (RegFile.brpin 1) -- (IDEX.west |- RegFile.brpin 1);
+\draw[data_path] (RegFile.brpin 2) -- (IDEX.west |- RegFile.brpin 2);
+
+% IF/ID to Sign Extend
+\draw[data_path] (IFID.east |- SignExt) -- (SignExt.west);
+% Sign Extend to ID/EX
+\draw[data_path] (SignExt.east) -- (IDEX.west |- SignExt);
+
+% Target register (dst) path
+\node[font=\scriptsize, below=1mm of SignExt] {dst};
+\draw[data_path] ([yshift=4mm]instruction.south east) -- ++(0.5,0) |- (dst_idex_in);
+
+% ID/EX to ALU (top input direct, bottom through MUX)
+\draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
+\coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+\draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
+\draw[data_path] (EXMEM.east |- DMem.lpin 10) -- (DMem.lpin 10);
+\draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
+
+% SignExt through ID/EX to ALUMux and Target Adder
+\coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
+\draw[data_path] (SignExt -| IDEX.east) -| (ImmJunction) -- (ALUMux.lpin 2);
+\node[data_connector] at (ImmJunction) {};
+\draw[data_path] (ImmJunction) |- (TargetAdder.lpin 2);
+
+% Target Adder to EX/MEM buffer
+\coordinate (calc_target_exmem) at (TargetAdder.rpin 1 -| EXMEM.west);
+\draw[data_path] (TargetAdder.brpin 1) -- (calc_target_exmem);
+
+% ALU output to EX/MEM buffer (result only, no zero)
+\coordinate (exmem_alu_result) at (ALU.brpin 4 -| EXMEM.west);
+\draw[data_path] (ALU.brpin 4) -- (exmem_alu_result);
+
+% EX/MEM to DMem (addr)
+\draw[data_path] (EXMEM.east |- DMem.lpin 5) -- (DMem.lpin 5);
+
+% DMem to MEM/WB (read data)
+\draw[data_path] (DMem.rpin 5) -- (MEMWB.west |- DMem.rpin 5);
+
+% Dst register propagation through pipeline
+\draw[data_path] (dst_idex_out) -- (dst_exmem_in);
+\draw[data_path] (dst_exmem_out) -- (dst_memwb_in);
+\draw[data_path] (dst_memwb_out) -- ++(0.5,0) |- ([yshift=-5mm,xshift=-6mm]RegFile.west |- IDEX.south) |- (RegFile.blpin 3);
+
+% MEM/WB to WB Mux
+\draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
+
+% Address path from DMem to WB Mux
+\coordinate (AddrWB) at ([yshift=-3mm]DMem.south -| MEMWB.west);
+\node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.lpin 5) {};
+\draw[data_path] (AddrConn) |- (AddrWB);
+\draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
+
+% WB Mux output to Register File write data
+\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([xshift=-4mm,yshift=-8mm]IDEX.south -| RegFile.lpin 4) |- (RegFile.blpin 4);
+
+% === Branch target path (from calc target back to PC mux) ===
+\coordinate (calc_target_mem_out) at (calc_target_exmem -| EXMEM.east);
+\draw[data_path] (calc_target_mem_out) -- ++(0.5,0) |- (PCSrcMux.rpin 1);
+
+% Register File labels
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {src1};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {src2};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {dst};
+\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {data};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 1) {src1\\data};
+\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {src2\\data};
+
+% Data Cache labels
+\node[align=left, font=\tiny] at ([xshift=3mm,yshift=-1mm]DMem.lpin 5) {address};
+\node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {data};
+\node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {data};
+
+% === Coordinates for instruction and data placement (for overlay content) ===
+% Instruction positions: shown at the latch OUTPUT (next stage's input)
+\coordinate (inst_fetch_pos) at (instruction.south);
+\coordinate (inst_decode_pos) at (IDEX.center |- Decode);
+\coordinate (inst_execute_pos) at (EXMEM.center |- Decode);
+\coordinate (inst_memory_pos) at (MEMWB.center |- Decode);
+\coordinate (inst_wb_pos) at ([xshift=12mm]MEMWB.center |- Decode);
+
+% Data value positions using (latch |- line) pattern
+\coordinate (src1_data_pos) at (IDEX |- RegFile.brpin 1);
+\coordinate (src2_data_pos) at (IDEX |- RegFile.brpin 2);
+\coordinate (imm_pos) at (IDEX |- SignExt);
+\coordinate (alu_result_pos) at (EXMEM |- ALU);
+\coordinate (mem_data_pos) at (MEMWB |- DMem.rpin 5);
+
+% Dst register propagation coordinates
+\coordinate (dst_idex_pos) at (dst_y_level -| IDEX);
+\coordinate (dst_exmem_pos) at (dst_y_level -| EXMEM);
+\coordinate (dst_memwb_pos) at (dst_y_level -| MEMWB);
+
+% Explanation box position
+\coordinate (ExplainPos) at ([yshift=-36mm]IMem.south -| ALU);
+}
+
+% Circuitikz styles for Pipelined CPU diagram
+\tikzset{
+    pipelined_cpu/.style={
+        component/.style={draw, thick, minimum height=0.8cm},
+        pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=6.2cm},
+        stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
+        imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                            external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+        regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                        external pins width=0, fill=red!20, align=center},
+        alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NT=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                         external pins width=0, fill=green!20, font=\scriptsize},
+        adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+                         external pins width=0, fill=blue!20, font=\scriptsize},
+        mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NT=1, w=0.8},
+                     external pins width=0, fill=green!30},
+        pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
+                     external pins width=0, fill=blue!20},
+        arrow/.style={->, >=stealth, thick},
+        data_path/.style={arrow, black},
+        line_label/.style={above, inner sep=1pt, font=\footnotesize},
+        data_connector/.style={circle, fill, inner sep=1.2pt},
+        data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+        control_label/.style={font=\footnotesize, text=orange!80!black, align=center},
+        node distance=5mm and 5mm,
+    },
+}
+
 \begin{document}
 
 \frame{\titlepage}
@@ -850,9 +1114,8 @@
 \end{frame}
 
 
-%% Slide: Pipelined CPU (with label for againframe)
-%% Overlay 1: plain CPU diagram; overlays 2-6: pipeline example cycles (shown via againframe)
-\begin{frame}<1>[label=pipelined-cpu]{Pipelined CPU}
+%% Slide: Pipelined CPU (plain diagram)
+\begin{frame}{Pipelined CPU}
 \begin{center}
 \scalebox{0.58}{
 \begin{circuitikz}[
@@ -881,368 +1144,8 @@
     node distance=5mm and 5mm,
 ]
 
-% IF Stage Components
-\node[component, fill=blue!30, minimum width=0.8cm] (PC) {IP};
-\node[imem_block, right=of PC, anchor=blpin 2] (IMem) {Inst.\\Cache};
-\node[adder, above=2mm of IMem.north, anchor=south] (PCadder) {+};
-\node[pcsrc_mux, anchor=south] (PCSrcMux) at ([yshift=20mm]IMem.north west) {};
-\node[font=\scriptsize, left=5mm of PCadder.blpin 2] (four) {4};
-
-% Pipeline register IF/ID
-\node[pipeline_reg, right=8mm of IMem.brpin 2] (IFID) {};
-\node[data_latch, minimum height=2cm] (instruction) at (IMem.rpin 2 -| IFID) {\rotatebox{90}{Instruction}};
-
-% ID Stage Components
-\node[regfile, right=15mm of IFID] (RegFile) {\rotatebox{90}{Register File}};
-
-% Decode unit (control signal generator)
-\node[ellipse, draw, thick, fill=orange!30, minimum width=1.2cm, minimum height=0.6cm, inner sep=0pt,
-      font=\scriptsize] (Decode) at ([yshift=15mm,xshift=-8mm]RegFile.north) {decode};
-
-% Sign Extend unit
-\node[ellipse, draw, thick, fill=green!30, minimum width=0.3cm, minimum height=0.2cm, inner sep=0pt,
-      font=\tiny, below=2mm of RegFile.south] (SignExt) {\rotatebox{90}{Sign Ext.}};
-
-% Pipeline register ID/EX
-\node[pipeline_reg, right=8mm of RegFile.east |- IFID] (IDEX) {};
-
-% EX Stage Components - ALU and MUX for immediate selection
-\node[alu_style, anchor=blpin 1] (ALU) at ([xshift=2.5cm]RegFile.brpin 1 -| IDEX.east) {};
-\node[mux2, anchor=rpin 1] (ALUMux) at ([xshift=-6mm]ALU.lpin 2) {};
-\node[font=\scriptsize, below right=-2mm of ALU.blpin 1] {\rotatebox{-45}{ALU}};
-
-% Target calculation adder
-\node[adder, anchor=lpin 1] (TargetAdder) at ([xshift=-5mm]ALU.west |- PCadder.rpin 1) {+};
-
-
-% Pipeline register EX/MEM
-\node[pipeline_reg, right=12mm of ALU.east |- IDEX] (EXMEM) {};
-
-% MEM Stage Components
-\node[muxdemux, muxdemux def={Lh=4.1, NL=10, Rh=4.1, NR=10, w=2.8, square pins=1},
-      external pins width=0, align=center, text depth=6.5ex, fill=yellow!20, anchor=lpin 5] (DMem) at ([xshift=1cm]ALU.brpin 4 -| EXMEM.east) {Data\\Cache};
-
-
-% Pipeline register MEM/WB
-\node[pipeline_reg, right=8mm of DMem.east |- EXMEM] (MEMWB) {};
-
-% WB Stage
-\node[mux2, anchor=lpin 1] at ([xshift=8mm]MEMWB.east |- DMem.rpin 5) (WBMux) {};
-
-
-% Stage labels
-\node[stage_label] (IF_label) at ([yshift=37mm]IMem.north) {Fetch};
-\node[stage_label] (ID_label) at (IF_label -| RegFile) {Decode};
-\node[stage_label] (EX_label) at (IF_label -| ALU) {Execute};
-\node[stage_label] (MEM_label) at (IF_label -| DMem) {Memory};
-\node[stage_label] (WB_label) at (IF_label -| WBMux) {WB};
-
-% === Routing coordinates for pipeline signal propagation ===
-% Next sequential address coordinates
-\coordinate (fetch_out_next_seq) at (PCadder.brpin 1 -| IFID.west);
-\coordinate (decode_in_next_seq) at (IFID.east |- fetch_out_next_seq);
-\coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
-\coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
-
-% Target register (dst) coordinates - unified Y level at 5mm below SignExt.south
-\coordinate (dst_y_level) at ([yshift=-5mm]SignExt.south);
-\coordinate (dst_idex_in) at (IDEX.west |- dst_y_level);
-\coordinate (dst_idex_out) at (IDEX.east |- dst_y_level);
-\coordinate (dst_exmem_in) at (EXMEM.west |- dst_y_level);
-\coordinate (dst_exmem_out) at (EXMEM.east |- dst_y_level);
-\coordinate (dst_memwb_in) at (MEMWB.west |- dst_y_level);
-\coordinate (dst_memwb_out) at (MEMWB.east |- dst_y_level);
-
-% === Data paths ===
-% MUX output to PC
-\coordinate (IP_west_conn) at ([xshift=-5mm]PC.west);
-\draw[data_path] (PCSrcMux.lpin 1) -| (IP_west_conn) -- (PC.west);
-\draw[data_path] (PC.east) -- (IMem.blpin 2);
-
-% PC to adder
-\node[data_connector] (PC_conn) at ([xshift=3mm]PC.east) {};
-\draw[data_path] (PC_conn) |- (PCadder.blpin 1);
-\draw[data_path] (four.east) -- (PCadder.blpin 2);
-
-% === Next sequential address ===
-\draw[data_path] (PCadder.brpin 1) -- ++(4mm,0) node[data_connector] (NextSeqConn) {} -- ++(0.1,0) |- (fetch_out_next_seq);
-\draw[data_path] (NextSeqConn) |- (PCSrcMux.rpin 2);
-\draw[data_path] (decode_in_next_seq) -- (decode_out_next_seq);
-\draw[data_path] (execute_in_next_seq) |- (TargetAdder.lpin 1);
-
-% IMem to IF/ID
-\draw[data_path] (IMem.brpin 2) -- (IFID.west |- IMem.brpin 2);
-
-% Instruction to Decode (from instruction latch to decode unit)
-\draw[data_path] ([yshift=-1pt]instruction.north east) -- ++(0.3,0) |- (Decode.west);
-
-% === Control signal paths (propagate through pipeline latches) ===
-% Control signals Y coordinate (same as Decode)
-\coordinate (ctrl_idex_in) at (IDEX.west |- Decode);
-\coordinate (ctrl_idex_out) at (IDEX.east |- Decode);
-\coordinate (ctrl_exmem_in) at (EXMEM.west |- Decode);
-\coordinate (ctrl_exmem_out) at (EXMEM.east |- Decode);
-\coordinate (ctrl_memwb_in) at (MEMWB.west |- Decode);
-\coordinate (ctrl_memwb_out) at (MEMWB.east |- Decode);
-
-% Control signal lines between latches
-\draw[data_path, orange!80!black] (Decode.east) -- (ctrl_idex_in) node[control_label, above=-2pt, midway] {Control\\signals};
-\draw[data_path, orange!80!black] (ctrl_idex_out) -- (ctrl_exmem_in);
-\draw[data_path, orange!80!black] (ctrl_exmem_out) -- (ctrl_memwb_in);
-
-% Control signal arrows to components with data-connectors
-% ALU source (vertical from control line to ALUMux top pin)
-\coordinate (ctrl_alusrc) at (Decode -| ALUMux.tpin 1);
-\node[data_connector, fill=orange!80!black] at (ctrl_alusrc) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_alusrc) -- (ALUMux.tpin 1) node[control_label, pos=0.2, right] {ALU\\source};
-
-% ALU Control (vertical from control line to ALU top pin)
-\coordinate (ctrl_aluctl) at (Decode -| ALU.tpin 1);
-\node[data_connector, fill=orange!80!black] at (ctrl_aluctl) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_aluctl) -- (ALU.tpin 1) node[control_label, pos=0.25, right] {ALU\\Control};
-
-% Mem Rd/Wr (vertical from control line to DMem top)
-\coordinate (ctrl_mem) at (Decode -| DMem.north);
-\node[data_connector, fill=orange!80!black] at (ctrl_mem) {};
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_mem) -- (DMem.north) node[control_label, pos=0.25, right] {Mem\\Rd/Wr};
-
-% WB select (from control line at MEMWB east to WBMux top pin)
-\draw[->, >=stealth, thick, orange!80!black] (ctrl_memwb_out) -| (WBMux.tpin 1) node[control_label, pos=0.55, right] {WB\\select};
-
-% IF/ID to RegFile
-\draw[data_path] (IFID.east |- RegFile.lpin 1) -- (RegFile.blpin 1);
-\draw[data_path] (IFID.east |- RegFile.lpin 2) -- (RegFile.blpin 2);
-
-% RegFile to ID/EX
-\draw[data_path] (RegFile.brpin 1) -- (IDEX.west |- RegFile.brpin 1);
-\draw[data_path] (RegFile.brpin 2) -- (IDEX.west |- RegFile.brpin 2);
-
-% IF/ID to Sign Extend
-\draw[data_path] (IFID.east |- SignExt) -- (SignExt.west);
-% Sign Extend to ID/EX
-\draw[data_path] (SignExt.east) -- (IDEX.west |- SignExt);
-
-% Target register (dst) path
-\node[font=\scriptsize, below=1mm of SignExt] {dst};
-\draw[data_path] ([yshift=4mm]instruction.south east) -- ++(0.5,0) |- (dst_idex_in);
-
-% ID/EX to ALU (top input direct, bottom through MUX)
-\draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
-\coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
-\draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
-\draw[data_path] (EXMEM.east |- DMem.lpin 10) -- (DMem.lpin 10);
-\draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
-
-% SignExt through ID/EX to ALUMux and Target Adder
-\coordinate (ImmJunction) at ([xshift=-7mm]ALUMux.lpin 2);
-\draw[data_path] (SignExt -| IDEX.east) -| (ImmJunction) -- (ALUMux.lpin 2);
-\node[data_connector] at (ImmJunction) {};
-\draw[data_path] (ImmJunction) |- (TargetAdder.lpin 2);
-
-% Target Adder to EX/MEM buffer
-\coordinate (calc_target_exmem) at (TargetAdder.rpin 1 -| EXMEM.west);
-\draw[data_path] (TargetAdder.brpin 1) -- (calc_target_exmem);
-
-% ALU output to EX/MEM buffer (result only, no zero)
-\coordinate (exmem_alu_result) at (ALU.brpin 4 -| EXMEM.west);
-\draw[data_path] (ALU.brpin 4) -- (exmem_alu_result);
-
-% EX/MEM to DMem (addr)
-\draw[data_path] (EXMEM.east |- DMem.lpin 5) -- (DMem.lpin 5);
-
-% DMem to MEM/WB (read data)
-\draw[data_path] (DMem.rpin 5) -- (MEMWB.west |- DMem.rpin 5);
-
-% Dst register propagation through pipeline
-\draw[data_path] (dst_idex_out) -- (dst_exmem_in);
-\draw[data_path] (dst_exmem_out) -- (dst_memwb_in);
-\draw[data_path] (dst_memwb_out) -- ++(0.5,0) |- ([yshift=-5mm,xshift=-6mm]RegFile.west |- IDEX.south) |- (RegFile.blpin 3);
-
-% MEM/WB to WB Mux
-\draw[data_path] (MEMWB.east |- WBMux.lpin 1) -- (WBMux.blpin 1);
-
-% Address path from DMem to WB Mux
-\coordinate (AddrWB) at ([yshift=-3mm]DMem.south -| MEMWB.west);
-\node[data_connector] (AddrConn) at ([xshift=-5mm]DMem.lpin 5) {};
-\draw[data_path] (AddrConn) |- (AddrWB);
-\draw[data_path] (AddrWB -| MEMWB.east) -- ++(0.5,0) |- (WBMux.lpin 2);
-
-% WB Mux output to Register File write data
-\draw[data_path] (WBMux.rpin 1) -- ++(0.5,0) |- ([xshift=-4mm,yshift=-8mm]IDEX.south -| RegFile.lpin 4) |- (RegFile.blpin 4);
-
-% === Branch target path (from calc target back to PC mux) ===
-\coordinate (calc_target_mem_out) at (calc_target_exmem -| EXMEM.east);
-\draw[data_path] (calc_target_mem_out) -- ++(0.5,0) |- (PCSrcMux.rpin 1);
-
-% Register File labels
-\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 1) {src1};
-\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 2) {src2};
-\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 3) {dst};
-\node[align=left, xshift=3mm, font=\tiny] at (RegFile.blpin 4) {data};
-\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 1) {src1\\data};
-\node[align=right, xshift=-3mm, font=\tiny] at (RegFile.brpin 2) {src2\\data};
-
-% Data Cache labels
-\node[align=left, font=\tiny] at ([xshift=3mm,yshift=-1mm]DMem.lpin 5) {address};
-\node[align=left, font=\tiny] at ([xshift=3mm, yshift=2mm]DMem.lpin 10) {data};
-\node[align=right, font=\tiny] at ([xshift=-3mm,yshift=-2mm]DMem.rpin 5) {data};
-
-% === Styles for pipeline example (matching Control Hazard on Branches) ===
-\tikzset{
-    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
-                       minimum height=5mm, text depth=0.5ex},
-    data_value/.style={draw=orange!60!black, line width=1pt, fill=orange!20,
-                       rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
-    dst_value/.style={draw=green!60!black, line width=1pt, fill=green!20,
-                      rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
-    ip_value/.style={font=\small\bfseries, text=blue!70!black},
-    explain_box/.style={draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
-                        font=\small, inner sep=8pt, align=left},
-}
-
-% === Coordinates for instruction and data placement ===
-% Instruction positions: shown at the latch OUTPUT (next stage's input)
-% Fetch output: at instruction.south (on IF/ID latch)
-% Other stages: at next latch using (latch |- Decode) pattern
-\coordinate (inst_fetch_pos) at (instruction.south);
-\coordinate (inst_decode_pos) at (IDEX.center |- Decode);
-\coordinate (inst_execute_pos) at (EXMEM.center |- Decode);
-\coordinate (inst_memory_pos) at (MEMWB.center |- Decode);
-\coordinate (inst_wb_pos) at ([xshift=12mm]MEMWB.center |- Decode);
-
-% Data value positions using (latch |- line) pattern
-% Decode outputs (at IDEX latch)
-\coordinate (src1_data_pos) at (IDEX |- RegFile.brpin 1);
-\coordinate (src2_data_pos) at (IDEX |- RegFile.brpin 2);
-\coordinate (imm_pos) at (IDEX |- SignExt);
-% Execute output (at EXMEM latch)
-\coordinate (alu_result_pos) at (EXMEM |- ALU);
-% Memory output (at MEMWB latch)
-\coordinate (mem_data_pos) at (MEMWB |- DMem.rpin 5);
-
-% Dst register propagation coordinates (use same Y level as dst path)
-% These align with where the dst arrow goes through each latch
-\coordinate (dst_idex_pos) at (dst_y_level -| IDEX);
-\coordinate (dst_exmem_pos) at (dst_y_level -| EXMEM);
-\coordinate (dst_memwb_pos) at (dst_y_level -| MEMWB);
-
-% Explanation box position (1cm lower than before)
-\coordinate (ExplainPos) at ([yshift=-40mm]IMem.south -| ALU);
-
-% === Program listing at bottom left (shown on overlays 2+) ===
-\only<2->{
-\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
-      anchor=north west, font=\small\ttfamily, align=left]
-      (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
-    \begin{tabular}{rl}
-    0: & \textcolor{blue}{lw} R10,9(R1)\\
-    4: & \textcolor{blue}{sub} R11,R2,R3\\
-    8: & \textcolor{blue}{and} R12,R4,R5\\
-    12: & \textcolor{blue}{or} R13,R6,R7\\
-    \end{tabular}
-};
-}
-
-% === PC value display (below IP box) ===
-\only<2>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {0};}
-\only<3>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {4};}
-\only<4>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {8};}
-\only<5>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {12};}
-\only<6>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {16};}
-
-% === Cycle indicator (nice box 2cm left of Fetch label) ===
-\tikzset{
-    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
-                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt,
-                      anchor=east},
-}
-\only<2>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 1};}
-\only<3>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 2};}
-\only<4>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 3};}
-\only<5>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 4};}
-\only<6>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};}
-
-% === Cycle 1 (overlay 2): lw in Fetch ===
-\only<2>{
-    \node[latch_inst] at (inst_fetch_pos) {lw};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Cycle 1:} \texttt{lw} fetched from I-Cache. PC $\leftarrow$ PC + 4
-    };
-}
-
-% === Cycle 2 (overlay 3): lw in Decode, sub in Fetch ===
-\only<3>{
-    \node[latch_inst] at (inst_fetch_pos) {sub};
-    \node[latch_inst] at (inst_decode_pos) {lw};
-    % lw decoding: read R1, sign-extend 9
-    \node[data_value] at (src1_data_pos) {[R1]};
-    \node[data_value] at (imm_pos) {9};
-    \node[dst_value] at (dst_idex_pos) {R10};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Cycle 2:} \texttt{lw} decodes: read R1, sign-extend offset 9, dst=R10
-    };
-}
-
-% === Cycle 3 (overlay 4): lw in Execute, sub in Decode, and in Fetch ===
-\only<4>{
-    \node[latch_inst] at (inst_fetch_pos) {and};
-    \node[latch_inst] at (inst_decode_pos) {sub};
-    \node[latch_inst] at (inst_execute_pos) {lw};
-    % sub decoding: read R2, R3
-    \node[data_value] at (src1_data_pos) {[R2]};
-    \node[data_value] at (src2_data_pos) {[R3]};
-    \node[dst_value] at (dst_idex_pos) {R11};
-    % lw executing: compute address
-    \node[data_value] at (alu_result_pos) {[R1]+9};
-    \node[dst_value] at (dst_exmem_pos) {R10};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Cycle 3:} \texttt{lw} executes: ALU computes address [R1]+9
-    };
-}
-
-% === Cycle 4 (overlay 5): lw in Memory, sub in Execute, and in Decode, or in Fetch ===
-\only<5>{
-    \node[latch_inst] at (inst_fetch_pos) {or};
-    \node[latch_inst] at (inst_decode_pos) {and};
-    \node[latch_inst] at (inst_execute_pos) {sub};
-    \node[latch_inst] at (inst_memory_pos) {lw};
-    % and decoding: read R4, R5
-    \node[data_value] at (src1_data_pos) {[R4]};
-    \node[data_value] at (src2_data_pos) {[R5]};
-    \node[dst_value] at (dst_idex_pos) {R12};
-    % sub executing
-    \node[data_value] at (alu_result_pos) {[R2]-[R3]};
-    \node[dst_value] at (dst_exmem_pos) {R11};
-    % lw in memory
-    \node[dst_value] at (dst_memwb_pos) {R10};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Cycle 4:} \texttt{lw} accesses D-Cache at address [R1]+9
-    };
-}
-
-% === Cycle 5 (overlay 6): lw in WB, sub in Memory, and in Execute, or in Decode ===
-\only<6>{
-    \node[latch_inst] at (inst_decode_pos) {or};
-    \node[latch_inst] at (inst_execute_pos) {and};
-    \node[latch_inst] at (inst_memory_pos) {sub};
-    \node[latch_inst] at (inst_wb_pos) {lw};
-    % or decoding: read R6, R7
-    \node[data_value] at (src1_data_pos) {[R6]};
-    \node[data_value] at (src2_data_pos) {[R7]};
-    \node[dst_value] at (dst_idex_pos) {R13};
-    % and executing
-    \node[data_value] at (alu_result_pos) {[R4]\&[R5]};
-    \node[dst_value] at (dst_exmem_pos) {R12};
-    % sub in memory (passes through)
-    \node[dst_value] at (dst_memwb_pos) {R11};
-    % lw writeback - show data being written
-    \node[data_value] at ([xshift=8mm]WBMux.east) {M[..]};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Cycle 5:} \texttt{lw} writes M[[R1]+9] to R10. First instruction completes!
-    };
-}
+% Draw the core pipelined CPU diagram
+\PipelinedCPUCore
 
 \end{circuitikz}
 }
@@ -1527,12 +1430,161 @@
 \end{center}
 \end{frame}
 
-%% Slide: Pipeline Example - using againframe to show cycles 1-5
-\againframe<2>{pipelined-cpu}
-\againframe<3>{pipelined-cpu}
-\againframe<4>{pipelined-cpu}
-\againframe<5>{pipelined-cpu}
-\againframe<6>{pipelined-cpu}
+%% Slide: Pipeline Example - showing cycles 1-5
+\begin{frame}{Pipeline Example}
+\begin{center}
+\scalebox{0.58}{
+\begin{circuitikz}[
+    % Component styles
+    component/.style={draw, thick, minimum height=0.8cm},
+    pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=6.2cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
+    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                    external pins width=0, fill=red!20, align=center},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NT=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, fill=green!20, font=\scriptsize},
+    adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+                     external pins width=0, fill=blue!20, font=\scriptsize},
+    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NT=1, w=0.8},
+                 external pins width=0, fill=green!30},
+    pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
+                 external pins width=0, fill=blue!20},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, black},
+    line_label/.style={above, inner sep=1pt, font=\footnotesize},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+    control_label/.style={font=\footnotesize, text=orange!80!black, align=center},
+    node distance=5mm and 5mm,
+]
+
+% Draw the core pipelined CPU diagram
+\PipelinedCPUCore
+
+% === Styles for pipeline example overlays ===
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
+    data_value/.style={draw=orange!60!black, line width=1pt, fill=orange!20,
+                       rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    dst_value/.style={draw=green!60!black, line width=1pt, fill=green!20,
+                      rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    ip_value/.style={font=\small\bfseries, text=blue!70!black},
+    explain_box/.style={draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+                        font=\small, inner sep=8pt, align=left, anchor=north},
+    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
+                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt,
+                      anchor=east},
+}
+
+% === Program listing at bottom left ===
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
+    \begin{tabular}{rl}
+    0: & \textcolor{blue}{lw} R10,9(R1)\\
+    4: & \textcolor{blue}{sub} R11,R2,R3\\
+    8: & \textcolor{blue}{and} R12,R4,R5\\
+    12: & \textcolor{blue}{or} R13,R6,R7\\
+    \end{tabular}
+};
+
+% === PC value display (below IP box) ===
+\only<1>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {0};}
+\only<2>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {4};}
+\only<3>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {8};}
+\only<4>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {12};}
+\only<5>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {16};}
+
+% === Cycle indicator (nice box 2cm left of Fetch label) ===
+\only<1>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 1};}
+\only<2>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 2};}
+\only<3>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 3};}
+\only<4>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 4};}
+\only<5>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};}
+
+% === Cycle 1 (overlay 1): Fetching lw, pipeline empty ===
+\only<1>{
+    % No instructions visible yet - lw is being fetched
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{lw} from I-Cache at PC=0
+    };
+}
+
+% === Cycle 2 (overlay 2): lw fetched, sub being fetched ===
+\only<2>{
+    \node[latch_inst] at (inst_fetch_pos) {lw};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{sub} at PC=4\\
+        \textbf{Decode:} \texttt{lw} decoded: read R1, imm=9, dst=R10
+    };
+}
+
+% === Cycle 3 (overlay 3): sub fetched, lw in decode ===
+\only<3>{
+    \node[latch_inst] at (inst_fetch_pos) {sub};
+    \node[latch_inst] at (inst_decode_pos) {lw};
+    % lw in ID/EX with decode outputs
+    \node[data_value] at (src1_data_pos) {[R1]};
+    \node[data_value] at (imm_pos) {9};
+    \node[dst_value] at (dst_idex_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{and} at PC=8\\
+        \textbf{Decode:} \texttt{sub} decoded: read R2, R3, dst=R11\\
+        \textbf{Execute:} \texttt{lw} computes address [R1]+9
+    };
+}
+
+% === Cycle 4 (overlay 4): and fetched, sub decoded, lw executing ===
+\only<4>{
+    \node[latch_inst] at (inst_fetch_pos) {and};
+    \node[latch_inst] at (inst_decode_pos) {sub};
+    \node[latch_inst] at (inst_execute_pos) {lw};
+    % sub in ID/EX with decode outputs
+    \node[data_value] at (src1_data_pos) {[R2]};
+    \node[data_value] at (src2_data_pos) {[R3]};
+    \node[dst_value] at (dst_idex_pos) {R11};
+    % lw in EX/MEM with execute outputs
+    \node[data_value] at (alu_result_pos) {[R1]+9};
+    \node[dst_value] at (dst_exmem_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{or} at PC=12\\
+        \textbf{Decode:} \texttt{and} decoded: read R4, R5, dst=R12\\
+        \textbf{Execute:} \texttt{sub} computes [R2]-[R3]\\
+        \textbf{Memory:} \texttt{lw} reads D-Cache at [R1]+9
+    };
+}
+
+% === Cycle 5 (overlay 5): or fetched, and decoded, sub executing, lw in memory ===
+\only<5>{
+    \node[latch_inst] at (inst_fetch_pos) {or};
+    \node[latch_inst] at (inst_decode_pos) {and};
+    \node[latch_inst] at (inst_execute_pos) {sub};
+    \node[latch_inst] at (inst_memory_pos) {lw};
+    % and in ID/EX with decode outputs
+    \node[data_value] at (src1_data_pos) {[R4]};
+    \node[data_value] at (src2_data_pos) {[R5]};
+    \node[dst_value] at (dst_idex_pos) {R12};
+    % sub in EX/MEM with execute outputs
+    \node[data_value] at (alu_result_pos) {[R2]-[R3]};
+    \node[dst_value] at (dst_exmem_pos) {R11};
+    % lw in MEM/WB
+    \node[dst_value] at (dst_memwb_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Decode:} \texttt{or} decoded: read R6, R7, dst=R13\\
+        \textbf{Execute:} \texttt{and} computes [R4]\&[R5]\\
+        \textbf{Memory:} \texttt{sub} passes through (no mem access)\\
+        \textbf{WB:} \texttt{lw} writes M[[R1]+9] to R10 -- first instruction completes!
+    };
+}
+
+\end{circuitikz}
+}
+\end{center}
+\end{frame}
 
 %% Slide: RAW Dependency
 \begin{frame}{RAW Dependency}
