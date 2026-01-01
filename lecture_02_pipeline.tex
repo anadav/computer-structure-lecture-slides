@@ -1120,7 +1120,7 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 
 \pause
 \vspace{2mm}
-\normalsize Not quite -- \textbf{pipeline hazards} prevent us from reaching ideal throughput.
+\normalsize Not quite -- \textbf{pipeline hazards} cause stalls, and \textbf{unbalanced stages} limit clock to the slowest.
 \end{frame}
 
 
@@ -1659,8 +1659,8 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
     \centering\footnotesize Other data hazard types (WAR, WAW) discussed in Out-of-Order Execution.
 \end{frame}
 
-%% Slide: RAW Dependency in Pipeline
-\begin{frame}{RAW Dependency in Pipeline}
+%% Slide: RAW Dependency in Pipeline Example
+\begin{frame}{RAW Dependency in Pipeline -- Example}
 \begin{center}
 \scalebox{0.55}{
 \begin{circuitikz}[
@@ -1734,17 +1734,21 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \node[latch_inst] at (inst_memory_pos) {lw};
 
 % Data values (and in ID trying to read R4, R5 - shown in red as hazard)
-\node[hazard_value] at (src1_data_pos) {[R4]};
-\node[hazard_value] at (src2_data_pos) {[R5]};
+\node[hazard_value] (need_r4) at (src1_data_pos) {[R4]};
+\node[hazard_value] (need_r5) at (src2_data_pos) {[R5]};
 \node[dst_value] at (dst_idex_pos) {R12};
 
 % sub in EX/MEM with result
 \node[data_value] at (alu_result_pos) {[R2]-[R3]};
-\node[dst_value] at (dst_exmem_pos) {R5};
+\node[dst_value] (prod_r5) at (dst_exmem_pos) {R5};
 
 % lw in MEM/WB with memory result
 \node[data_value] at (mem_data_pos) {M[[R1]+9]};
-\node[dst_value] at (dst_memwb_pos) {R4};
+\node[dst_value] (prod_r4) at (dst_memwb_pos) {R4};
+
+% Dashed arrows showing RAW dependency (where data should come from)
+\draw[->, dashed, red!70!black, line width=1.5pt] (prod_r4.north) to[out=120, in=-30] (need_r4.south east);
+\draw[->, dashed, red!70!black, line width=1.5pt] (prod_r5.north) to[out=130, in=-45] (need_r5.south east);
 
 % Explanation box
 \node[draw=red!50!black, line width=1.5pt, fill=red!10, rounded corners=6pt,
