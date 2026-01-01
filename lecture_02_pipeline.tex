@@ -587,8 +587,11 @@
 
 \frame{\titlepage}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
 
-
+\section{Pipeline}
 
 %% Slide: A Basic Processor
 \begin{frame}{A Basic Processor}
@@ -1162,6 +1165,184 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \end{center}
 \end{frame}
 
+%% Slide: Pipeline Example - showing cycles 1-5
+\begin{frame}{Pipeline Example}
+\begin{center}
+\scalebox{0.58}{
+\begin{circuitikz}[
+    % Component styles
+    component/.style={draw, thick, minimum height=0.8cm},
+    pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=6.2cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
+    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                    external pins width=0, fill=red!20, align=center},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NT=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, fill=green!20, font=\scriptsize},
+    adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+                     external pins width=0, fill=blue!20, font=\scriptsize},
+    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NT=1, w=0.8},
+                 external pins width=0, fill=green!30},
+    pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
+                 external pins width=0, fill=blue!20},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, black},
+    line_label/.style={above, inner sep=1pt, font=\footnotesize},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+    control_label/.style={font=\footnotesize, text=orange!80!black, align=center},
+    node distance=5mm and 5mm,
+]
+
+% Draw the core pipelined CPU diagram
+\PipelinedCPUCore
+
+% === Styles for pipeline example overlays ===
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
+    data_value/.style={draw=orange!60!black, line width=1pt, fill=orange!20,
+                       rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    dst_value/.style={draw=green!60!black, line width=1pt, fill=green!20,
+                      rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    ip_value/.style={font=\small\bfseries, text=blue!70!black},
+    explain_box/.style={draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+                        font=\small, inner sep=8pt, align=left, anchor=north},
+    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
+                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt,
+                      anchor=east},
+}
+
+% === Program listing at bottom left ===
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
+    \begin{tabular}{rl}
+    0: & \textcolor{blue}{lw} R10,9(R1)\\
+    4: & \textcolor{blue}{sub} R11,R2,R3\\
+    8: & \textcolor{blue}{and} R12,R4,R5\\
+    12: & \textcolor{blue}{or} R13,R6,R7\\
+    \end{tabular}
+};
+
+% === PC value display (below IP box) ===
+\only<1>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {0};}
+\only<2>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {4};}
+\only<3>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {8};}
+\only<4>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {12};}
+\only<5>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {16};}
+
+% === Cycle indicator (nice box 2cm left of Fetch label) ===
+\only<1>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 1};}
+\only<2>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 2};}
+\only<3>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 3};}
+\only<4>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 4};}
+\only<5>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};}
+
+% === Cycle 1 (overlay 1): Fetching lw, pipeline empty ===
+\only<1>{
+    % No instructions visible yet - lw is being fetched
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{lw} from I-Cache at PC=0
+    };
+}
+
+% === Cycle 2 (overlay 2): lw fetched, sub being fetched ===
+\only<2>{
+    \node[latch_inst] at (inst_fetch_pos) {lw};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{sub} at PC=4\\
+        \textbf{Decode:} \texttt{lw} decoded: read R1, imm=9, dst=R10
+    };
+}
+
+% === Cycle 3 (overlay 3): sub fetched, lw in decode ===
+\only<3>{
+    \node[latch_inst] at (inst_fetch_pos) {sub};
+    \node[latch_inst] at (inst_decode_pos) {lw};
+    % lw in ID/EX with decode outputs
+    \node[data_value] at (src1_data_pos) {[R1]};
+    \node[data_value] at (imm_pos) {9};
+    \node[dst_value] at (dst_idex_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{and} at PC=8\\
+        \textbf{Decode:} \texttt{sub} decoded: read R2, R3, dst=R11\\
+        \textbf{Execute:} \texttt{lw} computes address [R1]+9
+    };
+}
+
+% === Cycle 4 (overlay 4): and fetched, sub decoded, lw executing ===
+\only<4>{
+    \node[latch_inst] at (inst_fetch_pos) {and};
+    \node[latch_inst] at (inst_decode_pos) {sub};
+    \node[latch_inst] at (inst_execute_pos) {lw};
+    % sub in ID/EX with decode outputs
+    \node[data_value] at (src1_data_pos) {[R2]};
+    \node[data_value] at (src2_data_pos) {[R3]};
+    \node[dst_value] at (dst_idex_pos) {R11};
+    % lw in EX/MEM with execute outputs
+    \node[data_value] at (alu_result_pos) {[R1]+9};
+    \node[dst_value] at (dst_exmem_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Fetch:} Reading \texttt{or} at PC=12\\
+        \textbf{Decode:} \texttt{and} decoded: read R4, R5, dst=R12\\
+        \textbf{Execute:} \texttt{sub} computes [R2]-[R3]\\
+        \textbf{Memory:} \texttt{lw} reads D-Cache at [R1]+9
+    };
+}
+
+% === Cycle 5 (overlay 5): or fetched, and decoded, sub executing, lw in memory ===
+\only<5>{
+    \node[latch_inst] at (inst_fetch_pos) {or};
+    \node[latch_inst] at (inst_decode_pos) {and};
+    \node[latch_inst] at (inst_execute_pos) {sub};
+    \node[latch_inst] at (inst_memory_pos) {lw};
+    % and in ID/EX with decode outputs
+    \node[data_value] at (src1_data_pos) {[R4]};
+    \node[data_value] at (src2_data_pos) {[R5]};
+    \node[dst_value] at (dst_idex_pos) {R12};
+    % sub in EX/MEM with execute outputs
+    \node[data_value] at (alu_result_pos) {[R2]-[R3]};
+    \node[dst_value] at (dst_exmem_pos) {R11};
+    % lw in MEM/WB
+    \node[dst_value] at (dst_memwb_pos) {R10};
+    \node[explain_box] at (ExplainPos) {
+        \textbf{Decode:} \texttt{or} decoded: read R6, R7, dst=R13\\
+        \textbf{Execute:} \texttt{and} computes [R4]\&[R5]\\
+        \textbf{Memory:} \texttt{sub} passes through (no mem access)\\
+        \textbf{WB:} \texttt{lw} writes M[[R1]+9] to R10 -- first instruction completes!
+    };
+}
+
+\end{circuitikz}
+}
+\end{center}
+\end{frame}
+
+\section{Hazards}
+
+%% Slide: Pipeline Hazards - Overview
+\begin{frame}{Pipeline Hazards}
+    Besides \textbf{unbalanced stages}, pipelines face additional challenges called \emph{hazards} -- situations where the next instruction cannot execute in the following clock cycle.
+
+    \vspace{0.5cm}
+    \begin{tcolorbox}[colback=red!5, colframe=red!60!black, title=Pipeline Hazard, fonttitle=\bfseries]
+        A \textbf{hazard} is a situation that prevents an instruction from executing during its designated clock cycle, causing the pipeline to \textbf{stall}.
+    \end{tcolorbox}
+
+    \vspace{0.5cm}
+    \textbf{Types of hazards:}
+    \begin{itemize}
+        \item \textbf{Structural hazard} -- hardware resource conflict
+        \item \textbf{Data hazard} -- instruction depends on result of prior instruction
+        \item \textbf{Control hazard} -- branch/jump changes instruction flow
+    \end{itemize}
+\end{frame}
+
+\subsection{Structural Hazards}
+
 %% Slide: Structural Hazard
 \begin{frame}{Structural Hazard}
     \begin{columns}
@@ -1367,240 +1548,11 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
     \end{tcolorbox}
 \end{frame}
 
-\begin{frame}{Pipeline Architecture}
-\begin{center}
-\begin{circuitikz}[scale=0.9, transform shape]
-    % Define circuitikz component styles
-    \tikzstyle{imem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
-                              external pins width=0, fill=white, align=center]
-    \tikzstyle{regfile_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=3, NR=4, square pins=1},
-                                 external pins width=0, fill=white, align=center]
-    \tikzstyle{regfile_wb} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=0, square pins=1},
-                              external pins width=0, fill=white, align=center]
-    \tikzstyle{alu_block} = [muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
-                            external pins width=0, fill=white]
-    \tikzstyle{dmem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
-                              external pins width=0, fill=white, align=center]
-    \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.8cm]
-    \tikzstyle{line} = [draw, thick]
 
-    % Stage labels at top
-    \node[font=\footnotesize] at (0, 2) {IF};
-    \node[font=\footnotesize] at (2.5, 2) {ID};
-    \node[font=\footnotesize] at (5, 2) {EXE};
-    \node[font=\footnotesize] at (7.5, 2) {MEM};
-    \node[font=\footnotesize] at (10, 2) {WB};
+\subsection{Data Hazards}
 
-    % Instruction Memory
-    \node[imem_block] (IM) at (0,0) {IM};
-
-    % Latch L1
-    \node[latch, anchor=west] (L1) at ([xshift=3mm]IM.east) {};
-
-    % Register File (first) - anchor at lpin 2
-    \node[regfile_block, anchor=lpin 2] (Reg1) at ([xshift=3mm]L1.east) {Reg};
-
-    % Latch L2
-    \node[latch, anchor=west] (L2) at ([xshift=3mm]Reg1.east |- L1) {};
-
-    % ALU
-    \node[alu_block, anchor=west] (ALU) at ([xshift=3mm]L2.east) {};
-
-    % Latch L3
-    \node[latch, anchor=west] (L3) at ([xshift=3mm]ALU.east |- L1) {};
-
-    % Data Memory
-    \node[dmem_block, anchor=lpin 1] (DM) at ([xshift=3mm]L3.east) {DM};
-
-    % Latch L4
-    \node[latch, anchor=west] (L4) at ([xshift=3mm]DM.east |- L1) {};
-
-    % Register File (second) - only 1 lpin, no rpin
-    \node[regfile_wb, anchor=lpin 1] (Reg2) at ([xshift=3mm]L4.east) {Reg};
-
-    % Connections - using pins for clean horizontal lines
-    \draw[line] (IM.rpin 1) -- (L1.west);
-    \draw[line] (L1.east) -- (Reg1.lpin 2);
-    \draw[line] ([xshift=2mm]L1.east) |- (Reg1.lpin 1);
-
-    \draw[line] (Reg1.rpin 1) -- (L2.west |- Reg1.rpin 1);
-    \draw[line] (Reg1.rpin 4) -- (L2.west |- Reg1.rpin 4);
-
-    \draw[line] (L2.east |- ALU.lpin 1) -- (ALU.lpin 1);
-    \draw[line] (L2.east |- ALU.lpin 2) -- (ALU.lpin 2);
-
-    \draw[line] (ALU.rpin 1) -- (L3.west);
-
-    \draw[line] (L3.east) -- (DM.lpin 1);
-    \draw[line] (DM.rpin 1) -- (L4.west);
-
-    % Bypass around DM
-    \draw[line] (L3.east) -- ++(2mm, 0) coordinate (bypass_start) -| ([xshift=-1mm, yshift=-1mm]DM.south west) -| ([xshift=1mm,yshift=-3mm]DM.east) -- ([yshift=-3mm]L4.west);
-
-    \draw[line] (L4.east) -- (Reg2.lpin 1);
-
-\end{circuitikz}
-\end{center}
-\end{frame}
-
-%% Slide: Pipeline Example - showing cycles 1-5
-\begin{frame}{Pipeline Example}
-\begin{center}
-\scalebox{0.58}{
-\begin{circuitikz}[
-    % Component styles
-    component/.style={draw, thick, minimum height=0.8cm},
-    pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=6.2cm},
-    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
-    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
-                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
-    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
-                    external pins width=0, fill=red!20, align=center},
-    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NT=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
-                     external pins width=0, fill=green!20, font=\scriptsize},
-    adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
-                     external pins width=0, fill=blue!20, font=\scriptsize},
-    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NT=1, w=0.8},
-                 external pins width=0, fill=green!30},
-    pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
-                 external pins width=0, fill=blue!20},
-    arrow/.style={->, >=stealth, thick},
-    data_path/.style={arrow, black},
-    line_label/.style={above, inner sep=1pt, font=\footnotesize},
-    data_connector/.style={circle, fill, inner sep=1.2pt},
-    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
-    control_label/.style={font=\footnotesize, text=orange!80!black, align=center},
-    node distance=5mm and 5mm,
-]
-
-% Draw the core pipelined CPU diagram
-\PipelinedCPUCore
-
-% === Styles for pipeline example overlays ===
-\tikzset{
-    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
-                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
-                       minimum height=5mm, text depth=0.5ex},
-    data_value/.style={draw=orange!60!black, line width=1pt, fill=orange!20,
-                       rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
-    dst_value/.style={draw=green!60!black, line width=1pt, fill=green!20,
-                      rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
-    ip_value/.style={font=\small\bfseries, text=blue!70!black},
-    explain_box/.style={draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
-                        font=\small, inner sep=8pt, align=left, anchor=north},
-    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
-                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt,
-                      anchor=east},
-}
-
-% === Program listing at bottom left ===
-\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
-      anchor=north west, font=\small\ttfamily, align=left]
-      (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
-    \begin{tabular}{rl}
-    0: & \textcolor{blue}{lw} R10,9(R1)\\
-    4: & \textcolor{blue}{sub} R11,R2,R3\\
-    8: & \textcolor{blue}{and} R12,R4,R5\\
-    12: & \textcolor{blue}{or} R13,R6,R7\\
-    \end{tabular}
-};
-
-% === PC value display (below IP box) ===
-\only<1>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {0};}
-\only<2>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {4};}
-\only<3>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {8};}
-\only<4>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {12};}
-\only<5>{\node[ip_value, anchor=north] at ([yshift=-2mm]PC.south) {16};}
-
-% === Cycle indicator (nice box 2cm left of Fetch label) ===
-\only<1>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 1};}
-\only<2>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 2};}
-\only<3>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 3};}
-\only<4>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 4};}
-\only<5>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};}
-
-% === Cycle 1 (overlay 1): Fetching lw, pipeline empty ===
-\only<1>{
-    % No instructions visible yet - lw is being fetched
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Fetch:} Reading \texttt{lw} from I-Cache at PC=0
-    };
-}
-
-% === Cycle 2 (overlay 2): lw fetched, sub being fetched ===
-\only<2>{
-    \node[latch_inst] at (inst_fetch_pos) {lw};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Fetch:} Reading \texttt{sub} at PC=4\\
-        \textbf{Decode:} \texttt{lw} decoded: read R1, imm=9, dst=R10
-    };
-}
-
-% === Cycle 3 (overlay 3): sub fetched, lw in decode ===
-\only<3>{
-    \node[latch_inst] at (inst_fetch_pos) {sub};
-    \node[latch_inst] at (inst_decode_pos) {lw};
-    % lw in ID/EX with decode outputs
-    \node[data_value] at (src1_data_pos) {[R1]};
-    \node[data_value] at (imm_pos) {9};
-    \node[dst_value] at (dst_idex_pos) {R10};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Fetch:} Reading \texttt{and} at PC=8\\
-        \textbf{Decode:} \texttt{sub} decoded: read R2, R3, dst=R11\\
-        \textbf{Execute:} \texttt{lw} computes address [R1]+9
-    };
-}
-
-% === Cycle 4 (overlay 4): and fetched, sub decoded, lw executing ===
-\only<4>{
-    \node[latch_inst] at (inst_fetch_pos) {and};
-    \node[latch_inst] at (inst_decode_pos) {sub};
-    \node[latch_inst] at (inst_execute_pos) {lw};
-    % sub in ID/EX with decode outputs
-    \node[data_value] at (src1_data_pos) {[R2]};
-    \node[data_value] at (src2_data_pos) {[R3]};
-    \node[dst_value] at (dst_idex_pos) {R11};
-    % lw in EX/MEM with execute outputs
-    \node[data_value] at (alu_result_pos) {[R1]+9};
-    \node[dst_value] at (dst_exmem_pos) {R10};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Fetch:} Reading \texttt{or} at PC=12\\
-        \textbf{Decode:} \texttt{and} decoded: read R4, R5, dst=R12\\
-        \textbf{Execute:} \texttt{sub} computes [R2]-[R3]\\
-        \textbf{Memory:} \texttt{lw} reads D-Cache at [R1]+9
-    };
-}
-
-% === Cycle 5 (overlay 5): or fetched, and decoded, sub executing, lw in memory ===
-\only<5>{
-    \node[latch_inst] at (inst_fetch_pos) {or};
-    \node[latch_inst] at (inst_decode_pos) {and};
-    \node[latch_inst] at (inst_execute_pos) {sub};
-    \node[latch_inst] at (inst_memory_pos) {lw};
-    % and in ID/EX with decode outputs
-    \node[data_value] at (src1_data_pos) {[R4]};
-    \node[data_value] at (src2_data_pos) {[R5]};
-    \node[dst_value] at (dst_idex_pos) {R12};
-    % sub in EX/MEM with execute outputs
-    \node[data_value] at (alu_result_pos) {[R2]-[R3]};
-    \node[dst_value] at (dst_exmem_pos) {R11};
-    % lw in MEM/WB
-    \node[dst_value] at (dst_memwb_pos) {R10};
-    \node[explain_box] at (ExplainPos) {
-        \textbf{Decode:} \texttt{or} decoded: read R6, R7, dst=R13\\
-        \textbf{Execute:} \texttt{and} computes [R4]\&[R5]\\
-        \textbf{Memory:} \texttt{sub} passes through (no mem access)\\
-        \textbf{WB:} \texttt{lw} writes M[[R1]+9] to R10 -- first instruction completes!
-    };
-}
-
-\end{circuitikz}
-}
-\end{center}
-\end{frame}
-
-%% Slide: RAW Dependency Example
-\begin{frame}{RAW Dependency}
+%% Slide: Data Hazards: RAW Dependency
+\begin{frame}{Data Hazards: RAW Dependency}
     \centering
     \begin{tikzpicture}[
         stage/.style={draw, minimum width=9mm, minimum height=6mm, font=\scriptsize\ttfamily},
@@ -1761,6 +1713,101 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \end{circuitikz}
 }
 \end{center}
+\end{frame}
+
+%% Slide: Forwarding Cases
+\begin{frame}{Data Hazards: When Do We Need Forwarding?}
+    Consider a \textbf{producer} instruction followed by a \textbf{consumer} that needs the result:
+
+    \vspace{0.3cm}
+    \centering
+    \begin{tikzpicture}[
+        stage/.style={draw, minimum width=8mm, minimum height=5mm, font=\scriptsize\ttfamily},
+        IF/.style={stage, fill=blue!25},
+        ID/.style={stage, fill=yellow!35},
+        EX/.style={stage, fill=green!25},
+        MEM/.style={stage, fill=orange!25},
+        WB/.style={stage, fill=purple!25},
+        inst/.style={font=\scriptsize\ttfamily, anchor=east},
+        hdr/.style={font=\scriptsize\bfseries},
+        case_label/.style={font=\scriptsize, anchor=west},
+        solution/.style={font=\scriptsize, text=blue!70!black, anchor=west},
+    ]
+        % Header
+        \node[hdr] at (0, 0.5) {Cycle:};
+        \foreach \i in {1,...,6} {
+            \node[hdr] at (\i*1.1, 0.5) {\i};
+        }
+
+        % Distance labels on left
+        \node[case_label, font=\small\bfseries] at (-2.8, -0.3) {Dist 1};
+        \node[case_label, font=\small\bfseries] at (-2.8, -1.3) {Dist 2};
+        \node[case_label, font=\small\bfseries] at (-2.8, -2.3) {Dist 3};
+
+        % Distance 1: Producer i, Consumer i+1
+        \node[inst] at (-0.2, -0.1) {i:};
+        \node[IF] at (1.1, -0.1) {IF};
+        \node[ID] at (2.2, -0.1) {ID};
+        \node[EX, fill=green!50] at (3.3, -0.1) {EX};
+        \node[MEM] at (4.4, -0.1) {MEM};
+        \node[WB] at (5.5, -0.1) {WB};
+
+        \node[inst] at (-0.2, -0.5) {i+1:};
+        \node[IF] at (2.2, -0.5) {IF};
+        \node[ID, fill=yellow!60] at (3.3, -0.5) {ID};
+        \node[EX] at (4.4, -0.5) {EX};
+        \node[MEM] at (5.5, -0.5) {MEM};
+        \node[WB] at (6.6, -0.5) {WB};
+
+        % Arrow for dist 1
+        \draw[->, thick, red!70!black] (3.3, -0.35) -- (3.3, -0.25);
+
+        % Distance 2: Producer i, Consumer i+2
+        \node[inst] at (-0.2, -1.1) {i:};
+        \node[IF] at (1.1, -1.1) {IF};
+        \node[ID] at (2.2, -1.1) {ID};
+        \node[EX] at (3.3, -1.1) {EX};
+        \node[MEM, fill=orange!50] at (4.4, -1.1) {MEM};
+        \node[WB] at (5.5, -1.1) {WB};
+
+        \node[inst] at (-0.2, -1.5) {i+2:};
+        \node[IF] at (3.3, -1.5) {IF};
+        \node[ID, fill=yellow!60] at (4.4, -1.5) {ID};
+        \node[EX] at (5.5, -1.5) {EX};
+        \node[MEM] at (6.6, -1.5) {MEM};
+
+        % Arrow for dist 2
+        \draw[->, thick, red!70!black] (4.4, -1.35) -- (4.4, -1.25);
+
+        % Distance 3: Producer i, Consumer i+3
+        \node[inst] at (-0.2, -2.1) {i:};
+        \node[IF] at (1.1, -2.1) {IF};
+        \node[ID] at (2.2, -2.1) {ID};
+        \node[EX] at (3.3, -2.1) {EX};
+        \node[MEM] at (4.4, -2.1) {MEM};
+        \node[WB, fill=purple!50] at (5.5, -2.1) {WB};
+
+        \node[inst] at (-0.2, -2.5) {i+3:};
+        \node[IF] at (4.4, -2.5) {IF};
+        \node[ID, fill=yellow!60] at (5.5, -2.5) {ID};
+        \node[EX] at (6.6, -2.5) {EX};
+
+        % Arrow for dist 3
+        \draw[->, thick, red!70!black] (5.5, -2.35) -- (5.5, -2.25);
+
+        % Solutions on right
+        \node[solution] at (7.2, -0.3) {$\Rightarrow$ \textbf{Bypass from EX/MEM}};
+        \node[solution] at (7.2, -1.3) {$\Rightarrow$ \textbf{Bypass from MEM/WB}};
+        \node[solution] at (7.2, -2.3) {$\Rightarrow$ \textbf{Register file split}};
+    \end{tikzpicture}
+
+    \vspace{0.3cm}
+    \raggedright
+    \small
+    \textbf{Distance $\geq$ 4:} No hazard -- result already in register file before consumer reads it.
+
+    \vspace{0.2cm}
+    \textbf{Exception -- Load-Use (Dist 1):} Load result available only after MEM $\Rightarrow$ must \textbf{stall} 1 cycle.
 \end{frame}
 
 %% Slide: Using Bypass to Solve RAW Dependency
@@ -2077,6 +2124,8 @@ then stall
         };
     \end{tikzpicture}
 \end{frame}
+
+\subsection{Control Hazards}
 
 %% Slide: Control Hazard on Branches (based on BTB slide structure but without BTB)
 \begin{frame}<1-4>[label=control-hazard]{Control Hazard on Branches}
