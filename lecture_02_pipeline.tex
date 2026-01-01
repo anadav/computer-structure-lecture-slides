@@ -1909,11 +1909,22 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
         \node[anchor=east, font=\small\ttfamily, anchor=north east] (add_inst) at ([yshift=-3mm]or_inst.south east) {add R14, R2, R2};
         \node[anchor=east, font=\small\ttfamily, anchor=north east] (sw_inst) at ([yshift=-3mm]add_inst.south east) {sw R15, 100(R2)};
 
-        \drawpipelinearch[prefix=i1, at={(lw_inst -| i1)}, scale=0.58]
-        \drawpipelinearch[prefix=i1, at={(and_inst -| i2)}, scale=0.58]
-        \drawpipelinearch[prefix=i1, at={(or_inst -| i3)}, scale=0.58]
-        \drawpipelinearch[prefix=i1, at={(add_inst -| i4)}, scale=0.58]
-        \drawpipelinearch[prefix=i1, at={(sw_inst -| i5)}, scale=0.58]
+        \drawpipelinearch[prefix=lw, at={(lw_inst -| i1)}, scale=0.58]
+        \drawpipelinearch[prefix=i2, at={(and_inst -| i2)}, scale=0.58]
+        \drawpipelinearch[prefix=i3, at={(or_inst -| i3)}, scale=0.58]
+        \drawpipelinearch[prefix=add, at={(add_inst -| i4)}, scale=0.58]
+        \drawpipelinearch[prefix=i5, at={(sw_inst -| i5)}, scale=0.58]
+
+        % Highlight lw's Reg2 (WB stage) - write to right half (red)
+        \fill[red!40] (lw-Reg2.north) -- (lw-Reg2.north east) -- (lw-Reg2.south east) -- (lw-Reg2.south) -- cycle;
+        \node[font=\tiny] at (lw-Reg2.center) {Reg};
+
+        % Highlight add's Reg1 (ID stage) - read from left half (red)
+        \fill[red!40] (add-Reg1.north west) -- (add-Reg1.north) -- (add-Reg1.south) -- (add-Reg1.south west) -- cycle;
+        \node[font=\tiny] at (add-Reg1.center) {Reg};
+
+        % Arrow from lw's WB (write) to add's ID (read) showing the split
+        \draw[->, thick, red!70!black] ([xshift=1mm]lw-Reg2.south) to[out=-90, in=90] ([xshift=-1mm]add-Reg1.north);
 
         % Program execution order label with arrow
         \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\execution\\order};
