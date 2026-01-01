@@ -1715,77 +1715,6 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \end{center}
 \end{frame}
 
-%% Slide: Forwarding Cases
-\begin{frame}{Data Hazards: When Do We Need Forwarding?}
-    Consider a \textbf{producer} instruction followed by a \textbf{consumer} that needs the result:
-
-    \vspace{0.3cm}
-    \centering
-    \begin{tikzpicture}[
-        % Base stage style
-        stage/.style={draw, minimum width=8mm, minimum height=5mm, font=\scriptsize\ttfamily},
-        % Stage colors
-        IF/.style={stage, fill=blue!25},
-        ID/.style={stage, fill=yellow!35},
-        IDh/.style={stage, fill=yellow!60},  % highlighted ID (consumer)
-        EX/.style={stage, fill=green!25},
-        EXh/.style={stage, fill=green!50},   % highlighted EX (producer)
-        MEM/.style={stage, fill=orange!25},
-        MEMh/.style={stage, fill=orange!50}, % highlighted MEM (producer)
-        WB/.style={stage, fill=purple!25},
-        WBh/.style={stage, fill=purple!50},  % highlighted WB (producer)
-        % Other styles
-        PH/.style={minimum width=8mm, minimum height=5mm},  % phantom
-        hdr/.style={font=\scriptsize\bfseries, text depth=0.4ex},
-        inst/.style={font=\scriptsize\ttfamily},
-        dist/.style={font=\small\bfseries},
-        solution/.style={font=\scriptsize, text=blue!70!black},
-    ]
-        \matrix (m) [
-            matrix of nodes,
-            ampersand replacement=\&,
-            column sep=1mm,
-            row sep=0.5mm,
-            row 1/.style={nodes={hdr}},
-            column 1/.style={nodes={inst, anchor=east, text width=6mm, align=right}},
-            nodes in empty cells,
-        ] {
-            Cycle: \& |[hdr]| 1 \& |[hdr]| 2 \& |[hdr]| 3 \& |[hdr]| 4 \& |[hdr]| 5 \& |[hdr]| 6 \\
-            % Distance 1
-            i:   \& |[IF]| IF \& |[ID]| ID \& |[EXh]| EX \& |[MEM]| MEM \& |[WB]| WB \& |[PH]| \\
-            i+1: \& |[PH]|    \& |[IF]| IF \& |[IDh]| ID \& |[EX]| EX   \& |[MEM]| MEM \& |[WB]| WB \\
-            % Distance 2
-            i:   \& |[IF]| IF \& |[ID]| ID \& |[EX]| EX \& |[MEMh]| MEM \& |[WB]| WB \& |[PH]| \\
-            i+2: \& |[PH]|    \& |[PH]|    \& |[IF]| IF \& |[IDh]| ID  \& |[EX]| EX \& |[MEM]| MEM \\
-            % Distance 3
-            i:   \& |[IF]| IF \& |[ID]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WBh]| WB \& |[PH]| \\
-            i+3: \& |[PH]|    \& |[PH]|    \& |[PH]|    \& |[IF]| IF   \& |[IDh]| ID \& |[EX]| EX \\
-        };
-
-        % Arrows showing forwarding direction
-        \draw[->, thick, red!70!black] (m-2-4.south) -- (m-3-4.north);
-        \draw[->, thick, red!70!black] (m-4-5.south) -- (m-5-5.north);
-        \draw[->, thick, red!70!black] (m-6-6.south) -- (m-7-6.north);
-
-        % Distance labels on left (positioned relative to matrix rows)
-        \node[dist, anchor=east] at ([xshift=-5mm]m-2-1.west |- m-2-1.south east) {Dist 1};
-        \node[dist, anchor=east] at ([xshift=-5mm]m-4-1.west |- m-4-1.south east) {Dist 2};
-        \node[dist, anchor=east] at ([xshift=-5mm]m-6-1.west |- m-6-1.south east) {Dist 3};
-
-        % Solutions on right (positioned relative to matrix)
-        \node[solution, anchor=west] at ([xshift=3mm]m-2-7.east |- m-2-7.south east) {$\Rightarrow$ \textbf{Bypass from EX/MEM}};
-        \node[solution, anchor=west] at ([xshift=3mm]m-4-7.east |- m-4-7.south east) {$\Rightarrow$ \textbf{Bypass from MEM/WB}};
-        \node[solution, anchor=west] at ([xshift=3mm]m-6-7.east |- m-6-7.south east) {$\Rightarrow$ \textbf{Register file split}};
-    \end{tikzpicture}
-
-    \vspace{0.3cm}
-    \raggedright
-    \small
-    \textbf{Distance $\geq$ 4:} No hazard -- result already in register file before consumer reads it.
-
-    \vspace{0.2cm}
-    \textbf{Exception -- Load-Use (Dist 1):} Load result available only after MEM $\Rightarrow$ must \textbf{stall} 1 cycle.
-\end{frame}
 
 %% Slide: Using Bypass to Solve RAW Dependency
 \begin{frame}{Using Bypass to Solve RAW Dependency}
@@ -1805,6 +1734,120 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
             Bypass/Forwarding Hardware Diagram
         };
     \end{tikzpicture}
+\end{frame}
+
+%% Slide: Bypass Hardware
+\begin{frame}{Bypass Hardware}
+\begin{center}
+\scalebox{0.55}{
+\begin{circuitikz}[
+    % Component styles (same as Pipeline Example)
+    component/.style={draw, thick, minimum height=0.8cm},
+    pipeline_reg/.style={draw, thick, fill=yellow!40, minimum width=6mm, minimum height=6.2cm},
+    stage_label/.style={draw, thick, fill=blue!60, text=white, font=\bfseries, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex},
+    imem_block/.style={muxdemux, muxdemux def={Lh=3, NL=3, Rh=3, NR=3, w=3.6, square pins=1},
+                        external pins width=0, align=center, text depth=3ex, fill=yellow!20},
+    regfile/.style={muxdemux, muxdemux def={Lh=4, NL=4, Rh=4, NR=2, w=2.8, square pins=1},
+                    external pins width=0, fill=red!20, align=center},
+    alu_style/.style={muxdemux, muxdemux def={Lh=2.6, Rh=1.5, NL=2, NR=5, NT=1, w=1.3, inset w=0.5, inset Lh=2, inset Rh=0, square pins=1},
+                     external pins width=0, fill=green!20, font=\scriptsize},
+    adder/.style={muxdemux, muxdemux def={Lh=1.2, NL=2, Rh=0.6, NR=1, w=1, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1},
+                     external pins width=0, fill=blue!20, font=\scriptsize},
+    mux2/.style={muxdemux, muxdemux def={Lh=1.6, Rh=0.8, NL=2, NR=1, NT=1, w=0.8},
+                 external pins width=0, fill=green!30},
+    pcsrc_mux/.style={muxdemux, muxdemux def={Lh=0.8, Rh=1.6, NL=1, NR=2, NT=1, w=0.8},
+                 external pins width=0, fill=blue!20},
+    arrow/.style={->, >=stealth, thick},
+    data_path/.style={arrow, black},
+    data_connector/.style={circle, fill, inner sep=1.2pt},
+    data_latch/.style={draw, thick, fill=cyan!20, minimum width=6mm, minimum height=0.3cm, inner sep=1pt, font=\tiny},
+    control_label/.style={font=\footnotesize, text=orange!80!black, align=center},
+    node distance=5mm and 5mm,
+]
+
+% Draw the core pipelined CPU diagram
+\PipelinedCPUCore
+
+% Styles for annotations
+\tikzset{
+    latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
+                       rounded corners=3pt, font=\small\bfseries\ttfamily, inner sep=4pt,
+                       minimum height=5mm, text depth=0.5ex},
+    data_value/.style={draw=orange!60!black, line width=1pt, fill=orange!20,
+                       rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    dst_value/.style={draw=green!60!black, line width=1pt, fill=green!20,
+                      rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    bypass_value/.style={draw=green!60!black, line width=1pt, fill=green!40,
+                         rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
+    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
+                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt, anchor=east},
+}
+
+% Cycle indicator
+\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};
+
+% Program listing
+\node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
+      anchor=north west, font=\small\ttfamily, align=left]
+      (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
+    \begin{tabular}{rl}
+    0: & lw \textcolor{blue}{R4},9(R1)\\
+    4: & sub \textcolor{blue}{R5},R2,R3\\
+    8: & and R12,\textcolor{green!50!black}{R4},\textcolor{green!50!black}{R5}\\
+    12: & or R13,R6,R7\\
+    \end{tabular}
+};
+
+% Instruction labels at pipeline latches
+\node[latch_inst] at (inst_fetch_pos) {or};
+\node[latch_inst] at (inst_decode_pos) {and};
+\node[latch_inst] at (inst_execute_pos) {sub};
+\node[latch_inst] at (inst_memory_pos) {lw};
+
+% Data values - now showing bypass working (green instead of red)
+\node[bypass_value] (need_r4) at (src1_data_pos) {[R4]};
+\node[bypass_value] (need_r5) at (src2_data_pos) {[R5]};
+\node[dst_value] at (dst_idex_pos) {R12};
+
+% sub in EX/MEM with result
+\node[data_value] at (alu_result_pos) {[R2]-[R3]};
+\node[dst_value] (prod_r5) at (dst_exmem_pos) {R5};
+
+% lw in MEM/WB with memory result
+\node[data_value] at (mem_data_pos) {M[[R1]+9]};
+\node[dst_value] (prod_r4) at (dst_memwb_pos) {R4};
+
+% === Bypass MUXes ===
+% Style for 3-input bypass mux
+\tikzset{
+    bypass_mux/.style={muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=3, NR=1, NT=1, w=0.6, square pins=1},
+                       external pins width=0, fill=green!40, draw=green!50!black, line width=1pt},
+}
+
+% Bypass mux for ALU input A (src1) - positioned left of ALU.lpin 1
+\node[bypass_mux, anchor=rpin 1] (BypassMuxA) at ([xshift=-8mm]ALU.lpin 1) {};
+\node[font=\tiny, green!40!black, above=0.5mm of BypassMuxA] {FwdA};
+
+% Bypass mux for ALU input B (src2) - positioned left of ALUMux
+\node[bypass_mux, anchor=rpin 1] (BypassMuxB) at ([xshift=-8mm]ALUMux.lpin 1) {};
+\node[font=\tiny, green!40!black, above=0.5mm of BypassMuxB] {FwdB};
+
+% Draw bypass arrows going INTO the muxes
+\draw[->, green!50!black, line width=2pt] (prod_r4.north) to[out=120, in=-30] (BypassMuxA.south east);
+\draw[->, green!50!black, line width=2pt] (prod_r5.north) to[out=130, in=-60] (BypassMuxB.south east);
+
+% Explanation box
+\node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
+      font=\small, inner sep=8pt, align=left, anchor=north]
+      at ([yshift=4mm]ExplainPos) {
+    \textbf{Bypass paths:}\\
+    R4 $\leftarrow$ MEM/WB latch (from \texttt{lw})\\
+    R5 $\leftarrow$ EX/MEM latch (from \texttt{sub})
+};
+
+\end{circuitikz}
+}
+\end{center}
 \end{frame}
 
 %% Slide: Bypass Control
@@ -2038,6 +2081,77 @@ then stall
     \end{circuitikz}
 \end{frame}
 
+%% Slide: Forwarding Cases
+\begin{frame}{Data Hazards: When Do We Need Forwarding?}
+    Consider a \textbf{producer} instruction followed by a \textbf{consumer} that needs the result:
+
+    \vspace{0.3cm}
+    \centering
+    \begin{tikzpicture}[
+        % Base stage style
+        stage/.style={draw, minimum width=8mm, minimum height=5mm, font=\scriptsize\ttfamily},
+        % Stage colors
+        IF/.style={stage, fill=blue!25},
+        ID/.style={stage, fill=yellow!35},
+        IDh/.style={stage, fill=yellow!60},  % highlighted ID (consumer)
+        EX/.style={stage, fill=green!25},
+        EXh/.style={stage, fill=green!50},   % highlighted EX (producer)
+        MEM/.style={stage, fill=orange!25},
+        MEMh/.style={stage, fill=orange!50}, % highlighted MEM (producer)
+        WB/.style={stage, fill=purple!25},
+        WBh/.style={stage, fill=purple!50},  % highlighted WB (producer)
+        % Other styles
+        PH/.style={minimum width=8mm, minimum height=5mm},  % phantom
+        hdr/.style={font=\scriptsize\bfseries, text depth=0.4ex},
+        inst/.style={font=\scriptsize\ttfamily},
+        dist/.style={font=\small\bfseries},
+        solution/.style={font=\scriptsize, text=blue!70!black},
+    ]
+        \matrix (m) [
+            matrix of nodes,
+            ampersand replacement=\&,
+            column sep=1mm,
+            row sep=0.5mm,
+            row 1/.style={nodes={hdr}},
+            column 1/.style={nodes={inst, anchor=east, text width=6mm, align=right}},
+            nodes in empty cells,
+        ] {
+            Cycle: \& |[hdr]| 1 \& |[hdr]| 2 \& |[hdr]| 3 \& |[hdr]| 4 \& |[hdr]| 5 \& |[hdr]| 6 \\
+            % Distance 1
+            i:   \& |[IF]| IF \& |[ID]| ID \& |[EXh]| EX \& |[MEM]| MEM \& |[WB]| WB \& |[PH]| \\
+            i+1: \& |[PH]|    \& |[IF]| IF \& |[IDh]| ID \& |[EX]| EX   \& |[MEM]| MEM \& |[WB]| WB \\
+            % Distance 2
+            i:   \& |[IF]| IF \& |[ID]| ID \& |[EX]| EX \& |[MEMh]| MEM \& |[WB]| WB \& |[PH]| \\
+            i+2: \& |[PH]|    \& |[PH]|    \& |[IF]| IF \& |[IDh]| ID  \& |[EX]| EX \& |[MEM]| MEM \\
+            % Distance 3
+            i:   \& |[IF]| IF \& |[ID]| ID \& |[EX]| EX \& |[MEM]| MEM \& |[WBh]| WB \& |[PH]| \\
+            i+3: \& |[PH]|    \& |[PH]|    \& |[PH]|    \& |[IF]| IF   \& |[IDh]| ID \& |[EX]| EX \\
+        };
+
+        % Arrows showing forwarding direction
+        \draw[->, thick, red!70!black] (m-2-4.south) -- (m-3-4.north);
+        \draw[->, thick, red!70!black] (m-4-5.south) -- (m-5-5.north);
+        \draw[->, thick, red!70!black] (m-6-6.south) -- (m-7-6.north);
+
+        % Distance labels on left (positioned relative to matrix rows)
+        \node[dist, anchor=east] at ([xshift=-5mm]m-2-1.west |- m-2-1.south east) {Dist 1};
+        \node[dist, anchor=east] at ([xshift=-5mm]m-4-1.west |- m-4-1.south east) {Dist 2};
+        \node[dist, anchor=east] at ([xshift=-5mm]m-6-1.west |- m-6-1.south east) {Dist 3};
+
+        % Solutions on right (positioned relative to matrix)
+        \node[solution, anchor=west] at ([xshift=3mm]m-2-7.east |- m-2-7.south east) {$\Rightarrow$ \textbf{Bypass from EX/MEM}};
+        \node[solution, anchor=west] at ([xshift=3mm]m-4-7.east |- m-4-7.south east) {$\Rightarrow$ \textbf{Bypass from MEM/WB}};
+        \node[solution, anchor=west] at ([xshift=3mm]m-6-7.east |- m-6-7.south east) {$\Rightarrow$ \textbf{Register file split}};
+    \end{tikzpicture}
+
+    \vspace{0.3cm}
+    \raggedright
+    \small
+    \textbf{Distance $\geq$ 4:} No hazard -- result already in register file before consumer reads it.
+
+    \vspace{0.2cm}
+    \textbf{Exception -- Load-Use (Dist 1):} Load result available only after MEM $\Rightarrow$ must \textbf{stall} 1 cycle.
+\end{frame}
 %% Slide: Software Scheduling to Avoid Load Hazards
 \begin{frame}[fragile]{Software Scheduling to Avoid Load Hazards}
     \begin{tikzpicture}[remember picture, overlay]
