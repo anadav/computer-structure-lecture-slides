@@ -154,7 +154,7 @@ npm install -g @anthropic-ai/claude-code
 {\footnotesize
 \textbf{Documentation:}\\
 \url{https://code.claude.com/docs/en/setup}\\
-\url{https://openrouter.ai/docs/guides/claude-code-integration}
+\url{https://openrouter.ai/docs/guides/guides/claude-code-integration}
 }
 
 \end{frame}
@@ -176,7 +176,7 @@ Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
 
 \vspace{0.3cm}
 
-{\small \textcolor{codeorange}{\textbf{Note:}} \texttt{ANTHROPIC\_API\_KEY} must be explicitly empty (not omitted).}
+{\small \textcolor{codeorange}{\textbf{Note:}} \texttt{ANTHROPIC\_API\_KEY} must be explicitly empty (not omitted). Create the directory first if needed: \colorbox{lightgray}{\texttt{mkdir -p \textasciitilde/.claude}}}
 
 \begin{tikzpicture}[remember picture, overlay]
 \node[rectangle callout, draw=red, fill=calloutbg, text width=2.8cm, font=\small, align=center,
@@ -223,6 +223,8 @@ claude
 \vspace{0.1cm}
 
 {\small If model shows \texttt{claude-sonnet} instead $\rightarrow$ check your \colorbox{lightgray}{\texttt{settings.json}} configuration.}
+
+{\small \textcolor{codeorange}{\textbf{WSL:}} If Claude asks to log in instead, check that \colorbox{lightgray}{\texttt{\textasciitilde/.claude.json}} contains \texttt{"hasCompletedOnboarding": true}.}
 
 \end{frame}
 
@@ -357,6 +359,8 @@ printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' 
 \vspace{0.1cm}
 
 \textbf{Benefits:} Claude sees your open files, workspace context, and you can review changes in VSCode's diff view.
+
+{\small \textcolor{codeorange}{\textbf{WSL users:}} Set default terminal to WSL: \colorbox{keybg}{\texttt{Ctrl+Shift+P}} $\rightarrow$ ``Terminal: Select Default Profile'' $\rightarrow$ choose your WSL distribution.}
 
 \end{frame}
 
@@ -528,6 +532,7 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
     \item \textbf{Filesystem:} Write access only to working directory; read access elsewhere
     \item \textbf{Network:} Only approved domains can be accessed
     \item Uses OS primitives (Seatbelt on macOS, bubblewrap on Linux)
+    \item {\small \textcolor{codeorange}{\textbf{Note:}} Sandbox is not supported on WSL.}
 \end{itemize}
 
 \vspace{0.2cm}
@@ -710,7 +715,7 @@ The AI handles the implementation details while you focus on understanding the a
         \item Empty? $\rightarrow$ Re-check your shell config or \colorbox{lightgray}{\texttt{settings.json}}
     \end{itemize}
 
-    \item \textbf{Out of budget?} Check with the curl command (slide~\ref{frame:budget})
+    \item \textbf{Out of budget?} Monitor usage via the status line. No extra budget will be provided
 
     \item \textbf{VSCode extension not connecting?}
     \begin{itemize}
