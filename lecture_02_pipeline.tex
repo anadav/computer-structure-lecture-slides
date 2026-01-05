@@ -1852,10 +1852,10 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Pin labels inside the box (near top edge, rotated) - 6 pins: src2, src1, dst_t-1, dst_t-2, FwdA, FwdB
 \node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 1) {src2};
 \node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 2) {src1};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 3) {dst$_{t-1}$};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 4) {dst$_{t-2}$};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 5) {FwdA};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 6) {FwdB};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 3) {FwdA};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 4) {FwdB};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 5) {dst$_{t-1}$};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 6) {dst$_{t-2}$};
 
 % Draw connections from src register numbers - route via west of IDEX latch
 \coordinate (src1_tap) at ([xshift=-5mm]RegFile.lpin 1);
@@ -1873,15 +1873,15 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Draw connections from dst register index lines (tap from propagation lines between latches)
 \coordinate (dst_exmem_tap) at ([xshift=3mm]dst_exmem_out);
 \coordinate (dst_memwb_tap) at ([xshift=3mm]dst_memwb_out);
-\draw[bypass_wire] (dst_exmem_tap) -- ++(0,-2mm) -| (BypassCtrl.tpin 3);
-\draw[bypass_wire] (dst_memwb_tap) -- ++(0,-4mm) -| (BypassCtrl.tpin 4);
+\draw[bypass_wire] (dst_exmem_tap) -- ++(0,-2mm) -| (BypassCtrl.tpin 5);
+\draw[bypass_wire] (dst_memwb_tap) -- ++(0,-4mm) -| (BypassCtrl.tpin 6);
 % Tap marks on the dst lines
 \node[bypass_tap] at (dst_exmem_tap) {};
 \node[bypass_tap] at (dst_memwb_tap) {};
 
-% Control signals to muxes (using top pins 5 and 6)
-\draw[bypass_ctrl_wire] (BypassCtrl.tpin 5) -- (BypassMuxA.bpin 1);
-\draw[bypass_ctrl_wire] (BypassCtrl.tpin 6) -- (BypassMuxB.bpin 1);
+% Control signals to muxes (using top pins 3 and 4)
+\draw[bypass_ctrl_wire] (BypassCtrl.tpin 3) -- (BypassMuxA.bpin 1);
+\draw[bypass_ctrl_wire] (BypassCtrl.tpin 4) -- (BypassMuxB.bpin 1);
 
 \end{circuitikz}
 }
