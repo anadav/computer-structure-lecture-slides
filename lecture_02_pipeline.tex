@@ -533,6 +533,7 @@
 \coordinate (calc_target_idex_out) at (TargetAdder.rpin 1 -| IDEX.east);
 \coordinate (calc_target_exmem_in) at (TargetAdder.rpin 1 -| EXMEM.west);
 \coordinate (calc_target_exmem) at (TargetAdder.rpin 1 -| EXMEM);
+\coordinate (calc_target_exe_out) at (TargetAdder.rpin 1 -| EXMEM.west);
 \ifdrawtargetadderpath
 \draw[data_path] (TargetAdder.brpin 1) -- (calc_target_exmem_in);
 \fi
@@ -2529,7 +2530,7 @@ then stall
 \draw[data_path] (decode_in_next_seq) -- node[next_seq_label] {next sequential address} (decode_out_next_seq);
 
 % Target Adder to EX/MEM buffer with label
-\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_exmem);
+\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_exe_out);
 
 % ALU outputs to EX/MEM buffer with labels
 \draw[arrow, orange!70!black] (ALU.brpin 2) -- node[midway, line_label, text=orange!70!black] {zero} (exmem_alu_zero);
@@ -3000,7 +3001,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \draw[verify_actual] (execute_in_pred_dir) -- (execute_out_pred_dir);
 
 % Target Adder to EX/MEM buffer with label
-\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_idex_out);
+\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_exmem);
 
 % ALU outputs to EX/MEM buffer with labels
 \draw[arrow, orange!70!black] (ALU.brpin 2) -- node[midway, line_label, text=orange!70!black] {zero} (exmem_alu_zero);
