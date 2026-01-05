@@ -424,8 +424,9 @@
 \coordinate (decode_out_next_seq) at (IDEX.west |- fetch_out_next_seq);
 \coordinate (execute_in_next_seq) at (IDEX.east |- fetch_out_next_seq);
 
-% Target register (dst) coordinates - unified Y level at 5mm below SignExt.south
-\coordinate (dst_y_level) at ([yshift=-5mm]SignExt.south);
+% Target register (dst) coordinates - unified Y level at 5mm below SignExt.south, but constrained to stay inside latches
+\path let \p1=([yshift=-5mm]SignExt.south), \p2=([yshift=2mm]IDEX.south) in
+    coordinate (dst_y_level) at (0, {max(\y1, \y2)});
 \coordinate (dst_idex_in) at (IDEX.west |- dst_y_level);
 \coordinate (dst_idex_out) at (IDEX.east |- dst_y_level);
 \coordinate (dst_exmem_in) at (EXMEM.west |- dst_y_level);
@@ -2999,7 +3000,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \draw[verify_actual] (execute_in_pred_dir) -- (execute_out_pred_dir);
 
 % Target Adder to EX/MEM buffer with label
-\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_exmem);
+\draw[arrow, green!60!black] (TargetAdder.brpin 1) -- node[midway, line_label, text=green!60!black] {calc.\ target} (calc_target_idex_out);
 
 % ALU outputs to EX/MEM buffer with labels
 \draw[arrow, orange!70!black] (ALU.brpin 2) -- node[midway, line_label, text=orange!70!black] {zero} (exmem_alu_zero);
