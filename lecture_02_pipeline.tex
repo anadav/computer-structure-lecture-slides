@@ -1807,7 +1807,11 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Data values - now showing bypass working (green instead of red)
 \node[bypass_value] (need_r4) at (src1_data_pos) {[R4]};
 \node[bypass_value] (need_r5) at (src2_data_pos) {[R5]};
-\node[dst_value] at (dst_idex_pos) {R12};
+\node[dst_value] (dst_problem) at (dst_idex_pos) {R12};
+
+% TODO: need bad_value - like bypass_value but red
+\node[bypass_value, anchor=south] (bad_src2) at (dst_problem.north) {R4};
+\node[bypass_value, anchor=south] (bad_src1) at (bad_src2.north) {R5};
 
 % sub in EX/MEM with result
 \node[data_value] at (alu_result_pos) {[R2]-[R3]};
@@ -1822,9 +1826,9 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \tikzset{
     bypass_mux/.style={muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=3, NR=1, NB=1, w=0.6, square pins=1},
                        external pins width=0, fill=green!40, draw=green!50!black, line width=1pt},
-    bypass_ctrl/.style={draw=purple!70!black, line width=1.5pt, fill=purple!20,
-                        rounded corners=4pt, minimum width=4cm, minimum height=1cm,
-                        align=center,
+    % Bypass control: muxdemux with 4 top pins, 2 bottom pins, ~50% wider (w=6), ~100% taller (Lh=Rh=2)
+    bypass_ctrl/.style={muxdemux, muxdemux def={Lh=2, Rh=2, NL=0, NR=0, NT=4, NB=2, w=6, square pins=1},
+                        external pins width=0, fill=purple!20, draw=purple!70!black, line width=1.5pt,
                         font=\small\bfseries},
 }
 
@@ -1838,34 +1842,40 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 
 % === Bypass Control Unit ===
 % Positioned relative to IDEX latch south, horizontally centered on muxes
-\node[bypass_ctrl, anchor=north] (BypassCtrl) at ([yshift=-8mm]IDEX.south -| BypassMuxA) {\\Bypass Control};
+\node[bypass_ctrl, anchor=north] (BypassCtrl) at ([yshift=-8mm]IDEX.south -| BypassMuxA) {};
+% Text in lower half
+\node[font=\small\bfseries, purple!70!black] at ([yshift=-4mm]BypassCtrl.center) {Bypass Control};
+% Pin labels inside the box (near top edge, rotated)
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 1) {src2};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 2) {src1};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 3) {dst$_{t-1}$};
+\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 4) {dst$_{t-2}$};
 
-% Draw connections from src register numbers (from RegFile left pins)
-\coordinate (src1_tap) at ([xshift=-10mm]BypassCtrl.north);
-\coordinate (src2_tap) at ([xshift=-5mm]BypassCtrl.north);
-\coordinate (src1_bend) at ([xshift=-5mm]RegFile.lpin 1);
-\coordinate (src2_bend) at ([xshift=-8mm]RegFile.lpin 2);
-\draw[->, purple, line width=1.5pt] (src1_bend) |- ([yshift=4mm]src1_tap) -- (src1_tap);
-\draw[->, purple, line width=1.5pt] (src2_bend) |- ([yshift=2mm]src2_tap) -- (src2_tap);
+% Draw connections from src register numbers - route via west of IDEX latch
+\coordinate (src1_tap) at ([xshift=-5mm]RegFile.lpin 1);
+\coordinate (src2_tap) at ([xshift=-8mm]RegFile.lpin 2);
+
+% Route: tap → west of IDEX → down to BypassCtrl
+\draw[->, purple, line width=1.5pt] (src1_tap) |- (bad_src1.west) |- ([yshift=4mm]BypassCtrl.tpin 1) -- (BypassCtrl.tpin 1);
+\draw[->, purple, line width=1.5pt] (src2_tap) |- (bad_src2.west) |- ([yshift=2mm]BypassCtrl.tpin 2) -- (BypassCtrl.tpin 2);
+\draw[->, purple, line width=1.5pt] (bad_src1.east) -| (BypassCtrl.tpin 2);
+\draw[->, purple, line width=1.5pt] (bad_src2.east) -| (BypassCtrl.tpin 1);
 % Tap marks on the input lines
-\fill[purple] (src1_bend) circle (2pt);
-\fill[purple] (src2_bend) circle (2pt);
+\fill[purple] (src1_tap) circle (2pt);
+\fill[purple] (src2_tap) circle (2pt);
 
-% Draw connections from dst registers
-\coordinate (dst1_tap) at ([xshift=5mm]BypassCtrl.north);
-\coordinate (dst2_tap) at ([xshift=10mm]BypassCtrl.north);
-\draw[->, purple!70!black, thick] (prod_r5.south) -- ++(0,-2mm) -| (dst1_tap);
-\draw[->, purple!70!black, thick] (prod_r4.south) -- ++(0,-4mm) -| (dst2_tap);
-
-% Labels for inputs (positioned at tap coordinates)
-\node[font=\tiny, purple!70!black, rotate=90, anchor=south] at (src1_tap) {src1};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=south] at (src2_tap) {src2};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=south] at (dst1_tap) {dst$_{t-1}$};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=south] at (dst2_tap) {dst$_{t-2}$};
+% Draw connections from dst register index lines (tap from propagation lines between latches)
+\coordinate (dst_exmem_tap) at ([yshift=2mm]dst_exmem_in);
+\coordinate (dst_memwb_tap) at ([yshift=4mm]dst_memwb_in);
+\draw[->, purple, line width=1.5pt] (dst_exmem_tap) -- ++(0,-2mm) -| (BypassCtrl.tpin 3);
+\draw[->, purple, line width=1.5pt] (dst_memwb_tap) -- ++(0,-4mm) -| (BypassCtrl.tpin 4);
+% Tap marks on the dst lines
+\fill[purple] (dst_exmem_tap) circle (2pt);
+\fill[purple] (dst_memwb_tap) circle (2pt);
 
 % Control signals to muxes (using bottom pins)
-\draw[->, purple!70!black, thick, dashed] ([xshift=-3mm]BypassCtrl.north) -- (BypassMuxA.bpin 1);
-\draw[->, purple!70!black, thick, dashed] ([xshift=3mm]BypassCtrl.north) -- (BypassMuxB.bpin 1);
+\draw[->, purple!70!black, thick, dashed] (BypassCtrl.bpin 1) -- (BypassMuxA.bpin 1);
+\draw[->, purple!70!black, thick, dashed] (BypassCtrl.bpin 2) -- (BypassMuxB.bpin 1);
 
 \end{circuitikz}
 }
