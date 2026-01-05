@@ -1833,7 +1833,9 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
     % Styles for bypass wiring
     bypass_wire/.style={->, purple, line width=1.5pt},
     bypass_ctrl_wire/.style={->, purple!70!black, thick, dashed},
+    bypass_ctrl_out/.style={->, purple!70!black, line width=1.5pt},
     bypass_tap/.style={purple, circle, inner sep=0pt, minimum size=4pt, fill=purple},
+    bypass_pin_label/.style={font=\tiny, purple!70!black, rotate=90, anchor=east},
 }
 
 % Bypass mux for ALU input A (src1) - positioned left of ALU.lpin 1
@@ -1849,13 +1851,13 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \node[bypass_ctrl, anchor=north] (BypassCtrl) at ([yshift=-11mm,xshift=5mm]IDEX.south -| BypassMuxA) {};
 % Text in lower half
 \node[font=\small\bfseries, purple!70!black] at ([yshift=-4mm]BypassCtrl.center) {Bypass Control};
-% Pin labels inside the box (near top edge, rotated) - 6 pins: src2, src1, dst_t-1, dst_t-2, FwdA, FwdB
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 1) {src2};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 2) {src1};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 3) {FwdA};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 4) {FwdB};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 5) {dst$_{t-1}$};
-\node[font=\tiny, purple!70!black, rotate=90, anchor=east] at ([yshift=-1pt]BypassCtrl.tpin 6) {dst$_{t-2}$};
+% Pin labels inside the box (near top edge, rotated) - 6 pins: src2, src1, FwdA, FwdB, dst_t-1, dst_t-2
+\node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 1) {src2};
+\node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 2) {src1};
+\node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 3) {FwdA};
+\node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 4) {FwdB};
+\node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 5) {dst$_{t-1}$};
+\node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 6) {dst$_{t-2}$};
 
 % Draw connections from src register numbers - route via west of IDEX latch
 \coordinate (src1_tap) at ([xshift=-5mm]RegFile.lpin 1);
@@ -1880,8 +1882,8 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \node[bypass_tap] at (dst_memwb_tap) {};
 
 % Control signals to muxes (using top pins 3 and 4)
-\draw[bypass_ctrl_wire] (BypassCtrl.tpin 3) -- (BypassMuxA.bpin 1);
-\draw[bypass_ctrl_wire] (BypassCtrl.tpin 4) -- (BypassMuxB.bpin 1);
+\draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-2mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
+\draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-2mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
 
 \end{circuitikz}
 }
