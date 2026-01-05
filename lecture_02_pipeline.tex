@@ -1877,8 +1877,8 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Draw connections from dst register index lines (tap from propagation lines between latches)
 \coordinate (dst_exmem_tap) at ([xshift=3mm]dst_exmem_out);
 \coordinate (dst_memwb_tap) at ([xshift=3mm]dst_memwb_out);
-\draw[bypass_wire] (dst_exmem_tap) -- ++(0,-2mm) -| (BypassCtrl.tpin 5);
-\draw[bypass_wire] (dst_memwb_tap) -- ++(0,-4mm) -| (BypassCtrl.tpin 6);
+\draw[bypass_wire] (dst_exmem_tap) -- ++(0,-10mm) -| (BypassCtrl.tpin 5);
+\draw[bypass_wire] (dst_memwb_tap) -- ++(0,-12mm) -| (BypassCtrl.tpin 6);
 % Tap marks on the dst lines
 \node[bypass_tap] at (dst_exmem_tap) {};
 \node[bypass_tap] at (dst_memwb_tap) {};
@@ -1889,15 +1889,19 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 
 % Bypass data lines from EX/MEM (t-1) to mux lpin 1
 \coordinate (exmem_bypass_tap) at (AddrConn);
-\draw[bypass_data] (exmem_bypass_tap) |- ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxB.west) |- (BypassMuxB.lpin 1);
-\node[bypass_data_tap] at ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxA.west) {};
-\draw[bypass_data] ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxA.west) |- (BypassMuxA.lpin 1);
+\coordinate (exmem_fwdA_junc) at ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxA.west);
+\coordinate (exmem_fwdB_junc) at ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxB.west);
+\draw[bypass_data] (exmem_bypass_tap) |- (exmem_fwdB_junc) |- (BypassMuxB.lpin 1);
+\node[bypass_data_tap] at (exmem_fwdA_junc) {};
+\draw[bypass_data] (exmem_fwdA_junc) |- (BypassMuxA.lpin 1);
 
 % Bypass data lines from MEM/WB (t-2) to mux lpin 3
 \coordinate (memwb_bypass_tap) at (AddrWB -| MEMWB.east);
-\draw[bypass_data] (memwb_bypass_tap) |- ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxB.west) |- (BypassMuxB.lpin 3);
-\node[bypass_data_tap] at ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxA.west) {};
-\draw[bypass_data] ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxA.west) |- (BypassMuxA.lpin 3);
+\coordinate (memwb_fwdA_junc) at ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxA.west);
+\coordinate (memwb_fwdB_junc) at ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxB.west);
+\draw[bypass_data] (memwb_bypass_tap) |- (memwb_fwdB_junc) |- (BypassMuxB.lpin 3);
+\node[bypass_data_tap] at (memwb_fwdA_junc) {};
+\draw[bypass_data] (memwb_fwdA_junc) |- (BypassMuxA.lpin 3);
 
 \end{circuitikz}
 }
