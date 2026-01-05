@@ -2956,9 +2956,6 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \coordinate (execute_out_target_reg) at (decode_out_target_reg -| EXMEM.west);
 \coordinate (mem_in_target_reg) at (decode_out_target_reg -| EXMEM.east);
 
-% Alias for instruction node (macro uses lowercase)
-\node (Instruction) at (instruction) {};
-
 % === BTB-specific data paths ===
 % MUX output to PC
 \draw[data_path] (PCSrcMux.lpin 1) -| (IP_west_conn) -- (PC.west);
@@ -3054,19 +3051,25 @@ Assuming 20\% branches, $\sim$50\% taken on average
       anchor=north west, font=\small\ttfamily, align=left]
       (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
     \begin{tabular}{rl}
-    0: & or \\
+    0: & or \textcolor{gray!60}{r6,r7} \\
     4: & jcc 50 \\
-    8: & and \\
+    8: & and \textcolor{gray!60}{r8,r9} \\
     \multicolumn{2}{c}{...} \\
-    50: & sub \\
-    54: & mul \\
-    58: & add \\
+    50: & sub \textcolor{gray!60}{r1,r2} \\
+    54: & mul \textcolor{gray!60}{r4,r5} \\
+    58: & add \textcolor{gray!60}{r3,r4} \\
     \end{tabular}
 };
 
 % === Enhanced styles for visibility ===
 % Coordinate for stage explanation box at bottom
 \coordinate (StageExplainPos) at ([yshift=-20mm]BPU.south -| RegFile);
+
+% BTB-specific instruction position coordinates (using instruction.south as y-reference)
+\coordinate (inst_fetch_pos) at (instruction.south);
+\coordinate (inst_decode_pos) at (IDEX.center |- instruction.south);
+\coordinate (inst_execute_pos) at (EXMEM.center |- instruction.south);
+\coordinate (inst_memory_pos) at (MEMWB.center |- instruction.south);
 
 % Prominent instruction style on latches
 \tikzset{
@@ -3094,15 +3097,24 @@ Assuming 20\% branches, $\sim$50\% taken on average
                           rounded corners=2pt, font=\scriptsize\bfseries, inner sep=2pt},
     stage_box/.style={draw=blue!50!black, line width=1.5pt, fill=blue!8,
                       rounded corners=6pt, font=\small, inner sep=8pt},
+    cycle_box/.style={draw=blue!60!black, line width=2pt, fill=blue!15,
+                      rounded corners=6pt, font=\Large\bfseries, inner sep=8pt, anchor=east},
 }
+
+% === Cycle indicator ===
+\only<1>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 1};}
+\only<2>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 2};}
+\only<3>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 3};}
+\only<4>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 4};}
+\only<5>{\node[cycle_box] at ([xshift=-2cm]IF_label.west) {Cycle 5};}
 
 % === Animation: Instructions on latches + values + callouts ===
 % Slide 1: or fetching, lookup BTB
 \only<1>{
     % IP value below IP register
     \node[ip_value] at ([yshift=-3mm]PC.south) {4};
-    % Instruction on IF/ID latch - anchored north at instruction.south
-    \node[latch_inst, anchor=north] at (Instruction.south) {or};
+    % Instruction on IF/ID latch
+    \node[latch_inst, anchor=north] at (inst_fetch_pos) {or};
     % Stage explanation - colorbox at bottom
     \node[stage_box, anchor=west] at (StageExplainPos) {
         \textcolor{blue!60!black}{\textbf{Fetch:}} Looking up IP=4 in I\$ and BTB in parallel
@@ -3114,7 +3126,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
     % IP value below IP register
     \node[ip_value] at ([yshift=-3mm]PC.south) {4};
     % Instruction on latch with branch offset at SignExt y-level
-    \node[latch_inst, anchor=north] (jcc2) at (Instruction.south) {jcc};
+    \node[latch_inst, anchor=north] (jcc2) at (inst_fetch_pos) {jcc};
     \node[branch_offset] at (IFID.center |- SignExt) {42};
     % Latch values - positioned relative to signal coordinates
     \node[latch_target] at (IFID.center |- fetch_out_pred_target) {50};
@@ -3133,9 +3145,9 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<3>{
     % IP value below IP register
     \node[ip_value] at ([yshift=-3mm]PC.south) {54};
-    % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {sub};
-    \node[latch_inst, anchor=north] (jcc3) at (IDEX.center |- Instruction.south) {jcc};
+    % Instructions on latches
+    \node[latch_inst, anchor=north] at (inst_fetch_pos) {sub};
+    \node[latch_inst, anchor=north] (jcc3) at (inst_decode_pos) {jcc};
     \node[branch_offset] at (IDEX.center |- SignExt) {42};
     % Latch values propagating - positioned relative to signal coordinates
     \node[latch_target] at (IDEX.center |- decode_out_pred_target) {50};
@@ -3151,10 +3163,10 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<4>{
     % IP value below IP register
     \node[ip_value] at ([yshift=-3mm]PC.south) {58};
-    % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {mul};
-    \node[latch_inst, anchor=north] at (IDEX.center |- Instruction.south) {sub};
-    \node[latch_inst_highlight, anchor=north] (jcc4) at (EXMEM.center |- Instruction.south) {jcc};
+    % Instructions on latches
+    \node[latch_inst, anchor=north] at (inst_fetch_pos) {mul};
+    \node[latch_inst, anchor=north] at (inst_decode_pos) {sub};
+    \node[latch_inst_highlight, anchor=north] (jcc4) at (inst_execute_pos) {jcc};
     \node[branch_offset] at (EXMEM.center |- SignExt) {42};
     % Predicted values - positioned relative to signal coordinates
     \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
@@ -3187,11 +3199,11 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<5>{
     % IP value below IP register
     \node[ip_value] at ([yshift=-3mm]PC.south) {62};
-    % Instructions on latches - using -| for consistent y-level
-    \node[latch_inst, anchor=north] at (Instruction.south) {add};
-    \node[latch_inst, anchor=north] at (IDEX.center |- Instruction.south) {mul};
-    \node[latch_inst, anchor=north] at (EXMEM.center |- Instruction.south) {sub};
-    \node[latch_inst, anchor=north] at (MEMWB.center |- Instruction.south) {jcc};
+    % Instructions on latches
+    \node[latch_inst, anchor=north] at (inst_fetch_pos) {add};
+    \node[latch_inst, anchor=north] at (inst_decode_pos) {mul};
+    \node[latch_inst, anchor=north] at (inst_execute_pos) {sub};
+    \node[latch_inst, anchor=north] at (inst_memory_pos) {jcc};
     % Verification OK - prominent
     \node[draw=green!50!black, line width=2pt, fill=green!35, rounded corners=5pt,
           font=\normalsize\bfseries, inner sep=6pt, text=green!20!black]
@@ -3314,9 +3326,6 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \coordinate (mem_out_target_reg) at (decode_out_target_reg -| MEMWB.west);
 \coordinate (wb_in_target_reg) at (decode_out_target_reg -| MEMWB.east);
 
-% Alias for instruction node (macro uses lowercase)
-\node (Instruction) at (instruction) {};
-
 % === BTB-specific data paths ===
 % MUX output to PC
 \draw[data_path] (PCSrcMux.lpin 1) -| (IP_west_conn) -- (PC.west);
@@ -3372,22 +3381,28 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \node[data_connector, fill=red!70!black] at (flush_line_y -| IFID.north) {};
 \draw[repair_path] (flush_line_y -| IFID.north) -- (IFID.north);
 
-% Program listing with border (right side)
+% Program listing with border (right side, with pale gray arguments)
 \node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
       anchor=north west, font=\small\ttfamily, align=left]
       (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
     \begin{tabular}{rl}
-    0: & or \\
+    0: & or \textcolor{gray!60}{r6,r7} \\
     4: & jcc 50 \\
-    8: & and \\
+    8: & and \textcolor{gray!60}{r8,r9} \\
     \multicolumn{2}{c}{...} \\
-    50: & sub \\
-    54: & mul \\
+    50: & sub \textcolor{gray!60}{r1,r2} \\
+    54: & mul \textcolor{gray!60}{r4,r5} \\
     \end{tabular}
 };
 
 % === Enhanced styles (same as first slide) ===
 \coordinate (StageExplainPos) at ([yshift=-20mm]BPU.south -| RegFile);
+
+% BTB-specific instruction position coordinates (using instruction.south as y-reference)
+\coordinate (inst_fetch_pos) at (instruction.south);
+\coordinate (inst_decode_pos) at (IDEX.center |- instruction.south);
+\coordinate (inst_execute_pos) at (EXMEM.center |- instruction.south);
+\coordinate (inst_memory_pos) at (MEMWB.center |- instruction.south);
 
 \tikzset{
     latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
@@ -3429,12 +3444,12 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<1>{
     % IP value below IP register
     \node[ip_value] at ([yshift=-3mm]PC.south) {58};
-    % Instructions on latches - anchored north at instruction.south level
-    \node[latch_inst, anchor=north] at (Instruction.south) {mul};
-    \node[latch_inst, anchor=north] at (IDEX.center |- Instruction.south) {sub};
-    \node[latch_inst_highlight, anchor=north] (jccM1) at (EXMEM.center |- Instruction.south) {jcc};
+    % Instructions on latches
+    \node[latch_inst, anchor=north] at (inst_fetch_pos) {mul};
+    \node[latch_inst, anchor=north] at (inst_decode_pos) {sub};
+    \node[latch_inst_highlight, anchor=north] (jccM1) at (inst_execute_pos) {jcc};
     \node[branch_offset] at (EXMEM.center |- SignExt) {42};
-    \node[latch_inst, anchor=north] at (MEMWB.center |- Instruction.south) {or};
+    \node[latch_inst, anchor=north] at (inst_memory_pos) {or};
     % Predicted values - positioned relative to signal coordinates
     \node[latch_target] at (EXMEM.center |- execute_out_pred_target) {50};
     \node[latch_dir] at (EXMEM.center |- execute_out_pred_dir) {taken};
@@ -3452,7 +3467,7 @@ Assuming 20\% branches, $\sim$50\% taken on average
     % Stage explanation
     \node[draw=red!50!black, line width=1.5pt, fill=red!8, rounded corners=6pt,
           font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
-        \textcolor{red!60!black}{\textbf{Execute:}} jcc actual direction = Not Taken $\neq$ predicted (Taken)
+        \textcolor{red!60!black}{\textbf{Execute:}} jcc actual direction = (Not Taken) $\neq$ predicted (Taken)
     };
 }
 
@@ -3460,11 +3475,11 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<2>{
     % IP value - being repaired to 8
     \node[ip_value, text=red!70!black] at ([yshift=-3mm]PC.south) {$\rightarrow$8};
-    % Instructions - mul/sub being flushed - anchored north at instruction.south level
-    \node[latch_inst_flush, anchor=north] at (Instruction.south) {\sout{mul} $\to$ NOP};
-    \node[latch_inst_flush, anchor=north] at (IDEX.center |- Instruction.south) {\sout{sub} $\to$ NOP};
-    \node[latch_inst_highlight, anchor=north] at (EXMEM.center |- Instruction.south) {jcc};
-    \node[latch_inst, anchor=north] at (MEMWB.center |- Instruction.south) {or};
+    % Instructions - mul/sub being flushed
+    \node[latch_inst_flush, anchor=north] at (inst_fetch_pos) {\sout{mul} $\to$ NOP};
+    \node[latch_inst_flush, anchor=north] at (inst_decode_pos) {\sout{sub} $\to$ NOP};
+    \node[latch_inst_highlight, anchor=north] at (inst_execute_pos) {jcc};
+    \node[latch_inst, anchor=north] at (inst_memory_pos) {or};
     % Mismatch indicator
     \node[draw=red!70!black, line width=2pt, fill=red!50, rounded corners=5pt,
           font=\normalsize\bfseries, inner sep=6pt, text=white]
@@ -3487,11 +3502,11 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<3>{
     % IP value - now at 8
     \node[ip_value] at ([yshift=-3mm]PC.south) {8};
-    % Instructions - NOPs (bubbles) in flushed stages - anchored north at instruction.south level
-    \node[latch_inst_nop, anchor=north] at (Instruction.south) {NOP};
-    \node[latch_inst_nop, anchor=north] at (IDEX.center |- Instruction.south) {NOP};
-    \node[latch_inst, anchor=north] at (EXMEM.center |- Instruction.south) {jcc};
-    \node[latch_inst, anchor=north] at (MEMWB.center |- Instruction.south) {or};
+    % Instructions - NOPs (bubbles) in flushed stages
+    \node[latch_inst_nop, anchor=north] at (inst_fetch_pos) {NOP};
+    \node[latch_inst_nop, anchor=north] at (inst_decode_pos) {NOP};
+    \node[latch_inst, anchor=north] at (inst_execute_pos) {jcc};
+    \node[latch_inst, anchor=north] at (inst_memory_pos) {or};
     % Stage explanation
     \node[draw=orange!50!black, line width=1.5pt, fill=orange!10, rounded corners=6pt,
           font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
@@ -3503,11 +3518,11 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \only<4>{
     % IP value - at 8, fetching and
     \node[ip_value] at ([yshift=-3mm]PC.south) {8};
-    % Instructions - and fetched from correct path - anchored north at instruction.south level
-    \node[latch_inst_new, anchor=north] at (Instruction.south) {and};
-    \node[latch_inst_nop, anchor=north] at (IDEX.center |- Instruction.south) {--};
-    \node[latch_inst_nop, anchor=north] at (EXMEM.center |- Instruction.south) {--};
-    \node[latch_inst, anchor=north] at (MEMWB.center |- Instruction.south) {jcc};
+    % Instructions - and fetched from correct path
+    \node[latch_inst_new, anchor=north] at (inst_fetch_pos) {and};
+    \node[latch_inst_nop, anchor=north] at (inst_decode_pos) {NOP};
+    \node[latch_inst_nop, anchor=north] at (inst_execute_pos) {NOP};
+    \node[latch_inst, anchor=north] at (inst_memory_pos) {jcc};
     % Stage explanation
     \node[draw=green!50!black, line width=1.5pt, fill=green!10, rounded corners=6pt,
           font=\small, inner sep=8pt, anchor=west] at (StageExplainPos) {
