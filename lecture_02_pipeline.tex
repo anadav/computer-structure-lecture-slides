@@ -1836,6 +1836,8 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
     bypass_ctrl_out/.style={->, purple!70!black, line width=1.5pt},
     bypass_tap/.style={purple, circle, inner sep=0pt, minimum size=4pt, fill=purple},
     bypass_pin_label/.style={font=\tiny, purple!70!black, rotate=90, anchor=east},
+    bypass_data/.style={->, teal, line width=1.5pt},
+    bypass_data_tap/.style={teal, circle, inner sep=0pt, minimum size=4pt, fill=teal},
 }
 
 % Bypass mux for ALU input A (src1) - positioned left of ALU.lpin 1
@@ -1884,6 +1886,18 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Control signals to muxes (using top pins 3 and 4)
 \draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-2mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
 \draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-2mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
+
+% Bypass data lines from EX/MEM (t-1) to mux lpin 1
+\coordinate (exmem_bypass_tap) at (AddrConn);
+\draw[bypass_data] (exmem_bypass_tap) |- ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxB.west) |- (BypassMuxB.lpin 1);
+\node[bypass_data_tap] at ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxA.west) {};
+\draw[bypass_data] ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxA.west) |- (BypassMuxA.lpin 1);
+
+% Bypass data lines from MEM/WB (t-2) to mux lpin 3
+\coordinate (memwb_bypass_tap) at (AddrWB -| MEMWB.east);
+\draw[bypass_data] (memwb_bypass_tap) |- ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxB.west) |- (BypassMuxB.lpin 3);
+\node[bypass_data_tap] at ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxA.west) {};
+\draw[bypass_data] ([yshift=-4mm,xshift=-2mm]EXMEM.south -| BypassMuxA.west) |- (BypassMuxA.lpin 3);
 
 \end{circuitikz}
 }
