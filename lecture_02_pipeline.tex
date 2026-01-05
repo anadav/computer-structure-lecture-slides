@@ -1836,10 +1836,19 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
     bypass_ctrl_out/.style={->, purple!70!black, line width=1.5pt},
     bypass_tap/.style={purple, circle, inner sep=0pt, minimum size=4pt, fill=purple},
     bypass_pin_label/.style={font=\tiny, purple!70!black, rotate=90, anchor=east},
-    bypass_data/.style={->, teal, line width=1.5pt},
-    bypass_data_tap/.style={teal, circle, inner sep=0pt, minimum size=4pt, fill=teal},
+    bypass_data_exmem/.style={->, orange!80!black, line width=1.5pt},
+    bypass_data_exmem_tap/.style={orange!80!black, circle, inner sep=0pt, minimum size=4pt, fill=orange!80!black},
+    bypass_data_memwb/.style={->, cyan!70!black, line width=1.5pt},
+    bypass_data_memwb_tap/.style={cyan!70!black, circle, inner sep=0pt, minimum size=4pt, fill=cyan!70!black},
+    % Callout style for explanations (rectangle callout - pointer specified per-node)
+    bypass_callout/.style={rectangle callout, draw=blue!70!black, line width=1.5pt, fill=blue!10,
+                           font=\small, inner sep=6pt, text width=5.5cm, align=left},
 }
 
+% Fixed position for callouts (top right of page)
+\coordinate (callout_pos) at ([xshift=3cm,yshift=3cm]DMem.north east);
+
+% === Stage 1: Bypass MUXes ===
 % Bypass mux for ALU input A (src1) - positioned left of ALU.lpin 1
 \node[bypass_mux, anchor=rpin 1] (BypassMuxA) at ([xshift=-8mm]ALU.lpin 1) {};
 \node[font=\tiny, green!40!black, above=0.5mm of BypassMuxA] {FwdA};
@@ -1848,24 +1857,42 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \node[bypass_mux, anchor=rpin 1] (BypassMuxB) at ([xshift=-8mm]ALUMux.lpin 1) {};
 \node[font=\tiny, green!40!black, above=0.5mm of BypassMuxB] {FwdB};
 
-% === Bypass Control Unit ===
+% Callout for stage 1
+\node<1>[bypass_callout, callout absolute pointer={(BypassMuxA.north)}, anchor=south west] at (callout_pos) {
+\textbf{Forwarding MUXes}\\[2pt]
+Select between: original register value, EX/MEM result (1 cycle old), or MEM/WB result (2 cycles old)
+};
+
+% === Stage 2: Bypass Control Unit ===
 % Positioned relative to IDEX latch south, horizontally centered on muxes
-\node[bypass_ctrl, anchor=north] (BypassCtrl) at ([yshift=-15mm,xshift=5mm]IDEX.south -| BypassMuxA) {};
+\onslide<2->{\node[bypass_ctrl, anchor=north] (BypassCtrl) at ([yshift=-15mm,xshift=5mm]IDEX.south -| BypassMuxA) {};}
+% Need BypassCtrl defined for later stages even when invisible
+\node[bypass_ctrl, anchor=north, opacity=0] (BypassCtrl) at ([yshift=-15mm,xshift=5mm]IDEX.south -| BypassMuxA) {};
 % Text in lower half
-\node[font=\small\bfseries, purple!70!black] at ([yshift=-4mm]BypassCtrl.center) {Bypass Control};
+\onslide<2->{\node[font=\small\bfseries, purple!70!black] at ([yshift=-4mm]BypassCtrl.center) {Bypass Control};}
 % Pin labels inside the box (near top edge, rotated) - 6 pins: src2, src1, FwdA, FwdB, dst_t-1, dst_t-2
+\onslide<2->{
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 1) {src2};
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 2) {src1};
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 3) {FwdB};
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 4) {FwdA};
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 5) {dst$_{t-1}$};
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 6) {dst$_{t-2}$};
+}
 
+% Callout for stage 2
+\node<2>[bypass_callout, callout absolute pointer={(BypassCtrl.north)}, anchor=south west] at (callout_pos) {
+\textbf{Bypass Control Unit}\\[2pt]
+Compares source registers of current instruction with destination registers of previous instructions
+};
+
+% === Stage 3: Control inputs (src1, src2, dst) ===
 % Draw connections from src register numbers - route via west of IDEX latch
 \coordinate (src1_tap) at ([xshift=-5mm]RegFile.lpin 1);
 \coordinate (src2_tap) at ([xshift=-8mm]RegFile.lpin 2);
 
 % Route: tap → west of IDEX → down to BypassCtrl (using bypass_wire style)
+\onslide<3->{
 \draw[bypass_wire] (src1_tap) |- (bad_src1.west);
 \draw[bypass_wire] (src2_tap) |- (bad_src2.west);
 \draw[bypass_wire] (bad_src1.east) -| (BypassCtrl.tpin 2);
@@ -1873,35 +1900,72 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Tap marks on the input lines
 \node[bypass_tap] at (src1_tap) {};
 \node[bypass_tap] at (src2_tap) {};
+}
 
 % Draw connections from dst register index lines (tap from propagation lines between latches)
 \coordinate (dst_exmem_tap) at ([xshift=3mm]dst_exmem_out);
 \coordinate (dst_memwb_tap) at ([xshift=3mm]dst_memwb_out);
+\onslide<3->{
 \draw[bypass_wire] (dst_exmem_tap) -- ++(0,-10mm) -| (BypassCtrl.tpin 5);
 \draw[bypass_wire] (dst_memwb_tap) -- ++(0,-12mm) -| (BypassCtrl.tpin 6);
 % Tap marks on the dst lines
 \node[bypass_tap] at (dst_exmem_tap) {};
 \node[bypass_tap] at (dst_memwb_tap) {};
+}
 
+% Callout for stage 3
+\node<3>[bypass_callout, callout absolute pointer={(bad_src1.east)}, anchor=south west] at (callout_pos) {
+\textbf{Control Inputs}\\[2pt]
+src1, src2: source register indices from ID/EX\\
+dst$_{t-1}$, dst$_{t-2}$: destination registers from EX/MEM and MEM/WB stages
+};
+
+% === Stage 4: Control outputs (FwdA, FwdB signals) ===
 % Control signals to muxes (using top pins 3 and 4)
+\onslide<4->{
 \draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-2mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
 \draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-2mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
+}
 
+% Callout for stage 4
+\node<4>[bypass_callout, callout absolute pointer={(BypassCtrl.tpin 4)}, anchor=south west] at (callout_pos) {
+\textbf{Control Outputs}\\[2pt]
+FwdA, FwdB: 2-bit signals selecting mux input based on detected hazards
+};
+
+% === Stage 5: EX/MEM data path ===
 % Bypass data lines from EX/MEM (t-1) to mux lpin 1
 \coordinate (exmem_bypass_tap) at (AddrConn);
 \coordinate (exmem_fwdA_junc) at ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxA.west);
 \coordinate (exmem_fwdB_junc) at ([yshift=-2mm,xshift=-3mm]EXMEM.south -| BypassMuxB.west);
-\draw[bypass_data] (exmem_bypass_tap) |- (exmem_fwdB_junc) |- (BypassMuxB.lpin 1);
-\node[bypass_data_tap] at (exmem_fwdA_junc) {};
-\draw[bypass_data] (exmem_fwdA_junc) |- (BypassMuxA.lpin 1);
+\onslide<5->{
+\draw[bypass_data_exmem] (exmem_bypass_tap) |- (exmem_fwdB_junc) |- (BypassMuxB.lpin 1);
+\node[bypass_data_exmem_tap] at (exmem_fwdA_junc) {};
+\draw[bypass_data_exmem] (exmem_fwdA_junc) |- (BypassMuxA.lpin 1);
+}
 
+% Callout for stage 5
+\node<5>[bypass_callout, callout absolute pointer={(BypassMuxA.lpin 1)}, anchor=south west] at (callout_pos) {
+\textbf{EX/MEM Data Path}\\[2pt]
+Forward ALU result from previous instruction (1 cycle old) to mux input 1
+};
+
+% === Stage 6: MEM/WB data path ===
 % Bypass data lines from MEM/WB (t-2) to mux lpin 3 - tap from writeback line to RegFile
 \coordinate (memwb_bypass_tap_a) at ([xshift=-4mm,yshift=-8mm]IDEX.south -| BypassMuxA.lpin 3);
 \coordinate (memwb_bypass_tap_b) at ([xshift=-4mm,yshift=-8mm]IDEX.south -| BypassMuxB.lpin 3);
-\node[bypass_data_tap] at (memwb_bypass_tap_a) {};
-\node[bypass_data_tap] at (memwb_bypass_tap_b) {};
-\draw[bypass_data] (memwb_bypass_tap_a) |- (BypassMuxA.lpin 3);
-\draw[bypass_data] (memwb_bypass_tap_b) |- (BypassMuxB.lpin 3);
+\onslide<6->{
+\node[bypass_data_memwb_tap] at (memwb_bypass_tap_a) {};
+\node[bypass_data_memwb_tap] at (memwb_bypass_tap_b) {};
+\draw[bypass_data_memwb] (memwb_bypass_tap_a) |- (BypassMuxA.lpin 3);
+\draw[bypass_data_memwb] (memwb_bypass_tap_b) |- (BypassMuxB.lpin 3);
+}
+
+% Callout for stage 6
+\node<6>[bypass_callout, callout absolute pointer={(BypassMuxA.lpin 3)}, anchor=south west] at (callout_pos) {
+\textbf{MEM/WB Data Path}\\[2pt]
+Forward result from writeback stage (2 cycles old) to mux input 3
+};
 
 \end{circuitikz}
 }
