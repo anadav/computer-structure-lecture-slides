@@ -1928,6 +1928,21 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Draw the core pipelined CPU diagram
 \PipelinedCPUCore[bypass]
 
+% Fade out the TargetAdder and its lines (not relevant for bypass)
+% First cover original lines with white
+\draw[white, line width=2pt] (execute_in_next_seq) |- (TargetAdder.lpin 1);
+\draw[white, line width=2pt] ([xshift=-7mm]ALUMux.lpin 2) |- (TargetAdder.lpin 2);
+\draw[white, line width=2pt] (TargetAdder.rpin 1) -- (TargetAdder.rpin 1 -| EXMEM.west);
+% Cover the TargetAdder
+\fill[white] ([xshift=-1mm,yshift=1mm]TargetAdder.north west) rectangle ([xshift=1mm,yshift=-1mm]TargetAdder.south east);
+% Redraw faded and dotted
+\begin{scope}[opacity=0.3]
+    \node[pcpu_adder, anchor=center] at (TargetAdder.center) {+};
+    \draw[data_path, densely dotted, thin] (execute_in_next_seq) |- (TargetAdder.lpin 1);
+    \draw[data_path, densely dotted, thin] ([xshift=-7mm]ALUMux.lpin 2) |- (TargetAdder.lpin 2);
+    \draw[data_path, densely dotted, thin] (TargetAdder.rpin 1) -- (TargetAdder.rpin 1 -| EXMEM.west);
+\end{scope}
+
 % Styles for annotations
 \tikzset{
     latch_inst/.style={draw=blue!70!black, line width=1.5pt, fill=blue!15,
@@ -1943,7 +1958,13 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 
 % Cycle indicator moved to title bar overlay (see after circuitikz)
 
-% Program listing
+% Define coordinates for stacked labels (always, so anchoring works)
+\coordinate (dst_stack_base) at (dst_idex_pos);
+\coordinate (dst_stack_mid) at ([yshift=3mm]dst_stack_base);
+\coordinate (dst_stack_top) at ([yshift=6mm]dst_stack_base);
+
+% Program listing and annotations - only on last slide (7)
+\onslide<7->{
 \node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
       anchor=north west, font=\small\ttfamily, align=left]
       (ProgList) at ([xshift=-5mm,yshift=-25mm]PC.south west) {
@@ -1964,11 +1985,11 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Data values - now showing bypass working (green instead of red)
 \node[bypass_value] (need_r4) at (src1_data_pos) {[R4]};
 \node[bypass_value] (need_r5) at (src2_data_pos) {[R5]};
-\node[dst_value] (dst_problem) at (dst_idex_pos) {R12};
+\node[dst_value] (dst_problem) at (dst_stack_base) {R12};
 
-% TODO: need bad_value - like bypass_value but red
-\node[bypass_value, anchor=south] (bad_src2) at (dst_problem.north) {R4};
-\node[bypass_value, anchor=south] (bad_src1) at (bad_src2.north) {R5};
+% Source register labels stacked above dst
+\node[bypass_value] (bad_src2) at (dst_stack_mid) {R4};
+\node[bypass_value] (bad_src1) at (dst_stack_top) {R5};
 
 % sub in EX/MEM with result
 \node[data_value] at (alu_result_pos) {[R2]-[R3]};
@@ -1977,6 +1998,7 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % lw in MEM/WB with memory result
 \node[data_value] at (mem_data_pos) {M[[R1]+9]};
 \node[dst_value] (prod_r4) at (dst_memwb_pos) {R4};
+}
 
 % === Bypass MUXes ===
 % Styles for bypass hardware
@@ -2007,11 +2029,11 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 
 % === Stage 1: Bypass MUXes ===
 % Bypass mux for ALU input A (src1) - positioned left of ALU.lpin 1
-\node[bypass_mux, anchor=lpin 1] (BypassMuxA) at ([xshift=-14mm]ALU.lpin 1) {};
+\node[bypass_mux, anchor=rpin 1] (BypassMuxA) at ([xshift=-10mm]ALU.lpin 1) {};
 \node[font=\tiny, green!40!black, above=0.5mm of BypassMuxA] {FwdA};
 
 % Bypass mux for ALU input B (src2) - positioned left of ALUMux
-\node[bypass_mux, anchor=lpin 1] (BypassMuxB) at ([xshift=-14mm]ALUMux.lpin 1) {};
+\node[bypass_mux, anchor=rpin 1] (BypassMuxB) at ([xshift=-10mm]ALUMux.lpin 1) {};
 \node[font=\tiny, green!40!black, above=0.5mm of BypassMuxB] {FwdB};
 
 % Callout for stage 1
@@ -2126,12 +2148,14 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 
 \end{circuitikz}
 }
-% Cycle indicator on title bar
+% Cycle indicator on title bar - only on last slide (7)
+\only<7->{
 \begin{tikzpicture}[remember picture, overlay]
     \node[draw=blue!60!black, line width=1.5pt, fill=blue!60, text=white,
           rounded corners=4pt, font=\normalsize\bfseries, inner sep=5pt, anchor=east]
           at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 5};
 \end{tikzpicture}
+}
 \end{center}
 \end{frame}
 
