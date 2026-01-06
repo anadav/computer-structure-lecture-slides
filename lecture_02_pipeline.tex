@@ -2183,23 +2183,67 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 
 %% Slide: Bypass Control
 \begin{frame}[fragile]{Bypass Control}
-    \textbf{L3\_reg\_wr = L3.RegWrite and (L3.opcode != lw)}
-    
-    \vspace{0.3cm}
-    \textbf{Forwarding from EXE (L3):}
-    \begin{itemize}
-        \item \small if (L3\_reg\_wr and (L3.dst == L2.src1)) ALUSelA = 1
-        \item \small if (L3\_reg\_wr and (L3.dst == L2.src2)) ALUSelB = 1
-    \end{itemize}
-    
-    \vspace{0.3cm}
-    \textbf{Forwarding from MEM (L4):}
-    \begin{itemize}
-        \item \small if (L4.RegWrite and ((not L3\_reg\_wr) or (L3.dst $\neq$ L2.src1))\\
-              and (L4.dst = L2.src1)) ALUSelA = 2
-        \item \small if (L4.RegWrite and ((not L3\_reg\_wr) or (L3.dst $\neq$ L2.src2))\\
-              and (L4.dst = L2.src2)) ALUSelB = 2
-    \end{itemize}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\small
+\texttt{L3\_wr = L3.RegWrite \&\& (L3.op != lw)}
+
+\vspace{0.4cm}
+\textcolor{orange!80!black}{\textbf{// Forward from EXE (L3):}}\\[2pt]
+\texttt{\textcolor{orange!80!black}{if} (L3\_wr \&\& L3.dst == L2.src1)}\\
+\texttt{~~~~ALUSelA = \textcolor{orange!80!black}{\textbf{1}}}\\[2pt]
+\texttt{\textcolor{orange!80!black}{if} (L3\_wr \&\& L3.dst == L2.src2)}\\
+\texttt{~~~~ALUSelB = \textcolor{orange!80!black}{\textbf{1}}}
+
+\vspace{0.4cm}
+\textcolor{cyan!70!black}{\textbf{// Forward from MEM (L4):}}\\[2pt]
+\texttt{\textcolor{cyan!70!black}{if} (L4.RegWrite \&\&}\\
+\texttt{~~~~(!L3\_wr || L3.dst != L2.src1) \&\&}\\
+\texttt{~~~~L4.dst == L2.src1)}\\
+\texttt{~~~~ALUSelA = \textcolor{cyan!70!black}{\textbf{2}}}\\[4pt]
+\texttt{\textcolor{cyan!70!black}{if} (L4.RegWrite \&\&}\\
+\texttt{~~~~(!L3\_wr || L3.dst != L2.src2) \&\&}\\
+\texttt{~~~~L4.dst == L2.src2)}\\
+\texttt{~~~~ALUSelB = \textcolor{cyan!70!black}{\textbf{2}}}
+\end{column}
+\begin{column}{0.43\textwidth}
+\centering
+\begin{circuitikz}[scale=0.95, transform shape]
+    % Define bypass mux style (similar to Bypass Hardware slide)
+    \tikzset{
+        bypass_mux_large/.style={muxdemux, muxdemux def={Lh=2.8, Rh=1.4, NL=3, NR=1, NB=1, w=1.2, square pins=1},
+                           external pins width=0, fill=green!40, draw=green!50!black, line width=1.5pt},
+        pin_num/.style={font=\scriptsize\bfseries, text=green!30!black},
+        line_label/.style={font=\scriptsize, above, inner sep=1pt},
+    }
+
+    % Draw the mux
+    \node[bypass_mux_large] (Mux) at (0,0) {};
+    \node[font=\small\bfseries, green!40!black, above=2mm of Mux] {FwdA / FwdB};
+
+    % Pin numbers INSIDE the mux (near left edge)
+    \node[pin_num] at ([xshift=3mm]Mux.lpin 1) {0};
+    \node[pin_num] at ([xshift=3mm]Mux.lpin 2) {1};
+    \node[pin_num] at ([xshift=3mm]Mux.lpin 3) {2};
+
+    % Input lines with labels ABOVE
+    \draw[thick, ->] ([xshift=-22mm]Mux.lpin 1) -- (Mux.lpin 1)
+        node[line_label, midway] {ID/EX (reg)};
+    \draw[thick, ->, orange!80!black] ([xshift=-22mm]Mux.lpin 2) -- (Mux.lpin 2)
+        node[line_label, midway, text=orange!80!black] {EX/MEM (L3)};
+    \draw[thick, ->, cyan!70!black] ([xshift=-22mm]Mux.lpin 3) -- (Mux.lpin 3)
+        node[line_label, midway, text=cyan!70!black] {MEM/WB (L4)};
+
+    % Output line
+    \draw[thick, ->] (Mux.rpin 1) -- ([xshift=12mm]Mux.rpin 1)
+        node[line_label, midway] {to ALU};
+
+    % Control input from bottom
+    \draw[thick, ->, purple!70!black] ([yshift=-18mm]Mux.bpin 1) -- (Mux.bpin 1);
+    \node[font=\scriptsize, purple!70!black, anchor=north] at ([yshift=-18mm]Mux.bpin 1) {ALUSel};
+\end{circuitikz}
+\end{column}
+\end{columns}
 \end{frame}
 
 % Macro for drawing full pipeline architecture based on Pipeline Architecture slide
