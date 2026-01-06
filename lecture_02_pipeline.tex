@@ -2079,13 +2079,21 @@ Select between: original register value, EX/MEM result (1 cycle old), or MEM/WB 
 \node[bypass_pin_label] at ([yshift=-1pt]BypassCtrl.tpin 6) {dst$_{t-2}$};
 }
 
+% === Stage 2 also includes FwdA/FwdB control outputs ===
+% Control signals to muxes (using top pins 3 and 4)
+\onslide<2->{
+\draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-3mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
+\draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-5mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
+}
+
 % Callout for stage 2
 \node<2>[bypass_callout, callout absolute pointer={(BypassCtrl.north)}, anchor=south west] at (callout_pos) {
 \textbf{Bypass Control Unit}\\[2pt]
-Compares source registers of current instruction with destination registers of previous instructions
+Compares source registers with destination registers of previous instructions.\\
+Outputs FwdA/FwdB: 2-bit signals selecting mux input
 };
 
-% === Stage 3: Control inputs (src1, src2, dst) ===
+% === Stage 3: Control inputs (src1, src2) ===
 % Draw connections from src register numbers - route via west of IDEX latch
 \coordinate (src1_tap) at ([xshift=-5mm]RegFile.lpin 1);
 \coordinate (src2_tap) at ([xshift=-8mm]RegFile.lpin 2);
@@ -2101,10 +2109,17 @@ Compares source registers of current instruction with destination registers of p
 \node[bypass_tap] at (src2_tap) {};
 }
 
+% Callout for stage 3
+\node<3>[bypass_callout, callout absolute pointer={(bad_src1.east)}, anchor=south west] at (callout_pos) {
+\textbf{Source Register Inputs}\\[2pt]
+src1, src2: source register indices from ID/EX latch
+};
+
+% === Stage 4: Control inputs (dst_{t-1}, dst_{t-2}) ===
 % Draw connections from dst register index lines (tap from propagation lines between latches)
 \coordinate (dst_exmem_tap) at ([xshift=3mm]dst_exmem_out);
 \coordinate (dst_memwb_tap) at ([xshift=3mm]dst_memwb_out);
-\onslide<3->{
+\onslide<4->{
 \draw[bypass_wire] (dst_exmem_tap) -- ++(0,-10mm) -| (BypassCtrl.tpin 5);
 \draw[bypass_wire] (dst_memwb_tap) -- ++(0,-12mm) -| (BypassCtrl.tpin 6);
 % Tap marks on the dst lines
@@ -2112,24 +2127,11 @@ Compares source registers of current instruction with destination registers of p
 \node[bypass_tap] at (dst_memwb_tap) {};
 }
 
-% Callout for stage 3
-\node<3>[bypass_callout, callout absolute pointer={(bad_src1.east)}, anchor=south west] at (callout_pos) {
-\textbf{Control Inputs}\\[2pt]
-src1, src2: source register indices from ID/EX\\
-dst$_{t-1}$, dst$_{t-2}$: destination registers from EX/MEM and MEM/WB stages
-};
-
-% === Stage 4: Control outputs (FwdA, FwdB signals) ===
-% Control signals to muxes (using top pins 3 and 4)
-\onslide<4->{
-\draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-3mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
-\draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-5mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
-}
-
 % Callout for stage 4
-\node<4>[bypass_callout, callout absolute pointer={(BypassCtrl.tpin 4)}, anchor=south west] at (callout_pos) {
-\textbf{Control Outputs}\\[2pt]
-FwdA, FwdB: 2-bit signals selecting mux input based on detected hazards
+\node<4>[bypass_callout, callout absolute pointer={(dst_exmem_tap)}, anchor=south west] at (callout_pos) {
+\textbf{Destination Register Inputs}\\[2pt]
+dst$_{t-1}$: destination register from EX/MEM (previous instruction)\\
+dst$_{t-2}$: destination register from MEM/WB (2 instructions ago)
 };
 
 % === Stage 5: EX/MEM data path ===
