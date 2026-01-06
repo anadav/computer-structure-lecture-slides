@@ -329,9 +329,14 @@
 \draw[data_path] ([yshift=4mm]instruction.south east) -- ++(0.5,0) |- node[pos=0.90, above=-1mm, font=\scriptsize] {dst} (dst_idex_in);
 
 % ID/EX to ALU (top input direct, bottom through MUX)
+\ifdrawaluinputs
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
+\fi
 \coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {} -- (ALUMux.blpin 1);
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {};
+\ifdrawaluinputs
+\draw[data_path] (WriteDataJunction) -- (ALUMux.blpin 1);
+\fi
 \draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
 \draw[data_path] (EXMEM.east |- DMem.lpin 10) -- (DMem.lpin 10);
 \draw[data_path] (ALUMux.rpin 1) -- (ALU.blpin 2);
@@ -595,6 +600,7 @@
         draw regfile labels=true,
         draw datacache labels=true,
         draw btb components=false,
+        draw alu inputs=true,
     },
     % Branch hazard theme (same colors as default, but no decode/control signals)
     branch-hazard/.style={
@@ -620,6 +626,7 @@
         draw regfile labels=true,
         draw datacache labels=true,
         draw btb components=false,
+        draw alu inputs=true,
     },
     % Bypass theme (for bypass hardware slides - wider ALU spacing for bypass muxes)
     bypass/.style={
@@ -645,6 +652,7 @@
         draw regfile labels=true,
         draw datacache labels=true,
         draw btb components=false,
+        draw alu inputs=false,
     },
     % BTB theme (for slides with Branch Target Buffer - uses mux3 instead of pcsrc_mux)
     btb/.style={
@@ -670,6 +678,7 @@
         draw regfile labels=true,
         draw datacache labels=true,
         draw btb components=true,
+        draw alu inputs=true,
     },
     % Individual keys
     pipeline reg color/.store in=\pipelineRegColor,
@@ -694,6 +703,7 @@
     draw regfile labels/.is if=drawregfilelabels,
     draw datacache labels/.is if=drawdatacachelabels,
     draw btb components/.is if=drawbtbcomponents,
+    draw alu inputs/.is if=drawaluinputs,
 }
 \newif\ifshowdecode
 \newif\ifshowcontrolsignals
@@ -706,6 +716,7 @@
 \newif\ifdrawregfilelabels
 \newif\ifdrawdatacachelabels
 \newif\ifdrawbtbcomponents
+\newif\ifdrawaluinputs
 
 % Circuitikz styles for Pipelined CPU diagram
 \tikzset{
@@ -2035,6 +2046,14 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Bypass mux for ALU input B (src2) - positioned left of ALUMux
 \node[bypass_mux, anchor=rpin 1] (BypassMuxB) at ([xshift=-10mm]ALUMux.lpin 1) {};
 \node[font=\tiny, green!40!black, above=0.5mm of BypassMuxB] {FwdB};
+
+% Draw wiring through bypass muxes (original direct lines disabled via draw alu inputs=false)
+% Src1 (to FwdA): from IDEX position -| to bypass mux lpin 2, then rpin 1 to ALU
+\draw[data_path] (IDEX.east |- ALU.blpin 1) -| ([xshift=-5mm]BypassMuxA.lpin 2) -- (BypassMuxA.lpin 2);
+\draw[data_path] (BypassMuxA.rpin 1) -- (ALU.blpin 1);
+% Src2 (to FwdB): from IDEX position -| to bypass mux lpin 2, then rpin 1 to ALUMux
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -| ([xshift=-5mm]BypassMuxB.lpin 2) -- (BypassMuxB.lpin 2);
+\draw[data_path] (BypassMuxB.rpin 1) -- (ALUMux.blpin 1);
 
 % Callout for stage 1
 \node<1>[bypass_callout, callout absolute pointer={(BypassMuxA.north)}, anchor=south west] at (callout_pos) {
