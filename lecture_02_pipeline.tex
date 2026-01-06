@@ -1783,7 +1783,7 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 %% Slide: RAW Dependency in Pipeline Example
 \begin{frame}{RAW Dependency in Pipeline -- Example}
 \begin{center}
-\scalebox{0.55}{
+\scalebox{0.65}{
 \begin{circuitikz}[
     % Component styles (same as Pipeline Example)
     component/.style={draw, thick, minimum height=0.8cm},
@@ -1911,7 +1911,7 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 %% Slide: Bypass Hardware
 \begin{frame}{Bypass Hardware}
 \begin{center}
-\scalebox{0.55}{
+\scalebox{0.62}{
 \begin{circuitikz}[
     % Component styles (same as Pipeline Example)
     component/.style={draw, thick, minimum height=0.8cm},
@@ -2033,11 +2033,11 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
     bypass_data_memwb_tap/.style={cyan!70!black, circle, inner sep=0pt, minimum size=4pt, fill=cyan!70!black},
     % Callout style for explanations (rectangle callout - pointer specified per-node)
     bypass_callout/.style={rectangle callout, draw=blue!70!black, line width=1.5pt, fill=blue!10,
-                           font=\small, inner sep=6pt, text width=5.5cm, align=left},
+                           font=\small, inner sep=6pt, text width=6.5cm, align=left},
 }
 
 % Fixed position for callouts (top right of page)
-\coordinate (callout_pos) at ([xshift=0cm,yshift=2cm]DMem.north east);
+\coordinate (callout_pos) at ([xshift=-2cm,yshift=1cm]DMem.north east);
 
 % === Stage 1: Bypass MUXes ===
 % Bypass mux for ALU input A (src1) - positioned left of ALU.lpin 1
@@ -2606,9 +2606,9 @@ then stall
       (ProgramListing) at ([yshift=-5mm, xshift=8mm]WB_label.south) {
     \begin{tabular}{rl}
     0: & or \textcolor{gray!60}{r6,r7} \\
-    4: & jcc 50 \\
+    4: & beq 50 \\
     8: & and \textcolor{gray!60}{r8,r9} \\
-    12: & sw \textcolor{gray!60}{r10,r11} \\
+    12: & sw \textcolor{gray!60}{r10,r11}, xshift=8mm \\
     16: & sub \textcolor{gray!60}{r1,r2} \\
     \end{tabular}
 };
@@ -2622,21 +2622,21 @@ then stall
                         font=\small, inner sep=8pt, anchor=west, align=left},
 }
 
-% === Slide 1: Empty pipeline, explain jcc (PPT slide 30) ===
+% === Slide 1: Empty pipeline, explain beq (PPT slide 30) ===
 \only<1>{
     \node[explain_box] at (StageExplainPos) {
-        \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
+        \textbf{beq rs, rt, offset; ~if rs == rt then PC $\leftarrow$ PC + offset}\\[2mm]
         $\diamond$ To fetch the next instruction, we need to know \textbf{if the branch is taken}\\
         $\diamond$ If taken, we also need the \textbf{target address}\\
         $\diamond$ Otherwise, we might fetch the wrong instructions!
     };
 }
 
-% === Slide 2: PC=8, jcc at IF/ID, or at ID/EX (PPT slide 31) ===
+% === Slide 2: PC=8, beq at IF/ID, or at ID/EX (PPT slide 31) ===
 \only<2>{
     \node[ip_value] at ([yshift=-3mm]PC.south) {8};
     % Instructions
-    \node[latch_inst] (jcc2) at (instruction.south) {jcc};
+    \node[latch_inst] (beq2) at (instruction.south) {beq};
     \node[latch_offset] at (IFID.center |- SignExt) {42};
     \node[latch_inst] at (IDEX.center |- instruction.south) {or};
     % Values
@@ -2644,17 +2644,17 @@ then stall
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {4};
     % Explanation
     \node[explain_box] at (StageExplainPos) {
-        $\diamond$ \texttt{jcc} was fetched -- but we don't know yet it's a branch!\\
+        $\diamond$ \texttt{beq} was fetched -- but we don't know yet it's a branch!\\
         $\diamond$ We must fetch \emph{something}, so we fetch the next sequential instruction
     };
 }
 
-% === Slide 3: IP=12, jcc at ID/EX, and at IF/ID, or at EX/MEM (PPT slide 32) ===
+% === Slide 3: IP=12, beq at ID/EX, and at IF/ID, or at EX/MEM (PPT slide 32) ===
 \only<3>{
     \node[ip_value] at ([yshift=-3mm]PC.south) {12};
     % Instructions
     \node[latch_inst] at (instruction.south) {and};
-    \node[latch_inst] (jcc3) at (IDEX.center |- instruction.south) {jcc};
+    \node[latch_inst] (beq3) at (IDEX.center |- instruction.south) {beq};
     \node[latch_offset] at (IDEX.center |- SignExt) {42};
     \node[latch_inst] at (EXMEM.center |- instruction.south) {or};
     % Values
@@ -2663,18 +2663,18 @@ then stall
     \node[latch_target] at (calc_target_exmem) {50};
     % Explanation
     \node[explain_box] at (StageExplainPos) {
-        $\diamond$ We decoded \texttt{jcc} -- now we know it's a branch\\
+        $\diamond$ We decoded \texttt{beq} -- now we know it's a branch\\
         $\diamond$ Target is being calculated, but we don't know the condition outcome yet
     };
 }
 
-% === Slide 4: PC=16, jcc at EX/MEM (PPT slide 33) ===
+% === Slide 4: PC=16, beq at EX/MEM (PPT slide 33) ===
 \only<4>{
     \node[ip_value] at ([yshift=-3mm]PC.south) {16};
     % Instructions
     \node[latch_inst] at (instruction.south) {sw};
     \node[latch_inst] at (IDEX.center |- instruction.south) {and};
-    \node[latch_inst] at (EXMEM.center |- instruction.south) {jcc};
+    \node[latch_inst] at (EXMEM.center |- instruction.south) {beq};
     \node[latch_inst] at (MEMWB.center |- instruction.south) {or};
     % Values
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {16};
@@ -2689,21 +2689,21 @@ then stall
     };
 }
 
-% === Slide 5: Flush - PC=50, jcc at MEM/WB, flushed instructions (PPT slide 37) ===
+% === Slide 5: Flush - PC=50, beq at MEM/WB, flushed instructions (PPT slide 37) ===
 \only<5>{
     \node[ip_value] at ([yshift=-3mm]PC.south) {50};
     % Flushed instructions
     \node[latch_inst_flush] at (instruction.south) {\sout{sub}};
     \node[latch_inst_flush] at (IDEX.center |- instruction.south) {\sout{sw}};
     \node[latch_inst_flush] at (EXMEM.center |- instruction.south) {\sout{and}};
-    % jcc at MEM/WB (branch was resolved in previous cycle)
-    \node[latch_inst] at (MEMWB.center |- instruction.south) {jcc};
+    % beq at MEM/WB (branch was resolved in previous cycle)
+    \node[latch_inst] at (MEMWB.center |- instruction.south) {beq};
     % Latch values (20 and 16)
     \node[latch_nextseq] at (IFID.center |- fetch_out_next_seq) {20};
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {16};
     % Explanation box
     \node[explain_box] at (StageExplainPos) {
-        If the \underline{jcc} is resolved as taken at EXE $\Rightarrow$ flush the pipeline:\\
+        If the \underline{beq} is resolved as taken at EXE $\Rightarrow$ flush the pipeline:\\
         Reset the pipe latches, and set PC $\leftarrow$ target
     };
 }
