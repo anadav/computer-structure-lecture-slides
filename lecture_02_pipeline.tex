@@ -2184,36 +2184,27 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 %% Slide: Bypass Control
 \begin{frame}[fragile]{Bypass Control}
 \begin{columns}[T]
-\begin{column}{0.55\textwidth}
+\begin{column}{0.62\textwidth}
 \small
-\texttt{L3\_wr = L3.RegWrite \&\& (L3.op != lw)}
+\textbf{// For ALUSelA (src1):}\\[2pt]
+\tikz[remember picture, baseline=(if_l3.base)]{\node[inner sep=0pt] (if_l3) {\texttt{\textcolor{orange!80!black}{if} (L3.RegWrite \&\& \tikz[remember picture, baseline=(lw_check.base)]{\node[inner sep=0pt] (lw_check) {L3.op != lw};} \&\& L3.dst == L2.src1)}};}\\
+\texttt{~~~~ALUSelA = \textcolor{orange!80!black}{\textbf{1}}}\\
+\texttt{\textcolor{cyan!70!black}{else if} (L4.RegWrite \&\& L4.dst == L2.src1)}\\
+\texttt{~~~~ALUSelA = \textcolor{cyan!70!black}{\textbf{2}}}\\
+\texttt{else}\\
+\texttt{~~~~ALUSelA = \textbf{0}}
 
 \vspace{0.4cm}
-\textcolor{orange!80!black}{\textbf{// Forward from EXE (L3):}}\\[2pt]
-\texttt{\textcolor{orange!80!black}{if} (L3\_wr \&\& L3.dst == L2.src1)}\\
-\texttt{~~~~ALUSelA = \textcolor{orange!80!black}{\textbf{1}}}\\[2pt]
-\texttt{\textcolor{orange!80!black}{if} (L3\_wr \&\& L3.dst == L2.src2)}\\
-\texttt{~~~~ALUSelB = \textcolor{orange!80!black}{\textbf{1}}}
-
-\vspace{0.4cm}
-\textcolor{cyan!70!black}{\textbf{// Forward from MEM (L4):}}\\[2pt]
-\texttt{\textcolor{cyan!70!black}{if} (L4.RegWrite \&\&}\\
-\texttt{~~~~(!L3\_wr || L3.dst != L2.src1) \&\&}\\
-\texttt{~~~~L4.dst == L2.src1)}\\
-\texttt{~~~~ALUSelA = \textcolor{cyan!70!black}{\textbf{2}}}\\[4pt]
-\texttt{\textcolor{cyan!70!black}{if} (L4.RegWrite \&\&}\\
-\texttt{~~~~(!L3\_wr || L3.dst != L2.src2) \&\&}\\
-\texttt{~~~~L4.dst == L2.src2)}\\
-\texttt{~~~~ALUSelB = \textcolor{cyan!70!black}{\textbf{2}}}
+\textit{\small Same logic applies to ALUSelB (for src2)}
 \end{column}
-\begin{column}{0.43\textwidth}
+\begin{column}{0.36\textwidth}
 \centering
-\begin{circuitikz}[scale=0.95, transform shape]
+\begin{circuitikz}[scale=0.85, transform shape]
     % Define bypass mux style (similar to Bypass Hardware slide)
     \tikzset{
         bypass_mux_large/.style={muxdemux, muxdemux def={Lh=2.8, Rh=1.4, NL=3, NR=1, NB=1, w=1.2, square pins=1},
                            external pins width=0, fill=green!40, draw=green!50!black, line width=1.5pt},
-        pin_num/.style={font=\scriptsize\bfseries, text=green!30!black},
+        pin_num/.style={font=\scriptsize\bfseries, text=green!20!black},
         line_label/.style={font=\scriptsize, above, inner sep=1pt},
     }
 
@@ -2221,10 +2212,10 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     \node[bypass_mux_large] (Mux) at (0,0) {};
     \node[font=\small\bfseries, green!40!black, above=2mm of Mux] {FwdA / FwdB};
 
-    % Pin numbers INSIDE the mux (near left edge)
-    \node[pin_num] at ([xshift=3mm]Mux.lpin 1) {0};
-    \node[pin_num] at ([xshift=3mm]Mux.lpin 2) {1};
-    \node[pin_num] at ([xshift=3mm]Mux.lpin 3) {2};
+    % Pin numbers at the border pins (inside mux edge)
+    \node[pin_num, anchor=west] at (Mux.blpin 1) {0};
+    \node[pin_num, anchor=west] at (Mux.blpin 2) {1};
+    \node[pin_num, anchor=west] at (Mux.blpin 3) {2};
 
     % Input lines with labels ABOVE
     \draw[thick, ->] ([xshift=-22mm]Mux.lpin 1) -- (Mux.lpin 1)
@@ -2238,12 +2229,38 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     \draw[thick, ->] (Mux.rpin 1) -- ([xshift=12mm]Mux.rpin 1)
         node[line_label, midway] {to ALU};
 
-    % Control input from bottom
-    \draw[thick, ->, purple!70!black] ([yshift=-18mm]Mux.bpin 1) -- (Mux.bpin 1);
-    \node[font=\scriptsize, purple!70!black, anchor=north] at ([yshift=-18mm]Mux.bpin 1) {ALUSel};
+    % Control input from bottom (shorter arrow)
+    \draw[thick, ->, purple!70!black] ([yshift=-9mm]Mux.bpin 1) -- (Mux.bpin 1);
+    \node[font=\scriptsize, purple!70!black, anchor=north] at ([yshift=-9mm]Mux.bpin 1) {ALUSel};
 \end{circuitikz}
 \end{column}
 \end{columns}
+
+% Callouts using overlay
+\begin{tikzpicture}[remember picture, overlay]
+    \tikzset{
+        callout_box/.style={rectangle callout, draw=blue!70!black, line width=1pt, fill=blue!10,
+                            font=\small, inner sep=5pt, align=left, rounded corners=2pt},
+    }
+    % Callout 1: L3 precedence explanation
+    \only<2>{
+        \node[callout_box, callout absolute pointer={(if_l3.east)}, anchor=west]
+            at ([xshift=5mm, yshift=1.5cm]if_l3.east) {
+            \textbf{L3 has priority}\\
+            More recent instruction\\
+            wins if both match
+        };
+    }
+    % Callout 2: lw check explanation
+    \only<3>{
+        \node[callout_box, callout absolute pointer={(lw_check.north)}, anchor=south west]
+            at ([xshift=1cm, yshift=5mm]lw_check.north west) {
+            \textbf{Why exclude \texttt{lw}?}\\
+            Load result not ready until MEM\\
+            $\rightarrow$ \hyperlink{load-use-hazard}{Load-Use Hazard}
+        };
+    }
+\end{tikzpicture}
 \end{frame}
 
 % Macro for drawing full pipeline architecture based on Pipeline Architecture slide
@@ -2374,23 +2391,22 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     \end{circuitikz}
 \end{frame}
 
-%% Slide: Can't Always Bypass
-\begin{frame}{Can't Always Bypass}
+%% Slide: Can't Always Bypass (Load-Use Hazard)
+\begin{frame}[label=load-use-hazard]{Can't Always Bypass: Load-Use Hazard}
     \begin{itemize}
         \item Load word can still cause a hazard
         \begin{itemize}
             \item An instruction tries to read a register following a load instruction that writes to the same register
+            \item Load result not available until \textbf{after} MEM stage $\Rightarrow$ can't forward to EXE
         \end{itemize}
-        \item A hazard detection unit is needed to "stall" the load instruction
+        \item A hazard detection unit is needed to \textbf{stall} the pipeline
     \end{itemize}
-    
+
+    \vspace{0.3cm}
     Program execution order:
     \begin{enumerate}
         \item \texttt{lw \textcolor{red}{R2}, 30(R1)}
-        \item \texttt{and R12, \textcolor{red}{R2}, R5}
-        \item \texttt{or R13, R6, \textcolor{red}{R2}}
-        \item \texttt{add R14, \textcolor{red}{R2}, \textcolor{red}{R2}}
-        \item \texttt{sw R15, 100(\textcolor{red}{R2})}
+        \item \texttt{and R12, \textcolor{red}{R2}, R5} ~~~$\leftarrow$ \textit{needs R2 immediately!}
     \end{enumerate}
 \end{frame}
 
