@@ -2605,11 +2605,11 @@ then stall
       anchor=north, font=\small\ttfamily, align=left]
       (ProgramListing) at ([yshift=-5mm, xshift=8mm]WB_label.south) {
     \begin{tabular}{rl}
-    0: & or \\
+    0: & or \textcolor{gray!60}{r6,r7} \\
     4: & jcc 50 \\
-    8: & and \\
-    12: & sw \\
-    16: & sub \\
+    8: & and \textcolor{gray!60}{r8,r9} \\
+    12: & sw \textcolor{gray!60}{r10,r11} \\
+    16: & sub \textcolor{gray!60}{r1,r2} \\
     \end{tabular}
 };
 
@@ -2626,8 +2626,9 @@ then stall
 \only<1>{
     \node[explain_box] at (StageExplainPos) {
         \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
-        $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction\\
-        $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
+        $\diamond$ To fetch the next instruction, we need to know \textbf{if the branch is taken}\\
+        $\diamond$ If taken, we also need the \textbf{target address}\\
+        $\diamond$ Otherwise, we might fetch the wrong instructions!
     };
 }
 
@@ -2643,9 +2644,8 @@ then stall
     \node[latch_nextseq] at (IDEX.center |- decode_out_next_seq) {4};
     % Explanation
     \node[explain_box] at (StageExplainPos) {
-        \textbf{jcc target; if cond then PC $\leftarrow$ target}\\[2mm]
-        $\diamond$ The target is saved in the instruction relative to the address of the fall-through instruction\\
-        $\diamond$ Most conditional jumps are short (if and loop) $\Rightarrow$ save bits in the instruction encoding
+        $\diamond$ \texttt{jcc} was fetched -- but we don't know yet it's a branch!\\
+        $\diamond$ We must fetch \emph{something}, so we fetch the next sequential instruction
     };
 }
 
@@ -2663,7 +2663,8 @@ then stall
     \node[latch_target] at (calc_target_exmem) {50};
     % Explanation
     \node[explain_box] at (StageExplainPos) {
-        Instructions following the branch get into the pipe
+        $\diamond$ We decoded \texttt{jcc} -- now we know it's a branch\\
+        $\diamond$ Target is being calculated, but we don't know the condition outcome yet
     };
 }
 
@@ -2709,6 +2710,15 @@ then stall
 
 \end{circuitikz}
 }
+% Cycle indicator on title bar
+\begin{tikzpicture}[remember picture, overlay]
+    \tikzset{title_cycle_box/.style={draw=blue!60!black, line width=1.5pt, fill=blue!60,
+                  text=white, rounded corners=4pt, font=\normalsize\bfseries, inner sep=5pt}}
+    \only<2>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 2};}
+    \only<3>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 3};}
+    \only<4>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 4};}
+    \only<5>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 5};}
+\end{tikzpicture}
 \end{center}
 \end{frame}
 
