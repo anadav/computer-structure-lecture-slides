@@ -333,8 +333,8 @@
 \draw[data_path] (IDEX.east |- ALU.blpin 1) -- (ALU.blpin 1);
 \fi
 \coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] {};
 \ifdrawaluinputs
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] -- (ALUMux.lpin 1) {};
 \draw[data_path] (WriteDataJunction) -- (ALUMux.blpin 1);
 \fi
 \draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
@@ -2048,12 +2048,14 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \node[font=\tiny, green!40!black, above=0.5mm of BypassMuxB] {FwdB};
 
 % Draw wiring through bypass muxes (original direct lines disabled via draw alu inputs=false)
-% Src1 (to FwdA): from IDEX position -| to bypass mux lpin 2, then rpin 1 to ALU
-\draw[data_path] (IDEX.east |- ALU.blpin 1) -| ([xshift=-5mm]BypassMuxA.lpin 1) -- (BypassMuxA.lpin 1);
+% Src1 (to FwdA): from IDEX position -| to bypass mux lpin 1, then rpin 1 to ALU
+\draw[thick, ->] (IDEX.east |- ALU.blpin 1) -| ([xshift=-5mm]BypassMuxA.lpin 1) -- (BypassMuxA.lpin 1);
 \draw[data_path] (BypassMuxA.rpin 1) -- (ALU.blpin 1);
-% Src2 (to FwdB): from IDEX position -| to bypass mux lpin 2, then rpin 1 to ALUMux
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -| ([xshift=-5mm]BypassMuxB.lpin 1) -- (BypassMuxB.lpin 1);
+% Src2 (to FwdB): from IDEX position -| to bypass mux lpin 1, then rpin 1 to ALUMux
+\draw[thick, ->] (IDEX.east |- ALUMux.lpin 1) -| ([xshift=-5mm]BypassMuxB.lpin 1) -- (BypassMuxB.lpin 1);
 \draw[data_path] (BypassMuxB.rpin 1) -- (ALUMux.blpin 1);
+% Immediate path: route around BypassMuxB to ALUMux.lpin 2
+\draw[data_path] (ImmJunction) |- ([yshift=-3mm]BypassMuxB.south) -| (ALUMux.lpin 2);
 
 % Callout for stage 1
 \node<1>[bypass_callout, callout absolute pointer={(BypassMuxA.north)}, anchor=south west] at (callout_pos) {
