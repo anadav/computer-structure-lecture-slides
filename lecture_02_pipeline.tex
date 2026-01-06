@@ -334,7 +334,8 @@
 \fi
 \coordinate (WriteDataJunction) at ([xshift=-3mm]ALUMux.lpin 1);
 \ifdrawaluinputs
-\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) node[data_connector] -- (ALUMux.lpin 1) {};
+\draw[data_path] (IDEX.east |- ALUMux.lpin 1) -- (WriteDataJunction) -- (ALUMux.lpin 1);
+\node[data_connector] at (WriteDataJunction) {};
 \draw[data_path] (WriteDataJunction) -- (ALUMux.blpin 1);
 \fi
 \draw[data_path] (WriteDataJunction) |- (EXMEM.west |- DMem.lpin 10);
@@ -2014,7 +2015,7 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % === Bypass MUXes ===
 % Styles for bypass hardware
 \tikzset{
-    bypass_mux/.style={muxdemux, muxdemux def={Lh=1.2, Rh=0.6, NL=3, NR=1, NB=1, w=0.6, square pins=1},
+    bypass_mux/.style={muxdemux, muxdemux def={Lh=1.4, Rh=0.7, NL=3, NR=1, NB=1, w=0.6, square pins=1},
                        external pins width=0, fill=green!40, draw=green!50!black, line width=1pt},
     % Bypass control: muxdemux with 6 top pins (all inputs/outputs from top), no bottom pins
     bypass_ctrl/.style={muxdemux, muxdemux def={Lh=2.5, Rh=2.5, NL=0, NR=0, NT=6, NB=0, w=8, square pins=1},
@@ -2054,8 +2055,6 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 % Src2 (to FwdB): from IDEX position -| to bypass mux lpin 1, then rpin 1 to ALUMux
 \draw[thick, ->] (IDEX.east |- ALUMux.lpin 1) -| ([xshift=-5mm]BypassMuxB.lpin 1) -- (BypassMuxB.lpin 1);
 \draw[data_path] (BypassMuxB.rpin 1) -- (ALUMux.blpin 1);
-% Immediate path: route around BypassMuxB to ALUMux.lpin 2
-\draw[data_path] (ImmJunction) |- ([yshift=-3mm]BypassMuxB.south) -| (ALUMux.lpin 2);
 
 % Callout for stage 1
 \node<1>[bypass_callout, callout absolute pointer={(BypassMuxA.north)}, anchor=south west] at (callout_pos) {
@@ -2123,8 +2122,8 @@ dst$_{t-1}$, dst$_{t-2}$: destination registers from EX/MEM and MEM/WB stages
 % === Stage 4: Control outputs (FwdA, FwdB signals) ===
 % Control signals to muxes (using top pins 3 and 4)
 \onslide<4->{
-\draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-2mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
-\draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-2mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
+\draw[bypass_ctrl_out] (BypassCtrl.tpin 3) |- ([yshift=-3mm]BypassMuxB.bpin 1) -- (BypassMuxB.bpin 1);
+\draw[bypass_ctrl_out] (BypassCtrl.tpin 4) |- ([yshift=-5mm]BypassMuxA.bpin 1) -- (BypassMuxA.bpin 1);
 }
 
 % Callout for stage 4
@@ -2551,7 +2550,7 @@ then stall
 %% Slide: Control Hazard on Branches (using PipelinedCPUCore macro)
 \begin{frame}<1-4>[label=control-hazard]{Control Hazard on Branches}
 \begin{center}
-\scalebox{0.58}{
+\scalebox{0.65}{
 \begin{circuitikz}[pipelined_cpu,
     % Additional styles for this slide
     arrow/.style={->, >=stealth, thick},
@@ -2603,8 +2602,8 @@ then stall
 
 % Program listing with border (right side, same as BTB slide)
 \node[draw, thick, fill=white, rounded corners=3pt, inner sep=4pt,
-      anchor=north west, font=\small\ttfamily, align=left]
-      (ProgramListing) at ([xshift=5mm]WBMux.east |- IF_label.south) {
+      anchor=north, font=\small\ttfamily, align=left]
+      (ProgramListing) at ([yshift=-5mm, xshift=8mm]WB_label.south) {
     \begin{tabular}{rl}
     0: & or \\
     4: & jcc 50 \\
