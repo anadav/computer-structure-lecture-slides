@@ -2437,13 +2437,13 @@ Forward result from writeback stage (2 cycles old) to mux input 3
               external pins width=0, fill=red!40, draw=red!60!black, line width=0.5pt,
               scale=0.58, anchor=center] at (and-ALU.center) {};
 
-        % "need data here" label - top left of ALU, two lines
+        % "need data here" label - near and's L2
         \node[font=\scriptsize, text=red!70!black, align=right, anchor=south east]
-            at ([xshift=-1mm, yshift=1mm]and-ALU.north west) {need data\\here};
+            at ([xshift=-1mm, yshift=1mm]and-L2.north) {need data\\here};
 
-        % Arrow from lw's DM to and's ALU north west - showing data would need to go back in time
+        % Arrow from lw's L4 (after MEM) to and's L2 (before EX) - data not ready in time
         \draw[<-, ultra thick, red!70!black, dashed]
-            (and-ALU.north west) -- (lw-DM.south east)
+            (and-L2.north) -- (lw-L4.south)
             node[below right, font=\scriptsize, text=blue!70!black] {available here};
 
         % Program execution order label
@@ -2494,10 +2494,8 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     % Program execution order label
     \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\order};
     \draw[->, thick] (ordertext.south) -- (ordertext |- and_inst);
-\end{circuitikz}
 
-% Callout for bubble
-\begin{tikzpicture}[remember picture, overlay]
+    % Callout for bubble
     \node[rectangle callout, draw=orange!70!black, line width=1pt, fill=orange!10,
           font=\scriptsize, inner sep=4pt, align=left,
           callout absolute pointer={(bubble_IM.north)}, anchor=south]
@@ -2505,7 +2503,7 @@ Forward result from writeback stage (2 cycles old) to mux input 3
         \textbf{Bubble:} and stays in IF\\
         while lw proceeds to MEM
     };
-\end{tikzpicture}
+\end{circuitikz}
 \end{frame}
 
 %% Slide: Forwarding Cases
