@@ -2181,13 +2181,13 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 \end{center}
 \end{frame}
 
-%% Slide: Bypass Control
-\begin{frame}[fragile]{Bypass Control}
+%% Slide: Forwarding Logic
+\begin{frame}[fragile]{Forwarding Logic}
 \begin{columns}[T]
 \begin{column}{0.62\textwidth}
 \small
 \textbf{// For ALUSelA (src1):}\\[2pt]
-\tikz[remember picture, baseline=(if_l3.base)]{\node[inner sep=0pt] (if_l3) {\texttt{\textcolor{orange!80!black}{if} (L3.RegWrite \&\& \tikz[remember picture, baseline=(lw_check.base)]{\node[inner sep=0pt] (lw_check) {L3.op != lw};} \&\& L3.dst == L2.src1)}};}\\
+\tikz[remember picture, baseline=(if_l3.base)]{\node[inner sep=0pt] (if_l3) {\texttt{\textcolor{orange!80!black}{if} (\tikz[remember picture, baseline=(l3_marker.base)]{\node[inner sep=0pt] (l3_marker) {L3};}.RegWrite \&\& \tikz[remember picture, baseline=(lw_check.base)]{\node[inner sep=0pt] (lw_check) {L3.op != lw};} \&\& L3.dst == L2.src1)}};}\\
 \texttt{~~~~ALUSelA = \textcolor{orange!80!black}{\textbf{1}}}\\
 \texttt{\textcolor{cyan!70!black}{else if} (L4.RegWrite \&\& L4.dst == L2.src1)}\\
 \texttt{~~~~ALUSelA = \textcolor{cyan!70!black}{\textbf{2}}}\\
@@ -2242,8 +2242,16 @@ Forward result from writeback stage (2 cycles old) to mux input 3
         callout_box/.style={rectangle callout, draw=blue!70!black, line width=1pt, fill=blue!10,
                             font=\small, inner sep=5pt, align=left, rounded corners=2pt},
     }
-    % Callout 1: L3 precedence explanation
+    % Callout 1: Latch naming convention
     \only<2>{
+        \node[callout_box, callout absolute pointer={(l3_marker.south)}, anchor=north west]
+            at ([yshift=-3mm]l3_marker.south west) {
+            \textbf{Latch naming}\\
+            L2 = ID/EX~~L3 = EX/MEM~~L4 = MEM/WB
+        };
+    }
+    % Callout 2: L3 precedence explanation
+    \only<3>{
         \node[callout_box, callout absolute pointer={(if_l3.east)}, anchor=west]
             at ([xshift=5mm, yshift=1.5cm]if_l3.east) {
             \textbf{L3 has priority}\\
@@ -2251,8 +2259,8 @@ Forward result from writeback stage (2 cycles old) to mux input 3
             wins if both match
         };
     }
-    % Callout 2: lw check explanation
-    \only<3>{
+    % Callout 3: lw check explanation
+    \only<4>{
         \node[callout_box, callout absolute pointer={(lw_check.north)}, anchor=south west]
             at ([xshift=1cm, yshift=5mm]lw_check.north west) {
             \textbf{Why exclude \texttt{lw}?}\\
