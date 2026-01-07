@@ -2184,7 +2184,9 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 %% Slide: Forwarding Logic
 \begin{frame}[fragile]{Forwarding Logic}
 \begin{columns}[T]
-\begin{column}{0.62\textwidth}
+\begin{column}{0.72\textwidth}
+\fcolorbox{gray!60}{gray!10}{%
+\begin{minipage}{0.97\linewidth}
 \small
 \textbf{// For ALUSelA (src1):}\\[2pt]
 \tikz[remember picture, baseline=(if_l3.base)]{\node[inner sep=0pt] (if_l3) {\texttt{\textcolor{orange!80!black}{if} (\tikz[remember picture, baseline=(l3_marker.base)]{\node[inner sep=0pt] (l3_marker) {L3};}.RegWrite \&\& \tikz[remember picture, baseline=(lw_check.base)]{\node[inner sep=0pt] (lw_check) {L3.op != lw};} \&\& L3.dst == L2.src1)}};}\\
@@ -2193,11 +2195,13 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 \texttt{~~~~ALUSelA = \textcolor{cyan!70!black}{\textbf{2}}}\\
 \texttt{else}\\
 \texttt{~~~~ALUSelA = \textbf{0}}
+\end{minipage}%
+}
 
-\vspace{0.4cm}
+\vspace{0.28cm}
 \textit{\small Same logic applies to ALUSelB (for src2)}
 \end{column}
-\begin{column}{0.36\textwidth}
+\begin{column}{0.29\textwidth}
 \centering
 \begin{circuitikz}[scale=0.85, transform shape]
     % Define bypass mux style (similar to Bypass Hardware slide)
@@ -2244,8 +2248,8 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     }
     % Callout 1: Latch naming convention
     \only<2>{
-        \node[callout_box, callout absolute pointer={(l3_marker.south)}, anchor=north west]
-            at ([yshift=-3mm]l3_marker.south west) {
+        \node[callout_box, callout absolute pointer={(l3_marker.north)}, anchor=south west]
+            at ([yshift=5mm]l3_marker.north west) {
             \textbf{Latch naming}\\
             L2 = ID/EX~~L3 = EX/MEM~~L4 = MEM/WB
         };
@@ -2454,11 +2458,15 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 
 %% Slide: Stall on Load-Use Hazard
 \begin{frame}[fragile]{Stall on Load-Use Hazard}
+\fcolorbox{gray!60}{gray!10}{%
+\begin{minipage}{0.7\linewidth}
 \small
 \textbf{// Detect load-use hazard (stall required):}\\[2pt]
 \texttt{\textcolor{red!70!black}{if} (L2.RegWrite \&\& L2.op == \textcolor{red!70!black}{lw} \&\&}\\
 \hspace*{1.5em}\texttt{(L2.dst == L1.src1 || L2.dst == L1.src2))}\\
 \hspace*{3em}\texttt{\textcolor{red!70!black}{\textbf{stall}}}
+\end{minipage}%
+}
 
 \vspace{0.2cm}
 \begin{itemize}
@@ -2499,9 +2507,8 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     \node[rectangle callout, draw=orange!70!black, line width=1pt, fill=orange!10,
           font=\scriptsize, inner sep=4pt, align=left,
           callout absolute pointer={(bubble_IM.north)}, anchor=south]
-          at ([yshift=5mm]bubble_IM.north) {
-        \textbf{Bubble:} and stays in IF\\
-        while lw proceeds to MEM
+          at ([yshift=1mm]bubble_IM.north) {
+        \textbf{Bubble}
     };
 \end{circuitikz}
 \end{frame}
