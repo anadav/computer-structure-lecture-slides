@@ -2410,12 +2410,44 @@ Forward result from writeback stage (2 cycles old) to mux input 3
         \item A hazard detection unit is needed to \textbf{stall} the pipeline
     \end{itemize}
 
-    \vspace{0.3cm}
-    Program execution order:
-    \begin{enumerate}
-        \item \texttt{lw \textcolor{red}{R2}, 30(R1)}
-        \item \texttt{and R12, \textcolor{red}{R2}, R5} ~~~$\leftarrow$ \textit{needs R2 immediately!}
-    \end{enumerate}
+    \vspace{0.2cm}
+    \centering
+    \begin{circuitikz}[scale=0.9, transform shape]
+        % Timeline at top
+        \node[anchor=south west, font=\small] at (-2.5, 2.7) {Time (clock cycles)};
+        \draw[->, thick] (0, 2.5) -- (8, 2.5);
+        \foreach \i in {1,...,7} {
+            \node[above, font=\scriptsize] at (\i, 2.5) (i\i) {\i};
+        }
+
+        % Instructions with named nodes
+        \node[anchor=east, font=\small\ttfamily] (lw_inst) at (-0.3, 1.8) {lw \textcolor{red}{R2}, 30(R1)};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (and_inst) at ([yshift=-15mm]lw_inst.south east) {and R12, \textcolor{red}{R2}, R5};
+
+        % Draw pipeline stages
+        \drawpipelinearch[prefix=lw, at={(lw_inst -| i1)}, scale=0.58]
+        \drawpipelinearch[prefix=and, at={(and_inst -| i2)}, scale=0.58]
+
+        % Highlight lw's DM (MEM stage) - where load result becomes available
+        \fill[blue!40] (lw-DM.north west) rectangle (lw-DM.south east);
+        \node[font=\tiny, text=white] at (lw-DM.center) {DM};
+
+        % Highlight and's ALU (EXE stage) - where data is needed
+        \fill[red!40] (and-ALU.north west) rectangle (and-ALU.south east);
+
+        % "need data here" label - top left of ALU, two lines
+        \node[font=\scriptsize, text=red!70!black, align=right, anchor=south east]
+            at ([xshift=-1mm, yshift=1mm]and-ALU.north west) {need data\\here};
+
+        % Arrow from lw's DM to and's ALU north west - showing data would need to go back in time
+        \draw[<-, ultra thick, red!70!black, dashed]
+            (and-ALU.north west) -- (lw-DM.south east)
+            node[below right, font=\scriptsize, text=blue!70!black] {available here};
+
+        % Program execution order label
+        \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\order};
+        \draw[->, thick] (ordertext.south) -- (ordertext |- and_inst);
+    \end{circuitikz}
 \end{frame}
 
 %% Slide: Stall If Cannot Bypass
