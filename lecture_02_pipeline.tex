@@ -2432,8 +2432,10 @@ Forward result from writeback stage (2 cycles old) to mux input 3
         \fill[blue!40] (lw-DM.north west) rectangle (lw-DM.south east);
         \node[font=\tiny, text=white] at (lw-DM.center) {DM};
 
-        % Highlight and's ALU (EXE stage) - where data is needed
-        \fill[red!40] (and-ALU.north west) rectangle (and-ALU.south east);
+        % Highlight and's ALU (EXE stage) - redraw with red fill
+        \node[muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+              external pins width=0, fill=red!40, draw=red!60!black, line width=0.5pt,
+              scale=0.58, anchor=center] at (and-ALU.center) {};
 
         % "need data here" label - top left of ALU, two lines
         \node[font=\scriptsize, text=red!70!black, align=right, anchor=south east]
@@ -2450,22 +2452,22 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     \end{circuitikz}
 \end{frame}
 
-%% Slide: Stall If Cannot Bypass
-\begin{frame}[fragile]{Stall If Cannot Bypass}
-\begin{minted}{text}
-if (L2.RegWrite and (L2.opcode == lw) and
-    ((L2.dst == L1.src1) or (L2.dst == L1.src2)))
-then stall
-\end{minted}
-    
+%% Slide: Stall on Load-Use Hazard
+\begin{frame}[fragile]{Stall on Load-Use Hazard}
+\small
+\textbf{// Detect load-use hazard (stall required):}\\[2pt]
+\texttt{\textcolor{red!70!black}{if} (L2.RegWrite \&\& L2.op == \textcolor{red!70!black}{lw} \&\&}\\
+\texttt{~~~~(L2.dst == L1.src1 || L2.dst == L1.src2))}\\
+\texttt{~~~~\textcolor{red!70!black}{\textbf{stall}}}
+
     \vspace{0.3cm}
     \begin{itemize}
-        \item De-assert the enable to the L1 latch, and to the IP
+        \item De-assert the enable to the L1 latch (IF/ID) and to the PC
         \begin{itemize}
-            \item The dependent instruction (and) stays another cycle in L1
+            \item The dependent instruction stays another cycle in L1
         \end{itemize}
-        \item Issue a NOP into the L2 latch (instead of the stalled inst.)
-        \item Allow the stalling instruction (lw) to move on
+        \item Issue a NOP (bubble) into the L2 latch (ID/EX)
+        \item Allow the load instruction to proceed through MEM
     \end{itemize}
 
     \vspace{0.3cm}
