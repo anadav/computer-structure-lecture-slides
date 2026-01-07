@@ -2457,61 +2457,55 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 \small
 \textbf{// Detect load-use hazard (stall required):}\\[2pt]
 \texttt{\textcolor{red!70!black}{if} (L2.RegWrite \&\& L2.op == \textcolor{red!70!black}{lw} \&\&}\\
-\texttt{~~~~(L2.dst == L1.src1 || L2.dst == L1.src2))}\\
-\texttt{~~~~\textcolor{red!70!black}{\textbf{stall}}}
+\hspace*{1.5em}\texttt{(L2.dst == L1.src1 || L2.dst == L1.src2))}\\
+\hspace*{3em}\texttt{\textcolor{red!70!black}{\textbf{stall}}}
 
-    \vspace{0.3cm}
-    \begin{itemize}
-        \item De-assert the enable to the L1 latch (IF/ID) and to the PC
-        \begin{itemize}
-            \item The dependent instruction stays another cycle in L1
-        \end{itemize}
-        \item Issue a NOP (bubble) into the L2 latch (ID/EX)
-        \item Allow the load instruction to proceed through MEM
-    \end{itemize}
+\vspace{0.2cm}
+\begin{itemize}
+    \item De-assert the enable to the L1 latch (IF/ID) and PC --- instruction stays another cycle
+    \item Issue a NOP (bubble) into the L2 latch (ID/EX)
+\end{itemize}
 
-    \vspace{0.3cm}
-    \centering
-    \begin{circuitikz}[scale=1, transform shape]
-        % Timeline at top
-        \node[anchor=south, font=\small] at (4.5, 2.8) {Time (clock cycles)};
-        \draw[->, thick] (0, 2.5) -- (9.5, 2.5);
-        \foreach \i in {1,...,9} {
-            \node[above, font=\scriptsize] at (\i*1, 2.5) {\i};
-        }
+\vspace{0.1cm}
+\centering
+\begin{circuitikz}[scale=0.9, transform shape]
+    % Timeline at top
+    \node[anchor=south west, font=\small] at (-2.5, 2.7) {Time (clock cycles)};
+    \draw[->, thick] (0, 2.5) -- (8, 2.5);
+    \foreach \i in {1,...,7} {
+        \node[above, font=\scriptsize] at (\i, 2.5) (i\i) {\i};
+    }
 
-        % Program execution order label
-        \node[anchor=north, align=center, font=\small] at (-0.8, 2.3) {Program\\execution\\order};
+    % Instructions with named nodes
+    \node[anchor=east, font=\small\ttfamily] (lw_inst) at (-0.3, 1.8) {lw \textcolor{red}{R2}, 30(R1)};
+    \node[anchor=east, font=\small\ttfamily, anchor=north east] (and_inst) at ([yshift=-8mm]lw_inst.south east) {and R12, \textcolor{red}{R2}, R5};
 
-        % Instructions
-        \node[anchor=east, font=\small\ttfamily] at (0, 2) {lw \textcolor{blue}{R2}, 30(R1)};
-        \node[anchor=east, font=\small\ttfamily] at (0, 1) {and R12,\textcolor{blue}{R2}, R5};
-        \node[anchor=east, font=\small\ttfamily] at (0, 0) {or R13,R6, \textcolor{blue}{R2}};
-        \node[anchor=east, font=\small\ttfamily] at (0, -1) {add R14,\textcolor{blue}{R2}, \textcolor{blue}{R2}};
-        \node[anchor=east, font=\small\ttfamily] at (0, -2) {sw R15,100(\textcolor{blue}{R2})};
+    % Draw pipeline stages - lw starts at cycle 1
+    \drawpipelinearch[prefix=lw, at={(lw_inst -| i1)}, scale=0.58]
 
-        % Draw pipeline stages using the macro
-        % lw instruction - cycle 1
-        \drawpipelinearch[prefix=lw, at={(1,2)}, scale=0.5]
+    % Bubble: and's first IM (cycle 2) - stalled, stays in IF
+    \node[muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+          external pins width=0, fill=yellow!60, draw=orange!70!black, line width=1pt,
+          scale=0.58, anchor=center] (bubble_IM) at (and_inst -| i2) {IM};
 
-        % and instruction - cycle 2
-        \drawpipelinearch[prefix=and1, at={(2,1)}, scale=0.5]
+    % and continues from cycle 3 (after stall)
+    \drawpipelinearch[prefix=and, at={(and_inst -| i3)}, scale=0.58]
 
-        % bubble - cycle 3 at row 2 (and's position)
-        \node[draw, fill=gray!30, minimum width=0.5cm, minimum height=0.3cm, font=\tiny, anchor=west] at (3, 1) {bubble};
+    % Program execution order label
+    \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\order};
+    \draw[->, thick] (ordertext.south) -- (ordertext |- and_inst);
+\end{circuitikz}
 
-        % and instruction continues - cycle 4
-        \drawpipelinearch[prefix=and2, at={(4,1)}, scale=0.5]
-
-        % or instruction - cycle 3
-        \drawpipelinearch[prefix=or, at={(3,0)}, scale=0.5]
-
-        % add instruction - cycle 4
-        \drawpipelinearch[prefix=add, at={(4,-1)}, scale=0.5]
-
-        % sw instruction - cycle 5
-        \drawpipelinearch[prefix=sw, at={(5,-2)}, scale=0.5]
-    \end{circuitikz}
+% Callout for bubble
+\begin{tikzpicture}[remember picture, overlay]
+    \node[rectangle callout, draw=orange!70!black, line width=1pt, fill=orange!10,
+          font=\scriptsize, inner sep=4pt, align=left,
+          callout absolute pointer={(bubble_IM.north)}, anchor=south]
+          at ([yshift=5mm]bubble_IM.north) {
+        \textbf{Bubble:} and stays in IF\\
+        while lw proceeds to MEM
+    };
+\end{tikzpicture}
 \end{frame}
 
 %% Slide: Forwarding Cases
