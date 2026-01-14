@@ -345,36 +345,58 @@ if __name__ == "__main__":
     list_parser.add_argument("--include-disabled", action="store_true", help="Include disabled keys")
     
     args = parser.parse_args()
-    
-    if args.command == "create":
-        reset = None if args.reset == "none" else args.reset
-        create_keys(
-            n=args.n,
-            name_prefix=args.prefix,
-            limit_usd=args.limit,
-            limit_reset=reset,
-            expires_at=args.expires,
-            output_csv=args.output
-        )
-    
-    elif args.command == "delete":
-        delete_keys(
-            prefix=args.prefix,
-            from_csv=args.from_csv,
-            dry_run=args.dry_run
-        )
-    
-    elif args.command == "list":
-        keys = list_keys(prefix=args.prefix, include_disabled=args.include_disabled)
-        if keys:
-            print(f"Found {len(keys)} keys:\n")
-            for k in keys:
-                status = "disabled" if k.get("disabled") else "active"
-                limit = k.get("limit", "unlimited")
-                usage = k.get("usage", 0)
-                print(f"  {k['name']}: ${usage:.2f} / ${limit} ({status})")
+
+    try:
+        if args.command == "create":
+            reset = None if args.reset == "none" else args.reset
+            create_keys(
+                n=args.n,
+                name_prefix=args.prefix,
+                limit_usd=args.limit,
+                limit_reset=reset,
+                expires_at=args.expires,
+                output_csv=args.output
+            )
+
+        elif args.command == "delete":
+            delete_keys(
+                prefix=args.prefix,
+                from_csv=args.from_csv,
+                dry_run=args.dry_run
+            )
+
+        elif args.command == "list":
+            keys = list_keys(prefix=args.prefix, include_disabled=args.include_disabled)
+            if keys:
+                print(f"Found {len(keys)} keys:\n")
+                for k in keys:
+                    status = "disabled" if k.get("disabled") else "active"
+                    limit = k.get("limit", "unlimited")
+                    usage = k.get("usage", 0)
+                    print(f"  {k['name']}: ${usage:.2f} / ${limit} ({status})")
+            else:
+                print("No keys found.")
+
         else:
-            print("No keys found.")
-    
-    else:
-        parser.print_help()
+            parser.print_help()
+
+    except ValueError as e:
+        print(f"\nError: {e}", file=sys.stderr)
+        if "OPENROUTER_PROVISIONING_KEY" in str(e):
+            print("\nPlease set the environment variable:", file=sys.stderr)
+            print("  export OPENROUTER_PROVISIONING_KEY='your-provisioning-key-here'", file=sys.stderr)
+        sys.exit(1)
+
+    except FileNotFoundError as e:
+        print(f"\nError: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    except KeyboardInterrupt:
+        print("\n\nAborted by user.", file=sys.stderr)
+        sys.exit(130)
+
+    except Exception as e:
+        print(f"\nUnexpected error: {e}", file=sys.stderr)
+        print("\nFor more details, run with Python in debug mode:", file=sys.stderr)
+        print("  python -u openrouter_key.py ...", file=sys.stderr)
+        sys.exit(1)

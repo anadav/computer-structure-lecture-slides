@@ -36,6 +36,9 @@
 %======================================================================
 \begin{frame}{Outline}
 \tableofcontents
+
+\vspace{0.3cm}
+{\small \textcolor{gray}{Appendix: Claude Code Setup (alternative tool)}}
 \end{frame}
 
 %======================================================================
@@ -52,7 +55,8 @@ As part of a \textbf{pilot program}, students are expected to use Large Language
 
 \begin{itemize}
     \item Each pair receives \textbf{\$10 credit} via \href{https://openrouter.ai}{OpenRouter.ai}
-    \item Primary model: \textbf{Moonshot Kimi K2} (via Claude Code interface)
+    \item \textbf{Tool options:} \href{https://opencode.ai}{OpenCode.ai} (recommended) or Claude Code (see \hyperref[sec:appendix]{Appendix})
+    \item \textbf{Model choices:} GLM-4.7 or Kimi K2 Thinking
     \item Goal: Learn \textbf{agentic AI programming} workflows
 \end{itemize}
 
@@ -62,7 +66,7 @@ As part of a \textbf{pilot program}, students are expected to use Large Language
 
 \vspace{0.3cm}
 
-{\small \textcolor{codeorange}{\textbf{Note:}} Using a non-Claude model with Claude Code means some features may be unsupported (e.g., context usage indicators, certain diagnostics).}
+{\small \textcolor{codeorange}{\textbf{Note:}} Both tools connect to OpenRouter and use your API key. Choose whichever interface you prefer!}
 
 \end{frame}
 
@@ -128,103 +132,133 @@ Unlike simple chatbots, agentic AI can:
 \end{frame}
 
 %======================================================================
-\begin{frame}[fragile]{Installing Claude Code}
+\subsection{OpenCode.ai Setup}
+%======================================================================
 
-\textbf{macOS / Linux / WSL:}
+\begin{frame}[fragile]{Installing OpenCode.ai}
+
+\textbf{Recommended Installation:}
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
-curl -fsSL https://claude.ai/install.sh | bash
+curl -fsSL https://opencode.ai/install | bash
 \end{minted}
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
-\textbf{Windows PowerShell:}
-\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{powershell}
-irm https://claude.ai/install.ps1 | iex
+\textbf{Alternative --- Homebrew (macOS/Linux):}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+brew install anomalyco/tap/opencode
 \end{minted}
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
 \textbf{Alternative --- npm (requires Node.js 18+):}
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
-npm install -g @anthropic-ai/claude-code
+npm install -g opencode
 \end{minted}
 
 \vspace{0.3cm}
 
 {\footnotesize
-\textbf{Documentation:}\\
-\url{https://code.claude.com/docs/en/setup}\\
-\url{https://openrouter.ai/docs/guides/guides/claude-code-integration}
+\textbf{Documentation:} \url{https://opencode.ai/docs}\\
+Additional installation options (Docker, pnpm, etc.) available in the docs.
 }
 
 \end{frame}
 
 %======================================================================
-\begin{frame}[fragile]{Configuring Claude Code for OpenRouter}
+\begin{frame}[fragile]{Configuring OpenCode.ai for OpenRouter}
 
-Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
-\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
-{
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "sk-or-v1-...",
-    "ANTHROPIC_API_KEY": "",
-    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
-    "ANTHROPIC_MODEL": "moonshotai/kimi-k2"
-  }
-}
+\textbf{Step 1:} Open a terminal and run:
+\begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{bash}
+opencode
 \end{minted}
 
 \vspace{0.3cm}
 
-{\small \textcolor{codeorange}{\textbf{Note:}} \texttt{ANTHROPIC\_API\_KEY} must be explicitly empty (not omitted). Create the directory first if needed: \colorbox{lightgray}{\texttt{mkdir -p \textasciitilde/.claude}}}
+\textbf{Step 2:} Inside OpenCode, type \colorbox{lightgray}{\texttt{/connect}} and press Enter
 
-\begin{tikzpicture}[remember picture, overlay]
-\node[rectangle callout, draw=red, fill=calloutbg, text width=2.8cm, font=\small, align=center,
-      callout absolute pointer={([xshift=-1.2cm, yshift=1.1cm]current page.center)}]
-      at ([xshift=4cm, yshift=1cm]current page.center) {
-    Replace \texttt{...} with your key from \href{https://webcourse.cs.technion.ac.il/02360267}{Webcourse}!
-};
-\end{tikzpicture}
+\vspace{0.3cm}
+
+\textbf{Step 3:} Search for ``OpenRouter'' in the provider list
+
+\vspace{0.3cm}
+
+\textbf{Step 4:} Paste your API key when prompted:
+\begin{itemize}
+    \item Format: \texttt{sk-or-v1-...}
+    \item This is the key you received from \href{https://webcourse.cs.technion.ac.il/02360267}{Webcourse}
+\end{itemize}
+
+\vspace{0.3cm}
+
+{\small \textcolor{codeorange}{\textbf{Note:}} Keep your API key private! Do not share it with others.}
 
 \end{frame}
 
 %======================================================================
-\begin{frame}[fragile]{Verifying Your Setup}
+\begin{frame}[fragile]{Choosing Your Model}
 
-\textbf{Step 1:} Open a terminal and run:
-\begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{bash}
-claude
-\end{minted}
+After connecting to OpenRouter, select your model:
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
-\textbf{Step 2:} Inside Claude Code, type \colorbox{lightgray}{\texttt{/status}} to verify configuration:
+\textbf{Type} \colorbox{lightgray}{\texttt{/models}} \textbf{and choose one of these:}
 
-\begin{minted}[fontsize=\tiny,bgcolor=lightgray]{text}
-> /status
- Version: 2.0.76
- Session ID: 12345678-abcd-1234-efgh-567890abcdef
- cwd: /home/user/project
- Auth token: ANTHROPIC_AUTH_TOKEN
- Anthropic base URL: https://openrouter.ai/api
+\vspace{0.3cm}
 
- Model: moonshotai/kimi-k2
-\end{minted}
-
-\vspace{0.2cm}
-
-\textbf{Check these fields:}
 \begin{itemize}
-    \item \texttt{Auth token}: Should say \texttt{ANTHROPIC\_AUTH\_TOKEN}
-    \item \texttt{Anthropic base URL}: Should be \texttt{https://openrouter.ai/api}
-    \item \texttt{Model}: Should be \texttt{moonshotai/kimi-k2}
+    \item \href{https://z.ai/blog/glm-4.7}{\textbf{GLM-4.7}}
+    \begin{itemize}
+        \item Cost: \$0.40/M input, \$1.50/M output tokens
+        \item Context: 203K tokens
+        \item Fast, good for iterative development
+    \end{itemize}
+
+    \vspace{0.2cm}
+
+    \item \href{https://www.kimi.com/en}{\textbf{Kimi K2 Thinking}}
+    \begin{itemize}
+        \item Cost: \$0.57/M input, \$2.42/M output tokens
+        \item Context: 256K tokens
+        \item Shows step-by-step reasoning
+    \end{itemize}
 \end{itemize}
 
-\vspace{0.1cm}
+\vspace{0.3cm}
 
-{\small If model shows \texttt{claude-sonnet} instead $\rightarrow$ check your \colorbox{lightgray}{\texttt{settings.json}} configuration.}
+{\small You can switch models anytime using \colorbox{lightgray}{\texttt{/models}}}
 
-{\small \textcolor{codeorange}{\textbf{WSL:}} If Claude asks to log in instead, check that \colorbox{lightgray}{\texttt{\textasciitilde/.claude.json}} contains \texttt{"hasCompletedOnboarding": true}.}
+\end{frame}
+
+%======================================================================
+\begin{frame}[fragile]{Verifying Your OpenCode.ai Setup}
+
+\textbf{Step 1:} Check the status bar at the bottom
+
+\vspace{0.2cm}
+
+The status bar should display your current model:
+\begin{center}
+\colorbox{lightgray}{\texttt{GLM-4.7 (OpenRouter)}} or \colorbox{lightgray}{\texttt{Kimi K2 Thinking (OpenRouter)}}
+\end{center}
+
+\vspace{0.3cm}
+
+\textbf{Step 2:} Test with a simple prompt:
+
+\vspace{0.2cm}
+
+\begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{text}
+You: "Hello! Can you see my current directory?"
+\end{minted}
+
+\vspace{0.3cm}
+
+If OpenCode responds correctly, you're all set!
+
+\vspace{0.3cm}
+
+{\small \textcolor{codegreen}{\textbf{Tip:}} Use \colorbox{lightgray}{\texttt{/help}} to see all available commands.}
 
 \end{frame}
 
@@ -267,100 +301,57 @@ Example output:
 \fi
 
 %======================================================================
-\begin{frame}[fragile]{Checking Your Budget: Status Line (1/2)}
+\begin{frame}[fragile]{Checking Your Budget}
 
-\textbf{Show your remaining budget directly in Claude Code's status bar.}
+\textbf{Both tools use your OpenRouter budget.} Monitor it to avoid running out!
 
-\vspace{0.2cm}
+\vspace{0.5cm}
 
-\textbf{Step 1: Install \texttt{jq}} (JSON parser)
-\begin{itemize}
-    \item \textbf{macOS:} \colorbox{lightgray}{\texttt{brew install jq}}
-    \item \textbf{Ubuntu/Debian/WSL:} \colorbox{lightgray}{\texttt{sudo apt install jq}}
-\end{itemize}
-
-\vspace{0.2cm}
-
-\textbf{Step 2: Create \colorbox{lightgray}{\texttt{\textasciitilde/.claude/statusline.sh}}}
-\begin{minted}[fontsize=\tiny,bgcolor=lightgray]{bash}
-#!/bin/bash
-input=$(cat)
-or_response=$(curl -s -H "Authorization: Bearer $ANTHROPIC_AUTH_TOKEN" \
-  "https://openrouter.ai/api/v1/key" 2>/dev/null)
-remaining=$(echo "$or_response" | jq -r '.data.limit_remaining // 0')
-limit=$(echo "$or_response" | jq -r '.data.limit // 0')
-model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
-printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' \
-       "$model" "$remaining" "$limit"
-\end{minted}
-
-\vspace{0.1cm}
-
-\textbf{Step 3: Make executable:} \colorbox{lightgray}{\texttt{chmod +x \textasciitilde/.claude/statusline.sh}}
-
-\vspace{0.1cm}
-
-{\small \textcolor{codeorange}{\textbf{Windows users:}} This script requires WSL or Git Bash.}
-
-\end{frame}
-
-%======================================================================
-\begin{frame}[fragile]{Checking Your Budget: Status Line (2/2)}
-
-\textbf{Step 4: Add \texttt{statusLine} to your existing \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}}
-\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
-{
-  "env": { ... },
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh",
-    "padding": 0
-  }
-}
-\end{minted}
-{\small Add the \texttt{statusLine} block after your existing \texttt{env} block (don't forget the comma after \texttt{\}}).}
+\textbf{Check your remaining budget at:}
+\begin{center}
+\large\url{https://nadav.amit.zone/tools/openrouter-budget.html}
+\end{center}
 
 \vspace{0.3cm}
 
-\textbf{Result in status bar:}
-\begin{center}
-\colorbox{black}{\texttt{\textcolor{cyan}{moonshotai/kimi-k2} \textcolor{white}{|} \textcolor{green}{\$9.51}\textcolor{white}{/}\textcolor{yellow}{\$10}}}
-\end{center}
+{\small Enter your API key (\texttt{sk-or-v1-...}) to see your remaining balance.}
 
-\vspace{0.2cm}
+\vspace{0.5cm}
 
-{\small \textcolor{codeorange}{\textbf{Note:}} \colorbox{lightgray}{\texttt{/cost}} in Claude Code won't show correct costs with OpenRouter.}
+{\small \textcolor{codeorange}{\textbf{Note:}} No extra budget will be provided. Monitor your usage!}
 
 \end{frame}
 
 %======================================================================
 \begin{frame}[fragile]{IDE Integration}
 
-\textbf{Option 1: VSCode Extension}
-\begin{enumerate}
-    \item Install ``Claude Code'' from VSCode Marketplace
-    \item Configure \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}} (see ``Configuring'' slide)
-    \item In extension settings: enable \textbf{Claude Code: Use Terminal} (checkbox)
-    \item Click the Claude logo in the sidebar: \raisebox{-0.3em}{\includegraphics[height=1.2em]{figures/claude.png}}
-\end{enumerate}
+\textbf{Running OpenCode.ai in your IDE:}
+\begin{itemize}
+    \item Run \colorbox{lightgray}{\texttt{opencode}} directly in your IDE's terminal
+    \item Works with VSCode, Cursor, or any editor with a terminal
+    \item Open terminal:
+    \begin{itemize}
+        \item \textbf{VSCode/Windows:} \colorbox{keybg}{\texttt{Ctrl+Shift+`}}
+        \item \textbf{macOS:} \colorbox{keybg}{\texttt{Cmd+`}}
+    \end{itemize}
+\end{itemize}
 
 \vspace{0.3cm}
 
-\textbf{Option 2: Run CLI directly in terminal}
+\textbf{Benefits:}
 \begin{itemize}
-    \item Open new terminal: \colorbox{keybg}{\texttt{Ctrl+Shift+`}}
-    \item Run \colorbox{lightgray}{\texttt{claude --model "moonshotai/kimi-k2"}}
+    \item AI sees your open files and workspace context (type \colorbox{lightgray}{\texttt{/ide}} to check)
+    \item Easy to review changes in your editor
+    \item Natural integration with your existing workflow
 \end{itemize}
+
+\vspace{0.3cm}
+
+{\small \textcolor{codeorange}{\textbf{WSL users:}} Set default terminal to WSL: \colorbox{keybg}{\texttt{Ctrl+Shift+P}} $\rightarrow$ ``Terminal: Select Default Profile'' $\rightarrow$ choose your WSL distribution.}
 
 \vspace{0.2cm}
 
-{\small Both options are functionally identical --- the extension just adds sidebar integration.}
-
-\vspace{0.1cm}
-
-\textbf{Benefits:} Claude sees your open files, workspace context, and you can review changes in VSCode's diff view.
-
-{\small \textcolor{codeorange}{\textbf{WSL users:}} Set default terminal to WSL: \colorbox{keybg}{\texttt{Ctrl+Shift+P}} $\rightarrow$ ``Terminal: Select Default Profile'' $\rightarrow$ choose your WSL distribution.}
+{\small For Claude Code IDE integration, see the \hyperref[sec:appendix]{Appendix}.}
 
 \end{frame}
 
@@ -416,19 +407,36 @@ printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' 
 
 \vspace{0.3cm}
 
-\textbf{6. Use \colorbox{lightgray}{\texttt{CLAUDE.md}} for Project Context}
+\textbf{6. Use \colorbox{lightgray}{\texttt{AGENTS.md}} for Project Context}
 \begin{itemize}
-    \item Create a \colorbox{lightgray}{\texttt{CLAUDE.md}} file in your project root
+    \item Create an \colorbox{lightgray}{\texttt{AGENTS.md}} file in your project root
+    \item Or use \colorbox{lightgray}{\texttt{/init}} in OpenCode.ai to generate it automatically
     \item Document: build commands, test commands, project structure
-    \item The AI reads this automatically for context
+    \item The AI reads this file automatically for context
 \end{itemize}
 
 \end{frame}
 
 %======================================================================
-\begin{frame}[fragile]{CLAUDE.md: Project Context File}
+\begin{frame}[fragile]{Project Context Files}
 
-Create a \colorbox{lightgray}{\texttt{CLAUDE.md}} file in your project root to give Claude persistent context:
+\textbf{OpenCode.ai uses} \colorbox{lightgray}{\texttt{AGENTS.md}} \textbf{in your project root:}
+
+\vspace{0.2cm}
+
+\begin{itemize}
+    \item Generate automatically: run OpenCode.ai, type \colorbox{lightgray}{\texttt{/init}}
+    \item Or create manually with build commands, project structure, etc.
+    \item OpenCode.ai reads this file automatically for context
+\end{itemize}
+
+\vspace{0.3cm}
+
+{\small \textbf{Claude Code} uses \colorbox{lightgray}{\texttt{CLAUDE.md}} instead (see \hyperref[sec:appendix]{Appendix}).}
+
+\vspace{0.3cm}
+
+\textbf{Example content:}
 
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{markdown}
 # Build commands
@@ -449,11 +457,11 @@ Create a \colorbox{lightgray}{\texttt{CLAUDE.md}} file in your project root to g
 
 \vspace{0.2cm}
 
-\textbf{Benefits:} Claude reads this automatically $\rightarrow$ better context, fewer mistakes.
+\textbf{Benefits:} The AI reads this automatically $\rightarrow$ better context, fewer mistakes.
 
 \vspace{0.1cm}
 
-{\footnotesize See: \url{https://www.anthropic.com/engineering/claude-code-best-practices}}
+{\footnotesize Resources: \url{https://www.anthropic.com/engineering/claude-code-best-practices} (for Claude Code), or use OpenCode's \colorbox{lightgray}{\texttt{/init}} to generate \texttt{AGENTS.md}}
 
 \end{frame}
 
@@ -464,11 +472,16 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 
 \vspace{0.3cm}
 
+\textbf{Claude Code:}
 \begin{itemize}
     \item Press \colorbox{keybg}{\textbf{Shift+Tab}} to toggle plan mode
     \item Or ask: ``Plan how to implement X before writing code''
-    \item The AI will outline its approach for your approval
-    \item Review the plan, suggest changes, then let it execute
+\end{itemize}
+
+\textbf{OpenCode.ai / General approach:}
+\begin{itemize}
+    \item Ask: ``Plan how to implement X. Don't write code yet, explain the approach''
+    \item Review the plan, suggest changes, then proceed
 \end{itemize}
 
 \vspace{0.3cm}
@@ -480,25 +493,20 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
     \item Save tokens/budget by avoiding wrong directions
 \end{itemize}
 
-\vspace{0.3cm}
-
-\textbf{Example:} ``Plan how to add branch prediction to the pipeline. Don't write code yet, just explain the approach.''
-
 \end{frame}
 
 %======================================================================
 \begin{frame}{Version Control: Rewind and Git}
 
-\textbf{Rewind (CLI only):}
+\textbf{Claude Code:} Built-in \colorbox{lightgray}{\texttt{/rewind}} (CLI only)
 \begin{itemize}
-    \item Claude Code CLI has built-in \colorbox{lightgray}{\texttt{/rewind}} to undo changes
     \item Useful if the AI takes a wrong direction
-    \item Note: Not available in VSCode extension
+    \item Not available in VSCode extension or OpenCode.ai
 \end{itemize}
 
 \vspace{0.3cm}
 
-\textbf{Use Git for Safety:}
+\textbf{Git: Universal Safety Net (Works with Both Tools)}
 \begin{itemize}
     \item \textbf{Commit frequently} before asking AI to make big changes
     \item If something goes wrong: \colorbox{lightgray}{\texttt{git checkout .}} or \colorbox{lightgray}{\texttt{git reset}}
@@ -521,36 +529,30 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 \section{Safety and Permissions}
 %======================================================================
 
-\begin{frame}[fragile]{Sandboxing and Permissions}
+\begin{frame}[fragile]{Sandboxing}
 
 \textbf{Sandboxing} = OS-level filesystem \& network isolation for safer operation.
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
 \textbf{What it does:}
 \begin{itemize}
     \item \textbf{Filesystem:} Write access only to working directory; read access elsewhere
     \item \textbf{Network:} Only approved domains can be accessed
-    \item Uses OS primitives (Seatbelt on macOS, bubblewrap on Linux)
-    \item {\small \textcolor{codeorange}{\textbf{Note:}} Sandbox is not supported on WSL.}
+    \item Prevents accidental damage to your system
 \end{itemize}
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
-\textbf{Enable sandboxing:} Type \colorbox{lightgray}{\texttt{/sandbox}} in Claude Code
-\begin{itemize}
-    \item \textbf{Auto-allow mode:} Commands within sandbox run without prompts
-    \item \textbf{Regular mode:} All commands still go through permission flow
-\end{itemize}
+\textbf{OpenCode.ai with Docker (recommended for sandboxing):}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+docker run -it --rm -v $(pwd):/workspace ghcr.io/anomalyco/opencode
+\end{minted}
+{\small Runs OpenCode.ai in an isolated container with your current directory mounted.}
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
-\textbf{Permissions (separate from sandbox):}
-\begin{itemize}
-    \item Claude Code asks before running commands
-    \item Choose ``Allow once'' or ``Allow always'' when prompted
-    \item Pre-approve in \colorbox{lightgray}{\texttt{CLAUDE.md}}: \colorbox{lightgray}{\texttt{- make test}}, \colorbox{lightgray}{\texttt{- gdb ./program}}
-\end{itemize}
+{\small For Claude Code sandboxing options, see the \hyperref[sec:appendix]{Appendix}.}
 
 \end{frame}
 
@@ -572,10 +574,11 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 
 \vspace{0.1cm}
 
-\textbf{Context compaction:} When context fills up, Claude Code automatically summarizes older parts of the conversation to make room. You may see a message like ``Compacting...'' or ``This session is being continued...''
+\textbf{Context compaction (Claude Code):} Claude Code automatically summarizes older parts of the conversation when context fills up. You may see ``Compacting...'' or ``This session is being continued...''
 \begin{itemize}
     \item Details from early in the session may become less precise
     \item Important decisions might need to be restated
+    \item OpenCode.ai handles context differently --- monitor manually
 \end{itemize}
 
 \vspace{-0.1cm}
@@ -599,9 +602,10 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 
 \textbf{How to start fresh:}
 \begin{itemize}
-    \item \colorbox{lightgray}{\texttt{/clear}} --- clear conversation but stay in same session
-    \item \colorbox{lightgray}{\texttt{/new}} --- start a completely new session
-    \item Use \colorbox{lightgray}{\texttt{CLAUDE.md}} to preserve project knowledge across sessions
+    \item \colorbox{lightgray}{\texttt{/clear}} --- clear conversation (both tools)
+    \item \colorbox{lightgray}{\texttt{/new}} --- start new session (both tools)
+    \item Or just exit and restart the tool
+    \item Use \colorbox{lightgray}{\texttt{CLAUDE.md}} or \colorbox{lightgray}{\texttt{AGENTS.md}} to preserve project knowledge
     \item Commit your work before starting new sessions
 \end{itemize}
 
@@ -611,38 +615,6 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 
 \end{frame}
 
-%======================================================================
-\begin{frame}{Advanced: Skills and Subagents}
-
-Claude Code has features that help manage context more efficiently:
-
-\vspace{0.3cm}
-
-\textbf{Subagents:}
-\begin{itemize}
-    \item Separate AI instances with their own context windows
-    \item Main agent delegates tasks, gets summarized results back
-    \item Reduces context bloat in your main conversation
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textbf{Skills:}
-\begin{itemize}
-    \item Reusable prompt templates for common tasks
-    \item Encapsulate complex workflows into simple commands
-    \item Keep your main context clean
-\end{itemize}
-
-\vspace{0.3cm}
-
-{\footnotesize
-Learn more:\\
-\url{https://code.claude.com/docs/en/sub-agents}\\
-\url{https://code.claude.com/docs/en/skills}
-}
-
-\end{frame}
 
 %======================================================================
 \section{Workflow Examples}
@@ -701,30 +673,32 @@ The AI handles the implementation details while you focus on understanding the a
 
 \textbf{``It's not working!''} --- Check these first:
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
-\begin{enumerate}
-    \item \textbf{Wrong model?} Check the status bar --- should say \texttt{kimi-k2}
+\textbf{Both tools:}
+\begin{itemize}
+    \item \textbf{Wrong model?}
     \begin{itemize}
-        \item If \texttt{claude-sonnet} $\rightarrow$ check config (or you have your own Anthropic account)
+        \item OpenCode.ai: Check status bar (bottom) or use \colorbox{lightgray}{\texttt{/models}} to switch
+        \item Claude Code: Type \colorbox{lightgray}{\texttt{/status}} or update \colorbox{lightgray}{\texttt{settings.json}}
+        \item Should show \texttt{z-ai/glm-4.7} or \texttt{moonshotai/kimi-k2-thinking}
     \end{itemize}
 
-    \item \textbf{API key not set?} Run: \colorbox{lightgray}{\texttt{echo \$ANTHROPIC\_AUTH\_TOKEN}}
+    \item \textbf{API key not working?}
     \begin{itemize}
-        \item Should print your \texttt{sk-or-v1-...} key
-        \item Empty? $\rightarrow$ Re-check your shell config or \colorbox{lightgray}{\texttt{settings.json}}
+        \item OpenCode.ai: Type \colorbox{lightgray}{\texttt{/connect}} and re-enter key
+        \item Claude Code: Check \colorbox{lightgray}{\texttt{settings.json}} has correct key
+        \item Verify key at \url{https://openrouter.ai/settings/keys}
     \end{itemize}
 
-    \item \textbf{Out of budget?} Monitor usage via the status line. No extra budget will be provided
+    \item \textbf{Out of budget?} Check OpenRouter dashboard. No extra budget will be provided
+\end{itemize}
 
-    \item \textbf{VSCode extension not connecting?}
-    \begin{itemize}
-        \item Restart VSCode after editing \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}
-        \item Make sure ``Use Terminal'' is set to \texttt{integrated}
-    \end{itemize}
-
-    \item \textbf{Feature not working?} Some Claude Code features (context indicators, etc.) may not work with non-Claude models --- this is expected.
-\end{enumerate}
+\textbf{Claude Code specific:}
+\begin{itemize}
+    \item VSCode extension: Restart VSCode after editing settings
+    \item Some features don't work with OpenRouter models (expected)
+\end{itemize}
 
 \end{frame}
 
@@ -759,7 +733,7 @@ The goal is to learn \textbf{computer architecture concepts} --- the AI is a too
 %======================================================================
 \begin{frame}{Summary}
 
-\textbf{Setup:} Submit HW0 $\rightarrow$ get API key $\rightarrow$ configure Claude Code
+\textbf{Setup:} Submit HW0 $\rightarrow$ get API key $\rightarrow$ configure OpenCode.ai (or Claude Code)
 
 \vspace{0.3cm}
 
@@ -777,7 +751,264 @@ The goal is to learn \textbf{computer architecture concepts} --- the AI is a too
 
 \vspace{0.4cm}
 
-{\footnotesize Docs: \url{https://code.claude.com/docs/en/setup}}
+{\footnotesize Docs: \url{https://opencode.ai/docs}}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}{}
+\vfill
+\begin{center}
+{\Huge Backup}
+\end{center}
+\vfill
+\end{frame}
+
+%======================================================================
+\appendix
+\section{Appendix: Claude Code Setup}\label{sec:appendix}
+%======================================================================
+
+\begin{frame}{About This Appendix}
+
+\textbf{OpenCode.ai is the recommended tool for this course.}
+
+\vspace{0.3cm}
+
+However, if you prefer Claude Code, this appendix contains:
+\begin{itemize}
+    \item Installation and configuration instructions
+    \item OpenRouter setup for Claude Code
+    \item Budget monitoring via status line
+    \item Advanced features (subagents, skills)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textcolor{codeorange}{\textbf{Note:}} Most concepts (prompting, planning, context management) apply to both tools. These slides cover Claude Code-specific setup.
+
+\end{frame}
+\begin{frame}[fragile]{Appendix: Installing Claude Code}
+
+{\small \textcolor{codeorange}{\textbf{Why Claude Code?}} Originally designed for Anthropic's models, but works with OpenRouter. Offers additional features like IDE integration and built-in context management tools.}
+
+\vspace{0.3cm}
+
+\textbf{macOS / Linux / WSL:}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+curl -fsSL https://claude.ai/install.sh | bash
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Windows PowerShell:}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{powershell}
+irm https://claude.ai/install.ps1 | iex
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Alternative --- npm (requires Node.js 18+):}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+npm install -g @anthropic-ai/claude-code
+\end{minted}
+
+\vspace{0.2cm}
+
+{\footnotesize
+\textbf{Documentation:}\\
+\url{https://code.claude.com/docs/en/setup}\\
+\url{https://openrouter.ai/docs/guides/guides/claude-code-integration}
+}
+
+\end{frame}
+%======================================================================
+\begin{frame}[fragile]{Appendix: Configuring Claude Code for OpenRouter}
+
+Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-or-v1-...",
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+    "ANTHROPIC_MODEL": "z-ai/glm-4.7"
+  }
+}
+\end{minted}
+
+\vspace{0.2cm}
+
+{\small \textbf{Model options:} \texttt{z-ai/glm-4.7} (recommended) or \texttt{moonshotai/kimi-k2-thinking}}
+
+\vspace{0.2cm}
+
+{\small \textcolor{codeorange}{\textbf{Note:}} \texttt{ANTHROPIC\_API\_KEY} must be explicitly empty (not omitted). Create the directory first if needed: \colorbox{lightgray}{\texttt{mkdir -p \textasciitilde/.claude}}}
+
+\begin{tikzpicture}[remember picture, overlay]
+\node[rectangle callout, draw=red, fill=calloutbg, text width=2.8cm, font=\small, align=center,
+      callout absolute pointer={([xshift=-1.2cm, yshift=1.1cm]current page.center)}]
+      at ([xshift=4cm, yshift=1cm]current page.center) {
+    Replace \texttt{...} with your key from \href{https://webcourse.cs.technion.ac.il/02360267}{Webcourse}!
+};
+\end{tikzpicture}
+
+\end{frame}
+%======================================================================
+\begin{frame}[fragile]{Appendix: Verifying Claude Code Setup}
+
+\textbf{Step 1:} Open a terminal and run:
+\begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{bash}
+claude
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Step 2:} Inside Claude Code, type \colorbox{lightgray}{\texttt{/status}} to verify configuration:
+
+\begin{minted}[fontsize=\tiny,bgcolor=lightgray]{text}
+> /status
+ Version: 2.0.76
+ Session ID: 12345678-abcd-1234-efgh-567890abcdef
+ cwd: /home/user/project
+ Auth token: ANTHROPIC_AUTH_TOKEN
+ Anthropic base URL: https://openrouter.ai/api
+
+ Model: z-ai/glm-4.7
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Check these fields:}
+\begin{itemize}
+    \item \texttt{Auth token}: Should say \texttt{ANTHROPIC\_AUTH\_TOKEN}
+    \item \texttt{Anthropic base URL}: Should be \texttt{https://openrouter.ai/api}
+    \item \texttt{Model}: Should be \texttt{z-ai/glm-4.7} or \texttt{moonshotai/kimi-k2-thinking}
+\end{itemize}
+
+\vspace{0.1cm}
+
+{\small If model shows \texttt{claude-sonnet} instead $\rightarrow$ check your \colorbox{lightgray}{\texttt{settings.json}} configuration.}
+
+{\small \textcolor{codeorange}{\textbf{WSL:}} If Claude asks to log in instead, check that \colorbox{lightgray}{\texttt{\textasciitilde/.claude.json}} contains \texttt{"hasCompletedOnboarding": true}.}
+
+\end{frame}
+%======================================================================
+\begin{frame}[fragile]{Appendix: Status Line Budget Display (1/2)}
+
+\textbf{Show your remaining budget directly in Claude Code's status bar.}
+
+\vspace{0.2cm}
+
+\textbf{Step 1: Install \texttt{jq}} (JSON parser)
+\begin{itemize}
+    \item \textbf{macOS:} \colorbox{lightgray}{\texttt{brew install jq}}
+    \item \textbf{Ubuntu/Debian/WSL:} \colorbox{lightgray}{\texttt{sudo apt install jq}}
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Step 2: Create \colorbox{lightgray}{\texttt{\textasciitilde/.claude/statusline.sh}}}
+\begin{minted}[fontsize=\tiny,bgcolor=lightgray]{bash}
+#!/bin/bash
+input=$(cat)
+or_response=$(curl -s -H "Authorization: Bearer $ANTHROPIC_AUTH_TOKEN" \
+  "https://openrouter.ai/api/v1/key" 2>/dev/null)
+remaining=$(echo "$or_response" | jq -r '.data.limit_remaining // 0')
+limit=$(echo "$or_response" | jq -r '.data.limit // 0')
+model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
+printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' \
+       "$model" "$remaining" "$limit"
+\end{minted}
+
+\vspace{0.1cm}
+
+\textbf{Step 3: Make executable:} \colorbox{lightgray}{\texttt{chmod +x \textasciitilde/.claude/statusline.sh}}
+
+\vspace{0.1cm}
+
+{\small \textcolor{codeorange}{\textbf{Windows users:}} This script requires WSL or Git Bash.}
+
+\end{frame}
+%======================================================================
+\begin{frame}[fragile]{Appendix: Status Line Budget Display (2/2)}
+
+\textbf{Step 4: Add \texttt{statusLine} to your existing \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
+{
+  "env": { ... },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
+  }
+}
+\end{minted}
+{\small Add the \texttt{statusLine} block after your existing \texttt{env} block (don't forget the comma after \texttt{\}}).}
+
+\vspace{0.3cm}
+
+\textbf{Result in status bar:}
+\begin{center}
+\colorbox{black}{\texttt{\textcolor{cyan}{z-ai/glm-4.7} \textcolor{white}{|} \textcolor{green}{\$9.51}\textcolor{white}{/}\textcolor{yellow}{\$10}}}
+\end{center}
+
+\vspace{0.2cm}
+
+{\small \textcolor{codeorange}{\textbf{Note:}} \colorbox{lightgray}{\texttt{/cost}} in Claude Code won't show correct costs with OpenRouter.}
+
+\end{frame}
+%======================================================================
+\begin{frame}[fragile]{Appendix: Claude Code Sandboxing and Permissions}
+
+\textbf{Enable sandboxing:} Type \colorbox{lightgray}{\texttt{/sandbox}} in Claude Code
+\begin{itemize}
+    \item Uses OS primitives (Seatbelt on macOS, bubblewrap on Linux)
+    \item \textbf{Auto-allow mode:} Commands within sandbox run without prompts
+    \item \textbf{Regular mode:} All commands still go through permission flow
+    \item {\small \textcolor{codeorange}{\textbf{Note:}} Sandbox is not supported on WSL.}
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Permissions (separate from sandbox):}
+\begin{itemize}
+    \item Claude Code asks before running commands
+    \item Choose ``Allow once'' or ``Allow always'' when prompted
+    \item Pre-approve in \colorbox{lightgray}{\texttt{CLAUDE.md}}: \colorbox{lightgray}{\texttt{- make test}}, \colorbox{lightgray}{\texttt{- gdb ./program}}
+\end{itemize}
+
+\end{frame}
+%======================================================================
+\begin{frame}{Appendix: Skills and Subagents}
+
+Claude Code has advanced features that help manage context more efficiently:
+
+\vspace{0.3cm}
+
+\textbf{Subagents:}
+\begin{itemize}
+    \item Separate AI instances with their own context windows
+    \item Main agent delegates tasks, gets summarized results back
+    \item Reduces context bloat in your main conversation
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Skills:}
+\begin{itemize}
+    \item Reusable prompt templates for common tasks
+    \item Encapsulate complex workflows into simple commands
+    \item Keep your main context clean
+\end{itemize}
+
+\vspace{0.3cm}
+
+{\footnotesize
+Learn more:\\
+\url{https://code.claude.com/docs/en/sub-agents}\\
+\url{https://code.claude.com/docs/en/skills}
+}
 
 \end{frame}
 
