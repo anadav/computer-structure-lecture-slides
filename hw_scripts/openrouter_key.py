@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
-import requests
 import csv
-from datetime import datetime
+
+# Check for required dependencies
+try:
+    import requests
+except ImportError:
+    print("Error: Missing required dependency 'requests'", file=sys.stderr)
+    print("\nPlease install dependencies by running:", file=sys.stderr)
+    print("  pip install -r requirements.txt", file=sys.stderr)
+    print("\nOr install requests directly:", file=sys.stderr)
+    print("  pip install requests", file=sys.stderr)
+    sys.exit(1)
 
 BASE_URL = "https://openrouter.ai/api/v1/keys"
 MAX_RETRIES = 5
