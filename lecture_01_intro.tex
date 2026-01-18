@@ -417,69 +417,101 @@ $$\text{Speedup}_{overall} = 1 - 0.95 = 0.05 = 5\%$$
 \section{Performance Evaluation}
 
 % Slide 12: Evaluating Performance of future CPUs
-\begin{frame}{Evaluating Performance of future CPUs}
+\begin{frame}{Evaluating Performance of Future CPUs}
 \begin{itemize}
-    \item \textbf{Use a performance simulator to evaluate the performance of a new feature / algorithm}
+    \item \textbf{Use a performance simulator to evaluate a new feature / algorithm}
     \begin{itemize}
-        \item Models the uarch to a great detail
-        \item Run 100's of representative applications
+        \item Models the $\mu$Arch in great detail
+        \item Run 100's of representative applications (benchmarks)
     \end{itemize}
-    \item \textbf{Produce the performance s-curve}
+    \vspace{0.3cm}
+    \item \textbf{Produce a sorted performance distribution (``S-curve'')}
     \begin{itemize}
-        \item Sort the applications according to the IPC increase
-        \item Baseline (0) is the processor without the new feature
+        \item For each application, measure performance change vs.\ baseline (no feature)
+        \item Sort applications by performance change (worst $\rightarrow$ best)
+        \item Plot: X = application percentile, Y = performance change (\%)
+    \end{itemize}
+    \vspace{0.3cm}
+    \item \textbf{Why ``S-curve''?}
+    \begin{itemize}
+        \item Sorted results often form an S-shape: some apps hurt, most neutral, some benefit
+        \item Easy to see: how many apps improve? How many regress? By how much?
     \end{itemize}
 \end{itemize}
+\end{frame}
 
-\begin{columns}
-\column{0.5\textwidth}
+% Slide 12b: S-curve Example - Poor Feature
+\begin{frame}{S-Curve Example: Poor Feature}
 \centering
-\textbf{S-curve with negative results}\\
-\begin{tikzpicture}[scale=0.6]
+\begin{tikzpicture}
     \begin{axis}[
-        xlabel={Applications},
-        ylabel={Performance (\%)},
-        width=\textwidth,
-        height=4cm,
-        ymin=-4, ymax=3,
+        xlabel={Applications (sorted by performance change) [\%]},
+        ylabel={Performance Change (\%)},
+        width=0.85\textwidth,
+        height=6cm,
+        ymin=-5, ymax=6,
+        xmin=0, xmax=100,
         grid=major,
-        xtick=\empty
+        xtick={0,20,40,60,80,100},
+        ytick={-4,-2,0,2,4,6},
+        extra y ticks={0},
+        extra y tick style={grid=major, grid style={black, thick}},
     ]
-    \addplot[blue, thick, smooth] coordinates {
-        (0,-3) (10,-2) (20,-1) (30,-0.5) (40,0) (50,0.2) 
-        (60,0.3) (70,0.5) (80,0.8) (90,1.5) (100,2.5)
+    \addplot[blue, very thick, smooth] coordinates {
+        (0,-3.5) (5,-3) (10,-2.5) (20,-1.5) (30,-0.8) (40,-0.2) (50,0.1)
+        (60,0.3) (70,0.5) (80,0.8) (90,1.5) (95,2) (100,2.5)
     };
-    \node[red, circle, draw] at (axis cs:10,-2) {};
-    \node[red] at (axis cs:10,-3) {\scriptsize Negative outliers};
-    \node[green, circle, draw] at (axis cs:95,2) {};
-    \node[green] at (axis cs:85,2.5) {\scriptsize Positive outliers};
+    % Circle the negative outliers (left end)
+    \draw[red, very thick] (axis cs:5,-3) circle (8pt);
+    \node[red, anchor=west] at (axis cs:12,-3.5) {\small Significant regressions};
+    % Circle the positive outliers (right end)
+    \draw[green!60!black, very thick] (axis cs:95,2) circle (8pt);
+    \node[green!60!black, anchor=east] at (axis cs:88,3) {\small Modest gains};
     \end{axis}
 \end{tikzpicture}
 
-\column{0.5\textwidth}
+\vspace{0.2cm}
+\begin{alertblock}{Problem}
+Many applications regress significantly ($>$2\%), while gains are modest. \\
+\textbf{This feature should probably be rejected.}
+\end{alertblock}
+\end{frame}
+
+% Slide 12c: S-curve Example - Good Feature
+\begin{frame}{S-Curve Example: Good Feature}
 \centering
-\textbf{S-curve of a good feature}\\
-\begin{tikzpicture}[scale=0.6]
+\begin{tikzpicture}
     \begin{axis}[
-        xlabel={Applications},
-        ylabel={Performance (\%)},
-        width=\textwidth,
-        height=4cm,
-        ymin=-2, ymax=6,
+        xlabel={Applications (sorted by performance change) [\%]},
+        ylabel={Performance Change (\%)},
+        width=0.85\textwidth,
+        height=6cm,
+        ymin=-5, ymax=6,
+        xmin=0, xmax=100,
         grid=major,
-        xtick=\empty
+        xtick={0,20,40,60,80,100},
+        ytick={-4,-2,0,2,4,6},
+        extra y ticks={0},
+        extra y tick style={grid=major, grid style={black, thick}},
     ]
-    \addplot[blue, thick, smooth] coordinates {
-        (0,-0.5) (10,-0.2) (20,0) (30,0.1) (40,0.2) (50,0.3) 
-        (60,0.5) (70,0.8) (80,1.5) (90,3) (100,5)
+    \addplot[blue, very thick, smooth] coordinates {
+        (0,-0.5) (5,-0.3) (10,-0.1) (20,0) (30,0.1) (40,0.2) (50,0.4)
+        (60,0.7) (70,1.2) (80,2) (90,3.5) (95,4.5) (100,5.5)
     };
-    \node[red, circle, draw] at (axis cs:5,-0.3) {};
-    \node[red] at (axis cs:20,-1) {\scriptsize Small negative outliers};
-    \node[green, circle, draw] at (axis cs:95,4.5) {};
-    \node[green] at (axis cs:75,4.5) {\scriptsize Positive outliers};
+    % Circle the negative outliers (left end) - small
+    \draw[red, very thick] (axis cs:5,-0.3) circle (8pt);
+    \node[red, anchor=west] at (axis cs:12,-1.5) {\small Minor regressions};
+    % Circle the positive outliers (right end)
+    \draw[green!60!black, very thick] (axis cs:95,4.5) circle (8pt);
+    \node[green!60!black, anchor=east] at (axis cs:88,5.5) {\small Strong gains};
     \end{axis}
 \end{tikzpicture}
-\end{columns}
+
+\vspace{0.2cm}
+\begin{exampleblock}{Success}
+Minimal regressions ($<$1\%), significant gains for many applications. \\
+\textbf{This feature is worth implementing.}
+\end{exampleblock}
 \end{frame}
 
 % Slide 13: Using Benchmarks for Comparing Performance
