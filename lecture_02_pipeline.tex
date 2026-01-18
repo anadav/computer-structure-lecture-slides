@@ -2471,7 +2471,7 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 
 \vspace{0.2cm}
 \begin{itemize}
-    \item De-assert the enable to the L1 latch (IF/ID) and PC --- instruction stays another cycle
+    \item De-assert write-enable on PC and IF/ID --- instruction stays in IF
     \item Issue a NOP (bubble) into the L2 latch (ID/EX)
 \end{itemize}
 
@@ -2581,9 +2581,9 @@ Forward result from writeback stage (2 cycles old) to mux input 3
         \draw[->, thick, red!70!black] (m-6-6.south) -- (m-7-6.north);
 
         % Distance labels on left (positioned relative to matrix rows)
-        \node[dist, anchor=east] at ([xshift=-5mm]m-2-1.west |- m-2-1.south east) {Dist 1};
-        \node[dist, anchor=east] at ([xshift=-5mm]m-4-1.west |- m-4-1.south east) {Dist 2};
-        \node[dist, anchor=east] at ([xshift=-5mm]m-6-1.west |- m-6-1.south east) {Dist 3};
+        \node[dist, anchor=east] at ([xshift=-5mm]m-2-1.west |- m-2-1.south east) {Distance 1};
+        \node[dist, anchor=east] at ([xshift=-5mm]m-4-1.west |- m-4-1.south east) {Distance 2};
+        \node[dist, anchor=east] at ([xshift=-5mm]m-6-1.west |- m-6-1.south east) {Distance 3};
 
         % Solutions on right (positioned relative to matrix)
         \node[solution, anchor=west] at ([xshift=3mm]m-2-7.east |- m-2-7.south east) {$\Rightarrow$ \textbf{Bypass from EX/MEM}};
@@ -3458,6 +3458,15 @@ Assuming 20\% branches, $\sim$50\% taken on average
 
 \end{circuitikz}
 }
+% Cycle indicator on title bar
+\begin{tikzpicture}[remember picture, overlay]
+    \tikzset{title_cycle_box/.style={draw=blue!60!black, line width=1.5pt, fill=blue!60,
+                  text=white, rounded corners=4pt, font=\normalsize\bfseries, inner sep=5pt}}
+    \only<1>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 4};}
+    \only<2>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 4};}
+    \only<3>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 5};}
+    \only<4>{\node[title_cycle_box, anchor=east] at ([xshift=-5mm, yshift=-5mm]current page.north east) {Cycle 6};}
+\end{tikzpicture}
 \end{center}
 \end{frame}
 
