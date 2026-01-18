@@ -24,8 +24,7 @@
 \definecolor{myred}{RGB}{255,0,0}
 
 \title{Computer Structure}
-\subtitle{236267}
-\author{Lihu Rappoport}
+\author{Computer Architecture 236267}
 \date{}
 
 \begin{document}
@@ -750,33 +749,7 @@ These goals often conflict: reducing IC may require complex instructions, which 
 \end{itemize}
 \end{frame}
 
-% Slide 18: CISC Processors
-\begin{frame}[fragile]{CISC Processors}
-\begin{itemize}
-    \item \textbf{CISC -- Complex Instruction Set Computer} -- a high-level machine language
-    \begin{itemize}
-        \item Example: x86
-    \end{itemize}
-    \item \textbf{Complex instructions and complex addressing modes}\\
-    $\Rightarrow$ complicates the processor and slows down the simple, common instructions\\
-    $\Rightarrow$ contradicts \emph{Make The Common Case Fast}
-    \item \textbf{Small number of registers} $\Rightarrow$ requires many memory accesses
-    \item \textbf{Non-orthogonal registers}: some operations supported only on specific registers\\
-    $\Rightarrow$ Not compiler friendly
-    \item \textbf{ALU operations directly on memory}
-\begin{minted}{nasm}
-    add  eax, 7680[ecx] ;eax <- MEM[7680+ecx]+ eax
-\end{minted}
-    \item \textbf{Variable length instructions}
-    \begin{itemize}
-        \item Common instructions get short codes $\Rightarrow$ save code length
-        \item Difficult to decode few instructions in parallel: only after an instruction is decoded, its length (and when the next instruction starts) is known
-        \item An instruction may cross a cache line or a page
-    \end{itemize}
-\end{itemize}
-\end{frame}
-
-% Slide 19: Top 10 Instructions
+% Slide 18: Top 10 Instructions
 \begin{frame}{Top 10 Instructions}
 \centering
 \begin{table}
@@ -943,6 +916,38 @@ Simple instructions dominate instruction frequency
 \begin{alertblock}{Bottom Line}
 Despite convergence in execution cores, instruction encoding still matters for front-end performance
 \end{alertblock}
+\end{frame}
+
+\section{Summary}
+
+% Summary Slide
+\begin{frame}{Summary}
+\begin{itemize}
+    \item \textbf{Performance Metrics}
+    \begin{itemize}
+        \item CPU Time $=$ IC $\times$ CPI $\times$ clock cycle
+        \item Goal: minimize all three factors
+    \end{itemize}
+    \vspace{0.2cm}
+    \item \textbf{Amdahl's Law}
+    \begin{itemize}
+        \item Speedup limited by the fraction that can be improved
+        \item \emph{Make The Common Case Fast}
+    \end{itemize}
+    \vspace{0.2cm}
+    \item \textbf{CISC vs RISC}
+    \begin{itemize}
+        \item CISC: complex instructions, variable length, few registers
+        \item RISC: simple instructions, fixed length, many registers
+        \item Modern CPUs: CISC ISA with RISC-like microarchitecture
+    \end{itemize}
+    \vspace{0.2cm}
+    \item \textbf{Architecture vs Microarchitecture}
+    \begin{itemize}
+        \item Architecture: what software sees (ISA)
+        \item Microarchitecture: how it's implemented
+    \end{itemize}
+\end{itemize}
 \end{frame}
 
 \end{document}
