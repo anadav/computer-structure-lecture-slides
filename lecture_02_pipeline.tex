@@ -2500,6 +2500,15 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     % and continues from cycle 3 (after stall)
     \drawpipelinearch[prefix=and, at={(and_inst -| i3)}, scale=0.58]
 
+    % Highlight lw's DM (MEM stage) - where load result becomes available
+    \fill[blue!40] (lw-DM.north west) rectangle (lw-DM.south east);
+    \node[font=\tiny, text=white] at (lw-DM.center) {DM};
+
+    % Highlight and's ALU (EXE stage) - green since forwarding now works
+    \node[muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+          external pins width=0, fill=green!40, draw=green!60!black, line width=0.5pt,
+          scale=0.58, anchor=center] at (and-ALU.center) {};
+
     % Program execution order label
     \node[anchor=south east, align=center, font=\small] at (lw_inst.north west) (ordertext) {Program\\order};
     \draw[->, thick] (ordertext.south) -- (ordertext |- and_inst);
@@ -2511,6 +2520,11 @@ Forward result from writeback stage (2 cycles old) to mux input 3
           at ([yshift=1mm]bubble_IM.north) {
         \textbf{Bubble}
     };
+
+    % Green arrow from lw's L4 to and's L2 - forwarding now works after stall
+    \draw[->, ultra thick, green!60!black]
+        (lw-L4.south) -- (and-L2.north)
+        node[midway, right, font=\scriptsize, text=green!50!black] {forward};
 \end{circuitikz}
 \end{frame}
 
