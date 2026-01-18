@@ -15,6 +15,7 @@
 \definecolor{codegreen}{RGB}{40,180,99}
 \definecolor{codepurple}{RGB}{155,89,182}
 \definecolor{codeorange}{RGB}{230,126,34}
+\definecolor{codeteal}{RGB}{0,128,128}
 \definecolor{lightgray}{RGB}{245,245,245}
 \definecolor{calloutbg}{RGB}{255,255,200}
 \definecolor{keybg}{RGB}{255,220,180}
@@ -35,10 +36,21 @@
 
 %======================================================================
 \begin{frame}{Outline}
-\tableofcontents
-
-\vspace{0.3cm}
-{\small \textcolor{gray}{Appendix: Claude Code Setup (alternative tool)}}
+\linespread{1.3}\selectfont
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\tableofcontents[sections={1-7}]
+\end{column}
+\begin{column}{0.5\textwidth}
+\vspace{0.8cm}
+\textcolor{codepurple}{\textbf{Extensions:}}
+\vspace{0.2cm}
+\tableofcontents[sections={8}]
+\vspace{0.4cm}
+\textcolor{codeteal}{\textbf{Alternative Tool:}}
+\tableofcontents[sections={9}]
+\end{column}
+\end{columns}
 \end{frame}
 
 %======================================================================
@@ -55,7 +67,7 @@ As part of a \textbf{pilot program}, students are expected to use Large Language
 
 \begin{itemize}
     \item Each pair receives \textbf{\$10 credit} via \href{https://openrouter.ai}{OpenRouter.ai}
-    \item \textbf{Tool options:} \href{https://opencode.ai}{OpenCode.ai} (recommended) or Claude Code (see \hyperref[sec:appendix]{Appendix})
+    \item \textbf{Tool options:} \href{https://opencode.ai}{OpenCode.ai} (recommended) or \hyperref[sec:claudecode]{Claude Code}
     \item \textbf{Model choices:} GLM-4.7 or Kimi K2 Thinking
     \item Goal: Learn \textbf{agentic AI programming} workflows
 \end{itemize}
@@ -132,9 +144,6 @@ Unlike simple chatbots, agentic AI can:
 \end{frame}
 
 %======================================================================
-\subsection{OpenCode.ai Setup}
-%======================================================================
-
 \begin{frame}[fragile]{Installing OpenCode.ai}
 
 \textbf{Recommended Installation:}
@@ -263,6 +272,38 @@ If OpenCode responds correctly, you're all set!
 \end{frame}
 
 %======================================================================
+\begin{frame}[fragile]{OpenCode.ai Interface Essentials}
+
+\textbf{Command Palette:} Press \colorbox{keybg}{\textbf{Ctrl+P}} to open the command palette
+
+\vspace{0.2cm}
+
+\textbf{Useful Slash Commands:}
+\begin{itemize}
+    \item \colorbox{lightgray}{\texttt{/help}} --- Show all available commands
+    \item \colorbox{lightgray}{\texttt{/sessions}} --- View and switch between previous sessions
+    \item \colorbox{lightgray}{\texttt{/models}} --- Switch AI model
+    \item \colorbox{lightgray}{\texttt{/compact}} --- Summarize session to free up context
+    \item \colorbox{lightgray}{\texttt{/new}} --- Start a fresh session
+    \item \colorbox{lightgray}{\texttt{/undo}} / \colorbox{lightgray}{\texttt{/redo}} --- Revert or restore changes
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Keyboard Shortcuts:} (Leader key: \colorbox{keybg}{\texttt{Ctrl+X}})
+\begin{itemize}
+    \item \colorbox{keybg}{\texttt{Ctrl+X l}} --- List/switch sessions
+    \item \colorbox{keybg}{\texttt{Ctrl+X h}} --- Help dialog
+    \item \colorbox{keybg}{\texttt{Tab}} --- Toggle Plan/Build mode
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Status Display:} The sidebar shows token usage, context window percentage, and cost. Auto-compact triggers at 95\% context usage.
+
+\end{frame}
+
+%======================================================================
 % Hidden slide: Manual budget checking via curl (requires shell variables)
 \iffalse
 \begin{frame}[fragile]{Checking Your Budget (Manual)}\label{frame:budget}
@@ -316,7 +357,11 @@ Example output:
 
 {\small Enter your API key (\texttt{sk-or-v1-...}) to see your remaining balance.}
 
-\vspace{0.5cm}
+\vspace{0.3cm}
+
+{\small \textcolor{codegreen}{\textbf{Try it:}} Learn to extend OpenCode.ai by creating a \colorbox{lightgray}{\texttt{/balance}} command --- \hyperref[frame:balance-cmd]{see how}!}
+
+\vspace{0.3cm}
 
 {\small \textcolor{codeorange}{\textbf{Note:}} No extra budget will be provided. Monitor your usage!}
 
@@ -348,10 +393,6 @@ Example output:
 \vspace{0.3cm}
 
 {\small \textcolor{codeorange}{\textbf{WSL users:}} Set default terminal to WSL: \colorbox{keybg}{\texttt{Ctrl+Shift+P}} $\rightarrow$ ``Terminal: Select Default Profile'' $\rightarrow$ choose your WSL distribution.}
-
-\vspace{0.2cm}
-
-{\small For Claude Code IDE integration, see the \hyperref[sec:appendix]{Appendix}.}
 
 \end{frame}
 
@@ -432,10 +473,6 @@ Example output:
 
 \vspace{0.3cm}
 
-{\small \textbf{Claude Code} uses \colorbox{lightgray}{\texttt{CLAUDE.md}} instead (see \hyperref[sec:appendix]{Appendix}).}
-
-\vspace{0.3cm}
-
 \textbf{Example content:}
 
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{markdown}
@@ -461,7 +498,7 @@ Example output:
 
 \vspace{0.1cm}
 
-{\footnotesize Resources: \url{https://www.anthropic.com/engineering/claude-code-best-practices} (for Claude Code), or use OpenCode's \colorbox{lightgray}{\texttt{/init}} to generate \texttt{AGENTS.md}}
+{\footnotesize Use \colorbox{lightgray}{\texttt{/init}} in OpenCode.ai to auto-generate \texttt{AGENTS.md} for your project.}
 
 \end{frame}
 
@@ -472,15 +509,10 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 
 \vspace{0.3cm}
 
-\textbf{Claude Code:}
+\textbf{In OpenCode.ai:}
 \begin{itemize}
-    \item Press \colorbox{keybg}{\textbf{Shift+Tab}} to toggle plan mode
-    \item Or ask: ``Plan how to implement X before writing code''
-\end{itemize}
-
-\textbf{OpenCode.ai / General approach:}
-\begin{itemize}
-    \item Ask: ``Plan how to implement X. Don't write code yet, explain the approach''
+    \item Press \colorbox{keybg}{\textbf{Tab}} to toggle between Plan and Build mode
+    \item Or ask: ``Plan how to implement X. Don't write code yet, explain the approach''
     \item Review the plan, suggest changes, then proceed
 \end{itemize}
 
@@ -496,17 +528,17 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 \end{frame}
 
 %======================================================================
-\begin{frame}{Version Control: Rewind and Git}
+\begin{frame}{Version Control: Undo and Git}
 
-\textbf{Claude Code:} Built-in \colorbox{lightgray}{\texttt{/rewind}} (CLI only)
+\textbf{OpenCode.ai:} Built-in \colorbox{lightgray}{\texttt{/undo}} and \colorbox{lightgray}{\texttt{/redo}}
 \begin{itemize}
-    \item Useful if the AI takes a wrong direction
-    \item Not available in VSCode extension or OpenCode.ai
+    \item Revert changes if the AI takes a wrong direction
+    \item Can undo multiple times for sequential changes
 \end{itemize}
 
 \vspace{0.3cm}
 
-\textbf{Git: Universal Safety Net (Works with Both Tools)}
+\textbf{Git: Universal Safety Net}
 \begin{itemize}
     \item \textbf{Commit frequently} before asking AI to make big changes
     \item If something goes wrong: \colorbox{lightgray}{\texttt{git checkout .}} or \colorbox{lightgray}{\texttt{git reset}}
@@ -520,7 +552,7 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
     \item \colorbox{lightgray}{\texttt{git commit}} your working state
     \item Ask AI to implement feature
     \item If happy: commit the changes
-    \item If not: \colorbox{lightgray}{\texttt{git checkout .}} to revert
+    \item If not: \colorbox{lightgray}{\texttt{/undo}} or \colorbox{lightgray}{\texttt{git checkout .}}
 \end{enumerate}
 
 \end{frame}
@@ -531,28 +563,23 @@ For complex tasks, ask the AI to \textbf{plan before implementing}:
 
 \begin{frame}[fragile]{Sandboxing}
 
+\fcolorbox{red}{white}{\parbox{0.95\textwidth}{\textbf{Without sandboxing}, the AI agent can: read/write \textbf{any file} on your system, execute \textbf{arbitrary commands}, access the \textbf{network}, and potentially cause \textbf{irreversible damage}. Use with caution!}}
+
+\vspace{0.2cm}
+
 \textbf{Sandboxing} = OS-level filesystem \& network isolation for safer operation.
-
-\vspace{0.3cm}
-
-\textbf{What it does:}
 \begin{itemize}
     \item \textbf{Filesystem:} Write access only to working directory; read access elsewhere
     \item \textbf{Network:} Only approved domains can be accessed
-    \item Prevents accidental damage to your system
 \end{itemize}
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 
-\textbf{OpenCode.ai with Docker (recommended for sandboxing):}
+\textbf{OpenCode.ai with Docker (recommended):}
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
 docker run -it --rm -v $(pwd):/workspace ghcr.io/anomalyco/opencode
 \end{minted}
-{\small Runs OpenCode.ai in an isolated container with your current directory mounted.}
-
-\vspace{0.3cm}
-
-{\small For Claude Code sandboxing options, see the \hyperref[sec:appendix]{Appendix}.}
+{\small Runs in an isolated container with only your current directory mounted.}
 
 \end{frame}
 
@@ -574,11 +601,12 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/anomalyco/opencode
 
 \vspace{0.1cm}
 
-\textbf{Context compaction (Claude Code):} Claude Code automatically summarizes older parts of the conversation when context fills up. You may see ``Compacting...'' or ``This session is being continued...''
+\textbf{Context compaction:} OpenCode.ai can automatically summarize older parts of the conversation when context fills up.
 \begin{itemize}
+    \item Use \colorbox{lightgray}{\texttt{/compact}} to manually trigger summarization
+    \item Auto-compact triggers at 95\% context usage
     \item Details from early in the session may become less precise
     \item Important decisions might need to be restated
-    \item OpenCode.ai handles context differently --- monitor manually
 \end{itemize}
 
 \vspace{-0.1cm}
@@ -595,17 +623,16 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/anomalyco/opencode
     \item Switching to a completely different task
     \item AI starts making mistakes about earlier code
     \item You've been going for 30+ turns on complex work
-    \item Claude Code shows context usage warnings
+    \item Context usage in sidebar approaches 90--100\%
 \end{itemize}
 
 \vspace{0.3cm}
 
 \textbf{How to start fresh:}
 \begin{itemize}
-    \item \colorbox{lightgray}{\texttt{/clear}} --- clear conversation (both tools)
-    \item \colorbox{lightgray}{\texttt{/new}} --- start new session (both tools)
+    \item \colorbox{lightgray}{\texttt{/new}} --- start new session
     \item Or just exit and restart the tool
-    \item Use \colorbox{lightgray}{\texttt{CLAUDE.md}} or \colorbox{lightgray}{\texttt{AGENTS.md}} to preserve project knowledge
+    \item Use \colorbox{lightgray}{\texttt{AGENTS.md}} to preserve project knowledge across sessions
     \item Commit your work before starting new sessions
 \end{itemize}
 
@@ -630,14 +657,14 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/anomalyco/opencode
 You: "First, write a testbench for a bypass/forwarding unit that
      detects RAW hazards. Then implement the unit to pass the tests."
 
-Claude: [writes testbench first, then implements bypass_unit.v,
-         runs tests, sees failures, fixes logic, re-runs tests...]
+AI: [writes testbench first, then implements bypass_unit.v,
+     runs tests, sees failures, fixes logic, re-runs tests...]
 
 You: "The forwarding from MEM stage isn't working for load
      instructions. Here's the error: ..."
 
-Claude: [debugs, identifies the issue, fixes the logic, runs tests
-         again until they pass...]
+AI: [debugs, identifies the issue, fixes the logic, runs tests
+     again until they pass...]
 \end{minted}
 
 \vspace{0.3cm}
@@ -675,29 +702,30 @@ The AI handles the implementation details while you focus on understanding the a
 
 \vspace{0.2cm}
 
-\textbf{Both tools:}
 \begin{itemize}
-    \item \textbf{Wrong model?}
-    \begin{itemize}
-        \item OpenCode.ai: Check status bar (bottom) or use \colorbox{lightgray}{\texttt{/models}} to switch
-        \item Claude Code: Type \colorbox{lightgray}{\texttt{/status}} or update \colorbox{lightgray}{\texttt{settings.json}}
-        \item Should show \texttt{z-ai/glm-4.7} or \texttt{moonshotai/kimi-k2-thinking}
-    \end{itemize}
-
     \item \textbf{API key not working?}
     \begin{itemize}
-        \item OpenCode.ai: Type \colorbox{lightgray}{\texttt{/connect}} and re-enter key
-        \item Claude Code: Check \colorbox{lightgray}{\texttt{settings.json}} has correct key
+        \item Type \colorbox{lightgray}{\texttt{/connect}} and re-enter your key
         \item Verify key at \url{https://openrouter.ai/settings/keys}
     \end{itemize}
 
-    \item \textbf{Out of budget?} Check OpenRouter dashboard. No extra budget will be provided
-\end{itemize}
+    \vspace{0.1cm}
 
-\textbf{Claude Code specific:}
-\begin{itemize}
-    \item VSCode extension: Restart VSCode after editing settings
-    \item Some features don't work with OpenRouter models (expected)
+    \item \textbf{Model not running/building code?}
+    \begin{itemize}
+        \item Some models may only explain instead of executing
+        \item Try: ``Run make and show me the output'' or ``Execute this, don't just explain''
+        \item Switch models with \colorbox{lightgray}{\texttt{/models}} if issue persists
+    \end{itemize}
+
+    \vspace{0.1cm}
+
+    \item \textbf{Out of budget?}
+    \begin{itemize}
+        \item Check at: \url{https://nadav.amit.zone/tools/openrouter-budget.html}
+        \item Or create a \colorbox{lightgray}{\texttt{/balance}} command (\hyperref[frame:balance-cmd]{see here})
+        \item No extra budget --- \hyperref[sec:alternatives]{see alternative models}!
+    \end{itemize}
 \end{itemize}
 
 \end{frame}
@@ -733,7 +761,7 @@ The goal is to learn \textbf{computer architecture concepts} --- the AI is a too
 %======================================================================
 \begin{frame}{Summary}
 
-\textbf{Setup:} Submit HW0 $\rightarrow$ get API key $\rightarrow$ configure OpenCode.ai (or Claude Code)
+\textbf{Setup:} Submit HW0 $\rightarrow$ get API key $\rightarrow$ configure OpenCode.ai
 
 \vspace{0.3cm}
 
@@ -756,39 +784,198 @@ The goal is to learn \textbf{computer architecture concepts} --- the AI is a too
 \end{frame}
 
 %======================================================================
-\begin{frame}{}
-\vfill
-\begin{center}
-{\Huge Backup}
-\end{center}
-\vfill
-\end{frame}
-
-%======================================================================
-\appendix
-\section{Appendix: Claude Code Setup}\label{sec:appendix}
+% Change frame title color for remaining slides
+\setbeamercolor{frametitle}{bg=codepurple!80!black, fg=white}
+\section{Alternatives \& Extensions}\label{sec:alternatives}
 %======================================================================
 
-\begin{frame}{About This Appendix}
+\begin{frame}{Alternatives \& Extensions}
 
-\textbf{OpenCode.ai is the recommended tool for this course.}
+\textbf{OpenCode.ai with OpenRouter is the recommended setup for this course.}
 
 \vspace{0.3cm}
 
-However, if you prefer Claude Code, this appendix contains:
+This section covers:
 \begin{itemize}
-    \item Installation and configuration instructions
-    \item OpenRouter setup for Claude Code
-    \item Budget monitoring via status line
-    \item Advanced features (subagents, skills)
+    \item \textbf{Alternative models} (Copilot, Gemini, OpenAI) --- if you run out of budget
+    \item \textbf{Custom commands} --- extend OpenCode.ai (e.g., \colorbox{lightgray}{\texttt{/balance}})
+    \item \textbf{Claude Code setup} --- alternative tool with OpenRouter
 \end{itemize}
 
 \vspace{0.3cm}
 
-\textcolor{codeorange}{\textbf{Note:}} Most concepts (prompting, planning, context management) apply to both tools. These slides cover Claude Code-specific setup.
+\textcolor{codeorange}{\textbf{Note:}} Most concepts (prompting, planning, context management) apply to both tools.
 
 \end{frame}
-\begin{frame}[fragile]{Appendix: Installing Claude Code}
+
+%======================================================================
+\begin{frame}[fragile]{GitHub Copilot Pro (Free for Students)}
+
+\textbf{Out of budget?} Students get free GitHub Copilot Pro access!
+
+\vspace{0.15cm}
+
+\textbf{Step 1: Register for GitHub Education}
+\begin{itemize}
+    \item Go to: \url{https://github.com/education/students}
+    \item Verify your student status (may take a few days)
+\end{itemize}
+
+\vspace{0.1cm}
+
+\textbf{Step 2: Enable Copilot Pro} (after approval email arrives)
+\begin{enumerate}
+    \item Click your profile picture $\rightarrow$ \textbf{Copilot settings}
+    \item Click ``\textbf{Get access to GitHub Copilot}''
+    \item Configure policies $\rightarrow$ ``\textbf{Save and complete}''
+\end{enumerate}
+{\footnotesize Alternative: \url{https://github.com/github-copilot/free_signup}}
+
+\vspace{0.1cm}
+
+\textbf{Step 3: Connect in OpenCode.ai}
+\begin{itemize}
+    \item Type \colorbox{lightgray}{\texttt{/connect}} $\rightarrow$ search ``Copilot''
+\end{itemize}
+
+\vspace{0.1cm}
+
+\fcolorbox{codeorange}{white}{\parbox{0.9\textwidth}{\textcolor{codeorange}{\textbf{Warning:}} Premium requests (Claude, GPT-4.5) limited to \textbf{300/month}. Resets on the 1st. Use as backup when OpenRouter budget runs out.}}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}[fragile]{Other Alternative Models}
+
+\textbf{Google Gemini (Free):}
+\begin{itemize}
+    \item Generate API key at: \url{https://aistudio.google.com/app/api-keys}
+    \item In OpenCode.ai: \colorbox{lightgray}{\texttt{/connect}} $\rightarrow$ search ``Google AI''
+    \item Free tier has generous limits for experimentation
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{OpenAI (requires Plus/Pro subscription):}
+\begin{itemize}
+    \item If you have a personal ChatGPT Plus or Pro subscription
+    \item In OpenCode.ai: \colorbox{lightgray}{\texttt{/connect}} $\rightarrow$ search ``OpenAI''
+    \item Uses your existing subscription's API access
+\end{itemize}
+
+\vspace{0.3cm}
+
+{\small \textcolor{codegreen}{\textbf{Tip:}} Use \colorbox{lightgray}{\texttt{/connect}} to add providers, then \colorbox{lightgray}{\texttt{/models}} to switch between them. Mix and match based on task complexity and remaining budget!}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}[fragile]{Custom Command for Balance Check (1/2)}\label{frame:balance-cmd}
+
+\textbf{Learn to extend OpenCode.ai!} Create a \colorbox{lightgray}{\texttt{/balance}} command to check your OpenRouter credit.
+
+\vspace{0.2cm}
+
+\textbf{Step 1: Set up the environment variable}
+
+Add to your shell config (\colorbox{lightgray}{\texttt{\textasciitilde/.bashrc}}, \colorbox{lightgray}{\texttt{\textasciitilde/.zshrc}}, or \colorbox{lightgray}{\texttt{\textasciitilde/.profile}}):
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+export OPENROUTER_API_KEY="sk-or-v1-..."  # Your key from Webcourse
+\end{minted}
+
+Then reload: \colorbox{lightgray}{\texttt{source \textasciitilde/.bashrc}} (or restart terminal)
+
+\vspace{0.2cm}
+
+\textbf{Step 2: Create the command directory}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+mkdir -p ~/.config/opencode/commands
+\end{minted}
+
+\vspace{0.2cm}
+
+\textbf{Step 3: Create the command file}
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{bash}
+nano ~/.config/opencode/commands/balance.md
+\end{minted}
+
+{\small (Or use any text editor: \texttt{code}, \texttt{vim}, etc.)}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}[fragile]{Custom Command for Balance Check (2/2)}
+
+\textbf{Step 4: Paste this content into \colorbox{lightgray}{\texttt{balance.md}}:}
+
+\begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{markdown}
+---
+description: Check remaining OpenRouter credit balance
+---
+
+Check my current OpenRouter credit balance and usage stats.
+Run this bash command and summarize the "limit_remaining"
+and "usage" fields:
+
+!`curl -s https://openrouter.ai/api/v1/key \
+  -H "Authorization: Bearer $OPENROUTER_API_KEY"`
+\end{minted}
+
+\vspace{0.3cm}
+
+\textbf{Step 5: Use it!}
+
+In OpenCode.ai, type \colorbox{lightgray}{\texttt{/balance}} and the AI will run the command and summarize your remaining budget.
+
+\vspace{0.3cm}
+
+{\small \textcolor{codegreen}{\textbf{Tip:}} Custom commands live in \colorbox{lightgray}{\texttt{\textasciitilde/.config/opencode/commands/}}. Create more commands for your workflow! See \url{https://opencode.ai/docs/commands}}
+
+\end{frame}
+
+%======================================================================
+\begin{frame}{OpenCode.ai Agents}
+
+\textbf{Agents} = specialized AI assistants configured for specific tasks.
+
+\vspace{0.2cm}
+
+\textbf{Built-in agents:}
+\begin{itemize}
+    \item \textbf{Build} (default) --- full tool access for development
+    \item \textbf{Plan} --- restricted mode for analysis without making changes
+    \item Press \colorbox{keybg}{\textbf{Tab}} to switch between Build and Plan modes
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Subagents} --- invoke with \colorbox{lightgray}{\texttt{@name}}:
+\begin{itemize}
+    \item \colorbox{lightgray}{\texttt{@general}} --- research, search, multi-step tasks
+    \item \colorbox{lightgray}{\texttt{@explore}} --- fast codebase exploration
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Create custom agents:} \colorbox{lightgray}{\texttt{opencode agent create}}
+\begin{itemize}
+    \item Define custom prompts, model, tools, permissions
+    \item Store in \colorbox{lightgray}{\texttt{\textasciitilde/.config/opencode/agent/}} (global) or \colorbox{lightgray}{\texttt{.opencode/agent/}} (project)
+\end{itemize}
+
+\vspace{0.1cm}
+
+{\footnotesize Docs: \url{https://opencode.ai/docs/agents}}
+
+\end{frame}
+
+%======================================================================
+% Change frame title color for Claude Code slides
+\setbeamercolor{frametitle}{bg=codeteal, fg=white}
+\section{Claude Code (Alternative Tool)}\label{sec:claudecode}
+%======================================================================
+
+\begin{frame}[fragile]{Installing Claude Code}
 
 {\small \textcolor{codeorange}{\textbf{Why Claude Code?}} Originally designed for Anthropic's models, but works with OpenRouter. Offers additional features like IDE integration and built-in context management tools.}
 
@@ -823,7 +1010,7 @@ npm install -g @anthropic-ai/claude-code
 
 \end{frame}
 %======================================================================
-\begin{frame}[fragile]{Appendix: Configuring Claude Code for OpenRouter}
+\begin{frame}[fragile]{Configuring Claude Code for OpenRouter}
 
 Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
@@ -855,7 +1042,7 @@ Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}:
 
 \end{frame}
 %======================================================================
-\begin{frame}[fragile]{Appendix: Verifying Claude Code Setup}
+\begin{frame}[fragile]{Verifying Claude Code Setup}
 
 \textbf{Step 1:} Open a terminal and run:
 \begin{minted}[fontsize=\footnotesize,bgcolor=lightgray]{bash}
@@ -894,7 +1081,46 @@ claude
 
 \end{frame}
 %======================================================================
-\begin{frame}[fragile]{Appendix: Status Line Budget Display (1/2)}
+\begin{frame}[fragile]{Claude Code Troubleshooting}
+
+\textbf{Common issues with Claude Code:}
+
+\vspace{0.2cm}
+
+\begin{itemize}
+    \item \textbf{Wrong model showing?}
+    \begin{itemize}
+        \item Type \colorbox{lightgray}{\texttt{/status}} to check current model
+        \item Verify \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}} has correct \texttt{ANTHROPIC\_MODEL}
+    \end{itemize}
+
+    \vspace{0.1cm}
+
+    \item \textbf{API key not working?}
+    \begin{itemize}
+        \item Check \colorbox{lightgray}{\texttt{settings.json}} has \texttt{ANTHROPIC\_AUTH\_TOKEN} set
+        \item Ensure \texttt{ANTHROPIC\_API\_KEY} is explicitly empty (\texttt{""})
+    \end{itemize}
+
+    \vspace{0.1cm}
+
+    \item \textbf{VSCode extension issues?}
+    \begin{itemize}
+        \item Restart VSCode after editing \colorbox{lightgray}{\texttt{settings.json}}
+        \item Some features don't work with OpenRouter models (expected)
+    \end{itemize}
+
+    \vspace{0.1cm}
+
+    \item \textbf{WSL login loop?}
+    \begin{itemize}
+        \item Edit \colorbox{lightgray}{\texttt{\textasciitilde/.claude.json}} and set \texttt{"hasCompletedOnboarding": true}
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+%======================================================================
+\begin{frame}[fragile]{Status Line Budget Display (1/2)}
 
 \textbf{Show your remaining budget directly in Claude Code's status bar.}
 
@@ -931,7 +1157,7 @@ printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' 
 
 \end{frame}
 %======================================================================
-\begin{frame}[fragile]{Appendix: Status Line Budget Display (2/2)}
+\begin{frame}[fragile]{Status Line Budget Display (2/2)}
 
 \textbf{Step 4: Add \texttt{statusLine} to your existing \colorbox{lightgray}{\texttt{\textasciitilde/.claude/settings.json}}}
 \begin{minted}[fontsize=\scriptsize,bgcolor=lightgray]{json}
@@ -959,7 +1185,7 @@ printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' 
 
 \end{frame}
 %======================================================================
-\begin{frame}[fragile]{Appendix: Claude Code Sandboxing and Permissions}
+\begin{frame}[fragile]{Claude Code Sandboxing and Permissions}
 
 \textbf{Enable sandboxing:} Type \colorbox{lightgray}{\texttt{/sandbox}} in Claude Code
 \begin{itemize}
@@ -980,9 +1206,9 @@ printf '\033[01;36m%s\033[00m | \033[01;32m$%.2f\033[00m/\033[33m$%.0f\033[00m' 
 
 \end{frame}
 %======================================================================
-\begin{frame}{Appendix: Skills and Subagents}
+\begin{frame}{Claude Code: Skills and Subagents}
 
-Claude Code has advanced features that help manage context more efficiently:
+Claude Code has advanced features for managing context:
 
 \vspace{0.3cm}
 
