@@ -2826,6 +2826,20 @@ Forward result from writeback stage (2 cycles old) to mux input 3
 \end{center}
 \end{frame}
 
+\begin{frame}{Control Hazard}
+    \begin{tcolorbox}[colback=blue!5, colframe=blue!60!black, title=Control Hazard, fonttitle=\bfseries]
+        A \textbf{control hazard} occurs when the next instruction to fetch depends on the outcome of a \textbf{branch} or \textbf{jump} that hasn't been resolved yet.
+        Solutions: \textbf{stall}, \textbf{predict not-taken}, or \textbf{dynamic prediction} (BTB).
+    \end{tcolorbox}
+
+    \vspace{0.5cm}
+    \textbf{The problem:}
+    \begin{itemize}
+        \item Branch outcome known at EXE stage (cycle 4)
+        \item But we need to fetch next instruction at cycle 2
+        \item If we guess wrong $\rightarrow$ flush and restart
+    \end{itemize}
+\end{frame}
 
 %% Slide: Control Hazard: Stall
 \begin{frame}{Control Hazard: Stall}
@@ -2918,8 +2932,8 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \end{frame}
 
 
-%% Slide: BTB
-\begin{frame}{BTB}
+%% Slide: Branch Target Buffer (BTB)
+\begin{frame}{Branch Target Buffer (BTB)}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \textcolor{myblue}{\textbf{(1) Allocation}} -- at Decode/EXE
@@ -2954,8 +2968,8 @@ Assuming 20\% branches, $\sim$50\% taken on average
 \end{columns}
 \end{frame}
 
-%% Slide: Misprediction
-\begin{frame}{Misprediction}
+%% Slide: Branch Misprediction
+\begin{frame}{Branch Misprediction}
 \begin{center}
 \begin{tikzpicture}
     % Wrong prediction box
@@ -3594,6 +3608,32 @@ Assuming 20\% branches, $\sim$50\% taken on average
     \end{tikzpicture}
 \end{frame}
 
+%% Summary
+\section{Summary}
+
+\begin{frame}{Summary}
+\begin{itemize}
+    \item \textbf{Pipelining}
+    \begin{itemize}
+        \item Overlap execution of multiple instructions
+        \item Increases throughput, not individual instruction latency
+    \end{itemize}
+    \vspace{0.3cm}
+    \item \textbf{Pipeline Hazards}
+    \begin{itemize}
+        \item Structural: resource conflicts $\rightarrow$ duplicate hardware
+        \item Data (RAW): forwarding/bypass, stall for load-use
+        \item Control: branch prediction, BTB
+    \end{itemize}
+    \vspace{0.3cm}
+    \item \textbf{Branch Handling}
+    \begin{itemize}
+        \item Predict not-taken: simple, 50\% accuracy
+        \item Dynamic prediction (BTB): better accuracy, needs flush on mispredict
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
 %% Backup Slides
 
 %% Backup Slides Separator
@@ -3907,32 +3947,6 @@ Assuming 20\% branches, $\sim$50\% taken on average
             \item Causes \textbf{compatibility issues} between generations
         \end{itemize}
     \end{itemize}
-\end{frame}
-
-%% Summary
-\section{Summary}
-
-\begin{frame}{Summary}
-\begin{itemize}
-    \item \textbf{Pipelining}
-    \begin{itemize}
-        \item Overlap execution of multiple instructions
-        \item Increases throughput, not individual instruction latency
-    \end{itemize}
-    \vspace{0.3cm}
-    \item \textbf{Pipeline Hazards}
-    \begin{itemize}
-        \item Structural: resource conflicts $\rightarrow$ duplicate hardware
-        \item Data (RAW): forwarding/bypass, stall for load-use
-        \item Control: branch prediction, BTB
-    \end{itemize}
-    \vspace{0.3cm}
-    \item \textbf{Branch Handling}
-    \begin{itemize}
-        \item Predict not-taken: simple, 50\% accuracy
-        \item Dynamic prediction (BTB): better accuracy, needs flush on mispredict
-    \end{itemize}
-\end{itemize}
 \end{frame}
 
 \end{document}
