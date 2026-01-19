@@ -2532,8 +2532,8 @@ func:
                 \item Attacker saves old ciphertext
                 \item Replays it later
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.2cm}
             \textbf{Merkle Tree Solution:}
             \begin{itemize}
                 \item Tree of cryptographic hashes
@@ -2541,8 +2541,7 @@ func:
                 \item Each node hashes its children
                 \item Detects any modification
             \end{itemize}
-            
-            \vspace{0.3cm}
+
             %\textbf{Intel SGX Implementation:}
             %\begin{itemize}
             %    \item 8-ary tree (8 children per node)
@@ -2553,28 +2552,28 @@ func:
         \end{column}
         \begin{column}{0.5\textwidth}
             \centering
-            \begin{tikzpicture}[scale=0.8]
+            \begin{tikzpicture}[scale=0.75,
+                level dist/.store in=\leveldist, level dist=1cm,
+                sibling dist/.store in=\siblingdist, sibling dist=1cm]
                 % Root
-                \node[draw,fill=red!30,circle] (root) at (4,5) {Root};
-                \node at (4,5.7) {\tiny On-chip};
-                
-                % Level 1
-                \node[draw,fill=yellow!30,circle] (n1) at (2,3.5) {H1};
-                \node[draw,fill=yellow!30,circle] (n2) at (6,3.5) {H2};
-                
-                % Level 2
-                \node[draw,fill=green!30,circle] (n3) at (1,2) {H3};
-                \node[draw,fill=green!30,circle] (n4) at (3,2) {H4};
-                \node[draw,fill=green!30,circle] (n5) at (5,2) {H5};
-                \node[draw,fill=green!30,circle] (n6) at (7,2) {H6};
-                
-                % Data blocks
-                \node[draw,fill=blue!20] (d1) at (0,0.5) {\tiny Data};
-                \node[draw,fill=blue!20] (d2) at (1.5,0.5) {\tiny Data};
-                \node[draw,fill=blue!20] (d3) at (3,0.5) {\tiny Data};
-                \node[draw,fill=blue!20] (d4) at (4.5,0.5) {\tiny Data};
-                \node[draw,fill=blue!20] (d5) at (6,0.5) {\tiny Data};
-                \node[draw,fill=blue!20] (d6) at (7.5,0.5) {\tiny Data};
+                \node[draw,fill=red!30,circle] (root) {Root};
+                \node[above=2mm of root] {\tiny On-chip};
+
+                % Level 1 - below root
+                \node[draw,fill=yellow!30,circle, below left=\leveldist and \siblingdist of root] (n1) {H1};
+                \node[draw,fill=yellow!30,circle, below right=\leveldist and \siblingdist of root] (n2) {H2};
+
+                % Level 2 - below level 1
+                \node[draw,fill=green!30,circle, below left=\leveldist and 0.5cm of n1] (n3) {H3};
+                \node[draw,fill=green!30,circle, below right=\leveldist and 0.5cm of n1] (n4) {H4};
+                \node[draw,fill=green!30,circle, below left=\leveldist and 0.5cm of n2] (n5) {H5};
+                \node[draw,fill=green!30,circle, below right=\leveldist and 0.5cm of n2] (n6) {H6};
+
+                % Data blocks - below level 2 (one per H node for compactness)
+                \node[draw,fill=blue!20, below=0.7cm of n3] (d1) {\tiny Data};
+                \node[draw,fill=blue!20, below=0.7cm of n4] (d3) {\tiny Data};
+                \node[draw,fill=blue!20, below=0.7cm of n5] (d4) {\tiny Data};
+                \node[draw,fill=blue!20, below=0.7cm of n6] (d6) {\tiny Data};
                 
                 % Edges
                 \draw[-] (root) -- (n1);
@@ -2584,37 +2583,21 @@ func:
                 \draw[-] (n2) -- (n5);
                 \draw[-] (n2) -- (n6);
                 \draw[-] (n3) -- (d1);
-                \draw[-] (n3) -- (d2);
                 \draw[-] (n4) -- (d3);
                 \draw[-] (n5) -- (d4);
-                \draw[-] (n6) -- (d5);
                 \draw[-] (n6) -- (d6);
                 
                 % Attack
                 \node[red] at (d3) {X};
-                \draw[->,thick,red] (3,-0.5) -- (3,0.3);
-                \node[red] at (3,-0.7) {\tiny Replay};
-                
+                \draw[->,thick,red] ([yshift=-0.5cm]d3.south) -- (d3.south);
+                \node[red, below=0.6cm of d3] {\tiny Replay};
+
                 % Detection path
                 \draw[ultra thick,red] (d3) -- (n4);
                 \draw[ultra thick,red] (n4) -- (n1);
                 \draw[ultra thick,red] (n1) -- (root);
-                \node[red] at (1,4.5) {\tiny Detected!};
+                \node[red, left=0.5cm of n1] {\tiny Detected!};
             \end{tikzpicture}
-            
-            \vspace{-0.4cm}
-            \begin{tcolorbox}[colback=green!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{text}
-On Write:
-  1. Update data
-  2. Update counter
-  3. Recalculate hashes to root
-
-On Read:
-  1. Verify path to root
-  2. Check counter matches
-\end{minted}
-            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}

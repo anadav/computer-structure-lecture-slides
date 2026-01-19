@@ -701,22 +701,14 @@ Note: Direct mapped caches don't need replacement policy!
 
 \section{Write Policies}
 \begin{frame}{Write Back Policy}
+\vspace{-0.3cm}
 \begin{itemize}
     \item Write only to cache during write operation
     \item Update main memory only when block is evicted
     \item Requires a \textbf{dirty bit} per block to indicate if block was modified
-    \item When evicting a block: update lower memory level only if dirty bit is set
 \end{itemize}
 
-\begin{center}
-\begin{tcolorbox}[colback=blue!10, width=0.7\textwidth]
-Write $\rightarrow$ L1 Cache (set dirty bit)\\
-Eviction $\rightarrow$ If dirty, write to Memory
-\end{tcolorbox}
-\end{center}
-\end{frame}
-
-\begin{frame}{Write-Back Cache Operation}
+\vspace{0.3cm}
 \centering
 \begin{tikzpicture}[
     block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
@@ -724,16 +716,16 @@ Eviction $\rightarrow$ If dirty, write to Memory
     arrow/.style={->, >=Stealth, thick, font=\small},
     dirtymark/.style={font=\footnotesize\bfseries, black},
     group/.style={draw, very thick, inner sep=0pt},
-    node distance=0cm and 0cm
+    node distance=0cm and 0cm,
+    scale=0.9
 ]
 
 % State 1: Initial
 \node[label] (l1lbl) {L1};
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
-    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east, 
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
 }
-% Group borders for State 1 L1
 \node[group, fit=(s1_l1_1)(s1_l1_2)] {};
 \node[group, fit=(s1_l1_3)(s1_l1_4)] {};
 
@@ -742,12 +734,10 @@ Eviction $\rightarrow$ If dirty, write to Memory
     \node[block, fill=\col, right=0cm of memlbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
 }
-% Group borders for State 1 MEM
 \node[group, fit=(s1_mem_1)(s1_mem_2)] {};
 \node[group, fit=(s1_mem_3)(s1_mem_4)] {};
 \node[group, fit=(s1_mem_5)(s1_mem_6)] {};
 
-% coordinate between L1 and MEM
 \coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east)$);
 
 % Arrow 1 with "Write" label
@@ -757,22 +747,19 @@ Eviction $\rightarrow$ If dirty, write to Memory
       above=of arrow1] (writeblock) {};
 \node[above=of writeblock] (write) {Write};
 
-% State 2: After Write - positioned relative to arrow1
+% State 2: After Write
 \coordinate (s2start) at ([xshift=4cm]between);
 
-% L1 cache with first block (both pieces) marked as dirty
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
     \ifnum\i=1
-        \node[writeblock=\col, 
-              right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
+        \node[writeblock=\col,
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
               yshift=0.75cm] (s2_l1_\i) {};
-        % Add dirty bit marker
         \node[dirtymark] at (s2_l1_\i) {D};
     \else
         \ifnum\i=2
             \node[block, fill=\col, right=0cm of s2start,
                   anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
-            % Add dirty bit marker to second piece of the block
             \node[dirtymark] at (s2_l1_\i) {D};
         \else
             \node[block, fill=\col, right=0cm of s2start,
@@ -780,50 +767,42 @@ Eviction $\rightarrow$ If dirty, write to Memory
         \fi
     \fi
 }
-% Group borders for State 2 L1
 \node[group, fit=(s2_l1_1)(s2_l1_2)] {};
 \node[group, fit=(s2_l1_3)(s2_l1_4)] {};
 
-% MEM remains unchanged in State 2
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \node[block, fill=\col, right=0cm of s2start,
           anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
 }
-% Group borders for State 2 MEM
 \node[group, fit=(s2_mem_1)(s2_mem_2)] {};
 \node[group, fit=(s2_mem_3)(s2_mem_4)] {};
 \node[group, fit=(s2_mem_5)(s2_mem_6)] {};
 
 % Arrow 2
 \coordinate (between2) at ([xshift=4*\blocksize+3cm]between);
-\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0) 
-    node[midway, above, align=center] (arrow2) {Eviction to\\make room};
+\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0)
+    node[midway, above, align=center] (arrow2) {Eviction};
 
-% State 3: Final - after eviction
+% State 3: Final
 \coordinate (s3start) at ([xshift=4cm]between2);
 
-% L1 cache with yellow blocks (new data loaded)
 \foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
     \node[block, fill=\col, right=0cm of s3start,
           anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s3_l1_\i) {};
 }
-% Group borders for State 3 L1
 \node[group, fit=(s3_l1_1)(s3_l1_2)] {};
 \node[group, fit=(s3_l1_3)(s3_l1_4)] {};
 
-% MEM with updated first block (both pieces written back from cache)
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
         \node[writeblock=\col,
-              right=0cm of s3start, anchor=west, xshift={\i*\blocksize}, 
+              right=0cm of s3start, anchor=west, xshift={\i*\blocksize},
               yshift=-0.75cm] (s3_mem_\i) {};
-        % Add dirty bit marker to show it was written back
         \node[dirtymark] at (s3_mem_\i) {D};
     \else
         \ifnum\i=2
             \node[block, fill=\col, right=0cm of s3start,
                   anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
-            % Add dirty bit marker to second piece of the block
             \node[dirtymark] at (s3_mem_\i) {D};
         \else
             \node[block, fill=\col, right=0cm of s3start,
@@ -831,41 +810,46 @@ Eviction $\rightarrow$ If dirty, write to Memory
         \fi
     \fi
 }
-% Group borders for State 3 MEM
 \node[group, fit=(s3_mem_1)(s3_mem_2)] {};
 \node[group, fit=(s3_mem_3)(s3_mem_4)] {};
 \node[group, fit=(s3_mem_5)(s3_mem_6)] {};
 
 \end{tikzpicture}
 
-\vspace{1cm}
+\vspace{0.3cm}
 \footnotesize
-\textbf{Note:} Write-back policy delays writes to main memory until cache line eviction.\\
-The entire cache block (2 bytes) is marked dirty when any part is modified.\\
-(Fully associative cache with 2 bytes per block, dirty blocks marked with 'D')
+Dirty blocks (marked 'D') are written back to memory on eviction
 \end{frame}
 
-\begin{frame}{Write-Through Cache Operation}
+
+
+
+
+\begin{frame}{Write Through Policy}
+\vspace{-0.3cm}
+\begin{itemize}
+    \item Write to both cache AND main memory during write operation
+    \item No need to update memory when block is evicted
+    \item No dirty bit needed - simpler but more memory traffic
+\end{itemize}
+
+\vspace{0.3cm}
 \centering
 \begin{tikzpicture}[
     block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
     label/.style={font=\bfseries\large},
     arrow/.style={->, >=Stealth, thick, font=\small},
-    state/.style={inner sep=0pt},
     group/.style={draw, very thick, inner sep=0pt},
-    node distance=0cm and 0cm
+    node distance=0cm and 0cm,
+    scale=0.9
 ]
-% Define colors for blocks
-\def\initialL{blue!30, blue!30, green!60, green!60}
-\def\initialM{blue!30, blue!30, green!60, green!60, yellow!60, yellow!60}
 
 % State 1: Initial
 \node[label] (l1lbl) {L1};
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
-    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east, 
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
 }
-% Group borders for State 1 L1
 \node[group, fit=(s1_l1_1)(s1_l1_2)] {};
 \node[group, fit=(s1_l1_3)(s1_l1_4)] {};
 
@@ -874,109 +858,83 @@ The entire cache block (2 bytes) is marked dirty when any part is modified.\\
     \node[block, fill=\col, right=0cm of memlbl.east,
           anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
 }
-% Group borders for State 1 MEM
 \node[group, fit=(s1_mem_1)(s1_mem_2)] {};
 \node[group, fit=(s1_mem_3)(s1_mem_4)] {};
 \node[group, fit=(s1_mem_5)(s1_mem_6)] {};
 
-% coordinate between L1 and MEM
 \coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east)$);
 
 % Arrow 1
 \draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
   node[midway, above] (arrow1) {};
-\node[writeblock=blue, 
+\node[writeblock=blue,
       above=of arrow1] (writeblock) {};
 \node[above=of writeblock] (write) {Write};
 
-% State 2: After Write - positioned relative to arrow1
+% State 2: After Write
 \coordinate (s2start) at ([xshift=4cm]between);
 
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
     \ifnum\i=1
-        \node[writeblock=\col, 
-              right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
+        \node[writeblock=\col,
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
               yshift=0.75cm] (s2_l1_\i) {};
     \else
         \node[block, fill=\col, right=0cm of s2start,
               anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s2_l1_\i) {};
     \fi
 }
-% Group borders for State 2 L1
 \node[group, fit=(s2_l1_1)(s2_l1_2)] {};
 \node[group, fit=(s2_l1_3)(s2_l1_4)] {};
 
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
         \node[writeblock=\col,
-              right=0cm of s2start, anchor=west, xshift={\i*\blocksize}, 
+              right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
               yshift=-0.75cm] (s2_mem_\i) {};
     \else
         \node[block, fill=\col, right=0cm of s2start,
               anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s2_mem_\i) {};
     \fi
 }
-% Group borders for State 2 MEM
 \node[group, fit=(s2_mem_1)(s2_mem_2)] {};
 \node[group, fit=(s2_mem_3)(s2_mem_4)] {};
 \node[group, fit=(s2_mem_5)(s2_mem_6)] {};
 
 % Arrow 2
 \coordinate (between2) at ([xshift=4*\blocksize+3cm]between);
-\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0) 
-    node[midway, above, align=center] (arrow2) {Eviction to\\make room};
+\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0)
+    node[midway, above, align=center] (arrow2) {Eviction};
 
-% State 3: Final - positioned relative to arrow2
+% State 3: Final
 \coordinate (s3start) at ([xshift=4cm]between2);
 
 \foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
     \node[block, fill=\col, right=0cm of s3start,
           anchor=west, xshift={\i*\blocksize}, yshift=0.75cm] (s3_l1_\i) {};
 }
-% Group borders for State 3 L1
 \node[group, fit=(s3_l1_1)(s3_l1_2)] {};
 \node[group, fit=(s3_l1_3)(s3_l1_4)] {};
 
 \foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
     \ifnum\i=1
         \node[writeblock=\col,
-              right=0cm of s3start, anchor=west, xshift={\i*\blocksize}, 
+              right=0cm of s3start, anchor=west, xshift={\i*\blocksize},
               yshift=-0.75cm] (s3_mem_\i) {};
     \else
         \node[block, fill=\col, right=0cm of s3start,
               anchor=west, xshift={\i*\blocksize}, yshift=-0.75cm] (s3_mem_\i) {};
     \fi
 }
-% Group borders for State 3 MEM
 \node[group, fit=(s3_mem_1)(s3_mem_2)] {};
 \node[group, fit=(s3_mem_3)(s3_mem_4)] {};
 \node[group, fit=(s3_mem_5)(s3_mem_6)] {};
 
 \end{tikzpicture}
 
-\vspace{1cm}
+\vspace{0.3cm}
 \footnotesize
-\textbf{Note:} Write-through policy ensures data is written to both L1 cache and main memory simultaneously.\\
-(Fully associative cache with 2 bytes per block)
-\end{frame}
-
-
-
-
-\begin{frame}{Write Through Policy}
-\begin{itemize}
-    \item Write to both cache AND main memory during write operation
-    \item No need to update memory when block is evicted
-    \item No dirty bit needed
-    \item Simpler but more memory traffic
-\end{itemize}
-
-\begin{center}
-\begin{tcolorbox}[colback=green!10, width=0.7\textwidth]
-Write $\rightarrow$ L1 Cache + Memory (simultaneously)\\
-Eviction $\rightarrow$ No memory update needed
-\end{tcolorbox}
-\end{center}
+Both cache and memory are updated simultaneously on write
 \end{frame}
 
 \begin{frame}{Write Miss Policies}
