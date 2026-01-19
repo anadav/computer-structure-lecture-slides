@@ -102,6 +102,12 @@
 \titlepage
 \end{frame}
 
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+
 \begin{frame}{The Problem}
 \begin{columns}
 \column{0.6\textwidth}
@@ -197,6 +203,8 @@
 \end{itemize}
 \end{enumerate}
 \end{frame}
+
+\section{Address Translation}
 
 \begin{frame}{Physical Memory Structure}
 \begin{columns}
@@ -494,7 +502,9 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \textbf{Result}: 2 memory accesses - one for page table, one for data
 \end{frame}
 
-\begin{frame}{Example: Virtual Memory System}
+\section{Questions}
+
+\begin{frame}{Question 1: Virtual Memory System}
 \textbf{Given:}
 \begin{itemize}
 \item Machine without cache
@@ -532,7 +542,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \end{center}
 \end{frame}
 
-\begin{frame}{Example: Address Translation}
+\begin{frame}{Question 1: Address Translation}
 \textbf{Question:} A program reads a dword (4 bytes) from virtual address 0x0A100100
 \begin{enumerate}
 \item What is the physical address?
@@ -606,7 +616,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \end{columns}
 \end{frame}
 
-\begin{frame}{Cache and Virtual Memory Optimization}
+\begin{frame}{Question 2: Cache and Virtual Memory Optimization}
 \textbf{Question:} What speedup can be achieved if $q \geq b + c$?
 
 Where:
@@ -631,7 +641,7 @@ Where:
   |[minimum width=3.2cm]| Page Offset (q bits) \\
 };
 
-% Cache line
+% Physical Address (cache indexing)
 \matrix[matrix of nodes,
         nodes={draw, minimum height=7mm, inner xsep=2mm, anchor=center},
         column sep=-\pgflinewidth,
@@ -644,9 +654,13 @@ Where:
   |[minimum width=1.2cm]| disp (b bits) \\
 };
 
+% Labels - aligned using |- positioning
+\node[anchor=east] (vlabel) at ([xshift=-5mm]vaddr.west) {Virtual:};
+\node[anchor=east] at (vlabel.east |- cache) {Physical:};
+
 % Arrow
-\draw[<-, thick, correctgreen] 
-  (vaddr-1-2.south) 
+\draw[<-, thick, correctgreen]
+  (vaddr-1-2.south)
   -- (cache-1-3.north -| vaddr-1-2.south)
   node[midway, right, align=center] {contained\\in offset};
 
@@ -655,6 +669,8 @@ Where:
 
 \textbf{Benefit:} Can access cache in parallel with TLB lookup!
 \end{frame}
+
+\section{Summary}
 
 \begin{frame}{Summary}
 \begin{itemize}
