@@ -261,7 +261,28 @@
 \begin{tcolorbox}[colback=gray!10]
 \textbf{Address Fields:}\\
 \begin{center}
-    \addressbreakdown{27}{0}{5}
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.6cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    % Tag block (27 bits)
+    \node[section, fill=blue!40, minimum width=4.59cm] (tag) at (2.295, 0) {};
+    \node[sectionlabel] at (tag.center) {tag};
+    \node[bitnumber] at ($(tag.south west) + (0mm,-1mm)$) {31};
+    \node[bitnumber] at ($(tag.south east) + (-1mm,-1mm)$) {5};
+
+    % Offset block (5 bits)
+    \node[section, fill=yellow!40, minimum width=0.85cm] (offset) at (5.015, 0) {};
+    \node[sectionlabel] at (offset.center) {offset};
+    \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {4};
+    \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {0};
+
+    % Block number arrow above tag
+    \draw[<->, thick] ([yshift=2mm]tag.north west) -- ([yshift=2mm]tag.north east)
+        node[midway, above, font=\scriptsize] {block number};
+    \end{tikzpicture}
 \end{center}
 \end{tcolorbox}
 
