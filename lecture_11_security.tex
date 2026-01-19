@@ -2482,9 +2482,9 @@ func:
 
                 % Protected VMs below AMD SP
                 \node[vm, fill=green!30, below left=1cm and 0.3cm of amdsp.south] (vm1)
-                    {\textbf{VM1}\\[-2pt]\small Encrypted\\[-2pt]{\tiny Key1}};
+                    {\textbf{VM1}\\[-2pt]\small Encrypted\\[-2pt]\includegraphics[height=0.3cm]{figures/noun-key-8095348.png}{\tiny 1}};
                 \node[vm, fill=blue!30, below right=1cm and 0.3cm of amdsp.south] (vm2)
-                    {\textbf{VM2}\\[-2pt]\small Encrypted\\[-2pt]{\tiny Key2}};
+                    {\textbf{VM2}\\[-2pt]\small Encrypted\\[-2pt]\includegraphics[height=0.3cm]{figures/noun-key-8095348.png}{\tiny 2}};
 
                 % Protection connections
                 \draw[connection, green!70!black] (vm1.north) -- (amdsp.south);
@@ -2689,9 +2689,9 @@ func:
                 \node at (paddr.center) {Physical Address};
 
                 % Memory regions
-                \node[vm box, fill=green!30] (vm1) at (1,1) {VM1\\{\footnotesize Key 1}};
-                \node[vm box, fill=blue!30, right=0.4cm of vm1] (vm2) {VM2\\{\footnotesize Key 2}};
-                \node[vm box, fill=yellow!30, right=0.4cm of vm2] (vm3) {VM3\\{\footnotesize Key 3}};
+                \node[vm box, fill=green!30] (vm1) at (1,1) {VM1\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
+                \node[vm box, fill=blue!30, right=0.4cm of vm1] (vm2) {VM2\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
+                \node[vm box, fill=yellow!30, right=0.4cm of vm2] (vm3) {VM3\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
 
                 % Encryption engine
                 \draw[thick,<->] (vm2.north) -- ++(0,1) node[right, midway] {AES-XTS};
@@ -2764,19 +2764,23 @@ func:
                 \node[chainlink, fill=orange!30, below=0.3cm of hw] (uefi) {UEFI Firmware};
                 \node[chainlink, fill=yellow!30, below=0.3cm of uefi] (bootloader) {Bootloader};
                 \node[chainlink, fill=green!30, below=0.3cm of bootloader] (kernel) {OS Kernel};
-                \node[chainlink, fill=purple!20, below=0.3cm of kernel] (ima) {IMA\\{\tiny (Runtime)}};
+                \node[chainlink, fill=purple!20, below=0.3cm of kernel] (ima) {IMA};
+                \node[font=\tiny, below=-1mm of ima] {(Runtime)};
 
-                % Keys - right side
-                \node[key, right=1.5cm of hw] (pk) {PK};
-                \node[key, right=1.5cm of uefi] (kek) {KEK};
-                \node[key, right=1.5cm of bootloader] (db) {db};
+                % Keys - right side (using key icon) - signs the next stage
+                \node[right=1cm of hw] (pk) {\includegraphics[height=0.4cm]{figures/noun-key-8095348.png}};
+                \node[font=\tiny, right=-1mm of pk] {PK};
+                \node[right=1cm of uefi] (kek) {\includegraphics[height=0.4cm]{figures/noun-key-8095348.png}};
+                \node[font=\tiny, right=-1mm of kek] {KEK};
+                \node[right=1cm of bootloader] (db) {\includegraphics[height=0.4cm]{figures/noun-key-8095348.png}};
+                \node[font=\tiny, right=-1mm of db] {db};
 
                 % TPM with PCR matrix - far right
                 \matrix[matrix of nodes,
                     nodes={draw, minimum width=0.9cm, minimum height=0.35cm,
                            font=\tiny, fill=green!20, inner sep=1pt},
                     row sep=-\pgflinewidth,
-                    right=0.8cm of kek] (pcrs) {
+                    right=1.8cm of kek] (pcrs) {
                     PCR0 \\
                     PCR1 \\
                     PCR2 \\
@@ -2803,10 +2807,10 @@ func:
                 \draw[dashed, ->, gray] (db.west) -- (kernel.east);
 
                 % TPM measurement arrows (blue dashed) to specific PCRs - staircase routing
-                \draw[measure] (uefi.east) -| ([xshift=-13mm]pcrs-1-1.west) -- (pcrs-1-1.west);
-                \draw[measure] (bootloader.east) -| ([xshift=-11mm]pcrs-2-1.west) -- (pcrs-2-1.west);
-                \draw[measure] (kernel.east) -| ([xshift=-9mm]pcrs-3-1.west) -- (pcrs-3-1.west);
-                \draw[measure] (ima.east) -| ([xshift=-7mm]pcrs-5-1.west) -- (pcrs-5-1.west);
+                \draw[measure] (uefi.east) -| ([xshift=-23mm]pcrs-1-1.west) -- (pcrs-1-1.west);
+                \draw[measure] (bootloader.east) -| ([xshift=-21mm]pcrs-2-1.west) -- (pcrs-2-1.west);
+                \draw[measure] (kernel.east) -| ([xshift=-19mm]pcrs-3-1.west) -- (pcrs-3-1.west);
+                \draw[measure] (ima.east) -| ([xshift=-17mm]pcrs-5-1.west) -- (pcrs-5-1.west);
 
                 % Labels
                 \node[font=\tiny, text=green!60!black, right=2pt] at (hw.south east) {Boot};

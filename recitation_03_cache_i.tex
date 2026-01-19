@@ -373,6 +373,7 @@
         \item Offset (position within block)
     \end{itemize}
     \item Simple indexing - no search needed
+    \item No eviction policy needed
 \end{itemize}
 
 \column{0.5\textwidth}
@@ -909,24 +910,214 @@ Dirty blocks (marked 'D') are written back to memory on eviction
 Both cache and memory are updated simultaneously on write
 \end{frame}
 
-\begin{frame}{Write Miss Policies}
-What happens when we need to write to data not in cache?
-
-\begin{block}{Write Allocate}
+\begin{frame}{Write Miss Policies: Write Allocate}
+\vspace{-0.3cm}
 \begin{itemize}
-    \item On write miss: fetch block from memory
-    \item Allocate space in cache (may require eviction)
-    \item Then perform the write
+    \item On write miss: fetch block from memory, allocate in cache, then write
+    \item May require eviction to make room
+    \item Commonly used with \textbf{write-back} policy
 \end{itemize}
-\end{block}
 
-\begin{block}{No Write Allocate}
+\vspace{0.2cm}
+\centering
+\begin{tikzpicture}[
+    block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
+    label/.style={font=\bfseries\large},
+    arrow/.style={->, >=Stealth, thick, font=\small},
+    invalidmark/.style={font=\scriptsize\sffamily\bfseries, black},
+    dirtymark/.style={font=\footnotesize\bfseries, black},
+    group/.style={draw, very thick, inner sep=0pt},
+    arrowlabel/.style={font=\scriptsize, inner sep=1pt, align=center},
+    node distance=0cm and 0cm,
+    scale=0.9
+]
+
+% State 1: Initial
+\node[label] (l1lbl) {L1};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
+}
+\node[group, fit=(s1_l1_1)(s1_l1_2)] {};
+\node[group, fit=(s1_l1_3)(s1_l1_4)] {};
+
+\node[label, below=1.5cm of l1lbl.east, anchor=east] (memlbl) {MEM};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of memlbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_mem_\i) {};
+}
+\node[group, fit=(s1_mem_1)(s1_mem_2)] {};
+\node[group, fit=(s1_mem_3)(s1_mem_4)] {};
+\node[group, fit=(s1_mem_5)(s1_mem_6)] {};
+
+\coordinate (between) at ($(l1lbl.east)!0.5!(memlbl.east) + (0,-0.15cm)$);
+
+% Arrow 1: Write request, miss, eviction
+\draw[arrow] ([xshift=1.5cm]between) -- ++(2.5,0)
+  node[midway, above, arrowlabel] (arrow1) {Write request,\\[-2pt]miss \& eviction};
+\node[draw, thick, minimum width=\blocksize, minimum height=\blocksize,
+      pattern=north east lines, pattern color=orange, above=0.15cm of arrow1] (writeblock) {};
+
+% State 2: After eviction (block invalidated)
+\coordinate (s2start) at ([xshift=4cm]between);
+
+\foreach \i/\col in {1/white, 2/white, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
+          yshift=0.9cm] (s2_l1_\i) {};
+    \ifnum\i<3
+        \node[invalidmark] at (s2_l1_\i) {\textsf{I}};
+    \fi
+}
+\node[group, fit=(s2_l1_1)(s2_l1_2)] {};
+\node[group, fit=(s2_l1_3)(s2_l1_4)] {};
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of s2start,
+          anchor=west, xshift={\i*\blocksize}, yshift=-0.6cm] (s2_mem_\i) {};
+}
+\node[group, fit=(s2_mem_1)(s2_mem_2)] {};
+\node[group, fit=(s2_mem_3)(s2_mem_4)] {};
+\node[group, fit=(s2_mem_5)(s2_mem_6)] {};
+
+% Arrow 2: Fetch block and write
+\coordinate (between2) at ([xshift=4*\blocksize+3cm]between);
+\draw[arrow] ([xshift=1.5cm]between2) -- ++(2.5,0)
+    node[midway, above, arrowlabel] (arrow2) {Fetch block\\[-2pt]\& write};
+
+% State 3: Final - yellow block fetched and written
+\coordinate (s3start) at ([xshift=4cm]between2);
+
+\foreach \i/\col in {1/yellow!60, 2/yellow!60, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of s3start,
+          anchor=west, xshift={\i*\blocksize}, yshift=0.9cm] (s3_l1_\i) {};
+}
+% Add pattern to the written block (first yellow) - same pattern as write box
+\node[draw, thick, minimum width=\blocksize, minimum height=\blocksize,
+      fill=yellow!60, pattern=north east lines, pattern color=orange,
+      right=0cm of s3start, anchor=west,
+      xshift={1*\blocksize}, yshift=0.9cm] {};
+% Add D markers to both yellow blocks
+\node[dirtymark] at (s3_l1_1) {D};
+\node[dirtymark] at (s3_l1_2) {D};
+\node[group, fit=(s3_l1_1)(s3_l1_2)] {};
+\node[group, fit=(s3_l1_3)(s3_l1_4)] {};
+
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of s3start,
+          anchor=west, xshift={\i*\blocksize}, yshift=-0.6cm] (s3_mem_\i) {};
+}
+\node[group, fit=(s3_mem_1)(s3_mem_2)] {};
+\node[group, fit=(s3_mem_3)(s3_mem_4)] {};
+\node[group, fit=(s3_mem_5)(s3_mem_6)] {};
+
+\end{tikzpicture}
+
+\vspace{0.3cm}
+\footnotesize
+Block is fetched to cache before writing; evicted blocks marked 'I' (invalid), dirty block marked 'D'
+\end{frame}
+
+\begin{frame}{Write Miss Policies: No Write Allocate}
+\vspace{-0.3cm}
 \begin{itemize}
-    \item On write miss: write directly to memory
-    \item Don't bring block to cache
-    \item Simpler but may miss future locality
+    \item On write miss: write directly to next level, don't fetch to cache
+    \item Cache unchanged, simpler but may miss future locality
+    \item Commonly used with \textbf{write-through} policy
 \end{itemize}
-\end{block}
+
+\vspace{0.2cm}
+\centering
+\begin{tikzpicture}[
+    block/.style={draw, thick, minimum width=\blocksize, minimum height=\blocksize},
+    label/.style={font=\bfseries\large},
+    arrow/.style={->, >=Stealth, thick},
+    arrowlabel/.style={font=\scriptsize, inner sep=1pt, align=center},
+    group/.style={draw, very thick, inner sep=0pt},
+    node distance=0cm and 0cm,
+    scale=0.9
+]
+
+% State 1: Initial
+\node[label] (l1lbl) {L1};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right={\ifnum\i=1 0cm\else 0cm\fi} of l1lbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_l1_\i) {};
+}
+\node[group, fit=(s1_l1_1)(s1_l1_2)] {};
+\node[group, fit=(s1_l1_3)(s1_l1_4)] {};
+
+\node[label, below=2.0cm of l1lbl.east, anchor=east] (l2lbl) {L2};
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of l2lbl.east,
+          anchor=west, xshift={\i*\blocksize}] (s1_l2_\i) {};
+}
+\node[group, fit=(s1_l2_1)(s1_l2_2)] {};
+\node[group, fit=(s1_l2_3)(s1_l2_4)] {};
+\node[group, fit=(s1_l2_5)(s1_l2_6)] {};
+
+\coordinate (between1) at ($(l1lbl.east)!0.5!(l2lbl.east)$);
+
+% Arrow 1: Write request to L1, miss
+\draw[arrow] ([xshift=3.0cm, yshift=-5mm]between1) -- ++(1.8,0)
+  node[midway, above, yshift=1mm, arrowlabel] (arrow1) {Write request to\\[-2pt]level 1, miss};
+\node[draw, thick, minimum width=\blocksize, minimum height=\blocksize,
+      pattern=north east lines, pattern color=orange, above=0.15cm of arrow1] (writeblock) {};
+
+% State 2: L1 miss, forwarding to L2
+\coordinate (s2start) at ([xshift=5.0cm]between1);
+
+% L1 unchanged
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of s2start, anchor=west, xshift={\i*\blocksize},
+          yshift=1.0cm] (s2_l1_\i) {};
+}
+\node[group, fit=(s2_l1_1)(s2_l1_2)] {};
+\node[group, fit=(s2_l1_3)(s2_l1_4)] {};
+
+% L2 unchanged yet
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of s2start,
+          anchor=west, xshift={\i*\blocksize}, yshift=-1.0cm] (s2_l2_\i) {};
+}
+\node[group, fit=(s2_l2_1)(s2_l2_2)] {};
+\node[group, fit=(s2_l2_3)(s2_l2_4)] {};
+\node[group, fit=(s2_l2_5)(s2_l2_6)] {};
+
+% Arrow 2: Write request from L1 to L2, hit
+\coordinate (between2) at ($(s2_l1_4.east)!0.5!(s2_l2_6.east)$);
+\draw[arrow] ([xshift=0.3cm, yshift=-5mm]between2) -- ++(1.8,0)
+  node[midway, above, yshift=1mm, arrowlabel] {Write request from\\[-2pt]level 1 to level 2, hit};
+
+% State 3: Final - L2 has the write
+\coordinate (s3start) at ([xshift=2.4cm]between2);
+
+% L1 still unchanged
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60} {
+    \node[block, fill=\col, right=0cm of s3start, anchor=west, xshift={\i*\blocksize},
+          yshift=1.0cm] (s3_l1_\i) {};
+}
+\node[group, fit=(s3_l1_1)(s3_l1_2)] {};
+\node[group, fit=(s3_l1_3)(s3_l1_4)] {};
+
+% L2 with yellow block written
+\foreach \i/\col in {1/blue!30, 2/blue!30, 3/green!60, 4/green!60, 5/yellow!60, 6/yellow!60} {
+    \node[block, fill=\col, right=0cm of s3start,
+          anchor=west, xshift={\i*\blocksize}, yshift=-1.0cm] (s3_l2_\i) {};
+}
+% Add pattern to the yellow block that was written
+\node[draw, thick, minimum width=\blocksize, minimum height=\blocksize,
+      fill=yellow!60, pattern=north east lines, pattern color=orange,
+      right=0cm of s3start, anchor=west,
+      xshift={5*\blocksize}, yshift=-1.0cm] {};
+\node[group, fit=(s3_l2_1)(s3_l2_2)] {};
+\node[group, fit=(s3_l2_3)(s3_l2_4)] {};
+\node[group, fit=(s3_l2_5)(s3_l2_6)] {};
+
+\end{tikzpicture}
+
+\vspace{0.3cm}
+\footnotesize
+Write goes directly to next level; L1 cache is not modified
 \end{frame}
 
 \section{Types of Misses}
