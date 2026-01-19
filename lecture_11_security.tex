@@ -504,11 +504,10 @@ vulnerable:
 \begin{frame}{SMEP - Supervisor Mode Execution Prevention}
     \begin{columns}
         \begin{column}{0.55\textwidth}
-            \textbf{The Problem:}
+            \textbf{ret2user Attack:}
             \begin{itemize}
                 \item Kernel exploits redirect to user code
                 \item User controls memory at known addresses
-                \item ret2user attacks bypass KASLR
             \end{itemize}
 
             \vspace{0.3cm}
@@ -521,47 +520,44 @@ vulnerable:
             \end{itemize}
         \end{column}
         \begin{column}{0.45\textwidth}
+            \centering
             \begin{tikzpicture}[
-                space/.style={draw, thick, minimum width=3.2cm, minimum height=2.2cm,
+                space/.style={draw, thick, minimum width=2.8cm, minimum height=1.4cm,
                             align=center, font=\small, rounded corners=2pt},
                 label/.style={draw, fill=white, rounded corners=2pt, font=\tiny,
-                            inner sep=2pt, align=center}]
+                            inner sep=2pt}]
 
                 % Kernel Space at top
-                \node[space, fill=purple!15] (kernel)
-                    {\textbf{Kernel Space}};
-                \node[label, below=2mm of kernel.north] (cpl0) {CPL = 0};
-                \node[label, below=1mm of cpl0] {U = 0};
+                \node[space, fill=purple!15] (kernel) {};
+                \node[font=\small, above=1mm of kernel.south] {\textbf{Kernel Space}};
+                \node[label, below=1mm of kernel.north] {CPL = 0};
 
-                % User Space below kernel
-                \node[space, fill=cyan!10, below=1cm of kernel.south, minimum height=2.5cm] (user)
-                    {\textbf{User Space}};
-                \node[label, below=2mm of user.north] (cpl3) {CPL = 3};
-                \node[label, below=1mm of cpl3] (u1) {U = 1};
-                \node[font=\small, below=0mm of u1, fill=red!20, rounded corners=2pt,
-                      inner sep=2pt] {Shellcode};
+                % PTE bar in the middle
+                \node[draw, thick, fill=yellow!30, minimum width=2.8cm, minimum height=0.5cm,
+                      below=0.7cm of kernel, font=\scriptsize] (pte) {PTE: U = 1};
 
-                % Attack attempt with X mark
-                \draw[->, thick, red, dashed] (kernel.south) -- ++(0, -0.5cm);
-                \node[red, font=\small, left=2pt] at ([yshift=-2mm]kernel.south) {ret2user};
-                \node[inner sep=0pt] at ([yshift=-5mm]kernel.south)
-                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-                \node[red, font=\tiny, below=6mm of kernel.south] {SMEP Blocks!};
+                % User Space at bottom
+                \node[space, fill=cyan!10, below=0.7cm of pte] (user) {};
+                \node[font=\small, above=1mm of user.south] {\textbf{User Space}};
+                \node[font=\scriptsize, fill=red!20, rounded corners=2pt,
+                      inner sep=2pt, below=1mm of user.north] {Shellcode};
 
-                % Consequence box
-                \node[draw, fill=yellow!10, rounded corners=2pt, font=\tiny,
-                      align=left, right=0.5cm of user.east, anchor=west, text width=2cm]
-                    {\textbf{Without SMEP:}\\
-                     Kernel jumps to\\
-                     user shellcode\\
-                     \textcolor{red}{= root shell}};
+                % Code annotation and attack arrow from kernel center
+                \draw[->, thick, red, dashed] (kernel.south) -- (pte.north)
+                    node[font=\ttfamily\tiny, red, midway, left=1mm] {jmp *\%rax};
+                \draw[->, thick, red, dashed] (pte.south) -- (user.north);
+
+                % Block symbol and label together
+                \node[inner sep=0pt, right=3mm of pte.east] (xmark)
+                    {\includegraphics[width=0.45cm]{figures/noun-x-2222229.png}};
+                \node[red, font=\scriptsize, below=0mm of xmark] {SMEP};
             \end{tikzpicture}
         \end{column}
     \end{columns}
-    
+
     \vspace{0.3cm}
     \begin{tcolorbox}[colback=yellow!20]
-        \textbf{Bypass Methods:} ROP in kernel code, physmap spraying, page table manipulation
+        \textbf{Bypass Methods:} ROP in kernel code, physmap spraying
     \end{tcolorbox}
 \end{frame}
 
@@ -1511,20 +1507,19 @@ evil->admin(); // Calls wrong vtable!
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \textbf{Function with FineIBT:}
             \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{gas}
-; Type hash prefix
-__cfi_func:
-    mov $0x12345678, %r11d
+; Caller: indirect call through %rax
+    mov $0x12345678, %r11d ; Expected hash
+    call *%rax             ; Indirect call
 
-; Actual function
+; Callee: func
 func:
-    endbranch        ; CET check
-    sub $0x12345678, %r11d
-    je .Lcontinue    ; Type check
-    ud2              ; Trap on mismatch
-.Lcontinue:
+    endbranch              ; CET check
+    sub $0x12345678, %r11d ; Compare hashes
+    je .Lok                ; Match -> continue
+    ud2                    ; Mismatch -> trap
+.Lok:
     push rbp
     ; Function body
 \end{minted}
@@ -1548,16 +1543,16 @@ func:
             \textbf{Segmentation (Historical):}
             \begin{itemize}
                 \item Original x86 protection mechanism
-                \item Segment descriptors with privilege levels
                 \item Gates for controlled transitions
                 \item Complex and rarely used today
             \end{itemize}
             
             \vspace{0.3cm}
             \textbf{Privilege Checking:}
-            \begin{tcolorbox}[colback=yellow!20]
+            \begin{tcolorbox}[colback=yellow!20, boxsep=0pt]
                 MAX(CPL, RPL) $\leq$ DPL
             \end{tcolorbox}
+            \vspace{-2mm}
             \begin{itemize}
                 \item \textbf{CPL}: Current Privilege Level
                 \item \textbf{RPL}: Requested Privilege Level
@@ -1573,7 +1568,7 @@ func:
                 \item Task Gates: Task switching
             \end{itemize}
             
-            \vspace{0.3cm}
+            \vspace{-0.2cm}
             \begin{tcolorbox}[colback=red!10]
                 \textbf{Reality Today:}
                 \begin{itemize}
@@ -2646,11 +2641,8 @@ func:
 
                 % EPC Memory connection
                 \draw[<-, thick, blue!70] (enclave.east) -- ++(1cm, 0)
-                    node[right, font=\scriptsize] {EPC Memory};
+                    node[right, font=\scriptsize, align=left] {Enclave Page\\Cache (EPC)};
             \end{tikzpicture}
-
-            \vspace{0.3cm}
-            \textbf{Page Types:} REG, TCS, SECS, VA
         \end{column}
     \end{columns}
 \end{frame}
@@ -2682,7 +2674,7 @@ func:
 
                 % Physical address bar
                 \node[addr field, fill=red!30, minimum width=1.2cm] (keyid) at (0,4) {};
-                \node[font=\tiny] at (keyid.center) {KeyID};
+                \node at (keyid.center) {KeyID};
                 \node[addr field, fill=blue!30, minimum width=5.2cm, right=0pt of keyid] (paddr) {};
                 \node at (paddr.center) {Physical Address};
 
