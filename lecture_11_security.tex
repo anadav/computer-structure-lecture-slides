@@ -2554,29 +2554,30 @@ func:
             \centering
             \begin{tikzpicture}[scale=0.75,
                 level dist/.store in=\leveldist, level dist=1cm,
-                sibling dist/.store in=\siblingdist, sibling dist=1cm]
+                sibling dist/.store in=\siblingdist, sibling dist=1cm,
+                hashnode/.style={draw, circle, inner sep=1pt, font=\small}]
                 % Root
-                \node[draw,fill=red!30,circle] (root) {Root};
+                \node[hashnode, fill=red!30] (root) {Root};
                 \node[above=0mm of root] {\tiny On-chip};
-                \node[right=1mm of root, font=\tiny] {= hash(H1,H2)};
+                \node[right=1mm of root, font=\scriptsize] {= hash(H1,H2)};
 
                 % Level 1 - below root
-                \node[draw,fill=yellow!30,circle, below left=\leveldist and \siblingdist of root] (n1) {H1};
-                \node[right=1mm of n1, font=\tiny] {= hash(H3,H4)};
-                \node[draw,fill=yellow!30,circle, below right=\leveldist and \siblingdist of root] (n2) {H2};
+                \node[hashnode, fill=yellow!30, below left=\leveldist and \siblingdist of root] (n1) {H1};
+                \node[right=1mm of n1, font=\scriptsize] {= hash(H3,H4)};
+                \node[hashnode, fill=yellow!30, below right=\leveldist and \siblingdist of root] (n2) {H2};
 
                 % Level 2 - below level 1
-                \node[draw,fill=green!30,circle, below left=\leveldist and 0.5cm of n1] (n3) {H3};
-                \node[draw,fill=green!30,circle, below right=\leveldist and 0.5cm of n1] (n4) {H4};
-                \node[draw,fill=green!30,circle, below left=\leveldist and 0.5cm of n2] (n5) {H5};
-                \node[draw,fill=green!30,circle, below right=\leveldist and 0.5cm of n2] (n6) {H6};
+                \node[hashnode, fill=green!30, below left=\leveldist and 0.5cm of n1] (n3) {H3};
+                \node[hashnode, fill=green!30, below right=\leveldist and 0.5cm of n1] (n4) {H4};
+                \node[hashnode, fill=green!30, below left=\leveldist and 0.5cm of n2] (n5) {H5};
+                \node[hashnode, fill=green!30, below right=\leveldist and 0.5cm of n2] (n6) {H6};
 
                 % Data blocks - below level 2 (one per H node for compactness)
-                \node[draw,fill=blue!20, below=0.7cm of n3] (d1) {\tiny Data};
-                \node[draw,fill=blue!20, below=0.7cm of n4] (d3) {\tiny Data};
-                \node[draw,fill=blue!20, below=0.7cm of n5] (d4) {\tiny Data};
-                \node[draw,fill=blue!20, below=0.7cm of n6] (d6) {\tiny Data};
-                
+                \node[draw,fill=blue!20, inner sep=2pt, below=0.7cm of n3] (d1) {\tiny Data};
+                \node[draw,fill=blue!20, inner sep=2pt, below=0.7cm of n4] (d3) {\tiny Data};
+                \node[draw,fill=blue!20, inner sep=2pt, below=0.7cm of n5] (d4) {\tiny Data};
+                \node[draw,fill=blue!20, inner sep=2pt, below=0.7cm of n6] (d6) {\tiny Data};
+
                 % Edges
                 \draw[-] (root) -- (n1);
                 \draw[-] (root) -- (n2);
@@ -2588,17 +2589,17 @@ func:
                 \draw[-] (n4) -- (d3);
                 \draw[-] (n5) -- (d4);
                 \draw[-] (n6) -- (d6);
-                
+
                 % Attack
                 \node[red] at (d3) {X};
-                \draw[->,thick,red] ([yshift=-0.5cm]d3.south) -- (d3.south);
-                \node[red, below=0.6cm of d3] {\tiny Replay};
+                \draw[->,thick,red] ([yshift=-0.4cm]d3.south) -- (d3.south);
+                \node[red, font=\scriptsize, below=0.4cm of d3] {Replay};
 
                 % Detection path
                 \draw[ultra thick,red] (d3) -- (n4);
                 \draw[ultra thick,red] (n4) -- (n1);
                 \draw[ultra thick,red] (n1) -- (root);
-                \node[red, left=0.5cm of n1] {\tiny Detected!};
+                \node[red, font=\scriptsize, left=2mm of n1] {Detected!};
             \end{tikzpicture}
         \end{column}
     \end{columns}
@@ -2801,19 +2802,19 @@ func:
                 \draw[verify] (bootloader.south) -- (kernel.north) node[midway, left, font=\tiny] {Verify};
                 \draw[verify] (kernel.south) -- (ima.north) node[midway, left, font=\tiny] {Extend};
 
-                % Key usage (dashed to chain) - keys sign the next stage
-                \draw[dashed, <-, gray] (pk.west) -- ++(-0.6cm,0) |- (uefi.east);
-                \draw[dashed, <-, gray] (kek.west) -- ++(-0.6cm,0) |- (bootloader.east);
-                \draw[dashed, <-, gray] (db.west) -- ++(-0.6cm,0) |- (kernel.east);
+                % Key usage (dashed to chain) - keys sign the stage
+                \draw[dashed, ->, gray] (pk.west) -- (uefi.east);
+                \draw[dashed, ->, gray] (kek.west) -- (bootloader.east);
+                \draw[dashed, ->, gray] (db.west) -- (kernel.east);
+
+                % TPM measurement arrows (blue dashed) to specific PCRs - go right first to avoid keys
+                \draw[measure] (uefi.east) -- ++(2.3cm,0) |- (pcrs-1-1.west);
+                \draw[measure] (bootloader.east) -- ++(2.4cm,0) |- (pcrs-2-1.west);
+                \draw[measure] (kernel.east) -- ++(2.5cm,0) |- (pcrs-3-1.west);
+                \draw[measure] (ima.east) -- ++(2.6cm,0) |- (pcrs-5-1.west);
 
                 % Legend for key icon
-                \node[font=\tiny, below=0.5cm of db, xshift=0.3cm] (keylegend) {\includegraphics[height=0.25cm]{figures/noun-key-8095348.png} = Signed by};
-
-                % TPM measurement arrows (blue dashed) to specific PCRs - staircase routing
-                \draw[measure] (uefi.east) -| ([xshift=-23mm]pcrs-1-1.west) -- (pcrs-1-1.west);
-                \draw[measure] (bootloader.east) -| ([xshift=-21mm]pcrs-2-1.west) -- (pcrs-2-1.west);
-                \draw[measure] (kernel.east) -| ([xshift=-19mm]pcrs-3-1.west) -- (pcrs-3-1.west);
-                \draw[measure] (ima.east) -| ([xshift=-17mm]pcrs-5-1.west) -- (pcrs-5-1.west);
+                \node[font=\tiny, below=0.3cm of db, xshift=0.5cm] (keylegend) {\includegraphics[height=0.25cm]{figures/noun-key-8095348.png} = Signed by};
 
                 % Labels
                 \node[font=\tiny, text=green!60!black, right=2pt] at (hw.south east) {Boot};

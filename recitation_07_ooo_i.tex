@@ -26,6 +26,21 @@
 \definecolor{darkblue}{RGB}{0,100,200}
 \definecolor{highlightorange}{RGB}{255,200,100}
 
+% Stage description box style (no title)
+\tcbset{
+    stagebox/.style={
+        colback=red!5!white,
+        colframe=red!75!black,
+        boxrule=0.5pt,
+        arc=2pt,
+        left=4pt,
+        right=4pt,
+        top=4pt,
+        bottom=4pt,
+        fontupper=\small
+    }
+}
+
 % PGF Keys for pipeline diagram configuration
 \pgfkeys{
     /pipeline/.cd,
@@ -56,7 +71,9 @@
     highlightD3/.initial=white,
     highlightD4/.initial=white,
     highlightD5/.initial=white,
-    highlightD6/.initial=white
+    highlightD6/.initial=white,
+    % Y-spacing between execution unit rows (EX, M, D)
+    yspacing/.initial=1.2cm
 }
 
 % Macro for drawing the pipeline diagram
@@ -74,7 +91,7 @@
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM4}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M3] (M4) {M4};
         
         % Divider pipeline (multi-stage) - each stage can be individually highlighted
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD2}, minimum width=0.6cm, minimum height=0.6cm] (D2) at ($(M1) + (0,-1.2)$) {D2};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD2}, minimum width=0.6cm, minimum height=0.6cm] (D2) at ($(M1) + (0,-\pgfkeysvalueof{/pipeline/yspacing})$) {D2};
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD1}, minimum width=0.6cm, minimum height=0.6cm, left=0.4cm of D2] (D1) {D1};
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD3}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D2] (D3) {D3};
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD4}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D3] (D4) {D4};
@@ -82,7 +99,7 @@
         \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD6}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D5] (D6) {D6};
 
         % Integer unit (single stage) - positioned between M2 and M3 horizontally, same distance above M as M is above D
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.6cm] (EX) at ($(M2)!0.5!(M3) + (0,1.2)$) {EX};
+        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.6cm] (EX) at ($(M2)!0.5!(M3) + (0,\pgfkeysvalueof{/pipeline/yspacing})$) {EX};
          
         % Labels for units
         \node[below=0.1cm of EX, font=\footnotesize] (intlabel) {Integer unit};
@@ -397,9 +414,9 @@
         multiplycontent={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stage M1}
+    \begin{tcolorbox}[stagebox]
         First stage of multiplication - operand fetch and partial product generation
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Multiply Pipeline: Cycle 2}
@@ -409,9 +426,9 @@
         multiplycontent={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stage M2}
+    \begin{tcolorbox}[stagebox]
         Second stage - partial product accumulation
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Multiply Pipeline: Cycle 3}
@@ -421,9 +438,9 @@
         multiplycontent={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stage M3}
+    \begin{tcolorbox}[stagebox]
         Third stage - final partial products
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Multiply Pipeline: Cycle 4}
@@ -433,9 +450,9 @@
         multiplycontent={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stage M4 - Complete}
+    \begin{tcolorbox}[stagebox]
         Final stage - result ready for writeback
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Pipeline Stage Progression: Divider Unit}
@@ -454,9 +471,9 @@
         dividercontent={R5 $\leftarrow$ R6/R7}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stages D1-D2}
+    \begin{tcolorbox}[stagebox]
         Initial quotient digit generation
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Divider Pipeline: Cycles 3-4}
@@ -467,9 +484,9 @@
         dividercontent={R5 $\leftarrow$ R6/R7}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stages D3-D4}
+    \begin{tcolorbox}[stagebox]
         Intermediate quotient refinement
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Divider Pipeline: Cycles 5-6}
@@ -480,9 +497,9 @@
         dividercontent={R5 $\leftarrow$ R6/R7}
     ]
     \vspace{0.3cm}
-    \begin{alertblock}{Stages D5-D6 - Complete}
+    \begin{tcolorbox}[stagebox]
         Final quotient and remainder computation
-    \end{alertblock}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Example - In-Order Execution}
