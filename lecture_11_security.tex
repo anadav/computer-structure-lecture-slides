@@ -2801,10 +2801,13 @@ func:
                 \draw[verify] (bootloader.south) -- (kernel.north) node[midway, left, font=\tiny] {Verify};
                 \draw[verify] (kernel.south) -- (ima.north) node[midway, left, font=\tiny] {Extend};
 
-                % Key usage (dashed to chain)
-                \draw[dashed, ->, gray] (pk.west) -- (uefi.east);
-                \draw[dashed, ->, gray] (kek.west) -- (bootloader.east);
-                \draw[dashed, ->, gray] (db.west) -- (kernel.east);
+                % Key usage (dashed to chain) - keys sign the next stage
+                \draw[dashed, <-, gray] (pk.west) -- ++(-0.6cm,0) |- (uefi.east);
+                \draw[dashed, <-, gray] (kek.west) -- ++(-0.6cm,0) |- (bootloader.east);
+                \draw[dashed, <-, gray] (db.west) -- ++(-0.6cm,0) |- (kernel.east);
+
+                % Legend for key icon
+                \node[font=\tiny, below=0.5cm of db, xshift=0.3cm] (keylegend) {\includegraphics[height=0.25cm]{figures/noun-key-8095348.png} = Signed by};
 
                 % TPM measurement arrows (blue dashed) to specific PCRs - staircase routing
                 \draw[measure] (uefi.east) -| ([xshift=-23mm]pcrs-1-1.west) -- (pcrs-1-1.west);
