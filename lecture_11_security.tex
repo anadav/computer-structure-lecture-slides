@@ -503,14 +503,14 @@ vulnerable:
 
 \begin{frame}{SMEP - Supervisor Mode Execution Prevention}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.55\textwidth}
             \textbf{The Problem:}
             \begin{itemize}
                 \item Kernel exploits redirect to user code
                 \item User controls memory at known addresses
                 \item ret2user attacks bypass KASLR
             \end{itemize}
-            
+
             \vspace{0.3cm}
             \textbf{SMEP Solution:}
             \begin{itemize}
@@ -520,9 +520,9 @@ vulnerable:
                 \item Intel: Ivy Bridge (2012)
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.45\textwidth}
             \begin{tikzpicture}[
-                space/.style={draw, thick, minimum width=4cm, minimum height=2.5cm,
+                space/.style={draw, thick, minimum width=3.2cm, minimum height=2.2cm,
                             align=center, font=\small, rounded corners=2pt},
                 label/.style={draw, fill=white, rounded corners=2pt, font=\tiny,
                             inner sep=2pt, align=center}]
@@ -534,11 +534,11 @@ vulnerable:
                 \node[label, below=1mm of cpl0] {U = 0};
 
                 % User Space below kernel
-                \node[space, fill=cyan!10, below=1.2cm of kernel.south] (user)
+                \node[space, fill=cyan!10, below=1cm of kernel.south, minimum height=2.5cm] (user)
                     {\textbf{User Space}};
                 \node[label, below=2mm of user.north] (cpl3) {CPL = 3};
                 \node[label, below=1mm of cpl3] (u1) {U = 1};
-                \node[font=\small, below=1mm of u1, fill=red!20, rounded corners=2pt,
+                \node[font=\small, below=0mm of u1, fill=red!20, rounded corners=2pt,
                       inner sep=2pt] {Shellcode};
 
                 % Attack attempt with X mark
@@ -1157,7 +1157,7 @@ RET        ; Return if valid, else fault
 
 \begin{frame}[fragile]{Forward-Edge CFI Mechanisms}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.6\textwidth}
             \textbf{Intel CET-IBT (Indirect Branch Tracking):}
             \begin{itemize}
                 \item \texttt{ENDBRANCH} instruction marks valid targets
@@ -1178,15 +1178,15 @@ RET        ; Return if valid, else fault
                 \item CPU faults on mismatch
             \end{itemize}
             
-            \vspace{0.3cm}
-            \textbf{Software CFI (LLVM):}
-            \begin{itemize}
-                \item Type-based: Check function signatures
-                \item Fine-grained: Unique IDs per callsite
-                \item Cross-DSO support
-            \end{itemize}
+            %\vspace{0.3cm}
+            %\textbf{Software CFI (LLVM):}
+            %\begin{itemize}
+            %    \item Type-based: Check function signatures
+            %    \item Fine-grained: Unique IDs per callsite
+            %    \item Cross-DSO support
+            %\end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.4\textwidth}
             \textbf{Example: Intel CET-IBT}
             \vspace{-2mm}
             \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
@@ -1213,7 +1213,7 @@ invalid_target:  ; No endbranch
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{ARM BTI Explained}
+\begin{frame}<0>[fragile]{ARM BTI Explained}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{BTI Instruction Variants:}
@@ -1346,19 +1346,10 @@ sensitive_function:
             \vspace{0.3cm}
             \textbf{Intel CET Implementation:}
             \begin{itemize}
-                \item New SSP register (Shadow Stack Pointer)
+                \item SSP register (Shadow Stack Pointer)
                 \item WRSS/RDSS instructions (privileged)
                 \item Automatic on CALL/RET
                 \item Page table bit for SS pages
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Benefits:}
-            \begin{itemize}
-                \item Complete ROP prevention
-                \item Zero false positives
-                \item Hardware speed
-                \item Transparent to applications
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
