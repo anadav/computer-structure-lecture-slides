@@ -1722,6 +1722,7 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 
 %% Slide: Data Hazards: RAW Dependency
 \begin{frame}{Data Hazards: RAW Dependency}
+    \vspace{-0.3cm}
     \centering
     \begin{tikzpicture}[
         stage/.style={draw, minimum width=9mm, minimum height=6mm, font=\scriptsize\ttfamily},
@@ -1887,25 +1888,131 @@ Can we do better? Let's borrow ideas from \textbf{manufacturing}...
 \end{center}
 \end{frame}
 
+% Macro for drawing full pipeline architecture based on Pipeline Architecture slide
+\pgfkeys{
+    /pipelinearch/.is family, /pipelinearch,
+    default/.style = {
+        prefix = pipe,
+        at = {(0,0)},
+        scale = 0.5
+    },
+    prefix/.estore in = \pipeprefix,
+    at/.store in = \pipeat,
+    scale/.estore in = \pipescale
+}
+
+\newcommand{\drawpipelinearch}[1][]{%
+    \pgfkeys{/pipelinearch, default, #1}%
+    \begin{scope}[scale=\pipescale, transform shape]
+        % Define circuitikz component styles (EXACTLY as Pipeline Architecture)
+        \tikzstyle{imem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+                                  external pins width=0, fill=white, align=center]
+        \tikzstyle{regfile_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=3, NR=4, square pins=1},
+                                     external pins width=0, fill=white, align=center]
+        \tikzstyle{regfile_wb} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=0, square pins=1},
+                                  external pins width=0, fill=white, align=center]
+        \tikzstyle{alu_block} = [muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+                                external pins width=0, fill=white]
+        \tikzstyle{dmem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
+                                  external pins width=0, fill=white, align=center]
+        \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.4cm]
+        \tikzstyle{line} = [draw, thick]
+
+        % Instruction Memory - positioned at the 'at' coordinate
+        \node[imem_block] (\pipeprefix-IM) at \pipeat {IM};
+
+        % Latch L1
+        \node[latch, anchor=west] (\pipeprefix-L1) at ([xshift=3mm]\pipeprefix-IM.east) {};
+
+        % Register File (first) - anchor at lpin 2
+        \node[regfile_block, anchor=lpin 2] (\pipeprefix-Reg1) at ([xshift=3mm]\pipeprefix-L1.east) {Reg};
+
+        % Latch L2 - aligned with L1 vertically
+        \node[latch, anchor=west] (\pipeprefix-L2) at ([xshift=3mm]\pipeprefix-Reg1.east |- \pipeprefix-L1) {};
+
+        % ALU - using anchor=west like the original
+        \node[alu_block, anchor=west] (\pipeprefix-ALU) at ([xshift=3mm]\pipeprefix-L2.east) {};
+
+        % Latch L3 - aligned with L1 vertically
+        \node[latch, anchor=west] (\pipeprefix-L3) at ([xshift=3mm]\pipeprefix-ALU.east |- \pipeprefix-L1) {};
+
+        % Data Memory
+        \node[dmem_block, anchor=lpin 1] (\pipeprefix-DM) at ([xshift=3mm]\pipeprefix-L3.east) {DM};
+
+        % Latch L4 - aligned with L1 vertically
+        \node[latch, anchor=west] (\pipeprefix-L4) at ([xshift=3mm]\pipeprefix-DM.east |- \pipeprefix-L1) {};
+
+        % Register File (second) - only 1 lpin, no rpin
+        \node[regfile_wb, anchor=lpin 1] (\pipeprefix-Reg2) at ([xshift=3mm]\pipeprefix-L4.east) {Reg};
+
+        % Connections - EXACTLY as Pipeline Architecture
+        \draw[line] (\pipeprefix-IM.rpin 1) -- (\pipeprefix-L1.west);
+        \draw[line] (\pipeprefix-L1.east) -- (\pipeprefix-Reg1.lpin 2);
+        \draw[line] ([xshift=2mm]\pipeprefix-L1.east) |- (\pipeprefix-Reg1.lpin 1);
+
+        \draw[line] (\pipeprefix-Reg1.rpin 1) -- (\pipeprefix-L2.west |- \pipeprefix-Reg1.rpin 1);
+        \draw[line] (\pipeprefix-Reg1.rpin 4) -- (\pipeprefix-L2.west |- \pipeprefix-Reg1.rpin 4);
+
+        \draw[line] (\pipeprefix-L2.east |- \pipeprefix-ALU.lpin 1) -- (\pipeprefix-ALU.lpin 1);
+        \draw[line] (\pipeprefix-L2.east |- \pipeprefix-ALU.lpin 2) -- (\pipeprefix-ALU.lpin 2);
+
+        \draw[line] (\pipeprefix-ALU.rpin 1) -- (\pipeprefix-L3.west);
+
+        \draw[line] (\pipeprefix-L3.east) -- (\pipeprefix-DM.lpin 1);
+        \draw[line] (\pipeprefix-DM.rpin 1) -- (\pipeprefix-L4.west);
+
+        % Bypass around DM - EXACTLY as Pipeline Architecture
+        \draw[line] (\pipeprefix-L3.east) -- ++(2mm, 0) coordinate (\pipeprefix-bypass_start) -| ([xshift=-1mm, yshift=-1mm]\pipeprefix-DM.south west) -| ([xshift=1mm,yshift=-3mm]\pipeprefix-DM.east) -- ([yshift=-3mm]\pipeprefix-L4.west);
+
+        \draw[line] (\pipeprefix-L4.east) -- (\pipeprefix-Reg2.lpin 1);
+    \end{scope}
+}
 
 %% Slide: Using Bypass to Solve RAW Dependency
 \begin{frame}{Using Bypass to Solve RAW Dependency}
     \begin{itemize}
         \item Bypass result directly from EXE output to EXE input
         \item No stall needed when bypass is possible
-        \item Hardware forwards data from:
-        \begin{itemize}
-            \item EXE/MEM pipeline register
-            \item MEM/WB pipeline register
-        \end{itemize}
+        \item Hardware forwards data from EX/MEM or MEM/WB pipeline registers
     \end{itemize}
-    
+
+    \vspace{0.2cm}
     \centering
-    \begin{tikzpicture}[scale=0.7]
-        \node[draw, dashed, minimum width=10cm, minimum height=4cm] {
-            Bypass/Forwarding Hardware Diagram
-        };
-    \end{tikzpicture}
+    \begin{circuitikz}[scale=0.9, transform shape]
+        % Timeline at top
+        \node[anchor=south west, font=\small] at (-2.5, 2.7) {Time (clock cycles)};
+        \draw[->, thick] (0, 2.5) -- (8, 2.5);
+        \foreach \i in {1,...,7} {
+            \node[above, font=\scriptsize] at (\i, 2.5) (i\i) {\i};
+        }
+
+        % Instructions with named nodes
+        \node[anchor=east, font=\small\ttfamily] (sub_inst) at (-0.3, 1.8) {sub \textcolor{red}{R2}, R1, R3};
+        \node[anchor=east, font=\small\ttfamily, anchor=north east] (and_inst) at ([yshift=-15mm]sub_inst.south east) {and R12, \textcolor{red}{R2}, R5};
+
+        % Draw pipeline stages
+        \drawpipelinearch[prefix=sub, at={(sub_inst -| i1)}, scale=0.58]
+        \drawpipelinearch[prefix=and, at={(and_inst -| i2)}, scale=0.58]
+
+        % Highlight sub's ALU (EXE stage) - where result is computed
+        \node[muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+              external pins width=0, fill=blue!40, draw=blue!60!black, line width=0.5pt,
+              scale=0.58, anchor=center] at (sub-ALU.center) {};
+
+        % Highlight and's ALU (EXE stage) - where data is needed
+        \node[muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
+              external pins width=0, fill=green!40, draw=green!60!black, line width=0.5pt,
+              scale=0.58, anchor=center] at (and-ALU.center) {};
+
+        % Green forwarding arrow from sub's L3 (after EXE) to and's L2 (before EXE)
+        \draw[->, ultra thick, green!60!black]
+            (sub-L3.south) -- (and-L2.north)
+            node[midway, right, font=\scriptsize, text=green!50!black] {forward};
+
+        % Program execution order label
+        \node[anchor=south east, align=center, font=\small] at (sub_inst.north west) (ordertext) {Program\\order};
+        \draw[->, thick] (ordertext.south) -- (ordertext |- and_inst);
+    \end{circuitikz}
 \end{frame}
 
 %% Slide: Bypass Hardware
@@ -2275,86 +2382,6 @@ Forward result from writeback stage (2 cycles old) to mux input 3
     }
 \end{tikzpicture}
 \end{frame}
-
-% Macro for drawing full pipeline architecture based on Pipeline Architecture slide
-\pgfkeys{
-    /pipelinearch/.is family, /pipelinearch,
-    default/.style = {
-        prefix = pipe,
-        at = {(0,0)},
-        scale = 0.5
-    },
-    prefix/.estore in = \pipeprefix,
-    at/.store in = \pipeat,
-    scale/.estore in = \pipescale
-}
-
-\newcommand{\drawpipelinearch}[1][]{%
-    \pgfkeys{/pipelinearch, default, #1}%
-    \begin{scope}[scale=\pipescale, transform shape]
-        % Define circuitikz component styles (EXACTLY as Pipeline Architecture)
-        \tikzstyle{imem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
-                                  external pins width=0, fill=white, align=center]
-        \tikzstyle{regfile_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=3, NR=4, square pins=1},
-                                     external pins width=0, fill=white, align=center]
-        \tikzstyle{regfile_wb} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=0, square pins=1},
-                                  external pins width=0, fill=white, align=center]
-        \tikzstyle{alu_block} = [muxdemux, muxdemux def={Lh=2, Rh=1.5, NL=2, NR=1, w=1.2, inset w=0.5, inset Lh=1, inset Rh=0},
-                                external pins width=0, fill=white]
-        \tikzstyle{dmem_block} = [muxdemux, muxdemux def={Lh=2, Rh=2, w=1.5, NL=1, NR=1, square pins=1},
-                                  external pins width=0, fill=white, align=center]
-        \tikzstyle{latch} = [draw, thick, fill=gray!20, minimum width=0.15cm, minimum height=1.4cm]
-        \tikzstyle{line} = [draw, thick]
-
-        % Instruction Memory - positioned at the 'at' coordinate
-        \node[imem_block] (\pipeprefix-IM) at \pipeat {IM};
-
-        % Latch L1
-        \node[latch, anchor=west] (\pipeprefix-L1) at ([xshift=3mm]\pipeprefix-IM.east) {};
-
-        % Register File (first) - anchor at lpin 2
-        \node[regfile_block, anchor=lpin 2] (\pipeprefix-Reg1) at ([xshift=3mm]\pipeprefix-L1.east) {Reg};
-
-        % Latch L2 - aligned with L1 vertically
-        \node[latch, anchor=west] (\pipeprefix-L2) at ([xshift=3mm]\pipeprefix-Reg1.east |- \pipeprefix-L1) {};
-
-        % ALU - using anchor=west like the original
-        \node[alu_block, anchor=west] (\pipeprefix-ALU) at ([xshift=3mm]\pipeprefix-L2.east) {};
-
-        % Latch L3 - aligned with L1 vertically
-        \node[latch, anchor=west] (\pipeprefix-L3) at ([xshift=3mm]\pipeprefix-ALU.east |- \pipeprefix-L1) {};
-
-        % Data Memory
-        \node[dmem_block, anchor=lpin 1] (\pipeprefix-DM) at ([xshift=3mm]\pipeprefix-L3.east) {DM};
-
-        % Latch L4 - aligned with L1 vertically
-        \node[latch, anchor=west] (\pipeprefix-L4) at ([xshift=3mm]\pipeprefix-DM.east |- \pipeprefix-L1) {};
-
-        % Register File (second) - only 1 lpin, no rpin
-        \node[regfile_wb, anchor=lpin 1] (\pipeprefix-Reg2) at ([xshift=3mm]\pipeprefix-L4.east) {Reg};
-
-        % Connections - EXACTLY as Pipeline Architecture
-        \draw[line] (\pipeprefix-IM.rpin 1) -- (\pipeprefix-L1.west);
-        \draw[line] (\pipeprefix-L1.east) -- (\pipeprefix-Reg1.lpin 2);
-        \draw[line] ([xshift=2mm]\pipeprefix-L1.east) |- (\pipeprefix-Reg1.lpin 1);
-
-        \draw[line] (\pipeprefix-Reg1.rpin 1) -- (\pipeprefix-L2.west |- \pipeprefix-Reg1.rpin 1);
-        \draw[line] (\pipeprefix-Reg1.rpin 4) -- (\pipeprefix-L2.west |- \pipeprefix-Reg1.rpin 4);
-
-        \draw[line] (\pipeprefix-L2.east |- \pipeprefix-ALU.lpin 1) -- (\pipeprefix-ALU.lpin 1);
-        \draw[line] (\pipeprefix-L2.east |- \pipeprefix-ALU.lpin 2) -- (\pipeprefix-ALU.lpin 2);
-
-        \draw[line] (\pipeprefix-ALU.rpin 1) -- (\pipeprefix-L3.west);
-
-        \draw[line] (\pipeprefix-L3.east) -- (\pipeprefix-DM.lpin 1);
-        \draw[line] (\pipeprefix-DM.rpin 1) -- (\pipeprefix-L4.west);
-
-        % Bypass around DM - EXACTLY as Pipeline Architecture
-        \draw[line] (\pipeprefix-L3.east) -- ++(2mm, 0) coordinate (\pipeprefix-bypass_start) -| ([xshift=-1mm, yshift=-1mm]\pipeprefix-DM.south west) -| ([xshift=1mm,yshift=-3mm]\pipeprefix-DM.east) -- ([yshift=-3mm]\pipeprefix-L4.west);
-
-        \draw[line] (\pipeprefix-L4.east) -- (\pipeprefix-Reg2.lpin 1);
-    \end{scope}
-}
 
 %% Slide: Register File Split
 \begin{frame}{Register File Split}
