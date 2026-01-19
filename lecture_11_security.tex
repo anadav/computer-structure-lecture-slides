@@ -832,25 +832,35 @@ some_ioctl:
 % Section 1: Memory Protection
 \section{Memory Protection Mechanisms}
 
-\begin{frame}{Pointer Tagging}
+\begin{frame}{Pointer Tagging - Using Unused Pointer Bits}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{Concept:}
             \begin{itemize}
-                \item Uses unused bits in 64-bit pointers
-                \item Tags store metadata (type, color, version)
-                \item Enables memory safety checks
+                \item 64-bit pointers only use 48 bits for address
+                \item Upper 16 bits available for metadata
+                \item Hardware can check metadata on access
             \end{itemize}
-            
-            \vspace{0.5cm}
-            \textbf{Benefits:}
+
+            \vspace{0.3cm}
+            \textbf{Two Security Applications:}
+            \vspace{0.2cm}
+
+            \colorbox{green!20}{\textbf{Memory Safety (MTE):}}
             \begin{itemize}
-                \item Detect use-after-free
-                \item Prevent type confusion
-                \item Low overhead ($<$5\%)
+                \item Tag memory regions with colors
+                \item Detect use-after-free, overflows
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \colorbox{blue!20}{\textbf{Control Flow (PAC):}}
+            \begin{itemize}
+                \item Cryptographic pointer signatures
+                \item Protect return addresses, function ptrs
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
+            \centering
             \begin{tikzpicture}[scale=0.8]
                 \draw (0,0) rectangle (8,1);
                 \draw[fill=blue!30] (0,0) rectangle (2,1);
@@ -860,19 +870,19 @@ some_ioctl:
                 \draw[<->] (0,1.3) -- (2,1.3) node[midway,above] {16 bits};
                 \draw[<->] (2,1.3) -- (8,1.3) node[midway,above] {48 bits};
             \end{tikzpicture}
-            
+
             \vspace{0.5cm}
-            \textbf{Example: ARM MTE}
-            \begin{itemize}
-                \item 4-bit tags in bits [59:56]
-                \item Hardware tag checking
-                \item Synchronous/async exceptions
-            \end{itemize}
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Same mechanism, different goals:}\\[2pt]
+                MTE $\rightarrow$ \textit{Where} can I access?\\
+                PAC $\rightarrow$ \textit{Where} can code jump?
+            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
 
-\begin{frame}{ARM MTE - How It Works}
+\begin{frame}{ARM MTE - Memory Safety via Tagging}
     \begin{columns}
         \begin{column}{0.49\textwidth}
             \textbf{Memory Granularity:}
@@ -914,7 +924,7 @@ some_ioctl:
     \end{columns}
 \end{frame}
 
-\begin{frame}{ARM MTE in Action}
+\begin{frame}{ARM MTE - Detecting Memory Errors}
     \begin{tikzpicture}[
         memcell/.style={draw, minimum width=1.1cm, minimum height=0.5cm, font=\tiny},
         tagcell/.style={draw, minimum width=1.1cm, minimum height=0.4cm, font=\scriptsize\bfseries},
@@ -1048,12 +1058,12 @@ some_ioctl:
     \end{tikzpicture}
 \end{frame}
 
-\begin{frame}[fragile]{Pointer Authentication (PAC)}
+\begin{frame}[fragile]{Pointer Authentication (PAC) - Control Flow Protection}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{ARM PAC Architecture:}
             \begin{itemize}
-                \item Cryptographic signature in pointer
+                \item Cryptographic signature stored in upper pointer bits
                 \item Uses QARMA block cipher
                 \item 5 128-bit keys (IA, IB, DA, DB, GA)
             \end{itemize}
@@ -1269,7 +1279,7 @@ plt_stub:
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Pointer Authentication (PAC) - ARM64}
+\begin{frame}<0>[fragile]{Pointer Authentication (PAC) - ARM64}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{How PAC Works:}
