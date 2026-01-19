@@ -129,14 +129,14 @@
                 |[layer tech]| Sandboxing, TEE \\
             };
 
-            % Attack progression arrow - straight vertical line
-            \draw[->, ultra thick, red] ([xshift=-0.5cm]m-1-1.west) -- ([xshift=-0.5cm]m-5-1.west);
-            \node[rotate=90, red, font=\small, anchor=south, xshift=-0.9cm] at (m-3-1.west) {Attack Progression};
-
             % Defense arrows
             \foreach \i in {1,...,5} {
                 \draw[<-, ultra thick, green!60!black] (m-\i-1.west) -- ++(-0.3,0);
             }
+
+            % Attack progression arrow - draw bottom to top so text reads upward, arrow points down
+            \draw[<-, ultra thick, red] ([xshift=-1.2cm]m-5-1.west) -- ([xshift=-1.2cm]m-1-1.west)
+                node[midway, sloped, above, red, font=\small] {Attack Progression};
         \end{tikzpicture}
     \end{center}
 
@@ -210,7 +210,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Why XD/NX is Not Enough - Enter ROP}
+\begin{frame}{Why XD/NX is Not Enough - Enter ROP}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{The Problem:}
@@ -230,23 +230,20 @@
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{ROP Attack Example:}
-\begin{minted}[fontsize=\scriptsize]{nasm}
-; Gadget 1: pop rdi; ret
-; Gadget 2: pop rsi; ret
-; Gadget 3: mov rax, 59; ret
-; Gadget 4: syscall
-
-Stack Layout:
-[addr_gadget1]
-["/bin/sh"]
-[addr_gadget2]
-[0]
-[addr_gadget3]
-[addr_gadget4]
-\end{minted}
+            \textbf{ROP Attack Example:} {\small(execve("/bin/sh"))}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+                \ttfamily\scriptsize
+                \begin{tabular}{@{}l@{\hspace{2mm}}l@{}}
+                    \textbf{Stack:} & \textbf{Effect:} \\
+                    {[}gadget1{]} & pop rdi; ret \\
+                    {[}"/bin/sh"{]} & \textrm{\scriptsize$\rightarrow$ rdi = arg1} \\
+                    {[}gadget2{]} & pop rsi; ret \\
+                    {[}0{]} & \textrm{\scriptsize$\rightarrow$ rsi = arg2} \\
+                    {[}gadget3{]} & mov rax,59; ret \\
+                    & \textrm{\scriptsize$\rightarrow$ syscall \#} \\
+                    {[}gadget4{]} & syscall \\
+                \end{tabular}
             \end{tcolorbox}
             
             \begin{tikzpicture}[
@@ -315,7 +312,7 @@ Stack Layout:
             \draw[flow] (stack-5-1.west) to[out=180,in=90] (g4.north);
 
             % Caption
-            \node[red, font=\footnotesize\bfseries, below=0.3cm of code] {Control Flow Hijacked via RET Chain};
+            \node[draw=red, fill=red!15, rounded corners=3pt, text=red!80!black, font=\footnotesize\bfseries, below=0.7cm of code] {Control Flow Hijacked via RET Chain};
         \end{tikzpicture}
     \end{center}
 
@@ -325,7 +322,7 @@ Stack Layout:
 \end{frame}
 
 % Protection Mechanisms in Detail
-\begin{frame}[fragile]{ASLR - Address Space Layout Randomization}
+\begin{frame}<0>[fragile]{ASLR - Address Space Layout Randomization}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{How ASLR Works:}
@@ -375,7 +372,7 @@ Libc:  0x7fc8e1200000
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Stack Canaries - Buffer Overflow Detection}
+\begin{frame}<0>[fragile]{Stack Canaries - Buffer Overflow Detection}
     \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{How Stack Canaries Work:}
@@ -441,7 +438,7 @@ vulnerable:
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Stack Canary - Memory Layout}
+\begin{frame}<0>[fragile]{Stack Canary - Memory Layout}
     \begin{center}
         \begin{tikzpicture}[font=\footnotesize,
             stack cell/.style={draw, minimum width=3.5cm, minimum height=0.6cm},
@@ -589,9 +586,9 @@ vulnerable:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{Kernel Code Pattern:}
+            \textbf{Kernel Code Pattern:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{gas}
 copy_from_user:
     STAC        ; Enable access
@@ -1074,31 +1071,29 @@ some_ioctl:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{Function Prologue:}
+            \textbf{Function Prologue:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{gas}
-PACIASP    ; Sign LR with SP
-STP x29,x30,[sp,#-16]!
-\end{minted}
-
-                \textbf{Function Epilogue:}
-\begin{minted}[fontsize=\scriptsize]{gas}
-LDP x29,x30,[sp],#16
-AUTIASP    ; Verify LR
-RET        ; Return if valid
+; LR (x30) = return addr, SP = stack ptr
+PACIASP    ; Sign LR using SP as context
+STP x29,x30,[sp,#-16]!  ; Save frame ptr & LR
 \end{minted}
             \end{tcolorbox}
-            
-            \vspace{0.2cm}
-            \textbf{Key Terms:}
-            \begin{itemize}
-                \item \textbf{LR (x30):} Link Register - stores return address
-                \item \textbf{SP:} Stack Pointer - used as context
-                \item \textbf{x29:} Frame Pointer
-            \end{itemize}
-            
-            \textbf{Security:} Prevents ROP/JOP attacks
+
+            \vspace{-1mm}
+            \textbf{Function Epilogue:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\scriptsize]{gas}
+LDP x29,x30,[sp],#16    ; Restore frame ptr & LR
+AUTIASP    ; Verify LR signature
+RET        ; Return if valid, else fault
+\end{minted}
+            \end{tcolorbox}
+
+            \vspace{2mm}
+            \textbf{Security:} Prevents ROP/JOP attacks by cryptographically signing return addresses
         \end{column}
     \end{columns}
 \end{frame}
@@ -1147,7 +1142,7 @@ RET        ; Return if valid
                 \draw[->,thick,red,dashed] (B) to[bend right=20] (C);
                 \node[red] at (2,1.5) {\small Invalid};
                 
-                \node at (2,-1) {\textbf{CFG Enforcement}};
+                \node[align=center] at (2,-1) {\textbf{CFG} (Control Flow\\Graph) \textbf{Enforcement}};
             \end{tikzpicture}
             
             \vspace{-2mm}
@@ -1192,9 +1187,9 @@ RET        ; Return if valid
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{Example: Intel CET-IBT}
+            \textbf{Example: Intel CET-IBT}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{nasm}
 valid_target:
     endbranch    ; Mark as valid
@@ -1248,9 +1243,9 @@ invalid_target:  ; No endbranch
         \end{column}
         \begin{column}{0.5\textwidth}
             \vspace{-7mm}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{BTI Usage Example:}
+            \textbf{BTI Usage Example:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{gas}
 ; Function called via pointer
 func_ptr:
