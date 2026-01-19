@@ -14,6 +14,7 @@
 \usepackage{listings}
 \usepackage{minted}
 \usepackage{xcolor}
+\usepackage{xstring}
 \usepackage{arydshln}
 \usetheme{Madrid}
 
@@ -27,7 +28,10 @@
     writeblock/.default=blue
 }
 
-\newcommand{\addressbreakdown}[3]{%
+% Address breakdown macro with optional block number arrow
+% Usage: \addressbreakdown{tag bits}{set bits}{offset bits}
+%        \addressbreakdown[blocknumber]{tag bits}{set bits}{offset bits}
+\NewDocumentCommand{\addressbreakdown}{O{} m m m}{%
     \begin{tikzpicture}[
         section/.style={draw, very thick, minimum height=0.6cm},
         bitnumber/.style={font=\tiny},
@@ -35,39 +39,39 @@
         baseline=(current bounding box.center)
     ]
     % Calculate total bits and positions
-    \pgfmathtruncatemacro{\totalbits}{#1 + #2 + #3}
+    \pgfmathtruncatemacro{\totalbits}{#2 + #3 + #4}
     \pgfmathtruncatemacro{\tagstart}{\totalbits - 1}
-    \pgfmathtruncatemacro{\tagend}{\totalbits - #1}
+    \pgfmathtruncatemacro{\tagend}{\totalbits - #2}
     \pgfmathtruncatemacro{\setstart}{\tagend - 1}
-    \pgfmathtruncatemacro{\setend}{\tagend - #2}
+    \pgfmathtruncatemacro{\setend}{\tagend - #3}
     \pgfmathtruncatemacro{\offsetstart}{\setend - 1}
     \pgfmathtruncatemacro{\offsetend}{0}
-    
+
     % Scale factor for width (adjust this to change overall size)
     \pgfmathsetmacro{\bitwidth}{0.17}
-    
+
     % Starting position
     \pgfmathsetmacro{\xpos}{0}
-    
+
     % Draw tag block
-    \ifnum#1>0
-        \pgfmathsetmacro{\tagwidth}{#1 * \bitwidth}
+    \ifnum#2>0
+        \pgfmathsetmacro{\tagwidth}{#2 * \bitwidth}
         \node[section, fill=blue!40, minimum width=\tagwidth cm] (tag) at (\xpos + \tagwidth/2, 0) {};
         \node[sectionlabel] at (tag.center) {tag};
-        
+
         % Add bit numbers below
         \node[bitnumber] at ($(tag.south west) + (0mm,-1mm)$) {\tagstart};
         \node[bitnumber] at ($(tag.south east) + (-1mm,-1mm)$) {\tagend};
-        
+
         \pgfmathsetmacro{\xpos}{\xpos + \tagwidth}
     \fi
-    
+
     % Draw set block
-    \ifnum#2>0
-        \pgfmathsetmacro{\setwidth}{#2 * \bitwidth}
+    \ifnum#3>0
+        \pgfmathsetmacro{\setwidth}{#3 * \bitwidth}
         \node[section, fill=green!40, minimum width=\setwidth cm] (set) at (\xpos + \setwidth/2, 0) {};
-        % if num is smaller thean 2 rotate label
-        \ifnum#2<3
+        % if num is smaller than 3 rotate label
+        \ifnum#3<3
             \node[sectionlabel, rotate=90] at (set.center) {set};
         \else
             \node[sectionlabel] at (set.center) {set};
@@ -81,17 +85,17 @@
     \fi
 
     % Draw offset block
-    \ifnum#3>0
-        \pgfmathsetmacro{\offsetwidth}{#3 * \bitwidth}
+    \ifnum#4>0
+        \pgfmathsetmacro{\offsetwidth}{#4 * \bitwidth}
         \node[section, fill=yellow!40, minimum width=\offsetwidth cm] (offset) at (\xpos + \offsetwidth/2, 0) {};
-        \ifnum#3<3
+        \ifnum#4<3
             \node[sectionlabel, rotate=90, font=\tiny] at (offset.center) {offset};
         \else
             \node[sectionlabel] at (offset.center) {offset};
         \fi
 
         % Add bit numbers below - fix for when set bits = 0
-        \ifnum#2>0
+        \ifnum#3>0
             \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {\offsetstart};
         \else
             % When no set bits, offset starts directly after tag
@@ -100,6 +104,19 @@
         \fi
         \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {\offsetend};
     \fi
+
+    % Draw block number arrow if option is specified
+    \IfStrEq{#1}{blocknumber}{%
+        \ifnum#3>0
+            % Arrow spans tag and set
+            \draw[<->, thick] ([yshift=2mm]tag.north west) -- ([yshift=2mm]set.north east)
+                node[midway, above, font=\scriptsize] {block number};
+        \else
+            % Arrow spans only tag (no set bits)
+            \draw[<->, thick] ([yshift=2mm]tag.north west) -- ([yshift=2mm]tag.north east)
+                node[midway, above, font=\scriptsize] {block number};
+        \fi
+    }{}
     \end{tikzpicture}
 }
 
