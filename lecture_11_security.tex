@@ -2404,37 +2404,39 @@ func:
                 cpu/.style={draw, fill=yellow!30, minimum width=4cm, minimum height=0.7cm, font=\small\bfseries},
                 barrier/.style={ultra thick, blue}]
 
-                % CPU enforcement (top)
-                \node[cpu] (cpu) at (0,0) {CPU (TDX Module)};
+                % CPU enforcement (top) - anchor for everything
+                \node[cpu] (cpu) {CPU (TDX Module)};
 
-                % Protected VMs - explicit positioning
-                \node[vm, fill=green!30, draw=green!70!black] (vm1) at (-1,-1.4) {
+                % Protected VMs - relative to CPU
+                \node[vm, fill=green!30, draw=green!70!black, below left=0.6cm and 0.2cm of cpu.south] (vm1) {
                     \textbf{VM1}\\[-2pt]{\tiny Customer A}};
-                \node[vm, fill=blue!30, draw=blue!70!black] (vm2) at (1,-1.4) {
+                \node[vm, fill=blue!30, draw=blue!70!black, below right=0.6cm and 0.2cm of cpu.south] (vm2) {
                     \textbf{VM2}\\[-2pt]{\tiny Customer B}};
 
-                % Protection barrier
-                \draw[barrier] (-2.2,-2.2) -- (2.2,-2.2)
+                % Protection barrier - relative to VMs
+                \draw[barrier] ([xshift=-0.5cm]vm1.south west) -- ([xshift=0.5cm]vm2.south east)
                     node[right, font=\small] {TDX};
+                \coordinate (barrier-left) at ([yshift=-0.2cm]vm1.south);
+                \coordinate (barrier-right) at ([yshift=-0.2cm]vm2.south);
 
-                % Threat Actor (bottom)
-                \node[inner sep=0pt] (provider) at (0,-4.2)
+                % Threat Actor - below VMs
+                \node[inner sep=0pt, below=1.8cm of cpu] (provider)
                     {\includegraphics[width=1.5cm]{figures/noun-cloud-5095064.png}};
-                \node[font=\scriptsize] at (0,-5.2) {Cloud Provider (Untrusted)};
+                \node[font=\scriptsize, below=0.1cm of provider] (provider-label) {Cloud Provider (Untrusted)};
 
-                % Attack attempts - arrows from cloud toward barrier
-                \draw[->, thick, red] (0.3,-3.5) -- (0.3,-2.6)
+                % Attack arrows from provider toward barrier with X marks
+                \draw[->, thick, red] ([xshift=0.3cm]provider.north) -- ([xshift=0.3cm, yshift=-0.5cm]barrier-right)
                     node[pos=0.3, right, font=\tiny] {Read};
-                \draw[->, thick, red] (-0.5,-3.5) -- (-0.5,-2.6)
+                \draw[->, thick, red] ([xshift=-0.3cm]provider.north) -- ([xshift=-0.3cm, yshift=-0.5cm]barrier-left)
                     node[pos=0.3, left, font=\tiny] {Modify};
 
-                % X marks for blocked attacks - clearly below barrier
-                \node[inner sep=0pt] at (0.3,-2.85)
+                % X marks for blocked attacks
+                \node[inner sep=0pt] at ([xshift=0.3cm, yshift=-0.35cm]barrier-right)
                     {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-                \node[inner sep=0pt] at (-0.5,-2.85)
+                \node[inner sep=0pt] at ([xshift=-0.3cm, yshift=-0.35cm]barrier-left)
                     {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
 
-                % Protection arrows from CPU
+                % Protection arrows from CPU to VMs
                 \draw[->, thick, green!60!black] (cpu.south) -- (vm1.north);
                 \draw[->, thick, green!60!black] (cpu.south) -- (vm2.north);
             \end{tikzpicture}
