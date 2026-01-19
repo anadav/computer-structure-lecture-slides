@@ -1155,7 +1155,7 @@ RET        ; Return if valid, else fault
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Forward-Edge CFI Mechanisms}
+\begin{frame}[fragile]{Forward-Edge CFI: Intel CET-IBT \& ARM BTI}
     \begin{columns}
         \begin{column}{0.6\textwidth}
             \textbf{Intel CET-IBT (Indirect Branch Tracking):}
@@ -1205,9 +1205,9 @@ invalid_target:  ; No endbranch
             
             \textbf{Protection Granularity:}
             \begin{itemize}
-                \item \textbf{Coarse:} Any valid function
-                \item \textbf{Fine:} Type-compatible functions
-                \item \textbf{Ultra-fine:} Exact callsite matching
+                \item \textbf{HW (coarse):} Any marked target
+                \item \textbf{SW (fine):} Type-compatible
+                \item \textbf{SW (ultra-fine):} Exact callsite
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1404,9 +1404,9 @@ sensitive_function:
             \end{tikzpicture}
             
             \vspace{0.3cm}
-            \begin{tcolorbox}[colback=yellow!10]
-                \small
-                \textbf{Operation Example:}
+            \textbf{Operation Example:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=yellow!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{text}
 CALL func:
   - Push addr to regular stack
@@ -1451,9 +1451,9 @@ RET:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{Type Confusion Example:}
+            \textbf{Type Confusion Example:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{cpp}
 class Animal {
   virtual void speak() = 0;
@@ -1513,9 +1513,9 @@ evil->admin(); // Calls wrong vtable!
         \end{column}
         \begin{column}{0.5\textwidth}
             \vspace{-3mm}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                \textbf{Function with FineIBT:}
+            \textbf{Function with FineIBT:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{gas}
 ; Type hash prefix
 __cfi_func:
@@ -2039,7 +2039,7 @@ func:
 \begin{frame}{IOMMU - Shared Buffer Problem}
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \textbf{The Problem:}
+            \textbf{Problem:}
             \begin{itemize}
                 \item IOMMU protection is page-granular
                 \item Device needs access to buffer A
@@ -2047,15 +2047,13 @@ func:
                 \item Device can access both!
             \end{itemize}
 
-            \vspace{-5mm}
-            \begin{tcolorbox}[colback=blue!20]
-                \textbf{Solutions:}
-                \begin{itemize}
-                    \item Align DMA buffers to page boundaries
-                    \item Use bounce buffers (copy to isolated page)
-                    \item Sub-page protection (future hardware)
-                \end{itemize}
-            \end{tcolorbox}
+            \vspace{0.3cm}
+            \textbf{Solutions:}
+            \begin{itemize}
+                \item Align DMA buffers to page boundaries
+                \item Use bounce buffers (copy to isolated page)
+                \item Sub-page protection (future hardware)
+            \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{tikzpicture}[font=\footnotesize, scale=1.3, every node/.style={scale=1.3},
