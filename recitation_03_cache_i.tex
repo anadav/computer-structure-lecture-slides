@@ -379,68 +379,40 @@
 \begin{tcolorbox}[colback=gray!10]
 \textbf{Address Fields:}\\
 \begin{center}
-    \addressbreakdown{24}{3}{5}
+    \begin{tikzpicture}[
+        section/.style={draw, very thick, minimum height=0.6cm},
+        bitnumber/.style={font=\tiny},
+        sectionlabel/.style={font=\scriptsize},
+        baseline=(current bounding box.center)
+    ]
+    % Tag block (24 bits)
+    \node[section, fill=blue!40, minimum width=4.08cm] (tag) at (2.04, 0) {};
+    \node[sectionlabel] at (tag.center) {tag};
+    \node[bitnumber] at ($(tag.south west) + (0mm,-1mm)$) {31};
+    \node[bitnumber] at ($(tag.south east) + (-1mm,-1mm)$) {8};
+
+    % Set block (3 bits)
+    \node[section, fill=green!40, minimum width=0.51cm] (set) at (4.335, 0) {};
+    \node[sectionlabel, rotate=90] at (set.center) {set};
+    \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {7};
+    \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {5};
+
+    % Offset block (5 bits)
+    \node[section, fill=yellow!40, minimum width=0.85cm] (offset) at (5.015, 0) {};
+    \node[sectionlabel] at (offset.center) {offset};
+    \node[bitnumber] at ($(offset.south west) + (1mm,-1mm)$) {4};
+    \node[bitnumber] at ($(offset.south east) + (0mm,-1mm)$) {0};
+
+    % Block number arrow above tag and set
+    \draw[<->, thick] ([yshift=2mm]tag.north west) -- ([yshift=2mm]set.north east)
+        node[midway, above, font=\scriptsize] {block number};
+    \end{tikzpicture}
 \end{center}
 \end{tcolorbox}
 
 \textbf{Advantage:} Simple and cheap\\
 \textbf{Disadvantage:} Higher miss rate due to conflicts
 \end{columns}
-\end{frame}
-
-\begin{frame}
-\begin{tikzpicture}[scale=0.25, font=\footnotesize]
-  % Define constants
-  \def\boxheight{3}
-  
-  % Define colors for different fields
-  \definecolor{fieldgreen}{RGB}{144, 238, 144}
-  \definecolor{fieldorange}{RGB}{255, 200, 100}
-  \definecolor{fieldyellow}{RGB}{255, 255, 150}
-  
-  % Define key coordinates as base references
-  \coordinate (origin) at (0,0);
-  \coordinate (topright) at (32,\boxheight);
-  
-  % Draw outer border
-  \draw[very thick] (origin) rectangle (topright);
-  
-  % Define field boundaries using coordinates
-  % Working from MSB (31) to LSB (0), left to right
-  \coordinate (b31) at (0,0);               % MSB position
-  \coordinate (b8) at ($(b31) + (24,0)$);   % Tag is 24 bits wide (31-8)
-  \coordinate (b5) at ($(b8) + (3,0)$);     % Set is 3 bits wide (7-5)
-  \coordinate (b0) at ($(b5) + (5,0)$);     % Line Offset is 5 bits wide (4-0)
-  
-  % Tag field (31-8)
-  \fill[fieldgreen!60] (b31) rectangle ($(b8) + (0,\boxheight)$);
-  \draw[thick] (b8) -- ($(b8) + (0,\boxheight)$);
-  \node at ($(b31)!0.5!(b8) + (0,\boxheight/2)$) {Tag};
-  
-  % Set field (7-5)
-  \fill[fieldyellow!80] (b8) rectangle ($(b5) + (0,\boxheight)$);
-  \draw[thick] (b5) -- ($(b5) + (0,\boxheight)$);
-  \node at ($(b8)!0.5!(b5) + (0,\boxheight/2)$) {Set};
-  
-  % Line Offset field (4-0)
-  \fill[fieldorange!60] (b5) rectangle ($(b0) + (0,\boxheight)$);
-  \node[align=center] at ($(b5)!0.5!(b0) + (0,\boxheight/2)$) {Line\\Offset};
-  
-  % Add bit numbers below
-  \node[below, font=\tiny] at ($(b31) + (0,-0.5)$) {31};
-  \node[below, font=\tiny] at ($(b8) + (0,-0.5)$) {8};
-  \node[below, font=\tiny] at ($(b8) + (1,-0.5)$) {7};
-  \node[below, font=\tiny] at ($(b5) + (0,-0.5)$) {5};
-  \node[below, font=\tiny] at ($(b5) + (1,-0.5)$) {4};
-  \node[below, font=\tiny] at ($(b0) + (0,-0.5)$) {0};
-  
-  % Add "Block number" label with bracket above
-  \draw[thick,<->] 
-    ($(b31) + (0,\boxheight + 1.5)$) -- 
-    ($(b5) + (0,\boxheight + 1.5)$)
-    node[midway, above] {Block number};  
-
-\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{K-Way Set Associative Organization}
@@ -982,6 +954,65 @@ What happens when we need to write to data not in cache?
 \end{enumerate}
 \end{frame}
 
+\section{LRU Implementation}
+\begin{frame}{LRU Implementation for 4-Way Cache}
+\textbf{Method 1: Full List (8 bits per set)}
+\begin{itemize}
+    \item Maintain linked list of 4 nodes (one per way)
+    \item Store order of usage
+    \item 2 bits per way $\times$ 4 ways = 8 bits
+    \item Update list on every access
+\end{itemize}
+
+\textbf{Example states:}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+Initial: & Way0(00) & Way1(01) & Way2(10) & Way3(11) \\
+Hit Way1: & Way1(01) & Way0(00) & Way2(10) & Way3(11) \\
+Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
+\hline
+\multicolumn{2}{|l}{MRU} & & & LRU \\
+\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}{LRU Implementation - Optimized}
+\textbf{Method 2: Partial List (6 bits per set)}
+\begin{itemize}
+    \item Store only 3 most recent ways
+    \item 4th way is implicitly LRU
+    \item 2 bits $\times$ 3 = 6 bits per set
+\end{itemize}
+
+\textbf{Method 3: Optimal Encoding (5 bits per set)}
+\begin{itemize}
+    \item Number of possible orderings: $4! = 24$
+    \item Need $\lceil \log_2(24) \rceil = 5$ bits
+    \item Most space-efficient
+    \item But complex encoding/decoding logic
+\end{itemize}
+\end{frame}
+
+\section{Cache Performance Metrics}
+\begin{frame}{Cache Performance Metrics}
+\textbf{Important Formulas:}
+\begin{itemize}
+    \item \textbf{Average Memory Access Time (AMAT):}
+    $$AMAT = Hit\_Time + Miss\_Rate \times Miss\_Penalty$$
+
+    \item \textbf{Cache Size:}
+    $$Size = \#Sets \times \#Ways \times Block\_Size$$
+
+    \item \textbf{Directory Size:}
+    $$Dir\_Size = \#Sets \times \#Ways \times (Tag\_Bits + Status\_Bits)$$
+
+    \item \textbf{Set Calculation:}
+    $$Set = \lfloor Address / Block\_Size \rfloor \mod \#Sets$$
+\end{itemize}
+\end{frame}
+
 \section{Question 1: Cache Access Trace}
 \begin{frame}{Q1: Cache Access Trace}
 \textbf{Given:}
@@ -1057,7 +1088,8 @@ What happens when we need to write to data not in cache?
 \end{center}
 \end{frame}
 
-\begin{frame}[fragile]{Example 2: Array Initialization}
+\section{Question 2: Array Initialization}
+\begin{frame}[fragile]{Q2: Array Initialization}
 \begin{columns}
 \column{0.5\textwidth}
 \begin{minted}[fontsize=\footnotesize, frame=single, bgcolor=gray!10]{c}
@@ -1086,7 +1118,7 @@ for (int i=0; i<1024; i++)
 \end{columns}
 \end{frame}
 
-\begin{frame}{Q2: Cache Directory Size}
+\begin{frame}{Q2a: Cache Directory Size}
 \textbf{Question:} How many bits in the cache directory?
 
 \textbf{Solution:}
@@ -1105,7 +1137,7 @@ for (int i=0; i<1024; i++)
 \textbf{Total:} $25 \times 4 \times 16 = 1600$ bits
 \end{frame}
 
-\begin{frame}{Q2a: Number of Misses}
+\begin{frame}{Q2b: Number of Misses}
 \textbf{Question:} Maximum number of misses during execution?
 
 \textbf{Solution:}
@@ -1126,7 +1158,7 @@ for (int i=0; i<1024; i++)
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Q2b: Effect of Alignment}
+\begin{frame}{Q2c: Effect of Alignment}
 \textbf{Question:} What if array is not aligned?
 
 \textbf{Answer:}
@@ -1145,7 +1177,7 @@ Alignment matters for cache performance!
 \end{center}
 \end{frame}
 
-\begin{frame}{Q2c: No Write Allocate}
+\begin{frame}{Q2d: No Write Allocate}
 \textbf{Question:} How many blocks transferred if using no-write-allocate?
 
 Given: Variable i at address 0x00000100
@@ -1165,7 +1197,7 @@ Given: Variable i at address 0x00000100
 \textbf{Result:} Only 1 block transferred to cache
 \end{frame}
 
-\begin{frame}{Q2d: Locality Principles}
+\begin{frame}{Q2e: Locality Principles}
 \textbf{Question:} Which locality principle is demonstrated in this code?
 \pause
 
@@ -1193,267 +1225,8 @@ Given: Variable i at address 0x00000100
 \end{itemize}
 \end{frame}
 
-\section{Question 2: Cache Directory and Array Analysis}
-\begin{frame}{LRU Implementation for 4-Way Cache}
-\textbf{Method 1: Full List (8 bits per set)}
-\begin{itemize}
-    \item Maintain linked list of 4 nodes (one per way)
-    \item Store order of usage
-    \item 2 bits per way $\times$ 4 ways = 8 bits
-    \item Update list on every access
-\end{itemize}
-
-\textbf{Example states:}
-\begin{center}
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-Initial: & Way0(00) & Way1(01) & Way2(10) & Way3(11) \\
-Hit Way1: & Way1(01) & Way0(00) & Way2(10) & Way3(11) \\
-Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
-\hline
-\multicolumn{2}{|l}{MRU} & & & LRU \\
-\hline
-\end{tabular}
-\end{center}
-\end{frame}
-
-\begin{frame}{LRU Implementation - Optimized}
-\textbf{Method 2: Partial List (6 bits per set)}
-\begin{itemize}
-    \item Store only 3 most recent ways
-    \item 4th way is implicitly LRU
-    \item 2 bits $\times$ 3 = 6 bits per set
-\end{itemize}
-
-\textbf{Method 3: Optimal Encoding (5 bits per set)}
-\begin{itemize}
-    \item Number of possible orderings: $4! = 24$
-    \item Need $\lceil \log_2(24) \rceil = 5$ bits
-    \item Most space-efficient
-    \item But complex encoding/decoding logic
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Cache Performance Metrics}
-\textbf{Important Formulas:}
-\begin{itemize}
-    \item \textbf{Average Memory Access Time (AMAT):}
-    $$AMAT = Hit\_Time + Miss\_Rate \times Miss\_Penalty$$
-    
-    \item \textbf{Cache Size:}
-    $$Size = \#Sets \times \#Ways \times Block\_Size$$
-    
-    \item \textbf{Directory Size:}
-    $$Dir\_Size = \#Sets \times \#Ways \times (Tag\_Bits + Status\_Bits)$$
-    
-    \item \textbf{Set Calculation:}
-    $$Set = \lfloor Address / Block\_Size \rfloor \mod \#Sets$$
-\end{itemize}
-\end{frame}
-
-\section{Question 3: Cache Access Pattern}
-\begin{frame}{Q3: Cache Access Pattern}
-\begin{columns}
-\column{0.5\textwidth}
-\textbf{Given:}
-\begin{itemize}
-    \item 2-way set associative cache
-    \item 4 bytes per block
-    \item LRU replacement
-    \item Address sequence (decimal):\\
-    5, 7, 1, 4, 36, 8, 100, 6, 4, 12, 36, 12, 68, 5, 7
-\end{itemize}
-
-\column{0.5\textwidth}
-\begin{tcolorbox}[colback=gray!10]
-\textbf{Address Fields:}\\
-\begin{center}
-\addressbreakdown{25}{3}{2}
-\end{center}
-\end{tcolorbox}
-
-\textbf{Task:} Count hits and misses
-\end{columns}
-\end{frame}
-
-\begin{frame}[fragile]{Example: Array Initialization}
-\begin{columns}
-\column{0.5\textwidth}
-\begin{minted}[fontsize=\footnotesize, frame=single, bgcolor=gray!10]{c}
-int array[1024];
-for (int i=0; i<1024; i++)
-    array[i] = 0;
-\end{minted}
-
-\textbf{Cache specs:}
-\begin{itemize}
-    \item 1KB data cache
-    \item 4-way set associative
-    \item 16-byte blocks
-    \item Write through, write allocate
-\end{itemize}
-
-\column{0.5\textwidth}
-\textbf{Analysis:}
-\begin{itemize}
-    \item Array size: 4KB (1024 $\times$ 4 bytes)
-    \item Cache can hold: 64 blocks
-    \item Array needs: 256 blocks
-    \item Miss rate: 25\% (1 miss per 4 ints)
-    \item Demonstrates spatial locality
-\end{itemize}
-\end{columns}
-\end{frame}
-
-\section{Review: LRU Implementation}
-\begin{frame}{LRU Implementation Strategies}
-\textbf{For 4-way set associative cache:}
-
-\begin{enumerate}
-    \item \textbf{Full ordering (8 bits per set)}
-    \begin{itemize}
-        \item Maintain complete order of all 4 ways
-        \item 2 bits per way $\times$ 4 ways = 8 bits
-    \end{itemize}
-    
-    \item \textbf{Partial ordering (6 bits per set)}
-    \begin{itemize}
-        \item Track only 3 most recent ways
-        \item Implicit LRU for 4th way
-    \end{itemize}
-    
-    \item \textbf{Optimal encoding (5 bits per set)}
-    \begin{itemize}
-        \item 4! = 24 possible orderings
-        \item Need $\lceil \log_2(24) \rceil = 5$ bits
-    \end{itemize}
-\end{enumerate}
-\end{frame}
-
-
-
-
-
-\begin{frame}{Write Through Policy}
-\begin{itemize}
-    \item Write to both cache AND main memory during write operation
-    \item No need to update memory when block is evicted
-    \item \alert{No dirty bit needed} (Why?)
-    \item Simpler but more memory traffic
-\end{itemize}
-
-\begin{center}
-\begin{tcolorbox}[colback=green!10, width=0.8\textwidth]
-\begin{tabular}{c c c}
-Write & $\rightarrow$ & L1 Cache \\
-      & $\searrow$ & Memory (simultaneously)\\
-& & \\
-Eviction & $\rightarrow$ & No memory update needed
-\end{tabular}
-\end{tcolorbox}
-\end{center}
-
-\textbf{Note:} Valid bit still needed to indicate if cache line contains valid data
-\end{frame}
-
-\begin{frame}{Write Miss Policies: Write Allocate}
-\textbf{Write Allocate:}
-\begin{enumerate}
-    \item On write miss: send request to fetch block from memory
-    \item Before fetching: free appropriate location (based on set and replacement policy)
-    \item Fetch block from lower level
-    \item Perform the write to cache
-\end{enumerate}
-
-\begin{center}
-\begin{tcolorbox}[colback=yellow!10, width=0.9\textwidth]
-Write request, miss $\rightarrow$ Evict if needed $\rightarrow$ Fetch block $\rightarrow$ Write to cache
-\end{tcolorbox}
-\end{center}
-
-Commonly used with \textbf{write-back} policy
-\end{frame}
-
-\begin{frame}{Write Miss Policies: No Write Allocate}
-\textbf{No Write Allocate:}
-\begin{itemize}
-    \item On write miss: send write request directly to memory
-    \item Don't fetch block to cache
-    \item No eviction needed
-    \item Simpler but may miss future locality
-\end{itemize}
-
-\begin{center}
-\begin{tcolorbox}[colback=orange!10, width=0.7\textwidth]
-Write request, miss $\rightarrow$ Write directly to memory\\
-(Cache unchanged)
-\end{tcolorbox}
-\end{center}
-
-Commonly used with \textbf{write-through} policy
-\end{frame}
-
-\section{Review: Advanced Cache Topics}
-\begin{frame}{LRU Implementation for 4-Way Cache}
-\textbf{Method 1: Full List (8 bits per set)}
-\begin{itemize}
-    \item Maintain linked list of 4 nodes (one per way)
-    \item Store order of usage
-    \item 2 bits per way $\times$ 4 ways = 8 bits
-    \item Update list on every access
-\end{itemize}
-
-\textbf{Example states:}
-\begin{center}
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-Initial: & Way0(00) & Way1(01) & Way2(10) & Way3(11) \\
-Hit Way1: & Way1(01) & Way0(00) & Way2(10) & Way3(11) \\
-Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
-\hline
-\multicolumn{2}{|l}{MRU} & & & LRU \\
-\hline
-\end{tabular}
-\end{center}
-\end{frame}
-
-\begin{frame}{LRU Implementation - Optimized}
-\textbf{Method 2: Partial List (6 bits per set)}
-\begin{itemize}
-    \item Store only 3 most recent ways
-    \item 4th way is implicitly LRU
-    \item 2 bits × 3 = 6 bits per set
-\end{itemize}
-
-\textbf{Method 3: Optimal Encoding (5 bits per set)}
-\begin{itemize}
-    \item Number of possible orderings: 4! = 24
-    \item Need $\lceil \log_2(24) \rceil = 5$ bits
-    \item Most space-efficient
-    \item But complex encoding/decoding logic
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Cache Performance Metrics}
-\textbf{Important Formulas:}
-
-\begin{itemize}
-    \item \textbf{Average Memory Access Time (AMAT):}
-    $$AMAT = Hit\_Time + Miss\_Rate \times Miss\_Penalty$$
-    
-    \item \textbf{Cache Size:}
-    $$Size = \#Sets \times \#Ways \times Block\_Size$$
-    
-    \item \textbf{Directory Size:}
-    $$Dir\_Size = \#Sets \times \#Ways \times (Tag\_Bits + Status\_Bits)$$
-    
-    \item \textbf{Set Calculation:}
-    $$Set = \lfloor Address / Block\_Size \rfloor \mod \#Sets$$
-\end{itemize}
-\end{frame}
-
-\section{Question 4: Segment-Based Cache Design}
-\begin{frame}{Q4: Segment-Based Cache Design}
+\section{Question 3: Segment-Based Cache Design}
+\begin{frame}{Q3: Segment-Based Cache Design}
 \textbf{Problem Setup:}
 \begin{itemize}
     \item 2-way set associative cache deployed in a system
@@ -1468,7 +1241,7 @@ Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
 \textbf{Question:} Propose a simple and efficient method to implement this requirement and explain its operation.
 \end{frame}
 
-\begin{frame}{Q4a: Analysis}
+\begin{frame}{Q3a: Analysis}
 \textbf{Step 1: Understanding Memory Segments}
 \begin{itemize}
     \item Each segment is 256MB = $2^{28}$ bytes
@@ -1499,7 +1272,7 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Q4b: Solution}
+\begin{frame}{Q3b: Solution}
 \textbf{Design Goal:} Ensure max 50\% cache for A segments, 50\% for B segments
 
 \pause
@@ -1554,7 +1327,7 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Q4c: Concrete Example}
+\begin{frame}{Q3c: Concrete Example}
 \textbf{Example Addresses and Their Mapping:}
 
 \begin{center}
