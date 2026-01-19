@@ -393,16 +393,9 @@ Libc:  0x7fc8e1200000
                 \item \textbf{Terminator:} 0x00000aff
                 \item \textbf{Random XOR:} Includes stack ptr
             \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Compiler Flags:}
-            \begin{itemize}
-                \item -fstack-protector
-                \item -fstack-protector-strong
-                \item -fstack-protector-all
-            \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
+            \vspace{-7mm}
             \begin{tcolorbox}[colback=blue!10]
                 \small
                 \textbf{Vulnerable Function:}
@@ -452,7 +445,8 @@ vulnerable:
     \begin{center}
         \begin{tikzpicture}[font=\footnotesize,
             stack cell/.style={draw, minimum width=3.5cm, minimum height=0.6cm},
-            annotation/.style={font=\scriptsize, red, anchor=west}]
+            callout/.style={draw, fill=white, font=\scriptsize, rounded corners=2pt,
+                           inner sep=3pt, drop shadow={opacity=0.3}}]
 
             % Stack frame title
             \node[font=\footnotesize\bfseries] (title) {Stack Frame};
@@ -475,20 +469,34 @@ vulnerable:
                 \node[fill=gray!20, fit=(title)(stack), inner sep=6pt] {};
             \end{scope}
 
-            % Annotations
-            \node[annotation, right=0.3cm of stack-3-1] {← Check this!};
+            % Stage 1: Normal state - canary check annotation
+            \node[callout, right=2.5cm of stack-3-1] (check) {Verified on return};
+            \draw[->, thick, green!60!black] (check.west) -- (stack-3-1.east);
 
-            % Attack arrows
-            \draw[->, ultra thick, red] ([xshift=2.5cm]stack-2-1.east) -- (stack-2-1.east)
-                node[pos=0, anchor=west, font=\scriptsize] {Overflow};
-            \draw[->, dashed, red] ([xshift=2.5cm]stack-3-1.east) -- ([xshift=0.8cm]stack-3-1.east)
-                node[pos=0, anchor=west, font=\scriptsize] {Corrupts canary};
-            \draw[->, dashed, red] ([xshift=2.5cm]stack-5-1.east) -- ([xshift=0.8cm]stack-5-1.east)
-                node[pos=0, anchor=west, font=\scriptsize] {Target};
+            % Stage 2: Overflow attack
+            \onslide<2->{
+                \draw[->, ultra thick, red] ([xshift=4cm]stack-2-1.east) -- (stack-2-1.east);
+                \node[callout, fill=red!10, right=4.2cm of stack-2-1] (overflow) {1. Overflow};
+            }
+
+            % Stage 3: Canary corruption
+            \onslide<3->{
+                \draw[->, thick, red, dashed] ([xshift=4cm]stack-3-1.east) -- (stack-3-1.east);
+                \node[callout, fill=red!10, right=4.2cm of stack-3-1] (corrupt) {2. Corrupts canary};
+            }
+
+            % Stage 4: Target and detection
+            \onslide<4->{
+                \draw[->, thick, red, dashed] ([xshift=4cm]stack-5-1.east) -- (stack-5-1.east);
+                \node[callout, fill=red!10, right=4.2cm of stack-5-1] (target) {3. Target};
+            }
 
             % Detection result
-            \node[draw, fill=green!20, font=\scriptsize, below=0.5cm of stack]
-                {Canary mismatch $\rightarrow$ abort()};
+            \onslide<5->{
+                \node[draw=green!60!black, fill=green!20, font=\scriptsize, thick,
+                      below=0.5cm of stack, minimum width=4cm]
+                    {Canary mismatch $\rightarrow$ \textbf{abort()}};
+            }
         \end{tikzpicture}
     \end{center}
 \end{frame}
@@ -619,7 +627,7 @@ some_ioctl:
             allowed/.style={->, thick, green!60!black}]
 
             % Kernel Space at top - smaller and more compact
-            \node[space, fill=purple!15] (kernel) {\textbf{Kernel Space (Ring 0)}};
+            \node[space, fill=purple!15, minimum height=0.9cm, text depth=3mm] (kernel) {\textbf{Kernel Space (Ring 0)}};
 
             % Protection barrier
             \coordinate (barrier-left) at ([xshift=-4cm]kernel.south);
@@ -881,7 +889,7 @@ some_ioctl:
                 \item Tag memory not directly accessible
             \end{itemize}
 
-            \vspace{0.3cm}
+            %\vspace{0.3cm}
             \textbf{Hardware Tag Checking:}
             \begin{itemize}
                 \item On every load/store: compare pointer tag with memory tag
@@ -889,7 +897,7 @@ some_ioctl:
                 \item Synchronous or asynchronous mode
             \end{itemize}
 
-            \vspace{0.3cm}
+            %\vspace{0.3cm}
             \textbf{Software Behavior:}
             \begin{itemize}
                 \item \texttt{malloc()}: assigns random tag to allocation
@@ -898,13 +906,12 @@ some_ioctl:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \textbf{Use-After-Free Detection Example:}
-            \begin{tcolorbox}[colback=gray!10]
-{\scriptsize
-\begin{minted}{c}
+            \vspace{-3mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\footnotesize]{c}
 // Allocation - tag = 0x5
 char *ptr = malloc(64);
-// ptr = 0x5_00001000 (tag in bits 59:56)
+// ptr = 0x5_00001000 (tag bits 59:56)
 // Memory at 0x1000 tagged with 0x5
 
 strcpy(ptr, "hello");  // OK: tags match
@@ -914,16 +921,153 @@ free(ptr);  // Memory retagged to 0x7
 
 // Use-after-free attempt:
 strcpy(ptr, "bad");  // EXCEPTION!
-                     // ptr tag (0x5) !=
-                     // memory tag (0x7)
+// ptr tag (0x5) != memory tag (0x7)
 \end{minted}
-}
             \end{tcolorbox}
 
-            \vspace{0.2cm}
+            \vspace{0.1cm}
             {\tiny Note: Tags are random, not sequential}
         \end{column}
     \end{columns}
+\end{frame}
+
+\begin{frame}{ARM MTE in Action}
+    \begin{tikzpicture}[
+        memcell/.style={draw, minimum width=1.1cm, minimum height=0.5cm, font=\tiny},
+        tagcell/.style={draw, minimum width=1.1cm, minimum height=0.4cm, font=\scriptsize\bfseries},
+        codeline/.style={font=\ttfamily\scriptsize, anchor=west},
+        highlight/.style={draw=yellow!80!black, fill=yellow!30, thick, rounded corners=2pt},
+        highlight bad/.style={draw=red!80!black, fill=red!30, thick, rounded corners=2pt},
+        rowlabel/.style={font=\scriptsize\bfseries, anchor=east},
+        ptrtag/.style={draw, minimum width=0.6cm, minimum height=0.4cm, font=\scriptsize\bfseries},
+        ptrval/.style={draw, minimum width=1.5cm, minimum height=0.4cm, font=\scriptsize},
+        allocated/.style={fill=green!40},
+        freed/.style={fill=orange!40},
+        allocmem/.style={fill=green!20},
+        freedmem/.style={fill=orange!20},
+        result/.style={draw=red, fill=red!20, thick, font=\small\bfseries, rounded corners=3pt}]
+
+        % Code listing (left side)
+        \matrix[matrix of nodes, nodes={codeline}, row sep=2pt] (code) {
+            |(c1)| ptr = malloc(64); \\
+            |(c2)| strcpy(ptr, "hello"); \\
+            |(c3)| free(ptr); \\
+            |(c4)| strcpy(ptr, "bad"); \\
+        };
+
+        % Highlight current line (on background layer so code stays visible)
+        \begin{scope}[on background layer]
+            \onslide<2>{\node[highlight, fit=(c1), inner sep=1pt] {};}
+            \onslide<3>{\node[highlight, fit=(c2), inner sep=1pt] {};}
+            \onslide<4>{\node[highlight, fit=(c3), inner sep=1pt] {};}
+            \onslide<5-6>{\node[highlight bad, fit=(c4), inner sep=1pt] {};}
+        \end{scope}
+
+        % Right side - memory visualization
+        % Tag Memory (separate storage) with address labels above
+        \node[rowlabel] (taglabel) at (5.2, 0.6) {Tag Memory:};
+        \matrix[matrix of nodes,
+            nodes={tagcell, fill=gray!20},
+            column sep=-\pgflinewidth,
+            ampersand replacement=\&,
+            right=3pt of taglabel.east, anchor=west] (tags) {
+            - \& - \& - \& - \\
+        };
+        % Address labels above tag cells (no border/background)
+        \matrix[matrix of nodes,
+            nodes={font=\tiny, minimum width=1.1cm, minimum height=0.3cm, inner sep=0pt},
+            column sep=-\pgflinewidth,
+            ampersand replacement=\&,
+            anchor=south] at (tags.north) {
+            0x1000 \& 0x1010 \& 0x1020 \& 0x1030 \\
+        };
+
+        % Color the tag cells based on state
+        \onslide<2-3>{
+            \node[tagcell, allocated] at (tags-1-1) {5};
+            \node[tagcell, allocated] at (tags-1-2) {5};
+            \node[tagcell, allocated] at (tags-1-3) {5};
+            \node[tagcell, allocated] at (tags-1-4) {5};
+        }
+        \onslide<4->{
+            \node[tagcell, freed] at (tags-1-1) {7};
+            \node[tagcell, freed] at (tags-1-2) {7};
+            \node[tagcell, freed] at (tags-1-3) {7};
+            \node[tagcell, freed] at (tags-1-4) {7};
+        }
+
+        % Main Memory - label aligned to taglabel, matrix aligned to tags
+        \node[rowlabel, below=0.6cm of taglabel.east, anchor=east] (memlabel) {Memory:};
+        \matrix[matrix of nodes,
+            nodes={memcell, fill=gray!10},
+            column sep=-\pgflinewidth,
+            ampersand replacement=\&,
+            anchor=west] (mem) at (tags.west |- memlabel) {
+            --- \& --- \& --- \& --- \\
+        };
+
+        % Color memory based on state - show content, not addresses
+        \onslide<2>{
+            \node[memcell, allocmem] at (mem-1-1) {---};
+            \node[memcell, allocmem] at (mem-1-2) {---};
+            \node[memcell, allocmem] at (mem-1-3) {---};
+            \node[memcell, allocmem] at (mem-1-4) {---};
+        }
+        \onslide<3>{
+            \node[memcell, allocmem] at (mem-1-1) {"hel};
+            \node[memcell, allocmem] at (mem-1-2) {lo"};
+            \node[memcell, allocmem] at (mem-1-3) {---};
+            \node[memcell, allocmem] at (mem-1-4) {---};
+        }
+        \onslide<4->{
+            \node[memcell, freedmem] at (mem-1-1) {freed};
+            \node[memcell, freedmem] at (mem-1-2) {freed};
+            \node[memcell, freedmem] at (mem-1-3) {freed};
+            \node[memcell, freedmem] at (mem-1-4) {freed};
+        }
+
+        % Pointer variable - label aligned to memlabel, larger gap from Memory row
+        \node[rowlabel, below=1cm of memlabel.east, anchor=east] (ptrlabel) {ptr:};
+        \node[ptrtag, fill=gray!20, anchor=west] (ptrtag-node) at (mem-1-1.west |- ptrlabel) {-};
+        \node[ptrval, fill=gray!10, anchor=west] (ptrval-node) at (ptrtag-node.east) {NULL};
+
+        % Update pointer on malloc - positioned relative to mem-1-1 and ptrtag-alloc
+        \onslide<2->{
+            \node[ptrtag, allocated, anchor=west] (ptrtag-alloc) at (mem-1-1.west |- ptrlabel) {5};
+            \node[ptrval, fill=blue!20, anchor=west] (ptrval-alloc) at (ptrtag-alloc.east) {0x1000};
+        }
+        \onslide<4->{
+            \node[font=\tiny, red, right=2pt of ptrval-alloc.east] {(stale tag)};
+        }
+
+        % Tag comparison visualization
+        \onslide<3>{
+            \draw[->, thick, green!60!black] ([yshift=2pt]ptrtag-alloc.north) -- ++(0, 0.4)
+                node[right, font=\scriptsize, pos=0.5] {5==5 \checkmark};
+        }
+        \onslide<5->{
+            \draw[->, thick, red] ([yshift=2pt]ptrtag-alloc.north) -- ++(0, 0.4)
+                node[right, font=\scriptsize, pos=0.5] {5$\neq$7};
+        }
+
+        % Labels for sections
+        \node[font=\scriptsize\itshape, gray, above=0.3cm of code.north] (proglabel) {Program};
+        \node[font=\scriptsize\itshape, gray] at (tags.north |- proglabel) {Hardware State};
+
+        % Separator line - from above program label to below ptr
+        \draw[gray, dashed] ([xshift=1cm]proglabel.north -| code.east) -- ([xshift=1cm, yshift=-0.3cm]ptrlabel.south -| code.east);
+
+        % Note about tag memory
+        \node[font=\tiny, gray, anchor=west] at ([xshift=0.5cm]tags.east) {(separate DRAM)};
+
+        % Description box at bottom center - use separate overlaid nodes
+        \coordinate (descpos) at ([yshift=-1.5cm]ptrlabel.south);
+        \onslide<1>{\node[draw, fill=blue!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {Initial state: pointer is NULL, memory unallocated};}
+        \onslide<2>{\node[draw, fill=blue!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {malloc(64): Allocates memory, assigns tag 5 to both pointer and memory};}
+        \onslide<3>{\node[draw, fill=green!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {strcpy(): Hardware checks pointer tag (5) == memory tag (5) \checkmark};}
+        \onslide<4>{\node[draw, fill=orange!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {free(): Memory tag changed to 7, but pointer still has tag 5};}
+        \onslide<5-6>{\node[draw, fill=red!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {strcpy(): Hardware checks 5 $\neq$ 7 $\rightarrow$ \textbf{FAULT!}};}
+    \end{tikzpicture}
 \end{frame}
 
 \begin{frame}[fragile]{Pointer Authentication (PAC)}
@@ -1121,6 +1265,7 @@ invalid_target:  ; No endbranch
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
+            \vspace{-7mm}
             \begin{tcolorbox}[colback=gray!10]
                 \small
                 \textbf{BTI Usage Example:}
@@ -1180,7 +1325,7 @@ plt_stub:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \vspace{-3mm}
+            \vspace{-7mm}
             \begin{tcolorbox}[colback=green!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{gas}
 sensitive_function:
@@ -1240,6 +1385,7 @@ sensitive_function:
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
+            \vspace{-7mm}
             \begin{tikzpicture}[font=\scriptsize,
                 stack title/.style={font=\scriptsize\bfseries},
                 stack cell/.style={draw, minimum width=2cm, minimum height=0.5cm, anchor=north, inner sep=2pt},
@@ -1807,16 +1953,15 @@ func:
 
 \begin{frame}{IOMMU - Input/Output Memory Management Unit}
     \begin{columns}
-        \begin{column}{0.65\textwidth}
+        \begin{column}{0.55\textwidth}
             \textbf{What is IOMMU?}
             \begin{itemize}
                 \item Hardware unit controlling device DMA
                 \item Maps device addresses to physical memory
                 \item Similar to MMU but for devices
-                \item Intel: VT-d, AMD: AMD-Vi
             \end{itemize}
 
-            \vspace{0.0cm}
+            \vspace{0.3cm}
             \textbf{Key Features:}
             \begin{itemize}
                 \item \textbf{PASID:} Process Address Space ID
@@ -1827,18 +1972,10 @@ func:
                 \item \textbf{Protection Granularity:} Page-level (4KB)
                 \item \textbf{Interrupt Remapping:} Prevents interrupt injection
             \end{itemize}
-
-            \vspace{0.0cm}
-            \textbf{Attacks Prevented:}
-            \begin{itemize}
-                \item \textcolor{red}{DMA attacks} (BadUSB, Thunderstrike)
-                \item \textcolor{red}{Malicious devices} reading memory
-                \item \textcolor{red}{Driver bugs} corrupting memory
-            \end{itemize}
         \end{column}
-        \begin{column}{0.35\textwidth}
-            \vspace{-0.5cm}
-            \begin{tikzpicture}[font=\footnotesize]
+        \begin{column}{0.45\textwidth}
+            \centering
+            \begin{tikzpicture}[font=\footnotesize, scale=1.3, every node/.style={scale=1.3}]
                 % Memory at top right
                 \node[inner sep=0pt] (mem)
                     {\includegraphics[width=1cm]{figures/noun-ram-7483151.png}};
@@ -1892,17 +2029,11 @@ func:
                 % Show a blocked path attempt
                 \draw[->, thick, red, dashed] (iommu.right) -- (blocked.west);
             \end{tikzpicture}
-
-%            \vspace{0.2cm}
-%            \begin{tcolorbox}[colback=yellow!10]
-%                \small
-%                \textbf{Challenge:} Buffer sharing requires careful management when protection is page-granular
-%            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
 
-\begin{frame}{IOMMU Protection Scenarios}
+\begin{frame}{IOMMU - Attack Prevention}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{CPU-Initiated Attacks:}
@@ -1911,8 +2042,8 @@ func:
                 \item Kernel bug triggers bad DMA request
                 \item IOMMU validates all translations
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.5cm}
             \textbf{Device-Initiated Attacks:}
             \begin{itemize}
                 \item Malicious firmware in peripherals
@@ -1920,21 +2051,46 @@ func:
                 \item Rogue Thunderbolt devices
                 \item USB devices with DMA capability
             \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Shared Buffer Problem:}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Attacks Prevented:}
+            \begin{itemize}
+                \item \textcolor{red}{DMA attacks} (BadUSB, Thunderstrike)
+                \item \textcolor{red}{Malicious devices} reading memory
+                \item \textcolor{red}{Driver bugs} corrupting memory
+            \end{itemize}
+
+            \vspace{0.5cm}
             \begin{tcolorbox}[colback=yellow!20]
-                \small
-                When data structures share a page:
+                \textbf{Limitation:} Protection is page-granular (4KB). If two data structures share a page, device can access both!
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{IOMMU - Shared Buffer Problem}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The Problem:}
+            \begin{itemize}
+                \item IOMMU protection is page-granular
+                \item Device needs access to buffer A
+                \item Buffer B is on same 4KB page
+                \item Device can access both!
+            \end{itemize}
+
+            \vspace{-5mm}
+            \begin{tcolorbox}[colback=blue!20]
+                \textbf{Solutions:}
                 \begin{itemize}
-                    \item Device needs access to buffer A
-                    \item Buffer B is on same 4KB page
-                    \item Device can access both!
+                    \item Align DMA buffers to page boundaries
+                    \item Use bounce buffers (copy to isolated page)
+                    \item Sub-page protection (future hardware)
                 \end{itemize}
             \end{tcolorbox}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[font=\footnotesize,
+            \begin{tikzpicture}[font=\footnotesize, scale=1.3, every node/.style={scale=1.3},
                 buffer/.style={draw, minimum width=2cm, minimum height=0.8cm, align=center}]
                 % Memory page container
                 \node[draw, fill=gray!10, minimum width=5cm, minimum height=1.8cm] (page) {};
@@ -1968,17 +2124,6 @@ func:
                 \draw[->, thick, red, dashed] (iommu.tpin 2) -- (bufB.south)
                     node[midway, right, font=\tiny, text=red] {Leaks!};
             \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \begin{tcolorbox}[colback=blue!20]
-                \small
-                \textbf{Solutions:}
-                \begin{itemize}
-                    \item Align DMA buffers to page boundaries
-                    \item Use bounce buffers
-                    \item Sub-page protection (future)
-                \end{itemize}
-            \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
@@ -2016,7 +2161,7 @@ func:
 
             \vspace{0.3cm}
             \begin{tcolorbox}[colback=blue!10, title={\small Goal}]
-                \textbf{Run code on someone else's hardware without them being able to:}
+                \textbf{Run code on someone else's hardware without them being able to:}%
                 \begin{itemize}
                     \item Read your data
                     \item Modify your code
@@ -2933,12 +3078,9 @@ On Read:
             timeline label/.style={font=\tiny, text depth=0.25ex},
             feature/.style={draw, fill=blue!20, minimum width=1.2cm, minimum height=0.5cm, text depth=0.25ex}]
 
-            % Timeline arrow
-            \draw[thick,->] (-0.5,-1) -- (12.5,-1) node[right] {Time};
-
             % Security features with consistent style
             \node[feature] (nx) at (1,0) {NX Bit};
-            \node[timeline label, below=2pt of nx] {2000s};
+            \node[timeline label, below=2pt of nx] (year-nx) {2000s};
 
             \node[feature, right=0.6cm of nx] (aslr) {ASLR};
             \node[timeline label, below=2pt of aslr] {2005};
@@ -2953,7 +3095,10 @@ On Read:
             \node[timeline label, below=2pt of tdx] {2021};
 
             \node[feature, right=0.6cm of tdx] (mte) {MTE/PAC};
-            \node[timeline label, below=2pt of mte] {2022};
+            \node[timeline label, below=2pt of mte] (year-mte) {2022};
+
+            % Timeline arrow (positioned relative to nodes)
+            \draw[thick,->] ([yshift=-1pt]nx.west |- year-nx.south) -- ([yshift=-1pt, xshift=0.8cm]mte.east |- year-mte.south) node[right] {Time};
         \end{tikzpicture}
     \end{center}
 
