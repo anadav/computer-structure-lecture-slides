@@ -879,9 +879,9 @@ some_ioctl:
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{ARM MTE - How It Works}
+\begin{frame}{ARM MTE - How It Works}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.49\textwidth}
             \textbf{Memory Granularity:}
             \begin{itemize}
                 \item Each 16-byte memory granule has a 4-bit tag
@@ -894,39 +894,29 @@ some_ioctl:
             \begin{itemize}
                 \item On every load/store: compare pointer tag with memory tag
                 \item If mismatch $\rightarrow$ exception
-                \item Synchronous or asynchronous mode
+                \item \textbf{Probabilistic:} 4-bit tag = 1/16 chance of collision
             \end{itemize}
 
             %\vspace{0.3cm}
-            \textbf{Software Behavior:}
-            \begin{itemize}
-                \item \texttt{malloc()}: assigns random tag to allocation
-                \item \texttt{free()}: changes memory tag
-                \item Old pointers become invalid
-            \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \vspace{-3mm}
-            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\footnotesize]{c}
-// Allocation - tag = 0x5
-char *ptr = malloc(64);
-// ptr = 0x5_00001000 (tag bits 59:56)
-// Memory at 0x1000 tagged with 0x5
+        \begin{column}{0.49\textwidth}
+            \textbf{Key Instructions:}
+            \begin{itemize}
+                \item \texttt{IRG} -- Insert Random tag into pointer
+                \item \texttt{STG} -- Store Allocation Tag to memory
+                \item \texttt{LDG} -- Load Allocation Tag from memory
+            \end{itemize}
 
-strcpy(ptr, "hello");  // OK: tags match
+            \vspace{0.3cm}
+            \textbf{Allocator Integration:}
+            \begin{itemize}
+                \item \texttt{malloc()}: uses \texttt{IRG} + \texttt{STG}
+                \item \texttt{free()}: uses \texttt{STG} with new tag
+                \item Hardware checks tag on every access
+            \end{itemize}
 
-free(ptr);  // Memory retagged to 0x7
-            // ptr still has tag 0x5
-
-// Use-after-free attempt:
-strcpy(ptr, "bad");  // EXCEPTION!
-// ptr tag (0x5) != memory tag (0x7)
-\end{minted}
-            \end{tcolorbox}
-
-            \vspace{0.1cm}
-            {\tiny Note: Tags are random, not sequential}
+            \vspace{0.3cm}
+            {\small \textbf{Note:} Probabilistic detection ($\sim$94\% per access)}
         \end{column}
     \end{columns}
 \end{frame}
@@ -951,7 +941,7 @@ strcpy(ptr, "bad");  // EXCEPTION!
         \matrix[matrix of nodes, nodes={codeline}, row sep=2pt] (code) {
             |(c1)| ptr = malloc(64); \\
             |(c2)| strcpy(ptr, "hello"); \\
-            |(c3)| free(ptr); \\
+            |(c3)| free(ptr); // STG \\
             |(c4)| strcpy(ptr, "bad"); \\
         };
 
@@ -1065,8 +1055,8 @@ strcpy(ptr, "bad");  // EXCEPTION!
         \onslide<1>{\node[draw, fill=blue!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {Initial state: pointer is NULL, memory unallocated};}
         \onslide<2>{\node[draw, fill=blue!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {malloc(64): Allocates memory, assigns tag 5 to both pointer and memory};}
         \onslide<3>{\node[draw, fill=green!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {strcpy(): Hardware checks pointer tag (5) == memory tag (5) \checkmark};}
-        \onslide<4>{\node[draw, fill=orange!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {free(): Memory tag changed to 7, but pointer still has tag 5};}
-        \onslide<5-6>{\node[draw, fill=red!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {strcpy(): Hardware checks 5 $\neq$ 7 $\rightarrow$ \textbf{FAULT!}};}
+        \onslide<4>{\node[draw, fill=orange!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {free() uses \texttt{STG} instruction to set memory tag to 7; pointer keeps stale tag 5};}
+        \onslide<5-6>{\node[draw, fill=red!10, rounded corners=3pt, font=\small, minimum width=10cm] at (descpos) {strcpy(): HW checks 5 $\neq$ 7 $\rightarrow$ \textbf{FAULT!} (even if reallocated: 15/16 detection)};}
     \end{tikzpicture}
 \end{frame}
 
