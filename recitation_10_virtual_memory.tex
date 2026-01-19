@@ -471,42 +471,74 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 
 \begin{frame}{Address Translation Diagram}
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
-  % Virtual Address
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2,
-        minimum height=0.8cm] (vaddr) at (0,4) {
-    \nodepart{one} VPN
-    \nodepart{two} offset
+\begin{tikzpicture}[scale=0.85,
+  addrfield/.style={draw, minimum height=7mm, inner sep=2mm, font=\small},
+  lbl/.style={font=\scriptsize\bfseries},
+  arrow/.style={->, thick, >=stealth},
+  darrow/.style={<->, dashed, thick, >=stealth},
+]
+  % Virtual Address - using matrix of nodes
+  \matrix[matrix of nodes,
+          nodes={addrfield},
+          column sep=-\pgflinewidth,
+          ampersand replacement=\&] (vaddr) {
+    |[fill=lightblue, minimum width=2cm]| VPN \&
+    |[fill=highlightyellow, minimum width=1.5cm]| offset \\
   };
-  \node[above] at (vaddr.north) {Virtual Address};
-  
-  % PTBR
-  \node[draw, rectangle, fill=highlightorange] (ptbr) at (-3,2) {PTBR};
-  
-  % Page Table
-  \node[draw, rectangle, fill=lightblue!30, minimum width=2cm, minimum height=1.5cm] (pt) at (0,2) {Page Table};
-  
-  % Physical Address
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2,
-        minimum height=0.8cm] (paddr) at (0,0) {
-    \nodepart{one} PFN
-    \nodepart{two} offset
+  \node[lbl, above=0mm of vaddr] {Virtual Address};
+
+  % Page Table - positioned relative to VPN field
+  \node[draw, fill=lightblue!30, minimum width=2.2cm, minimum height=1.6cm,
+        below=0.8cm of vaddr-1-1, align=center] (pt) {Page\\Table};
+
+  % PTBR - positioned relative to page table
+  \node[draw, fill=highlightorange, inner sep=3mm,
+        left=1.5cm of pt.north west, anchor=east] (ptbr) {PTBR};
+
+  % Physical Address - east aligned with virtual address east
+  \matrix[matrix of nodes,
+          nodes={addrfield},
+          column sep=-\pgflinewidth,
+          anchor=east,
+          ampersand replacement=\&] (paddr) at (vaddr.east |- pt.south) [yshift=-1.5cm] {
+    |[fill=correctgreen!30, minimum width=2cm]| PFN \&
+    |[fill=highlightyellow, minimum width=1.5cm]| offset \\
   };
-  \node[below] at (paddr.south) {Physical Address};
-  
-  % Memory
-  \node[draw, rectangle, fill=memorycolor, minimum width=2cm, minimum height=3cm, align=center] (mem) at (4,1) {Main\\Memory};
-  
+  \node[lbl, below=0mm of paddr] {Physical Address};
+
+  % Main Memory - positioned relative to page table
+  \node[draw, fill=memorycolor, minimum width=2.2cm, minimum height=3cm,
+        right=2cm of pt] (mem) {};
+  \node[lbl, above=0mm of mem] {Main Memory};
+
+  % Data block inside memory (white background)
+  \node[draw, fill=white, minimum width=1.8cm, minimum height=8mm,
+        align=center, font=\small] (data) at (mem.center) {data};
+
   % Arrows
-  \draw[->, thick] (vaddr.one south) -- (pt.north) node[midway, right] {\small index};
-  \draw[->, thick] (ptbr) -- (pt) node[midway, above] {\small base};
-  \draw[->, thick] (pt) -- (paddr.one north) node[midway, right] {\small PFN};
-  \draw[->, thick] (paddr) -| (mem) node[near end, above] {\small data};
-  \draw[<->, dashed] (vaddr.two south) -- (paddr.two north) node[midway, right] {\small same};
+  % VPN -> Page Table (index)
+  \draw[arrow, darkblue] (vaddr-1-1.south) -- (pt.north)
+    node[midway, right, font=\scriptsize] {index};
+
+  % PTBR -> Page Table (base)
+  \draw[arrow] (ptbr.east) -- (pt.north west)
+    node[midway, above, font=\scriptsize] {base};
+
+  % Page Table -> PFN
+  \draw[arrow, correctgreen!70!black] (pt.south) -- (paddr-1-1.north)
+    node[midway, left, font=\scriptsize] {PFN};
+
+  % Physical Address -> Memory (from right of entire address)
+  \draw[arrow, correctgreen!70!black] (paddr.east) to[out=0, in=180] (data.west);
+
+  % Offset passthrough (dashed)
+  \draw[darrow, orange!80!black] (vaddr-1-2.south) -- (paddr-1-2.north)
+    node[midway, right, font=\scriptsize, text=black] {same};
+
 \end{tikzpicture}
 \end{center}
 
-\textbf{Result}: 2 memory accesses - one for page table, one for data
+\textbf{Result}: 2 memory accesses — one for page table, one for data
 \end{frame}
 
 \section{Questions}
