@@ -641,60 +641,6 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 
 
 
-% Slide 6: Software Implications
-\begin{frame}{Software Implications}
-\begin{columns}[T]
-\column{0.5\textwidth}
-\textbf{Cache Coherency}
-\begin{itemize}
-\item Maintained automatically
-\item But costs performance
-\item Worse across sockets
-\end{itemize}
-
-\vspace{0.2cm}
-\textbf{Memory Allocation}
-\begin{itemize}
-\item First-touch policy
-\item NUMA-aware allocation
-\item Thread-local storage
-\end{itemize}
-
-\vspace{0.2cm}
-\textbf{Thread Placement}
-\begin{itemize}
-\item Pin threads to cores
-\item Keep related threads on same socket
-\item Minimize cross-socket communication
-\end{itemize}
-
-\column{0.5\textwidth}
-\textbf{Performance Tips:}
-\begin{itemize}
-\item \textbf{Check your topology:}\\
-   \texttt{lscpu -e} or \texttt{lstopo}
-
-\item \textbf{Quick improvement:}\\
-   \texttt{numactl --cpunodebind=0 ./app}
-
-\item \textbf{For shared data:}\\
-   Place on socket with most accessors
-
-\item \textbf{For partitioned data:}\\
-   Align partitions to NUMA nodes
-\end{itemize}
-
-\vspace{0.3cm}
-\begin{tikzpicture}
-\node[draw, thick, fill=red!20, text width=7.5cm] at (0,0) {
-%\textbf{Remember:}\\
-Remote memory access = 1.5-2x slower\\
-Cross-socket atomics = 3-5x slower\\
-False sharing across sockets = 10x slower
-};
-\end{tikzpicture}
-\end{columns}
-\end{frame}
 
 
 \section{NUMA Architecture}
@@ -715,21 +661,6 @@ False sharing across sockets = 10x slower
 \item How processors access memory defines the architecture
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Memory Architecture Spectrum:}
-\begin{center}
-\footnotesize
-\begin{tabular}{lccc}
-\toprule
-& \textbf{UMA} & \textbf{NUMA} & \textbf{Message Passing} \\
-\midrule
-Address Space & Shared & Shared & Private \\
-Memory Access & Uniform & Non-uniform & Local only \\
-Scalability & Low & Medium & High \\
-Programming & Easy & Medium & Hard \\
-\bottomrule
-\end{tabular}
-\end{center}
 \end{frame}
 % Slide: Multi-Processor Memory - UMA
 \begin{frame}{Multi-Processor Memory: UMA}
@@ -968,6 +899,23 @@ Programming & Easy & Medium & Hard \\
 \end{columns}
 \end{frame}
 
+% Slide: Memory Architecture Spectrum
+\begin{frame}{Memory Architecture Spectrum}
+\begin{center}
+\large
+\begin{tabular}{lccc}
+\toprule
+& \textbf{UMA} & \textbf{NUMA} & \textbf{Message Passing} \\
+\midrule
+Address Space & Shared & Shared & Private \\
+Memory Access & Uniform & Non-uniform & Local only \\
+Scalability & Low & Medium & High \\
+Programming & Easy & Medium & Hard \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{frame}
+
 % Slide: NUMA Topology
 \begin{frame}{NUMA Node Topology}
 \begin{columns}[T]
@@ -1042,455 +990,58 @@ node & 0 & 1 \\
 \end{columns}
 \end{frame}
 
-% Slide 3: Interconnect Topologies
-\begin{frame}{Interconnect Topologies}
-\begin{center}
-\begin{tikzpicture}[
-    cpu/.style={draw, circle, minimum size=0.5cm, inner sep=1pt, font=\tiny},
-    cpublue/.style={cpu, fill=blue!30},
-    cpugreen/.style={cpu, fill=green!30},
-    cpuorange/.style={cpu, fill=orange!30},
-    mem/.style={draw, rectangle, fill=gray!30, minimum width=0.6cm, minimum height=0.4cm, font=\tiny},
-    conn/.style={<->, thick},
-    desc/.style={text width=2.8cm, align=center, font=\tiny}
-]
-
-% Ring (Intel)
-\node (ringtitle) at (0, 1.4) {\small\textbf{Ring}};
-\node[font=\tiny, below=0.02cm of ringtitle] {Intel Sandy Bridge+};
-\node[cpublue] (r0) at (0,0.5) {};
-\node[cpublue, right=0.4cm of r0] (r1) {};
-\node[cpublue, below=0.4cm of r1] (r2) {};
-\node[cpublue, left=0.4cm of r2] (r3) {};
-\draw[->, thick, blue!70] (r0) to[bend left=15] (r1);
-\draw[->, thick, blue!70] (r1) to[bend left=15] (r2);
-\draw[->, thick, blue!70] (r2) to[bend left=15] (r3);
-\draw[->, thick, blue!70] (r3) to[bend left=15] (r0);
-\node[mem, below=0.5cm of r3] (rmem) {Mem};
-\draw[conn] (r3) -- (rmem);
-\node[desc, below=0.15cm of rmem] {Bidirectional ring\\ Low latency\\ Limited scalability};
-
-% Mesh (Intel)
-\node (meshtitle) at (4.5, 1.4) {\small\textbf{Mesh}};
-\node[font=\tiny, below=0.02cm of meshtitle] {Intel Skylake-SP};
-\node[cpugreen] (m00) at (3.8,0.5) {};
-\node[cpugreen, right=0.35cm of m00] (m10) {};
-\node[cpugreen, right=0.35cm of m10] (m20) {};
-\node[cpugreen, below=0.4cm of m00] (m01) {};
-\node[cpugreen, right=0.35cm of m01] (m11) {};
-\node[cpugreen, right=0.35cm of m11] (m21) {};
-\draw[conn, green!60!black] (m00) -- (m10) -- (m20);
-\draw[conn, green!60!black] (m01) -- (m11) -- (m21);
-\draw[conn, green!60!black] (m00) -- (m01);
-\draw[conn, green!60!black] (m10) -- (m11);
-\draw[conn, green!60!black] (m20) -- (m21);
-\node[mem, below=0.5cm of m11] (mmem) {Mem};
-\draw[conn] (m11) -- (mmem);
-\node[desc, below=0.15cm of mmem] {2D grid\\ Good scalability\\ Higher latency};
-
-% Crossbar (AMD)
-\node (crosstitle) at (9, 1.4) {\small\textbf{Crossbar}};
-\node[font=\tiny, below=0.02cm of crosstitle] {AMD Zen CCX};
-\node[cpuorange] (x0) at (8.5,0.5) {};
-\node[cpuorange, right=0.7cm of x0] (x1) {};
-\node[cpuorange, below=0.5cm of x0] (x2) {};
-\node[cpuorange, right=0.7cm of x2] (x3) {};
-\draw[-, thick, orange!70] (x0) -- (x1) -- (x2) -- (x3) -- (x0) -- (x2);
-\draw[-, thick, orange!70] (x1) -- (x3);
-% IF connects to center of crossbar (shared L3/fabric)
-\coordinate (xcenter) at ($(x0)!0.5!(x3)$);
-\node[mem, below=0.7cm of xcenter] (xmem) {IF};
-\draw[conn] (xcenter) -- (xmem);
-\node[desc, below=0.15cm of xmem] {All-to-all within CCX\\ Lowest latency\\ Limited to small clusters};
-
-\end{tikzpicture}
-\end{center}
-
-\textbf{Software Impact:}
-\begin{itemize}
-\item Different topologies $\rightarrow$ different performance characteristics
-\item Ring: predictable latency, but can saturate with many cores
-\item Mesh: better for many-core scaling, but more variable latency
-\item Crossbar: excellent for small core counts, used in AMD's CCX design
-\end{itemize}
-\end{frame}
-
-% Mesh Interconnect Detail
-\begin{frame}{Mesh Interconnect (Intel Skylake-SP / Xeon Scalable)}
-\begin{center}
-\begin{tikzpicture}[scale=0.85, transform shape,
-    tile/.style={draw, minimum width=1.1cm, minimum height=0.45cm, font=\tiny, inner sep=1pt},
-    iotile/.style={tile, fill=blue!70, text=white, minimum height=0.7cm},
-    linktile/.style={tile, fill=blue!50, text=white, minimum height=0.7cm, text width=0.9cm, align=center},
-    cachetile/.style={tile, fill=cyan!40},
-    coretile/.style={tile, fill=blue!60, text=white},
-    mctile/.style={tile, fill=gray!50, minimum height=0.9cm, text width=0.9cm, align=center},
-    router/.style={draw, fill=yellow!60, minimum size=0.15cm, inner sep=0pt},
-    meshline/.style={line width=0.5pt, orange!80},
-    meshgap/.style={line width=0.04cm}
-]
-
-% Column positions (tighter spacing)
-\def\colA{0}
-\def\colB{1.15}
-\def\colC{2.3}
-\def\colD{3.45}
-\def\colE{4.6}
-\def\colF{5.75}
-
-% Row positions (top to bottom) - rowI adjusted so IO/ISL has same gap to Cache as other rows
-\def\rowI{-0.32}
-\def\rowII{-1.0}
-\def\rowIII{-2.0}
-\def\rowIV{-3.0}
-\def\rowV{-4.0}
-
-% Top row: Inter Socket Link and IO
-\node[linktile] at (\colA, \rowI) {Inter Socket Link};
-\node[iotile] at (\colB, \rowI) {IO};
-\node[iotile] at (\colC, \rowI) {IO};
-\node[iotile] at (\colD, \rowI) {IO};
-\node[iotile] at (\colE, \rowI) {IO};
-\node[linktile] at (\colF, \rowI) {Inter Socket Link};
-
-% Row 2: Cache + Core tiles
-\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
-    \node[cachetile] at (\col, \rowII) {Cache};
-    \node[coretile] at (\col, \rowII - 0.45) {Core};
-}
-
-% Row 3: Memory Controller on left, Cache+Core in middle, Memory Controller on right
-\node[mctile] at (\colA, \rowIII - 0.2) {Memory\\Controller};
-\foreach \col in {\colB, \colC, \colD, \colE} {
-    \node[cachetile] at (\col, \rowIII) {Cache};
-    \node[coretile] at (\col, \rowIII - 0.45) {Core};
-}
-\node[mctile] at (\colF, \rowIII - 0.2) {Memory\\Controller};
-
-% Row 4: Cache + Core tiles
-\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
-    \node[cachetile] at (\col, \rowIV) {Cache};
-    \node[coretile] at (\col, \rowIV - 0.45) {Core};
-}
-
-% Row 5: Cache + Core tiles
-\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
-    \node[cachetile] at (\col, \rowV) {Cache};
-    \node[coretile] at (\col, \rowV - 0.45) {Core};
-}
-
-% Mesh line positions centered on router boxes
-\def\tileHalfWidth{0.55}
-\def\cacheCoreBoundary{-0.225}
-\def\lineGap{0.03}
-\def\routerHalf{0.075}  % half of router size (0.15cm)
-\pgfmathsetmacro{\topRouterY}{\rowI - 0.35}
-
-% Vertical mesh lines (double lines with arrows for bidirectional ring)
-% Y coordinates: top router center to bottom router center (now at boundary)
-\pgfmathsetmacro{\topCenterY}{\topRouterY + \routerHalf}
-\pgfmathsetmacro{\bottomCenterY}{\rowV + \cacheCoreBoundary}
-% Left 3 columns (A, B, C): lines centered on router (which is anchored at east edge)
-\foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
-    % One line going up (arrow at top), one going down (arrow at bottom)
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomCenterY) -- (\lineX - \lineGap, \topCenterY);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topCenterY) -- (\lineX + \lineGap, \bottomCenterY);
-}
-% Right 3 columns (D, E, F): lines centered on router (which is anchored at west edge)
-\foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomCenterY) -- (\lineX - \lineGap, \topCenterY);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topCenterY) -- (\lineX + \lineGap, \bottomCenterY);
-}
-
-% Horizontal mesh lines (double lines with arrows for bidirectional ring)
-\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth - \routerHalf}
-\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth + \routerHalf}
-% Top row horizontal line (router anchored at south, so center is up by routerHalf)
-\pgfmathsetmacro{\topLineY}{\topRouterY + \routerHalf}
-% One line going right (arrow at right), one going left (arrow at left)
-\draw[meshline, -{Stealth[length=1.5pt]}] (\leftmostX, \topLineY - \lineGap) -- (\rightmostX, \topLineY - \lineGap);
-\draw[meshline, -{Stealth[length=1.5pt]}] (\rightmostX, \topLineY + \lineGap) -- (\leftmostX, \topLineY + \lineGap);
-% Cache/Core rows horizontal lines (router centered at boundary)
-\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftmostX, \lineY - \lineGap) -- (\rightmostX, \lineY - \lineGap);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightmostX, \lineY + \lineGap) -- (\leftmostX, \lineY + \lineGap);
-}
-
-% Routers at intersections
-% Top row (IO/ISL) - anchored at SE corner for left cols, SW for right cols
-% Tile half-width = 0.55, half-height = 0.35
-\foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\rx}{\col + 0.55}
-    \pgfmathsetmacro{\ry}{\rowI - 0.35}
-    \node[router, anchor=south east] at (\rx, \ry) {};
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\rx}{\col - 0.55}
-    \pgfmathsetmacro{\ry}{\rowI - 0.35}
-    \node[router, anchor=south west] at (\rx, \ry) {};
-}
-% Cache/Core rows - centered on boundary between Cache and Core
-\foreach \col in {\colA, \colB, \colC} {
-    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-        \pgfmathsetmacro{\rx}{\col + 0.55}
-        \pgfmathsetmacro{\ry}{\row - 0.225}
-        \node[router, anchor=east] at (\rx, \ry) {};
-    }
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-        \pgfmathsetmacro{\rx}{\col - 0.55}
-        \pgfmathsetmacro{\ry}{\row - 0.225}
-        \node[router, anchor=west] at (\rx, \ry) {};
-    }
-}
-
-% DDR4 arrows
-\draw[<->, very thick] (-1.1, \rowIII - 0.2) -- (-0.6, \rowIII - 0.2);
-\node[font=\small\bfseries, anchor=east] at (-1.2, \rowIII - 0.2) {DDR4};
-\draw[<->, very thick] (6.35, \rowIII - 0.2) -- (6.85, \rowIII - 0.2);
-\node[font=\small\bfseries, anchor=west] at (6.95, \rowIII - 0.2) {DDR4};
-
-% Top arrows from IO/ISL tiles (extending further up)
-\pgfmathsetmacro{\ioTop}{\rowI + 0.35}
-\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
-    \draw[<->, thick] (\col, \ioTop + 0.35) -- (\col, \ioTop);
-}
-
-% Outer box - adjusted to fit tile positions
-\pgfmathsetmacro{\boxTop}{\rowI + 0.4}
-\pgfmathsetmacro{\boxBottom}{\rowV - 0.45 - 0.28}
-\draw[very thick, rounded corners=3pt] (-0.65, \boxTop) rectangle (6.4, \boxBottom);
-
-\end{tikzpicture}
-\end{center}
-
-\vspace{-0.2cm}
-\begin{itemize}
-\item Each tile: Core + private L1/L2 + slice of distributed L3 cache
-\item Mesh routers at each intersection enable flexible routing
-\item Memory controllers and I/O at edges; UPI links for multi-socket
-\end{itemize}
-\end{frame}
-
-% Mesh Components - with overlays: 1=interconnect only, 2=with tiles
-\begin{frame}{Mesh Components}
+% Slide 6: Software Implications
+\begin{frame}{Software Implications}
 \begin{columns}[T]
-\column{0.55\textwidth}
-\begin{center}
-\begin{tikzpicture}[scale=0.7, transform shape,
-    tile/.style={draw, minimum width=0.9cm, minimum height=0.38cm, font=\tiny, inner sep=1pt},
-    iotile/.style={tile, fill=blue!70, text=white, minimum height=0.55cm},
-    linktile/.style={tile, fill=blue!50, text=white, minimum height=0.55cm, text width=0.75cm, align=center},
-    cachetile/.style={tile, fill=cyan!40},
-    coretile/.style={tile, fill=blue!60, text=white},
-    mctile/.style={tile, fill=gray!50, minimum height=0.7cm, text width=0.75cm, align=center},
-    router/.style={draw, fill=yellow!60, minimum size=0.12cm, inner sep=0pt},
-    meshline/.style={line width=0.5pt, orange!80}
-]
+\column{0.5\textwidth}
+\textbf{Cache Coherency}
+\begin{itemize}
+\item Maintained automatically
+\item But costs performance
+\item Worse across sockets
+\end{itemize}
 
-% Column and row positions
-\def\colA{0}
-\def\colB{0.95}
-\def\colC{1.9}
-\def\colD{2.85}
-\def\colE{3.8}
-\def\colF{4.75}
-\def\rowI{-0.25}
-\def\rowII{-0.85}
-\def\rowIII{-1.65}
-\def\rowIV{-2.45}
-\def\rowV{-3.25}
+\vspace{0.2cm}
+\textbf{Memory Allocation}
+\begin{itemize}
+\item First-touch policy
+\item NUMA-aware allocation
+\item Thread-local storage
+\end{itemize}
 
-\def\tileHalfWidth{0.45}
-\def\cacheCoreBoundary{-0.19}
-\def\lineGap{0.025}
-\def\routerHalf{0.06}
-\pgfmathsetmacro{\topRouterY}{\rowI - 0.275}
-\pgfmathsetmacro{\topCenterY}{\topRouterY + \routerHalf}
-\pgfmathsetmacro{\bottomCenterY}{\rowV + \cacheCoreBoundary}
-\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth - \routerHalf}
-\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth + \routerHalf}
-\pgfmathsetmacro{\topLineY}{\topRouterY + \routerHalf}
+\vspace{0.2cm}
+\textbf{Thread Placement}
+\begin{itemize}
+\item Pin threads to cores
+\item Keep related threads on same socket
+\item Minimize cross-socket communication
+\end{itemize}
 
-% ===== ROUTERS FIRST (so lines draw on top) =====
-\foreach \col in {\colA, \colB, \colC} {
-    \node[router, anchor=south east] at (\col + 0.45, \rowI - 0.275) {};
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \node[router, anchor=south west] at (\col - 0.45, \rowI - 0.275) {};
-}
-\foreach \col in {\colA, \colB, \colC} {
-    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-        \node[router, anchor=east] at (\col + 0.45, \row - 0.19) {};
-    }
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-        \node[router, anchor=west] at (\col - 0.45, \row - 0.19) {};
-    }
-}
+\column{0.5\textwidth}
+\textbf{Performance Tips:}
+\begin{itemize}
+\item \textbf{Check your topology:}\\
+   \texttt{lscpu -e} or \texttt{lstopo}
 
-% ===== MESH LINES (on top of routers, extended past edges) =====
-\def\extendLen{0.15}  % How far lines extend past edge routers
+\item \textbf{Quick improvement:}\\
+   \texttt{numactl --cpunodebind=0 ./app}
 
-% Vertical mesh lines - extended past top and bottom routers
-\foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
-    \draw[meshline] (\lineX - \lineGap, \bottomCenterY - \extendLen) -- (\lineX - \lineGap, \topCenterY + \extendLen);
-    \draw[meshline] (\lineX + \lineGap, \bottomCenterY - \extendLen) -- (\lineX + \lineGap, \topCenterY + \extendLen);
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
-    \draw[meshline] (\lineX - \lineGap, \bottomCenterY - \extendLen) -- (\lineX - \lineGap, \topCenterY + \extendLen);
-    \draw[meshline] (\lineX + \lineGap, \bottomCenterY - \extendLen) -- (\lineX + \lineGap, \topCenterY + \extendLen);
-}
+\item \textbf{For shared data:}\\
+   Place on socket with most accessors
 
-% Horizontal mesh lines - extended past left and right routers
-\draw[meshline] (\leftmostX - \extendLen, \topLineY - \lineGap) -- (\rightmostX + \extendLen, \topLineY - \lineGap);
-\draw[meshline] (\leftmostX - \extendLen, \topLineY + \lineGap) -- (\rightmostX + \extendLen, \topLineY + \lineGap);
-\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
-    \draw[meshline] (\leftmostX - \extendLen, \lineY - \lineGap) -- (\rightmostX + \extendLen, \lineY - \lineGap);
-    \draw[meshline] (\leftmostX - \extendLen, \lineY + \lineGap) -- (\rightmostX + \extendLen, \lineY + \lineGap);
-}
+\item \textbf{For partitioned data:}\\
+   Align partitions to NUMA nodes
+\end{itemize}
 
-% ===== TILES (only on slide 2) =====
-\only<2>{
-\node[linktile] at (\colA, \rowI) {Inter Socket Link};
-\node[iotile] at (\colB, \rowI) {IO};
-\node[iotile] at (\colC, \rowI) {IO};
-\node[iotile] at (\colD, \rowI) {IO};
-\node[iotile] at (\colE, \rowI) {IO};
-\node[linktile] at (\colF, \rowI) {Inter Socket Link};
-
-\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
-    \node[cachetile] at (\col, \rowII) {Cache};
-    \node[coretile] at (\col, \rowII - 0.38) {Core};
-}
-
-\node[mctile] at (\colA, \rowIII - 0.15) {Mem\\Ctrl};
-\foreach \col in {\colB, \colC, \colD, \colE} {
-    \node[cachetile] at (\col, \rowIII) {Cache};
-    \node[coretile] at (\col, \rowIII - 0.38) {Core};
-}
-\node[mctile] at (\colF, \rowIII - 0.15) {Mem\\Ctrl};
-
-\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
-    \node[cachetile] at (\col, \rowIV) {Cache};
-    \node[coretile] at (\col, \rowIV - 0.38) {Core};
-    \node[cachetile] at (\col, \rowV) {Cache};
-    \node[coretile] at (\col, \rowV - 0.38) {Core};
-}
-
-\draw[<->, thick] (-0.9, \rowIII - 0.15) -- (-0.5, \rowIII - 0.15);
-\node[font=\tiny\bfseries, anchor=east] at (-0.95, \rowIII - 0.15) {DDR4};
-\draw[<->, thick] (5.25, \rowIII - 0.15) -- (5.65, \rowIII - 0.15);
-\node[font=\tiny\bfseries, anchor=west] at (5.7, \rowIII - 0.15) {DDR4};
-}
-
-% ===== RING CLOSURES (simple arcs) and ARROWS on straight lines =====
-\pgfmathsetmacro{\topEndY}{\topCenterY + \extendLen}
-\pgfmathsetmacro{\bottomEndY}{\bottomCenterY - \extendLen}
-\pgfmathsetmacro{\leftEndX}{\leftmostX - \extendLen}
-\pgfmathsetmacro{\rightEndX}{\rightmostX + \extendLen}
-\def\arrowLen{0.08}
-
-% Vertical ring closures (arcs) and vertical arrows
-\foreach \col in {\colA, \colB, \colC} {
-    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
-    % Top arc closure
-    \draw[meshline] (\lineX - \lineGap, \topEndY) arc (180:0:\lineGap);
-    % Bottom arc closure
-    \draw[meshline] (\lineX + \lineGap, \bottomEndY) arc (0:-180:\lineGap);
-    % Vertical arrows on extended lines (showing ring direction)
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \topEndY - \arrowLen) -- (\lineX - \lineGap, \topEndY);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topEndY) -- (\lineX + \lineGap, \topEndY - \arrowLen);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \bottomEndY + \arrowLen) -- (\lineX + \lineGap, \bottomEndY);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomEndY) -- (\lineX - \lineGap, \bottomEndY + \arrowLen);
-}
-\foreach \col in {\colD, \colE, \colF} {
-    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
-    % Top arc closure
-    \draw[meshline] (\lineX - \lineGap, \topEndY) arc (180:0:\lineGap);
-    % Bottom arc closure
-    \draw[meshline] (\lineX + \lineGap, \bottomEndY) arc (0:-180:\lineGap);
-    % Vertical arrows
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \topEndY - \arrowLen) -- (\lineX - \lineGap, \topEndY);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topEndY) -- (\lineX + \lineGap, \topEndY - \arrowLen);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \bottomEndY + \arrowLen) -- (\lineX + \lineGap, \bottomEndY);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomEndY) -- (\lineX - \lineGap, \bottomEndY + \arrowLen);
-}
-
-% Horizontal ring closures (arcs) and horizontal arrows
-\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
-    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
-    % Left arc closure
-    \draw[meshline] (\leftEndX, \lineY - \lineGap) arc (-90:-270:\lineGap);
-    % Right arc closure
-    \draw[meshline] (\rightEndX, \lineY + \lineGap) arc (90:-90:\lineGap);
-    % Horizontal arrows
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX + \arrowLen, \lineY - \lineGap) -- (\leftEndX, \lineY - \lineGap);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX, \lineY + \lineGap) -- (\leftEndX + \arrowLen, \lineY + \lineGap);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX - \arrowLen, \lineY + \lineGap) -- (\rightEndX, \lineY + \lineGap);
-    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX, \lineY - \lineGap) -- (\rightEndX - \arrowLen, \lineY - \lineGap);
-}
-% Top row horizontal ring closures and arrows
-\draw[meshline] (\leftEndX, \topLineY - \lineGap) arc (-90:-270:\lineGap);
-\draw[meshline] (\rightEndX, \topLineY + \lineGap) arc (90:-90:\lineGap);
-\draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX + \arrowLen, \topLineY - \lineGap) -- (\leftEndX, \topLineY - \lineGap);
-\draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX, \topLineY + \lineGap) -- (\leftEndX + \arrowLen, \topLineY + \lineGap);
-\draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX - \arrowLen, \topLineY + \lineGap) -- (\rightEndX, \topLineY + \lineGap);
-\draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX, \topLineY - \lineGap) -- (\rightEndX - \arrowLen, \topLineY - \lineGap);
-
-% Labels for slide 1
-\only<1>{
-\node[font=\scriptsize, orange!80] at (2.4, 0.5) {Horizontal Rings};
-\node[font=\scriptsize, orange!80, rotate=90] at (5.6, -1.7) {Vertical Rings};
-\node[font=\scriptsize, yellow!60!black] at (2.4, -4.0) {Mesh Stops (Routers)};
-}
-
+\vspace{0.3cm}
+\begin{tikzpicture}
+\node[draw, thick, fill=red!20, text width=7.5cm] at (0,0) {
+%\textbf{Remember:}\\
+Remote memory access = 1.5-2x slower\\
+Cross-socket atomics = 3-5x slower\\
+False sharing across sockets = 10x slower
+};
 \end{tikzpicture}
-\end{center}
-
-\column{0.45\textwidth}
-\only<1>{
-\textbf{Mesh Fabric:}
-\begin{itemize}
-\item 2D array of bidirectional rings
-\item Each column forms a vertical ring
-\item Each row forms a horizontal ring
-\item Mesh stops at intersections
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Why Mesh over Ring?}
-\begin{itemize}
-\item Ring limited to $\sim$10 cores
-\item Mesh scales to 28+ cores
-\item Better bandwidth \& latency
-\end{itemize}
-}
-\only<2>{
-\textbf{Tile Types:}
-\begin{itemize}
-\item \textbf{Core/LLC}: CPU + L3 slice
-\item \textbf{Memory Ctrl}: DDR interface
-\item \textbf{I/O}: PCIe, DMI
-\item \textbf{Inter-Socket}: UPI link
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Mesh Stop (Router):}
-\begin{itemize}
-\item Interface: tile $\leftrightarrow$ fabric
-\item Routes packets N/S/E/W
-\item Handles coherency traffic
-\end{itemize}
-}
 \end{columns}
 \end{frame}
 
@@ -1841,12 +1392,6 @@ Often 20-30\% improvement!
 
 % Slide: SDRAM Features (continued)
 \begin{frame}{SDRAM Features (continued)}
-\textbf{Programmable Mode Register}
-\begin{itemize}
-\item CAS latency, burst length, burst type
-\end{itemize}
-
-\vspace{0.25cm}
 \textbf{Auto pre-charge}: close row at last read/write in burst
 
 \vspace{0.25cm}
@@ -1994,6 +1539,7 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \scriptsize
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
+\rowcolor{gray!25}
 & \textbf{Trend} & \textbf{SDRAM} & \textbf{DDR} & \textbf{DDR2} & \textbf{DDR3} & \textbf{DDR4} & \textbf{DDR5} \\
 \hline
 \textbf{Prefetch depth} & \textcolor{green!60!black}{$\uparrow$} & 1-Bit & 2-Bit & 4-Bit & 8-Bit & Per Bank & 16-Bit \\
@@ -2575,27 +2121,26 @@ Unbalanced channels waste half your bandwidth!
 
 % Slide: PCIe Overview
 \begin{frame}{PCIe: PCI Express}
-\textbf{PCIe is a layered protocol}
-
+\textbf{What is PCIe?}
 \begin{itemize}
-\item \textbf{Compatible with the PCI addressing model}
-  \begin{itemize}
-  \item All existing applications and drivers operate unchanged
-  \end{itemize}
-
-\vspace{0.3cm}
-\item \textbf{Software layers} generate read and write requests
-
-\vspace{0.3cm}
-\item \textbf{Hardware layers} process and transmit data:
-  \begin{itemize}
-  \item \textcolor{blue}{Transaction Layer}: Splits data to packets
-  \item \textcolor{green!60!black}{Data Link Layer}: Ensures data integrity (adds sequence numbers and CRC)
-  \item \textcolor{orange}{Physical Layer}: Transmits the packets (connector, voltage levels, etc.)
-  \end{itemize}
+\item High-speed serial expansion bus for connecting hardware devices
+\item Graphics cards, network cards, SSDs, sound cards, USB controllers, etc.
+\item Devices are assigned addresses in processor's address space (\textbf{MMIO} -- Memory Mapped I/O)
 \end{itemize}
 
 \vspace{0.3cm}
+\textbf{Layered Protocol Architecture:}
+\begin{itemize}
+\item \textbf{Software layers} generate read and write requests
+\item \textbf{Hardware layers} process and transmit data:
+  \begin{itemize}
+  \item \textcolor{blue}{Transaction Layer}: Splits data to packets
+  \item \textcolor{green!60!black}{Data Link Layer}: Ensures data integrity (sequence numbers + CRC)
+  \item \textcolor{orange}{Physical Layer}: Transmits the packets (connector, voltage levels)
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.2cm}
 \begin{alertblock}{Key Benefit}
 Layered design ensures reliable delivery of packets across the PCIe link
 \end{alertblock}
@@ -3052,121 +2597,7 @@ Binary representation of hardware topology, typically loaded from flash or passe
 \textbf{Both solve the same problem:} Tell the OS what hardware exists and how to use it
 \end{frame}
 
-% Slide: Physical Implementations
-\begin{frame}{Physical Implementations}
-\begin{center}
-\textbf{How memory architectures map to real systems:}
 
-\vspace{0.5cm}
-\begin{tabular}{lll}
-\toprule
-\textbf{Scale} & \textbf{Implementation} & \textbf{Memory Model} \\
-\midrule
-Single chip & CMP (multi-core) & UMA (within chip) \\
-Single machine & Multi-socket & NUMA \\
-Multiple machines & Cluster & Message Passing \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\vspace{0.5cm}
-\textbf{Note:} Modern systems often combine multiple levels
-\begin{itemize}
-\item Server: CMP cores + Multi-socket (NUMA)
-\item Supercomputer: CMP + Multi-socket + Cluster
-\end{itemize}
-\end{frame}
-
-% Slide: CMP - Core Multi-Processing
-\begin{frame}{CMP -- Chip Multi-Processing}
-\begin{columns}[T]
-\column{0.55\textwidth}
-\textbf{Multiple cores on one chip (UMA):}
-\begin{itemize}
-\item Resources shared between CPUs (e.g., shared L3 cache)
-\item \textbf{Cheaper} than multi-socket SMP
-  \begin{itemize}
-  \item Interface logic integrated on-chip
-  \item Fewer total chips, single CPU socket
-  \item Single interface to main memory
-  \end{itemize}
-\item \textbf{Less power} than multi-socket
-  \begin{itemize}
-  \item On-die communication more power-efficient
-  \end{itemize}
-\item \textbf{Performance}
-  \begin{itemize}
-  \item On-chip communication is faster
-  \end{itemize}
-\item \textbf{Efficiency}
-  \begin{itemize}
-  \item Better use of resources than improving single-thread performance
-  \end{itemize}
-\end{itemize}
-
-\column{0.45\textwidth}
-\begin{center}
-\begin{tikzpicture}[scale=0.45,
-    core/.style={draw, fill=orange!30, minimum width=8mm, minimum height=6mm, font=\tiny},
-    cache/.style={draw, fill=yellow!20, minimum width=8mm, minimum height=4mm, font=\tiny},
-    llc/.style={draw, fill=green!20, minimum width=8mm, minimum height=5mm, font=\tiny},
-    ctrl/.style={draw, fill=blue!20, minimum width=10mm, minimum height=5mm, font=\tiny},
-    ring/.style={draw, very thick, red!60, rounded corners=2mm}]
-
-% Row 1: 4 cores with L2 cache
-\node[core] (c1) {Core};
-\node[cache, below=1mm of c1] (l2-1) {L2};
-\node[core, right=3mm of c1] (c2) {Core};
-\node[cache, below=1mm of c2] (l2-2) {L2};
-\node[core, right=3mm of c2] (c3) {Core};
-\node[cache, below=1mm of c3] (l2-3) {L2};
-\node[core, right=3mm of c3] (c4) {Core};
-\node[cache, below=1mm of c4] (l2-4) {L2};
-
-% Row 2: LLC slices
-\node[llc, below=4mm of l2-1] (llc1) {LLC};
-\node[llc, below=4mm of l2-2] (llc2) {LLC};
-\node[llc, below=4mm of l2-3] (llc3) {LLC};
-\node[llc, below=4mm of l2-4] (llc4) {LLC};
-
-% Row 3: 4 more cores with L2 cache
-\node[core, below=4mm of llc1] (c5) {Core};
-\node[cache, above=1mm of c5] (l2-5) {L2};
-\node[core, below=4mm of llc2] (c6) {Core};
-\node[cache, above=1mm of c6] (l2-6) {L2};
-\node[core, below=4mm of llc3] (c7) {Core};
-\node[cache, above=1mm of c7] (l2-7) {L2};
-\node[core, below=4mm of llc4] (c8) {Core};
-\node[cache, above=1mm of c8] (l2-8) {L2};
-
-% Ring interconnect (rectangle around LLC row)
-\draw[ring] ([xshift=-2mm, yshift=2mm]llc1.north west) rectangle ([xshift=2mm, yshift=-2mm]llc4.south east);
-\node[font=\tiny, red!70] at ([xshift=-6mm]llc1.west) {Ring};
-
-% Memory Controller and I/O on the sides
-\node[ctrl, left=5mm of llc1, yshift=-5mm] (mc) {Mem Ctrl};
-\node[ctrl, right=5mm of llc4, yshift=-5mm] (io) {I/O};
-
-% Connections
-\draw[<->, thin] (l2-1) -- (l2-1 |- llc1.north);
-\draw[<->, thin] (l2-2) -- (l2-2 |- llc2.north);
-\draw[<->, thin] (l2-3) -- (l2-3 |- llc3.north);
-\draw[<->, thin] (l2-4) -- (l2-4 |- llc4.north);
-\draw[<->, thin] (l2-5) -- (l2-5 |- llc1.south);
-\draw[<->, thin] (l2-6) -- (l2-6 |- llc2.south);
-\draw[<->, thin] (l2-7) -- (l2-7 |- llc3.south);
-\draw[<->, thin] (l2-8) -- (l2-8 |- llc4.south);
-
-% MC and I/O to ring
-\draw[<->, thick] (mc.east) -- ([xshift=-2mm]llc1.west |- mc.east);
-\draw[<->, thick] (io.west) -- ([xshift=2mm]llc4.east |- io.west);
-
-\end{tikzpicture}
-\end{center}
-\footnotesize
-Ring interconnect between cores, shared LLC, memory controller, and I/O
-\end{columns}
-\end{frame}
 
 % Slide: Multi-Socket System
 \begin{frame}{Multi-Socket System (NUMA)}
@@ -3693,6 +3124,497 @@ Intel Sapphire Rapids & up to 60 & 4 & EMIB bridges & Multi-tile \\
 
 \textbf{Limitations:} Shared bandwidth, latency grows with cores, not for >10-12 cores
 \end{columns}
+\end{frame}
+% Mesh Interconnect Detail
+\begin{frame}{Mesh Interconnect (Intel Skylake-SP / Xeon Scalable)}
+\begin{center}
+\begin{tikzpicture}[scale=0.85, transform shape,
+    tile/.style={draw, minimum width=1.1cm, minimum height=0.45cm, font=\tiny, inner sep=1pt},
+    iotile/.style={tile, fill=blue!70, text=white, minimum height=0.7cm},
+    linktile/.style={tile, fill=blue!50, text=white, minimum height=0.7cm, text width=0.9cm, align=center},
+    cachetile/.style={tile, fill=cyan!40},
+    coretile/.style={tile, fill=blue!60, text=white},
+    mctile/.style={tile, fill=gray!50, minimum height=0.9cm, text width=0.9cm, align=center},
+    router/.style={draw, fill=yellow!60, minimum size=0.15cm, inner sep=0pt},
+    meshline/.style={line width=0.5pt, orange!80},
+    meshgap/.style={line width=0.04cm}
+]
+
+% Column positions (tighter spacing)
+\def\colA{0}
+\def\colB{1.15}
+\def\colC{2.3}
+\def\colD{3.45}
+\def\colE{4.6}
+\def\colF{5.75}
+
+% Row positions (top to bottom) - rowI adjusted so IO/ISL has same gap to Cache as other rows
+\def\rowI{-0.32}
+\def\rowII{-1.0}
+\def\rowIII{-2.0}
+\def\rowIV{-3.0}
+\def\rowV{-4.0}
+
+% Top row: Inter Socket Link and IO
+\node[linktile] at (\colA, \rowI) {Inter Socket Link};
+\node[iotile] at (\colB, \rowI) {IO};
+\node[iotile] at (\colC, \rowI) {IO};
+\node[iotile] at (\colD, \rowI) {IO};
+\node[iotile] at (\colE, \rowI) {IO};
+\node[linktile] at (\colF, \rowI) {Inter Socket Link};
+
+% Row 2: Cache + Core tiles
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowII) {Cache};
+    \node[coretile] at (\col, \rowII - 0.45) {Core};
+}
+
+% Row 3: Memory Controller on left, Cache+Core in middle, Memory Controller on right
+\node[mctile] at (\colA, \rowIII - 0.2) {Memory\\Controller};
+\foreach \col in {\colB, \colC, \colD, \colE} {
+    \node[cachetile] at (\col, \rowIII) {Cache};
+    \node[coretile] at (\col, \rowIII - 0.45) {Core};
+}
+\node[mctile] at (\colF, \rowIII - 0.2) {Memory\\Controller};
+
+% Row 4: Cache + Core tiles
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowIV) {Cache};
+    \node[coretile] at (\col, \rowIV - 0.45) {Core};
+}
+
+% Row 5: Cache + Core tiles
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowV) {Cache};
+    \node[coretile] at (\col, \rowV - 0.45) {Core};
+}
+
+% Mesh line positions centered on router boxes
+\def\tileHalfWidth{0.55}
+\def\cacheCoreBoundary{-0.225}
+\def\lineGap{0.03}
+\def\routerHalf{0.075}  % half of router size (0.15cm)
+\pgfmathsetmacro{\topRouterY}{\rowI - 0.35}
+
+% Vertical mesh lines (double lines with arrows for bidirectional ring)
+% Y coordinates: top router center to bottom router center (now at boundary)
+\pgfmathsetmacro{\topCenterY}{\topRouterY + \routerHalf}
+\pgfmathsetmacro{\bottomCenterY}{\rowV + \cacheCoreBoundary}
+% Left 3 columns (A, B, C): lines centered on router (which is anchored at east edge)
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
+    % One line going up (arrow at top), one going down (arrow at bottom)
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomCenterY) -- (\lineX - \lineGap, \topCenterY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topCenterY) -- (\lineX + \lineGap, \bottomCenterY);
+}
+% Right 3 columns (D, E, F): lines centered on router (which is anchored at west edge)
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomCenterY) -- (\lineX - \lineGap, \topCenterY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topCenterY) -- (\lineX + \lineGap, \bottomCenterY);
+}
+
+% Horizontal mesh lines (double lines with arrows for bidirectional ring)
+\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth - \routerHalf}
+\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth + \routerHalf}
+% Top row horizontal line (router anchored at south, so center is up by routerHalf)
+\pgfmathsetmacro{\topLineY}{\topRouterY + \routerHalf}
+% One line going right (arrow at right), one going left (arrow at left)
+\draw[meshline, -{Stealth[length=1.5pt]}] (\leftmostX, \topLineY - \lineGap) -- (\rightmostX, \topLineY - \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\rightmostX, \topLineY + \lineGap) -- (\leftmostX, \topLineY + \lineGap);
+% Cache/Core rows horizontal lines (router centered at boundary)
+\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftmostX, \lineY - \lineGap) -- (\rightmostX, \lineY - \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightmostX, \lineY + \lineGap) -- (\leftmostX, \lineY + \lineGap);
+}
+
+% Routers at intersections
+% Top row (IO/ISL) - anchored at SE corner for left cols, SW for right cols
+% Tile half-width = 0.55, half-height = 0.35
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\rx}{\col + 0.55}
+    \pgfmathsetmacro{\ry}{\rowI - 0.35}
+    \node[router, anchor=south east] at (\rx, \ry) {};
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\rx}{\col - 0.55}
+    \pgfmathsetmacro{\ry}{\rowI - 0.35}
+    \node[router, anchor=south west] at (\rx, \ry) {};
+}
+% Cache/Core rows - centered on boundary between Cache and Core
+\foreach \col in {\colA, \colB, \colC} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \pgfmathsetmacro{\rx}{\col + 0.55}
+        \pgfmathsetmacro{\ry}{\row - 0.225}
+        \node[router, anchor=east] at (\rx, \ry) {};
+    }
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \pgfmathsetmacro{\rx}{\col - 0.55}
+        \pgfmathsetmacro{\ry}{\row - 0.225}
+        \node[router, anchor=west] at (\rx, \ry) {};
+    }
+}
+
+% DDR4 arrows
+\draw[<->, very thick] (-1.1, \rowIII - 0.2) -- (-0.6, \rowIII - 0.2);
+\node[font=\small\bfseries, anchor=east] at (-1.2, \rowIII - 0.2) {DDR4};
+\draw[<->, very thick] (6.35, \rowIII - 0.2) -- (6.85, \rowIII - 0.2);
+\node[font=\small\bfseries, anchor=west] at (6.95, \rowIII - 0.2) {DDR4};
+
+% Top arrows from IO/ISL tiles (extending further up)
+\pgfmathsetmacro{\ioTop}{\rowI + 0.35}
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \draw[<->, thick] (\col, \ioTop + 0.35) -- (\col, \ioTop);
+}
+
+% Outer box - adjusted to fit tile positions
+\pgfmathsetmacro{\boxTop}{\rowI + 0.4}
+\pgfmathsetmacro{\boxBottom}{\rowV - 0.45 - 0.28}
+\draw[very thick, rounded corners=3pt] (-0.65, \boxTop) rectangle (6.4, \boxBottom);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{-0.2cm}
+\begin{itemize}
+\item Each tile: Core + private L1/L2 + slice of distributed L3 cache
+\item Mesh routers at each intersection enable flexible routing
+\item Memory controllers and I/O at edges; UPI links for multi-socket
+\end{itemize}
+\end{frame}
+% Mesh Components - with overlays: 1=interconnect only, 2=with tiles
+\begin{frame}{Mesh Components}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.7, transform shape,
+    tile/.style={draw, minimum width=0.9cm, minimum height=0.38cm, font=\tiny, inner sep=1pt},
+    iotile/.style={tile, fill=blue!70, text=white, minimum height=0.55cm},
+    linktile/.style={tile, fill=blue!50, text=white, minimum height=0.55cm, text width=0.75cm, align=center},
+    cachetile/.style={tile, fill=cyan!40},
+    coretile/.style={tile, fill=blue!60, text=white},
+    mctile/.style={tile, fill=gray!50, minimum height=0.7cm, text width=0.75cm, align=center},
+    router/.style={draw, fill=yellow!60, minimum size=0.12cm, inner sep=0pt},
+    meshline/.style={line width=0.5pt, orange!80}
+]
+
+% Column and row positions
+\def\colA{0}
+\def\colB{0.95}
+\def\colC{1.9}
+\def\colD{2.85}
+\def\colE{3.8}
+\def\colF{4.75}
+\def\rowI{-0.25}
+\def\rowII{-0.85}
+\def\rowIII{-1.65}
+\def\rowIV{-2.45}
+\def\rowV{-3.25}
+
+\def\tileHalfWidth{0.45}
+\def\cacheCoreBoundary{-0.19}
+\def\lineGap{0.025}
+\def\routerHalf{0.06}
+\pgfmathsetmacro{\topRouterY}{\rowI - 0.275}
+\pgfmathsetmacro{\topCenterY}{\topRouterY + \routerHalf}
+\pgfmathsetmacro{\bottomCenterY}{\rowV + \cacheCoreBoundary}
+\pgfmathsetmacro{\leftmostX}{\colA + \tileHalfWidth - \routerHalf}
+\pgfmathsetmacro{\rightmostX}{\colF - \tileHalfWidth + \routerHalf}
+\pgfmathsetmacro{\topLineY}{\topRouterY + \routerHalf}
+
+% ===== ROUTERS FIRST (so lines draw on top) =====
+\foreach \col in {\colA, \colB, \colC} {
+    \node[router, anchor=south east] at (\col + 0.45, \rowI - 0.275) {};
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \node[router, anchor=south west] at (\col - 0.45, \rowI - 0.275) {};
+}
+\foreach \col in {\colA, \colB, \colC} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \node[router, anchor=east] at (\col + 0.45, \row - 0.19) {};
+    }
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+        \node[router, anchor=west] at (\col - 0.45, \row - 0.19) {};
+    }
+}
+
+% ===== MESH LINES (on top of routers, extended past edges) =====
+\def\extendLen{0.15}  % How far lines extend past edge routers
+
+% Vertical mesh lines - extended past top and bottom routers
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
+    \draw[meshline] (\lineX - \lineGap, \bottomCenterY - \extendLen) -- (\lineX - \lineGap, \topCenterY + \extendLen);
+    \draw[meshline] (\lineX + \lineGap, \bottomCenterY - \extendLen) -- (\lineX + \lineGap, \topCenterY + \extendLen);
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
+    \draw[meshline] (\lineX - \lineGap, \bottomCenterY - \extendLen) -- (\lineX - \lineGap, \topCenterY + \extendLen);
+    \draw[meshline] (\lineX + \lineGap, \bottomCenterY - \extendLen) -- (\lineX + \lineGap, \topCenterY + \extendLen);
+}
+
+% Horizontal mesh lines - extended past left and right routers
+\draw[meshline] (\leftmostX - \extendLen, \topLineY - \lineGap) -- (\rightmostX + \extendLen, \topLineY - \lineGap);
+\draw[meshline] (\leftmostX - \extendLen, \topLineY + \lineGap) -- (\rightmostX + \extendLen, \topLineY + \lineGap);
+\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    \draw[meshline] (\leftmostX - \extendLen, \lineY - \lineGap) -- (\rightmostX + \extendLen, \lineY - \lineGap);
+    \draw[meshline] (\leftmostX - \extendLen, \lineY + \lineGap) -- (\rightmostX + \extendLen, \lineY + \lineGap);
+}
+
+% ===== TILES (only on slide 2) =====
+\only<2>{
+\node[linktile] at (\colA, \rowI) {Inter Socket Link};
+\node[iotile] at (\colB, \rowI) {IO};
+\node[iotile] at (\colC, \rowI) {IO};
+\node[iotile] at (\colD, \rowI) {IO};
+\node[iotile] at (\colE, \rowI) {IO};
+\node[linktile] at (\colF, \rowI) {Inter Socket Link};
+
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowII) {Cache};
+    \node[coretile] at (\col, \rowII - 0.38) {Core};
+}
+
+\node[mctile] at (\colA, \rowIII - 0.15) {Mem\\Ctrl};
+\foreach \col in {\colB, \colC, \colD, \colE} {
+    \node[cachetile] at (\col, \rowIII) {Cache};
+    \node[coretile] at (\col, \rowIII - 0.38) {Core};
+}
+\node[mctile] at (\colF, \rowIII - 0.15) {Mem\\Ctrl};
+
+\foreach \col in {\colA, \colB, \colC, \colD, \colE, \colF} {
+    \node[cachetile] at (\col, \rowIV) {Cache};
+    \node[coretile] at (\col, \rowIV - 0.38) {Core};
+    \node[cachetile] at (\col, \rowV) {Cache};
+    \node[coretile] at (\col, \rowV - 0.38) {Core};
+}
+
+\draw[<->, thick] (-0.9, \rowIII - 0.15) -- (-0.5, \rowIII - 0.15);
+\node[font=\tiny\bfseries, anchor=east] at (-0.95, \rowIII - 0.15) {DDR4};
+\draw[<->, thick] (5.25, \rowIII - 0.15) -- (5.65, \rowIII - 0.15);
+\node[font=\tiny\bfseries, anchor=west] at (5.7, \rowIII - 0.15) {DDR4};
+}
+
+% ===== RING CLOSURES (simple arcs) and ARROWS on straight lines =====
+\pgfmathsetmacro{\topEndY}{\topCenterY + \extendLen}
+\pgfmathsetmacro{\bottomEndY}{\bottomCenterY - \extendLen}
+\pgfmathsetmacro{\leftEndX}{\leftmostX - \extendLen}
+\pgfmathsetmacro{\rightEndX}{\rightmostX + \extendLen}
+\def\arrowLen{0.08}
+
+% Vertical ring closures (arcs) and vertical arrows
+\foreach \col in {\colA, \colB, \colC} {
+    \pgfmathsetmacro{\lineX}{\col + \tileHalfWidth - \routerHalf}
+    % Top arc closure
+    \draw[meshline] (\lineX - \lineGap, \topEndY) arc (180:0:\lineGap);
+    % Bottom arc closure
+    \draw[meshline] (\lineX + \lineGap, \bottomEndY) arc (0:-180:\lineGap);
+    % Vertical arrows on extended lines (showing ring direction)
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \topEndY - \arrowLen) -- (\lineX - \lineGap, \topEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topEndY) -- (\lineX + \lineGap, \topEndY - \arrowLen);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \bottomEndY + \arrowLen) -- (\lineX + \lineGap, \bottomEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomEndY) -- (\lineX - \lineGap, \bottomEndY + \arrowLen);
+}
+\foreach \col in {\colD, \colE, \colF} {
+    \pgfmathsetmacro{\lineX}{\col - \tileHalfWidth + \routerHalf}
+    % Top arc closure
+    \draw[meshline] (\lineX - \lineGap, \topEndY) arc (180:0:\lineGap);
+    % Bottom arc closure
+    \draw[meshline] (\lineX + \lineGap, \bottomEndY) arc (0:-180:\lineGap);
+    % Vertical arrows
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \topEndY - \arrowLen) -- (\lineX - \lineGap, \topEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \topEndY) -- (\lineX + \lineGap, \topEndY - \arrowLen);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX + \lineGap, \bottomEndY + \arrowLen) -- (\lineX + \lineGap, \bottomEndY);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\lineX - \lineGap, \bottomEndY) -- (\lineX - \lineGap, \bottomEndY + \arrowLen);
+}
+
+% Horizontal ring closures (arcs) and horizontal arrows
+\foreach \row in {\rowII, \rowIII, \rowIV, \rowV} {
+    \pgfmathsetmacro{\lineY}{\row + \cacheCoreBoundary}
+    % Left arc closure
+    \draw[meshline] (\leftEndX, \lineY - \lineGap) arc (-90:-270:\lineGap);
+    % Right arc closure
+    \draw[meshline] (\rightEndX, \lineY + \lineGap) arc (90:-90:\lineGap);
+    % Horizontal arrows
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX + \arrowLen, \lineY - \lineGap) -- (\leftEndX, \lineY - \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX, \lineY + \lineGap) -- (\leftEndX + \arrowLen, \lineY + \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX - \arrowLen, \lineY + \lineGap) -- (\rightEndX, \lineY + \lineGap);
+    \draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX, \lineY - \lineGap) -- (\rightEndX - \arrowLen, \lineY - \lineGap);
+}
+% Top row horizontal ring closures and arrows
+\draw[meshline] (\leftEndX, \topLineY - \lineGap) arc (-90:-270:\lineGap);
+\draw[meshline] (\rightEndX, \topLineY + \lineGap) arc (90:-90:\lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX + \arrowLen, \topLineY - \lineGap) -- (\leftEndX, \topLineY - \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\leftEndX, \topLineY + \lineGap) -- (\leftEndX + \arrowLen, \topLineY + \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX - \arrowLen, \topLineY + \lineGap) -- (\rightEndX, \topLineY + \lineGap);
+\draw[meshline, -{Stealth[length=1.5pt]}] (\rightEndX, \topLineY - \lineGap) -- (\rightEndX - \arrowLen, \topLineY - \lineGap);
+
+% Labels for slide 1
+\only<1>{
+\node[font=\scriptsize, orange!80] at (2.4, 0.5) {Horizontal Rings};
+\node[font=\scriptsize, orange!80, rotate=90] at (5.6, -1.7) {Vertical Rings};
+\node[font=\scriptsize, yellow!60!black] at (2.4, -4.0) {Mesh Stops (Routers)};
+}
+
+\end{tikzpicture}
+\end{center}
+
+\column{0.45\textwidth}
+\only<1>{
+\textbf{Mesh Fabric:}
+\begin{itemize}
+\item 2D array of bidirectional rings
+\item Each column forms a vertical ring
+\item Each row forms a horizontal ring
+\item Mesh stops at intersections
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Why Mesh over Ring?}
+\begin{itemize}
+\item Ring limited to $\sim$10 cores
+\item Mesh scales to 28+ cores
+\item Better bandwidth \& latency
+\end{itemize}
+}
+\only<2>{
+\textbf{Tile Types:}
+\begin{itemize}
+\item \textbf{Core/LLC}: CPU + L3 slice
+\item \textbf{Memory Ctrl}: DDR interface
+\item \textbf{I/O}: PCIe, DMI
+\item \textbf{Inter-Socket}: UPI link
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Mesh Stop (Router):}
+\begin{itemize}
+\item Interface: tile $\leftrightarrow$ fabric
+\item Routes packets N/S/E/W
+\item Handles coherency traffic
+\end{itemize}
+}
+\end{columns}
+\end{frame}
+% Slide: CMP - Core Multi-Processing
+\begin{frame}{CMP -- Chip Multi-Processing}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Multiple cores on one chip (UMA):}
+\begin{itemize}
+\item Resources shared between CPUs (e.g., shared L3 cache)
+\item \textbf{Cheaper} than multi-socket SMP
+  \begin{itemize}
+  \item Interface logic integrated on-chip
+  \item Fewer total chips, single CPU socket
+  \item Single interface to main memory
+  \end{itemize}
+\item \textbf{Less power} than multi-socket
+  \begin{itemize}
+  \item On-die communication more power-efficient
+  \end{itemize}
+\item \textbf{Performance}
+  \begin{itemize}
+  \item On-chip communication is faster
+  \end{itemize}
+\item \textbf{Efficiency}
+  \begin{itemize}
+  \item Better use of resources than improving single-thread performance
+  \end{itemize}
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.45,
+    core/.style={draw, fill=orange!30, minimum width=8mm, minimum height=6mm, font=\tiny},
+    cache/.style={draw, fill=yellow!20, minimum width=8mm, minimum height=4mm, font=\tiny},
+    llc/.style={draw, fill=green!20, minimum width=8mm, minimum height=5mm, font=\tiny},
+    ctrl/.style={draw, fill=blue!20, minimum width=10mm, minimum height=5mm, font=\tiny},
+    ring/.style={draw, very thick, red!60, rounded corners=2mm}]
+
+% Row 1: 4 cores with L2 cache
+\node[core] (c1) {Core};
+\node[cache, below=1mm of c1] (l2-1) {L2};
+\node[core, right=3mm of c1] (c2) {Core};
+\node[cache, below=1mm of c2] (l2-2) {L2};
+\node[core, right=3mm of c2] (c3) {Core};
+\node[cache, below=1mm of c3] (l2-3) {L2};
+\node[core, right=3mm of c3] (c4) {Core};
+\node[cache, below=1mm of c4] (l2-4) {L2};
+
+% Row 2: LLC slices
+\node[llc, below=4mm of l2-1] (llc1) {LLC};
+\node[llc, below=4mm of l2-2] (llc2) {LLC};
+\node[llc, below=4mm of l2-3] (llc3) {LLC};
+\node[llc, below=4mm of l2-4] (llc4) {LLC};
+
+% Row 3: 4 more cores with L2 cache
+\node[core, below=4mm of llc1] (c5) {Core};
+\node[cache, above=1mm of c5] (l2-5) {L2};
+\node[core, below=4mm of llc2] (c6) {Core};
+\node[cache, above=1mm of c6] (l2-6) {L2};
+\node[core, below=4mm of llc3] (c7) {Core};
+\node[cache, above=1mm of c7] (l2-7) {L2};
+\node[core, below=4mm of llc4] (c8) {Core};
+\node[cache, above=1mm of c8] (l2-8) {L2};
+
+% Ring interconnect (rectangle around LLC row)
+\draw[ring] ([xshift=-2mm, yshift=2mm]llc1.north west) rectangle ([xshift=2mm, yshift=-2mm]llc4.south east);
+\node[font=\tiny, red!70] at ([xshift=-6mm]llc1.west) {Ring};
+
+% Memory Controller and I/O on the sides
+\node[ctrl, left=5mm of llc1, yshift=-5mm] (mc) {Mem Ctrl};
+\node[ctrl, right=5mm of llc4, yshift=-5mm] (io) {I/O};
+
+% Connections
+\draw[<->, thin] (l2-1) -- (l2-1 |- llc1.north);
+\draw[<->, thin] (l2-2) -- (l2-2 |- llc2.north);
+\draw[<->, thin] (l2-3) -- (l2-3 |- llc3.north);
+\draw[<->, thin] (l2-4) -- (l2-4 |- llc4.north);
+\draw[<->, thin] (l2-5) -- (l2-5 |- llc1.south);
+\draw[<->, thin] (l2-6) -- (l2-6 |- llc2.south);
+\draw[<->, thin] (l2-7) -- (l2-7 |- llc3.south);
+\draw[<->, thin] (l2-8) -- (l2-8 |- llc4.south);
+
+% MC and I/O to ring
+\draw[<->, thick] (mc.east) -- ([xshift=-2mm]llc1.west |- mc.east);
+\draw[<->, thick] (io.west) -- ([xshift=2mm]llc4.east |- io.west);
+
+\end{tikzpicture}
+\end{center}
+\footnotesize
+Ring interconnect between cores, shared LLC, memory controller, and I/O
+\end{columns}
+\end{frame}
+% Slide: Physical Implementations
+\begin{frame}{Physical Implementations}
+\begin{center}
+\textbf{How memory architectures map to real systems:}
+
+\vspace{0.5cm}
+\begin{tabular}{lll}
+\toprule
+\textbf{Scale} & \textbf{Implementation} & \textbf{Memory Model} \\
+\midrule
+Single chip & CMP (multi-core) & UMA (within chip) \\
+Single machine & Multi-socket & NUMA \\
+Multiple machines & Cluster & Message Passing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+\textbf{Note:} Modern systems often combine multiple levels
+\begin{itemize}
+\item Server: CMP cores + Multi-socket (NUMA)
+\item Supercomputer: CMP + Multi-socket + Cluster
+\end{itemize}
 \end{frame}
 \fi
 
