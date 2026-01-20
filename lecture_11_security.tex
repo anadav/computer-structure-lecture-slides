@@ -2718,15 +2718,6 @@ func:
             \end{itemize}
 
             \vspace{0.2cm}
-            \textbf{UEFI Keys:}
-            \begin{itemize}
-                \item \textbf{PK}: Platform Key (OEM)
-                \item \textbf{KEK}: Key Exchange Key
-                \item \textbf{db}: Signature Database
-                \item \textbf{dbx}: Revoked Signatures
-            \end{itemize}
-
-            \vspace{0.2cm}
             \textbf{TPM Role:}
             \begin{itemize}
                 \item Stores measurements in PCRs
@@ -2749,8 +2740,6 @@ func:
             \begin{tikzpicture}[
                 chainlink/.style={draw, thick, minimum width=2.5cm, minimum height=0.7cm,
                                  align=center, font=\small, rounded corners=2pt},
-                key/.style={draw, thick, minimum width=1.2cm, minimum height=0.5cm,
-                           align=center, font=\tiny, fill=gray!30, rounded corners=1pt},
                 verify/.style={->, thick, green!60!black},
                 measure/.style={->, thick, blue!60, dashed}]
 
@@ -2762,20 +2751,12 @@ func:
                 \node[chainlink, fill=purple!20, below=0.3cm of kernel] (ima) {IMA};
                 \node[font=\tiny, below=-1mm of ima] {(Runtime)};
 
-                % Keys - right side (using key icon) - signs the next stage
-                \node at ([xshift=1cm,yshift=-4mm]hw.east) (pk) {\includegraphics[height=0.4cm]{figures/noun-key-8095348.png}};
-                \node[font=\tiny, right=-1mm of pk] {PK};
-                \node at ([xshift=1cm,yshift=-4mm]uefi.east) (kek) {\includegraphics[height=0.4cm]{figures/noun-key-8095348.png}};
-                \node[font=\tiny, right=-1mm of kek] {KEK};
-                \node at ([xshift=1cm,yshift=-4mm]bootloader.east) (db) {\includegraphics[height=0.4cm]{figures/noun-key-8095348.png}};
-                \node[font=\tiny, right=-1mm of db] {db};
-
-                % TPM with PCR matrix - far right
+                % TPM with PCR matrix - right side
                 \matrix[matrix of nodes,
                     nodes={draw, minimum width=0.9cm, minimum height=0.35cm,
                            font=\tiny, fill=green!20, inner sep=1pt},
                     row sep=-\pgflinewidth,
-                    right=1.8cm of kek] (pcrs) {
+                    right=1.5cm of uefi] (pcrs) {
                     PCR0 \\
                     PCR1 \\
                     PCR2 \\
@@ -2796,19 +2777,11 @@ func:
                 \draw[verify] (bootloader.south) -- (kernel.north) node[midway, left, font=\tiny] {Verify};
                 \draw[verify] (kernel.south) -- (ima.north) node[midway, left, font=\tiny] {Extend};
 
-                % Key usage (dashed to chain) - keys sign the stage
-                \draw[dashed, ->, gray] (pk.west) -- (uefi.east);
-                \draw[dashed, ->, gray] (kek.west) -- (bootloader.east);
-                \draw[dashed, ->, gray] (db.west) -- (kernel.east);
-
-                % TPM measurement arrows (blue dashed) to specific PCRs - go right first to avoid keys
-                \draw[measure] (uefi.east) -- ++(2.3cm,0) |- (pcrs-1-1.west);
-                \draw[measure] (bootloader.east) -- ++(2.4cm,0) |- (pcrs-2-1.west);
-                \draw[measure] (kernel.east) -- ++(2.5cm,0) |- (pcrs-3-1.west);
-                \draw[measure] (ima.east) -- ++(2.6cm,0) |- (pcrs-5-1.west);
-
-                % Legend for key icon
-                \node[font=\tiny, below=1cm of tpm] (keylegend) {\includegraphics[height=0.25cm]{figures/noun-key-8095348.png} = Signed by};
+                % TPM measurement arrows (blue dashed) to specific PCRs
+                \draw[measure] (uefi.east) -- (pcrs-1-1.west);
+                \draw[measure] (bootloader.east) -- ++(0.5cm,0) |- (pcrs-2-1.west);
+                \draw[measure] (kernel.east) -- ++(0.6cm,0) |- (pcrs-3-1.west);
+                \draw[measure] (ima.east) -- ++(0.7cm,0) |- (pcrs-5-1.west);
 
                 % Labels
                 \node[font=\tiny, text=green!60!black, right=2pt] at (hw.south east) {Boot};
