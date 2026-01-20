@@ -931,8 +931,8 @@ Programming & Easy & Medium & Hard \\
 \vspace{0.3cm}
 \textbf{Typical 2-Socket System:}
 \begin{itemize}
-\item Local memory: \textasciitilde100 cycles
-\item Remote memory: \textasciitilde150-200 cycles
+\item Local memory: $\sim$100 cycles
+\item Remote memory: $\sim$150-200 cycles
 \item Can be 50-100\% slower!
 \end{itemize}
 
@@ -1105,7 +1105,7 @@ float* data = malloc(N * sizeof(float));
   int start = tid * chunk;
 
   // Remote memory access!
-  for(int i = start; i < start+chunk; i++)
+  for (int i = start; i < start+chunk; i++)
     data[i] = compute(i);
 }
 \end{minted}
@@ -1127,7 +1127,7 @@ float* data = malloc(N * sizeof(float));
     numa_alloc_local(chunk * sizeof(float));
 
   // Access local memory only
-  for(int i = 0; i < chunk; i++)
+  for (int i = 0; i < chunk; i++)
     local_data[i] = compute(tid*chunk + i);
 
   // Copy to global if needed
@@ -1337,9 +1337,9 @@ Often 20-30\% improvement!
       %\draw[<->] (5.6,3.6) -- node[above,font=\scriptsize] {tRP} (10.4,3.6);
 
       % CL
-      \draw[dashed] (4.1,-7.5) -- node[below,font=\scriptsize] {} (4.1,-4);
-      \draw[dashed] (6,-7.5) -- node[below,font=\scriptsize] {} (6.1,-5.5);
-      \draw[<->] (4.1,-7.5) -- node[below,font=\scriptsize] {CL} (6.1,-7.5);
+      \draw[dashed] (4.75,-7.5) -- node[below,font=\scriptsize] {} (4.75,-4);
+      \draw[dashed] (7,-7.5) -- node[below,font=\scriptsize] {} (7,-6.5);
+      \draw[<->] (4.75,-7.5) -- node[below,font=\scriptsize] {CL} (7,-7.5);
 
       % tRCD
       \draw[<->] (2.1,1.5) -- node[above,font=\scriptsize] {tRCD} (5,1.5);
@@ -1573,6 +1573,264 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \end{itemize}
 \end{frame}
 
+% Slide: HBM Introduction
+\begin{frame}{High Bandwidth Memory (HBM)}
+\textbf{What is HBM?}
+\begin{itemize}
+\item \textbf{3D stacked} DRAM dies (4--8 layers)
+\item Connected via \textbf{TSVs} (Through-Silicon Vias) -- vertical interconnects
+\item Very wide bus (1024--4096 bits) vs DDR's 64 bits
+\item Short signal paths $\rightarrow$ lower voltage/power
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Used in:}
+\begin{itemize}
+\item GPUs (graphics cards)
+\item AI accelerators (TPUs, etc.)
+\item High-performance computing
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{block}{Key Advantage}
+Bandwidth: HBM3 delivers $\sim$800 GB/s per stack vs $\sim$50 GB/s for DDR5
+\end{block}
+\end{frame}
+\begin{frame}{High Bandwidth Memory Package}
+% Define colors for mixing
+\colorlet{basecolor}{cyan!70}
+\colorlet{emibcolor}{blue!50!cyan}
+
+% Text overlay at top right
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=north east, fill=white, fill opacity=0.9, text opacity=1,
+      draw=blue!50, line width=0.5pt, rounded corners=3pt, inner sep=5pt, text width=5cm, font=\small]
+  at ([xshift=-8mm, yshift=-18mm]current page.north east) {
+\only<1>{
+\textbf{Package Overview}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Circuit board with substrate
+\item Interconnect infrastructure
+\end{itemize}
+}
+\only<2>{
+\textbf{HBM Stack (3D DRAM)}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Multiple DRAM dies stacked vertically
+\item Connected via \textbf{TSVs} (Through-Silicon Vias)
+\item TSVs enable high-density 3D integration
+\end{itemize}
+}
+\only<3>{
+\textbf{Base Die \& Logic}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Base die interfaces with HBM stack
+\item Contains memory controllers
+\item Very wide bus (1024+ bits)
+\end{itemize}
+}
+\only<4>{
+\textbf{EMIB Integration}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item \textbf{EMIB:} Embedded Multi-die Interconnect Bridge
+\item High-density die-to-die connections
+\item Connects compute dies to memory
+\item Short signal paths, high bandwidth
+\end{itemize}
+}
+};
+\end{tikzpicture}
+
+% Illustration at bottom
+\vfill
+\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.7},
+    >=Stealth,
+    thick,
+    circuit/.style={rectangle, fill=green!60!black, draw=green!40!black, text=white, font=\tiny},
+    substrate/.style={rectangle, fill=cyan!60, draw=cyan!80!black, text=white, font=\tiny},
+    hbm/.style={rectangle, fill=red!70!brown, draw=brown!50!black, text=white, font=\tiny, align=left},
+    base/.style={rectangle, fill=basecolor, draw=cyan!80!black, text=white, font=\tiny, align=left},
+    phy/.style={rectangle, fill=emibcolor, draw=blue!70!black, text=white, font=\tiny},
+    emib/.style={rectangle, fill=emibcolor, draw=blue!70!black, text=white, font=\tiny},
+    compute/.style={rectangle, fill=blue!60!red!40, draw=blue!80!red!60, text=white, font=\tiny},
+    tsv/.style={rectangle, fill=yellow, draw=black, minimum size=2mm, inner sep=0pt},
+    ball/.style={circle, fill=gray!60, draw=black!80, minimum size=3mm, inner sep=0pt},
+    bump/.style={ball, fill=gray!60, draw=black!80, minimum size=1mm},
+    ubump/.style={bump, fill=gray!60, draw=black!80, minimum size=0.5mm},
+    graybump/.style={circle, fill=gray!60, draw=black!80, inner sep=0pt, anchor=south},
+    label/.style={font=\tiny},
+    small label/.style={font=\scriptsize}
+  ]
+
+% Package Substrate (base layer)
+\node[substrate, minimum width=10cm, minimum height=1.3cm]
+  (substrate) at (5.5,0.85) {Package Substrate};
+
+% Package Balls (positioned at bottom of substrate)
+\foreach \i in {0,1,...,19} {
+  \node[ball, anchor=north] (ball\i) at ([xshift=2mm + \i * 5mm]substrate.south west) {};
+}
+
+% Package Bumps (positioned at top of substrate)
+\foreach \i in {0,1,...,6} {
+  \node[bump, anchor=south] (pbump\i) at ([xshift=2mm + \i * 4mm]substrate.north west) {};
+}
+
+% Basic Logic Die Bumps (positioned above substrate)
+\foreach \i in {0,1,...,11} {
+  \node[bump, anchor=south] (blbump\i) at ([xshift=-2mm - \i * 4mm]substrate.north east) {};
+}
+
+% Circuit Board (positioned below balls, relative to ball1)
+\node[circuit, minimum width=13.5cm, minimum height=0.7cm, anchor=north]
+  (board) at ([xshift=3.5cm]ball1.south) {Circuit Board};
+
+% Standard Package Traces
+%\draw[thick, gray!40] (1.8,0.8) -- (1.8,1.3) -- (3.5,1.3) -- (3.5,1.8);
+%\draw[thick, gray!40] (2.5,0.8) -- (2.5,1.45) -- (4.5,1.45) -- (4.5,1.8);
+
+% Base Die (positioned relative to substrate)
+\node[base, minimum width=3.8cm, minimum height=0.8cm, anchor=south west, text width=3.5cm]
+  (basedie) at (pbump0.north -| substrate.west) {Base Die};
+
+% Base Logic Die (positioned relative to Base Die, to its right)
+\node[base, fill=basecolor!80, minimum width=5.8cm, minimum height=0.8cm, anchor=west]
+  (baselogic) at ([xshift=4mm]basedie.east) {Base Logic Die};
+
+% PHY blocks
+\node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south east]
+  (phy0) at ([xshift=-1mm, yshift=1mm]basedie.south east) {PHY};
+\node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south west]
+  (phy1) at ([xshift=1mm, yshift=1mm]baselogic.south west) {PHY};
+
+\node[emib, fill=emibcolor!90, minimum width=3.4cm, minimum height=0.4cm, anchor=north west, align=right, text width=3.2cm]
+  (emib) at ([xshift=-2mm]phy0.west |- substrate.north) {EMIB};
+
+
+
+% HBM Stack (4 dies, positioned relative to Base Die)
+\foreach \j in {0,1,...,3} {
+  \node[hbm, minimum width=2.7cm, minimum height=0.6cm, anchor=south west, text width=2.5cm]
+    (hbm\j) at ([xshift=1mm, yshift=\j * 8mm + 1mm]basedie.north west) {HBM DRAM\\Die};
+  % TSVs (yellow bumps, positioned relative to hbm\j.east)
+  \foreach \i in {0,1,...,4} {
+    \node[tsv, minimum width=0.08cm, minimum height=0.4cm, anchor=north] (tsv\j-\i) at ([xshift=-1mm - \i * 2mm]hbm\j.north east) {};
+  }
+  % µBumps at bottom of each (positioned south of TSVs)
+  \foreach \i in {0,1,...,4} {
+    \node[bump, anchor=north] (ubump\j-\i) at (tsv\j-\i.south |- hbm\j.south) {};
+    \draw (tsv\j-\i.south) -- (ubump\j-\i.north);
+  }
+}
+
+% Base Die TSVs and bumps (below HBM µBumps)
+\foreach \i in {0,1,...,4} {
+  % TSV in Base Die
+  \node[tsv, minimum width=0.08cm, minimum height=0.3cm, anchor=north] (basetsv\i) at (ubump0-\i.south) {};
+  % Bump at bottom of Base Die TSV
+  \node[bump, anchor=north] (basebump0\i) at ([xshift=-2mm * \i]phy0.east |- basedie.south) {};
+  % Wiring between HBM bump and Base Die TSV
+  \draw[very thin, white] (basetsv\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (basebump0\i.north);
+  % Bump at bottom of Base Logic Die TSV
+  \node[bump, anchor=north] (baselbump1\i) at ([xshift=2mm * \i]phy1.west |- baselogic.south) {};
+  % Wiring between Base Logic Die TSV and Base
+  \draw[very thin, white] (basebump0\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (baselbump1\i.north);
+}
+
+% EMIB section
+%\node[emib, rectangle, minimum width=2.5cm, minimum height=0.55cm, text=white, font=\tiny]
+%  (emib) at (5.05,1.775) {EMIB};
+
+
+% Short Wires in EMIB
+%\foreach \x in {4.0,4.3,4.6,4.9,5.2} {
+%  \draw[gray!40, very thin] (\x,1.55) -- (\x,1.65);
+%}
+
+
+
+% F2F µBumps (gray circles above Base Logic Die, using calc)
+\foreach \i in {0,1,...,8} {
+  \node[graybump, minimum size=0.5mm] (f2fbump0-\i) at ([xshift=-2mm - \i * 3mm]baselogic.north east) {};
+  \node[graybump, minimum size=0.5mm] (f2fbump1-\i) at ([xshift=2mm + \i * 3mm]baselogic.north west) {};
+  %\node[graybump, minimum size=0.5mm] at ($(baselogic.north west) + (\x,0.06)$) {};
+}
+
+% Compute Dies (positioned above F2F µBumps)
+\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south west]
+  (compute1) at (f2fbump1-7.north -| baselogic.west) {Compute/FPGA/Mem\\Die};
+\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south east]
+  (compute0) at (f2fbump1-7.north -| baselogic.east) {Compute/FPGA/Mem\\Die};
+
+% Interconnect lines
+%\draw[gray!40] (5.0,2.2) -- (5.0,2.45) -- (8.5,2.45) -- (8.5,2.7);
+%\draw[gray!40] (6.0,2.2) -- (6.0,2.55) -- (9.0,2.55) -- (9.0,2.7);
+
+% µBumps between EMIB and dies (positioned relative to base dies)
+%\foreach \i in {0,1,...,3} {
+%  \node[graybump, minimum size=1mm] (emibump\i) at ([xshift=33mm + \i * 3mm]basedie.north west) {};
+%}
+
+% Annotations
+%\draw[->, thick] (-1.5,0.6) -- (0.4,0.9);
+\node[label, anchor=east] (packagetrace) at ([xshift=-1cm]substrate.west) {\shortstack{Standard\\Package Trace}};
+\draw[->, thick] (packagetrace.east) -- (substrate.west);
+
+%\draw[->, thick] (-1.2,1.3) -- (0.5,1.7);
+\node[label, anchor=east] (bumpslabel) at ([xshift=-1.5cm]pbump0) {Bumps};
+\draw[->, thick] (bumpslabel.east) -- (pbump0.west);
+
+\foreach \i in {0,1,...,3} {
+  \draw[very thin] (pbump\i.south) -- ++(0,-1cm) -| (ball\i.north);
+  %\draw[->, thick] ([xshift=-5mm]ball\i) -- ([xshift=-\ballRadius cm]ball\i);
+}
+
+%\draw[->, thick] ([xshift=-5mm]ball0) -- ([xshift=-\ballRadius cm]ball0);
+\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=1mm]ball0) {Package\\Balls};
+\draw[->, thick] (packageballs.east) -- (ball0.west);
+
+%\draw[->, thick] (packageballs.east) -- (ball0.west);
+\node[label] (tsvlabel) at ([xshift=10mm]tsv3-0.east) {TSV};
+\draw[->, thick] (tsvlabel.west) -- (tsv3-0.east);
+
+%\draw[->, thick] (4.3,4.3) -- (3.3,3.7);
+%\node[label] (ubumps) at (4.5,4.5) {µBumps};
+
+%\draw[->, thick] (3.0,5.2) -- (4.2,2.75);
+%\node[label, anchor=south] (shortwires) at (2.8,5.3) {Short Wires};
+
+%\draw[->, thick] (9.5,3.8) -- (8.0,2.9);
+%\node[label] (f2fbumps) at (10,3.8) {\shortstack{F2F\\µBumps}};
+
+%\draw[->, thick] (10.5,2.0) -- (9.5,2.45);
+
+\end{tikzpicture}
+\end{frame}
+% Slide: HBM vs DDR
+\begin{frame}{HBM vs DDR Memory}
+\begin{center}
+\begin{tabular}{l|c|c}
+\textbf{Property} & \textbf{DDR (e.g., DDR5)} & \textbf{HBM (e.g., HBM3)} \\
+\hline
+\textbf{Architecture} & Planar (2D) & Stacked (3D) \\
+\textbf{Bus width} & 64 bits/channel & 1024+ bits/stack \\
+\textbf{Bandwidth} & 30-50 GB/s/channel & 300-600 GB/s/stack \\
+\textbf{Capacity} & High (32-128GB+) & Lower (8-24GB/stack) \\
+\textbf{Power efficiency} & Good & Better \\
+\textbf{Cost} & \textcolor{green!60!black}{Low} & \textcolor{red}{High} \\
+\textbf{Packaging} & Standard DIMMs & \textcolor{red}{Integrated (not upgradeable)} \\
+\end{tabular}
+\end{center}
+
+\vspace{0.4cm}
+\textbf{Why not always use HBM?}
+\begin{itemize}
+\item \textcolor{red}{Expensive} -- complex 3D packaging, low yields
+\item \textcolor{red}{Limited capacity} -- fewer dies per stack than DIMMs
+\item \textcolor{red}{Not upgradeable} -- soldered to package/interposer
+\item Only worth it when \textcolor{green!60!black}{bandwidth is critical} (GPUs, AI training)
+\end{itemize}
+\end{frame}
 % Slide: ECC Memory
 \begin{frame}{ECC: Error Correcting Code Memory}
 \textbf{What does ECC do?}
@@ -1819,303 +2077,8 @@ Unbalanced channels waste half your bandwidth!
 \textbf{Adaptive} -- predict whether next access will be to same row
 \end{frame}
 
-\begin{frame}{High Bandwidth Memory Package}
-% Define colors for mixing
-\colorlet{basecolor}{cyan!70}
-\colorlet{emibcolor}{blue!50!cyan}
-
-% Text overlay at top right
-\begin{tikzpicture}[remember picture, overlay]
-\node[anchor=north east, fill=white, fill opacity=0.9, text opacity=1,
-      draw=blue!50, line width=0.5pt, rounded corners=3pt, inner sep=5pt, text width=5cm, font=\small]
-  at ([xshift=-8mm, yshift=-18mm]current page.north east) {
-\only<1>{
-\textbf{Package Overview}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item Circuit board with substrate
-\item Interconnect infrastructure
-\end{itemize}
-}
-\only<2>{
-\textbf{HBM Stack (3D DRAM)}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item Multiple DRAM dies stacked vertically
-\item Connected via \textbf{TSVs} (Through-Silicon Vias)
-\item TSVs enable high-density 3D integration
-\end{itemize}
-}
-\only<3>{
-\textbf{Base Die \& Logic}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item Base die interfaces with HBM stack
-\item Contains memory controllers
-\item Very wide bus (1024+ bits)
-\end{itemize}
-}
-\only<4>{
-\textbf{EMIB Integration}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item \textbf{EMIB:} Embedded Multi-die Interconnect Bridge
-\item High-density die-to-die connections
-\item Connects compute dies to memory
-\item Short signal paths, high bandwidth
-\end{itemize}
-}
-};
-\end{tikzpicture}
-
-% Illustration at bottom
-\vfill
-\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.7},
-    >=Stealth,
-    thick,
-    circuit/.style={rectangle, fill=green!60!black, draw=green!40!black, text=white, font=\tiny},
-    substrate/.style={rectangle, fill=cyan!60, draw=cyan!80!black, text=white, font=\tiny},
-    hbm/.style={rectangle, fill=red!70!brown, draw=brown!50!black, text=white, font=\tiny, align=left},
-    base/.style={rectangle, fill=basecolor, draw=cyan!80!black, text=white, font=\tiny, align=left},
-    phy/.style={rectangle, fill=emibcolor, draw=blue!70!black, text=white, font=\tiny},
-    emib/.style={rectangle, fill=emibcolor, draw=blue!70!black, text=white, font=\tiny},
-    compute/.style={rectangle, fill=blue!60!red!40, draw=blue!80!red!60, text=white, font=\tiny},
-    tsv/.style={rectangle, fill=yellow, draw=black, minimum size=2mm, inner sep=0pt},
-    ball/.style={circle, fill=gray!60, draw=black!80, minimum size=3mm, inner sep=0pt},
-    bump/.style={ball, fill=gray!60, draw=black!80, minimum size=1mm},
-    ubump/.style={bump, fill=gray!60, draw=black!80, minimum size=0.5mm},
-    graybump/.style={circle, fill=gray!60, draw=black!80, inner sep=0pt, anchor=south},
-    label/.style={font=\tiny},
-    small label/.style={font=\scriptsize}
-  ]
-
-% Package Substrate (base layer)
-\node[substrate, minimum width=10cm, minimum height=1.3cm]
-  (substrate) at (5.5,0.85) {Package Substrate};
-
-% Package Balls (positioned at bottom of substrate)
-\foreach \i in {0,1,...,19} {
-  \node[ball, anchor=north] (ball\i) at ([xshift=2mm + \i * 5mm]substrate.south west) {};
-}
-
-% Package Bumps (positioned at top of substrate)
-\foreach \i in {0,1,...,6} {
-  \node[bump, anchor=south] (pbump\i) at ([xshift=2mm + \i * 4mm]substrate.north west) {};
-}
-
-% Basic Logic Die Bumps (positioned above substrate)
-\foreach \i in {0,1,...,11} {
-  \node[bump, anchor=south] (blbump\i) at ([xshift=-2mm - \i * 4mm]substrate.north east) {};
-}
-
-% Circuit Board (positioned below balls, relative to ball1)
-\node[circuit, minimum width=13.5cm, minimum height=0.7cm, anchor=north]
-  (board) at ([xshift=3.5cm]ball1.south) {Circuit Board};
-
-% Standard Package Traces
-%\draw[thick, gray!40] (1.8,0.8) -- (1.8,1.3) -- (3.5,1.3) -- (3.5,1.8);
-%\draw[thick, gray!40] (2.5,0.8) -- (2.5,1.45) -- (4.5,1.45) -- (4.5,1.8);
-
-% Base Die (positioned relative to substrate)
-\node[base, minimum width=3.8cm, minimum height=0.8cm, anchor=south west, text width=3.5cm]
-  (basedie) at (pbump0.north -| substrate.west) {Base Die};
-
-% Base Logic Die (positioned relative to Base Die, to its right)
-\node[base, fill=basecolor!80, minimum width=5.8cm, minimum height=0.8cm, anchor=west]
-  (baselogic) at ([xshift=4mm]basedie.east) {Base Logic Die};
-
-% PHY blocks
-\node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south east]
-  (phy0) at ([xshift=-1mm, yshift=1mm]basedie.south east) {PHY};
-\node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south west]
-  (phy1) at ([xshift=1mm, yshift=1mm]baselogic.south west) {PHY};
-
-\node[emib, fill=emibcolor!90, minimum width=3.4cm, minimum height=0.4cm, anchor=north west, align=right, text width=3.2cm]
-  (emib) at ([xshift=-2mm]phy0.west |- substrate.north) {EMIB};
 
 
-
-% HBM Stack (4 dies, positioned relative to Base Die)
-\foreach \j in {0,1,...,3} {
-  \node[hbm, minimum width=2.7cm, minimum height=0.6cm, anchor=south west, text width=2.5cm]
-    (hbm\j) at ([xshift=1mm, yshift=\j * 8mm + 1mm]basedie.north west) {HBM DRAM\\Die};
-  % TSVs (yellow bumps, positioned relative to hbm\j.east)
-  \foreach \i in {0,1,...,4} {
-    \node[tsv, minimum width=0.08cm, minimum height=0.4cm, anchor=north] (tsv\j-\i) at ([xshift=-1mm - \i * 2mm]hbm\j.north east) {};
-  }
-  % µBumps at bottom of each (positioned south of TSVs)
-  \foreach \i in {0,1,...,4} {
-    \node[bump, anchor=north] (ubump\j-\i) at (tsv\j-\i.south |- hbm\j.south) {};
-    \draw (tsv\j-\i.south) -- (ubump\j-\i.north);
-  }
-}
-
-% Base Die TSVs and bumps (below HBM µBumps)
-\foreach \i in {0,1,...,4} {
-  % TSV in Base Die
-  \node[tsv, minimum width=0.08cm, minimum height=0.3cm, anchor=north] (basetsv\i) at (ubump0-\i.south) {};
-  % Bump at bottom of Base Die TSV
-  \node[bump, anchor=north] (basebump0\i) at ([xshift=-2mm * \i]phy0.east |- basedie.south) {};
-  % Wiring between HBM bump and Base Die TSV
-  \draw[very thin, white] (basetsv\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (basebump0\i.north);
-  % Bump at bottom of Base Logic Die TSV
-  \node[bump, anchor=north] (baselbump1\i) at ([xshift=2mm * \i]phy1.west |- baselogic.south) {};
-  % Wiring between Base Logic Die TSV and Base
-  \draw[very thin, white] (basebump0\i.south) -- ++(0,-1mm - \i * 0.5mm) -| (baselbump1\i.north);
-}
-
-% EMIB section
-%\node[emib, rectangle, minimum width=2.5cm, minimum height=0.55cm, text=white, font=\tiny]
-%  (emib) at (5.05,1.775) {EMIB};
-
-
-% Short Wires in EMIB
-%\foreach \x in {4.0,4.3,4.6,4.9,5.2} {
-%  \draw[gray!40, very thin] (\x,1.55) -- (\x,1.65);
-%}
-
-
-
-% F2F µBumps (gray circles above Base Logic Die, using calc)
-\foreach \i in {0,1,...,8} {
-  \node[graybump, minimum size=0.5mm] (f2fbump0-\i) at ([xshift=-2mm - \i * 3mm]baselogic.north east) {};
-  \node[graybump, minimum size=0.5mm] (f2fbump1-\i) at ([xshift=2mm + \i * 3mm]baselogic.north west) {};
-  %\node[graybump, minimum size=0.5mm] at ($(baselogic.north west) + (\x,0.06)$) {};
-}
-
-% Compute Dies (positioned above F2F µBumps)
-\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south west]
-  (compute1) at (f2fbump1-7.north -| baselogic.west) {Compute/FPGA/Mem\\Die};
-\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south east]
-  (compute0) at (f2fbump1-7.north -| baselogic.east) {Compute/FPGA/Mem\\Die};
-
-% Interconnect lines
-%\draw[gray!40] (5.0,2.2) -- (5.0,2.45) -- (8.5,2.45) -- (8.5,2.7);
-%\draw[gray!40] (6.0,2.2) -- (6.0,2.55) -- (9.0,2.55) -- (9.0,2.7);
-
-% µBumps between EMIB and dies (positioned relative to base dies)
-%\foreach \i in {0,1,...,3} {
-%  \node[graybump, minimum size=1mm] (emibump\i) at ([xshift=33mm + \i * 3mm]basedie.north west) {};
-%}
-
-% Annotations
-%\draw[->, thick] (-1.5,0.6) -- (0.4,0.9);
-\node[label, anchor=east] (packagetrace) at ([xshift=-1cm]substrate.west) {\shortstack{Standard\\Package Trace}};
-\draw[->, thick] (packagetrace.east) -- (substrate.west);
-
-%\draw[->, thick] (-1.2,1.3) -- (0.5,1.7);
-\node[label, anchor=east] (bumpslabel) at ([xshift=-1.5cm]pbump0) {Bumps};
-\draw[->, thick] (bumpslabel.east) -- (pbump0.west);
-
-\foreach \i in {0,1,...,3} {
-  \draw[very thin] (pbump\i.south) -- ++(0,-1cm) -| (ball\i.north);
-  %\draw[->, thick] ([xshift=-5mm]ball\i) -- ([xshift=-\ballRadius cm]ball\i);
-}
-
-%\draw[->, thick] ([xshift=-5mm]ball0) -- ([xshift=-\ballRadius cm]ball0);
-\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=1mm]ball0) {Package\\Balls};
-\draw[->, thick] (packageballs.east) -- (ball0.west);
-
-%\draw[->, thick] (packageballs.east) -- (ball0.west);
-\node[label] (tsvlabel) at ([xshift=10mm]tsv3-0.east) {TSV};
-\draw[->, thick] (tsvlabel.west) -- (tsv3-0.east);
-
-%\draw[->, thick] (4.3,4.3) -- (3.3,3.7);
-%\node[label] (ubumps) at (4.5,4.5) {µBumps};
-
-%\draw[->, thick] (3.0,5.2) -- (4.2,2.75);
-%\node[label, anchor=south] (shortwires) at (2.8,5.3) {Short Wires};
-
-%\draw[->, thick] (9.5,3.8) -- (8.0,2.9);
-%\node[label] (f2fbumps) at (10,3.8) {\shortstack{F2F\\µBumps}};
-
-%\draw[->, thick] (10.5,2.0) -- (9.5,2.45);
-
-\end{tikzpicture}
-\end{frame}
-
-% Slide: HBM Architecture
-\begin{frame}{High Bandwidth Memory (HBM)}
-\begin{columns}[T]
-\column{0.5\textwidth}
-\begin{center}
-\begin{tikzpicture}[scale=0.8,
-    die/.style={draw, thick, fill=blue!20, minimum width=3cm, minimum height=0.5cm, font=\footnotesize},
-    substrate/.style={draw, thick, fill=green!30, minimum width=4cm, minimum height=0.4cm, font=\footnotesize},
-    tsv/.style={circle, fill=gray, inner sep=0.8pt}
-]
-
-% Processor die at bottom
-\node[substrate] (proc) at (0,-0.5) {Processor Die};
-
-% Interposer
-\node[substrate, minimum width=5cm, fill=orange!20] (interposer) at (0,0.3) {Interposer / Silicon Substrate};
-
-% HBM Stack - using loop
-\foreach \i in {0,1,2,3} {
-    \node[die, yshift=\i*8mm] (hbm\i) at (0,1.8) {DRAM Die \i};
-    % TSVs represented as small circles
-    \foreach \x in {-0.8,-0.4,0,0.4,0.8} {
-        \node[tsv] at ([xshift=\x cm]hbm\i.south) {};
-    }
-}
-
-% Base logic die
-\node[die, fill=cyan!30] (logic) at (0,1.2) {Logic Die};
-
-% Connections
-\draw[thick, <->] (proc.north) -- (interposer.south);
-\draw[thick, <->] (interposer.north) -- (logic.south);
-
-% Labels with annotations
-\draw[->, thick, red] (3.2,3.5) -- (2,3.2) node[anchor=west, xshift=1.2cm, yshift=0.3cm, align=left, font=\tiny] {Stacked DRAM\\(4-8 layers)};
-\draw[->, thick, blue] (3.2,1.2) -- (1.8,1.2) node[anchor=west, xshift=1.4cm, align=left, font=\tiny] {TSVs (Through\\Silicon Vias)};
-\draw[->, thick, green!60!black] (3.2,0.3) -- (2.8,0.3) node[anchor=west, xshift=1.2cm, align=left, font=\tiny] {Wide interface\\(1024+ bits)};
-
-\end{tikzpicture}
-\end{center}
-
-\column{0.5\textwidth}
-\textbf{Key features:}
-\begin{itemize}
-\item \textbf{3D stacked} DRAM dies
-\item Connected via TSVs
-\item Very wide bus (1024-4096 bits)
-\item Short signal paths
-\item Lower voltage/power
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Used in:}
-\begin{itemize}
-\item GPUs (graphics cards)
-\item AI accelerators
-\item High-performance computing
-\end{itemize}
-\end{columns}
-\end{frame}
-
-% Slide: HBM vs DDR
-\begin{frame}{HBM vs DDR Memory}
-\begin{center}
-\begin{tabular}{l|c|c}
-\textbf{Property} & \textbf{DDR (e.g., DDR5)} & \textbf{HBM (e.g., HBM3)} \\
-\hline
-\textbf{Architecture} & Planar (2D) & Stacked (3D) \\
-\textbf{Bus width} & 64 bits/channel & 1024+ bits/stack \\
-\textbf{Bandwidth} & 30-50 GB/s/channel & 300-600 GB/s/stack \\
-\textbf{Capacity} & High (32-128GB+) & Lower (8-24GB/stack) \\
-\textbf{Power efficiency} & Good & Better \\
-\textbf{Cost} & \textcolor{green!60!black}{Low} & \textcolor{red}{High} \\
-\textbf{Packaging} & Standard DIMMs & \textcolor{red}{Integrated (not upgradeable)} \\
-\end{tabular}
-\end{center}
-
-\vspace{0.4cm}
-\textbf{Why not always use HBM?}
-\begin{itemize}
-\item \textcolor{red}{Expensive} -- complex 3D packaging, low yields
-\item \textcolor{red}{Limited capacity} -- fewer dies per stack than DIMMs
-\item \textcolor{red}{Not upgradeable} -- soldered to package/interposer
-\item Only worth it when \textcolor{green!60!black}{bandwidth is critical} (GPUs, AI training)
-\end{itemize}
-\end{frame}
 
 \section{PCIe Architecture}
 
