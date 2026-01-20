@@ -11,7 +11,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, fit, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, fit, backgrounds, shapes.callouts}
 \usepackage{circuitikz}
 \usepackage{tikz-timing}
 \usepackage{tcolorbox}
@@ -924,8 +924,8 @@ node & 0 & 1 \\
 \end{columns}
 \end{frame}
 
-% Slide 6: Software Implications
-\begin{frame}{Software Implications}
+% Slide 6: NUMA Software Implications
+\begin{frame}{NUMA: Software Implications}
 \begin{columns}[T]
 \column{0.5\textwidth}
 \textbf{Cache Coherency}
@@ -1738,7 +1738,7 @@ Bandwidth: HBM3 delivers $\sim$800 GB/s per stack vs $\sim$50 GB/s for DDR5
 \hline
 \textbf{Architecture} & Planar (2D) & Stacked (3D) \\
 \textbf{Bus width} & 64 bits/channel & 1024+ bits/stack \\
-\textbf{Bandwidth} & 30-50 GB/s/channel & 300-600 GB/s/stack \\
+\textbf{Bandwidth} & 30-50 GB/s/channel & $\sim$800 GB/s/stack \\
 \textbf{Capacity} & High (32-128GB+) & Lower (8-24GB/stack) \\
 \textbf{Power efficiency} & Good & Better \\
 \textbf{Cost} & \textcolor{green!60!black}{Low} & \textcolor{red}{High} \\
@@ -2019,12 +2019,7 @@ Unbalanced channels waste half your bandwidth!
 \textbf{Layered Protocol Architecture:}
 \begin{itemize}
 \item \textbf{Software layers} generate read and write requests
-\item \textbf{Hardware layers} process and transmit data:
-  \begin{itemize}
-  \item \textcolor{blue}{Transaction Layer}: Splits data to packets
-  \item \textcolor{green!60!black}{Data Link Layer}: Ensures data integrity (sequence numbers + CRC)
-  \item \textcolor{orange}{Physical Layer}: Transmits the packets (connector, voltage levels)
-  \end{itemize}
+\item \textbf{Hardware layers} process and transmit data reliably
 \end{itemize}
 
 \vspace{0.2cm}
@@ -2034,7 +2029,7 @@ Layered design ensures reliable delivery of packets across the PCIe link
 \end{frame}
 
 % Slide: PCIe Layer Architecture with Diagram
-\begin{frame}{PCIe Layer Architecture}
+\begin{frame}{PCIe Hardware Layers}
 \begin{center}
 \begin{tikzpicture}[scale=0.9,
     box/.style={draw, thick, minimum height=1cm, align=center, font=\footnotesize},
@@ -2044,8 +2039,6 @@ Layered design ensures reliable delivery of packets across the PCIe link
 % Top level - Original packet
 \node[box, fill=blue!10, minimum width=1.5cm] (header) at (0,0) {Header};
 \node[box, fill=blue!5, minimum width=3cm, anchor=west] (data) at (header.east) {Data};
-
-
 
 % T-Layer Packet - below header, spanning from header.west to data.east
 \node[box, fill=blue!20, anchor=north west, minimum width=4.5cm] (tlpacket) at ([yshift=-6mm]header.south west) {T-Layer Packet};
@@ -2060,7 +2053,6 @@ Layered design ensures reliable delivery of packets across the PCIe link
 % CRC - right of T-Layer Packet, adjacent
 \node[box, fill=cyan!30, minimum width=1cm, anchor=west] (crc1) at (tlpacket.east) {CRC};
 
-
 % L-Layer Packet - below pseq, spanning from pseq.west to crc1.east
 \node[box, fill=cyan!20, minimum width=8.3cm, anchor=north west] (llpacket) at ([yshift=-6mm]pseq.south west) {L-Layer Packet};
 
@@ -2072,10 +2064,10 @@ Layered design ensures reliable delivery of packets across the PCIe link
 \node[box, fill=orange!30, minimum width=1cm, anchor=east] (frame1) at (llpacket.west) {Frame};
 \node[box, fill=orange!30, minimum width=1cm, anchor=west] (frame2) at (llpacket.east) {Frame};
 
-% Physical Layer label - positioned similarly
-\node[layer, right=of frame2] (physlayer) {\textbf{\textcolor{orange}{Physical Layer}}};
-\node[layer, anchor=east] (linklayer) at (crc1 -| physlayer.east) {\textbf{\textcolor{green!60!black}{Data Link Layer}}};
-\node[layer, anchor=east] (translayer) at (data -| physlayer.east) {\textbf{\textcolor{blue}{Transaction Layer}}};
+% Layer labels on the right
+\node[layer, right=of frame2] (physlayer) {\textbf{\textcolor{orange}{Physical}}};
+\node[layer, anchor=east] (linklayer) at (crc1 -| physlayer.east) {\textbf{\textcolor{green!60!black}{Data Link}}};
+\node[layer, anchor=east] (translayer) at (data -| physlayer.east) {\textbf{\textcolor{blue}{Transaction}}};
 
 % Dashed line separator below
 \draw[dashed, thick] ([yshift=-3mm,xshift=-1.5cm]header.south -| pseq.west) -- ([yshift=-3mm]translayer.east |- header.south);
@@ -2085,136 +2077,44 @@ Layered design ensures reliable delivery of packets across the PCIe link
 \draw[<->, thick] (linklayer.south) -- (physlayer.north -| linklayer);
 \draw[<->, thick] (linklayer.north) -- (translayer.south -| linklayer);
 
+% Callouts above the figure - drawn last to be on top, each appears on single stage
+\node<2>[rectangle callout, draw, fill=blue!10, callout absolute pointer={(translayer.north)},
+      font=\scriptsize, align=center] at ([xshift=-2cm,yshift=1cm]translayer.north) {\textbf{Transaction}: splits\\data into packets};
+
+\node<3>[rectangle callout, draw, fill=cyan!10, callout absolute pointer={(linklayer.north)},
+      font=\scriptsize, align=center] at ([xshift=-2cm,yshift=2cm]linklayer.north) {\textbf{Data Link}: adds seq \#\\+ CRC for reliability};
+
+\node<4>[rectangle callout, draw, fill=orange!10, callout absolute pointer={(physlayer.north)},
+      font=\scriptsize, align=center] at ([xshift=-2cm,yshift=2cm]physlayer.north) {\textbf{Physical}: transmits\\bits over serial lanes};
+
 \end{tikzpicture}
 \end{center}
-
-\vspace{0.3cm}
-\footnotesize
-Data flows top-to-bottom (TX) and bottom-to-top (RX) through the layers
 \end{frame}
 
-% Slide: Physical Layer
-\begin{frame}{PCIe Physical Layer}
-\textbf{Responsibilities:}
-\begin{itemize}
-\item \textbf{Transmits packets} received from the Data Link Layer
-\item \textbf{Connector definition}: Physical form factor and pinout
-\item \textbf{Electrical specifications}: Voltage levels, timing, signaling
-\item \textbf{Serialization/Deserialization}: Converts parallel data to serial transmission
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Key Features:}
-\begin{itemize}
-\item Point-to-point serial links (lanes)
-\item Multiple lanes can be aggregated: x1, x4, x8, x16
-\item High-speed differential signaling
-\item Supports multiple generations (PCIe 4.0: 16 GT/s, PCIe 5.0: 32 GT/s)
-\end{itemize}
-
-\vspace{0.3cm}
-\begin{alertblock}{Physical Layer Goal}
-Reliable transmission of bits across the physical medium
-\end{alertblock}
-\end{frame}
-
-% Slide: Data Link Layer
-\begin{frame}{PCIe Data Link Layer}
-\textbf{Responsibilities:}
-\begin{itemize}
-\item \textbf{Ensure data integrity}: Adds sequence number and CRC to each transaction layer packet
-\item \textbf{Credit-based flow control protocol}
-\item \textbf{Automatic retry} of corrupted packets detected by CRC checking
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Flow Control:}
-\begin{itemize}
-\item Packets only transmitted when receiver has buffer space available
-\item \textcolor{green!60!black}{Eliminates packet retries due to buffer overflow}
-\item \textcolor{green!60!black}{Saves bus bandwidth} (no wasted transmission attempts)
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Error Handling:}
-\begin{itemize}
-\item CRC checks data integrity
-\item NAK (Negative Acknowledgment) triggers automatic retransmission
-\item Transparent to upper layers
-\end{itemize}
-\end{frame}
-
-% Slide: Transaction Layer
-\begin{frame}{PCIe Transaction Layer}
-\textbf{Responsibilities:}
-\begin{itemize}
-\item \textbf{Receives} read and write requests from the software layer
-\item \textbf{Creates} request packets for transmission to the link layer
-\item \textbf{Receives} response packets from the link layer
-\item \textbf{Matches} responses with original requests using unique identifiers
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Packet Format Features:}
-\begin{itemize}
-\item Supports 32-bit and extended 64-bit memory addressing
-\item Packet attributes for optimization:
-  \begin{itemize}
-  \item ``no-snoop'': Skip cache coherency checks
-  \item ``relaxed-ordering'': Allow out-of-order completion
-  \item ``priority'': QoS support
-  \end{itemize}
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Some request packets require a response packet}
-\end{frame}
-
-% Slide: PCIe Address Spaces
-\begin{frame}{PCIe Address Spaces and Message Space}
-\textbf{PCIe supports three address spaces + Message Space:}
-
-\vspace{0.3cm}
+% Slide: PCIe Key Concepts
+\begin{frame}{PCIe: Key Concepts}
 \begin{columns}[T]
 \column{0.5\textwidth}
-\textbf{Three PCI address spaces:}
-\begin{enumerate}
-\item \textbf{Memory Space}
-  \begin{itemize}
-  \item 32-bit or 64-bit addressing
-  \item DMA access
-  \end{itemize}
-\item \textbf{I/O Space}
-  \begin{itemize}
-  \item Legacy support
-  \item 32-bit addressing
-  \end{itemize}
-\item \textbf{Configuration Space}
-  \begin{itemize}
-  \item Device enumeration
-  \item Capability discovery
-  \end{itemize}
-\end{enumerate}
-
-\column{0.5\textwidth}
-\textbf{Message Space} (not an address space):
+\textbf{Device Enumeration}
 \begin{itemize}
-\item Virtual wires mechanism
-\item Eliminates hard-wired sideband signals used in PCI
-\item Examples:
-  \begin{itemize}
-  \item Interrupts (MSI/MSI-X)
-  \item Power management requests
-  \item Reset signals
-  \item Error reporting
-  \end{itemize}
+\item Firmware walks PCIe tree at boot
+\item Assigns memory-mapped address ranges (BARs)
+\item OS discovers devices via configuration space
 \end{itemize}
 
-\vspace{0.5cm}
-\textbf{Message Signaled Interrupt (MSI)}
+\vspace{0.4cm}
+\textbf{DMA (Direct Memory Access)}
 \begin{itemize}
-\item Propagates system interrupts via memory writes
-\item More efficient than legacy INTx
+\item Device reads/writes system memory directly
+\item CPU sets up transfer, device executes it
+\item No CPU involvement during transfer
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{MSI (Message Signaled Interrupts)}
+\begin{itemize}
+\item Device signals interrupt by writing to special address
+\item Interrupt controller delivers to target CPU
 \end{itemize}
 \end{columns}
 \end{frame}
@@ -2268,10 +2168,11 @@ Reliable transmission of bits across the physical medium
 \item Which devices are available?
 \item Where are they located (addresses)?
 \item What are their capabilities?
-\item How to configure them?
 \end{itemize}
 
-\vspace{0.5cm}
+{\footnotesize\textcolor{gray}{\textit{Note: PCIe devices are auto-discovered; ACPI/Device Tree describes everything else.}}}
+
+\vspace{0.3cm}
 \textbf{Two main approaches:}
 
 \begin{columns}[T]
@@ -2295,6 +2196,7 @@ Flattened Device Tree (FDT)\\
 \begin{center}
 \begin{tabular}{|p{2.8cm}|p{4.8cm}|p{4.8cm}|}
 \hline
+\rowcolor{gray!20}
 \textbf{Aspect} & \textbf{ACPI (x86)} & \textbf{Device Tree (ARM)} \\
 \hline
 \textbf{Architecture} & x86/x86\_64 primarily & ARM, RISC-V, embedded \\
@@ -2338,6 +2240,83 @@ Flattened Device Tree (FDT)\\
 \begin{frame}
 \centering
 {\Huge Backup Slides}
+\end{frame}
+
+% Backup: PCIe Physical Layer
+\begin{frame}{PCIe Physical Layer}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item \textbf{Transmits packets} received from the Data Link Layer
+\item \textbf{Connector definition}: Physical form factor and pinout
+\item \textbf{Electrical specifications}: Voltage levels, timing, signaling
+\item \textbf{Serialization/Deserialization}: Converts parallel data to serial transmission
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Key Features:}
+\begin{itemize}
+\item Point-to-point serial links (lanes)
+\item Multiple lanes can be aggregated: x1, x4, x8, x16
+\item High-speed differential signaling
+\item Supports multiple generations (PCIe 4.0: 16 GT/s, PCIe 5.0: 32 GT/s)
+\end{itemize}
+
+\vspace{0.3cm}
+\begin{alertblock}{Physical Layer Goal}
+Reliable transmission of bits across the physical medium
+\end{alertblock}
+\end{frame}
+
+% Backup: PCIe Data Link Layer
+\begin{frame}{PCIe Data Link Layer}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item \textbf{Ensure data integrity}: Adds sequence number and CRC to each transaction layer packet
+\item \textbf{Credit-based flow control protocol}
+\item \textbf{Automatic retry} of corrupted packets detected by CRC checking
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Flow Control:}
+\begin{itemize}
+\item Packets only transmitted when receiver has buffer space available
+\item \textcolor{green!60!black}{Eliminates packet retries due to buffer overflow}
+\item \textcolor{green!60!black}{Saves bus bandwidth} (no wasted transmission attempts)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Error Handling:}
+\begin{itemize}
+\item CRC checks data integrity
+\item NAK (Negative Acknowledgment) triggers automatic retransmission
+\item Transparent to upper layers
+\end{itemize}
+\end{frame}
+
+% Backup: PCIe Transaction Layer
+\begin{frame}{PCIe Transaction Layer}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item \textbf{Receives} read and write requests from the software layer
+\item \textbf{Creates} request packets for transmission to the link layer
+\item \textbf{Receives} response packets from the link layer
+\item \textbf{Matches} responses with original requests using unique identifiers
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Packet Format Features:}
+\begin{itemize}
+\item Supports 32-bit and extended 64-bit memory addressing
+\item Packet attributes for optimization:
+  \begin{itemize}
+  \item ``no-snoop'': Skip cache coherency checks
+  \item ``relaxed-ordering'': Allow out-of-order completion
+  \item ``priority'': QoS support
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Some request packets require a response packet}
 \end{frame}
 
 % Backup: Memory Latency Numbers

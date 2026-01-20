@@ -22,8 +22,10 @@
 
 - Do NOT use "open" command to show generated PDF files to the user after building.
 
+- MOVING SLIDES: When asked to move, reorder, or relocate slides/frames (including moving to backup), you MUST use `tools/move_frame.py`. Do NOT manually cut/paste frame content with Edit tool. Use `--list` first to find frame numbers, then `--from N --to M` to move.
+
 - Tools in `tools/` directory:
+  - `move_frame.py <file>.tex --list` - List all beamer frames. Use `--from N --to M` to move frames, `--from N-M` for ranges, `-o other.tex` for cross-file moves. ALWAYS use this tool for moving slides.
   - `find_overfull.py <file>.tex` - Find pages with overfull boxes (content that doesn't fit). Options: `--vbox-only`, `--min-badness N`, `--pages-only`.
-  - `move_frame.py <file>.tex --list` - List all beamer frames. Use `--from N --to M` to move frames, `--from N-M` for ranges, `-o other.tex` for cross-file moves.
   - `extract_page.py <file>.pdf <page>` - Extract a single page from PDF as PNG image.
   - `extract_figs.py` - Extract images from talk.pptx to images_out/ directory.
