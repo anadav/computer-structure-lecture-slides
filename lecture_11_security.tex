@@ -2706,39 +2706,98 @@ func:
 % Section 5: Boot Security
 \section{Boot Security}
 
-\begin{frame}{Secure Boot - Implementing Chain of Trust}
+\begin{frame}{Secure Boot - Chain of Trust}
     \begin{columns}[T]
-        \begin{column}{0.45\textwidth}
-            \textbf{Chain of Trust Implementation:}
+        \begin{column}{0.6\textwidth}
+            \textbf{Chain of Trust:}
             \begin{itemize}
-                \item Each stage verifies the next
-                \item Cryptographic signatures (UEFI)
-                \item Hash measurements (TPM)
-                \item Extends from boot to runtime
+                \item Each stage verifies the next before executing
+                \item Hardware root of trust anchors the chain
+                \item UEFI Secure Boot checks cryptographic signatures
+                \item Blocks execution if signature invalid
             \end{itemize}
 
-            \vspace{0.2cm}
-            \textbf{TPM Role:}
+            \vspace{0.3cm}
+            \textbf{Key Components:}
             \begin{itemize}
-                \item Stores measurements in PCRs
-                \item PCR0-7: Firmware/Boot
-                \item PCR8-15: OS/Runtime
-                \item Enables remote attestation
+                \item \textbf{Root of Trust:} Immutable hardware anchor
+                \item \textbf{UEFI Firmware:} First mutable code, verifies bootloader
+                \item \textbf{Bootloader:} Verifies OS kernel signature
+                \item \textbf{Kernel:} Enforces module signing
             \end{itemize}
 
-            \vspace{0.2cm}
-            {\small \textbf{IMA (Integrity Measurement Architecture):}
-            \begin{itemize}
-                \item Linux kernel subsystem
-                \item Measures files before execution
-                \item Extends PCR10
-                \item Runtime integrity verification
-            \end{itemize}
-            }
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=green!10, fontupper=\small]
+                \textbf{Goal:} Prevent unauthorized code from running at boot time
+            \end{tcolorbox}
         \end{column}
-        \begin{column}{0.55\textwidth}
+        \begin{column}{0.4\textwidth}
+            \centering
             \begin{tikzpicture}[
-                chainlink/.style={draw, thick, minimum width=2.5cm, minimum height=0.7cm,
+                chainlink/.style={draw, thick, minimum width=2.2cm, minimum height=0.6cm,
+                                 align=center, font=\small, rounded corners=2pt},
+                verify/.style={->, thick, green!60!black}]
+
+                % Boot Chain
+                \node[chainlink, fill=red!30] (hw) {Hardware Root};
+                \node[chainlink, fill=orange!30, below=0.4cm of hw] (uefi) {UEFI Firmware};
+                \node[chainlink, fill=yellow!30, below=0.4cm of uefi] (bootloader) {Bootloader};
+                \node[chainlink, fill=green!30, below=0.4cm of bootloader] (kernel) {OS Kernel};
+
+                % Verification arrows (green)
+                \draw[verify] (hw.south) -- (uefi.north)
+                    node[midway, right, font=\scriptsize] {Verify};
+                \draw[verify] (uefi.south) -- (bootloader.north)
+                    node[midway, right, font=\scriptsize] {Verify};
+                \draw[verify] (bootloader.south) -- (kernel.north)
+                    node[midway, right, font=\scriptsize] {Verify};
+
+                % Labels
+                \node[font=\scriptsize, text=red!60!black, left=5pt of hw] {Immutable};
+                \node[font=\scriptsize, text=green!60!black, left=5pt of kernel] {Trusted};
+            \end{tikzpicture}
+
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=blue!10, fontupper=\scriptsize]
+                \textbf{Verification:} Each stage checks signature of next\\[1pt]
+                \textbf{On Failure:} Boot halts -- unauthorized code blocked
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Measured Boot with TPM}
+    \begin{columns}[T]
+        \begin{column}{0.6\textwidth}
+            \textbf{Measured Boot:}
+            \begin{itemize}
+                \item Records what ran (doesn't block!)
+                \item TPM stores hashes in PCRs
+                \item Complements Secure Boot verification
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{PCR Extend Operation:}
+            \begin{tcolorbox}[colback=gray!10]
+                \small
+                \texttt{PCR[i] = SHA256(PCR[i] || data)}
+            \end{tcolorbox}
+            {\small Cannot directly overwrite -- only extend!}
+
+            \vspace{0.2cm}
+            \textbf{Remote Attestation:}
+            \begin{itemize}
+                \item Prove system state to remote party
+                \item TPM signs PCR values with attestation key
+                \item Enables conditional access/secrets
+            \end{itemize}
+
+            \vspace{0.2cm}
+            {\small \textbf{IMA:} Runtime measurements extend to applications (PCR10)}
+        \end{column}
+        \begin{column}{0.4\textwidth}
+            \begin{tikzpicture}[
+                chainlink/.style={draw, thick, minimum width=2.2cm, minimum height=0.6cm,
                                  align=center, font=\small, rounded corners=2pt},
                 verify/.style={->, thick, green!60!black},
                 measure/.style={->, thick, blue!60, dashed}]
@@ -2748,12 +2807,10 @@ func:
                 \node[chainlink, fill=orange!30, below=0.3cm of hw] (uefi) {UEFI Firmware};
                 \node[chainlink, fill=yellow!30, below=0.3cm of uefi] (bootloader) {Bootloader};
                 \node[chainlink, fill=green!30, below=0.3cm of bootloader] (kernel) {OS Kernel};
-                \node[chainlink, fill=purple!20, below=0.3cm of kernel] (ima) {IMA};
-                \node[font=\tiny, below=-1mm of ima] {(Runtime)};
 
                 % TPM with PCR matrix - right side
                 \matrix[matrix of nodes,
-                    nodes={draw, minimum width=0.9cm, minimum height=0.35cm,
+                    nodes={draw, minimum width=0.8cm, minimum height=0.28cm,
                            font=\tiny, fill=green!20, inner sep=1pt},
                     row sep=-\pgflinewidth,
                     right=1.5cm of uefi] (pcrs) {
@@ -2772,218 +2829,29 @@ func:
                 \end{scope}
 
                 % Verification arrows (green)
-                \draw[verify] (hw.south) -- (uefi.north) node[midway, left, font=\tiny] {Verify};
-                \draw[verify] (uefi.south) -- (bootloader.north) node[midway, left, font=\tiny] {Verify};
-                \draw[verify] (bootloader.south) -- (kernel.north) node[midway, left, font=\tiny] {Verify};
-                \draw[verify] (kernel.south) -- (ima.north) node[midway, left, font=\tiny] {Extend};
+                \draw[verify] (hw.south) -- (uefi.north)
+                    node[midway, left, font=\tiny] {Verify};
+                \draw[verify] (uefi.south) -- (bootloader.north)
+                    node[midway, left, font=\tiny] {Verify};
+                \draw[verify] (bootloader.south) -- (kernel.north)
+                    node[midway, left, font=\tiny] {Verify};
 
-                % TPM measurement arrows (blue dashed) to specific PCRs
-                \draw[measure] (uefi.east) -- (pcrs-1-1.west);
-                \draw[measure] (bootloader.east) -- ++(0.5cm,0) |- (pcrs-2-1.west);
-                \draw[measure] (kernel.east) -- ++(0.6cm,0) |- (pcrs-3-1.west);
-                \draw[measure] (ima.east) -- ++(0.7cm,0) |- (pcrs-5-1.west);
+                % TPM measurement arrows (blue dashed) using ++(0.8cm,0) |- pattern
+                \draw[measure] (uefi.east) -- ++(0.8cm,0) |- (pcrs-1-1.west);
+                \draw[measure] (bootloader.east) -- ++(0.8cm,0) |- (pcrs-2-1.west);
+                \draw[measure] (kernel.east) -- ++(0.8cm,0) |- (pcrs-3-1.west);
 
-                % Labels
-                \node[font=\tiny, text=green!60!black, right=2pt] at (hw.south east) {Boot};
-                \node[font=\tiny, text=purple!60!black, right=2pt] at (kernel.south east) {Runtime};
+                % Legend
+                \node[font=\tiny, below=0.3cm of kernel.south west, anchor=north west] {
+                    \textcolor{green!60!black}{---} Verify \quad
+                    \textcolor{blue!60}{- -} Measure};
             \end{tikzpicture}
 
             \vspace{0.2cm}
             \begin{tcolorbox}[colback=blue!10, fontupper=\scriptsize]
-                \textbf{Full Chain:} Hardware → Firmware → Bootloader → Kernel → IMA\\[1pt]
-                \textbf{Verification:} Each stage checks signature of next\\[1pt]
-                \textbf{Measurement:} TPM records hash of each stage
+                \textbf{Key Difference:} Secure Boot \textit{blocks} unauthorized code;\\
+                Measured Boot \textit{records} what ran for later attestation
             \end{tcolorbox}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{Chain of Trust and UEFI Vulnerabilities}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Chain of Trust Concept:}
-            \begin{itemize}
-                \item Each component verifies the next
-                \item Trust anchored in hardware
-                \item Weakest link breaks entire chain
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{UEFI as Attack Surface:}
-            \begin{itemize}
-                \item \textcolor{red}{Complex codebase (millions of LOC)}
-                \item \textcolor{red}{Third-party drivers/modules}
-                \item \textcolor{red}{Network stack in firmware}
-                \item \textcolor{red}{Persistent across OS reinstalls}
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Known UEFI Attacks:}
-            \begin{itemize}
-                \item BootHole (CVE-2020-10713)
-                \item LogoFAIL (2023)
-                \item BlackLotus bootkit
-                \item ThinkPwn vulnerabilities
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[
-                chainlink/.style={draw, thick, minimum width=2.8cm, minimum height=0.8cm,
-                                 align=center, font=\small, rounded corners=2pt},
-                trustflow/.style={->, thick},
-                attack/.style={->, thick, red, dashed}]
-
-                % Chain links - positioned relative to each other
-                \node[chainlink, fill=green!30] (hw) {Hardware Root};
-                \node[chainlink, fill=yellow!30, below=0.4cm of hw] (uefi) {UEFI Firmware};
-                \node[chainlink, fill=orange!30, below=0.4cm of uefi] (boot) {Bootloader};
-                \node[chainlink, fill=blue!30, below=0.4cm of boot] (os) {OS Kernel};
-                \node[chainlink, fill=gray!30, below=0.4cm of os] (app) {Applications};
-
-                % Trust flow arrows
-                \draw[trustflow, green!70!black] (hw.south) -- (uefi.north);
-                \draw[trustflow, yellow!70!black] (uefi.south) -- (boot.north);
-                \draw[trustflow, orange!70!black] (boot.south) -- (os.north);
-                \draw[trustflow, blue!70!black] (os.south) -- (app.north);
-
-                % Attack point with X icon
-                \node[inner sep=0pt, right=1.2cm of uefi] (xmark)
-                    {\includegraphics[width=0.5cm]{figures/noun-x-2222229.png}};
-                \node[red, font=\tiny, below=1pt of xmark] {Attack Point};
-                \draw[attack] (xmark.west) -- (uefi.east);
-
-                % Broken chain indicator
-                \draw[red, ultra thick, dashed] ([yshift=-2mm]uefi.south) -- ([yshift=2mm]boot.north);
-                \node[red, font=\tiny, right=0.5cm of boot.east, anchor=west, align=center] {Trust Broken\\Below};
-            \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \begin{tcolorbox}[colback=red!10]
-                \textbf{Critical Issue:}
-                UEFI compromise gives attacker:
-                \begin{itemize}
-                    \item Ring -2 privileges
-                    \item Persistence below OS
-                    \item Bypass of all OS security
-                \end{itemize}
-            \end{tcolorbox}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{TPM - Trusted Platform Module}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{What is TPM?}
-            \begin{itemize}
-                \item Hardware security chip
-                \item Cryptographic processor
-                \item Tamper-resistant storage
-                \item Platform integrity measurement
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{TPM Capabilities:}
-            \begin{itemize}
-                \item Random number generation
-                \item Secure key generation/storage
-                \item Platform attestation
-                \item Sealed storage (bind to PCR state)
-            \end{itemize}
-            
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[
-                component/.style={draw, thick, minimum width=1.8cm, minimum height=0.6cm,
-                                align=center, font=\tiny, rounded corners=1pt},
-                tpm outline/.style={draw, thick, fill=yellow!30, rounded corners=3pt,
-                                   inner sep=4pt}]
-
-                % TPM internal components - position relative to each other
-                \node[component, fill=blue!20] (crypto) {Crypto Engine};
-                \node[component, fill=green!20, right=0.2cm of crypto] (keys) {Key Storage};
-                \node[component, fill=orange!20, below=0.2cm of crypto] (rng) {RNG};
-                \node[component, fill=red!20, below=0.2cm of keys] (pcr) {PCRs};
-                \node[component, fill=gray!20, minimum width=3.8cm, below=0.2cm of rng.south west,
-                      anchor=north west] (nvstorage) {Non-Volatile Storage};
-
-                % TPM Chip outline using fit and background
-                \begin{scope}[on background layer]
-                    \node[tpm outline, fit={(crypto) (keys) (pcr) (nvstorage)},
-                          label={[font=\small\bfseries, yshift=-3pt]north:TPM Chip}] (tpm) {};
-                \end{scope}
-
-                % External connection
-                \draw[<->, thick] (tpm.east) -- ++(1.2cm, 0)
-                    node[right, font=\small] {LPC/SPI};
-            \end{tikzpicture}
-
-            \vspace{0.3cm}
-            \textbf{Use Cases:}
-            \begin{itemize}
-                \item BitLocker/LUKS disk encryption
-                \item Measured/Secure Boot
-                \item Remote attestation
-                \item VPN client certificates
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{Measured Boot with TPM}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Platform Configuration Registers:}
-            \begin{itemize}
-                \item PCR0-7: BIOS/UEFI measurements
-                \item PCR8-9: OS Loader configuration
-                \item PCR10: IMA (Linux integrity)
-                \item PCR11-15: OS-specific
-                \item PCR16-23: Debug/Vendor-specific
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{PCR Extend Operation:}
-            \begin{tcolorbox}[colback=gray!10]
-                \small
-                PCR[i] = SHA256(PCR[i] || data)
-            \end{tcolorbox}
-            \small Cannot directly write PCRs!
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Boot Measurement Chain:}
-            \begin{tikzpicture}[font=\footnotesize,
-                component/.style={draw, fill=gray!10, minimum width=1.2cm},
-                measurement/.style={->, thick, blue}]
-                % Components - start with BIOS as anchor
-                \node[component] (bios) {BIOS};
-                \node[component, below=0.3cm of bios] (mbr) {Bootloader};
-                \node[component, below=0.3cm of mbr] (kernel) {Kernel};
-                \node[component, below=0.3cm of kernel] (apps) {Apps};
-
-                % TPM as muxdemux - further right
-                \node[muxdemux, muxdemux def={NL=4, Rh=2, Lh=2, w=2.5},
-                      fill=yellow!30, thick, font=\small,
-                      external pins width=0, right=3cm of kernel] (tpm) {TPM};
-
-                % Measurements - straight lines to each lpin
-                \draw[measurement] (bios.east) -- (tpm.lpin 1)
-                    node[midway, above, font=\tiny] {PCR0};
-                \draw[measurement] (mbr.east) -- (tpm.lpin 2)
-                    node[midway, above, font=\tiny] {PCR4};
-                \draw[measurement] (kernel.east) -- (tpm.lpin 3)
-                    node[midway, above, font=\tiny] {PCR8};
-                \draw[measurement] (apps.east) -- (tpm.lpin 4)
-                    node[midway, above, font=\tiny] {PCR10};
-            \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \textbf{Attestation:}
-            \begin{itemize}
-                \item Quote = Sign(PCRs, AIK)
-                \item Proves system state to remote party
-                \item Unsealing secrets based on PCR values
-            \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
