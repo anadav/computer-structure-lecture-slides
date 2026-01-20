@@ -2202,16 +2202,9 @@ func:
                 \item Fast (no encryption overhead)
             \end{itemize}
 
-            \vspace{0.2cm}
-            {\small \textbf{Examples:}
-            \begin{itemize}
-                \item Intel SGX: EPCM (Enclave Page Cache Map)
-                \item ARM TrustZone: NS bit (secure/non-secure)
-            \end{itemize}
-            }
+            {\small \textbf{Ex:} SGX (EPCM), TrustZone (NS bit)}
 
-            \vspace{0.2cm}
-            {\small \textcolor{red}{\textbf{Limitation:}} Vulnerable to physical attacks (cold boot, bus snooping)}
+            {\small \textcolor{red}{\textbf{Limitation:}} Physical attacks (cold boot, bus snooping)}
 
             \vspace{0.3cm}
             \textbf{2. Encryption Based:}
@@ -2222,13 +2215,7 @@ func:
                 \item Protects against physical attacks
             \end{itemize}
 
-            \vspace{0.2cm}
-            {\small \textbf{Examples:}
-            \begin{itemize}
-                \item AMD SEV: Per-VM encryption keys
-                \item Intel MKTME: Multi-key total memory encryption
-            \end{itemize}
-            }
+            {\small \textbf{Ex:} AMD SEV, Intel MKTME}
         \end{column}
         \begin{column}{0.5\textwidth}
             \textbf{3. Hybrid Approaches:}
@@ -2240,15 +2227,9 @@ func:
                 \item Encryption prevents physical attacks
             \end{itemize}
 
-            \vspace{0.2cm}
-            {\small \textbf{Examples:}
-            \begin{itemize}
-                \item AMD SEV-SNP: Encryption + RMP (Reverse Map Table)
-                \item Intel TDX: Encryption + SEPT (Secure EPT)
-            \end{itemize}
-            }
+            {\small \textbf{Ex:} SEV-SNP (RMP), TDX (SEPT)}
 
-            \vspace{0.3cm}
+            \vspace{0.2cm}
             \begin{tcolorbox}[colback=blue!10, title={\small Memory Protection Trade-offs}]
                 {\scriptsize
                 \textbf{Access Control Only:}
@@ -2277,13 +2258,82 @@ func:
     \end{columns}
 \end{frame}
 
+\begin{frame}{Reverse Map Table (RMP) - AMD SEV-SNP}
+    \begin{columns}[T]
+        \begin{column}{0.55\textwidth}
+            \textbf{Problem:} Hypervisor controls page tables
+            \begin{itemize}
+                \item Can remap guest physical → host physical
+                \item Could redirect VM memory to attacker pages
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Solution: Reverse Map Table (RMP)}
+            \begin{itemize}
+                \item One entry per physical page in system
+                \item Tracks owner (which VM or hypervisor)
+                \item Hardware checks RMP on \textbf{every} access
+            \end{itemize}
+
+            \vspace{0.2cm}
+            \textbf{Key Properties:}
+            \begin{itemize}
+                \item Each physical page has exactly one owner
+                \item Hypervisor cannot access VM-owned pages
+                \item VM must validate pages before use
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \centering
+            \begin{tikzpicture}[
+                mempage/.style={draw, minimum width=1.2cm, minimum height=0.45cm, font=\tiny},
+                arrow/.style={->, thick}]
+
+                % Physical Memory
+                \node[font=\small\bfseries] at (0, 2.4) {Physical Memory};
+                \node[mempage, fill=green!20] (p0) at (0, 1.85) {Page 0};
+                \node[mempage, fill=green!20] (p1) at (0, 1.3) {Page 1};
+                \node[mempage, fill=orange!20] (p2) at (0, 0.75) {Page 2};
+                \node[mempage, fill=green!20] (p3) at (0, 0.2) {Page 3};
+
+                % RMP Table using matrix of nodes
+                \node[font=\small\bfseries] at (3.2, 2.4) {RMP Table};
+                \matrix[matrix of nodes,
+                    ampersand replacement=\&,
+                    nodes={draw, text width=0.55cm, text height=0.25cm, text depth=0.08cm,
+                           align=center, inner sep=1pt, font=\tiny, fill=blue!10},
+                    row sep=-\pgflinewidth,
+                    column sep=-\pgflinewidth,
+                    row 1/.style={nodes={fill=gray!30, font=\tiny\bfseries}}] (rmp) at (3.2, 1.0) {
+                    Pg \& Owner \& V \\
+                    0 \& VM1 \& \checkmark \\
+                    1 \& VM1 \& \checkmark \\
+                    |[fill=orange!20]| 2 \& |[fill=orange!20]| HV \& |[fill=orange!20]| -- \\
+                    3 \& VM2 \& \checkmark \\
+                };
+
+                % Arrows to matrix rows
+                \draw[arrow, green!60!black] (p0.east) -- (rmp-2-1.west);
+                \draw[arrow, green!60!black] (p1.east) -- (rmp-3-1.west);
+                \draw[arrow, orange!60!black] (p2.east) -- (rmp-4-1.west);
+                \draw[arrow, green!60!black] (p3.east) -- (rmp-5-1.west);
+
+                % Legend
+                \node[font=\tiny] at (1.6, -0.35) {V = Validated, HV = Hypervisor};
+            \end{tikzpicture}
+
+            \vspace{0.2cm}
+            \begin{tcolorbox}[colback=green!10, fontupper=\scriptsize]
+                \textbf{Access Check:} CPU verifies RMP entry matches expected owner before allowing memory access
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Secure VMs vs Secure Enclaves}
     \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{Secure Enclaves (Process-Level):}
-
-            \vspace{0.2cm}
-            \textbf{Concept:}
             \begin{itemize}
                 \item Isolate parts of an application
                 \item Trust boundary \textit{within} a VM/OS
@@ -2294,8 +2344,7 @@ func:
             \vspace{0.2cm}
             \textbf{Threat Model:}
             \begin{itemize}
-                \item Untrusted OS/kernel
-                \item Untrusted applications
+                \item Untrusted OS/kernel and applications
                 \item Privileged software is adversary
             \end{itemize}
 
@@ -2318,9 +2367,6 @@ func:
         \end{column}
         \begin{column}{0.5\textwidth}
             \textbf{Secure VMs (VM-Level):}
-
-            \vspace{0.2cm}
-            \textbf{Concept:}
             \begin{itemize}
                 \item Isolate entire virtual machines
                 \item Trust boundary at hypervisor level
@@ -2331,8 +2377,7 @@ func:
             \vspace{0.2cm}
             \textbf{Threat Model:}
             \begin{itemize}
-                \item Untrusted hypervisor
-                \item Untrusted cloud provider
+                \item Untrusted hypervisor/cloud provider
                 \item Physical access attacks
             \end{itemize}
 
