@@ -1597,17 +1597,14 @@ func:
         \begin{column}{0.45\textwidth}
             \textbf{Modern Usage:}
             \begin{itemize}
-                \item Only Ring 0 (Kernel) and Ring 3 (User)
-                \item Ring 1-2 unused in practice
-                \item Ring -1: Hypervisor (VMX root)
-                \item Ring -2: SMM firmware
+                \item Ring 3: User applications
+                \item Ring 1-2: Unused in practice
+                \item Ring 0: Kernel (OS)
+                \item Ring -1: Hypervisor\\
+                      {\small (runs virtual machines)}
+                \item Ring -2: SMM firmware\\
+                      {\small (low-level hardware control)}
             \end{itemize}
-
-            \vspace{0.5cm}
-            \textbf{Protection Method:}
-            \begin{tcolorbox}[colback=yellow!20]
-                Paging-based protection with NX/XD bit
-            \end{tcolorbox}
         \end{column}
         \begin{column}{0.55\textwidth}
             \centering
@@ -1629,19 +1626,14 @@ func:
                 \node[ring num] at (0,2.1) {Ring 0};
                 \node[ring usage] at (0,-2.1) {Kernel};
 
-                % Hidden rings revealed on pause
-                \onslide<2->{
-                    \draw[fill=green!40] (0,0) circle (1.6cm);
-                    \node[ring num] at (0,1.3) {Ring -1};
-                    \node[ring usage] at (0,-1.3) {Hypervisor};
-                    \draw[thick,<-] (-1.2,0) -- (-2.5,0.5) node[left] {\small VMX Root};
-                }
+                % Inner rings (Ring -1 and Ring -2)
+                \draw[fill=green!40] (0,0) circle (1.6cm);
+                \node[ring num] at (0,1.3) {Ring -1};
+                \node[ring usage] at (0,-1.3) {Hypervisor};
 
-                \onslide<3->{
-                    \draw[fill=blue!40] (0,0) circle (0.8cm);
-                    \node[ring num] at (0,0.4) {Ring -2};
-                    \node[ring usage] at (0,-0.4) {SMM};
-                }
+                \draw[fill=blue!40] (0,0) circle (0.8cm);
+                \node[ring num] at (0,0.4) {Ring -2};
+                \node[ring usage] at (0,-0.4) {SMM};
             \end{tikzpicture}
         \end{column}
     \end{columns}
@@ -2926,12 +2918,6 @@ func:
                 \item Sealed storage (bind to PCR state)
             \end{itemize}
             
-            \vspace{0.3cm}
-            \textbf{TPM Versions:}
-            \begin{itemize}
-                \item TPM 1.2: SHA-1, RSA
-                \item TPM 2.0: SHA-256, ECC support
-            \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{tikzpicture}[
