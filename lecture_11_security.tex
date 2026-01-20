@@ -1430,16 +1430,15 @@ RET:
 
 \begin{frame}[fragile]{The Type Confusion Problem}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.6\textwidth}
             \textbf{What is Type Confusion?}
             \begin{itemize}
                 \item Object interpreted as wrong type
-                \item Common in C++ with inheritance
                 \item Enables control flow hijacking
                 \item Bypass basic CFI checks
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.15cm}
             \textbf{Attack Scenario:}
             \begin{itemize}
                 \item Attacker controls object allocation
@@ -1447,8 +1446,8 @@ RET:
                 \item Calls virtual function on wrong type
                 \item Jumps to attacker-controlled vtable
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.15cm}
             \textbf{Why Basic CFI Fails:}
             \begin{itemize}
                 \item All virtual calls are "valid" targets
@@ -1456,9 +1455,7 @@ RET:
                 \item Need type-aware CFI (FineIBT)
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Type Confusion Example:}
-            \vspace{-2mm}
+        \begin{column}{0.4\textwidth}
             \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
 \begin{minted}[fontsize=\scriptsize]{cpp}
 class Animal {
@@ -1840,21 +1837,18 @@ func:
             \begin{itemize}
                 \item Separate processor on Intel chipsets
                 \item Runs even when main CPU is off
-                \item Has full memory/network access
-                \item Runs at Ring -3 privilege
+                \item Full memory/network access (Ring -3)
                 \item Cannot be disabled on modern systems
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.2cm}
             \textbf{Legitimate Uses:}
             \begin{itemize}
                 \item Remote management (AMT)
-                \item DRM enforcement
-                \item Boot verification
-                \item Anti-theft features
+                \item Boot verification, DRM, anti-theft
             \end{itemize}
-            
-            \vspace{0.3cm}
+
+            \vspace{0.2cm}
             \textbf{Security Concerns:}
             \begin{itemize}
                 \item Closed source firmware
@@ -1900,14 +1894,8 @@ func:
                     node[midway, right, font=\scriptsize, text=red!70] {Controls};
             \end{tikzpicture}
 
-            \vspace{0.3cm}
-            \begin{tcolorbox}[colback=yellow!20]
-                \small
-                \textbf{Similar Systems:}
-                \begin{itemize}
-                    \item AMD PSP (Platform Security Processor)
-                    \item ARM TrustZone
-                \end{itemize}
+            \begin{tcolorbox}[colback=yellow!20, fontupper=\scriptsize]
+                \textbf{Similar:} AMD PSP, ARM TrustZone
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -2115,11 +2103,10 @@ func:
             \begin{itemize}
                 \item Confidential computing in public cloud
                 \item Processing sensitive data (medical, financial)
-                \item Multi-party computation
-                \item Secure enclaves for ML models
+                \item DRM / content protection
             \end{itemize}
 
-            \vspace{0.3cm}
+            \vspace{-0.7cm}
             \begin{tcolorbox}[colback=blue!10, title={\small Goal}]
                 \textbf{Run code on someone else's hardware without them being able to:}%
                 \begin{itemize}
@@ -2170,28 +2157,65 @@ func:
                 \item Client verifies before sending secrets
             \end{itemize}
 
-            \vspace{0.2cm}
-            \begin{tcolorbox}[colback=green!10, title={\small Attestation Flow}]
-                {\scriptsize
-                \textbf{1.} TEE measures code/data (hash)\\
-                \textbf{2.} CPU signs measurement with private key\\
-                \textbf{3.} Client verifies signature with CPU's public key\\
-                \textbf{4.} If valid $\rightarrow$ client sends encrypted secrets\\
-                \vspace{0.1cm}
+            \vspace{0.3cm}
+            \textit{Relies on:}
+            \begin{itemize}
+                \item Secure boot (chain of trust)
+                \item Hardware root of trust (TPM/fused keys)
+                \item CPU manufacturer's PKI
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
 
-                \textit{Relies on:}
-                \begin{itemize}
-                    \item Secure boot (chain of trust)
-                    \item Hardware root of trust (TPM/fused keys)
-                    \item CPU manufacturer's PKI
-                \end{itemize}
-                }
+\begin{frame}{Remote Attestation Flow}
+    \begin{columns}[T]
+        \begin{column}{0.45\textwidth}
+            \textbf{Attestation Steps:}
+            \begin{enumerate}
+                \item TEE measures code/data (hash)
+                \item CPU signs measurement with private key
+                \item Client verifies signature with CPU's public key
+                \item If valid → client sends encrypted secrets
+            \end{enumerate}
+
+            \vspace{0.3cm}
+            \textbf{Why It Works:}
+            \begin{itemize}
+                \item CPU private key burned in at manufacturing
+                \item Cannot be extracted or forged
+                \item Measurement reflects actual running code
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.55\textwidth}
+            \centering
+            \begin{tikzpicture}[
+                box/.style={draw, rounded corners, minimum width=1.8cm, minimum height=0.7cm, align=center, font=\small},
+                arrow/.style={->, thick},
+                num/.style={circle, draw, fill=white, font=\scriptsize, inner sep=1pt, minimum size=0.4cm}]
+
+                % Entities
+                \node[box, fill=blue!20] (tee) {TEE};
+                \node[box, fill=green!20, right=2.5cm of tee] (client) {Client};
+                \node[box, fill=orange!20, below=2cm of tee] (cpu) {CPU};
+
+                % Arrows with circled numbers
+                \draw[arrow] (tee) -- (cpu) node[midway, left, font=\scriptsize] {\tikz\node[num]{\tiny 1}; Hash};
+                \draw[arrow] (cpu) -- ++(2cm,0) |- (client.south west)
+                    node[pos=0.25, right, font=\scriptsize] {\tikz\node[num]{\tiny 2}; Signed report};
+                \node[font=\scriptsize, below=0.3cm of client] {\tikz\node[num]{\tiny 3}; Verify};
+                \draw[arrow, dashed] (client) -- (tee) node[midway, above, font=\scriptsize] {\tikz\node[num]{\tiny 4}; Secrets};
+            \end{tikzpicture}
+
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=green!10, fontupper=\small]
+                \textbf{Result:} Client is confident code is running in genuine TEE, unmodified
             \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
 
-\begin{frame}{TEE Memory Protection Approaches}
+\begin{frame}{TEE Memory Protection Approaches (1/2)}
     \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{1. Access Control Based:}
@@ -2200,23 +2224,25 @@ func:
                 \item Hypervisor/OS \textcolor{red}{blocked} from accessing TEE memory
                 \item Page table attributes control access
                 \item Fast (no encryption overhead)
+                \item \textbf{Ex:} SGX (EPCM), TrustZone (NS bit)
+                \item \textcolor{red}{\textbf{Limit:}} Physical attacks (cold boot, bus snooping)
             \end{itemize}
-
-            {\small \textbf{Ex:} SGX (EPCM), TrustZone (NS bit)}
-
-            {\small \textcolor{red}{\textbf{Limitation:}} Physical attacks (cold boot, bus snooping)}
-
-            \vspace{0.3cm}
+        \end{column}
+        \begin{column}{0.5\textwidth}
             \textbf{2. Encryption Based:}
             \begin{itemize}
                 \item Memory encrypted in DRAM
                 \item Each TEE has unique key
                 \item Hardware encrypts/decrypts on memory bus
                 \item Protects against physical attacks
+                \item \textbf{Ex:} AMD SEV, Intel MKTME
             \end{itemize}
-
-            {\small \textbf{Ex:} AMD SEV, Intel MKTME}
         \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{TEE Memory Protection Approaches (2/2)}
+    \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{3. Hybrid Approaches:}
 
@@ -2225,34 +2251,28 @@ func:
             \begin{itemize}
                 \item Access control prevents software attacks
                 \item Encryption prevents physical attacks
+                \item \textbf{Ex:} SEV-SNP (RMP), TDX (SEPT)
             \end{itemize}
-
-            {\small \textbf{Ex:} SEV-SNP (RMP), TDX (SEPT)}
-
-            \vspace{0.2cm}
-            \begin{tcolorbox}[colback=blue!10, title={\small Memory Protection Trade-offs}]
-                {\scriptsize
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=blue!10, title={\small Trade-offs}]
                 \textbf{Access Control Only:}
                 \begin{itemize}
-                    \item $\checkmark$ Fast, no encryption overhead
-                    \item $\times$ Physical attacks possible
+                    \item[\checkmark] Fast, no encryption overhead
+                    \item[$\times$] Physical attacks possible
                 \end{itemize}
 
-                \vspace{0.1cm}
                 \textbf{Encryption Only:}
                 \begin{itemize}
-                    \item $\checkmark$ Protects against physical attacks
-                    \item $\times$ Performance overhead (5-15\%)
-                    \item $\times$ Complex key management
+                    \item[\checkmark] Protects against physical attacks
+                    \item[$\times$] Performance overhead (5-15\%)
                 \end{itemize}
 
-                \vspace{0.1cm}
                 \textbf{Hybrid:}
                 \begin{itemize}
-                    \item $\checkmark$ Defense in depth
-                    \item $\times$ Complexity + overhead
+                    \item[\checkmark] Defense in depth
+                    \item[$\times$] Complexity + overhead
                 \end{itemize}
-                }
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -2289,11 +2309,10 @@ func:
                 % Physical Memory matrix
                 \matrix[matrix of nodes,
                     ampersand replacement=\&,
+                    label={[font=\small\bfseries]above:Physical Memory},
                     nodes={draw, text width=1cm, text height=0.3cm, text depth=0.1cm,
                            align=center, inner sep=2pt, font=\scriptsize, fill=green!20},
-                    row sep=-\pgflinewidth,
-                    row 1/.style={nodes={draw=none, fill=none, font=\small\bfseries}}] (mem) {
-                    Physical Memory \\
+                    row sep=-\pgflinewidth] (mem) {
                     Page 0 \\
                     Page 1 \\
                     |[fill=orange!20]| Page 2 \\
@@ -2320,11 +2339,11 @@ func:
                     3 \& VM2 \& \checkmark \\
                 };
 
-                % Arrows between matrices
-                \draw[arrow, green!60!black] (mem-2-1.east) -- (rmp-2-1.west);
-                \draw[arrow, green!60!black] (mem-3-1.east) -- (rmp-3-1.west);
-                \draw[arrow, orange!60!black] (mem-4-1.east) -- (rmp-4-1.west);
-                \draw[arrow, green!60!black] (mem-5-1.east) -- (rmp-5-1.west);
+                % Arrows between matrices (mem rows 1-4, rmp rows 2-5 since row 1 is header)
+                \draw[arrow, green!60!black] (mem-1-1.east) -- (rmp-2-1.west);
+                \draw[arrow, green!60!black] (mem-2-1.east) -- (rmp-3-1.west);
+                \draw[arrow, orange!60!black] (mem-3-1.east) -- (rmp-4-1.west);
+                \draw[arrow, green!60!black] (mem-4-1.east) -- (rmp-5-1.west);
 
                 % Legend
                 \node[font=\scriptsize, below=0.3cm of mem.south east, anchor=north west] {V = Validated, HV = Hypervisor};
@@ -2361,7 +2380,6 @@ func:
             \begin{itemize}
                 \item \textbf{Intel SGX}: x86 enclave instructions
                 \item \textbf{ARM TrustZone}: Secure/Normal worlds
-                \item \textbf{AMD SEV-ES}: Single VM encryption
             \end{itemize}
 
             \vspace{0.2cm}
@@ -2370,7 +2388,6 @@ func:
                 \item Protect cryptographic keys
                 \item Secure password verification
                 \item DRM (Digital Rights Management)
-                \item Biometric authentication
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -2394,7 +2411,6 @@ func:
             \begin{itemize}
                 \item \textbf{Intel TDX}: Trust Domain Extensions
                 \item \textbf{AMD SEV-SNP}: Secure Nested Paging
-                \item \textbf{ARM CCA}: Confidential Compute Architecture
             \end{itemize}
 
             \vspace{0.2cm}
@@ -2403,7 +2419,6 @@ func:
                 \item Confidential computing in public cloud
                 \item Lift-and-shift existing workloads
                 \item Multi-tenant isolation
-                \item Regulatory compliance (GDPR, HIPAA)
             \end{itemize}
 
             \vspace{0.2cm}
@@ -2416,161 +2431,6 @@ func:
     \end{columns}
 \end{frame}
 
-\begin{frame}{Intel TDX (Trust Domain Extensions)}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Who Protects Whom:}
-            \begin{itemize}
-                \item \textcolor{green!70!black}{\textbf{Protected:}} Guest VMs
-                \item \textcolor{red}{\textbf{Threat:}} Cloud Provider
-                \item \textcolor{blue}{\textbf{Enforcer:}} CPU Hardware
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Protection Guarantees:}
-            \begin{itemize}
-                \item Confidentiality from hypervisor
-                \item Memory encryption per VM
-                \item CPU-attested execution
-                \item Secure EPT (S-EPT)
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Use Case:}
-            \begin{tcolorbox}[colback=green!10]
-                \small
-                Run sensitive workloads on untrusted cloud infrastructure
-            \end{tcolorbox}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \centering
-            \begin{tikzpicture}[font=\small,
-                vm/.style={draw, line width=1pt, minimum width=1.4cm, minimum height=1.2cm, align=center},
-                cpu/.style={draw, fill=yellow!30, minimum width=4cm, minimum height=0.7cm, font=\small\bfseries},
-                barrier/.style={ultra thick, blue}]
-
-                % CPU enforcement (top) - anchor for everything
-                \node[cpu] (cpu) {CPU (TDX Module)};
-
-                % Protected VMs - relative to CPU
-                \node[vm, fill=green!30, draw=green!70!black, below left=0.6cm and 0.2cm of cpu.south] (vm1) {
-                    \textbf{VM1}\\[-2pt]{\tiny Customer A}};
-                \node[vm, fill=blue!30, draw=blue!70!black, below right=0.6cm and 0.2cm of cpu.south] (vm2) {
-                    \textbf{VM2}\\[-2pt]{\tiny Customer B}};
-
-                % Protection barrier - relative to VMs
-                \coordinate (barrier-left) at ([xshift=-0.5cm]vm1.south west);
-                \coordinate (barrier-right) at ([xshift=0.5cm]vm2.south east);
-                \coordinate (barrier-center) at ($(barrier-left)!0.5!(barrier-right)$);
-                \draw[barrier] (barrier-left) -- (barrier-right)
-                    node[right, font=\small] {TDX};
-
-                % Threat Actor - below barrier center
-                \node[inner sep=0pt, below=1.5cm of barrier-center] (provider)
-                    {\includegraphics[width=1.5cm]{figures/noun-cloud-5095064.png}};
-                \node[font=\scriptsize, below=0.1cm of provider] (provider-label) {Cloud Provider (Untrusted)};
-
-                % Attack arrows from provider toward barrier
-                \draw[->, thick, red] ([xshift=0.3cm]provider.north) -- ([xshift=0.3cm]provider.north |- barrier-center)
-                    node[pos=0.4, right, font=\tiny] {Read};
-                \draw[->, thick, red] ([xshift=-0.3cm]provider.north) -- ([xshift=-0.3cm]provider.north |- barrier-center)
-                    node[pos=0.4, left, font=\tiny] {Modify};
-
-                % X marks for blocked attacks - on the arrow paths
-                \node[inner sep=0pt] at ([xshift=0.3cm, yshift=-0.5cm]barrier-center)
-                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-                \node[inner sep=0pt] at ([xshift=-0.3cm, yshift=-0.5cm]barrier-center)
-                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-
-                % Protection arrows from CPU to VMs
-                \draw[->, thick, green!60!black] (cpu.south) -- (vm1.north);
-                \draw[->, thick, green!60!black] (cpu.south) -- (vm2.north);
-            \end{tikzpicture}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{AMD SEV-SNP - Secure Encrypted Virtualization}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{What SEV-SNP Protects Against:}
-            \begin{itemize}
-                \item \textcolor{red}{Malicious hypervisor}
-                \item \textcolor{red}{Physical memory attacks}
-                \item \textcolor{red}{VM memory inspection}
-                \item \textcolor{red}{Replay attacks}
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Key Features:}
-            \begin{itemize}
-                \item \textbf{SEV:} Memory encryption per-VM
-                \item \textbf{SEV-ES:} Register state encryption
-                \item \textbf{SEV-SNP:} Integrity protection
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{SNP Additions:}
-            \begin{itemize}
-                \item Reverse Map Table (RMP)
-                \item Page ownership tracking
-                \item Prevents remapping attacks
-                \item Guest-controlled page validation
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[
-                vm/.style={draw, thick, minimum width=2.2cm, minimum height=1.8cm,
-                          align=center, font=\small, rounded corners=2pt},
-                amd sp/.style={draw, thick, fill=yellow!30, minimum width=3.5cm,
-                              minimum height=0.8cm, align=center, font=\small, inner sep=2pt},
-                connection/.style={<->, thick},
-                attack/.style={->, thick, red, dashed}]
-
-                % AMD Security Processor at top
-                \node[amd sp] (amdsp) {\textbf{AMD SP}};
-
-                % Protected VMs below AMD SP
-                \node[vm, fill=green!30, below left=1cm and 0.3cm of amdsp.south] (vm1)
-                    {\textbf{VM1}\\[-2pt]\small Encrypted\\[-2pt]\includegraphics[height=0.3cm]{figures/noun-key-8095348.png}{\tiny 1}};
-                \node[vm, fill=blue!30, below right=1cm and 0.3cm of amdsp.south] (vm2)
-                    {\textbf{VM2}\\[-2pt]\small Encrypted\\[-2pt]\includegraphics[height=0.3cm]{figures/noun-key-8095348.png}{\tiny 2}};
-
-                % Protection connections
-                \draw[connection, green!70!black] (vm1.north) -- (amdsp.south);
-                \draw[connection, blue!70!black] (vm2.north) -- (amdsp.south);
-
-                % Untrusted Cloud Provider at bottom
-                \node[inner sep=0pt, below=2cm of amdsp.south] (cloud)
-                    {\includegraphics[width=1.8cm]{figures/noun-cloud-5095064.png}};
-                \node[font=\tiny, below=1pt of cloud] {Cloud Provider (Untrusted)};
-
-                % Blocked attack attempts with X marks
-                \draw[attack] (cloud.north) -- ++(0, 0.6cm);
-                \node[inner sep=0pt] at ([yshift=3mm]cloud.north)
-                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-
-                \draw[attack] ([xshift=-8mm]cloud.north) -- ++(0, 0.6cm);
-                \node[inner sep=0pt] at ([xshift=-8mm, yshift=3mm]cloud.north)
-                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-
-                % Attack labels
-                \node[red, font=\tiny, left] at ([xshift=-8mm, yshift=3mm]cloud.north) {Read};
-                \node[red, font=\tiny, right] at ([xshift=8mm, yshift=3mm]cloud.north) {Modify};
-            \end{tikzpicture}
-
-            \vspace{0.3cm}
-            \begin{tcolorbox}[colback=yellow!20]
-                \textbf{RMP (Reverse Map Table):}
-                \begin{itemize}
-                    \item Tracks page ownership (ASID)
-                    \item Validates page access
-                    \item Hardware-enforced
-                \end{itemize}
-            \end{tcolorbox}
-        \end{column}
-    \end{columns}
-\end{frame}
 
 \begin{frame}[fragile]{Merkle Trees for Memory Freshness}
     \begin{columns}
@@ -2650,56 +2510,6 @@ func:
                 \draw[ultra thick,red] (n4) -- (n1);
                 \draw[ultra thick,red] (n1) -- (root);
                 \node[red, font=\scriptsize, left=2mm of n1] {Detected!};
-            \end{tikzpicture}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{Intel SGX Enclaves}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{SGX - Another TEE Implementation:}
-            \begin{itemize}
-                \item Isolated execution environment (TEE)
-                \item Encrypted memory (MEE)
-                \item Remote attestation
-                \item Sealed storage
-                \item x86-specific (vs ARM TrustZone)
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Instructions:}
-            \begin{itemize}
-                \item \texttt{ECREATE}: Create enclave
-                \item \texttt{EENTER}: Enter enclave
-                \item \texttt{EEXIT}: Exit enclave
-                \item \texttt{ERESUME}: Resume after AEX
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[
-                app/.style={draw, thick, minimum width=4cm, minimum height=4cm,
-                           fill=gray!15, rounded corners=3pt},
-                enclave/.style={draw, very thick, minimum width=3cm, minimum height=2.2cm,
-                              fill=green!30, rounded corners=3pt, align=center}]
-
-                % Application container
-                \node[app] (app) {};
-                \node[font=\small\bfseries, below=2pt of app.north] {Application};
-
-                % SGX Enclave - protected region
-                \node[enclave] (enclave) at (app.center)
-                    {\textbf{SGX Enclave}\\[-2pt]
-                     \scriptsize Trusted Code\\[-2pt]
-                     \scriptsize Encrypted Data\\[2pt]
-                     \includegraphics[width=0.4cm]{figures/noun-lock-locked-4020631.png}};
-
-                % Untrusted code region
-                \node[font=\small, above=2pt of app.south] {Untrusted Code};
-
-                % EPC Memory connection
-                \draw[<-, thick, blue!70] (enclave.east) -- ++(1cm, 0)
-                    node[right, font=\scriptsize, align=left] {Enclave Page\\Cache (EPC)};
             \end{tikzpicture}
         \end{column}
     \end{columns}
