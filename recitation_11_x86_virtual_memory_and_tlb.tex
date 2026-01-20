@@ -971,37 +971,32 @@ For each access, how many \textbf{new page tables} must be allocated?
     \begin{itemize}
         \item Speeds up translation
         \item Separate L1 instruction TLB (iTLB) and data TLB (dTLB)
-        \item Typically 64--128 entries per L1 TLB
-        \item 4--8 way associative
+        \item Typically 64--128 entries, 4--8 way associative
     \end{itemize}
     \item \textbf{TLB Indexing:}
 
-\begin{tikzpicture}[scale=0.85]
-    % Virtual address breakdown
-    \draw[thick] (0,0) rectangle (5.5,0.6);
-    \draw[thick] (4,0) -- (4,0.6);
+\begin{tikzpicture}[
+    field/.style={
+        draw, thick,
+        minimum height=5mm,
+        text height=1.5ex, text depth=0.25ex,
+        inner sep=2pt,
+        font=\small,
+        anchor=west
+    }
+]
+    \newlength{\vpnwidth}\setlength{\vpnwidth}{3.6cm}
+    % Virtual address breakdown - top row
+    \node[field, fill=blue!20, minimum width=\vpnwidth] (vpn) at (0,0) {Virtual Page Number};
+    \node[field, fill=orange!20, minimum width=1.2cm] (offset) at (vpn.east) {Offset};
 
-    % Fill colors
-    \fill[blue!20] (0,0) rectangle (4,0.6);
-    \fill[orange!20] (4,0) rectangle (5.5,0.6);
+    % Tag and Set subdivision - bottom row (Tag + Set = VPN width)
+    \node[field, fill=green!20, minimum width=0.6\vpnwidth, anchor=north west] (tag) at ([yshift=-3mm]vpn.south west) {Tag};
+    \node[field, fill=yellow!20, minimum width=0.4\vpnwidth] (set) at (tag.east) {Set};
 
-    % Labels
-    \node at (2,0.3) {\small Virtual Page Number};
-    \node at (4.75,0.3) {\small Offset};
-
-    % Tag and Set subdivision
-    \draw[thick] (0,-0.8) rectangle (4,-0.2);
-    \draw[thick] (2.4,-0.8) -- (2.4,-0.2);
-
-    \fill[green!20] (0,-0.8) rectangle (2.4,-0.2);
-    \fill[yellow!20] (2.4,-0.8) rectangle (4,-0.2);
-
-    \node at (1.2,-0.5) {\small Tag};
-    \node at (3.2,-0.5) {\small Set};
-
-    % Dotted lines connecting
-    \draw[dotted, thick] (0,0) -- (0,-0.2);
-    \draw[dotted, thick] (4,0) -- (4,-0.2);
+    % Dotted lines connecting VPN to Tag/Set
+    \draw[dotted, thick] (vpn.south west) -- (tag.north west);
+    \draw[dotted, thick] (vpn.south east) -- (set.north east);
 \end{tikzpicture}
 
     \item \textbf{On a TLB miss:}\\
