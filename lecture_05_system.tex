@@ -52,30 +52,82 @@
 
 \section{CPU Architecture Overview}
 
+% Slide 5: Putting It All Together
+\begin{frame}{Hierarchy: From Transistor to System}
+\begin{center}
+\vspace{-1mm}
+\begin{tikzpicture}[scale=0.75,
+    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.62cm, inner sep=1pt},
+    desc/.style={text width=6.5cm, anchor=west, font=\small, align=left, inner ysep=0pt},
+    example/.style={anchor=east, font=\small\itshape}
+]
+
+% Hierarchy levels
+\node[level, fill=red!20] (trans) at (0,0) {Transistors};
+\node[level, fill=orange!20] (core) at (0,1.1) {Core};
+\node[level, fill=yellow!20] (tile) at (0,2.2) {Tile};
+\node[level, fill=green!20] (die) at (0,3.3) {Die};
+\node[level, fill=blue!20] (package) at (0,4.4) {Package};
+\node[level, fill=purple!20] (system) at (0,5.5) {System};
+
+% Descriptions - using style with reduced spacing
+\node[desc] (trans_desc) at ([xshift=0.4cm]trans.east) {Billions of switches (5-10nm)};
+\node[desc] at (trans_desc.west |- core) {Execution unit + L1/L2 (1-2 threads)};
+\node[desc] at (trans_desc.west |- tile) {Core(s) + L3 slice + interconnect};
+\node[desc] at (trans_desc.west |- die) {Complete silicon chip (mono/chiplet)};
+\node[desc] at (trans_desc.west |- package) {Die(s) + substrate + pins};
+\node[desc] at (trans_desc.west |- system) {Multiple sockets + memory + I/O};
+
+% Examples on left - using style
+\node[example] (trans_ex) at ([xshift=-0.4cm]trans.west) {7nm = 10M+/mm²};
+\node[example] at (trans_ex.east |- core) {Golden Cove, Zen 4};
+\node[example] at (trans_ex.east |- tile) {2-core tile};
+\node[example] at (trans_ex.east |- die) {CCD, Alder Lake};
+\node[example] at (trans_ex.east |- package) {Xeon, EPYC, i9};
+\node[example] at (trans_ex.east |- system) {2S server};
+
+% Arrows
+\foreach \i in {0,1,2,3,4} {
+    \draw[->, thick] (0,\i*1.1+0.34) -- (0,\i*1.1+0.76);
+}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{-2mm}
+\textbf{Key Insight:} Each level has its own interconnect needs:
+\begin{itemize}
+\item Within core: Register bypass networks
+\item Within tile: L2-L3 connections
+\item Within die: Ring/mesh/crossbar
+\item Within package: Die-to-die (chiplets)
+\item Between packages: UPI/IF (NUMA)
+\end{itemize}
+\end{frame}
 % Slide 1: Core vs Uncore
 \begin{frame}{CPU Architecture: Core vs Uncore}
 \begin{columns}[T]
 \column{0.5\textwidth}
-\textbf{Core (Execution Core):}
+\textbf{\textcolor{blue}{Core} (Execution Core):}
 \begin{itemize}
-\item The actual processing unit
+\item The \textbf{actual processing unit}
 \item Contains:
   \begin{itemize}
   \item ALUs, FPU
   \item Registers
   \item L1 cache (I\$ + D\$)
-  \item Usually L2 cache (private)
+  \item Usually L2 cache (\textbf{private})
   \item Branch predictor
   \item Decode/dispatch units
   \end{itemize}
 \item Each core can run 1-2 threads (with SMT/HT)
-\item The part that executes instructions
+\item The part that \textbf{executes instructions}
 \end{itemize}
 
 \column{0.5\textwidth}
-\textbf{Uncore (System Agent):}
+\textbf{\textcolor{green!50!black}{Uncore} (System Agent):}
 \begin{itemize}
-\item Everything else on the chip
+\item \textbf{Everything else} on the chip
 \item Contains:
   \begin{itemize}
   \item Memory controllers
@@ -85,34 +137,10 @@
   \item Power management
   \item Integrated GPU (if present)
   \end{itemize}
-\item Shared by all cores
+\item \textbf{Shared by all cores}
 \item Runs at different frequency (often lower)
 \end{itemize}
 \end{columns}
-
-\vspace{0.3cm}
-\begin{center}
-\begin{tikzpicture}[scale=0.8]
-\draw[thick, dashed] (0,0) rectangle (7,3);
-\node at (3.5,2.7) {\textbf{CPU Die}};
-
-% Cores
-\foreach \x in {0.5,1.5,2.5} {
-    \draw[fill=blue!30] (\x,1.5) rectangle (\x+0.8,2.3);
-    \node at (\x+0.4,1.9) {\tiny Core};
-}
-
-% Uncore components
-\draw[fill=green!30] (4,1.5) rectangle (6.5,2.3);
-\node at (5.25,1.9) {\small Uncore};
-\draw[fill=gray!30] (0.5,0.5) rectangle (3.3,1.2);
-\node at (1.9,0.85) {\small L3 Cache};
-\draw[fill=orange!30] (4,0.5) rectangle (5,1.2);
-\node at (4.5,0.85) {\tiny MC};
-\draw[fill=purple!30] (5.2,0.5) rectangle (6.5,1.2);
-\node at (5.85,0.85) {\tiny PCIe/IO};
-\end{tikzpicture}
-\end{center}
 \end{frame}
 
 % Slide 2: Tile Architecture
@@ -142,41 +170,43 @@
 \column{0.5\textwidth}
 \begin{center}
 \begin{tikzpicture}[
-    tilebox/.style={draw, ultra thick, minimum width=2cm, minimum height=2.5cm},
-    corebox/.style={draw, fill=blue!30, minimum width=0.65cm, minimum height=0.45cm, font=\tiny},
-    cachebox/.style={draw, minimum width=1.5cm, minimum height=0.35cm, font=\tiny},
-    minitile/.style={draw, thick, minimum width=1.1cm, minimum height=0.85cm}
+    tilebox/.style={draw, ultra thick, minimum width=2.7cm, minimum height=3.1cm},
+    corebox/.style={draw, fill=blue!30, minimum width=1.1cm, minimum height=0.5cm, inner sep=1pt, font=\small},
+    cachebox/.style={draw, minimum width=2.4cm, minimum height=0.5cm, font=\scriptsize},
+    minitile/.style={draw, thick, minimum width=1.55cm, minimum height=1.2cm}
 ]
 % Single tile detail
 \node[tilebox] (tile) at (0,0) {};
 \node[font=\bfseries, anchor=south] at (tile.north) {Tile};
-\node[corebox] (c1) at ([yshift=-0.4cm, xshift=-0.4cm]tile.north) {Core};
-\node[corebox, right=0.1cm of c1] (c2) {Core};
-\node[cachebox, fill=yellow!30, below=0.15cm of $(c1.south)!0.5!(c2.south)$] (l2) {L2 Cache};
+\node[corebox] (c1) at ([yshift=-0.55cm, xshift=-0.62cm]tile.north) {Core};
+\node[corebox, right=0.12cm of c1] (c2) {Core};
+\node[cachebox, fill=yellow!30, below=0.1cm of $(c1.south)!0.5!(c2.south)$] (l2) {L2 Cache};
 \node[cachebox, fill=green!30, below=0.1cm of l2] (l3) {L3 Slice};
-\node[cachebox, fill=red!20, below=0.1cm of l3, minimum height=0.2cm] (ring) {Ring Stop};
-\node[font=\small, below=0.3cm of tile] {Single Tile};
+\node[cachebox, fill=red!20, below=0.1cm of l3, minimum height=0.3cm] (ring) {Ring Stop};
+\node[font=\small, below=0.25cm of tile] (singlelabel) {Single Tile};
 
-% Multiple tiles - 2x2 grid
-\node[minitile, right=1.8cm of tile, yshift=0.55cm] (t00) {};
+% Multiple tiles - 2x2 grid, positioned to the right
+\node[minitile] (t00) at (3.3,0.75) {};
 \node[minitile, right=0.15cm of t00] (t10) {};
 \node[minitile, below=0.15cm of t00] (t01) {};
 \node[minitile, right=0.15cm of t01] (t11) {};
 
-% Mini content
-\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t00.center) {};
-\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t00.center) {};
-\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t10.center) {};
-\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t10.center) {};
-\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t01.center) {};
-\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t01.center) {};
-\node[draw, fill=blue!20, minimum width=0.4cm, minimum height=0.25cm] at ([yshift=0.15cm]t11.center) {};
-\node[draw, fill=green!20, minimum width=0.9cm, minimum height=0.2cm] at ([yshift=-0.2cm]t11.center) {};
+% Mini content in each tile
+\foreach \t in {t00,t10,t01,t11} {
+    \node[draw, fill=blue!20, minimum width=0.6cm, minimum height=0.35cm] at ([yshift=0.22cm]\t.center) {};
+    \node[draw, fill=green!20, minimum width=1.2cm, minimum height=0.28cm] at ([yshift=-0.28cm]\t.center) {};
+}
 
-% Mesh lines
+% Mesh interconnect lines
 \draw[red, thick] ($(t00.south)!0.5!(t01.north)$) -- ($(t10.south)!0.5!(t11.north)$);
 \draw[red, thick] ($(t00.east)!0.5!(t10.west)$) -- ($(t01.east)!0.5!(t11.west)$);
-\node[font=\small, below=0.3cm of $(t01.south)!0.5!(t11.south)$] {4-Tile Mesh};
+
+% Zoom lines from Single Tile to top-left tile
+\draw[dashed, gray] (tile.north east) -- (t00.north west);
+\draw[dashed, gray] (tile.south east) -- (t00.south west);
+
+% Label aligned with Single Tile using -|
+\node[font=\small] at (singlelabel.center -| t01.south east) {4-Tile Mesh};
 \end{tikzpicture}
 \end{center}
 
@@ -211,49 +241,50 @@
 \column{0.5\textwidth}
 \begin{center}
 \begin{tikzpicture}[
-    corebox/.style={draw, fill=blue!30, minimum width=0.3cm, minimum height=0.3cm, font=\tiny},
-    cachebox/.style={draw, fill=green!30, minimum height=0.25cm, font=\tiny},
-    iobox/.style={draw, minimum width=0.8cm, minimum height=0.25cm, text depth=0.1ex, font=\tiny},
-    ccdbox/.style={draw, thick, fill=blue!10, minimum width=1.15cm, minimum height=1.1cm},
-    iodbox/.style={draw, thick, fill=orange!10, minimum width=2.45cm, minimum height=0.85cm}
+    corebox/.style={draw, fill=blue!30, minimum width=0.38cm, minimum height=0.38cm, font=\tiny},
+    minicore/.style={draw, fill=blue!30, minimum width=0.32cm, minimum height=0.32cm, font=\tiny},
+    cachebox/.style={draw, fill=green!30, minimum height=0.3cm, font=\tiny},
+    iobox/.style={draw, minimum width=1cm, minimum height=0.3cm, text depth=0.1ex, font=\tiny},
+    ccdbox/.style={draw, thick, fill=blue!10, minimum width=1.5cm, minimum height=1.4cm},
+    iodbox/.style={draw, thick, fill=orange!10, minimum width=3.2cm, minimum height=1cm}
 ]
 % Monolithic - build from content outward
 \node[corebox] (mc1) at (0,0) {C};
-\node[corebox, right=0.06cm of mc1] (mc2) {C};
-\node[corebox, right=0.06cm of mc2] (mc3) {C};
-\node[corebox, right=0.06cm of mc3] (mc4) {C};
-\node[cachebox, minimum width=1.7cm, below=0.1cm of $(mc1.south)!0.5!(mc4.south)$] (ml3) {L3 Cache};
-\node[iobox, fill=orange!30, below=0.08cm of ml3, xshift=-0.4cm] (mmc) {MC};
-\node[iobox, fill=purple!30, right=0.06cm of mmc] (mio) {I/O};
+\node[corebox, right=0.08cm of mc1] (mc2) {C};
+\node[corebox, right=0.08cm of mc2] (mc3) {C};
+\node[corebox, right=0.08cm of mc3] (mc4) {C};
+\node[cachebox, minimum width=2.1cm, below=0.1cm of $(mc1.south)!0.5!(mc4.south)$] (ml3) {L3 Cache};
+\node[iobox, fill=orange!30, below=0.1cm of ml3, xshift=-0.5cm] (mmc) {MC};
+\node[iobox, fill=purple!30, right=0.08cm of mmc] (mio) {I/O};
 
 % Monolithic box fitted around content
-\node[draw, thick, fit=(mc1)(mc4)(ml3)(mmc)(mio), inner sep=0.12cm] (mono) {};
+\node[draw, thick, fit=(mc1)(mc4)(ml3)(mmc)(mio), inner sep=0.15cm] (mono) {};
 \node[font=\footnotesize\bfseries, anchor=south] at (mono.north) {Monolithic};
 \node[font=\small, below=0.2cm of mono] {Intel Core i7};
 
 % Chiplet design - CCD 1
-\node[ccdbox, right=1.3cm of mono, yshift=0.45cm] (ccd1) {};
-\node[font=\tiny\bfseries, anchor=south] at (ccd1.north) {CCD};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm] (cc1_1) at ([xshift=-0.25cm, yshift=0.2cm]ccd1.center) {C};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc1_1] (cc1_2) {C};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm, below=0.04cm of cc1_1] (cc1_3) {C};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc1_3] (cc1_4) {C};
-\node[cachebox, minimum width=0.9cm, below=0.06cm of $(cc1_3.south)!0.5!(cc1_4.south)$] (cl3_1) {L3};
+\node[ccdbox, right=1.5cm of mono, yshift=0.55cm] (ccd1) {};
+\node[font=\scriptsize\bfseries, anchor=south] at (ccd1.north) {CCD};
+\node[minicore] (cc1_1) at ([xshift=-0.32cm, yshift=0.25cm]ccd1.center) {C};
+\node[minicore, right=0.06cm of cc1_1] (cc1_2) {C};
+\node[minicore, below=0.06cm of cc1_1] (cc1_3) {C};
+\node[minicore, right=0.06cm of cc1_3] (cc1_4) {C};
+\node[cachebox, minimum width=1.15cm, below=0.08cm of $(cc1_3.south)!0.5!(cc1_4.south)$] (cl3_1) {L3};
 
 % CCD 2
-\node[ccdbox, right=0.15cm of ccd1] (ccd2) {};
-\node[font=\tiny\bfseries, anchor=south] at (ccd2.north) {CCD};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm] (cc2_1) at ([xshift=-0.25cm, yshift=0.2cm]ccd2.center) {C};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc2_1] (cc2_2) {C};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm, below=0.04cm of cc2_1] (cc2_3) {C};
-\node[corebox, minimum width=0.25cm, minimum height=0.25cm, right=0.04cm of cc2_3] (cc2_4) {C};
-\node[cachebox, minimum width=0.9cm, below=0.06cm of $(cc2_3.south)!0.5!(cc2_4.south)$] (cl3_2) {L3};
+\node[ccdbox, right=0.2cm of ccd1] (ccd2) {};
+\node[font=\scriptsize\bfseries, anchor=south] at (ccd2.north) {CCD};
+\node[minicore] (cc2_1) at ([xshift=-0.32cm, yshift=0.25cm]ccd2.center) {C};
+\node[minicore, right=0.06cm of cc2_1] (cc2_2) {C};
+\node[minicore, below=0.06cm of cc2_1] (cc2_3) {C};
+\node[minicore, right=0.06cm of cc2_3] (cc2_4) {C};
+\node[cachebox, minimum width=1.15cm, below=0.08cm of $(cc2_3.south)!0.5!(cc2_4.south)$] (cl3_2) {L3};
 
 % I/O Die
-\node[iodbox, below=0.3cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
-\node[font=\tiny\bfseries, anchor=north] at ([yshift=-0.02cm]iod.north) {I/O Die};
-\node[iobox, fill=orange!30, anchor=south, xshift=-0.45cm] at ([yshift=0.06cm]iod.south) (iomc) {MC};
-\node[iobox, fill=purple!30, right=0.06cm of iomc] (iopcie) {PCIe};
+\node[iodbox, below=0.35cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
+\node[font=\scriptsize\bfseries, anchor=north] at ([yshift=-0.03cm]iod.north) {I/O Die};
+\node[iobox, fill=orange!30, anchor=south, xshift=-0.55cm] at ([yshift=0.08cm]iod.south) (iomc) {MC};
+\node[iobox, fill=purple!30, right=0.08cm of iomc] (iopcie) {PCIe};
 
 % Connections
 \draw[<->, red, thick] (ccd1.south) -- (ccd1.south |- iod.north);
@@ -353,58 +384,6 @@
 \end{columns}
 \end{frame}
 
-% Slide 5: Putting It All Together
-\begin{frame}{Hierarchy: From Transistor to System}
-\begin{center}
-\vspace{-1mm}
-\begin{tikzpicture}[scale=0.75,
-    level/.style={draw, thick, minimum width=2.5cm, minimum height=0.62cm, inner sep=1pt},
-    desc/.style={text width=6.5cm, anchor=west, font=\small, align=left, inner ysep=0pt},
-    example/.style={anchor=east, font=\small\itshape}
-]
-
-% Hierarchy levels
-\node[level, fill=red!20] (trans) at (0,0) {Transistors};
-\node[level, fill=orange!20] (core) at (0,1.1) {Core};
-\node[level, fill=yellow!20] (tile) at (0,2.2) {Tile};
-\node[level, fill=green!20] (die) at (0,3.3) {Die};
-\node[level, fill=blue!20] (package) at (0,4.4) {Package};
-\node[level, fill=purple!20] (system) at (0,5.5) {System};
-
-% Descriptions - using style with reduced spacing
-\node[desc] (trans_desc) at ([xshift=0.4cm]trans.east) {Billions of switches (5-10nm)};
-\node[desc] at (trans_desc.west |- core) {Execution unit + L1/L2 (1-2 threads)};
-\node[desc] at (trans_desc.west |- tile) {Core(s) + L3 slice + interconnect};
-\node[desc] at (trans_desc.west |- die) {Complete silicon chip (mono/chiplet)};
-\node[desc] at (trans_desc.west |- package) {Die(s) + substrate + pins};
-\node[desc] at (trans_desc.west |- system) {Multiple sockets + memory + I/O};
-
-% Examples on left - using style
-\node[example] (trans_ex) at ([xshift=-0.4cm]trans.west) {7nm = 10M+/mm²};
-\node[example] at (trans_ex.east |- core) {Golden Cove, Zen 4};
-\node[example] at (trans_ex.east |- tile) {2-core tile};
-\node[example] at (trans_ex.east |- die) {CCD, Alder Lake};
-\node[example] at (trans_ex.east |- package) {Xeon, EPYC, i9};
-\node[example] at (trans_ex.east |- system) {2S server};
-
-% Arrows
-\foreach \i in {0,1,2,3,4} {
-    \draw[->, thick] (0,\i*1.1+0.34) -- (0,\i*1.1+0.76);
-}
-
-\end{tikzpicture}
-\end{center}
-
-\vspace{-2mm}
-\textbf{Key Insight:} Each level has its own interconnect needs:
-\begin{itemize}
-\item Within core: Register bypass networks
-\item Within tile: L2-L3 connections
-\item Within die: Ring/mesh/crossbar
-\item Within package: Die-to-die (chiplets)
-\item Between packages: UPI/IF (NUMA)
-\end{itemize}
-\end{frame}
 
 % Slide 6: Modern Examples
 \begin{frame}{Modern CPU Examples}
@@ -716,62 +695,6 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \end{center}
 
 \textbf{Limitations:} Shared bandwidth, latency grows with cores, not for >10-12 cores
-\end{columns}
-\end{frame}
-
-% Slide 4: Inter-Socket Interconnects
-\begin{frame}{Inter-Socket Interconnects}
-\textbf{Connecting Multiple CPUs in a System}
-
-\begin{center}
-\begin{tikzpicture}[scale=0.8,
-    socket/.style={draw, thick, fill=blue!10, minimum width=3cm, minimum height=2.5cm},
-    memory/.style={draw, fill=gray!20, minimum width=2.5cm, minimum height=0.5cm}
-]
-
-% Two socket system
-\node[socket] (cpu0) at (0,0) {};
-\node at (0,0.7) {\small CPU 0};
-\node at (0,0.2) {\tiny 16 cores};
-\node at (0,-0.2) {\tiny Ring/Mesh};
-\node[memory] (mem0) at (0,-2) {\small Memory 0};
-\draw[<->, thick] (cpu0.south) -- (mem0.north);
-
-\node[socket] (cpu1) at (5,0) {};
-\node at (5,0.7) {\small CPU 1};
-\node at (5,0.2) {\tiny 16 cores};
-\node at (5,-0.2) {\tiny Ring/Mesh};
-\node[memory] (mem1) at (5,-2) {\small Memory 1};
-\draw[<->, thick] (cpu1.south) -- (mem1.north);
-
-% Inter-socket link
-\draw[<->, ultra thick, red] (cpu0.east) -- node[above] {\small UPI/IF} node[below] {\tiny 10.4-16 GT/s} (cpu1.west);
-
-% Annotations
-\node[draw, thick, fill=yellow!20, text width=7cm] at (2.5,-3.5) {
-\textbf{Inter-Socket Links:}\\
-• \textbf{Intel UPI}: Ultra Path Interconnect (formerly QPI)\\
-• \textbf{AMD Infinity Fabric}: Connects dies/sockets\\
-• Point-to-point, cache-coherent\\
-• Creates NUMA effects
-};
-
-\end{tikzpicture}
-\end{center}
-
-\vspace{0.3cm}
-\textbf{Performance Impact:}
-\begin{columns}[T]
-\column{0.5\textwidth}
-\begin{itemize}
-\item Local memory: \textasciitilde80-100 ns
-\item Remote memory: \textasciitilde120-150 ns
-\end{itemize}
-\column{0.5\textwidth}
-\begin{itemize}
-\item Cross-socket bandwidth: 20-40 GB/s
-\item Local memory bandwidth: 50-100 GB/s
-\end{itemize}
 \end{columns}
 \end{frame}
 
@@ -2364,38 +2287,6 @@ Unbalanced channels waste half your bandwidth!
 \end{columns}
 \end{frame}
 
-% Slide: DRAM Controller Performance
-\begin{frame}{DRAM Controller: Performance Considerations}
-\textbf{Cache line granularity:}
-\begin{itemize}
-\item All reads/writes operate on full cache lines (64 bytes)
-\item Even if you only need 1 byte, entire line is transferred
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Write buffering:}
-\begin{itemize}
-\item Writes complete when data enters controller's write buffer (not DRAM!)
-\item Buffer flushed to DRAM later $\rightarrow$ low write latency
-\item Out-of-order scheduler reorders for maximum efficiency
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Partial writes (performance killer):}
-\begin{itemize}
-\item \textbf{Problem:} Writing $<$64 bytes requires Read-Modify-Write:
-  \begin{enumerate}
-  \item Read full cache line from DRAM
-  \item Modify only the bytes you want to change
-  \item Write full cache line back to DRAM
-  \end{enumerate}
-\item \textbf{Common causes:} Non-cacheable I/O device writes, unaligned accesses
-\item \textbf{Software fix:} Buffer small writes into full cache line writes
-\end{itemize}
-
-\vspace{0.2cm}
-\textbf{Takeaway:} Access memory in cache-line-sized chunks for best performance
-\end{frame}
 
 % Slide: DRAM Scheduling Policies
 \begin{frame}{DRAM Scheduling Policies}
@@ -3712,6 +3603,38 @@ HDD & & $\sim$5--10 ms \\
 \item $\mathbf{t_{\text{RRD}}}$: Same as SDR SDRAM
 \item \textbf{Burst length = 4:} Each READ transfers 4 consecutive locations (both edges)
 \end{itemize}
+\end{frame}
+% Slide: DRAM Controller Performance
+\begin{frame}{DRAM Controller: Performance Considerations}
+\textbf{Cache line granularity:}
+\begin{itemize}
+\item All reads/writes operate on full cache lines (64 bytes)
+\item Even if you only need 1 byte, entire line is transferred
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Write buffering:}
+\begin{itemize}
+\item Writes complete when data enters controller's write buffer (not DRAM!)
+\item Buffer flushed to DRAM later $\rightarrow$ low write latency
+\item Out-of-order scheduler reorders for maximum efficiency
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Partial writes (performance killer):}
+\begin{itemize}
+\item \textbf{Problem:} Writing $<$64 bytes requires Read-Modify-Write:
+  \begin{enumerate}
+  \item Read full cache line from DRAM
+  \item Modify only the bytes you want to change
+  \item Write full cache line back to DRAM
+  \end{enumerate}
+\item \textbf{Common causes:} Non-cacheable I/O device writes, unaligned accesses
+\item \textbf{Software fix:} Buffer small writes into full cache line writes
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Takeaway:} Access memory in cache-line-sized chunks for best performance
 \end{frame}
 \fi
 
