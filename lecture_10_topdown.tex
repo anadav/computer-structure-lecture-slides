@@ -506,76 +506,81 @@
   % Level 1 - Main categories
   L1/.style={rectangle, draw, fill=red!25, minimum height=0.55cm, minimum width=1.6cm, font=\tiny\bfseries, align=center},
   % Level 2 - Sub-categories (with newlines for multi-word)
-  L2/.style={rectangle, draw, fill=red!35, minimum height=0.6cm, minimum width=1.1cm, font=\tiny, align=center, inner sep=2pt, text width=1.0cm, text height=1.5ex, text depth=1.5ex},
+  L2/.style={rectangle, draw, fill=red!35, minimum height=0.65cm, minimum width=1.2cm, font=\tiny, align=center, inner sep=2pt, text width=1.1cm, text height=1.5ex, text depth=1.5ex},
   % Level 3 - Details (vertical text with newlines, uniform height)
-  L3/.style={rectangle, draw, fill=red!45, minimum height=0.7cm, minimum width=0.7cm, font=\tiny, align=center, text width=0.6cm, text height=2ex, text depth=2ex},
-  % Level 4 - Leaf nodes (rotated)
-  L4/.style={rectangle, draw, fill=red!55, minimum height=0.4cm, minimum width=0.65cm, font=\tiny, align=center, rotate=90},
+  L3/.style={rectangle, draw, fill=red!45, minimum height=0.7cm, minimum width=0.8cm, font=\tiny, align=center, text width=0.7cm, text height=2ex, text depth=2ex},
+  % Level 4 - Leaf nodes (rotated, larger width for text)
+  L4/.style={rectangle, draw, fill=red!55, minimum height=0.4cm, minimum width=1.2cm, font=\tiny, rotate=90, inner sep=1pt},
 ]
   % Root - Level 0
-  \node[L0, minimum width=13cm] (root) at (0,0) {CPU Bound $\Rightarrow$ Analyze};
+  \node[L0, minimum width=14.5cm] (root) at (0,0) {CPU Bound $\Rightarrow$ Analyze};
 
   % Level 1 - using matrix for alignment
   % Need align + text width for \\, text height + text depth for uniform row height
-  \matrix[matrix of nodes, nodes={L1, text width=1.8cm, text height=1.5ex, text depth=1.5ex}, column sep=0.15cm, below=0.15cm of root.south, anchor=north, ampersand replacement=\&] (L1mat) {
-    |[text width=2.0cm]| {Frontend\\Bound} \&
-    |[text width=2.0cm]| {Bad\\Speculation} \&
-    |[text width=1.8cm]| Retiring \&
-    |[text width=5.5cm]| {Backend Bound} \\
+  \matrix[matrix of nodes, nodes={L1, text width=2.0cm, text height=1.5ex, text depth=1.5ex}, column sep=0.2cm, below=0.15cm of root.south, anchor=north, ampersand replacement=\&] (L1mat) {
+    |[text width=2.2cm]| {Frontend\\Bound} \&
+    |[text width=1.4cm]| {Bad\\Spec} \&
+    |[text width=2.0cm]| Retiring \&
+    |[text width=7.0cm]| {Backend Bound} \\
   };
 
   % Level 2 - Frontend children
-  \matrix[matrix of nodes, nodes={L2}, column sep=2pt, below=0.08cm of L1mat-1-1.south, anchor=north, ampersand replacement=\&] (L2fe) {
+  \matrix[matrix of nodes, nodes={L2}, column sep=3pt, below=0.08cm of L1mat-1-1.south, anchor=north, ampersand replacement=\&] (L2fe) {
     |(felatency)| {FE\\Latency} \& |(febw)| {Band\\width} \\
   };
 
-  % Level 2 - Bad Speculation children
-  \matrix[matrix of nodes, nodes={L2}, column sep=2pt, below=0.08cm of L1mat-1-2.south, anchor=north, ampersand replacement=\&] (L2bs) {
-    |(branch)| {Branch\\Misp} \& |(machine)| {Mach\\Clears} \\
+  % Level 2 - Bad Speculation children (rotated to save space)
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.08cm of L1mat-1-2.south, anchor=north, ampersand replacement=\&] (L2bs) {
+    {Branch Misp} \& {Mach Clears} \\
   };
 
   % Level 2 - Retiring children
-  \matrix[matrix of nodes, nodes={L2}, column sep=2pt, below=0.08cm of L1mat-1-3.south, anchor=north, ampersand replacement=\&] (L2ret) {
+  \matrix[matrix of nodes, nodes={L2}, column sep=3pt, below=0.08cm of L1mat-1-3.south, anchor=north, ampersand replacement=\&] (L2ret) {
     |(base)| {BASE} \& |(microcode)| {Micro\\code} \\
   };
 
   % Level 2 - Backend children
-  \matrix[matrix of nodes, nodes={L2}, column sep=2pt, below=0.08cm of L1mat-1-4.south, anchor=north, ampersand replacement=\&] (L2be) {
-    |(core)| {Core\\Bound} \& |(memory)[minimum width=2.0cm]| {Memory\\Bound} \\
+  \matrix[matrix of nodes, nodes={L2}, column sep=3pt, below=0.08cm of L1mat-1-4.south, anchor=north, ampersand replacement=\&] (L2be) {
+    |(core)| {Core\\Bound} \& |(memory)[minimum width=2.2cm]| {Memory\\Bound} \\
   };
 
   % Level 3 - Frontend Latency children (rotated leaves)
-  \matrix[matrix of nodes, nodes={L4}, column sep=1pt, below=0.1cm of felatency.south, anchor=north, ampersand replacement=\&] {
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of felatency.south, anchor=north, ampersand replacement=\&] {
     ICache \& ITLB \& Resteers \& DSB Sw \& LCP \\
   };
 
   % Level 3 - Bandwidth children (rotated leaves)
-  \matrix[matrix of nodes, nodes={L4}, column sep=1pt, below=0.1cm of febw.south, anchor=north, ampersand replacement=\&] {
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of febw.south, anchor=north, ampersand replacement=\&] {
     MITE \& DSB \& LSD \\
   };
 
   % Level 3 - Backend children (Core + Memory combined)
-  \matrix[matrix of nodes, nodes={L3, minimum width=0.7cm}, column sep=2pt, below=0.1cm of L2be.south, anchor=north, ampersand replacement=\&] (L3be) {
-    Divider \& Ports \& |(stores)| {Stores} \& |(l1)| {L1 B} \& |(l2)| {L2 B} \& |(l3)| {L3 B} \& |(extmem)| {Ext Mem} \\
+  \matrix[matrix of nodes, nodes={L3}, column sep=3pt, below=0.1cm of L2be.south, anchor=north, ampersand replacement=\&] (L3be) {
+    Divider \& |(ports)| {Ports} \& |(stores)| {Stores} \& |(l1)| {L1 B} \& |(l2)| {L2 B} \& |(l3)| {L3 B} \& |(extmem)| {Ext Mem} \\
+  };
+
+  % Level 4 - Ports children (rotated)
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of ports.south, anchor=north, ampersand replacement=\&] {
+    {0 port} \& {1 port} \& {2 port} \& {3+ port} \\
   };
 
   % Level 4 - Stores Bound children (rotated)
-  \matrix[matrix of nodes, nodes={L4}, column sep=1pt, below=0.1cm of stores.south, anchor=north, ampersand replacement=\&] {
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of stores.south, anchor=north, ampersand replacement=\&] {
     {Stor DTLB} \& {Split Stor} \\
   };
 
   % Level 4 - L1 Bound children (rotated)
-  \matrix[matrix of nodes, nodes={L4}, column sep=1pt, below=0.1cm of l1.south, anchor=north, ampersand replacement=\&] {
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of l1.south, anchor=north, ampersand replacement=\&] {
     {DTLB Ld} \& {Stor Fwd} \\
   };
 
   % Level 4 - L3 Bound children (rotated)
-  \matrix[matrix of nodes, nodes={L4}, column sep=1pt, below=0.1cm of l3.south, anchor=north, ampersand replacement=\&] {
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of l3.south, anchor=north, ampersand replacement=\&] {
     Contested \& {Data Shr} \& {L3 Lat} \\
   };
 
   % Level 4 - Ext Memory children (rotated)
-  \matrix[matrix of nodes, nodes={L4}, column sep=1pt, below=0.1cm of extmem.south, anchor=north, ampersand replacement=\&] {
+  \matrix[matrix of nodes, nodes={L4}, column sep=2pt, below=0.1cm of extmem.south, anchor=north, ampersand replacement=\&] {
     {MEM BW} \& {MEM Lat} \\
   };
 \end{tikzpicture}
