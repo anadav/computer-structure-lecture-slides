@@ -34,6 +34,9 @@
 \colorlet{vpncolor}{lightblue}
 \colorlet{pfncolor}{correctgreen!30}
 \colorlet{offsetcolor}{highlightyellow}
+\colorlet{validcolor}{cyan!30}
+\colorlet{modifiedcolor}{highlightyellow}
+\colorlet{protcolor}{lightblue}
 \colorlet{tlbcolor}{correctgreen!30}
 \colorlet{ptcolor}{lightblue!30}
 \colorlet{ptbrcolor}{highlightorange}
@@ -455,7 +458,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
           nodes={ptefield},
           column sep=-\pgflinewidth,
           ampersand replacement=\&] (pte) {
-    |[fill=correctgreen!30, minimum width=1.2cm]| V \&
+    |[fill=validcolor, minimum width=1.2cm]| V \&
     |[fill=highlightyellow, minimum width=1.2cm]| M \&
     |[fill=pfncolor, minimum width=4cm]| PFN \\
   };
@@ -570,11 +573,11 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \begin{center}
 \begin{bytefield}[bitwidth=1.1em, endianness=big, boxformatting={\centering\scriptsize}]{32}
   \bitheader{0,22,23,25,26,27,30,31} \\
-  \bitbox{1}[bgcolor=correctgreen!30]{V}
+  \bitbox{1}[bgcolor=validcolor]{V}
   \bitbox{4}[bgcolor=lightblue]{Prot}
   \bitbox{1}[bgcolor=highlightyellow]{M}
   \bitbox{3}[bgcolor=gray!20]{Unused}
-  \bitbox{23}[bgcolor=highlightorange!50]{PFN}
+  \bitbox{23}[bgcolor=pfncolor]{PFN}
 \end{bytefield}
 \end{center}
 \end{frame}
@@ -586,30 +589,73 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \item How many memory accesses are needed?
 \end{enumerate}
 
-\textbf{Solution:}
 \pause
-\begin{enumerate}
-\item Convert to binary: 0x0A100100
+\textbf{Step 1:} Determine field sizes
 \begin{itemize}
-  \item = \textcolor{blue}{0000 1010 0001 0000 0000 001}\textcolor{red}{0 0000 0000} (binary)
-  \item \textcolor{red}{offset bits} = [phys addr width] - [PFN bits] = 32 - 23 = \textcolor{red}{9} $\rightarrow$ \textcolor{red}{offset} = bits [8:0]
-  \item \textcolor{blue}{VPN bits} = [virt addr width] - [offset bits] = 30 - \textcolor{red}{9} = \textcolor{blue}{21} $\rightarrow$ \textcolor{blue}{VPN} = bits [30:9]
+  \item PFN is \textcolor{correctgreen}{23 bits} (from PTE structure)
+  \item Physical address (32 bits) $=$ PFN $+$ offset
+  \item $\Rightarrow$ offset $= 32 - 23 = $ \textcolor{orange}{9 bits}
+  \item VPN $=$ [virt addr] $-$ [offset] $= 30 - 9 = $ \textcolor{blue}{21 bits}
 \end{itemize}
-\pause
-\item Calculate PTE address:
-\begin{itemize}
-  \item \textcolor{blue}{VPN} × \textcolor{green!50!black}{[PTE size]} + PTBR = \textcolor{blue}{VPN} × \textcolor{green!50!black}{4} + PTBR = 0x00201200
-\end{itemize}
-\pause
-\item Read PTE content: 0xC0010094 (little-endian: 0xC0 01 00 94 $\rightarrow$ 0x940100C0)
-\begin{itemize}
-  \item Valid (bit 31) = 1, PFN (bits [22:0]) = 0x0001C0
-\end{itemize}
-\pause
-\item Physical address = (PFN $\ll$ \textcolor{red}{9}) + \textcolor{red}{offset} = 0x000380A0
-\end{enumerate}
 
 \pause
+\textbf{Step 2:} Parse virtual address 0x0A100100
+
+\begin{center}
+\begin{bytefield}[bitwidth=1.1em, endianness=big, boxformatting={\centering\scriptsize}]{30}
+  \bitheader{0,8,9,29} \\
+  \bitbox{21}[bgcolor=vpncolor]{0x050800}
+  \bitbox{9}[bgcolor=offsetcolor]{0x100} \\[-.5ex]
+  \bitbox[]{21}{\tiny VPN}
+  \bitbox[]{9}{\tiny offset}
+\end{bytefield}
+\end{center}
+\vspace{-3mm}
+\pause
+\textbf{Step 3:} Calculate PTE address
+\begin{itemize}
+  \item PTE addr $=$ PTBR $+$ VPN $\times$ 4 $=$ 0x1000 $+$ 0x050800 $\times$ 4 $=$ \textbf{0x00201200}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Question 1: Address Translation (cont.)}
+\textbf{Step 4:} Read and parse PTE at address 0x00201200
+
+Content: 0xC0 01 00 94 (little-endian) $\rightarrow$ 0x940100C0
+
+\begin{center}
+\begin{bytefield}[bitwidth=0.9em, endianness=big, boxformatting={\centering\scriptsize}]{32}
+  \bitheader{0,22,23,25,26,27,30,31} \\
+  \bitbox{1}[bgcolor=validcolor]{1}
+  \bitbox{4}[bgcolor=lightblue]{0010}
+  \bitbox{1}[bgcolor=highlightyellow]{0}
+  \bitbox{3}[bgcolor=gray!20]{000}
+  \bitbox{23}[bgcolor=pfncolor]{0x0001C0} \\[-.5ex]
+  \bitbox[]{1}{\tiny V}
+  \bitbox[]{4}{\tiny Prot}
+  \bitbox[]{1}{\tiny M}
+  \bitbox[]{3}{\tiny --}
+  \bitbox[]{23}{\tiny PFN}
+\end{bytefield}
+\end{center}
+
+\pause
+\textbf{Step 5:} Construct physical address
+
+\begin{center}
+\begin{bytefield}[bitwidth=0.9em, endianness=big, boxformatting={\centering\scriptsize}]{32}
+  \bitheader{0,8,9,31} \\
+  \bitbox{23}[bgcolor=pfncolor]{0x0001C0}
+  \bitbox{9}[bgcolor=offsetcolor]{0x100} \\[-.5ex]
+  \bitbox[]{23}{\tiny PFN}
+  \bitbox[]{9}{\tiny offset}
+\end{bytefield}
+\end{center}
+
+Physical address $=$ (PFN $\ll$ 9) $|$ offset $=$ (0x0001C0 $\ll$ 9) $|$ 0x100 $=$ \textbf{0x000380A0}
+
+\pause
+\vspace{2mm}
 \textbf{Answer:} 2 memory accesses (1 for PTE, 1 for data)
 \end{frame}
 
@@ -738,42 +784,41 @@ Where:
 \textbf{Answer:} If $q \geq b + c$, then page offset contains both set and displacement fields
 
 \begin{center}
-\begin{tikzpicture}[scale=0.9,
-  addrfield/.style={draw, minimum height=7mm, inner sep=2mm, font=\small},
+\begin{tikzpicture}[scale=0.85,
+  addrfield/.style={draw, minimum height=6mm, text depth=0.5ex, inner sep=2mm, font=\small},
   lbl/.style={font=\small},
 ]
 
-% Virtual Address
+% Virtual Address - Page Offset must be visually >= set + disp
 \matrix[matrix of nodes,
         nodes={addrfield},
         column sep=-\pgflinewidth,
         ampersand replacement=\&] (vaddr) {
-  |[fill=vpncolor, minimum width=2.2cm]| VPN \&
-  |[fill=offsetcolor, minimum width=4cm]| Page Offset (q bits) \\
+  |[fill=vpncolor, minimum width=2cm]| VPN \&
+  |[fill=offsetcolor, minimum width=5cm]| Page Offset (q bits) \\
 };
-\node[lbl, left=3mm of vaddr] {Virtual:};
+\node[lbl, left=3mm of vaddr] (vlbl) {Virtual:};
 
-% Physical Address (cache indexing) - aligned so set+disp is under offset
+% Physical Address - positioned relative to vaddr.south east with anchor north east
 \matrix[matrix of nodes,
         nodes={addrfield},
         column sep=-\pgflinewidth,
-        below=1cm of vaddr,
-        ampersand replacement=\&] (cache) {
-  |[fill=pfncolor!50, minimum width=2.2cm]| tag \&
-  |[fill=memorycolor, minimum width=2cm]| set (c bits) \&
-  |[fill=highlightorange, minimum width=2cm]| disp (b bits) \\
+        anchor=north east,
+        ampersand replacement=\&] (cache) at ([yshift=-8mm]vaddr.south east) {
+  |[fill=pfncolor!50, minimum width=2cm]| tag \&
+  |[fill=memorycolor, minimum width=2.2cm]| set (c bits) \&
+  |[fill=highlightorange, minimum width=2.2cm]| disp (b bits) \\
 };
-\node[lbl, left=3mm of cache] {Physical:};
+\node[lbl, anchor=east] at (vlbl.east |- cache) {Physical:};
+
+% Dashed lines from Page Offset boundaries down to show containment
+\draw[dashed, gray] (vaddr-1-2.south west) -- (vaddr-1-2.south west |- cache-1-1.north);
+\draw[dashed, gray] (vaddr-1-2.south east) -- (cache-1-3.north east);
 
 % Brace showing set+disp contained in offset
-\draw[decorate, decoration={brace, amplitude=4pt, mirror}, thick, correctgreen]
+\draw[decorate, decoration={brace, amplitude=3pt, mirror}, thick, correctgreen]
   (cache-1-2.south west) -- (cache-1-3.south east)
-  node[midway, below=2pt, font=\scriptsize, correctgreen] {b + c $\leq$ q};
-
-% Arrow from offset to set+disp region
-\draw[<-, thick, correctgreen]
-  ([yshift=-1mm]vaddr-1-2.south) -- ([yshift=1mm]cache-1-2.north -| vaddr-1-2.south)
-  node[midway, right, font=\scriptsize] {contained in offset};
+  node[midway, below=1pt, font=\scriptsize, correctgreen] {b + c $\leq$ q};
 
 \end{tikzpicture}
 \end{center}

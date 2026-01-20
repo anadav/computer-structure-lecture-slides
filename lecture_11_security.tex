@@ -2414,26 +2414,27 @@ func:
                     \textbf{VM2}\\[-2pt]{\tiny Customer B}};
 
                 % Protection barrier - relative to VMs
-                \draw[barrier] ([xshift=-0.5cm]vm1.south west) -- ([xshift=0.5cm]vm2.south east)
+                \coordinate (barrier-left) at ([xshift=-0.5cm]vm1.south west);
+                \coordinate (barrier-right) at ([xshift=0.5cm]vm2.south east);
+                \coordinate (barrier-center) at ($(barrier-left)!0.5!(barrier-right)$);
+                \draw[barrier] (barrier-left) -- (barrier-right)
                     node[right, font=\small] {TDX};
-                \coordinate (barrier-left) at ([yshift=-0.2cm]vm1.south);
-                \coordinate (barrier-right) at ([yshift=-0.2cm]vm2.south);
 
-                % Threat Actor - below VMs
-                \node[inner sep=0pt, below=1.8cm of cpu] (provider)
+                % Threat Actor - below barrier center
+                \node[inner sep=0pt, below=1.5cm of barrier-center] (provider)
                     {\includegraphics[width=1.5cm]{figures/noun-cloud-5095064.png}};
                 \node[font=\scriptsize, below=0.1cm of provider] (provider-label) {Cloud Provider (Untrusted)};
 
-                % Attack arrows from provider toward barrier with X marks
-                \draw[->, thick, red] ([xshift=0.3cm]provider.north) -- ([xshift=0.3cm, yshift=-0.5cm]barrier-right)
-                    node[pos=0.3, right, font=\tiny] {Read};
-                \draw[->, thick, red] ([xshift=-0.3cm]provider.north) -- ([xshift=-0.3cm, yshift=-0.5cm]barrier-left)
-                    node[pos=0.3, left, font=\tiny] {Modify};
+                % Attack arrows from provider toward barrier
+                \draw[->, thick, red] ([xshift=0.3cm]provider.north) -- ([xshift=0.3cm]provider.north |- barrier-center)
+                    node[pos=0.4, right, font=\tiny] {Read};
+                \draw[->, thick, red] ([xshift=-0.3cm]provider.north) -- ([xshift=-0.3cm]provider.north |- barrier-center)
+                    node[pos=0.4, left, font=\tiny] {Modify};
 
-                % X marks for blocked attacks
-                \node[inner sep=0pt] at ([xshift=0.3cm, yshift=-0.35cm]barrier-right)
+                % X marks for blocked attacks - on the arrow paths
+                \node[inner sep=0pt] at ([xshift=0.3cm, yshift=-0.5cm]barrier-center)
                     {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-                \node[inner sep=0pt] at ([xshift=-0.3cm, yshift=-0.35cm]barrier-left)
+                \node[inner sep=0pt] at ([xshift=-0.3cm, yshift=-0.5cm]barrier-center)
                     {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
 
                 % Protection arrows from CPU to VMs
