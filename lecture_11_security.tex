@@ -2285,26 +2285,34 @@ func:
         \end{column}
         \begin{column}{0.45\textwidth}
             \centering
-            \begin{tikzpicture}[
-                mempage/.style={draw, minimum width=1.2cm, minimum height=0.45cm, font=\tiny},
-                arrow/.style={->, thick}]
-
-                % Physical Memory
-                \node[font=\small\bfseries] at (0, 2.4) {Physical Memory};
-                \node[mempage, fill=green!20] (p0) at (0, 1.85) {Page 0};
-                \node[mempage, fill=green!20] (p1) at (0, 1.3) {Page 1};
-                \node[mempage, fill=orange!20] (p2) at (0, 0.75) {Page 2};
-                \node[mempage, fill=green!20] (p3) at (0, 0.2) {Page 3};
-
-                % RMP Table using matrix of nodes
-                \node[font=\small\bfseries] at (3.2, 2.4) {RMP Table};
+            \begin{tikzpicture}[arrow/.style={->, thick}]
+                % Physical Memory matrix
                 \matrix[matrix of nodes,
                     ampersand replacement=\&,
-                    nodes={draw, text width=0.55cm, text height=0.25cm, text depth=0.08cm,
-                           align=center, inner sep=1pt, font=\tiny, fill=blue!10},
+                    nodes={draw, text width=1cm, text height=0.3cm, text depth=0.1cm,
+                           align=center, inner sep=2pt, font=\scriptsize, fill=green!20},
+                    row sep=-\pgflinewidth,
+                    row 1/.style={nodes={draw=none, fill=none, font=\small\bfseries}}] (mem) {
+                    Physical Memory \\
+                    Page 0 \\
+                    Page 1 \\
+                    |[fill=orange!20]| Page 2 \\
+                    Page 3 \\
+                };
+
+                % RMP Table matrix - positioned relative to mem
+                \matrix[matrix of nodes,
+                    ampersand replacement=\&,
+                    right=1.5cm of mem,
+                    label={[font=\small\bfseries]above:RMP Table},
+                    nodes={draw, text height=0.3cm, text depth=0.1cm,
+                           align=center, inner sep=2pt, font=\scriptsize, fill=blue!10},
+                    column 1/.style={nodes={text width=0.4cm}},
+                    column 2/.style={nodes={text width=0.8cm}},
+                    column 3/.style={nodes={text width=0.35cm}},
                     row sep=-\pgflinewidth,
                     column sep=-\pgflinewidth,
-                    row 1/.style={nodes={fill=gray!30, font=\tiny\bfseries}}] (rmp) at (3.2, 1.0) {
+                    row 1/.style={nodes={fill=gray!30, font=\scriptsize\bfseries}}] (rmp) {
                     Pg \& Owner \& V \\
                     0 \& VM1 \& \checkmark \\
                     1 \& VM1 \& \checkmark \\
@@ -2312,14 +2320,14 @@ func:
                     3 \& VM2 \& \checkmark \\
                 };
 
-                % Arrows to matrix rows
-                \draw[arrow, green!60!black] (p0.east) -- (rmp-2-1.west);
-                \draw[arrow, green!60!black] (p1.east) -- (rmp-3-1.west);
-                \draw[arrow, orange!60!black] (p2.east) -- (rmp-4-1.west);
-                \draw[arrow, green!60!black] (p3.east) -- (rmp-5-1.west);
+                % Arrows between matrices
+                \draw[arrow, green!60!black] (mem-2-1.east) -- (rmp-2-1.west);
+                \draw[arrow, green!60!black] (mem-3-1.east) -- (rmp-3-1.west);
+                \draw[arrow, orange!60!black] (mem-4-1.east) -- (rmp-4-1.west);
+                \draw[arrow, green!60!black] (mem-5-1.east) -- (rmp-5-1.west);
 
                 % Legend
-                \node[font=\tiny] at (1.6, -0.35) {V = Validated, HV = Hypervisor};
+                \node[font=\scriptsize, below=0.3cm of mem.south east, anchor=north west] {V = Validated, HV = Hypervisor};
             \end{tikzpicture}
 
             \vspace{0.2cm}
