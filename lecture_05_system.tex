@@ -2444,10 +2444,49 @@ Unbalanced channels waste half your bandwidth!
 \colorlet{basecolor}{cyan!70}
 \colorlet{emibcolor}{blue!50!cyan}
 
-\begin{columns}[T]
-\column{0.55\textwidth}
+% Text overlay at top right
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=north east, fill=white, fill opacity=0.9, text opacity=1,
+      draw=blue!50, line width=0.5pt, rounded corners=3pt, inner sep=5pt, text width=5cm, font=\small]
+  at ([xshift=-8mm, yshift=-18mm]current page.north east) {
+\only<1>{
+\textbf{Package Overview}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Circuit board with substrate
+\item Interconnect infrastructure
+\end{itemize}
+}
+\only<2>{
+\textbf{HBM Stack (3D DRAM)}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Multiple DRAM dies stacked vertically
+\item Connected via \textbf{TSVs} (Through-Silicon Vias)
+\item TSVs enable high-density 3D integration
+\end{itemize}
+}
+\only<3>{
+\textbf{Base Die \& Logic}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item Base die interfaces with HBM stack
+\item Contains memory controllers
+\item Very wide bus (1024+ bits)
+\end{itemize}
+}
+\only<4>{
+\textbf{EMIB Integration}
+\begin{itemize}\setlength\itemsep{0.1em}
+\item \textbf{EMIB:} Embedded Multi-die Interconnect Bridge
+\item High-density die-to-die connections
+\item Connects compute dies to memory
+\item Short signal paths, high bandwidth
+\end{itemize}
+}
+};
+\end{tikzpicture}
 
-\begin{tikzpicture}[scale=0.75, every node/.style={scale=0.75},
+% Illustration at bottom
+\vfill
+\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.7},
     >=Stealth,
     thick,
     circuit/.style={rectangle, fill=green!60!black, draw=green!40!black, text=white, font=\tiny},
@@ -2609,41 +2648,6 @@ Unbalanced channels waste half your bandwidth!
 %\draw[->, thick] (10.5,2.0) -- (9.5,2.45);
 
 \end{tikzpicture}
-
-\column{0.42\textwidth}
-\only<1>{
-\textbf{Package Overview}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item Circuit board with substrate
-\item Interconnect infrastructure
-\end{itemize}
-}
-\only<2>{
-\textbf{HBM Stack (3D DRAM)}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item Multiple DRAM dies stacked vertically
-\item Connected via \textbf{TSVs} (Through-Silicon Vias)
-\item TSVs enable high-density 3D integration
-\end{itemize}
-}
-\only<3>{
-\textbf{Base Die \& Logic}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item Base die interfaces with HBM stack
-\item Contains memory controllers
-\item Very wide bus (1024+ bits)
-\end{itemize}
-}
-\only<4>{
-\textbf{EMIB Integration}
-\begin{itemize}\setlength\itemsep{0.1em}
-\item \textbf{EMIB:} Embedded Multi-die Interconnect Bridge
-\item High-density die-to-die connections
-\item Connects compute dies to memory
-\item Short signal paths, high bandwidth
-\end{itemize}
-}
-\end{columns}
 \end{frame}
 
 % Slide: HBM Architecture
