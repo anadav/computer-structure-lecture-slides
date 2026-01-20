@@ -2051,112 +2051,6 @@ Bank interleaving: while accessing one bank, another prepares its row $\rightarr
 \end{itemize}
 \end{frame}
 
-% Slide: DDR-SDRAM
-\begin{frame}{DDR-SDRAM}
-\textbf{2n-prefetch architecture doubles data rate}
-
-\vspace{0.2cm}
-\begin{columns}[T]
-\column{0.58\textwidth}
-\textbf{How it works:}
-\begin{itemize}
-\item DRAM core operates at same speed as SDR
-\item Internal bus: 2$\times$ wider than external
-\item Data transferred twice per clock:
-  \begin{itemize}
-  \item Rising edge: lower half (0:n-1)
-  \item Falling edge: upper half (n:2n-1)
-  \end{itemize}
-\item Example: 200MHz clock = 400MT/s
-\end{itemize}
-
-\vspace{0.2cm}
-\textbf{Reduced power:} 2.5V vs. 3.3V in SDR
-
-\column{0.38\textwidth}
-\vspace{0.2cm}
-\begin{center}
-\begin{tikzpicture}[scale=0.75, transform shape]
-  % SDRAM Array
-  \node[draw, thick, minimum width=2.5cm, minimum height=1.5cm, fill=blue!10, align=center] (array) at (0,0) {SDRAM\\Array};
-
-  % Two multiplexers
-  \node[draw, thick, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=0.6cm, fill=green!20] (mux1) at (3,0.4) {0:n-1};
-  \node[draw, thick, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=0.6cm, fill=green!20] (mux2) at (3,-0.4) {n:2n-1};
-
-  % Internal bus
-  \draw[->, very thick] (array.east) -- node[above, font=\tiny] {0:2n-1} (1.5,0);
-  \draw[->, thick] (1.5,0.4) -- (mux1.west);
-  \draw[->, thick] (1.5,-0.4) -- (mux2.west);
-
-  % Output
-  \draw[->, very thick] (mux1.east) -- (4.5,0.4);
-  \draw[->, very thick] (mux2.east) -- (4.5,-0.4);
-  \draw[->, very thick] (4.5,0) -- node[above, font=\small] {0:n-1} (5.5,0);
-  \node[right, font=\scriptsize] at (5.5,0.4) {400M};
-  \node[right, font=\scriptsize] at (5.5,0) {xfer/sec};
-
-  % Clock label
-  \node[below, font=\tiny] at (0,-1.2) {200MHz clock};
-\end{tikzpicture}
-\end{center}
-\end{columns}
-\end{frame}
-
-% Slide: DDR SDRAM Timing
-\begin{frame}{DDR SDRAM Timing}
-\vspace{-0.2cm}
-\begin{center}
-\begin{tikztimingtable}[
-  timing/slope=0.15,
-  timing/coldist=0.35cm,
-  xscale=1.7,
-  timing/rowdist=0.6cm,
-  timing/name/.style={font=\small}
-]
-  clock & L H L H L H L H L H L H L H L H L H L H L H L H L H\\
-  cmd   & 2D{\textcolor{cyan}{ACT}} 4U 2D{\textcolor{cyan}{RD}} 2U 2D{\textcolor{blue}{ACT}} 4U 2D{\textcolor{blue}{RD}} 2U 2D{\textcolor{cyan}{ACT}} 4U \\
-  \\
-  Bank  & 2D{\textcolor{cyan}{Bank 0}} 4U 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{blue}{Bank 1}} 4U 2D{\textcolor{blue}{Bank1}} 2U 2D{\textcolor{cyan}{Bank 0}} 4U \\
-  Addr  & 2D{\textcolor{cyan}{Row i}} 4U 2D{\textcolor{cyan}{Col j}} 2U 2D{\textcolor{blue}{Row l}} 4U 2D{\textcolor{blue}{Col j}} 2U 2D{\textcolor{cyan}{Row m}} 4U \\
-  \\
-  Data  & 12U D{\textcolor{cyan}{j}} D{\textcolor{cyan}{+1}} D{\textcolor{cyan}{+2}} D{\textcolor{cyan}{+3}} 6U D{\textcolor{cyan!50}{n}} D{\textcolor{cyan!50}{+1}} D{\textcolor{cyan!50}{+2}} D{\textcolor{cyan!50}{+3}} \\
-  \extracode
-    % Vertical grid lines
-    \begin{scope}[gray!30, thin]
-      \foreach \x in {0,2,...,24} {
-        \draw[dashed] (\x+0.15,0.5) -- (\x+0.15,-12);
-      }
-    \end{scope}
-    % Timing annotations
-    \begin{scope}[>=stealth, font=\scriptsize]
-      % tRCD
-      \draw[<->,thick] (7.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RCD}}>20$ns} (1.15,-3);
-      \draw (7.15,-2) -- (7.15,-3);
-      \draw (1.15,-2) -- (1.15,-4);
-      % tRC
-      \draw[<->,thick] (1.15,-4) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RC}}>70$ns} (21.15,-4);
-      \draw (21.15,-2) -- (21.15,-4);
-      % tRRD
-      \draw[<->,thick] (11.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RRD}}>20$ns} (21.15,-3);
-      \draw (11.15,-2) -- (11.15,-3);
-      % CL
-      \draw[<->,thick] (12.15,-9.5) -- node[midway, fill=white, inner sep=1pt] {CL=2} (7.15,-9.5);
-      \draw (7.15,-10) -- (7.15,-8);
-      \draw (12.15,-9) -- (12.15,-11);
-    \end{scope}
-\end{tikztimingtable}
-\end{center}
-
-\vspace{-0.3cm}
-\textbf{Key timing parameters:}
-\begin{itemize}
-\item $\mathbf{t_{\text{RCD}}}$: Same as SDR SDRAM
-\item $\mathbf{t_{\text{RC}}}$: Same as SDR SDRAM
-\item $\mathbf{t_{\text{RRD}}}$: Same as SDR SDRAM
-\item \textbf{Burst length = 4:} Each READ transfers 4 consecutive locations (both edges)
-\end{itemize}
-\end{frame}
 
 \hide{
 % Slide: DDR2
@@ -3709,6 +3603,111 @@ HDD & & $\sim$5--10 ms \\
 \item Simple hardware
 \end{itemize}
 \end{columns}
+\end{frame}
+% Slide: DDR-SDRAM
+\begin{frame}{DDR-SDRAM}
+\textbf{2n-prefetch architecture doubles data rate}
+
+\vspace{0.2cm}
+\begin{columns}[T]
+\column{0.58\textwidth}
+\textbf{How it works:}
+\begin{itemize}
+\item DRAM core operates at same speed as SDR
+\item Internal bus: 2$\times$ wider than external
+\item Data transferred twice per clock:
+  \begin{itemize}
+  \item Rising edge: lower half (0:n-1)
+  \item Falling edge: upper half (n:2n-1)
+  \end{itemize}
+\item Example: 200MHz clock = 400MT/s
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Reduced power:} 2.5V vs. 3.3V in SDR
+
+\column{0.38\textwidth}
+\vspace{0.2cm}
+\begin{center}
+\begin{tikzpicture}[scale=0.75, transform shape]
+  % SDRAM Array
+  \node[draw, thick, minimum width=2.5cm, minimum height=1.5cm, fill=blue!10, align=center] (array) at (0,0) {SDRAM\\Array};
+
+  % Two multiplexers
+  \node[draw, thick, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=0.6cm, fill=green!20] (mux1) at (3,0.4) {0:n-1};
+  \node[draw, thick, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=1cm, minimum height=0.6cm, fill=green!20] (mux2) at (3,-0.4) {n:2n-1};
+
+  % Internal bus
+  \draw[->, very thick] (array.east) -- node[above, font=\tiny] {0:2n-1} (1.5,0);
+  \draw[->, thick] (1.5,0.4) -- (mux1.west);
+  \draw[->, thick] (1.5,-0.4) -- (mux2.west);
+
+  % Output
+  \draw[->, very thick] (mux1.east) -- (4.5,0.4);
+  \draw[->, very thick] (mux2.east) -- (4.5,-0.4);
+  \draw[->, very thick] (4.5,0) -- node[above, font=\small] {0:n-1} (5.5,0);
+  \node[right, font=\scriptsize] at (5.5,0.4) {400M};
+  \node[right, font=\scriptsize] at (5.5,0) {xfer/sec};
+
+  % Clock label
+  \node[below, font=\tiny] at (0,-1.2) {200MHz clock};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+% Slide: DDR SDRAM Timing
+\begin{frame}{DDR SDRAM Timing}
+\vspace{-0.2cm}
+\begin{center}
+\begin{tikztimingtable}[
+  timing/slope=0.15,
+  timing/coldist=0.35cm,
+  xscale=1.7,
+  timing/rowdist=0.6cm,
+  timing/name/.style={font=\small}
+]
+  clock & L H L H L H L H L H L H L H L H L H L H L H L H L H\\
+  cmd   & 2D{\textcolor{cyan}{ACT}} 4U 2D{\textcolor{cyan}{RD}} 2U 2D{\textcolor{blue}{ACT}} 4U 2D{\textcolor{blue}{RD}} 2U 2D{\textcolor{cyan}{ACT}} 4U \\
+  \\
+  Bank  & 2D{\textcolor{cyan}{Bank 0}} 4U 2D{\textcolor{cyan}{Bank 0}} 2U 2D{\textcolor{blue}{Bank 1}} 4U 2D{\textcolor{blue}{Bank1}} 2U 2D{\textcolor{cyan}{Bank 0}} 4U \\
+  Addr  & 2D{\textcolor{cyan}{Row i}} 4U 2D{\textcolor{cyan}{Col j}} 2U 2D{\textcolor{blue}{Row l}} 4U 2D{\textcolor{blue}{Col j}} 2U 2D{\textcolor{cyan}{Row m}} 4U \\
+  \\
+  Data  & 12U D{\textcolor{cyan}{j}} D{\textcolor{cyan}{+1}} D{\textcolor{cyan}{+2}} D{\textcolor{cyan}{+3}} 6U D{\textcolor{cyan!50}{n}} D{\textcolor{cyan!50}{+1}} D{\textcolor{cyan!50}{+2}} D{\textcolor{cyan!50}{+3}} \\
+  \extracode
+    % Vertical grid lines
+    \begin{scope}[gray!30, thin]
+      \foreach \x in {0,2,...,24} {
+        \draw[dashed] (\x+0.15,0.5) -- (\x+0.15,-12);
+      }
+    \end{scope}
+    % Timing annotations
+    \begin{scope}[>=stealth, font=\scriptsize]
+      % tRCD
+      \draw[<->,thick] (7.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RCD}}>20$ns} (1.15,-3);
+      \draw (7.15,-2) -- (7.15,-3);
+      \draw (1.15,-2) -- (1.15,-4);
+      % tRC
+      \draw[<->,thick] (1.15,-4) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RC}}>70$ns} (21.15,-4);
+      \draw (21.15,-2) -- (21.15,-4);
+      % tRRD
+      \draw[<->,thick] (11.15,-3) -- node[midway, fill=white, inner sep=1pt] {$t_{\text{RRD}}>20$ns} (21.15,-3);
+      \draw (11.15,-2) -- (11.15,-3);
+      % CL
+      \draw[<->,thick] (12.15,-9.5) -- node[midway, fill=white, inner sep=1pt] {CL=2} (7.15,-9.5);
+      \draw (7.15,-10) -- (7.15,-8);
+      \draw (12.15,-9) -- (12.15,-11);
+    \end{scope}
+\end{tikztimingtable}
+\end{center}
+
+\vspace{-0.3cm}
+\textbf{Key timing parameters:}
+\begin{itemize}
+\item $\mathbf{t_{\text{RCD}}}$: Same as SDR SDRAM
+\item $\mathbf{t_{\text{RC}}}$: Same as SDR SDRAM
+\item $\mathbf{t_{\text{RRD}}}$: Same as SDR SDRAM
+\item \textbf{Burst length = 4:} Each READ transfers 4 consecutive locations (both edges)
+\end{itemize}
 \end{frame}
 \fi
 
