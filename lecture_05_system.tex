@@ -214,6 +214,219 @@
 \end{columns}
 \end{frame}
 
+% Slide 1: Modern CPU Architecture Overview
+\begin{frame}{Modern Multi-Core CPU Architecture}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Hierarchy of Components:}
+\begin{enumerate}
+\item \textbf{Core}: Execution units + L1/L2 cache
+\item \textbf{Socket/Package}: Multiple cores + shared L3 + memory controller
+\item \textbf{System}: Multiple sockets + memory
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{Two Types of Interconnects:}
+\begin{itemize}
+\item \textcolor{blue}{\textbf{Intra-socket}}: Connects cores within CPU
+\item \textcolor{red}{\textbf{Inter-socket}}: Connects different CPUs
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\begin{tikzpicture}[
+    coreunit/.style={draw, fill=blue!30, minimum width=0.6cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
+    l2unit/.style={draw, fill=yellow!30, minimum width=0.4cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
+    l3box/.style={draw, fill=green!30, minimum height=0.4cm, text depth=0.1ex, font=\scriptsize},
+    mcbox/.style={draw, fill=orange!30, minimum height=0.4cm, text depth=0.1ex, font=\tiny}
+]
+% Core 0 + L2 (top-left)
+\node[coreunit] (c0) at (0,0) {Core 0};
+\node[l2unit, right=0.02cm of c0] (l2c0) {L2};
+
+% Core 1 + L2 (top-right)
+\node[coreunit, right=0.12cm of l2c0] (c1) {Core 1};
+\node[l2unit, right=0.02cm of c1] (l2c1) {L2};
+
+% Core 2 + L2 (bottom-left)
+\node[coreunit, below=0.15cm of c0] (c2) {Core 2};
+\node[l2unit, right=0.02cm of c2] (l2c2) {L2};
+
+% Core 3 + L2 (bottom-right)
+\node[coreunit, right=0.12cm of l2c2] (c3) {Core 3};
+\node[l2unit, right=0.02cm of c3] (l2c3) {L2};
+
+% Ring interconnect - rectangle around cores
+\draw[thick, blue, rounded corners=3pt]
+    ([xshift=-0.08cm, yshift=0.08cm]c0.north west) --
+    ([xshift=0.08cm, yshift=0.08cm]l2c1.north east) --
+    ([xshift=0.08cm, yshift=-0.08cm]l2c3.south east) --
+    ([xshift=-0.08cm, yshift=-0.08cm]c2.south west) -- cycle;
+\node[blue, font=\tiny] at ($(l2c0.south east)!0.5!(c3.north west)$) {Ring};
+
+% Shared L3 - further down
+\node[l3box, below=0.5cm of $(c2.south)!0.5!(l2c3.south)$] (l3) {Shared L3 Cache};
+
+% Memory Controller - centered below L3
+\node[mcbox, below=0.15cm of l3] (mc) {Memory Controller};
+
+% Connection from ring to L3
+\draw[thick, blue, <->] ([yshift=-0.08cm]$(c2.south)!0.5!(l2c3.south)$) -- (l3.north);
+
+% Socket container - fitted around content
+\begin{scope}[on background layer]
+\node[draw, thick, dashed, fit=(c0)(l2c1)(l3)(mc), inner sep=0.15cm] (socket) {};
+\end{scope}
+\node[font=\bfseries\footnotesize, anchor=south] at (socket.north) {CPU Socket};
+
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+% Slide 2: Intra-Socket Interconnects
+\begin{frame}{Intra-Socket Interconnects}
+Connect cores, caches, memory controllers, and I/O within a single CPU package
+
+\begin{center}
+\begin{tikzpicture}[scale=0.65,
+    core/.style={draw, rectangle, fill=blue!30, minimum width=0.75cm, minimum height=0.5cm, font=\tiny},
+    corewide/.style={core, text width=0.55cm},
+    cache/.style={draw, rectangle, fill=green!30, minimum width=2.5cm, minimum height=0.3cm},
+    mc/.style={draw, rectangle, fill=orange!30, minimum width=0.8cm, minimum height=0.3cm}
+]
+
+% Ring Topology
+\begin{scope}[shift={(-5,0)}]
+\node at (0, 2.4) {\textbf{Ring Bus}};
+\node at (0, 1.8) {\footnotesize (Intel Core, Xeon E5)};
+% Draw ring - slightly larger
+\draw[thick, blue] (0,0) circle (1.15cm);
+% Add cores on the ring with visible numbers
+\node[core] (c0) at (90:1.15) {C0};
+\node[corewide, align=right] (c1) at (0:1.15) {C1};
+\node[core] (c2) at (270:1.15) {C2};
+\node[corewide, align=left] (c3) at (180:1.15) {C3};
+% L3 slices inside the ring (shifted towards their cores)
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,0.65) {L3};
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0.65,0) {L3};
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,-0.65) {L3};
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (-0.65,0) {L3};
+
+\node[mc] (ring_mc) at (0,-2.2) {\tiny MC};
+\draw[<->, thick] (c2) -- (ring_mc.north);
+
+% Annotations
+\node[text width=5cm, align=left] at (0,-4.2) {
+\footnotesize
+• Bidirectional ring\\
+• Each core has L3 slice\\
+• Low latency (5-12 hops)\\
+• Limited to $\sim$10 cores
+};
+\end{scope}
+
+% Mesh Topology
+\begin{scope}[shift={(2.5,0)}]
+\node at (0, 2.4) {\textbf{Mesh}};
+\node at (0, 1.8) {\footnotesize (Intel Xeon SP)};
+% Draw mesh as 3x3 matrix of cores
+\matrix[matrix of nodes, nodes={core, minimum width=0.6cm, minimum height=0.45cm},
+        row sep=0.25cm, column sep=0.25cm, ampersand replacement=\&] (mesh) {
+    C0 \& C1 \& C2 \\
+    C3 \& C4 \& C5 \\
+    C6 \& C7 \& C8 \\
+};
+% Add small L3 slice inside each core
+\foreach \i in {1,2,3} {
+    \foreach \j in {1,2,3} {
+        \node[fill=green!30, draw, minimum width=0.2cm, minimum height=0.15cm, inner sep=0, anchor=south west]
+            at ([xshift=1pt, yshift=1pt]mesh-\i-\j.south west) {};
+    }
+}
+% Draw mesh connections
+\foreach \i in {1,2,3} {
+    \draw[blue, thick] (mesh-\i-1.east) -- (mesh-\i-2.west);
+    \draw[blue, thick] (mesh-\i-2.east) -- (mesh-\i-3.west);
+}
+\foreach \j in {1,2,3} {
+    \draw[blue, thick] (mesh-1-\j.south) -- (mesh-2-\j.north);
+    \draw[blue, thick] (mesh-2-\j.south) -- (mesh-3-\j.north);
+}
+\node[mc] (mesh_mc1) at ([yshift=-0.8cm]mesh-3-1.south) {\tiny MC};
+\node[mc] (mesh_mc2) at ([yshift=-0.8cm]mesh-3-3.south) {\tiny MC};
+\draw[<->, thick] (mesh-3-1.south) -- (mesh_mc1.north);
+\draw[<->, thick] (mesh-3-3.south) -- (mesh_mc2.north);
+
+% Annotations
+\node[text width=5cm, align=left] at (0,-4.2) {
+\footnotesize
+• 2D grid topology\\
+• Each tile: core + L3 slice\\
+• Multiple MCs at edges\\
+• Better bandwidth \& scaling
+};
+\end{scope}
+
+% Crossbar/IF
+\begin{scope}[shift={(10,0)}]
+\node at (0, 2.4) {\textbf{Infinity Fabric}};
+\node at (0, 1.8) {\footnotesize (AMD Zen)};
+
+% CCX 0
+\matrix[matrix of nodes, nodes={core, minimum width=0.55cm, minimum height=0.4cm},
+        row sep=0.1cm, column sep=0.1cm, ampersand replacement=\&] (ccx0) at (-2.0,0.15) {
+    C0 \& C1 \\
+    C2 \& C3 \\
+};
+% Crossbar connections within CCX0
+\draw[blue, thick] (ccx0-1-1) -- (ccx0-1-2);
+\draw[blue, thick] (ccx0-1-1) -- (ccx0-2-1);
+\draw[blue, thick] (ccx0-1-1) -- (ccx0-2-2);
+\draw[blue, thick] (ccx0-1-2) -- (ccx0-2-1);
+\draw[blue, thick] (ccx0-1-2) -- (ccx0-2-2);
+\draw[blue, thick] (ccx0-2-1) -- (ccx0-2-2);
+\node[cache, minimum width=1.2cm, minimum height=0.22cm, below=1pt of ccx0] (l3a) {\tiny L3};
+\node[draw, dashed, thick, fit=(ccx0) (l3a), inner sep=2pt, label={[font=\tiny]above:CCX0}] (box0) {};
+
+% CCX 1
+\matrix[matrix of nodes, nodes={core, minimum width=0.55cm, minimum height=0.4cm},
+        row sep=0.1cm, column sep=0.1cm, ampersand replacement=\&] (ccx1) at (2.0,0.15) {
+    C4 \& C5 \\
+    C6 \& C7 \\
+};
+% Crossbar connections within CCX1
+\draw[blue, thick] (ccx1-1-1) -- (ccx1-1-2);
+\draw[blue, thick] (ccx1-1-1) -- (ccx1-2-1);
+\draw[blue, thick] (ccx1-1-1) -- (ccx1-2-2);
+\draw[blue, thick] (ccx1-1-2) -- (ccx1-2-1);
+\draw[blue, thick] (ccx1-1-2) -- (ccx1-2-2);
+\draw[blue, thick] (ccx1-2-1) -- (ccx1-2-2);
+\node[cache, minimum width=1.2cm, minimum height=0.22cm, below=1pt of ccx1] (l3b) {\tiny L3};
+\node[draw, dashed, thick, fit=(ccx1) (l3b), inner sep=2pt, label={[font=\tiny]above:CCX1}] (box1) {};
+
+% Infinity Fabric interconnect
+\draw[<->, ultra thick, red] (box0.east) -- node[above, font=\tiny] {IF} (box1.west);
+
+% Memory controller
+\node[mc] (ifmc) at (0,-2) {\tiny MC};
+\draw[<->, thick] (l3a.south) |- (ifmc.west);
+\draw[<->, thick] (l3b.south) |- (ifmc.east);
+
+% Annotations
+\node[text width=5cm, align=left] at (0,-4.2) {
+\footnotesize
+• 4 cores + L3 per CCX\\
+• Crossbar within CCX\\
+• IF connects CCXs\\
+• Shared MC
+};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+
+\footnotesize All cores can access all cache and memory controllers, but with varying latency
+\end{frame}
 % Slide 3: Die and Multi-Die Designs
 \begin{frame}{Die and Multi-Die Designs}
 \begin{columns}[T]
@@ -389,278 +602,8 @@
 
 \section{Interconnects and Multi-Core Systems}
 
-% Slide 1: Modern CPU Architecture Overview
-\begin{frame}{Modern Multi-Core CPU Architecture}
-\begin{columns}[T]
-\column{0.55\textwidth}
-\textbf{Hierarchy of Components:}
-\begin{enumerate}
-\item \textbf{Core}: Execution units + L1/L2 cache
-\item \textbf{Socket/Package}: Multiple cores + shared L3 + memory controller
-\item \textbf{System}: Multiple sockets + memory
-\end{enumerate}
 
-\vspace{0.3cm}
-\textbf{Two Types of Interconnects:}
-\begin{itemize}
-\item \textcolor{blue}{\textbf{Intra-socket}}: Connects cores within CPU
-\item \textcolor{red}{\textbf{Inter-socket}}: Connects different CPUs
-\end{itemize}
 
-\column{0.45\textwidth}
-\begin{center}
-\begin{tikzpicture}[
-    coreunit/.style={draw, fill=blue!30, minimum width=0.6cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
-    l2unit/.style={draw, fill=yellow!30, minimum width=0.4cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
-    l3box/.style={draw, fill=green!30, minimum height=0.4cm, text depth=0.1ex, font=\scriptsize},
-    mcbox/.style={draw, fill=orange!30, minimum height=0.4cm, text depth=0.1ex, font=\tiny}
-]
-% Core 0 + L2 (top-left)
-\node[coreunit] (c0) at (0,0) {Core 0};
-\node[l2unit, right=0.02cm of c0] (l2c0) {L2};
-
-% Core 1 + L2 (top-right)
-\node[coreunit, right=0.12cm of l2c0] (c1) {Core 1};
-\node[l2unit, right=0.02cm of c1] (l2c1) {L2};
-
-% Core 2 + L2 (bottom-left)
-\node[coreunit, below=0.15cm of c0] (c2) {Core 2};
-\node[l2unit, right=0.02cm of c2] (l2c2) {L2};
-
-% Core 3 + L2 (bottom-right)
-\node[coreunit, right=0.12cm of l2c2] (c3) {Core 3};
-\node[l2unit, right=0.02cm of c3] (l2c3) {L2};
-
-% Ring interconnect - rectangle around cores
-\draw[thick, blue, rounded corners=3pt]
-    ([xshift=-0.08cm, yshift=0.08cm]c0.north west) --
-    ([xshift=0.08cm, yshift=0.08cm]l2c1.north east) --
-    ([xshift=0.08cm, yshift=-0.08cm]l2c3.south east) --
-    ([xshift=-0.08cm, yshift=-0.08cm]c2.south west) -- cycle;
-\node[blue, font=\tiny] at ($(l2c0.south east)!0.5!(c3.north west)$) {Ring};
-
-% Shared L3 - further down
-\node[l3box, below=0.5cm of $(c2.south)!0.5!(l2c3.south)$] (l3) {Shared L3 Cache};
-
-% Memory Controller - centered below L3
-\node[mcbox, below=0.15cm of l3] (mc) {Memory Controller};
-
-% Connection from ring to L3
-\draw[thick, blue, <->] ([yshift=-0.08cm]$(c2.south)!0.5!(l2c3.south)$) -- (l3.north);
-
-% Socket container - fitted around content
-\begin{scope}[on background layer]
-\node[draw, thick, dashed, fit=(c0)(l2c1)(l3)(mc), inner sep=0.15cm] (socket) {};
-\end{scope}
-\node[font=\bfseries\footnotesize, anchor=south] at (socket.north) {CPU Socket};
-
-\end{tikzpicture}
-\end{center}
-\end{columns}
-\end{frame}
-
-% Slide 2: Intra-Socket Interconnects
-\begin{frame}{Intra-Socket Interconnects}
-Connect cores, caches, memory controllers, and I/O within a single CPU package
-
-\begin{center}
-\begin{tikzpicture}[scale=0.65,
-    core/.style={draw, rectangle, fill=blue!30, minimum width=0.75cm, minimum height=0.5cm, font=\tiny},
-    corewide/.style={core, text width=0.55cm},
-    cache/.style={draw, rectangle, fill=green!30, minimum width=2.5cm, minimum height=0.3cm},
-    mc/.style={draw, rectangle, fill=orange!30, minimum width=0.8cm, minimum height=0.3cm}
-]
-
-% Ring Topology
-\begin{scope}[shift={(-5,0)}]
-\node at (0, 2.4) {\textbf{Ring Bus}};
-\node at (0, 1.9) {\footnotesize (Intel Core, Xeon E5)};
-% Draw ring - slightly larger
-\draw[thick, blue] (0,0) circle (1.15cm);
-% Add cores on the ring with visible numbers
-\node[core] (c0) at (90:1.15) {C0};
-\node[corewide, align=right] (c1) at (0:1.15) {C1};
-\node[core] (c2) at (270:1.15) {C2};
-\node[corewide, align=left] (c3) at (180:1.15) {C3};
-% L3 slices inside the ring (shifted towards their cores)
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,0.65) {L3};
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0.65,0) {L3};
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,-0.65) {L3};
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (-0.65,0) {L3};
-
-\node[mc] (ring_mc) at (0,-2.2) {\tiny MC};
-\draw[<->, thick] (c2) -- (ring_mc.north);
-
-% Annotations
-\node[text width=5cm, align=left] at (0,-4.2) {
-\footnotesize
-• Bidirectional ring\\
-• Each core has L3 slice\\
-• Low latency (5-12 hops)\\
-• Limited to \textasciitilde 10 cores
-};
-\end{scope}
-
-% Mesh Topology
-\begin{scope}[shift={(2.5,0)}]
-\node at (0, 2.4) {\textbf{Mesh}};
-\node at (0, 1.9) {\footnotesize (Intel Xeon SP)};
-% Draw mesh as 3x3 matrix of cores
-\matrix[matrix of nodes, nodes={core, minimum width=0.6cm, minimum height=0.45cm},
-        row sep=0.25cm, column sep=0.25cm, ampersand replacement=\&] (mesh) {
-    C0 \& C1 \& C2 \\
-    C3 \& C4 \& C5 \\
-    C6 \& C7 \& C8 \\
-};
-% Add small L3 slice inside each core
-\foreach \i in {1,2,3} {
-    \foreach \j in {1,2,3} {
-        \node[fill=green!30, draw, minimum width=0.2cm, minimum height=0.15cm, inner sep=0, anchor=south west]
-            at ([xshift=1pt, yshift=1pt]mesh-\i-\j.south west) {};
-    }
-}
-% Draw mesh connections
-\foreach \i in {1,2,3} {
-    \draw[blue, thick] (mesh-\i-1.east) -- (mesh-\i-2.west);
-    \draw[blue, thick] (mesh-\i-2.east) -- (mesh-\i-3.west);
-}
-\foreach \j in {1,2,3} {
-    \draw[blue, thick] (mesh-1-\j.south) -- (mesh-2-\j.north);
-    \draw[blue, thick] (mesh-2-\j.south) -- (mesh-3-\j.north);
-}
-\node[mc] (mesh_mc1) at ([yshift=-0.8cm]mesh-3-1.south) {\tiny MC};
-\node[mc] (mesh_mc2) at ([yshift=-0.8cm]mesh-3-3.south) {\tiny MC};
-\draw[<->, thick] (mesh-3-1.south) -- (mesh_mc1.north);
-\draw[<->, thick] (mesh-3-3.south) -- (mesh_mc2.north);
-
-% Annotations
-\node[text width=5cm, align=left] at (0,-4.2) {
-\footnotesize
-• 2D grid topology\\
-• Each tile: core + L3 slice\\
-• Multiple MCs at edges\\
-• Better bandwidth \& scaling
-};
-\end{scope}
-
-% Crossbar/IF
-\begin{scope}[shift={(10,0)}]
-\node at (0, 2.4) {\textbf{Infinity Fabric}};
-\node at (0, 1.9) {\footnotesize (AMD Zen)};
-
-% CCX 0
-\matrix[matrix of nodes, nodes={core, minimum width=0.55cm, minimum height=0.4cm},
-        row sep=0.1cm, column sep=0.1cm, ampersand replacement=\&] (ccx0) at (-2.0,0.15) {
-    C0 \& C1 \\
-    C2 \& C3 \\
-};
-\node[cache, minimum width=1.2cm, minimum height=0.22cm, below=1pt of ccx0] (l3a) {\tiny L3};
-\node[draw, dashed, thick, fit=(ccx0) (l3a), inner sep=2pt, label={[font=\tiny]above:CCX0}] (box0) {};
-
-% CCX 1
-\matrix[matrix of nodes, nodes={core, minimum width=0.55cm, minimum height=0.4cm},
-        row sep=0.1cm, column sep=0.1cm, ampersand replacement=\&] (ccx1) at (2.0,0.15) {
-    C4 \& C5 \\
-    C6 \& C7 \\
-};
-\node[cache, minimum width=1.2cm, minimum height=0.22cm, below=1pt of ccx1] (l3b) {\tiny L3};
-\node[draw, dashed, thick, fit=(ccx1) (l3b), inner sep=2pt, label={[font=\tiny]above:CCX1}] (box1) {};
-
-% Infinity Fabric interconnect
-\draw[<->, ultra thick, red] (box0.east) -- node[above, font=\tiny] {IF} (box1.west);
-
-% Memory controller
-\node[mc] (ifmc) at (0,-2) {\tiny MC};
-\draw[<->, thick] (l3a.south) |- (ifmc.west);
-\draw[<->, thick] (l3b.south) |- (ifmc.east);
-
-% Annotations
-\node[text width=5cm, align=left] at (0,-4.2) {
-\footnotesize
-• 4 cores + L3 per CCX\\
-• IF connects CCXs\\
-• Shared MC\\
-• Low latency within CCX
-};
-\end{scope}
-
-\end{tikzpicture}
-\end{center}
-
-\footnotesize All cores can access all cache and memory controllers, but with varying latency
-\end{frame}
-
-% Slide 3: Ring Interconnect Details
-\begin{frame}{Ring Interconnect: How It Works}
-\begin{columns}[T]
-\column{0.5\textwidth}
-\textbf{Ring Architecture:}
-\begin{itemize}
-\item Bidirectional rings (clockwise + counter-clockwise)
-\item Each "stop" contains:
-  \begin{itemize}
-  \item CPU core
-  \item L3 cache slice
-  \item Connection logic
-  \end{itemize}
-\item Messages take shortest path
-\item Typically 32-byte data ring
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Why Rings Work Well (up to a point):}
-\begin{itemize}
-\item Simple to implement
-\item Predictable latency
-\item Good bandwidth for small core counts
-\item Power efficient
-\end{itemize}
-
-\column{0.5\textwidth}
-\begin{center}
-\begin{tikzpicture}[
-    stop/.style={draw, circle, fill=blue!20, minimum size=0.5cm, inner sep=1pt, font=\tiny}
-]
-% Ring stops positioned explicitly
-\node[stop] (s0) at (90:1.3) {};
-\node[font=\tiny, above=0.1cm of s0] {Core0};
-\node[stop] (s1) at (30:1.3) {};
-\node[font=\tiny, right=0.05cm of s1] {Core1};
-\node[stop] (s2) at (-30:1.3) {};
-\node[font=\tiny, right=0.05cm of s2] {Core2};
-\node[stop] (s3) at (-90:1.3) {};
-\node[font=\tiny, below=0.1cm of s3] {Core3};
-\node[stop, fill=green!20] (s4) at (-150:1.3) {};
-\node[font=\tiny, left=0.05cm of s4] {LLC};
-\node[stop, fill=orange!20] (s5) at (150:1.3) {};
-\node[font=\tiny, left=0.05cm of s5] {MC};
-
-% Clockwise ring (blue, inner)
-\draw[->, thick, blue] (s0) to[bend left=25] (s1);
-\draw[->, thick, blue] (s1) to[bend left=25] (s2);
-\draw[->, thick, blue] (s2) to[bend left=25] (s3);
-\draw[->, thick, blue] (s3) to[bend left=25] (s4);
-\draw[->, thick, blue] (s4) to[bend left=25] (s5);
-\draw[->, thick, blue] (s5) to[bend left=25] (s0);
-
-% Counter-clockwise ring (red, outer)
-\draw[->, thick, red] (s0) to[bend right=25] (s5);
-\draw[->, thick, red] (s5) to[bend right=25] (s4);
-\draw[->, thick, red] (s4) to[bend right=25] (s3);
-\draw[->, thick, red] (s3) to[bend right=25] (s2);
-\draw[->, thick, red] (s2) to[bend right=25] (s1);
-\draw[->, thick, red] (s1) to[bend right=25] (s0);
-
-\node[font=\footnotesize] at (0,0) {Bidirectional};
-
-% Example path annotation
-\node[font=\tiny, green!50!black, below=0.3cm of s3] {Core0 → LLC: 2 hops};
-\end{tikzpicture}
-\end{center}
-
-\textbf{Limitations:} Shared bandwidth, latency grows with cores, not for >10-12 cores
-\end{columns}
-\end{frame}
 
 % Slide 6: Software Implications
 \begin{frame}{Software Implications}
@@ -3643,6 +3586,77 @@ Intel Sapphire Rapids & up to 60 & 4 & EMIB bridges & Multi-tile \\
 
 \vspace{1mm}
 \textbf{Software must adapt for optimal performance!}
+\end{frame}
+% Slide 3: Ring Interconnect Details
+\begin{frame}{Ring Interconnect: How It Works}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Ring Architecture:}
+\begin{itemize}
+\item Bidirectional rings (clockwise + counter-clockwise)
+\item Each "stop" contains:
+  \begin{itemize}
+  \item CPU core
+  \item L3 cache slice
+  \item Connection logic
+  \end{itemize}
+\item Messages take shortest path
+\item Typically 32-byte data ring
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Why Rings Work Well (up to a point):}
+\begin{itemize}
+\item Simple to implement
+\item Predictable latency
+\item Good bandwidth for small core counts
+\item Power efficient
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[
+    stop/.style={draw, circle, fill=blue!20, minimum size=0.5cm, inner sep=1pt, font=\tiny}
+]
+% Ring stops positioned explicitly
+\node[stop] (s0) at (90:1.3) {};
+\node[font=\tiny, above=0.1cm of s0] {Core0};
+\node[stop] (s1) at (30:1.3) {};
+\node[font=\tiny, right=0.05cm of s1] {Core1};
+\node[stop] (s2) at (-30:1.3) {};
+\node[font=\tiny, right=0.05cm of s2] {Core2};
+\node[stop] (s3) at (-90:1.3) {};
+\node[font=\tiny, below=0.1cm of s3] {Core3};
+\node[stop, fill=green!20] (s4) at (-150:1.3) {};
+\node[font=\tiny, left=0.05cm of s4] {LLC};
+\node[stop, fill=orange!20] (s5) at (150:1.3) {};
+\node[font=\tiny, left=0.05cm of s5] {MC};
+
+% Clockwise ring (blue, inner)
+\draw[->, thick, blue] (s0) to[bend left=25] (s1);
+\draw[->, thick, blue] (s1) to[bend left=25] (s2);
+\draw[->, thick, blue] (s2) to[bend left=25] (s3);
+\draw[->, thick, blue] (s3) to[bend left=25] (s4);
+\draw[->, thick, blue] (s4) to[bend left=25] (s5);
+\draw[->, thick, blue] (s5) to[bend left=25] (s0);
+
+% Counter-clockwise ring (red, outer)
+\draw[->, thick, red] (s0) to[bend right=25] (s5);
+\draw[->, thick, red] (s5) to[bend right=25] (s4);
+\draw[->, thick, red] (s4) to[bend right=25] (s3);
+\draw[->, thick, red] (s3) to[bend right=25] (s2);
+\draw[->, thick, red] (s2) to[bend right=25] (s1);
+\draw[->, thick, red] (s1) to[bend right=25] (s0);
+
+\node[font=\footnotesize] at (0,0) {Bidirectional};
+
+% Example path annotation
+\node[font=\tiny, green!50!black, below=0.3cm of s3] {Core0 → LLC: 2 hops};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Limitations:} Shared bandwidth, latency grows with cores, not for >10-12 cores
+\end{columns}
 \end{frame}
 \fi
 
