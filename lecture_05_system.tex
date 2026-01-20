@@ -430,18 +430,11 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 % Slide 3: Die and Multi-Die Designs
 \begin{frame}{Die and Multi-Die Designs}
 \begin{columns}[T]
-\column{0.5\textwidth}
+\column{0.42\textwidth}
 \textbf{Die:} Single piece of silicon cut from wafer
 \begin{itemize}
 \item Contains transistors/circuits
 \item Traditional: 1 die = 1 CPU
-\end{itemize}
-
-\textbf{Monolithic:} Everything on one die
-\begin{itemize}
-\item Simpler, lower latency
-\item More expensive (yield issues)
-\item Size limited by manufacturing
 \end{itemize}
 
 \textbf{Multi-Die (Chiplet):} Multiple smaller dies
@@ -451,63 +444,106 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \item Higher latency between dies
 \end{itemize}
 
-\column{0.5\textwidth}
+\vspace{0.2cm}
+\textbf{Chiplet Advantages:}
+\begin{itemize}
+\item Mix process nodes
+\item Reuse dies across products
+\item Better manufacturing yields
+\end{itemize}
+
+\column{0.58\textwidth}
 \begin{center}
-\begin{tikzpicture}[
-    corebox/.style={draw, fill=blue!30, minimum width=0.38cm, minimum height=0.38cm, font=\tiny},
-    minicore/.style={draw, fill=blue!30, minimum width=0.32cm, minimum height=0.32cm, font=\tiny},
-    cachebox/.style={draw, fill=green!30, minimum height=0.3cm, font=\tiny},
-    iobox/.style={draw, minimum width=1cm, minimum height=0.3cm, text depth=0.1ex, font=\tiny},
-    ccdbox/.style={draw, thick, fill=blue!10, minimum width=1.5cm, minimum height=1.4cm},
-    iodbox/.style={draw, thick, fill=orange!10, minimum width=3.2cm, minimum height=1cm}
+\begin{tikzpicture}[scale=0.85,
+    minicore/.style={draw, fill=blue!30, minimum width=0.28cm, minimum height=0.28cm, font=\tiny},
+    minicache/.style={draw, fill=green!30, minimum width=0.7cm, minimum height=0.18cm, font=\tiny},
+    ccxbox/.style={draw, dashed, inner sep=1pt},
+    ccdbox/.style={draw, thick, fill=blue!10, inner sep=3pt},
+    iobox/.style={draw, minimum width=0.8cm, minimum height=0.25cm, font=\tiny},
+    iodbox/.style={draw, thick, fill=orange!10}
 ]
-% Monolithic - build from content outward
-\node[corebox] (mc1) at (0,0) {C};
-\node[corebox, right=0.08cm of mc1] (mc2) {C};
-\node[corebox, right=0.08cm of mc2] (mc3) {C};
-\node[corebox, right=0.08cm of mc3] (mc4) {C};
-\node[cachebox, minimum width=2.1cm, below=0.1cm of $(mc1.south)!0.5!(mc4.south)$] (ml3) {L3 Cache};
-\node[iobox, fill=orange!30, below=0.1cm of ml3, xshift=-0.5cm] (mmc) {MC};
-\node[iobox, fill=purple!30, right=0.08cm of mmc] (mio) {I/O};
+% CCD 1
+% CCX 0
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx0) at (-1.4,0.7) {
+    {} \& {} \\
+    {} \& {} \\
+};
+% Crossbar in CCX0
+\draw[blue] (ccx0-1-1) -- (ccx0-1-2);
+\draw[blue] (ccx0-1-1) -- (ccx0-2-2);
+\draw[blue] (ccx0-2-1) -- (ccx0-2-2);
+\draw[blue] (ccx0-1-2) -- (ccx0-2-1);
+\node[minicache, below=1pt of ccx0] (l3_0) {\tiny L3};
+\node[ccxbox, fit=(ccx0)(l3_0), label={[font=\tiny]above:CCX0}] (box0) {};
 
-% Monolithic box fitted around content
-\node[draw, thick, fit=(mc1)(mc4)(ml3)(mmc)(mio), inner sep=0.15cm] (mono) {};
-\node[font=\footnotesize\bfseries, anchor=south] at (mono.north) {Monolithic};
-\node[font=\small, below=0.2cm of mono] {Intel Core i7};
+% CCX 1
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx1) at (-1.4,-0.7) {
+    {} \& {} \\
+    {} \& {} \\
+};
+% Crossbar in CCX1
+\draw[blue] (ccx1-1-1) -- (ccx1-1-2);
+\draw[blue] (ccx1-1-1) -- (ccx1-2-2);
+\draw[blue] (ccx1-2-1) -- (ccx1-2-2);
+\draw[blue] (ccx1-1-2) -- (ccx1-2-1);
+\node[minicache, below=1pt of ccx1] (l3_1) {\tiny L3};
+\node[ccxbox, fit=(ccx1)(l3_1), label={[font=\tiny]above:CCX1}] (box1) {};
 
-% Chiplet design - CCD 1
-\node[ccdbox, right=1.5cm of mono, yshift=0.55cm] (ccd1) {};
-\node[font=\scriptsize\bfseries, anchor=south] at (ccd1.north) {CCD};
-\node[minicore] (cc1_1) at ([xshift=-0.32cm, yshift=0.25cm]ccd1.center) {C};
-\node[minicore, right=0.06cm of cc1_1] (cc1_2) {C};
-\node[minicore, below=0.06cm of cc1_1] (cc1_3) {C};
-\node[minicore, right=0.06cm of cc1_3] (cc1_4) {C};
-\node[cachebox, minimum width=1.15cm, below=0.08cm of $(cc1_3.south)!0.5!(cc1_4.south)$] (cl3_1) {L3};
+% IF between CCXs in CCD1
+\draw[<->, red, thick] (box0.south) -- (box1.north);
 
 % CCD 2
-\node[ccdbox, right=0.2cm of ccd1] (ccd2) {};
-\node[font=\scriptsize\bfseries, anchor=south] at (ccd2.north) {CCD};
-\node[minicore] (cc2_1) at ([xshift=-0.32cm, yshift=0.25cm]ccd2.center) {C};
-\node[minicore, right=0.06cm of cc2_1] (cc2_2) {C};
-\node[minicore, below=0.06cm of cc2_1] (cc2_3) {C};
-\node[minicore, right=0.06cm of cc2_3] (cc2_4) {C};
-\node[cachebox, minimum width=1.15cm, below=0.08cm of $(cc2_3.south)!0.5!(cc2_4.south)$] (cl3_2) {L3};
+% CCX 2
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx2) at (1.4,0.7) {
+    {} \& {} \\
+    {} \& {} \\
+};
+% Crossbar in CCX2
+\draw[blue] (ccx2-1-1) -- (ccx2-1-2);
+\draw[blue] (ccx2-1-1) -- (ccx2-2-2);
+\draw[blue] (ccx2-2-1) -- (ccx2-2-2);
+\draw[blue] (ccx2-1-2) -- (ccx2-2-1);
+\node[minicache, below=1pt of ccx2] (l3_2) {\tiny L3};
+\node[ccxbox, fit=(ccx2)(l3_2), label={[font=\tiny]above:CCX2}] (box2) {};
+
+% CCX 3
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx3) at (1.4,-0.7) {
+    {} \& {} \\
+    {} \& {} \\
+};
+% Crossbar in CCX3
+\draw[blue] (ccx3-1-1) -- (ccx3-1-2);
+\draw[blue] (ccx3-1-1) -- (ccx3-2-2);
+\draw[blue] (ccx3-2-1) -- (ccx3-2-2);
+\draw[blue] (ccx3-1-2) -- (ccx3-2-1);
+\node[minicache, below=1pt of ccx3] (l3_3) {\tiny L3};
+\node[ccxbox, fit=(ccx3)(l3_3), label={[font=\tiny]above:CCX3}] (box3) {};
+
+% IF between CCXs in CCD2
+\draw[<->, red, thick] (box2.south) -- (box3.north);
+
+% CCD boxes on background layer
+\begin{scope}[on background layer]
+\node[ccdbox, fit=(box0)(box1), label={[font=\scriptsize\bfseries]above:CCD 1}] (ccd1) {};
+\node[ccdbox, fit=(box2)(box3), label={[font=\scriptsize\bfseries]above:CCD 2}] (ccd2) {};
+\end{scope}
+
+% IF between CCDs
+\draw[<->, red, ultra thick] (ccd1.east) -- node[above, font=\tiny] {IF} (ccd2.west);
 
 % I/O Die
-\node[iodbox, below=0.35cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
-\node[font=\scriptsize\bfseries, anchor=north] at ([yshift=-0.03cm]iod.north) {I/O Die};
-\node[iobox, fill=orange!30, anchor=south, xshift=-0.55cm] at ([yshift=0.08cm]iod.south) (iomc) {MC};
-\node[iobox, fill=purple!30, right=0.08cm of iomc] (iopcie) {PCIe};
+\node[iodbox, minimum width=3.5cm, minimum height=0.7cm, below=0.4cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
+\node[font=\scriptsize\bfseries] at ([yshift=0.1cm]iod.center) {I/O Die};
+\node[iobox, fill=orange!30] at ([xshift=-0.8cm, yshift=-0.12cm]iod.center) (iomc) {MC};
+\node[iobox, fill=purple!30] at ([xshift=0.8cm, yshift=-0.12cm]iod.center) (iopcie) {PCIe};
 
-% Connections
+% IF to I/O Die
 \draw[<->, red, thick] (ccd1.south) -- (ccd1.south |- iod.north);
 \draw[<->, red, thick] (ccd2.south) -- (ccd2.south |- iod.north);
 
-\node[font=\small, below=0.2cm of iod] {AMD Ryzen};
+\node[font=\small\bfseries, below=0.25cm of iod] {AMD Ryzen (Chiplet)};
 \end{tikzpicture}
 \end{center}
-
-\textbf{Chiplet Advantages:} Mix process nodes, reuse dies, better yields
 \end{columns}
 \end{frame}
 
