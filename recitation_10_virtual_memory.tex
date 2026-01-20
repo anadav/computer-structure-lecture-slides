@@ -30,6 +30,14 @@
 \definecolor{processcolor}{RGB}{255,200,200}
 \definecolor{diskcolor}{RGB}{255,255,200}
 
+% Semantic colors for address fields (for consistency)
+\colorlet{vpncolor}{lightblue}
+\colorlet{pfncolor}{correctgreen!30}
+\colorlet{offsetcolor}{highlightyellow}
+\colorlet{tlbcolor}{correctgreen!30}
+\colorlet{ptcolor}{lightblue!30}
+\colorlet{ptbrcolor}{highlightorange}
+
 % PGF keys for configurable macros
 \pgfkeys{
   /memblock/.is family,
@@ -440,17 +448,21 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 
 \begin{frame}{Page Table Entry (PTE) Structure}
 \begin{center}
-\begin{tikzpicture}
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=3, 
-        minimum height=1cm, inner sep=5pt] {
-    \nodepart{one} \textbf{V}
-    \nodepart{two} \textbf{M}
-    \nodepart{three} \textbf{PFN}
+\begin{tikzpicture}[
+  ptefield/.style={draw, minimum height=10mm, inner sep=3mm, font=\small\bfseries},
+]
+  \matrix[matrix of nodes,
+          nodes={ptefield},
+          column sep=-\pgflinewidth,
+          ampersand replacement=\&] (pte) {
+    |[fill=correctgreen!30, minimum width=1.2cm]| V \&
+    |[fill=highlightyellow, minimum width=1.2cm]| M \&
+    |[fill=pfncolor, minimum width=4cm]| PFN \\
   };
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.5cm}
+\vspace{0.3cm}
 \begin{itemize}
 \item \textbf{V (Valid bit)}: Indicates if page is in physical memory
 \begin{itemize}
@@ -482,17 +494,17 @@ The CPU addresses only using the process's virtual addresses. To access data in 
           nodes={addrfield},
           column sep=-\pgflinewidth,
           ampersand replacement=\&] (vaddr) {
-    |[fill=lightblue, minimum width=2cm]| VPN \&
-    |[fill=highlightyellow, minimum width=1.5cm]| offset \\
+    |[fill=vpncolor, minimum width=2cm]| VPN \&
+    |[fill=offsetcolor, minimum width=1.5cm]| offset \\
   };
   \node[lbl, above=0mm of vaddr] {Virtual Address};
 
   % Page Table - positioned relative to VPN field
-  \node[draw, fill=lightblue!30, minimum width=2.2cm, minimum height=1.6cm,
+  \node[draw, fill=ptcolor, minimum width=2.2cm, minimum height=1.6cm,
         below=0.8cm of vaddr-1-1, align=center] (pt) {Page\\Table};
 
   % PTBR - positioned relative to page table
-  \node[draw, fill=highlightorange, inner sep=3mm,
+  \node[draw, fill=ptbrcolor, inner sep=3mm,
         left=1.5cm of pt.north west, anchor=east] (ptbr) {PTBR};
 
   % Physical Address - east aligned with virtual address east
@@ -501,8 +513,8 @@ The CPU addresses only using the process's virtual addresses. To access data in 
           column sep=-\pgflinewidth,
           anchor=east,
           ampersand replacement=\&] (paddr) at (vaddr.east |- pt.south) [yshift=-1.5cm] {
-    |[fill=correctgreen!30, minimum width=2cm]| PFN \&
-    |[fill=highlightyellow, minimum width=1.5cm]| offset \\
+    |[fill=pfncolor, minimum width=2cm]| PFN \&
+    |[fill=offsetcolor, minimum width=1.5cm]| offset \\
   };
   \node[lbl, below=0mm of paddr] {Physical Address};
 
@@ -541,7 +553,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \textbf{Result}: 2 memory accesses — one for page table, one for data
 \end{frame}
 
-\section{Questions}
+\section{Question 1: Virtual Memory}
 
 \begin{frame}{Question 1: Virtual Memory System}
 \textbf{Given:}
@@ -607,7 +619,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \textbf{Solution:} TLB - a cache for recently used PTEs
 
 \begin{columns}
-\column{0.7\textwidth}
+\column{0.6\textwidth}
 \textbf{How it works:}
 \begin{itemize}
 \item Check TLB before accessing page table
@@ -616,29 +628,101 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \item Store page table in regular cache too
 \end{itemize}
 
-\column{0.3\textwidth}
-\begin{tikzpicture}[scale=0.7]
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2] (vaddr) at (0,4) {
-    \nodepart{one} VPN
-    \nodepart{two} Offset
+\column{0.4\textwidth}
+\begin{tikzpicture}[scale=0.8,
+  addrfield/.style={draw, minimum height=7mm, inner sep=2mm, font=\scriptsize},
+  lbl/.style={font=\tiny\bfseries},
+  arrow/.style={->, thick, >=stealth},
+]
+  % Virtual Address - wider fields
+  \matrix[matrix of nodes,
+          nodes={addrfield},
+          column sep=-\pgflinewidth,
+          ampersand replacement=\&] (vaddr) {
+    |[fill=vpncolor, minimum width=2cm]| VPN \&
+    |[fill=offsetcolor, minimum width=1.4cm]| Offset \\
   };
-  \coordinate (vpn) at ([xshift=-8mm]vaddr.south);
-  
-  \node[draw, rectangle, fill=correctgreen!30] (tlb) at (-2,2) {TLB};
-  \node[draw, rectangle, fill=lightblue!30, align=center, right=4mm of tlb] (pt) {Page\\Table};
-  
-  \node[draw, rectangle split, rectangle split horizontal, rectangle split parts=2] (paddr) at (0,0) {
-    \nodepart{one} PFN
-    \nodepart{two} Offset
+  \node[lbl, above=0mm of vaddr] {Virtual Address};
+
+  % TLB and Page Table - stacked below VPN
+  \node[draw, fill=tlbcolor, minimum width=1.8cm, minimum height=8mm,
+        below=0.6cm of vaddr-1-1] (tlb) {TLB};
+  \node[draw, fill=ptcolor, minimum width=1.8cm, minimum height=8mm,
+        below=2mm of tlb, align=center, font=\scriptsize] (pt) {Page Table};
+
+  % Physical Address - aligned with virtual address
+  \matrix[matrix of nodes,
+          nodes={addrfield},
+          column sep=-\pgflinewidth,
+          anchor=east,
+          ampersand replacement=\&] (paddr) at (vaddr.east |- pt.south) [yshift=-0.6cm] {
+    |[fill=pfncolor, minimum width=2cm]| PFN \&
+    |[fill=offsetcolor, minimum width=1.4cm]| Offset \\
   };
-  \coordinate (pfn) at ([xshift=-8mm]paddr.north);
-  
-  \draw[->, thick, correctgreen] (vpn) -- (tlb) node[midway, left] {\tiny hit};
-  \draw[->, thick, dashed, incorrectred] (vpn) -- (pt) node[midway, right] {\tiny miss};
-  \draw[->, thick] (tlb) -- ([xshift=-1mm]pfn);
-  \draw[->, thick] (pt) -- ([xshift=1mm]pfn);
+  \node[lbl, below=0mm of paddr] {Physical Address};
+
+  % Arrows
+  % VPN -> TLB (hit - fast path)
+  \draw[arrow, correctgreen!70!black] (vaddr-1-1.south) -- (tlb.north)
+    node[midway, left, font=\tiny] {hit};
+
+  % TLB -> Page Table (miss)
+  \draw[arrow, dashed, incorrectred] (tlb.south) -- (pt.north)
+    node[midway, left, font=\tiny] {miss};
+
+  % TLB/PT -> PFN
+  \draw[arrow, correctgreen!70!black] (pt.south) -- (paddr-1-1.north)
+    node[midway, left, font=\tiny] {PFN};
+
+  % Offset passthrough
+  \draw[arrow, dashed, orange!80!black] (vaddr-1-2.south) -- (paddr-1-2.north)
+    node[midway, right, font=\tiny] {same};
+
 \end{tikzpicture}
 \end{columns}
+\end{frame}
+
+\section{Question 2: Cache Optimization}
+
+\begin{frame}{Question 2: Address Structure}
+\textbf{Given:}
+\begin{itemize}
+\item Virtual memory: $2^n$ bytes, page size: $2^q$ bytes
+\item Physical memory: $2^m$ bytes
+\end{itemize}
+
+\textbf{Question:} Describe the virtual and physical address structure.
+
+\pause
+\textbf{Solution:}
+\begin{itemize}
+\item Virtual address space is $2^n$ bytes $\rightarrow$ virtual address is $\log_2(2^n) = $ \textcolor{blue}{n bits}
+\item Physical memory is $2^m$ bytes $\rightarrow$ physical address is $\log_2(2^m) = $ \textcolor{blue}{m bits}
+\item Page size is $2^q$ bytes $\rightarrow$ offset field is $\log_2(2^q) = $ \textcolor{orange}{q bits}
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[
+  addrfield/.style={draw, minimum height=8mm, inner sep=2mm, font=\small},
+  lbl/.style={font=\small},
+]
+  % Virtual Address
+  \matrix[matrix of nodes, nodes={addrfield}, column sep=-\pgflinewidth,
+          ampersand replacement=\&] (vaddr) {
+    |[fill=vpncolor, minimum width=2.5cm]| VPN (n-q bits) \&
+    |[fill=offsetcolor, minimum width=2.5cm]| Page Offset (q bits) \\
+  };
+  \node[lbl, right=3mm of vaddr] {Virtual Address};
+
+  % Physical Address
+  \matrix[matrix of nodes, nodes={addrfield}, column sep=-\pgflinewidth,
+          below=8mm of vaddr, ampersand replacement=\&] (paddr) {
+    |[fill=pfncolor, minimum width=2.5cm]| PFN (m-q bits) \&
+    |[fill=offsetcolor, minimum width=2.5cm]| Page Offset (q bits) \\
+  };
+  \node[lbl, right=3mm of paddr] {Physical Address};
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{Question 2: Cache and Virtual Memory Optimization}
@@ -654,44 +738,46 @@ Where:
 \textbf{Answer:} If $q \geq b + c$, then page offset contains both set and displacement fields
 
 \begin{center}
-\begin{tikzpicture}[scale=0.9]
+\begin{tikzpicture}[scale=0.9,
+  addrfield/.style={draw, minimum height=7mm, inner sep=2mm, font=\small},
+  lbl/.style={font=\small},
+]
 
 % Virtual Address
 \matrix[matrix of nodes,
-        nodes={draw, minimum height=7mm, inner xsep=2mm, anchor=center},
+        nodes={addrfield},
         column sep=-\pgflinewidth,
-        row sep=0pt,
         ampersand replacement=\&] (vaddr) {
-  |[minimum width=1.8cm]| VPN \&
-  |[minimum width=3.2cm]| Page Offset (q bits) \\
+  |[fill=vpncolor, minimum width=2.2cm]| VPN \&
+  |[fill=offsetcolor, minimum width=4cm]| Page Offset (q bits) \\
 };
+\node[lbl, left=3mm of vaddr] {Virtual:};
 
-% Physical Address (cache indexing)
+% Physical Address (cache indexing) - aligned so set+disp is under offset
 \matrix[matrix of nodes,
-        nodes={draw, minimum height=7mm, inner xsep=2mm, anchor=center},
+        nodes={addrfield},
         column sep=-\pgflinewidth,
-        row sep=0pt,
-        below=1cm of vaddr.south east,
-        anchor=north east,
+        below=1cm of vaddr,
         ampersand replacement=\&] (cache) {
-  |[minimum width=1.2cm]| tag \&
-  |[minimum width=1.8cm]| set (c bits) \&
-  |[minimum width=1.2cm]| disp (b bits) \\
+  |[fill=pfncolor!50, minimum width=2.2cm]| tag \&
+  |[fill=memorycolor, minimum width=2cm]| set (c bits) \&
+  |[fill=highlightorange, minimum width=2cm]| disp (b bits) \\
 };
+\node[lbl, left=3mm of cache] {Physical:};
 
-% Labels - aligned using |- positioning
-\node[anchor=east] (vlabel) at ([xshift=-5mm]vaddr.west) {Virtual:};
-\node[anchor=east] at (vlabel.east |- cache) {Physical:};
+% Brace showing set+disp contained in offset
+\draw[decorate, decoration={brace, amplitude=4pt, mirror}, thick, correctgreen]
+  (cache-1-2.south west) -- (cache-1-3.south east)
+  node[midway, below=2pt, font=\scriptsize, correctgreen] {b + c $\leq$ q};
 
-% Arrow
+% Arrow from offset to set+disp region
 \draw[<-, thick, correctgreen]
-  (vaddr-1-2.south)
-  -- (cache-1-3.north -| vaddr-1-2.south)
-  node[midway, right, align=center] {contained\\in offset};
+  ([yshift=-1mm]vaddr-1-2.south) -- ([yshift=1mm]cache-1-2.north -| vaddr-1-2.south)
+  node[midway, right, font=\scriptsize] {contained in offset};
 
 \end{tikzpicture}
 \end{center}
-
+\vspace{-2mm}
 \textbf{Benefit:} Can access cache in parallel with TLB lookup!
 \end{frame}
 
