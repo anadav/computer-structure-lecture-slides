@@ -458,7 +458,7 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
     minicore/.style={draw, fill=blue!30, minimum width=0.28cm, minimum height=0.28cm, font=\tiny},
     minicache/.style={draw, fill=green!30, minimum width=0.7cm, minimum height=0.18cm, font=\tiny},
     ccxbox/.style={draw, dashed, inner sep=1pt},
-    ccdbox/.style={draw, thick, fill=blue!10, inner sep=2pt, inner ysep=10pt},
+    ccdbox/.style={draw, thick, fill=blue!10, inner sep=3pt},
     iobox/.style={draw, minimum width=0.8cm, minimum height=0.25cm, font=\tiny},
     iodbox/.style={draw, thick, fill=orange!10}
 ]
@@ -473,7 +473,8 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[blue] (ccx0-2-1) -- (ccx0-2-2);
 \draw[blue] (ccx0-1-2) -- (ccx0-2-1);
 \node[minicache, below=1pt of ccx0] (l3_0) {\tiny L3};
-\node[ccxbox, fit=(ccx0)(l3_0), label={[font=\tiny]above:CCX0}] (box0) {};
+\node[ccxbox, fit=(ccx0)(l3_0)] (box0) {};
+\node[font=\tiny, above=0pt of box0] (lbl0) {CCX0};
 
 % CCX 1
 \matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx1) at (-1.35,0) {
@@ -485,7 +486,8 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[blue] (ccx1-2-1) -- (ccx1-2-2);
 \draw[blue] (ccx1-1-2) -- (ccx1-2-1);
 \node[minicache, below=1pt of ccx1] (l3_1) {\tiny L3};
-\node[ccxbox, fit=(ccx1)(l3_1), label={[font=\tiny]above:CCX1}] (box1) {};
+\node[ccxbox, fit=(ccx1)(l3_1)] (box1) {};
+\node[font=\tiny, above=0pt of box1] (lbl1) {CCX1};
 
 % IF between CCXs in CCD1
 \draw[<->, red, thick] (box0.east) -- (box1.west);
@@ -501,7 +503,8 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[blue] (ccx2-2-1) -- (ccx2-2-2);
 \draw[blue] (ccx2-1-2) -- (ccx2-2-1);
 \node[minicache, below=1pt of ccx2] (l3_2) {\tiny L3};
-\node[ccxbox, fit=(ccx2)(l3_2), label={[font=\tiny]above:CCX2}] (box2) {};
+\node[ccxbox, fit=(ccx2)(l3_2)] (box2) {};
+\node[font=\tiny, above=0pt of box2] (lbl2) {CCX2};
 
 % CCX 3
 \matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx3) at (2.85,0) {
@@ -513,15 +516,16 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[blue] (ccx3-2-1) -- (ccx3-2-2);
 \draw[blue] (ccx3-1-2) -- (ccx3-2-1);
 \node[minicache, below=1pt of ccx3] (l3_3) {\tiny L3};
-\node[ccxbox, fit=(ccx3)(l3_3), label={[font=\tiny]above:CCX3}] (box3) {};
+\node[ccxbox, fit=(ccx3)(l3_3)] (box3) {};
+\node[font=\tiny, above=0pt of box3] (lbl3) {CCX3};
 
 % IF between CCXs in CCD2
 \draw[<->, red, thick] (box2.east) -- (box3.west);
 
 % CCD boxes on background layer
 \begin{scope}[on background layer]
-\node[ccdbox, fit=(box0)(box1), label={[font=\scriptsize\bfseries]above:CCD 1}] (ccd1) {};
-\node[ccdbox, fit=(box2)(box3), label={[font=\scriptsize\bfseries]above:CCD 2}] (ccd2) {};
+\node[ccdbox, fit=(box0)(box1)(lbl0)(lbl1), label={[font=\scriptsize\bfseries]above:CCD 1}] (ccd1) {};
+\node[ccdbox, fit=(box2)(box3)(lbl2)(lbl3), label={[font=\scriptsize\bfseries]above:CCD 2}] (ccd2) {};
 \end{scope}
 
 % IF between CCDs
