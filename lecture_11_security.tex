@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, backgrounds, fit, shadows}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, backgrounds, fit, shadows, shapes.callouts}
 \usepackage[siunitx]{circuitikz}
 \usepackage{tcolorbox}
 \usepackage[normalem]{ulem}
@@ -2734,7 +2734,7 @@ func:
         \begin{column}{0.4\textwidth}
             \centering
             \begin{tikzpicture}[
-                chainlink/.style={draw, thick, minimum width=2.2cm, minimum height=0.6cm,
+                chainlink/.style={draw, thick, text width=2.2cm, minimum height=0.6cm,
                                  align=center, font=\small, rounded corners=2pt},
                 verify/.style={->, thick, green!60!black}]
 
@@ -2780,8 +2780,14 @@ func:
             \textbf{PCR Extend Operation:}
             \begin{tcolorbox}[colback=gray!10]
                 \small
-                \texttt{PCR[i] = SHA256(PCR[i] || data)}
+                \texttt{PCR[i] = SHA256(PCR[i] \tikzmarknode{concatop}{||} data)}
             \end{tcolorbox}
+            \begin{tikzpicture}[remember picture, overlay]
+                \node[rectangle callout, draw, fill=yellow!20, font=\tiny,
+                      callout absolute pointer={(concatop.north)},
+                      above=0.15cm of concatop]
+                      {concatenation};
+            \end{tikzpicture}
             {\small Cannot directly overwrite -- only extend!}
 
             \vspace{0.2cm}
@@ -2797,7 +2803,7 @@ func:
         \end{column}
         \begin{column}{0.4\textwidth}
             \begin{tikzpicture}[
-                chainlink/.style={draw, thick, minimum width=2.2cm, minimum height=0.6cm,
+                chainlink/.style={draw, thick, text width=2.2cm, minimum height=0.6cm,
                                  align=center, font=\small, rounded corners=2pt},
                 verify/.style={->, thick, green!60!black},
                 measure/.style={->, thick, blue!60, dashed}]
@@ -2815,8 +2821,8 @@ func:
                     row sep=-\pgflinewidth,
                     right=1.5cm of uefi] (pcrs) {
                     PCR0 \\
-                    PCR1 \\
-                    PCR2 \\
+                    PCR4 \\
+                    PCR8 \\
                     |[fill=gray!20]| ... \\
                     PCR10 \\
                 };
@@ -2836,9 +2842,9 @@ func:
                 \draw[verify] (bootloader.south) -- (kernel.north)
                     node[midway, left, font=\tiny] {Verify};
 
-                % TPM measurement arrows (blue dashed) using ++(0.8cm,0) |- pattern
-                \draw[measure] (uefi.east) -- ++(0.8cm,0) |- (pcrs-1-1.west);
-                \draw[measure] (bootloader.east) -- ++(0.8cm,0) |- (pcrs-2-1.west);
+                % TPM measurement arrows (blue dashed) - smallest x for top PCR
+                \draw[measure] (uefi.east) -- ++(0.4cm,0) |- (pcrs-1-1.west);
+                \draw[measure] (bootloader.east) -- ++(0.6cm,0) |- (pcrs-2-1.west);
                 \draw[measure] (kernel.east) -- ++(0.8cm,0) |- (pcrs-3-1.west);
 
                 % Legend
@@ -2847,7 +2853,7 @@ func:
                     \textcolor{blue!60}{- -} Measure};
             \end{tikzpicture}
 
-            \vspace{0.2cm}
+            \vspace{-0.8cm}
             \begin{tcolorbox}[colback=blue!10, fontupper=\scriptsize]
                 \textbf{Key Difference:} Secure Boot \textit{blocks} unauthorized code;\\
                 Measured Boot \textit{records} what ran for later attestation
