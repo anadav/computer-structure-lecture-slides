@@ -593,8 +593,7 @@ The CPU addresses only using the process's virtual addresses. To access data in 
 \textbf{Step 1:} Determine field sizes
 \begin{itemize}
   \item PFN is \textcolor{correctgreen}{23 bits} (from PTE structure)
-  \item Physical address (32 bits) $=$ PFN $+$ offset
-  \item $\Rightarrow$ offset $= 32 - 23 = $ \textcolor{orange}{9 bits}
+  \item Physical address (32 bits) $=$ PFN $+$ offset $\Rightarrow$ offset $= 32 - 23 = $ \textcolor{orange}{9 bits}
   \item VPN $=$ [virt addr] $-$ [offset] $= 30 - 9 = $ \textcolor{blue}{21 bits}
 \end{itemize}
 
@@ -730,7 +729,7 @@ Physical address $=$ (PFN $\ll$ 9) $|$ offset $=$ (0x0001C0 $\ll$ 9) $|$ 0x100 $
 
 \section{Question 2: Cache Optimization}
 
-\begin{frame}{Question 2: Address Structure}
+\begin{frame}{Question 2a: Address Structure}
 \textbf{Given:}
 \begin{itemize}
 \item Virtual memory: $2^n$ bytes, page size: $2^q$ bytes
@@ -771,7 +770,7 @@ Physical address $=$ (PFN $\ll$ 9) $|$ offset $=$ (0x0001C0 $\ll$ 9) $|$ 0x100 $
 \end{center}
 \end{frame}
 
-\begin{frame}{Question 2: Cache and Virtual Memory Optimization}
+\begin{frame}{Question 2b: Cache and Virtual Memory Optimization}
 \textbf{Question:} What speedup can be achieved if $q \geq b + c$?
 
 Where:
@@ -781,11 +780,12 @@ Where:
 \item Direct-mapped cache: $2^c$ blocks, block size: $2^b$ bytes
 \end{itemize}
 
+\pause
 \textbf{Answer:} If $q \geq b + c$, then page offset contains both set and displacement fields
 
 \begin{center}
 \begin{tikzpicture}[scale=0.85,
-  addrfield/.style={draw, minimum height=6mm, text depth=0.5ex, inner sep=2mm, font=\small},
+  addrfield/.style={draw, minimum height=6mm, text height=1.5ex, text depth=0.5ex, inner sep=2mm, font=\small},
   lbl/.style={font=\small},
 ]
 
@@ -818,7 +818,7 @@ Where:
 % Brace showing set+disp contained in offset
 \draw[decorate, decoration={brace, amplitude=3pt, mirror}, thick, correctgreen]
   (cache-1-2.south west) -- (cache-1-3.south east)
-  node[midway, below=1pt, font=\scriptsize, correctgreen] {b + c $\leq$ q};
+  node[midway, below=1pt, font=\scriptsize, correctgreen] {$q \geq b + c$};
 
 \end{tikzpicture}
 \end{center}
