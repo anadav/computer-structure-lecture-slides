@@ -385,50 +385,6 @@
 \end{frame}
 
 
-% Slide 6: Modern Examples
-\begin{frame}{Modern CPU Examples}
-\begin{center}
-\vspace{-3mm}
-\footnotesize
-\begin{tabular}{l|c|c|c|c}
-\toprule
-\textbf{CPU} & \textbf{Cores/Die} & \textbf{Dies/Pkg} & \textbf{Interconnect} & \textbf{Notes} \\
-\midrule
-Intel Core i9-13900K & 24 (8P+16E) & 1 & Ring + Fabric & Monolithic \\
-Intel Xeon Platinum & up to 40 & 1 & Mesh & Monolithic, tiles \\
-\midrule
-AMD Ryzen 9 7950X & 16 & 2 CCD + 1 IOD & IF (intra \& inter) & Chiplet \\
-AMD EPYC 9654 & 96 & 12 CCD + 1 IOD & IF & Massive chiplet \\
-\midrule
-Apple M2 Ultra & 24 & 2 & UltraFusion & Die-to-die bridge \\
-\midrule
-Intel Sapphire Rapids & up to 60 & 4 & EMIB bridges & Multi-tile \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\vspace{1mm}
-\begin{columns}[T]
-\column{0.4\textwidth}
-\textbf{Monolithic Advantages:}
-\begin{itemize}
-\item Lower latency
-\item Simpler software model
-\item No die-to-die overhead
-\end{itemize}
-
-\column{0.6\textwidth}
-\textbf{Multi-Die Advantages:}
-\begin{itemize}
-\item Higher core counts
-\item Better yields
-\item Mix-and-match configs, reusable components
-\end{itemize}
-\end{columns}
-
-\vspace{1mm}
-\textbf{Software must adapt for optimal performance!}
-\end{frame}
 
 
 \section{Interconnects and Multi-Core Systems}
@@ -510,6 +466,7 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \begin{center}
 \begin{tikzpicture}[scale=0.65,
     core/.style={draw, rectangle, fill=blue!30, minimum width=0.75cm, minimum height=0.5cm, font=\tiny},
+    corewide/.style={core, text width=0.55cm},
     cache/.style={draw, rectangle, fill=green!30, minimum width=2.5cm, minimum height=0.3cm},
     mc/.style={draw, rectangle, fill=orange!30, minimum width=0.8cm, minimum height=0.3cm}
 ]
@@ -522,14 +479,14 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[thick, blue] (0,0) circle (1.15cm);
 % Add cores on the ring with visible numbers
 \node[core] (c0) at (90:1.15) {C0};
-\node[core] (c1) at (0:1.15) {C1};
+\node[corewide, align=right] (c1) at (0:1.15) {C1};
 \node[core] (c2) at (270:1.15) {C2};
-\node[core] (c3) at (180:1.15) {C3};
-% L3 slices inside the ring (not overlapping cores)
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,0.4) {L3};
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0.4,0) {L3};
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,-0.4) {L3};
-\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (-0.4,0) {L3};
+\node[corewide, align=left] (c3) at (180:1.15) {C3};
+% L3 slices inside the ring (shifted towards their cores)
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,0.65) {L3};
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0.65,0) {L3};
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (0,-0.65) {L3};
+\node[cache, minimum width=0.35cm, minimum height=0.22cm, font=\tiny] at (-0.65,0) {L3};
 
 \node[mc] (ring_mc) at (0,-2.2) {\tiny MC};
 \draw[<->, thick] (c2) -- (ring_mc.north);
@@ -548,24 +505,33 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \begin{scope}[shift={(2.5,0)}]
 \node at (0, 2.4) {\textbf{Mesh}};
 \node at (0, 1.9) {\footnotesize (Intel Xeon SP)};
-% Draw mesh with integrated L3
-\foreach \x in {-1,0,1} {
-    \foreach \y in {-1,0,1} {
-        \node[core] (m\x\y) at (\x*0.7,\y*0.7) {\tiny};
-        \node[cache, minimum width=0.25cm, minimum height=0.15cm] at (\x*0.7+0.15,\y*0.7-0.15) {\tiny};
+% Draw mesh as 3x3 matrix of cores
+\matrix[matrix of nodes, nodes={core, minimum width=0.6cm, minimum height=0.45cm},
+        row sep=0.25cm, column sep=0.25cm, ampersand replacement=\&] (mesh) {
+    C0 \& C1 \& C2 \\
+    C3 \& C4 \& C5 \\
+    C6 \& C7 \& C8 \\
+};
+% Add small L3 slice inside each core
+\foreach \i in {1,2,3} {
+    \foreach \j in {1,2,3} {
+        \node[fill=green!30, draw, minimum width=0.2cm, minimum height=0.15cm, inner sep=0, anchor=south west]
+            at ([xshift=1pt, yshift=1pt]mesh-\i-\j.south west) {};
     }
 }
-% Draw connections
-\foreach \x in {-1,0,1} {
-    \draw[blue, thick] (\x*0.7,-1*0.7) -- (\x*0.7,1*0.7);
+% Draw mesh connections
+\foreach \i in {1,2,3} {
+    \draw[blue, thick] (mesh-\i-1.east) -- (mesh-\i-2.west);
+    \draw[blue, thick] (mesh-\i-2.east) -- (mesh-\i-3.west);
 }
-\foreach \y in {-1,0,1} {
-    \draw[blue, thick] (-1*0.7,\y*0.7) -- (1*0.7,\y*0.7);
+\foreach \j in {1,2,3} {
+    \draw[blue, thick] (mesh-1-\j.south) -- (mesh-2-\j.north);
+    \draw[blue, thick] (mesh-2-\j.south) -- (mesh-3-\j.north);
 }
-\node[mc] (mesh_mc1) at (-0.7,-2) {\tiny MC};
-\node[mc] (mesh_mc2) at (0.7,-2) {\tiny MC};
-\draw[<->, thick] (m-1-1) -- (mesh_mc1.north);
-\draw[<->, thick] (m1-1) -- (mesh_mc2.north);
+\node[mc] (mesh_mc1) at ([yshift=-0.8cm]mesh-3-1.south) {\tiny MC};
+\node[mc] (mesh_mc2) at ([yshift=-0.8cm]mesh-3-3.south) {\tiny MC};
+\draw[<->, thick] (mesh-3-1.south) -- (mesh_mc1.north);
+\draw[<->, thick] (mesh-3-3.south) -- (mesh_mc2.north);
 
 % Annotations
 \node[text width=5cm, align=left] at (0,-4.2) {
@@ -583,32 +549,30 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \node at (0, 1.9) {\footnotesize (AMD Zen)};
 
 % CCX 0
-\begin{scope}[shift={(-1.2,0)}]
-\draw[dashed, thick] (-0.8,-0.8) rectangle (0.8,0.8);
-\foreach \i in {0,1,2,3} {
-    \node[core] (z0\i) at ({45+\i*90}:0.45) {\tiny};
-}
-\node[cache, minimum width=0.8cm, minimum height=0.2cm] at (0,-0.5) {\tiny L3};
-\node at (0,0) {\tiny CCX0};
-\end{scope}
+\matrix[matrix of nodes, nodes={core, minimum width=0.55cm, minimum height=0.4cm},
+        row sep=0.1cm, column sep=0.1cm, ampersand replacement=\&] (ccx0) at (-2.0,0.15) {
+    C0 \& C1 \\
+    C2 \& C3 \\
+};
+\node[cache, minimum width=1.2cm, minimum height=0.22cm, below=1pt of ccx0] (l3a) {\tiny L3};
+\node[draw, dashed, thick, fit=(ccx0) (l3a), inner sep=2pt, label={[font=\tiny]above:CCX0}] (box0) {};
 
 % CCX 1
-\begin{scope}[shift={(1.2,0)}]
-\draw[dashed, thick] (-0.8,-0.8) rectangle (0.8,0.8);
-\foreach \i in {0,1,2,3} {
-    \node[core] (z1\i) at ({45+\i*90}:0.45) {\tiny};
-}
-\node[cache, minimum width=0.8cm, minimum height=0.2cm] at (0,-0.5) {\tiny L3};
-\node at (0,0) {\tiny CCX1};
-\end{scope}
+\matrix[matrix of nodes, nodes={core, minimum width=0.55cm, minimum height=0.4cm},
+        row sep=0.1cm, column sep=0.1cm, ampersand replacement=\&] (ccx1) at (2.0,0.15) {
+    C4 \& C5 \\
+    C6 \& C7 \\
+};
+\node[cache, minimum width=1.2cm, minimum height=0.22cm, below=1pt of ccx1] (l3b) {\tiny L3};
+\node[draw, dashed, thick, fit=(ccx1) (l3b), inner sep=2pt, label={[font=\tiny]above:CCX1}] (box1) {};
 
 % Infinity Fabric interconnect
-\draw[<->, ultra thick, red] (-0.4,0) -- node[above, font=\tiny] {IF} (0.4,0);
+\draw[<->, ultra thick, red] (box0.east) -- node[above, font=\tiny] {IF} (box1.west);
 
 % Memory controller
 \node[mc] (ifmc) at (0,-2) {\tiny MC};
-\draw[<->, thick] (-1.2,-0.8) |- (ifmc.west);
-\draw[<->, thick] (1.2,-0.8) |- (ifmc.east);
+\draw[<->, thick] (l3a.south) |- (ifmc.west);
+\draw[<->, thick] (l3b.south) |- (ifmc.east);
 
 % Annotations
 \node[text width=5cm, align=left] at (0,-4.2) {
@@ -3635,6 +3599,50 @@ HDD & & $\sim$5--10 ms \\
 
 \vspace{0.2cm}
 \textbf{Takeaway:} Access memory in cache-line-sized chunks for best performance
+\end{frame}
+% Slide 6: Modern Examples
+\begin{frame}{Modern CPU Examples}
+\begin{center}
+\vspace{-3mm}
+\footnotesize
+\begin{tabular}{l|c|c|c|c}
+\toprule
+\textbf{CPU} & \textbf{Cores/Die} & \textbf{Dies/Pkg} & \textbf{Interconnect} & \textbf{Notes} \\
+\midrule
+Intel Core i9-13900K & 24 (8P+16E) & 1 & Ring + Fabric & Monolithic \\
+Intel Xeon Platinum & up to 40 & 1 & Mesh & Monolithic, tiles \\
+\midrule
+AMD Ryzen 9 7950X & 16 & 2 CCD + 1 IOD & IF (intra \& inter) & Chiplet \\
+AMD EPYC 9654 & 96 & 12 CCD + 1 IOD & IF & Massive chiplet \\
+\midrule
+Apple M2 Ultra & 24 & 2 & UltraFusion & Die-to-die bridge \\
+\midrule
+Intel Sapphire Rapids & up to 60 & 4 & EMIB bridges & Multi-tile \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1mm}
+\begin{columns}[T]
+\column{0.4\textwidth}
+\textbf{Monolithic Advantages:}
+\begin{itemize}
+\item Lower latency
+\item Simpler software model
+\item No die-to-die overhead
+\end{itemize}
+
+\column{0.6\textwidth}
+\textbf{Multi-Die Advantages:}
+\begin{itemize}
+\item Higher core counts
+\item Better yields
+\item Mix-and-match configs, reusable components
+\end{itemize}
+\end{columns}
+
+\vspace{1mm}
+\textbf{Software must adapt for optimal performance!}
 \end{frame}
 \fi
 
