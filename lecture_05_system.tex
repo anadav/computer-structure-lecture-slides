@@ -71,7 +71,7 @@
 \node[level, fill=purple!20] (system) at (0,5.5) {System};
 
 % Descriptions - using style with reduced spacing
-\node[desc] (trans_desc) at ([xshift=0.4cm]trans.east) {Billions of switches (5-10nm)};
+\node[desc] (trans_desc) at ([xshift=0.4cm]trans.east) {Billions of switches (3-5nm)};
 \node[desc] at (trans_desc.west |- core) {Execution unit + L1/L2 (1-2 threads)};
 \node[desc] at (trans_desc.west |- tile) {Core(s) + L3 slice + interconnect};
 \node[desc] at (trans_desc.west |- die) {Complete silicon chip (mono/chiplet)};
@@ -79,7 +79,7 @@
 \node[desc] at (trans_desc.west |- system) {Multiple sockets + memory + I/O};
 
 % Examples on left - using style
-\node[example] (trans_ex) at ([xshift=-0.4cm]trans.west) {7nm = 10M+/mm²};
+\node[example] (trans_ex) at ([xshift=-0.4cm]trans.west) {3nm = 100M+/mm²};
 \node[example] at (trans_ex.east |- core) {Golden Cove, Zen 4};
 \node[example] at (trans_ex.east |- tile) {2-core tile};
 \node[example] at (trans_ex.east |- die) {CCD, Alder Lake};
@@ -130,7 +130,7 @@
 \item \textbf{Everything else} on the chip
 \item Contains:
   \begin{itemize}
-  \item Memory controllers
+  \item Memory controllers (MC)
   \item Last Level Cache (LLC/L3)
   \item PCIe controllers
   \item Interconnect (ring/mesh)
@@ -214,76 +214,7 @@
 \end{columns}
 \end{frame}
 
-% Slide 1: Modern CPU Architecture Overview
-\begin{frame}{Modern Multi-Core CPU Architecture}
-\begin{columns}[T]
-\column{0.55\textwidth}
-\textbf{Hierarchy of Components:}
-\begin{enumerate}
-\item \textbf{Core}: Execution units + L1/L2 cache
-\item \textbf{Socket/Package}: Multiple cores + shared L3 + memory controller
-\item \textbf{System}: Multiple sockets + memory
-\end{enumerate}
-
-\vspace{0.3cm}
-\textbf{Two Types of Interconnects:}
-\begin{itemize}
-\item \textcolor{blue}{\textbf{Intra-socket}}: Connects cores within CPU
-\item \textcolor{red}{\textbf{Inter-socket}}: Connects different CPUs
-\end{itemize}
-
-\column{0.45\textwidth}
-\begin{center}
-\begin{tikzpicture}[
-    coreunit/.style={draw, fill=blue!30, minimum width=0.6cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
-    l2unit/.style={draw, fill=yellow!30, minimum width=0.4cm, minimum height=0.45cm, text depth=0.1ex, font=\tiny},
-    l3box/.style={draw, fill=green!30, minimum height=0.4cm, text depth=0.1ex, font=\scriptsize},
-    mcbox/.style={draw, fill=orange!30, minimum height=0.4cm, text depth=0.1ex, font=\tiny}
-]
-% Core 0 + L2 (top-left)
-\node[coreunit] (c0) at (0,0) {Core 0};
-\node[l2unit, right=0.02cm of c0] (l2c0) {L2};
-
-% Core 1 + L2 (top-right)
-\node[coreunit, right=0.12cm of l2c0] (c1) {Core 1};
-\node[l2unit, right=0.02cm of c1] (l2c1) {L2};
-
-% Core 2 + L2 (bottom-left)
-\node[coreunit, below=0.15cm of c0] (c2) {Core 2};
-\node[l2unit, right=0.02cm of c2] (l2c2) {L2};
-
-% Core 3 + L2 (bottom-right)
-\node[coreunit, right=0.12cm of l2c2] (c3) {Core 3};
-\node[l2unit, right=0.02cm of c3] (l2c3) {L2};
-
-% Ring interconnect - rectangle around cores
-\draw[thick, blue, rounded corners=3pt]
-    ([xshift=-0.08cm, yshift=0.08cm]c0.north west) --
-    ([xshift=0.08cm, yshift=0.08cm]l2c1.north east) --
-    ([xshift=0.08cm, yshift=-0.08cm]l2c3.south east) --
-    ([xshift=-0.08cm, yshift=-0.08cm]c2.south west) -- cycle;
-\node[blue, font=\tiny] at ($(l2c0.south east)!0.5!(c3.north west)$) {Ring};
-
-% Shared L3 - further down
-\node[l3box, below=0.5cm of $(c2.south)!0.5!(l2c3.south)$] (l3) {Shared L3 Cache};
-
-% Memory Controller - centered below L3
-\node[mcbox, below=0.15cm of l3] (mc) {Memory Controller};
-
-% Connection from ring to L3
-\draw[thick, blue, <->] ([yshift=-0.08cm]$(c2.south)!0.5!(l2c3.south)$) -- (l3.north);
-
-% Socket container - fitted around content
-\begin{scope}[on background layer]
-\node[draw, thick, dashed, fit=(c0)(l2c1)(l3)(mc), inner sep=0.15cm] (socket) {};
-\end{scope}
-\node[font=\bfseries\footnotesize, anchor=south] at (socket.north) {CPU Socket};
-
-\end{tikzpicture}
-\end{center}
-\end{columns}
-\end{frame}
-% Slide 2: Intra-Socket Interconnects
+% Slide: Intra-Socket Interconnects
 \begin{frame}{Intra-Socket Interconnects}
 Connect cores, caches, memory controllers, and I/O within a single CPU package
 
@@ -541,7 +472,8 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[<->, red, thick] (ccd1.south) -- (ccd1.south |- iod.north);
 \draw[<->, red, thick] (ccd2.south) -- (ccd2.south |- iod.north);
 
-\node[font=\small\bfseries, below=0.25cm of iod] {AMD Ryzen (Chiplet)};
+\node[font=\small\bfseries, below=0.25cm of iod] (title) {AMD Ryzen (Chiplet)};
+\node[font=\tiny, below=0.1cm of title, align=center] {CCX = Core Complex (4 cores + L3)\\CCD = Core Chiplet Die (2 CCX)\\IF = Infinity Fabric};
 \end{tikzpicture}
 \end{center}
 \end{columns}
@@ -659,6 +591,7 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \begin{itemize}
 \item Adding processors $\rightarrow$ memory becomes bottleneck
 \item How processors access memory defines the architecture
+\item Multi-socket systems use inter-socket interconnect (Intel UPI, AMD Infinity Fabric)
 \end{itemize}
 
 \end{frame}
@@ -920,20 +853,21 @@ Programming & Easy & Medium & Hard \\
 \begin{frame}{NUMA Node Topology}
 \begin{columns}[T]
 \column{0.45\textwidth}
-\textbf{Key Concepts:}
-\begin{itemize}
-\item \textbf{NUMA Node}: CPU cores + local memory
-\item \textbf{Socket}: Physical CPU package
-\item \textbf{Distance}: Relative memory access cost
-\item \textbf{Affinity}: Binding threads/memory to nodes
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Typical 2-Socket System:}
+\textbf{Performance Impact:}
 \begin{itemize}
 \item Local memory: $\sim$100 cycles
 \item Remote memory: $\sim$150-200 cycles
-\item Can be 50-100\% slower!
+\item Can be 50--100\% slower!
+\item Interconnect bandwidth limited
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Key Concepts:}
+\begin{itemize}
+\item \textbf{Distance}: Relative memory access cost
+\item \textbf{Affinity}: Binding threads/memory to nodes
+\item Distance matrix exposed to software\\
+      {\footnotesize (e.g., \texttt{numactl --hardware})}
 \end{itemize}
 
 \column{0.55\textwidth}
@@ -1692,10 +1626,12 @@ Bandwidth: HBM3 delivers $\sim$800 GB/s per stack vs $\sim$50 GB/s for DDR5
 % Base Die (positioned relative to substrate)
 \node[base, minimum width=3.8cm, minimum height=0.8cm, anchor=south west, text width=3.5cm]
   (basedie) at (pbump0.north -| substrate.west) {Base Die};
+% Base Die highlight on overlay 3
+\only<3>{\draw[red, ultra thick, rounded corners=2pt] ([xshift=-1mm,yshift=-1mm]basedie.south west) rectangle ([xshift=1mm,yshift=1mm]basedie.north east);}
 
-% Base Logic Die (positioned relative to Base Die, to its right)
-\node[base, fill=basecolor!80, minimum width=5.8cm, minimum height=0.8cm, anchor=west]
-  (baselogic) at ([xshift=4mm]basedie.east) {Base Logic Die};
+% Processor Die (positioned relative to Base Die, to its right)
+\node[base, fill=purple!50, minimum width=5.8cm, minimum height=0.8cm, anchor=west]
+  (baselogic) at ([xshift=4mm]basedie.east) {Processor Die};
 
 % PHY blocks
 \node[phy, fill=emibcolor!70, minimum width=0.7cm, minimum height=0.4cm, anchor=south east]
@@ -1705,6 +1641,8 @@ Bandwidth: HBM3 delivers $\sim$800 GB/s per stack vs $\sim$50 GB/s for DDR5
 
 \node[emib, fill=emibcolor!90, minimum width=3.4cm, minimum height=0.4cm, anchor=north west, align=right, text width=3.2cm]
   (emib) at ([xshift=-2mm]phy0.west |- substrate.north) {EMIB};
+% EMIB highlight on overlay 4
+\only<4>{\draw[red, ultra thick, rounded corners=2pt] ([xshift=-1mm,yshift=-1mm]emib.south west) rectangle ([xshift=1mm,yshift=1mm]emib.north east);}
 
 
 
@@ -1749,18 +1687,6 @@ Bandwidth: HBM3 delivers $\sim$800 GB/s per stack vs $\sim$50 GB/s for DDR5
 
 
 
-% F2F µBumps (gray circles above Base Logic Die, using calc)
-\foreach \i in {0,1,...,8} {
-  \node[graybump, minimum size=0.5mm] (f2fbump0-\i) at ([xshift=-2mm - \i * 3mm]baselogic.north east) {};
-  \node[graybump, minimum size=0.5mm] (f2fbump1-\i) at ([xshift=2mm + \i * 3mm]baselogic.north west) {};
-  %\node[graybump, minimum size=0.5mm] at ($(baselogic.north west) + (\x,0.06)$) {};
-}
-
-% Compute Dies (positioned above F2F µBumps)
-\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south west]
-  (compute1) at (f2fbump1-7.north -| baselogic.west) {Compute/FPGA/\\Mem Die};
-\node[compute, minimum width=2.8cm, minimum height=0.55cm, align=center, anchor=south east]
-  (compute0) at (f2fbump1-7.north -| baselogic.east) {Compute/FPGA/\\Mem Die};
 
 % Interconnect lines
 %\draw[gray!40] (5.0,2.2) -- (5.0,2.45) -- (8.5,2.45) -- (8.5,2.7);
@@ -1771,27 +1697,25 @@ Bandwidth: HBM3 delivers $\sim$800 GB/s per stack vs $\sim$50 GB/s for DDR5
 %  \node[graybump, minimum size=1mm] (emibump\i) at ([xshift=33mm + \i * 3mm]basedie.north west) {};
 %}
 
-% Annotations
-%\draw[->, thick] (-1.5,0.6) -- (0.4,0.9);
-\node[label, anchor=east] (packagetrace) at ([xshift=-1cm]substrate.west) {\shortstack{Standard\\Package Trace}};
-\draw[->, thick] (packagetrace.east) -- (substrate.west);
-
-%\draw[->, thick] (-1.2,1.3) -- (0.5,1.7);
-\node[label, anchor=east] (bumpslabel) at ([xshift=-1.5cm]pbump0) {Bumps};
-\draw[->, thick] (bumpslabel.east) -- (pbump0.west);
+% Annotations - Stage 1: Package Overview
+\only<1>{
+  \node[label, anchor=east] (packagetrace) at ([xshift=-1cm]substrate.west) {\shortstack{Standard\\Package Trace}};
+  \draw[->, thick] (packagetrace.east) -- (substrate.west);
+  \node[label, anchor=east] (bumpslabel) at ([xshift=-1.5cm]pbump0) {Bumps};
+  \draw[->, thick] (bumpslabel.east) -- (pbump0.west);
+  \node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=1mm]ball0) {Package\\Balls};
+  \draw[->, thick] (packageballs.east) -- (ball0.west);
+}
 
 \foreach \i in {0,1,...,3} {
   \draw[very thin] (pbump\i.south) -- ++(0,-1cm) -| (ball\i.north);
-  %\draw[->, thick] ([xshift=-5mm]ball\i) -- ([xshift=-\ballRadius cm]ball\i);
 }
 
-%\draw[->, thick] ([xshift=-5mm]ball0) -- ([xshift=-\ballRadius cm]ball0);
-\node[label, anchor=east, align=center] (packageballs) at ([xshift=-1.5cm,yshift=1mm]ball0) {Package\\Balls};
-\draw[->, thick] (packageballs.east) -- (ball0.west);
-
-%\draw[->, thick] (packageballs.east) -- (ball0.west);
-\node[label] (tsvlabel) at ([xshift=10mm]tsv3-0.east) {TSV};
-\draw[->, thick] (tsvlabel.west) -- (tsv3-0.east);
+% Annotations - Stage 2: HBM Stack
+\only<2>{
+  \node[label] (tsvlabel) at ([xshift=10mm]tsv3-0.east) {TSV};
+  \draw[->, thick] (tsvlabel.west) -- (tsv3-0.east);
+}
 
 %\draw[->, thick] (4.3,4.3) -- (3.3,3.7);
 %\node[label] (ubumps) at (4.5,4.5) {µBumps};
@@ -2331,105 +2255,8 @@ Reliable transmission of bits across the physical medium
 \end{enumerate}
 \end{frame}
 
-% Slide: UEFI
-\begin{frame}{UEFI: Modern Firmware Interface}
-\textbf{UEFI (Unified Extensible Firmware Interface)}
 
-\vspace{0.3cm}
-\begin{columns}[T]
-\column{0.48\textwidth}
-\textbf{Key Features:}
-\begin{itemize}
-\item Modular architecture
-\item Supports GPT partitions
-\item Secure Boot capability
-\item 64-bit addressing
-\item Network boot support
-\item Faster boot times
-\end{itemize}
 
-\column{0.48\textwidth}
-\textbf{Responsibilities:}
-\begin{itemize}
-\item Hardware initialization
-\item POST execution
-\item Boot device selection
-\item Load boot loader
-\item \textcolor{blue!70!black}{Provide hardware info to OS}
-\end{itemize}
-\end{columns}
-
-\vspace{0.5cm}
-\begin{block}{Hardware Discovery}
-UEFI prepares hardware description tables for the operating system to discover available devices and their configuration
-\end{block}
-\end{frame}
-
-% Slide: POST and Hardware Initialization
-\begin{frame}{Power-On Self-Test (POST) and Initialization}
-\textbf{Firmware performs POST to verify hardware:}
-
-\begin{columns}[T]
-\column{0.5\textwidth}
-\textbf{Hardware Tests:}
-\begin{itemize}
-\item CPU functionality
-\item Memory (DRAM) test
-\item Chipset registers
-\item Storage controllers
-\item Keyboard/input devices
-\item Serial/parallel ports
-\item Display adapter
-\end{itemize}
-
-\column{0.5\textwidth}
-\textbf{Initialization Tasks:}
-\begin{itemize}
-\item Initialize power management
-\item Configure PCIe devices
-\item Set up interrupt controllers
-\item Initialize memory controller
-\item Apply CPU microcode patches
-\item Read system configuration
-\item Display system summary
-\end{itemize}
-\end{columns}
-
-\vspace{0.3cm}
-\begin{alertblock}{Microcode Updates}
-Firmware may contain CPU microcode patches to fix hardware bugs before OS loads
-\end{alertblock}
-\end{frame}
-
-% Slide: Boot Device Selection and OS Load
-\begin{frame}{Boot Device Selection and OS Loading}
-\textbf{After POST completes:}
-
-\vspace{0.3cm}
-\textbf{1. Boot Device Selection}
-\begin{itemize}
-\item Firmware searches for bootable devices in priority order
-\item Common boot order: NVMe/SSD, USB, Network (PXE), DVD
-\item UEFI looks for EFI System Partition (ESP) with boot loaders
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{2. Boot Loader Execution}
-\begin{itemize}
-\item Firmware loads and executes boot loader (e.g., GRUB, Windows Boot Manager)
-\item Boot loader reads configuration and presents OS selection menu
-\item Loads OS kernel into memory
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{3. Operating System Initialization}
-\begin{itemize}
-\item OS kernel takes control from boot loader
-\item Loads device drivers and system services
-\item Mounts file systems
-\item Starts user-space processes
-\end{itemize}
-\end{frame}
 
 % New section: Device Discovery
 \section{Hardware Discovery}
@@ -2462,75 +2289,6 @@ Flattened Device Tree (FDT)\\
 \end{columns}
 \end{frame}
 
-% Slide: ACPI
-\begin{frame}{ACPI: x86 Hardware Discovery}
-\textbf{ACPI (Advanced Configuration and Power Interface)}
-
-\vspace{0.3cm}
-\begin{columns}[T]
-\column{0.48\textwidth}
-\textbf{What it provides:}
-\begin{itemize}
-\item CPU topology and features
-\item Memory map
-\item Interrupt routing (APIC/IOAPIC)
-\item PCIe configuration
-\item Power management info
-\item Thermal management
-\item Device configuration
-\end{itemize}
-
-\column{0.48\textwidth}
-\textbf{How it works:}
-\begin{itemize}
-\item Firmware creates ACPI tables
-\item Tables stored in memory
-\item Pointer passed to OS
-\item OS parses tables at boot
-\item Dynamic discovery via ACPI methods
-\end{itemize}
-\end{columns}
-
-\vspace{0.3cm}
-\begin{alertblock}{ACPI Tables}
-Examples: MADT (interrupts), SRAT (NUMA), DSDT (device description), MCFG (PCIe config)
-\end{alertblock}
-\end{frame}
-
-% Slide: Device Tree
-\begin{frame}{Device Tree: ARM/Embedded Hardware Discovery}
-\textbf{Device Tree (Flattened Device Tree - FDT)}
-
-\vspace{0.3cm}
-\begin{columns}[T]
-\column{0.48\textwidth}
-\textbf{What it provides:}
-\begin{itemize}
-\item CPU cores and clusters
-\item Memory regions
-\item Bus topology
-\item Device addresses
-\item Interrupt connections
-\item Clock sources
-\item Pin configurations
-\end{itemize}
-
-\column{0.48\textwidth}
-\textbf{How it works:}
-\begin{itemize}
-\item Tree structure describing HW
-\item Compiled from .dts source
-\item Bootloader passes to kernel
-\item OS traverses tree at boot
-\item Static description
-\end{itemize}
-\end{columns}
-
-\vspace{0.3cm}
-\begin{alertblock}{Device Tree Blob (DTB)}
-Binary representation of hardware topology, typically loaded from flash or passed by bootloader
-\end{alertblock}
-\end{frame}
 
 % Slide: ACPI vs Device Tree Comparison
 \begin{frame}{ACPI vs Device Tree: Key Differences}
@@ -2560,108 +2318,15 @@ Binary representation of hardware topology, typically loaded from flash or passe
 \textbf{Both solve the same problem:} Tell the OS what hardware exists and how to use it
 \end{frame}
 
-
-
-% Slide: Multi-Socket System
-\begin{frame}{Multi-Socket System (NUMA)}
-\begin{columns}[T]
-\column{0.5\textwidth}
-\textbf{Architecture:}
+% Summary Slide
+\begin{frame}{Summary}
 \begin{itemize}
-\item Multiple CMP chips per machine
-\item Each socket has local memory (NUMA)
-\item High-speed point-to-point interconnect
-  \begin{itemize}
-  \item Intel UPI, AMD Infinity Fabric
-  \end{itemize}
+\item \textbf{Hierarchy:} Transistors $\rightarrow$ Core $\rightarrow$ Die $\rightarrow$ Package $\rightarrow$ System
+\item \textbf{Multi-Processor:} UMA (simple) $\rightarrow$ NUMA (scalable) $\rightarrow$ Message Passing (clusters)
+\item \textbf{DRAM:} Banks, rows, columns; DDR generations double bandwidth
+\item \textbf{HBM:} 3D stacked DRAM with TSVs for GPUs/accelerators
+\item \textbf{PCIe:} Layered protocol for device connectivity
 \end{itemize}
-
-\vspace{0.3cm}
-\textbf{Cache Coherency (ccNUMA):}
-\begin{itemize}
-\item Shared address space across sockets
-\item Directory-based coherency protocol
-\item Hardware manages consistency
-\end{itemize}
-
-\column{0.5\textwidth}
-\begin{center}
-\begin{tikzpicture}[scale=0.6,
-    comp/.style={draw, minimum height=7mm, minimum width=12mm, font=\scriptsize, text depth=0.5ex, text height=1.5ex},
-    socket/.style={draw, thick, rounded corners, minimum width=2.2cm, minimum height=1.2cm, fill=gray!10, font=\scriptsize},
-    mem/.style={comp, fill=blue!20, minimum width=1.8cm}]
-
-% Socket 1 (top-left) - DDR above
-\node[socket] (s1) {Socket 1};
-\node[mem, above=3mm of s1] (ddr1) {DDR};
-
-% Socket 2 (top-right) - DDR above
-\node[socket, right=1.5cm of s1] (s2) {Socket 2};
-\node[mem, above=3mm of s2] (ddr2) {DDR};
-
-% Socket 3 (bottom-left) - DDR below
-\node[socket, below=2cm of s1] (s3) {Socket 3};
-\node[mem, below=3mm of s3] (ddr3) {DDR};
-
-% Socket 4 (bottom-right) - DDR below
-\node[socket, right=1.5cm of s3] (s4) {Socket 4};
-\node[mem, below=3mm of s4] (ddr4) {DDR};
-
-% IPL connections (fully connected)
-\draw[<->, very thick, red!60] (s1) -- (s2);
-\draw[<->, very thick, red!60] (s3) -- (s4);
-\draw[<->, very thick, red!60] (s1) -- (s3);
-\draw[<->, very thick, red!60] (s2) -- (s4);
-\draw[<->, very thick, red!60] (s1) -- (s4);
-\draw[<->, very thick, red!60] (s2) -- (s3);
-
-% Socket to memory connections
-\draw[<->, thick] (s1) -- (ddr1);
-\draw[<->, thick] (s2) -- (ddr2);
-\draw[<->, thick] (s3) -- (ddr3);
-\draw[<->, thick] (s4) -- (ddr4);
-
-\node[font=\tiny, red!70] at ($(s1)!0.5!(s4)$) {IPL};
-\end{tikzpicture}
-\end{center}
-\end{columns}
-\end{frame}
-
-% Slide: Server Systems
-\begin{frame}{Server Systems}
-\begin{columns}[T]
-\column{0.55\textwidth}
-\textbf{Server systems combine:}
-\begin{itemize}
-\item \textbf{SMP}: Multiple sockets per motherboard
-\item \textbf{CMP}: Multiple cores per socket
-\item \textbf{SMT}: Multiple threads per core
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Example: Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} E7-8890 V4}
-\begin{itemize}
-\item SMP: Up to 8 processors per board
-\item CMP: 24 cores per processor
-\item SMT: 2 threads per core
-\item Total: $8 \times 24 \times 2 = 384$ threads
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Blade servers:}
-\begin{itemize}
-\item Multiple blades per rack
-\item Blades connect via network (e.g., InfiniBand\textsuperscript{\textregistered})
-\end{itemize}
-
-\column{0.45\textwidth}
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figures/xeon_e7.jpeg}
-
-\vspace{0.3cm}
-\includegraphics[width=0.9\textwidth]{figures/server_blade.jpeg}
-\end{center}
-\end{columns}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3578,6 +3243,207 @@ Multiple machines & Cluster & Message Passing \\
 \item Server: CMP cores + Multi-socket (NUMA)
 \item Supercomputer: CMP + Multi-socket + Cluster
 \end{itemize}
+\end{frame}
+% Slide: UEFI
+\begin{frame}{UEFI: Modern Firmware Interface}
+\textbf{UEFI (Unified Extensible Firmware Interface)}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Key Features:}
+\begin{itemize}
+\item Modular architecture
+\item Supports GPT partitions
+\item Secure Boot capability
+\item 64-bit addressing
+\item Network boot support
+\item Faster boot times
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Responsibilities:}
+\begin{itemize}
+\item Hardware initialization
+\item POST execution
+\item Boot device selection
+\item Load boot loader
+\item \textcolor{blue!70!black}{Provide hardware info to OS}
+\end{itemize}
+\end{columns}
+
+\vspace{0.5cm}
+\begin{block}{Hardware Discovery}
+UEFI prepares hardware description tables for the operating system to discover available devices and their configuration
+\end{block}
+\end{frame}
+% Slide: POST and Hardware Initialization
+\begin{frame}{Power-On Self-Test (POST) and Initialization}
+\textbf{Firmware performs POST to verify hardware:}
+
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Hardware Tests:}
+\begin{itemize}
+\item CPU functionality
+\item Memory (DRAM) test
+\item Chipset registers
+\item Storage controllers
+\item Keyboard/input devices
+\item Serial/parallel ports
+\item Display adapter
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Initialization Tasks:}
+\begin{itemize}
+\item Initialize power management
+\item Configure PCIe devices
+\item Set up interrupt controllers
+\item Initialize memory controller
+\item Apply CPU microcode patches
+\item Read system configuration
+\item Display system summary
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{alertblock}{Microcode Updates}
+Firmware may contain CPU microcode patches to fix hardware bugs before OS loads
+\end{alertblock}
+\end{frame}
+% Slide: Boot Device Selection and OS Load
+\begin{frame}{Boot Device Selection and OS Loading}
+\textbf{After POST completes:}
+
+\vspace{0.3cm}
+\textbf{1. Boot Device Selection}
+\begin{itemize}
+\item Firmware searches for bootable devices in priority order
+\item Common boot order: NVMe/SSD, USB, Network (PXE), DVD
+\item UEFI looks for EFI System Partition (ESP) with boot loaders
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. Boot Loader Execution}
+\begin{itemize}
+\item Firmware loads and executes boot loader (e.g., GRUB, Windows Boot Manager)
+\item Boot loader reads configuration and presents OS selection menu
+\item Loads OS kernel into memory
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{3. Operating System Initialization}
+\begin{itemize}
+\item OS kernel takes control from boot loader
+\item Loads device drivers and system services
+\item Mounts file systems
+\item Starts user-space processes
+\end{itemize}
+\end{frame}
+% Slide: ACPI
+\begin{frame}{ACPI: x86 Hardware Discovery}
+\textbf{ACPI (Advanced Configuration and Power Interface)}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{What it provides:}
+\begin{itemize}
+\item CPU topology and features
+\item Memory map
+\item Interrupt routing (APIC/IOAPIC)
+\item PCIe configuration
+\item Power management info
+\item Thermal management
+\item Device configuration
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{How it works:}
+\begin{itemize}
+\item Firmware creates ACPI tables
+\item Tables stored in memory
+\item Pointer passed to OS
+\item OS parses tables at boot
+\item Dynamic discovery via ACPI methods
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{alertblock}{ACPI Tables}
+Examples: MADT (interrupts), SRAT (NUMA), DSDT (device description), MCFG (PCIe config)
+\end{alertblock}
+\end{frame}
+% Slide: Device Tree
+\begin{frame}{Device Tree: ARM/Embedded Hardware Discovery}
+\textbf{Device Tree (Flattened Device Tree - FDT)}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{What it provides:}
+\begin{itemize}
+\item CPU cores and clusters
+\item Memory regions
+\item Bus topology
+\item Device addresses
+\item Interrupt connections
+\item Clock sources
+\item Pin configurations
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{How it works:}
+\begin{itemize}
+\item Tree structure describing HW
+\item Compiled from .dts source
+\item Bootloader passes to kernel
+\item OS traverses tree at boot
+\item Static description
+\end{itemize}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{alertblock}{Device Tree Blob (DTB)}
+Binary representation of hardware topology, typically loaded from flash or passed by bootloader
+\end{alertblock}
+\end{frame}
+% Slide: Server Systems
+\begin{frame}{Server Systems}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Server systems combine:}
+\begin{itemize}
+\item \textbf{SMP}: Multiple sockets per motherboard
+\item \textbf{CMP}: Multiple cores per socket
+\item \textbf{SMT}: Multiple threads per core
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Example: Intel\textsuperscript{\textregistered} Xeon\textsuperscript{\textregistered} E7-8890 V4}
+\begin{itemize}
+\item SMP: Up to 8 processors per board
+\item CMP: 24 cores per processor
+\item SMT: 2 threads per core
+\item Total: $8 \times 24 \times 2 = 384$ threads
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Blade servers:}
+\begin{itemize}
+\item Multiple blades per rack
+\item Blades connect via network (e.g., InfiniBand\textsuperscript{\textregistered})
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{figures/xeon_e7.jpeg}
+
+\vspace{0.3cm}
+\includegraphics[width=0.9\textwidth]{figures/server_blade.jpeg}
+\end{center}
+\end{columns}
 \end{frame}
 \fi
 
