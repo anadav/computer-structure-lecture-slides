@@ -462,13 +462,12 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
     iobox/.style={draw, minimum width=0.8cm, minimum height=0.25cm, font=\tiny},
     iodbox/.style={draw, thick, fill=orange!10}
 ]
-% CCD 1
+% CCD 1: CCX0 and CCX1 side by side
 % CCX 0
-\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx0) at (-1.4,0.7) {
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx0) at (-2.5,0) {
     {} \& {} \\
     {} \& {} \\
 };
-% Crossbar in CCX0
 \draw[blue] (ccx0-1-1) -- (ccx0-1-2);
 \draw[blue] (ccx0-1-1) -- (ccx0-2-2);
 \draw[blue] (ccx0-2-1) -- (ccx0-2-2);
@@ -477,11 +476,10 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \node[ccxbox, fit=(ccx0)(l3_0), label={[font=\tiny]above:CCX0}] (box0) {};
 
 % CCX 1
-\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx1) at (-1.4,-0.7) {
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx1) at (-1.2,0) {
     {} \& {} \\
     {} \& {} \\
 };
-% Crossbar in CCX1
 \draw[blue] (ccx1-1-1) -- (ccx1-1-2);
 \draw[blue] (ccx1-1-1) -- (ccx1-2-2);
 \draw[blue] (ccx1-2-1) -- (ccx1-2-2);
@@ -490,15 +488,14 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \node[ccxbox, fit=(ccx1)(l3_1), label={[font=\tiny]above:CCX1}] (box1) {};
 
 % IF between CCXs in CCD1
-\draw[<->, red, thick] (box0.south) -- (box1.north);
+\draw[<->, red, thick] (box0.east) -- (box1.west);
 
-% CCD 2
+% CCD 2: CCX2 and CCX3 side by side
 % CCX 2
-\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx2) at (1.4,0.7) {
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx2) at (1.2,0) {
     {} \& {} \\
     {} \& {} \\
 };
-% Crossbar in CCX2
 \draw[blue] (ccx2-1-1) -- (ccx2-1-2);
 \draw[blue] (ccx2-1-1) -- (ccx2-2-2);
 \draw[blue] (ccx2-2-1) -- (ccx2-2-2);
@@ -507,11 +504,10 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \node[ccxbox, fit=(ccx2)(l3_2), label={[font=\tiny]above:CCX2}] (box2) {};
 
 % CCX 3
-\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx3) at (1.4,-0.7) {
+\matrix[matrix of nodes, nodes={minicore}, row sep=1pt, column sep=1pt, ampersand replacement=\&] (ccx3) at (2.5,0) {
     {} \& {} \\
     {} \& {} \\
 };
-% Crossbar in CCX3
 \draw[blue] (ccx3-1-1) -- (ccx3-1-2);
 \draw[blue] (ccx3-1-1) -- (ccx3-2-2);
 \draw[blue] (ccx3-2-1) -- (ccx3-2-2);
@@ -520,7 +516,7 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \node[ccxbox, fit=(ccx3)(l3_3), label={[font=\tiny]above:CCX3}] (box3) {};
 
 % IF between CCXs in CCD2
-\draw[<->, red, thick] (box2.south) -- (box3.north);
+\draw[<->, red, thick] (box2.east) -- (box3.west);
 
 % CCD boxes on background layer
 \begin{scope}[on background layer]
@@ -532,10 +528,10 @@ Connect cores, caches, memory controllers, and I/O within a single CPU package
 \draw[<->, red, ultra thick] (ccd1.east) -- node[above, font=\tiny] {IF} (ccd2.west);
 
 % I/O Die
-\node[iodbox, minimum width=3.5cm, minimum height=0.7cm, below=0.4cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
-\node[font=\scriptsize\bfseries] at ([yshift=0.1cm]iod.center) {I/O Die};
-\node[iobox, fill=orange!30] at ([xshift=-0.8cm, yshift=-0.12cm]iod.center) (iomc) {MC};
-\node[iobox, fill=purple!30] at ([xshift=0.8cm, yshift=-0.12cm]iod.center) (iopcie) {PCIe};
+\node[iodbox, minimum width=4.5cm, minimum height=0.7cm, below=0.4cm of $(ccd1.south)!0.5!(ccd2.south)$] (iod) {};
+\node[font=\scriptsize\bfseries] at (iod.center) {I/O Die};
+\node[iobox, fill=orange!30, anchor=west] at ([xshift=1mm]iod.west) (iomc) {MC};
+\node[iobox, fill=purple!30, anchor=east] at ([xshift=-1mm]iod.east) (iopcie) {PCIe};
 
 % IF to I/O Die
 \draw[<->, red, thick] (ccd1.south) -- (ccd1.south |- iod.north);
