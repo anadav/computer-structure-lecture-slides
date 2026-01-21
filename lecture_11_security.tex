@@ -1541,7 +1541,7 @@ func:
 \end{frame}
 
 \begin{frame}{EPT/NPT - Nested Page Tables}
-    \begin{columns}
+    \begin{columns}[T]
         \begin{column}{0.5\textwidth}
             \textbf{Problem:}
             \begin{itemize}
@@ -1550,120 +1550,105 @@ func:
                 \item Hypervisor must translate guest physical $\rightarrow$ host physical
             \end{itemize}
 
-            \vspace{0.1cm}
+            \vspace{0.2cm}
             \textbf{Solution: EPT/NPT}
             \begin{itemize}
                 \item \textbf{EPT}: Intel's Extended Page Tables
                 \item \textbf{NPT}: AMD's Nested Page Tables
                 \item Hardware-accelerated 2D page walk
             \end{itemize}
-
-            \vspace{0.1cm}
-            \textbf{Address Translation:}
-            \begin{enumerate}
-                \item Guest Virtual $\rightarrow$ Guest Physical (guest page tables)
-                \item Guest Physical $\rightarrow$ Host Physical (EPT/NPT)
-            \end{enumerate}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \textbf{Performance Impact:}
+            \textbf{Address Translation:}
+            \begin{enumerate}
+                \item Guest Virtual $\rightarrow$ Guest Physical\\
+                      {\small (guest page tables)}
+                \item Guest Physical $\rightarrow$ Host Physical\\
+                      {\small (EPT/NPT)}
+            \end{enumerate}
 
-            \begin{tcolorbox}[colback=yellow!10, title={\small Native (No Virtualization)}]
-                {\scriptsize
-                \textbf{4-level page walk:}
-                \begin{itemize}
-                    \item 4 memory accesses
-                    \item CR3 $\rightarrow$ PML4 $\rightarrow$ PDP $\rightarrow$ PD $\rightarrow$ PT
-                \end{itemize}
-                }
-            \end{tcolorbox}
-
-            \vspace{0.2cm}
-            \begin{tcolorbox}[colback=red!10, title={\small With EPT (Nested)}]
-                {\scriptsize
-                \textbf{Each guest PTE access needs EPT walk!}
-                \begin{itemize}
-                    \item Guest walk: 4 accesses
-                    \item Each access $\times$ 4 EPT walks
-                    \item \textbf{Total: up to $4 \times 5 = 20$ memory accesses}
-                \end{itemize}
-
-                \vspace{0.1cm}
-                \textbf{Mitigations:}
-                \begin{itemize}
-                    \item TLB caching (both guest and EPT)
-                    \item Large pages (2MB/1GB)
-                    \item Typically 2-3$\times$ slowdown
-                \end{itemize}
-                }
+            \vspace{0.3cm}
+            \begin{tcolorbox}[colback=blue!10]
+                \small
+                \textbf{Key:} Every guest memory access (including page table walks) must go through EPT translation
             \end{tcolorbox}
         \end{column}
     \end{columns}
 \end{frame}
 
 \begin{frame}{2D Page Walk with EPT/NPT}
-    \begin{center}
-        \begin{tikzpicture}[scale=0.85,
-            gbox/.style={draw, fill=blue!20, minimum width=0.9cm, minimum height=0.6cm, font=\tiny, align=center},
-            ebox/.style={draw, fill=orange!20, minimum width=0.9cm, minimum height=0.5cm, font=\tiny, align=center},
-            arrow/.style={->, thick, >=stealth}]
+    \begin{columns}[T]
+        \begin{column}{0.6\textwidth}
+            \centering
+            \begin{tikzpicture}
+                \matrix[matrix of nodes,
+                    ampersand replacement=\&,
+                    nodes={minimum width=1.0cm, text width=0.9cm, minimum height=0.5cm, font=\scriptsize, align=center},
+                    row 1/.style={nodes={fill=blue!20, draw, font=\scriptsize\bfseries}},
+                    row 2/.style={nodes={fill=orange!15, draw}},
+                    row 3/.style={nodes={fill=orange!15, draw}},
+                    row 4/.style={nodes={fill=orange!15, draw}},
+                    row 5/.style={nodes={fill=orange!15, draw}},
+                    row 6/.style={nodes={fill=orange!25, draw, font=\scriptsize\bfseries}},
+                    column 1/.style={nodes={draw=none, fill=none}},
+                    row sep=4pt,
+                    column sep=3pt] (m) {
+                    |[draw, fill=violet!30]| gCR3 \& gPML4 \& gPDPT \& gPD \& gPT \& GPA \\
+                    \& ePML4 \& ePML4 \& ePML4 \& ePML4 \& ePML4 \\
+                    \& ePDPT \& ePDPT \& ePDPT \& ePDPT \& ePDPT \\
+                    \& ePD \& ePD \& ePD \& ePD \& ePD \\
+                    \& ePT \& ePT \& ePT \& ePT \& ePT \\
+                    \& HPA \& HPA \& HPA \& HPA \& HPA \\
+                };
 
-            % Guest walk labels (horizontal) - top row
-            \node[font=\scriptsize\bfseries] at (0, 2.5) {GVA};
-            \node[font=\scriptsize\bfseries] at (1.5, 2.5) {gPML4};
-            \node[font=\scriptsize\bfseries] at (3, 2.5) {gPDPT};
-            \node[font=\scriptsize\bfseries] at (4.5, 2.5) {gPD};
-            \node[font=\scriptsize\bfseries] at (6, 2.5) {gPT};
-            \node[font=\scriptsize\bfseries] at (7.5, 2.5) {GPA};
+                % Guest walk arrow (horizontal above matrix)
+                \draw[->, thick, blue!70] (m-1-1.east) -- (m-1-2.west);
+                \draw[->, thick, blue!70] ([yshift=0.3cm]m-1-2.north west) -- ([yshift=0.3cm]m-1-6.north east)
+                    node[midway, above, font=\scriptsize] {Guest page walk (GVA $\rightarrow$ GPA)};
 
-            % Horizontal arrows for guest walk
-            \draw[arrow, blue!70] (0.4, 2.5) -- (1.1, 2.5);
-            \draw[arrow, blue!70] (1.9, 2.5) -- (2.6, 2.5);
-            \draw[arrow, blue!70] (3.4, 2.5) -- (4.1, 2.5);
-            \draw[arrow, blue!70] (4.9, 2.5) -- (5.6, 2.5);
-            \draw[arrow, blue!70] (6.4, 2.5) -- (7.1, 2.5);
+                % EPT walk label (vertical on left)
+                \node[font=\scriptsize, rotate=90, anchor=south] at ([xshift=-0.4cm]m-4-2.west) {EPT};
 
-            % EPT walks (vertical columns under each guest PT access)
-            \foreach \x/\label in {1.5/gPML4, 3/gPDPT, 4.5/gPD, 6/gPT, 7.5/Data} {
-                \node[ebox] at (\x, 1.5) {ePML4};
-                \node[ebox] at (\x, 0.8) {ePDPT};
-                \node[ebox] at (\x, 0.1) {ePD};
-                \node[ebox] at (\x, -0.6) {ePT};
-                \node[ebox, fill=green!20] at (\x, -1.3) {HPA};
+                % Downward arrows for each column (skip column 1 which is CR3)
+                \foreach \col in {2,3,4,5,6} {
+                    \draw[->, thin, orange!70] (m-1-\col.south) -- (m-2-\col.north);
+                }
 
-                % Vertical arrows
-                \draw[arrow, orange!70, thin] (\x, 2.2) -- (\x, 1.8);
-                \draw[arrow, orange!70, thin] (\x, 1.2) -- (\x, 1.1);
-                \draw[arrow, orange!70, thin] (\x, 0.5) -- (\x, 0.4);
-                \draw[arrow, orange!70, thin] (\x, -0.2) -- (\x, -0.3);
-                \draw[arrow, orange!70, thin] (\x, -0.9) -- (\x, -1.0);
-            }
+                % Callouts (shown on overlay 2)
+                \visible<2->{
+                    \node[draw, fill=blue!10, font=\tiny, align=left, rounded corners,
+                          above=0.5cm of m-1-4] (gnote) {g = guest};
 
-            % Labels
-            \node[font=\scriptsize, rotate=90] at (-0.8, 0.5) {EPT walk};
-            \node[font=\scriptsize] at (3.5, 3.1) {Guest page walk $\longrightarrow$};
+                    \node[draw, fill=orange!10, font=\tiny, align=left, rounded corners,
+                          left=0.1cm of m-3-2.west] (enote) {e = EPT};
 
-            % Access count annotation
-            \node[draw, fill=yellow!20, font=\scriptsize, align=left] at (9.5, 0.5) {
-                5 guest accesses\\
-                $\times$ 5 EPT each\\
-                = \textbf{25 total}\\[2pt]
-                {\tiny (TLB helps!)}
-            };
-        \end{tikzpicture}
-    \end{center}
-
-    \vspace{-0.2cm}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \small
-            \textbf{Guest page walk} (blue): GVA $\rightarrow$ GPA\\
-            Each step accesses guest page table in memory
+                    \node[draw, fill=green!10, font=\tiny, align=center, rounded corners,
+                          below=0.2cm of m-6-2] (hpanote) {reads gPML4\\content};
+                    \draw[->, thin] (hpanote.north) -- (m-6-2.south);
+                }
+            \end{tikzpicture}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \small
-            \textbf{EPT walk} (orange): GPA $\rightarrow$ HPA\\
-            Every guest memory access needs EPT translation
+        \begin{column}{0.4\textwidth}
+            \textbf{Performance:}
+
+            \vspace{0.1cm}
+            \begin{tcolorbox}[colback=blue!10, fontupper=\small, width=\textwidth-0.5cm]
+                \textbf{Native:} 4 + 1 accesses\\
+                {\scriptsize 4 page walk + data}
+            \end{tcolorbox}
+
+            \vspace{0.1cm}
+            \begin{tcolorbox}[colback=orange!15, fontupper=\small, width=\textwidth-0.5cm]
+                \textbf{With EPT:} \textbf{20} + 1\\
+                {\scriptsize 5 $\times$ 4 EPT + access}
+            \end{tcolorbox}
+
+            \vspace{0.1cm}
+            \textbf{Mitigations:}
+            \begin{itemize}
+                \item TLB caching
+                \item Large pages
+            \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
