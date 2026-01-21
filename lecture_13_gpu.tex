@@ -7,7 +7,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage[siunitx]{circuitikz}
-\usetikzlibrary{positioning, matrix, fit, backgrounds, shapes.callouts, tikzmark, calc}
+\usetikzlibrary{positioning, matrix, fit, backgrounds, shapes.callouts, tikzmark, calc, shapes.geometric, shapes.symbols}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{listings}
@@ -364,158 +364,111 @@
 
 \begin{frame}[fragile]{SM Architecture \& Warp Scheduling}
 \begin{center}
-\begin{tikzpicture}[
-    every node/.style={font=\tiny},
-    box/.style={draw, fill=#1, minimum height=1cm, align=center},
-    box/.default=gray!20
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\tiny, transform shape},
+    box/.style={draw, fill=#1, minimum height=7mm, align=center},
+    box/.default=white,
+    lane/.style={draw, minimum width=6mm, minimum height=5mm, align=center, font=\fontsize{4}{5}\selectfont},
+    alu/.style={draw, fill=white, isosceles triangle, isosceles triangle apex angle=60,
+                shape border rotate=-90, minimum width=4mm, minimum height=3mm, inner sep=0pt},
 ]
 
-\vspace{-0.2cm}
 % Instruction cache
-\node[box, minimum width=2cm, minimum height=1.2cm] (icache) at (0,0) {instruction\\cache};
+\node[box, minimum width=16mm, minimum height=10mm] (icache) at (0,0) {Instruction\\cache};
 
-% Warp scheduler box
-\node[box=blue!20, minimum width=7cm, minimum height=3cm, anchor=west]
-    (scheduler) at ([xshift=1cm]icache.east) {};
-\node[anchor=north, font=\small\itshape] at (scheduler.north) {warp scheduler};
+% Warp scheduler box with scoreboard
+\node[box, minimum width=65mm, minimum height=22mm, anchor=west]
+    (scheduler) at ([xshift=4mm]icache.east) {};
+\node[anchor=north, font=\scriptsize] at ([yshift=-1mm]scheduler.north) {Warp scheduler};
 
-% Scoreboard label and table in minipage
-\node[anchor=north west, yshift=-0.3cm] at (scheduler.north west) {
-\begin{minipage}{6cm}
-\textbf{\small scoreboard}
-
-\vspace{0.2cm}
-\tiny
+% Scoreboard table
+\node[anchor=north, yshift=-4mm] at (scheduler.north) {
+\fontsize{6}{7}\selectfont
 \begin{tabular}{|c|c|l|c|}
 \hline
 \textbf{Warp No.} & \textbf{Address} & \textbf{SIMD instructions} & \textbf{Operands?} \\
 \hline
 1 & 42 & ld.global.f64 & Ready \\
-\hline
 1 & 43 & mul.f64 & No \\
-\hline
 3 & 95 & shl.s32 & Ready \\
-\hline
 3 & 96 & add.s32 & No \\
-\hline
 8 & 11 & ld.global.f64 & Ready \\
-\hline
 8 & 12 & ld.global.f64 & Ready \\
 \hline
 \end{tabular}
-\end{minipage}
 };
+\node[anchor=south west, font=\scriptsize] at ([xshift=2mm, yshift=-4mm]scheduler.north west) {Scoreboard};
 
 % Arrow from instruction cache to scheduler
 \draw[->, thick] (icache.east) -- (scheduler.west);
 
-% Instruction register (muxdemux) - positioned to the right
-\node[muxdemux, muxdemux def={Rh=1, Lh=1, w=2.5, NT=1, NB=32, square pins=1},
-      external pins width=0, fill=yellow!20, font=\tiny, rotate=90, anchor=lpin 1]
-    (ireg) at ([xshift=1cm]scheduler.east) {instruction register};
+% Instruction register as rectangle
+\node[box, minimum width=100mm, minimum height=5mm, anchor=north]
+    (ireg) at ([yshift=-6mm]scheduler.south) {Instruction register};
 
 % Arrow from scheduler to instruction register
-\draw[->, thick] (scheduler.east) -- (ireg.lpin 1);
+\draw[->, thick] (scheduler.south) -- (ireg.north);
 
-% Dashed lines for unconnected bottom pins
-\foreach \i in {1,2,...,32} {
-    \ifnum\i=1\relax
-        % Skip - will connect to lane 0
-    \else\ifnum\i=2\relax
-        % Skip - will connect to lane 1
-    \else\ifnum\i=32\relax
-        % Skip - will connect to lane 31
-    \else
-        \draw[dashed, thin, gray] (ireg.bpin \i) -- ++(0, -3mm);
-    \fi\fi\fi
+% Draw triangular pins below instruction register and 16 SIMD lanes
+\foreach \i in {0,...,15} {
+    % Calculate x position for this lane
+    \coordinate (pin\i) at ([xshift=\i*6mm-45mm]ireg.south);
+
+    % Draw triangular pin marker
+    \draw[fill=white] (pin\i) -- ++(-1.5mm,0) -- ++(1.5mm,-2.5mm) -- ++(1.5mm,2.5mm) -- cycle;
+
+    % ALU triangle below the pin
+    \node[alu] (alu\i) at ([yshift=-8mm]pin\i) {};
+
+    % Registers box with size inside
+    \node[lane, anchor=north, minimum height=8mm] at ([yshift=-0.5mm]alu\i.south) (reg\i) {Reg\\{\fontsize{3}{4}\selectfont 1K$\times$32}};
+
+    % Load store unit
+    \node[lane, anchor=north, minimum height=8mm] at ([yshift=-0.5mm]reg\i.south) (lsu\i) {Load\\store\\unit};
+
+    % Connect pin to ALU
+    \draw ([yshift=-2.5mm]pin\i) -- (alu\i.apex);
 }
 
-% SIMD lanes - H100 has 128 CUDA cores, 2K registers (64K 32-bit regs total)
-\pgfmathsetmacro{\lanewidth}{1.1}      % Lane width in cm
-\pgfmathsetmacro{\lanespacing}{1.5}    % Spacing between visible lanes
+% Lane labels (only show a few) - black text
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu0.north) {0};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu1.north) {1};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu2.north) {2};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu14.north) {14};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu15.north) {15};
 
-% Lane 0
-\coordinate (lane0) at ([yshift=-1cm]scheduler.south);
-\node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
-    (lane0-box) at (lane0) {};
-\node[font=\tiny, above] at (lane0-box.north) {0};
+% SIMD Lanes label
+\node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]alu15.east)
+    {SIMD Lanes\\(Thread\\Processors)};
 
-% ALU, registers, and load/store for lane 0
-\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
-      external pins width=0, fill=cyan!30, rotate=270]
-    (lane0-alu) at ([yshift=-0.6cm]lane0-box.north) {};
-\node[box, anchor=north] at ([yshift=-0.1cm]lane0-alu.east) (reg0) {Regs\\2K$\times$32};
-\node[box, anchor=north] at ([yshift=-0.1cm]reg0.south) (lsu0) {load\\store\\unit};
-
-% Lane 1
-\coordinate (lane1) at ([xshift=\lanespacing cm]lane0);
-\node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
-    (lane1-box) at (lane1) {};
-\node[font=\tiny, above] at (lane1-box.north) {1};
-
-% ALU, registers, and load/store for lane 1
-\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
-      external pins width=0, fill=cyan!30, rotate=270]
-    (lane1-alu) at ([yshift=-0.6cm]lane1-box.north) {};
-\node[box, anchor=north] at ([yshift=-0.1cm]lane1-alu.east) (reg1) {Regs\\2K$\times$32};
-\node[box, anchor=north] at ([yshift=-0.1cm]reg1.south) (lsu1) {load\\store\\unit};
-
-% Dots indicator
-\node[font=\Large] at ([xshift=\lanespacing cm]lane1) {$\cdots$};
-
-% Lane 31 (last lane in H100 warp with 32 threads)
-\coordinate (lane31) at ([xshift=2*\lanespacing cm]lane1);
-\node[box=green!20, minimum width=\lanewidth cm, minimum height=4cm, anchor=north, inner sep=0]
-    (lane31-box) at (lane31) {};
-\node[font=\tiny, above] at (lane31-box.north) {31};
-
-% ALU, registers, and load/store for lane 31
-\node[muxdemux, muxdemux def={Lh=1, Rh=0.5, w=0.8, inset w=0.3, inset Lh=0.6, inset Rh=0, square pins=1, NL=2, NR=1},
-      external pins width=0, fill=cyan!30, rotate=270]
-    (lane31-alu) at ([yshift=-0.6cm]lane31-box.north) {};
-\node[box, anchor=north] at ([yshift=-0.1cm]lane31-alu.east) (reg31) {Regs\\2K$\times$32};
-\node[box, anchor=north] at ([yshift=-0.1cm]reg31.south) (lsu31) {load\\store\\unit};
-
-% Arrows from instruction register to lanes
-\draw[->, thin] (ireg.bpin 1) -| (lane0-box.north);
-\draw[->, thin] (ireg.bpin 2) -| (lane1-box.north);
-\draw[->, thin] (ireg.bpin 32) -| (lane31-box.north);
-
-% Label for lanes
-\node[anchor=west, font=\small, align=center] at ([xshift=0.5cm]lane31-box.east)
-    {(Thread Processors)\\SIMD Lanes\\(32 total)};
-
-% Address coalescing unit (positioned below lane0)
-\node[box=purple!20, minimum width=4cm, minimum height=0.8cm, anchor=north]
-    (coalesce) at ([yshift=-0.5cm]lsu0.south) {address coalescing unit};
+% Address coalescing unit
+\node[box, minimum width=42mm, minimum height=5mm, anchor=north]
+    (coalesce) at ([yshift=-2mm, xshift=-23mm]lsu7.south) {Address coalescing unit};
 
 % Interconnection network
-\node[box=purple!20, minimum width=4cm, minimum height=0.8cm, anchor=north west]
-    (interconnect) at ([xshift=0.5cm]coalesce.north east) {Interconnection network};
+\node[box, minimum width=42mm, minimum height=5mm, anchor=north west]
+    (interconnect) at ([xshift=2mm]coalesce.north east) {Interconnection network};
 
-% Arrows from visible lanes to coalescing unit
-\foreach \i in {0,1,31} {
+% Arrows from lanes to bottom units
+\foreach \i in {0,3,7} {
     \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- coalesce.north);
+}
+\foreach \i in {8,11,15} {
+    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- interconnect.north);
 }
 
 % Local memory
-\node[box=orange!20, minimum width=4cm, minimum height=1cm, anchor=north]
-    (localmem) at ([yshift=-0.3cm]coalesce.south) {local memory (64KB)};
+\node[box, minimum width=42mm, minimum height=6mm, anchor=north]
+    (localmem) at ([yshift=-2mm]coalesce.south) {Local Memory 64 KB};
 
 % Arrow between coalescing and local memory
 \draw[<->, thick] (coalesce.south) -- (localmem.north);
 
-% To global memory label
-\node[anchor=north, align=center] at ([yshift=-0.5cm]interconnect.south)
+% To global memory
+\node[anchor=north, font=\scriptsize, align=center] at ([yshift=-2mm]interconnect.south)
     {To Global\\Memory};
-\draw[->, very thick] (interconnect.south) -- ([yshift=-0.3cm]interconnect.south);
-
-% Note about recent GPUs
-\node[anchor=west, font=\small, align=left] at ([xshift=12cm, yshift=-2cm]ireg.east)
-    {On recent GPUs:\\32 lanes\\2K regs.};
+\draw[->, thick] (interconnect.south) -- ++(0,-1.5mm);
 
 \end{tikzpicture}
-
 \end{center}
 \end{frame}
 \begin{frame}{GPU Scheduler}
@@ -579,91 +532,69 @@
 \begin{itemize}
     \item Some threads take ``true'' path
     \item Others take the ``false'' path
-    \item PC and active mask are pushed into a stack
+    \item PC and active mask pushed to stack
     \item Code execution is \textbf{serialized}
 \end{itemize}
 
 \vspace{0.3cm}
-\textbf{Convergence:} Both paths merge back together, and all threads become active again
+\textbf{Convergence:} Both paths merge back together, all threads become active again
 \end{column}
 
 \begin{column}{0.5\textwidth}
-\begin{tikzpicture}[scale=0.5, every node/.style={font=\tiny}]
+\begin{tikzpicture}[scale=0.92,
+    active/.style={draw, fill=green!40, minimum width=5mm, minimum height=4.5mm, font=\scriptsize},
+    inactive/.style={draw, fill=white, minimum width=5mm, minimum height=4.5mm, font=\scriptsize},
+    steplbl/.style={font=\scriptsize\bfseries, anchor=west},
+    dots/.style={font=\scriptsize, minimum width=5mm},
+]
+
 % Legend
-\draw[fill=green!40] (0,9) rectangle (0.4,9.4);
-\node[anchor=west] at (0.5,9.2) {Active thread};
-\draw[fill=white] (0,8.5) rectangle (0.4,8.9);
-\node[anchor=west] at (0.5,8.7) {Inactive thread (masked)};
+\node[active, label=right:{\scriptsize Active}] at (0,0) {};
+\node[inactive, label=right:{\scriptsize Inactive (masked)}] at (2.2,0) {};
 
-% Step 1
-\node[anchor=west, font=\fontsize{7}{8}\selectfont] at (0,8) {\textbf{Step 1: All 32 Threads Active}};
-\foreach \i in {0,...,7} {
-    \draw[fill=green!40] (\i*0.5,7.3) rectangle (\i*0.5+0.4,7.7);
-    \node at (\i*0.5+0.2,7.5) {\i};
-}
-\node at (4.5,7.5) {... to 31};
-\draw[fill=yellow!40] (5,7) rectangle (7.5,7.9);
-\node[align=center, font=\fontsize{6}{7}\selectfont] at (6.25,7.45) {if (data[idx] > 10)};
+% Step 1: All 32 Threads Active
+\node[steplbl] at (0,-0.6) {Step 1: All 32 Threads Active};
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s1) at (0,-0.75) {
+    |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
+    |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots{} 31 \\
+};
+\node[draw, fill=yellow!40, font=\tiny, right=1mm of s1, minimum height=4.5mm] {if (x > 10)};
 
-% Step 2
-\node[anchor=west, font=\fontsize{7}{8}\selectfont] at (0,6.2) {\textbf{Step 2: First Branch - TRUE Path}};
-\node[anchor=west, font=\fontsize{6}{7}\selectfont] at (0,5.9) {Active: 0-3 | Inactive: 4-31};
-\foreach \i in {0,...,3} {
-    \draw[fill=green!40] (\i*0.5,5.2) rectangle (\i*0.5+0.4,5.6);
-    \node at (\i*0.5+0.2,5.4) {\i};
-}
-\foreach \i in {4,...,7} {
-    \draw[fill=white] (\i*0.5,5.2) rectangle (\i*0.5+0.4,5.6);
-    \node at (\i*0.5+0.2,5.4) {\i};
-}
+% Step 2: First Branch - TRUE Path (Active: 0-3)
+\node[steplbl] at (0,-1.55) {Step 2: TRUE Path {\normalfont\tiny(Active: 0--3)}};
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.7) {
+    |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
+    |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
+};
 
-% Step 3
-\node[anchor=west, font=\fontsize{7}{8}\selectfont] at (0,4.4) {\textbf{Step 3: Nested Branch - TRUE}};
-\node[anchor=west, font=\fontsize{6}{7}\selectfont] at (0,4.1) {Active: 0-1 | Inactive: 2-31};
-\foreach \i in {0,...,1} {
-    \draw[fill=green!40] (\i*0.5,3.4) rectangle (\i*0.5+0.4,3.8);
-    \node at (\i*0.5+0.2,3.6) {\i};
-}
-\foreach \i in {2,...,7} {
-    \draw[fill=white] (\i*0.5,3.4) rectangle (\i*0.5+0.4,3.8);
-    \node at (\i*0.5+0.2,3.6) {\i};
-}
+% Step 3: Nested Branch - TRUE (Active: 0-1)
+\node[steplbl] at (0,-2.5) {Step 3: Nested TRUE {\normalfont\tiny(Active: 0--1)}};
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-2.65) {
+    |[active]| 0 \& |[active]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
+    |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
+};
 
-% Step 4
-\node[anchor=west, font=\fontsize{7}{8}\selectfont] at (0,2.6) {\textbf{Step 4: Nested Branch - FALSE}};
-\node[anchor=west, font=\fontsize{6}{7}\selectfont] at (0,2.3) {Active: 2-3 | Inactive: 0-1, 4-31};
-\foreach \i in {0,...,1} {
-    \draw[fill=white] (\i*0.5,1.6) rectangle (\i*0.5+0.4,2.0);
-    \node at (\i*0.5+0.2,1.8) {\i};
-}
-\foreach \i in {2,...,3} {
-    \draw[fill=green!40] (\i*0.5,1.6) rectangle (\i*0.5+0.4,2.0);
-    \node at (\i*0.5+0.2,1.8) {\i};
-}
-\foreach \i in {4,...,7} {
-    \draw[fill=white] (\i*0.5,1.6) rectangle (\i*0.5+0.4,2.0);
-    \node at (\i*0.5+0.2,1.8) {\i};
-}
+% Step 4: Nested Branch - FALSE (Active: 2-3)
+\node[steplbl] at (0,-3.45) {Step 4: Nested FALSE {\normalfont\tiny(Active: 2--3)}};
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-3.6) {
+    |[inactive]| 0 \& |[inactive]| 1 \& |[active]| 2 \& |[active]| 3 \&
+    |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
+};
 
-% Step 5
-\node[anchor=west, font=\fontsize{7}{8}\selectfont] at (0,0.8) {\textbf{Step 5: First Branch - FALSE}};
-\node[anchor=west, font=\fontsize{6}{7}\selectfont] at (0,0.5) {Active: 4-31 | Inactive: 0-3};
-\foreach \i in {0,...,3} {
-    \draw[fill=white] (\i*0.5,-0.2) rectangle (\i*0.5+0.4,0.2);
-    \node at (\i*0.5+0.2,0) {\i};
-}
-\foreach \i in {4,...,7} {
-    \draw[fill=green!40] (\i*0.5,-0.2) rectangle (\i*0.5+0.4,0.2);
-    \node at (\i*0.5+0.2,0) {\i};
-}
+% Step 5: First Branch - FALSE (Active: 4-31)
+\node[steplbl] at (0,-4.4) {Step 5: FALSE Path {\normalfont\tiny(Active: 4--31)}};
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s5) at (0,-4.55) {
+    |[inactive]| 0 \& |[inactive]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
+    |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots \\
+};
 
-% Step 6
-\node[anchor=west, font=\fontsize{7}{8}\selectfont, color=green!60!black] at (0,-1) {\textbf{Step 6: Convergence - All Active}};
-\foreach \i in {0,...,7} {
-    \draw[fill=green!40] (\i*0.5,-1.8) rectangle (\i*0.5+0.4,-1.4);
-    \node at (\i*0.5+0.2,-1.6) {\i};
-}
-\node at (4.5,-1.6) {... to 31};
+% Step 6: Convergence (All Active)
+\node[steplbl, text=green!50!black] at (0,-5.35) {Step 6: Convergence {\normalfont\tiny(All Active)}};
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s6) at (0,-5.5) {
+    |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
+    |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots{} 31 \\
+};
+
 \end{tikzpicture}
 \end{column}
 \end{columns}
@@ -993,7 +924,7 @@ __global__ void wmma_ker(half *a, half *b, float *c) {
     \end{columns}
 \end{frame}
 
-\begin{frame}{Quantization}
+\begin{frame}<0>{Quantization}  % Hidden slide
     \textbf{Software technique: converting high-precision weights to lower-precision formats.}
 
     \begin{columns}
@@ -1117,34 +1048,6 @@ __global__ void wmma_ker(half *a, half *b, float *c) {
     {\scriptsize Source: NVIDIA B200 Datasheet}
 \end{frame}
 
-\begin{frame}{Different Memory Types}
-\tiny
-\begin{tabular}{|l|c|c|c|c|c|}
-\hline
-\textbf{Parameter} & \textbf{LPDDR4x} & \textbf{LPDDR5} & \textbf{DDR4} & \textbf{GDDR6} & \textbf{HBM2E} \\
-\hline
-Bandwidth (Gbps) & Low-Med (136) & Med (204) & Med (200) & High (512) & \textbf{Highest (3686)} \\
-\hline
-Data Rate (Gbps) & 4.266 & 6.4 & 3.2 & 16 & 3.6 \\
-\hline
-Interface Width (bits) & 32 & 32 & 64 & 32 & \textbf{1024} \\
-\hline
-Board Area / Design & Large/Med & Med/Med & Large/Easy & Med/Med & Small/Complex \\
-\hline
-Efficiency (mW/Gbps) & High (3) & High (3) & Mod (10) & Mod (10) & \textbf{Highest (2)} \\
-\hline
-Cost & Medium & Medium & \textbf{Low} & Medium & High \\
-\hline
-Reliability/Yield & Good & Good & Good & Good & Moderate \\
-\hline
-Applications & Mobile, AI & Mobile, AI & Compute & AI, Graphics & AI, HPC \\
-\hline
-\end{tabular}
-
-\vspace{0.3cm}
-\normalsize
-Key insight: HBM achieves highest bandwidth through \textbf{wide interface} (1024 bits) × moderate data rate (3.6 Gbps) = 3686 Gbps total
-\end{frame}
 \begin{frame}[fragile]{Memory Coalescing}
     \begin{columns}
         \begin{column}{0.5\textwidth}
