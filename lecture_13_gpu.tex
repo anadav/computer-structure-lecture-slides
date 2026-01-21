@@ -651,47 +651,49 @@ int tid = threadIdx.x;
 \end{column}
 \end{columns}
 
-% Code highlighting overlay using tikzmarks - draw border around relevant code
+% Code highlighting overlay using tikzmarks - yellow background with blend mode
 \begin{tikzpicture}[remember picture, overlay]
+    \begin{scope}[blend mode=multiply]
     % Stage 3: highlight "if (tid < 4) {" - single line
     \only<3>{
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L2s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L2e);
     }
     % Stage 4: highlight "if (tid < 2) {" and "a = foo();" - two lines
     \only<4>{
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L3s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L3e);
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L4s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L4e);
     }
     % Stage 5: highlight "} else {" and "a = bar();" - two lines
     \only<5>{
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L5s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L5e);
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L6s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L6e);
     }
     % Stage 6: highlight "} else {" and "a = baz();" - two lines
     \only<6>{
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L8s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L8e);
-        \draw[orange, thick, rounded corners=2pt]
+        \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L9s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L9e);
     }
     % Stage 7: highlight "// All converge" - single line, green for convergence
     \only<7>{
-        \draw[green!60!black, thick, rounded corners=2pt]
+        \fill[green!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L11s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L11e);
     }
+    \end{scope}
 \end{tikzpicture}
 \end{frame}
 \begin{frame}[fragile]{Warp-Level Primitives Example}
