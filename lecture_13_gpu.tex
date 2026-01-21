@@ -1,389 +1,365 @@
-\documentclass[aspectratio=169,12pt]{beamer}
-\usepackage[utf8]{inputenc}
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+
 \usepackage[T1]{fontenc}
-\usepackage{amsmath, amssymb}
-\usepackage{booktabs}
-\usepackage{colortbl}
-\usepackage{hyperref}
-\usepackage{makecell}
-\usepackage{ragged2e}
-\usepackage{bytefield}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing}
-\usepackage[siunitx, RPvoltages]{circuitikz}
-\usepackage{tcolorbox}
+\usepackage[siunitx]{circuitikz}
+\usetikzlibrary{positioning, matrix, fit, backgrounds, shapes.callouts, tikzmark, calc}
 \usepackage{pgfplots}
-\pgfplotsset{compat=1.17}
+\pgfplotsset{compat=1.18}
 \usepackage{listings}
-\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
 \usepackage{xcolor}
 
-\usetheme{Madrid}
-\usecolortheme{default}
-
-% Custom colors
-\definecolor{mygreen}{RGB}{0,128,0}
-\definecolor{myblue}{RGB}{0,0,255}
-\definecolor{myred}{RGB}{255,0,0}
-\definecolor{techblue}{RGB}{0,56,101}
-\definecolor{techgold}{RGB}{177,121,22}
-\definecolor{lightgray}{RGB}{240,240,240}
-
-% Code listing style
 \lstset{
-    basicstyle=\ttfamily\small,
-    keywordstyle=\color{blue},
-    commentstyle=\color{mygreen},
-    stringstyle=\color{myred},
+    basicstyle=\ttfamily\tiny,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{orange},
     showstringspaces=false,
     breaklines=true,
     frame=single,
-    backgroundcolor=\color{lightgray}
+    backgroundcolor=\color{gray!10},
+    language=C++,
+    morekeywords={__global__, __device__, __shared__, half, float, wmma, fragment}
 }
 
-\title{Computer Structure}
-\subtitle{GPU Architecture and Programming}
-\author{Computer Architecture 2360267}
-\date{2025, Lecture \#13}
+\title{GPU and Other Accelerators}
+\subtitle{Performance Engineering}
+\author{Technion}
+\date{}
+
+\AtBeginSection[]{
+    \begin{frame}{Outline}
+        \tableofcontents[currentsection]
+    \end{frame}
+}
 
 \begin{document}
 
-\frame{\titlepage}
-
-% Table of Contents
-\begin{frame}{Outline}
-\tableofcontents
+\begin{frame}
+    \titlepage
 \end{frame}
 
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+%===============================================================================
 \section{Introduction to GPGPU}
+%===============================================================================
 
 \begin{frame}{What is GPGPU?}
-\begin{columns}
-\begin{column}{0.6\textwidth}
-\textbf{Execute general-purpose compute tasks on GPU}
-\begin{itemize}
-    \item Massive parallelism
-    \item High memory bandwidth
-    \item Energy efficiency
-    \item Specialized hardware units (e.g., Tensor cores)
-\end{itemize}
+    \textbf{General-Purpose computing on Graphics Processing Units}
 
-\vspace{0.3cm}
-\textbf{Fits various workloads}
-\begin{itemize}
-    \item Data-parallel algorithms: linear algebra, FFTs, convolutions
-    \item Embarrassingly parallel tasks: Monte Carlo, image/video processing
-    \item Batched inference/training in AI/ML pipelines
-\end{itemize}
-\end{column}
+    \vspace{1em}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Why GPUs?}
+            \begin{itemize}
+                \item Massive parallelism
+                \item High memory bandwidth
+                \item Energy efficiency
+                \item Specialized units (Tensor cores)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Suitable Workloads:}
+            \begin{itemize}
+                \item Data-parallel algorithms (linear algebra, FFTs)
+                \item Embarrassingly parallel tasks (Monte Carlo)
+                \item Image/video processing
+                \item AI/ML inference and training
+            \end{itemize}
+        \end{column}
+    \end{columns}
 
-\begin{column}{0.35\textwidth}
-\textbf{Mature ecosystem}
-\begin{itemize}
-    \item APIs: CUDA, OpenCL
-    \item Libraries: cuBLAS, cuDNN, Thrust
-    \item Frameworks: TensorFlow, PyTorch
-\end{itemize}
-
-\vspace{0.3cm}
-\begin{tikzpicture}[scale=0.4]
-\foreach \i in {0,...,2} {
-    \foreach \j in {0,...,2} {
-        \draw[blue!50] (\i*1.5,\j*1.5) -- ++(0.75,0.75) -- ++(0,-1.5) -- cycle;
-        \fill[blue!30] (\i*1.5+0.375,\j*1.5+0.375) circle (0.1);
-    }
-}
-\end{tikzpicture}
-\end{column}
-\end{columns}
+    \vspace{1em}
+    \textbf{Mature Ecosystem:}
+    \begin{itemize}
+        \item APIs: CUDA, OpenCL
+        \item Libraries: cuBLAS, cuDNN, Thrust
+        \item Frameworks: TensorFlow, PyTorch
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{When to Use GPU?}
-\begin{columns}
-\begin{column}{0.55\textwidth}
-\textbf{Arithmetic intensity}
-\begin{itemize}
-    \item $I = \frac{FLOPs}{bytes\ accessed}$
-    \item [bytes accessed] -- usually to slowest memory only
-    \item \textbf{$I \gtrsim 5$--10 FLOP/byte}
+    \textbf{Arithmetic Intensity:}
+    \[
+    I = \frac{\text{FLOPs}}{\text{bytes accessed}}
+    \]
 
-    $\rightarrow$ Almost certainly \textbf{compute-bound} on modern GPUs (e.g. H100)
-    \item Also known as ``Operational Intensity''
-\end{itemize}
-\end{column}
+    \begin{itemize}
+        \item $I \gtrsim 5$--$10$ FLOP/byte $\rightarrow$ Almost certainly \alert{compute-bound}
+        \item Also known as ``Operational Intensity''
+    \end{itemize}
 
-\begin{column}{0.4\textwidth}
-\textbf{Sometimes can benefit even with low AI:}
-\begin{itemize}
-    \item \textbf{Massive parallelism} hides latency
-    \item \textbf{High-throughput HBM}
-    \item \textbf{Overlap} of compute \& memory
-\end{itemize}
-\end{column}
-\end{columns}
+    \vspace{1em}
+    \textbf{Can still benefit with low AI:}
+    \begin{itemize}
+        \item Massive parallelism hides latency
+        \item High-throughput HBM memory
+        \item Overlap of compute \& memory operations
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Roofline Model}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\small
-\textbf{Visual model for estimating performance}
-\begin{itemize}
-    \item Targets multi-core, many-core, accelerator architectures
-    \item Highlights hardware limits and guides optimization priorities
-\end{itemize}
+    Visual model for estimating performance of compute kernels.
 
-\textbf{Combines:}
-\begin{itemize}
-    \item Maximum performance ($\pi$)
-    \item Arithmetic intensity (I)
-    \item Memory bandwidth ($\beta$)
-\end{itemize}
+    \begin{columns}
+        \begin{column}{0.35\textwidth}
+            \textbf{Key Components:}
+            \begin{itemize}
+                \item Maximum performance ($\pi$)
+                \item Arithmetic intensity ($I$)
+                \item Memory bandwidth ($\beta$)
+            \end{itemize}
 
-\textbf{Assesses performance quality}
+            \textbf{Performance bound:}
+            \[
+            P = \min\left\{ \pi, \; \beta \cdot I \right\}
+            \]
 
-\vspace{0.2cm}
-$P = \min\left\{\pi, \beta \cdot I\right\}$
-\end{column}
-
-\begin{column}{0.45\textwidth}
-\begin{tikzpicture}[scale=0.8]
-    \begin{axis}[
-        xlabel={Operational Intensity [FLOPS/byte]},
-        ylabel={Performance [GFLOPS]},
-        xmode=log,
-        ymode=log,
-        log basis x={2},
-        log basis y={2},
-        xmin=0.25, xmax=128,
-        ymin=0.25, ymax=4,
-        grid=major,
-        width=6cm,
-        height=5cm,
-        legend pos=south east
-    ]
-    % Memory bandwidth bound line
-    \addplot[blue, very thick, domain=0.25:8] {x};
-    % Compute bound horizontal line
-    \addplot[red, very thick, domain=8:128] {2};
-    % Example point
-    \addplot[mark=*, mark size=2pt] coordinates {(4,1)};
-    \node at (axis cs:16,0.5) {\small Memory-bound};
-    \node at (axis cs:32,2.5) {\small Compute-bound};
-    \end{axis}
-\end{tikzpicture}
-\end{column}
-\end{columns}
+            Highlights hardware limits and guides optimization priorities.
+        \end{column}
+        \begin{column}{0.65\textwidth}
+            \begin{center}
+            \begin{tikzpicture}[scale=0.8]
+            \begin{axis}[
+                name=main,
+                width=12cm,
+                height=7cm,
+                xmode=log,
+                ymode=log,
+                log basis x=2,
+                log basis y=2,
+                xmin=0.125, xmax=128,
+                ymin=0.125, ymax=2.8,
+                xlabel={Operational Intensity [FLOPs/byte]},
+                ylabel={Performance [GFLOPs]},
+                xtick={0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128},
+                xticklabels={$\frac{1}{4}$, $\frac{1}{2}$, 1, 2, 4, 8, 16, 32, 64, 128},
+                ytick={0.25, 0.5, 1, 2},
+                yticklabels={$\frac{1}{4}$, $\frac{1}{2}$, 1, 2},
+                axis lines=left,
+                axis line style={-},
+                tick style={black},
+                grid=none,
+                clip=false,
+            ]
+            % Dashed horizontal line behind pi
+            \addplot[black, dashed, thin, domain=0.125:8, samples=2] {2};
+            % Diagonal line (memory-bound): P = beta * I
+            \addplot[black, thick, domain=0.5:8, samples=2] {0.25*x};
+            % Horizontal line (compute-bound): P = pi = 2
+            \addplot[black, thick, domain=8:128, samples=2] {2};
+            % Dashed extension of diagonal beyond ridge
+            \addplot[black, dashed, thin, domain=8:16, samples=2] {0.25*x};
+            % Vertical dashed line O_1 (memory-bound)
+            \addplot[red, dashed, thick] coordinates {(4, 0.125) (4, 1)};
+            % Vertical dashed line O_2 (compute-bound)
+            \addplot[red, dashed, thick] coordinates {(16, 0.125) (16, 2)};
+            % Labels
+            \node[red, rotate=90, anchor=north west, font=\footnotesize] at (axis cs:4.3,0.13) {$O_1$ (memory-bound)};
+            \node[red, rotate=90, anchor=north west, font=\footnotesize] at (axis cs:16.5,0.13) {$O_2$ (compute-bound)};
+            \node[anchor=south, font=\large] at (axis cs:45,2.05) {$\pi$};
+            \path (axis cs:0.5,0.125) coordinate (A);
+            \path (axis cs:8,2) coordinate (B);
+            \end{axis}
+            % Beta label with calculated angle
+            \pgfmathanglebetweenpoints{\pgfpointanchor{A}{center}}{\pgfpointanchor{B}{center}}
+            \let\betaangle\pgfmathresult
+            \node[rotate=\betaangle, anchor=south, font=\large] at ($(A)!0.35!(B) + (-0.5,0.15)$) {$\beta \cdot I$};
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+    \end{columns}
 \end{frame}
 
+%===============================================================================
 \section{GPU Architecture}
+%===============================================================================
 
-\begin{frame}{NVIDIA H100 Architecture (Hopper)}
-\begin{center}
-\begin{tikzpicture}[scale=0.65, every node/.style={font=\tiny}]
-% Main die outline
-\draw[very thick] (0,0) rectangle (12,8);
-\node[anchor=north] at (6,8.2) {\textbf{GH100 GPU Die}};
-
-% Top controllers
-\draw[fill=orange!30] (1,7) rectangle (3,7.5);
-\node[align=center] at (2,7.25) {PCIe Gen5\\128 GB/s};
-
-\draw[fill=red!30] (4.5,7) rectangle (7.5,7.5);
-\node[align=center] at (6,7.25) {Giga Thread Engine\\(Thread Block Scheduler)};
-
-\draw[fill=purple!30] (9,7) rectangle (11,7.5);
-\node[align=center] at (10,7.25) {NVLink 4.0\\900 GB/s};
-
-% GPCs - left side
-\draw[fill=blue!20] (0.5,4.5) rectangle (3,6.5);
-\node[anchor=north] at (1.75,6.5) {\textbf{GPC 0}};
-\node at (1.75,6.2) {(16 SMs)};
-\foreach \i in {1,...,3} {
-    \draw[fill=cyan!40] (0.7,4.5+\i*0.5) rectangle (1.3,4.9+\i*0.5);
-    \node[font=\fontsize{5}{6}\selectfont] at (1,4.7+\i*0.5) {SM};
-}
-\node at (1.75,5.7) {...};
-
-% GPCs - right side
-\draw[fill=blue!20] (9,4.5) rectangle (11.5,6.5);
-\node[anchor=north] at (10.25,6.5) {\textbf{GPC 1}};
-\node at (10.25,6.2) {(17 SMs)};
-\foreach \i in {1,...,3} {
-    \draw[fill=cyan!40] (9.2,4.5+\i*0.5) rectangle (9.8,4.9+\i*0.5);
-    \node[font=\fontsize{5}{6}\selectfont] at (9.5,4.7+\i*0.5) {SM};
-}
-\node at (10.25,5.7) {...};
-
-\node at (6,5.5) {\textbf{... 8 GPCs total (132 active SMs)}};
-
-% L2 Cache
-\draw[fill=yellow!30] (0.5,3.5) rectangle (11.5,4);
-\node at (6,3.75) {\textbf{L2 Cache: 50MB} -- Shared across all 132 SMs};
-
-% Memory controllers
-\draw[fill=orange!40] (0.5,2.5) rectangle (11.5,3.2);
-\node[align=center] at (6,2.85) {\textbf{HBM3 Memory Controllers}\\6 HBM3 stacks, 5120-bit bus width};
-
-% Global memory
-\draw[fill=green!30] (0.5,1) rectangle (11.5,2.2);
-\node[align=center] at (6,1.6) {\textbf{Global Memory (HBM3)}\\80GB @ 3.35 TB/s bandwidth\\2.5D stacked memory on silicon interposer};
-
-% SM Components box (right side)
-\draw[very thick] (13,0) rectangle (18,8);
-\node[anchor=north] at (15.5,8.2) {\textbf{H100 SM Components}};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,7.5) {
-\textbf{128 FP32 CUDA Cores}\\
-(Thread Processors/SIMD Lanes)
-};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,6.5) {
-\textbf{4 Gen4 Tensor Cores}\\
-(FP8/FP16/BF16/TF32/INT8)
-};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,5.5) {
-\textbf{256KB Shared Memory}\\
-(configurable with L1 cache)
-};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,4.7) {
-\textbf{4 Warp Schedulers}
-};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,4) {
-\textbf{256KB Register File}\\
-(64K 32-bit registers)
-};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,3.2) {
-\textbf{DPX Instructions}
-};
-
-\node[anchor=west, align=left, font=\fontsize{7}{8}\selectfont] at (13.2,2.6) {
-\textbf{Async Memory Copy}
-};
-
-% Memory hierarchy box
-\draw[thick] (13.2,0.3) rectangle (17.8,2);
-\node[anchor=north, font=\fontsize{7}{8}\selectfont] at (15.5,2) {\textbf{Memory Hierarchy}};
-\node[anchor=west, align=left, font=\fontsize{6}{7}\selectfont] at (13.3,1.6) {
-\textbf{Per Thread:}\\
-• Registers: 255 32-bit max\\
-• Local Memory: Variable
-};
-\node[anchor=west, align=left, font=\fontsize{6}{7}\selectfont] at (13.3,0.9) {
-\textbf{Per Thread Block:}\\
-• Shared Memory: 228KB max
-};
-\node[anchor=west, align=left, font=\fontsize{6}{7}\selectfont] at (13.3,0.4) {
-\textbf{All SMs:} • Global Memory: 80GB HBM3
-};
-
-\end{tikzpicture}
-\end{center}
+\begin{frame}{NVIDIA Blackwell Ultra --- Full Chip}
+    \begin{center}
+        \includegraphics[height=0.85\textheight]{figures/NVIDIA-Blackwell-Ultra-GPU-chip-explained-png.png}
+    \end{center}
 \end{frame}
 
-\begin{frame}{Graphics Processing Cluster (GPC)}
-\textbf{GPC - Graphics Processing Cluster}
-\begin{itemize}
-    \item Several \textbf{SMs} (Streaming Multiprocessors), each running warps of threads
-    \item Texture units, raster engines, and L2 cache interfaces
-    \item Not exposed to software
-\end{itemize}
+\begin{frame}{NVIDIA Blackwell Architecture (2024)}
+    \textbf{NVIDIA B200 (Blackwell Architecture):}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Top Level:}
+            \begin{itemize}
+                \item 208 billion transistors
+                \item Dual-die design (2$\times$ GB100)
+                \item 10 TB/s chip-to-chip interconnect (NV-HBI)
+                \item 148 SMs
+                \item 192GB HBM3e @ 8 TB/s
+            \end{itemize}
 
-\vspace{0.5cm}
-\textbf{Memory-access patterns that cross GPC boundaries} (e.g. very large shared-memory tiling) may see slightly different latency/GPU-internal routing
+            \vspace{0.5em}
+            \textbf{Interconnects:}
+            \begin{itemize}
+                \item NVLink 5.0: 1.8 TB/s
+                \item PCIe Gen5: 128 GB/s
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Trends across GPU generations:}
+            \begin{itemize}
+                \item Tensor Cores increasingly dominant over CUDA Cores
+                \item Lower precision formats (FP8 $\rightarrow$ FP4)
+                \item Dedicated memory for Tensor Cores (TMEM)
+                \item Multi-die designs to bypass reticle limits
+                \item Memory bandwidth scaling (HBM3 $\rightarrow$ HBM3e)
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3em}
+    {\scriptsize Source: NVIDIA Blackwell Tuning Guide \& GTC 2024}
 \end{frame}
 
-\begin{frame}{CUDA Compilation Flow}
-\begin{columns}
-\begin{column}{0.55\textwidth}
-\begin{itemize}
-    \item Code is compiled into \textbf{PTX code} (intermediate representation)
-    \item Then optimized to the specific GPU
+\begin{frame}{NVIDIA Blackwell Ultra --- SM Architecture}
+    \begin{columns}[T]
+        \begin{column}{0.6\textwidth}
+            \vspace{-0.5em}
+            \textbf{Per SM (Streaming Multiprocessor):}
+            \begin{itemize}
+                \item 128 FP32 CUDA Cores
+                \item 4 Gen5 Tensor Cores
+                \item 4 Warp Schedulers (64 warps max)
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{On-Chip Memory per SM:}
+            \begin{itemize}
+                \item 256KB Register File
+                \item 228KB Shared Memory / L1 Cache
+                \item 256KB Tensor Memory (TMEM)
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{Memory Hierarchy:}
+            \begin{itemize}
+                \item \textbf{Per Thread:} Registers (max 255)
+                \item \textbf{Per Block:} Shared Memory
+                \item \textbf{All SMs:} L2 Cache, Global Memory
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.35\textwidth}
+            \vspace{-1em}
+            \begin{center}
+                \includegraphics[width=\textwidth]{figures/Blackwell-Ultra-SM-architecture-png.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{CUDA Compilation}
+    \begin{center}
+    \begin{tikzpicture}[
+        node distance=0.5cm and 0.8cm,
+        box/.style={draw, rounded corners},
+    ]
+        % Vertical flow
+        \node[box] (src) {Source Code};
+        \node[box, below=of src] (nvcc) {nvcc (compiler)};
+        \node[box, below=of nvcc] (ptx) {PTX Code (IR)};
+        % Two branches from PTX
+        \node[box, below left=of ptx] (offline) {Offline Compiler};
+        \node[box, below right=of ptx] (jit) {JIT Compiler};
+        % Final output
+        \node[box, below=0.9cm of ptx] (machine) {Machine Code};
+
+        \draw[->] (src) -- (nvcc);
+        \draw[->] (nvcc) -- (ptx);
+        \draw[->] (ptx) -- (offline);
+        \draw[->] (ptx) -- (jit);
+        \draw[->] (offline) -- (machine);
+        \draw[->] (jit) -- (machine);
+    \end{tikzpicture}
+    \end{center}
+
     \begin{itemize}
-        \item Offline (specific GPU given)
-        \item JIT
+        \item PTX: Intermediate representation (resembles GPU instruction set)
+        \item GPU peculiarities hidden from programmer
+        \item Use PTX intrinsics for performance
     \end{itemize}
-    \item PTX resembles GPU instruction set but not identical
-    \begin{itemize}
-        \item GPU peculiarities hidden
-    \end{itemize}
-    \item Use (PTX) intrinsics for performance
-\end{itemize}
-\end{column}
-
-\begin{column}{0.4\textwidth}
-\begin{tikzpicture}[
-    node distance=0.8cm,
-    box/.style={rectangle, draw, fill=brown!30, text width=2.5cm, align=center, minimum height=0.8cm},
-    arrow/.style={->, >=Stealth, thick}
-]
-\node[box] (source) {source code};
-\node[box, below=of source] (nvcc) {nvcc\\(compiler)};
-\node[box, below=of nvcc] (ptx) {PTX code\\(IR)};
-\node[box, below left=0.8cm and -0.5cm of ptx] (jit) {JIT compiler};
-\node[box, below right=0.8cm and -0.5cm of ptx] (offline) {offline\\compiler};
-\node[box, below=1.6cm of ptx] (machine) {machine code};
-\node[box, below=of machine] (hardware) {hardware};
-
-\draw[arrow] (source) -- (nvcc);
-\draw[arrow] (nvcc) -- (ptx);
-\draw[arrow] (ptx) -- (jit);
-\draw[arrow] (ptx) -- (offline);
-\draw[arrow] (jit) -- (machine);
-\draw[arrow] (offline) -- (machine);
-\draw[arrow] (machine) -- (hardware);
-\end{tikzpicture}
-\end{column}
-\end{columns}
 \end{frame}
 
-\section{Compute}
+%===============================================================================
+\section{GPU Compute}
+%===============================================================================
 
-\begin{frame}{GPU Scheduler}
-\begin{columns}
-\begin{column}{0.48\textwidth}
-\textbf{Grid \& Block Dispatch}
-\begin{itemize}
-    \item Kernel $\rightarrow$ grid of blocks (array of vectorizable loops)
-    \item SMs pull blocks when resources (registers/shared mem) free
-\end{itemize}
+\begin{frame}{CUDA Execution Model}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Hierarchy (software $\rightarrow$ hardware):}
+            \begin{description}
+                \item[Thread] Single execution unit; has private registers
+                \item[Warp] 32 threads executing in lockstep (SIMT)
+                \item[Thread Block] Group of threads that can cooperate via shared memory; mapped to one SM
+                \item[Grid] Collection of blocks executing same kernel
+            \end{description}
 
-\textbf{Warp Scheduling Inside SMs}
-\begin{itemize}
-    \item Threads grouped into 32-thread warps
-    \item Warp scheduler issues ready warps round-robin (probably) to hide stalls
-\end{itemize}
+            \vspace{0.5em}
+            \textbf{Hardware Mapping:}
+            \begin{description}
+                \item[SM] Streaming Multiprocessor; executes one or more blocks concurrently
+                \item[GPU] Contains many SMs (e.g., 148 on B200)
+            \end{description}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+            \begin{tikzpicture}[
+                box/.style={draw, rounded corners, minimum width=20mm, minimum height=6mm, font=\footnotesize},
+                sw/.style={box, fill=blue!20},
+                hw/.style={box, fill=orange!20},
+                arr/.style={->, thick},
+            ]
+                % Software side
+                \node[sw] (grid) {Grid};
+                \node[sw, below=4mm of grid] (block) {Thread Block};
+                \node[sw, below=4mm of block] (warp) {Warp (32 threads)};
+                \node[sw, below=4mm of warp] (thread) {Thread};
 
-\textbf{Occupancy Impact:}
-\begin{itemize}
-    \item Occupancy = active warps / max warps per SM
-\end{itemize}
-\end{column}
+                \draw[arr] (grid) -- (block);
+                \draw[arr] (block) -- (warp);
+                \draw[arr] (warp) -- (thread);
 
-\begin{column}{0.48\textwidth}
-\textbf{Latency Hiding}
-\begin{itemize}
-    \item High block occupancy $\Rightarrow$ many warps queued
-    \item When one warp stalls (e.g. memory), another executes
-\end{itemize}
+                % Hardware side
+                \node[hw, right=15mm of grid] (gpu) {GPU};
+                \node[hw, right=15mm of block] (sm) {SM};
+                \node[hw, right=15mm of warp] (cores) {CUDA Cores};
+                \node[hw, right=15mm of thread] (regs) {Registers};
 
-\textbf{Resource Constraints}
-\begin{itemize}
-    \item Block-level: limited by per-SM registers \& shared memory
-    \item Warp-level: limited by per-thread registers (max 255) and active warps
-\end{itemize}
+                \draw[arr] (gpu) -- (sm);
+                \draw[arr] (sm) -- (cores);
+                \draw[arr] (cores) -- (regs);
 
-\textbf{Tune for Balance}
-\begin{itemize}
-    \item Choose block size to maximize occupancy
-    \item Limit registers/thread to feed warp scheduler without causing spills
-\end{itemize}
-\end{column}
-\end{columns}
+                % Mapping arrows
+                \draw[arr, dashed, gray] (grid) -- (gpu);
+                \draw[arr, dashed, gray] (block) -- (sm);
+                \draw[arr, dashed, gray] (thread) -- (regs);
+
+                % Labels
+                \node[above=1mm of grid, font=\scriptsize\bfseries, blue!70!black] {Software};
+                \node[above=1mm of gpu, font=\scriptsize\bfseries, orange!70!black] {Hardware};
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3em}
+    {\scriptsize Source: CUDA C++ Programming Guide}
 \end{frame}
 
 \begin{frame}[fragile]{SM Architecture \& Warp Scheduling}
@@ -542,41 +518,58 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 
 \end{center}
 \end{frame}
+\begin{frame}{GPU Scheduler}
+    \textbf{Grid \& Block Dispatch:}
+    \begin{itemize}
+        \item Kernel $\rightarrow$ grid of blocks
+        \item SMs pull blocks when resources available
+    \end{itemize}
+
+    \vspace{0.5em}
+    \textbf{Warp Scheduling:}
+    \begin{itemize}
+        \item Threads grouped into 32-thread \textbf{warps}
+        \item Warp scheduler issues ready warps to hide stalls
+        \item \textbf{Occupancy} = $\frac{\text{active warps}}{\text{max warps per SM}}$
+    \end{itemize}
+
+    \vspace{0.5em}
+    \textbf{Latency Hiding:}
+    \begin{itemize}
+        \item High occupancy $\Rightarrow$ many warps queued
+        \item When one warp stalls (memory), another executes
+    \end{itemize}
+
+    \vspace{0.5em}
+    \textbf{Tune for Balance:}
+    \begin{itemize}
+        \item Choose block size to maximize occupancy
+        \item Limit registers/thread to avoid spills
+    \end{itemize}
+\end{frame}
 
 \begin{frame}{Registers}
-\begin{columns}
-\begin{column}{0.48\textwidth}
-\textbf{Limited On-Chip Resource:} Each SM has a fixed register file (e.g., 64K registers on many NVIDIA GPUs)
-\begin{itemize}
-    \item Each thread can use at most 255 registers
-\end{itemize}
+    \textbf{Limited On-Chip Resource:}
+    \begin{itemize}
+        \item Each SM has fixed register file (e.g., 64K registers)
+        \item Each thread can use at most 255 registers
+    \end{itemize}
 
-\textbf{Latency Hiding vs. Resource Use:}
-\begin{itemize}
-    \item Registers per thread directly cap the number of resident warps
-    \item High occupancy helps hide memory latency
-    \item Excessive register use improves ILP
-    \item ... but may starve the SM of parallel work
-\end{itemize}
-\end{column}
+    \vspace{0.5em}
+    \textbf{Trade-off:}
+    \begin{itemize}
+        \item Registers per thread cap number of resident warps
+        \item High occupancy helps hide memory latency
+        \item Excessive register use improves ILP but may starve SM
+    \end{itemize}
 
-\begin{column}{0.48\textwidth}
-\textbf{Tuning Registers:}
-\begin{itemize}
-    \item Use \texttt{-maxrregcount} or \texttt{\_\_launch\_bounds\_\_()} to limit registers/thread
-    \item Balance between enough registers for compute
-    \item ... and enough threads for latency hiding
-\end{itemize}
-
-\textbf{Register spilling}
-\begin{itemize}
-    \item Spilling when a kernel's register demand exceeds either the hardware limit (255/thread) or the compiler-set limit
-    \item 100s of cycles penalty
-    \item Refactor code to reuse variables and reduce live ranges
-    \item ... or lower occupancy
-\end{itemize}
-\end{column}
-\end{columns}
+    \vspace{0.5em}
+    \textbf{Tuning:}
+    \begin{itemize}
+        \item Use \texttt{-maxrregcount} or \texttt{\_\_launch\_bounds\_\_()} to limit registers
+        \item \textbf{Register spilling}: 100s of cycles penalty
+        \item Refactor code to reuse variables and reduce live ranges
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{GPU Warp Divergence}
@@ -675,239 +668,453 @@ $P = \min\left\{\pi, \beta \cdot I\right\}$
 \end{column}
 \end{columns}
 \end{frame}
+\begin{frame}[fragile]{Warp-Level Primitives Example}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Warp reduction without divergence:}
 
-\begin{frame}{GPU Warp Divergence: Solutions}
-\begin{columns}
-\begin{column}{0.6\textwidth}
-\textbf{Data reorganization}
-\begin{itemize}
-    \item Sort/group data so threads in a warp take the same branch
-\end{itemize}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+#define FULL_MASK 0xffffffff
 
-\textbf{Predicated instructions}
-\begin{itemize}
-    \item Instead of short branches (< 7 instructions)
-    \item Can waste cycles if used unnecessarily
-    \item Compiler will usually do that
-\end{itemize}
+for (int offset = 16; offset > 0; offset /= 2)
+    val += __shfl_down_sync(FULL_MASK, val, offset);
+\end{lstlisting}
 
-\textbf{Separate kernels}
-\begin{itemize}
-    \item Extreme cases
-\end{itemize}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item No shared memory needed
+                \item No synchronization barriers
+                \item Efficient intra-warp communication
+            \end{itemize}
 
-\textbf{Algorithmic restructuring}
-\begin{itemize}
-    \item Replace branches with arithmetic
-\end{itemize}
+            \textbf{Replace branches with arithmetic:}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+result = condition * trueValue
+       + (!condition) * falseValue;
+\end{lstlisting}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+            \begin{tikzpicture}[
+                val/.style={draw, minimum width=6.5mm, minimum height=5mm,
+                            font=\tiny\ttfamily, fill=green!20, inner sep=0pt},
+                valg/.style={val, fill=gray!15, text=gray},
+                hdr/.style={minimum width=6.5mm, minimum height=4mm,
+                            font=\tiny\ttfamily, inner sep=0pt, text=blue!70!black},
+                lbl/.style={font=\tiny\bfseries, text=black, minimum width=10mm,
+                            align=right, anchor=east},
+                gap/.style={minimum height=6mm, inner sep=0pt},
+                arr/.style={->, thick, red!70!black},
+            ]
+                \matrix[matrix of nodes, column sep=0pt, row sep=0pt,
+                        ampersand replacement=\&] (m) {
+                    % Row 1: Lane headers
+                    |[lbl]| Lane \&
+                    |[hdr]| 0 \& |[hdr]| 1 \& |[hdr]| 2 \& |[hdr]| 3 \&
+                    |[hdr]| 4 \& |[hdr]| 5 \& |[hdr]| 6 \& |[hdr]| 7 \\
+                    % Row 2: Initial values
+                    |[lbl]| val \&
+                    |[val]| 1 \& |[val]| 2 \& |[val]| 3 \& |[val]| 4 \&
+                    |[val]| 5 \& |[val]| 6 \& |[val]| 7 \& |[val]| 8 \\
+                    % Row 3: Gap for arrows
+                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \&
+                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \\
+                    % Row 4: After offset=4
+                    |[lbl]| val \&
+                    |[val]| 6 \& |[val]| 8 \& |[val]| 10 \& |[val]| 12 \&
+                    |[valg]| 5 \& |[valg]| 6 \& |[valg]| 7 \& |[valg]| 8 \\
+                    % Row 5: Gap for arrows
+                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \&
+                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \\
+                    % Row 6: After offset=2
+                    |[lbl]| val \&
+                    |[val]| 16 \& |[val]| 20 \& |[valg]| 10 \& |[valg]| 12 \&
+                    |[valg]| 5 \& |[valg]| 6 \& |[valg]| 7 \& |[valg]| 8 \\
+                    % Row 7: Gap for arrows
+                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \&
+                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \\
+                    % Row 8: Final result
+                    |[lbl]| val \&
+                    |[val, fill=green!40]| 36 \& |[valg]| 20 \& |[valg]| 10 \& |[valg]| 12 \&
+                    |[valg]| 5 \& |[valg]| 6 \& |[valg]| 7 \& |[valg]| 8 \\
+                };
 
-\textbf{Warp-level primitives}
-\begin{itemize}
-    \item E.g., reduction using \texttt{\_\_shfl\_down\_sync}
-\end{itemize}
-\end{column}
+                % Shuffle arrows: offset=4 (row 2 -> row 4)
+                \foreach \src/\dst in {6/2, 7/3, 8/4, 9/5} {
+                    \draw[arr] (m-2-\src.south) -- (m-4-\dst.north);
+                }
+                % Shuffle arrows: offset=2 (row 4 -> row 6)
+                \foreach \src/\dst in {4/2, 5/3} {
+                    \draw[arr] (m-4-\src.south) -- (m-6-\dst.north);
+                }
+                % Shuffle arrows: offset=1 (row 6 -> row 8)
+                \draw[arr] (m-6-3.south) -- (m-8-2.north);
 
-\begin{column}{0.35\textwidth}
-\begin{tcolorbox}[colback=lightgray, colframe=black, title=Arithmetic replacement]
-\texttt{\small
-result = condition * trueValue + (!condition) * falseValue;
-}
-\end{tcolorbox}
-
-\vspace{0.3cm}
-\begin{tcolorbox}[colback=lightgray, colframe=black, title=Warp reduction]
-\texttt{\tiny
-\#define FULL\_MASK 0xffffffff\\
-for (int offset = 16; offset > 0; offset /= 2)\\
-\ \ val += \_\_shfl\_down\_sync(FULL\_MASK, val, offset);
-}
-\end{tcolorbox}
-\end{column}
-\end{columns}
+                % Operation annotations aligned to right edge of last value cell
+                \node[font=\tiny\ttfamily, text=red!70!black, anchor=east, fill=white, inner sep=1pt]
+                    at (m-2-9.east |- m-3-9) {\_\_shfl\_down\_sync(..., 4)};
+                \node[font=\tiny\ttfamily, text=red!70!black, anchor=east, fill=white, inner sep=1pt]
+                    at (m-2-9.east |- m-5-9) {\_\_shfl\_down\_sync(..., 2)};
+                \node[font=\tiny\ttfamily, text=red!70!black, anchor=east, fill=white, inner sep=1pt]
+                    at (m-2-9.east |- m-7-9) {\_\_shfl\_down\_sync(..., 1)};
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Kernel Fusion and Fission}
-\begin{columns}
-\begin{column}{0.48\textwidth}
-\textbf{Kernel Fusion} combines multiple sequential kernels into a single launch
-\begin{itemize}
-    \item Reduces \textbf{kernel launch overhead}
-    \item Reduces global memory traffic by \textbf{reusing data} in registers/shared memory
-    \item May \textcolor{red}{increase register pressure} and code complexity, potentially limiting occupancy
-\end{itemize}
-\end{column}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Kernel Fusion:}
+            \begin{itemize}
+                \item Combine multiple sequential kernels into one
+                \item Reduces launch overhead
+                \item Reduces global memory traffic
+                \item Reuse data in registers/shared memory
+            \end{itemize}
 
-\begin{column}{0.48\textwidth}
-\textbf{Kernel Fission} splits a large kernel into smaller, more focused kernels
-\begin{itemize}
-    \item Lowers register and shared-memory usage per kernel, \textbf{improving occupancy} and load balancing
-    \item Exposes \textbf{finer-grained parallelism} and simplifies optimization of individual stages
-    \item Incurs \textcolor{red}{extra launches} and memory transfers, which can offset fission benefits if over-applied
-\end{itemize}
-\end{column}
-\end{columns}
+            \textbf{Trade-off:}
+            \begin{itemize}
+                \item May increase register pressure
+                \item Can limit occupancy
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Kernel Fission:}
+            \begin{itemize}
+                \item Split large kernel into smaller ones
+                \item Lowers register/shared memory usage
+                \item Improves occupancy
+                \item Exposes finer-grained parallelism
+            \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Usually done manually}
-\begin{itemize}
-    \item Some automation by libraries/frameworks
-\end{itemize}
+            \textbf{Trade-off:}
+            \begin{itemize}
+                \item Extra launches
+                \item Additional memory transfers
+            \end{itemize}
+        \end{column}
+    \end{columns}
 \end{frame}
 
-\begin{frame}{DPX (Dynamic Programming eXtensions)}
-\textbf{DPX is a set of specialized fused-compute instructions}
-\begin{itemize}
-    \item Enable finding min and max values
-    \item \& fused addition and min/max
-    \item Up to three 16 and 32-bit signed or unsigned integer parameters
-    \item Optional ReLU (clamping to zero)
-\end{itemize}
+\begin{frame}{DPX Instructions}
+    \begin{columns}
+        \begin{column}{0.55\textwidth}
+            \textbf{Dynamic Programming eXtensions:}
 
-\vspace{0.3cm}
-\textbf{Can be used by compiler / intrinsic}
+            \begin{itemize}
+                \item Specialized fused-compute instructions
+                \item Find min/max values with fused addition
+                \item Works on 16 and 32-bit signed/unsigned integers
+                \item Optional ReLU (clamping to zero)
+            \end{itemize}
 
-\vspace{0.5cm}
-\textbf{Example: Floyd--Warshall Algorithm}
-\begin{itemize}
-    \item Find the lengths (summed weights) of shortest paths between all pairs of vertices
-    \item Useful in robotics
-    \item \texttt{dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])}
-    \item Can use DPX instruction for fused min+add
-\end{itemize}
+            \vspace{0.5em}
+            \textbf{Example: Floyd--Warshall Algorithm}
+
+            Find shortest paths between all pairs of vertices:
+            \[
+            \text{dist}[i][j] = \min(\text{dist}[i][j], \text{dist}[i][k] + \text{dist}[k][j])
+            \]
+
+            DPX accelerates the \texttt{min(a, b + c)} operation.
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \begin{center}
+                \includegraphics[width=\textwidth]{figures/10-floyd-warshall-iterations.png}
+            \end{center}
+        \end{column}
+    \end{columns}
 \end{frame}
+
+%===============================================================================
+\section{Tensor Cores}
+%===============================================================================
 
 \begin{frame}{Tensor Cores}
-\textbf{Tensors:} multi-dimensional arrays
+    \begin{columns}
+        \begin{column}{0.65\textwidth}
+            \textbf{Specialized for matrix multiply-accumulate (MMA) operations.}
 
-\textbf{Warp Matrix Multiply Accumulate (WMMA)}
+            \vspace{0.5em}
+            \textbf{Tensor Cores dominate LLM workloads:}
+            \begin{itemize}
+                \item Transformers are \alert{matrix multiplication machines}
+                \item Attention: $\text{softmax}\left(\frac{QK^T}{\sqrt{d}}\right) \cdot V$ --- all matmuls
+                \item Feed-forward layers: dense matrix multiplications
+                \item Single Tensor Core op: 16$\times$16$\times$16 MMA (FP16)
+            \end{itemize}
 
-\textbf{Frameworks} like \textbf{cuBLAS, cuDNN, PyTorch}, and \textbf{TensorFlow} internally use WMMA to speed up operations like matmul, conv2d, and transformer attention blocks.
+            \vspace{0.5em}
+            \textbf{WMMA (Warp Matrix Multiply Accumulate):}
+            \begin{itemize}
+                \item Used internally by cuBLAS, cuDNN, PyTorch, TensorFlow
+                \item Fused multiply-add in single clock cycle
+                \item GPU tiling: large matrices $\rightarrow$ small tiles in shared memory
+            \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Tensor Cores:} Specialized for matrix multiply-accumulate (MMA) operations
-\begin{itemize}
-    \item Operates on small fixed-size matrices (e.g., 16×16×16)
-    \item Performs $D = A \times B + C$ at hardware speed
-\end{itemize}
+            \vspace{0.3em}
+            \begin{block}{Key Insight}
+                $>$90\% of LLM compute time is spent in Tensor Core operations.
+            \end{block}
+        \end{column}
+        \begin{column}{0.35\textwidth}
+            \vspace{-4.5em}
+            \begin{center}
+            \begin{tikzpicture}[
+                cell/.style={minimum size=6mm, anchor=center, font=\footnotesize},
+                arr/.style={->, thick, red!70!black}]
+                % Row-major
+                \matrix[matrix of math nodes, nodes={cell}, row sep=1pt,
+                        column sep=1pt, ampersand replacement=\&,
+                        left delimiter={[}, right delimiter={]},
+                        label={[font=\scriptsize\bfseries]above:Row-major}] (R) {
+                    a_{11} \& a_{12} \& a_{13} \\
+                    a_{21} \& a_{22} \& a_{23} \\
+                    a_{31} \& a_{32} \& a_{33} \\
+                };
+                \draw[arr, dashed] (R-1-1) -- (R-1-3) -- (R-2-1) -- (R-2-3) -- (R-3-1) -- (R-3-3);
 
-\vspace{0.3cm}
-\textbf{Supported precisions:}
-\begin{itemize}
-    \item FP16 (IEEE half-precision): 1 sign, 5 exponent, 10 mantissa
-    \item BF16 (Brain Float): 1 sign, 8 exponent, 7 mantissa -- same range as FP32
-    \item TF32 (Tensor Float): uses FP32 inputs but internally truncates to 10-bit mantissa
-    \item INT8/INT4 for quantized inference
-    \item Accumulator precision is almost always \textbf{FP32}
-\end{itemize}
+                % Column-major
+                \matrix[matrix of math nodes, nodes={cell}, row sep=1pt,
+                        column sep=1pt, ampersand replacement=\&,
+                        left delimiter={[}, right delimiter={]}, below=35pt of R,
+                        label={[font=\scriptsize\bfseries]above:Column-major}] (C) {
+                    a_{11} \& a_{12} \& a_{13} \\
+                    a_{21} \& a_{22} \& a_{23} \\
+                    a_{31} \& a_{32} \& a_{33} \\
+                };
+                \draw[arr, cyan!70!black, dashed] (C-1-1) -- (C-3-1) -- (C-1-2) -- (C-3-2) -- (C-1-3) -- (C-3-3);
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+    \end{columns}
 \end{frame}
 
-\begin{frame}{WMMA: Row-major vs. Column-major}
-\begin{columns}
-\begin{column}{0.55\textwidth}
-\textbf{Row-major vs. column-major}
+\begin{frame}[fragile]{Tensor Cores: WMMA Example}
+\begin{lstlisting}
+#include <mma.h>
+using namespace nvcuda;
 
-CUDA C/C++ default is \textbf{row-major}: elements A[i][j] are laid out so that A[i][j] and A[i][j+1] are contiguous in memory.
+__global__ void wmma_ker(half *a, half *b, float *c) {
+   // Declare the fragments
+   wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::col_major> a_frag;
+   wmma::fragment<wmma::matrix_b, 16, 16, 16, half, wmma::row_major> b_frag;
+   wmma::fragment<wmma::accumulator, 16, 16, 16, float> c_frag;
 
-\vspace{0.3cm}
-WMMA fragments can be declared for either layout (\texttt{row\_major} or \texttt{col\_major}), but you must match your data's layout.
-\end{column}
+   // Initialize the output to zero
+   wmma::fill_fragment(c_frag, 0.0f);
 
-\begin{column}{0.4\textwidth}
-\begin{tikzpicture}[scale=0.6]
-% Row-major
-\node[anchor=north] at (2,3.5) {\small\textbf{Row-major}};
-\foreach \i in {0,1,2} {
-    \foreach \j in {0,1,2} {
-        \draw[fill=blue!20] (\j*0.8,3-\i*0.6) rectangle (\j*0.8+0.7,3-\i*0.6-0.5);
-        \node[font=\tiny] at (\j*0.8+0.35,3-\i*0.6-0.25) {$a_{\i\j}$};
-    }
+   // Load the inputs
+   wmma::load_matrix_sync(a_frag, a, 16);
+   wmma::load_matrix_sync(b_frag, b, 16);
+
+   // Perform the matrix multiplication
+   wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
+
+   // Store the output
+   wmma::store_matrix_sync(c, c_frag, 16, wmma::mem_row_major);
 }
-\draw[->, red, very thick] (0.1,2.5) -- (2.2,2.5);
-\node[right, font=\tiny] at (2.3,2.5) {contiguous};
+\end{lstlisting}
+\end{frame}
 
-% Column-major
-\node[anchor=north] at (2,0.5) {\small\textbf{Column-major}};
-\foreach \i in {0,1,2} {
-    \foreach \j in {0,1,2} {
-        \draw[fill=green!20] (\j*0.8,0-\i*0.6) rectangle (\j*0.8+0.7,0-\i*0.6-0.5);
-        \node[font=\tiny] at (\j*0.8+0.35,0-\i*0.6-0.25) {$a_{\i\j}$};
-    }
-}
-\draw[->, cyan, very thick] (1.15,0.2) -- (1.15,-1.4);
-\node[below, font=\tiny] at (1.15,-1.5) {contiguous};
-\end{tikzpicture}
-\end{column}
-\end{columns}
+\begin{frame}{Tensor Core Precisions}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Floating-Point Formats:}
+            \begin{description}
+                \item[FP32] 32 bits --- full precision baseline
+                \item[TF32] 19 bits --- $\sim$10$\times$ speedup, same range as FP32
+                \item[FP16] 16 bits --- standard for deep learning
+                \item[BF16] 16 bits --- same range as FP32, fewer mantissa bits
+                \item[FP8] 8 bits --- Hopper+, 2$\times$ throughput vs FP16
+                \item[FP4] 4 bits --- Blackwell, 4$\times$ throughput vs FP8
+            \end{description}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Integer Formats:}
+            \begin{description}
+                \item[INT8] Quantized inference, 4$\times$ vs FP32
+                \item[INT4] Highest throughput for extreme quantization
+            \end{description}
+
+            \vspace{1em}
+            \textbf{Mixed Precision Pattern:}
+            \begin{itemize}
+                \item Inputs: FP16/BF16/FP8/FP4
+                \item Accumulator: \alert{always FP32}
+                \item Maintains numerical stability
+            \end{itemize}
+
+            \vspace{0.5em}
+            \begin{block}{Trend}
+                Each generation adds lower precision $\rightarrow$ higher throughput.
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Tensor Memory (TMEM) --- Blackwell}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{What is TMEM?}
+            \begin{itemize}
+                \item 256KB dedicated on-chip memory per SM
+                \item 128 lanes $\times$ 512 columns $\times$ 4 bytes
+                \item Specialized for Tensor Core accumulators
+                \item Separate from registers and shared memory
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item Zero register pressure for MMA operations
+                \item Decouples Tensor Cores from CUDA Cores
+                \item Higher occupancy possible
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Evolution of Tensor Core Data Flow:}
+            \begin{enumerate}
+                \item \textbf{Volta/Ampere:} Operands \& accumulators in registers
+                \item \textbf{Hopper:} TMA loads operands directly to shared memory
+                \item \textbf{Blackwell:} TMEM holds accumulators
+            \end{enumerate}
+
+            \vspace{0.5em}
+            \textbf{Trade-offs:}
+            \begin{itemize}
+                \item Must explicitly manage TMEM allocation
+                \item Custom ops on accumulators require TMEM $\leftrightarrow$ register copies
+                \item Restricted access patterns (warpgroup-based)
+            \end{itemize}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Quantization}
-\begin{columns}
-\begin{column}{0.55\textwidth}
-\textbf{Converting high-precision model parameters} (e.g., 32-bit floats) into lower-precision formats (e.g., 8-bit integers) to reduce compute and memory requirements.
+    \textbf{Software technique: converting high-precision weights to lower-precision formats.}
 
-\vspace{0.3cm}
-\textbf{Benefits:}
-\begin{itemize}
-    \item Lowers memory footprint
-    \item Speeds up inference
-    \item Enables deployment on resource-constrained hardware
-\end{itemize}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item Lower memory footprint
+                \item Faster inference (Tensor Cores accelerate INT8/INT4/FP8/FP4)
+                \item Enables deployment on resource-constrained hardware
+            \end{itemize}
 
-\textbf{Potential accuracy loss}
-\end{column}
+            \vspace{0.5em}
+            \textbf{Common Schemes:}
+            \begin{description}
+                \item[PTQ] Post-Training Quantization --- quantize after training
+                \item[QAT] Quantization-Aware Training --- simulate quantization during training
+            \end{description}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Connection to Hardware:}
+            \begin{itemize}
+                \item FP32 model $\rightarrow$ INT8 weights = 4$\times$ smaller
+                \item Tensor Cores have dedicated INT8/INT4 datapaths
+                \item Mixed precision: INT8 compute, FP32 accumulator
+            \end{itemize}
 
-\begin{column}{0.4\textwidth}
-\textbf{Common Quantization Schemes}
-\begin{itemize}
-    \item \textbf{Post-Training Quantization (PTQ):} Quantize a fully trained model without retraining
-    \item \textbf{Quantization-Aware Training (QAT):} Simulate quantization effects during training to preserve accuracy
-\end{itemize}
-\end{column}
-\end{columns}
+            \vspace{0.5em}
+            \begin{alertblock}{Trade-off}
+                Potential accuracy loss --- must validate on your workload.
+            \end{alertblock}
+        \end{column}
+    \end{columns}
 \end{frame}
 
-\section{GPU and Memory}
+%===============================================================================
+\section{GPU Memory}
+%===============================================================================
+
+\begin{frame}{GPU Memory Hierarchy}
+    \begin{columns}
+        \begin{column}{0.45\textwidth}
+            \textbf{B200 Memory Hierarchy:}
+            \begin{center}
+            \begin{tikzpicture}[
+                level/.style={draw, minimum width=32mm, minimum height=7mm, font=\scriptsize, align=center},
+                arr/.style={->, thick},
+            ]
+                \node[level, fill=red!30] (reg) {Registers\\256KB/SM, $\sim$1 cycle};
+                \node[level, fill=orange!30, below=2mm of reg] (smem) {Shared Mem / L1\\256KB/SM, $\sim$30 cycles};
+                \node[level, fill=yellow!30, below=2mm of smem] (l2) {L2 Cache\\128MB total, $\sim$200 cycles};
+                \node[level, fill=green!30, below=2mm of l2] (hbm) {HBM3e (Global)\\192GB, $\sim$400 cycles};
+
+                \draw[arr] (reg) -- (smem);
+                \draw[arr] (smem) -- (l2);
+                \draw[arr] (l2) -- (hbm);
+
+                % Scope labels
+                \node[font=\tiny, right=1mm of reg, text=gray] {per-thread};
+                \node[font=\tiny, right=1mm of smem, text=gray] {per-SM};
+                \node[font=\tiny, right=1mm of l2, text=gray] {all SMs};
+                \node[font=\tiny, right=1mm of hbm, text=gray] {all SMs};
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+        \begin{column}{0.55\textwidth}
+            \textbf{Shared Memory vs L1 Cache:}
+            \begin{itemize}
+                \item \alert{Same physical SRAM pool} (256KB per SM)
+                \item \textbf{Shared Memory}: Programmer-managed scratchpad
+                \item \textbf{L1 Cache}: Hardware-managed, caches global memory
+                \item Configurable split via \texttt{cudaFuncSetAttribute()}
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{L2 Cache:}
+            \begin{itemize}
+                \item Shared across all SMs (unlike L1)
+                \item Caches global memory accesses automatically
+                \item B200: 64MB per die $\times$ 2 dies = 128MB total
+                \item Can pin data with L2 residency controls
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{Key Insight:} Moving data closer to compute is critical for performance.
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3em}
+    {\scriptsize Source: NVIDIA Blackwell Tuning Guide}
+\end{frame}
 
 \begin{frame}{HBM (High Bandwidth Memory)}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{3D-stacked DRAM architecture}
-\begin{itemize}
-    \item Places memory dies vertically atop a base logic die
-    \item Interconnected via through-silicon vias (TSVs)
-\end{itemize}
+    \begin{columns}
+        \begin{column}{0.55\textwidth}
+            \textbf{3D-stacked DRAM architecture:}
+            \begin{itemize}
+                \item Memory dies stacked vertically atop base logic die
+                \item Interconnected via through-silicon vias (TSVs)
+            \end{itemize}
 
-\vspace{0.3cm}
-\textbf{Benefits:}
-\begin{itemize}
-    \item Massive bandwidth, low latency
-    \item Wide interface (1024+ bits)
-    \item Low power per bit
-\end{itemize}
-\end{column}
+            \vspace{0.5em}
+            \textbf{Benefits:}
+            \begin{itemize}
+                \item \textbf{Massive bandwidth}: 8 TB/s on B200
+                \item \textbf{Low latency}: Short signal paths
+                \item \textbf{Wide interface}: 8192-bit bus
+                \item \textbf{Low power per bit}: Compared to GDDR
+            \end{itemize}
 
-\begin{column}{0.45\textwidth}
-\begin{tikzpicture}[scale=0.7]
-% HBM stack illustration
-\foreach \i in {0,...,5} {
-    \draw[fill=blue!30, opacity=0.7] (0,\i*0.4) rectangle (3,\i*0.4+0.3);
-    \node[font=\tiny] at (1.5,\i*0.4+0.15) {DRAM Die \i};
-}
-\draw[fill=green!30] (0,2.8) rectangle (3,3.3);
-\node[font=\tiny, align=center] at (1.5,3.05) {Interface Die\\(TSVs)};
+            \vspace{0.5em}
+            \textbf{Example:} B200 has 192GB HBM3e @ 8 TB/s
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \begin{center}
+                \includegraphics[width=\textwidth]{figures/10-hbm2e-architecture.jpeg}
+            \end{center}
+        \end{column}
+    \end{columns}
 
-\draw[fill=yellow!30] (0,3.5) rectangle (3,4);
-\node[font=\tiny] at (1.5,3.75) {GPU/ASIC};
-
-% TSV illustration
-\foreach \i in {0.5,1,1.5,2,2.5} {
-    \draw[very thick, gray] (\i,0) -- (\i,2.8);
-}
-
-\node[font=\small] at (1.5,-0.5) {Through-Silicon Vias};
-\end{tikzpicture}
-\end{column}
-\end{columns}
+    \vspace{0.3em}
+    {\scriptsize Source: NVIDIA B200 Datasheet}
 \end{frame}
 
 \begin{frame}{Different Memory Types}
@@ -938,295 +1145,423 @@ Applications & Mobile, AI & Mobile, AI & Compute & AI, Graphics & AI, HPC \\
 \normalsize
 Key insight: HBM achieves highest bandwidth through \textbf{wide interface} (1024 bits) × moderate data rate (3.6 Gbps) = 3686 Gbps total
 \end{frame}
+\begin{frame}[fragile]{Memory Coalescing}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{How GPU memory works:}
+            \begin{itemize}
+                \item Memory accessed in \textbf{32-byte sectors}
+                \item L1 cache line: 128 bytes (4 sectors)
+                \item Warp (32 threads) issues one memory transaction
+                \item \alert{Goal:} Minimize transactions per warp
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{Coalesced access:}
+            \begin{itemize}
+                \item Adjacent threads access adjacent addresses
+                \item 32 threads $\times$ 4 bytes = 128 bytes = 1 transaction
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{Strided access:}
+            \begin{itemize}
+                \item Threads access non-contiguous addresses
+                \item Stride of $N$: up to $N\times$ more transactions
+                \item 10--30$\times$ performance penalty
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+\begin{lstlisting}[title={\color{green!50!black}\textbf{Coalesced (row-major)}}]
+// Thread i accesses A[row][i]
+float val = A[row * N + threadIdx.x];
+\end{lstlisting}
+
+\begin{lstlisting}[title={\color{red!70!black}\textbf{Non-coalesced (column-major)}}]
+// Thread i accesses A[i][col]
+float val = A[threadIdx.x * N + col];
+\end{lstlisting}
+
+            \vspace{0.5em}
+            \begin{center}
+            \begin{tikzpicture}[
+                cell/.style={draw, minimum width=4mm, minimum height=4mm,
+                             font=\tiny, inner sep=0pt},
+                good/.style={cell, fill=green!25},
+                bad/.style={cell, fill=red!25},
+                lbl/.style={font=\tiny\bfseries},
+            ]
+                % Coalesced access
+                \node[lbl] at (-0.8, 0) {Coalesced:};
+                \foreach \i in {0,...,7} {
+                    \node[good] at (\i*0.45, 0) {\i};
+                }
+                \draw[->, thick, green!50!black] (0, -0.4) -- (3.15, -0.4);
+                \node[font=\tiny, green!50!black] at (1.6, -0.65) {1 transaction};
+
+                % Strided access
+                \node[lbl] at (-0.8, -1.4) {Strided:};
+                \foreach \i in {0,...,7} {
+                    \node[bad] at (\i*0.45, -1.4) {\i};
+                }
+                \foreach \i in {0,2,4,6} {
+                    \draw[->, thick, red!70!black] (\i*0.45, -1.1) -- (\i*0.45, -1.2);
+                }
+                \node[font=\tiny, red!70!black] at (1.6, -1.95) {4 transactions};
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
 
 \begin{frame}{Asynchronous Memory Copying}
-\small
-\textbf{Host $\rightarrow$ Device DMA}
-\begin{itemize}
-    \item GPU DMA engines can transfer data over PCIe/NVLink without CPU intervention
-    \item \texttt{cudaMemcpyAsync()} issues non-blocking transfers on a copy engine, overlapping PCIe/NVLink traffic with compute on separate streams
-\end{itemize}
+    \textbf{Host $\rightarrow$ Device DMA:}
+    \begin{itemize}
+        \item GPU DMA engines transfer over PCIe/NVLink without CPU
+        \item \texttt{cudaMemcpyAsync()} for non-blocking transfers
+        \item Requires page-locked (pinned) host buffers
+    \end{itemize}
 
-\textbf{Device-Side Global $\rightarrow$ Shared}
-\begin{itemize}
-    \item \texttt{cp.async} (or \texttt{cuda::memcpy\_async}) enqueues transfers into a hardware FIFO
-    \item Data movement is decoupled from warp execution
-\end{itemize}
+    \vspace{0.5em}
+    \textbf{Device-Side Global $\rightarrow$ Shared:}
+    \begin{itemize}
+        \item \texttt{cp.async} or \texttt{cuda::memcpy\_async}
+        \item Data movement decoupled from warp execution
+    \end{itemize}
 
-\textbf{Pipelining \& Overlap}
-\begin{itemize}
-    \item Use multi-stage pipelines (double-buffering) or the CUDA C++ \texttt{cuda::pipeline} API
-    \item Issue next-tile copies before consuming current data
-    \item Hides hundreds of cycles of global-memory latency behind active computation
-\end{itemize}
+    \vspace{0.5em}
+    \textbf{Pipelining \& Overlap:}
+    \begin{itemize}
+        \item Multi-stage pipelines (double-buffering)
+        \item Issue next-tile copies before consuming current
+        \item Hides hundreds of cycles of global-memory latency
+    \end{itemize}
 
-\textbf{Best Practices}
-\begin{itemize}
-    \item Allocate host buffers with \texttt{cudaHostAlloc} for true async host-to-device DMA
-    \item Align and tile data to cache-line boundaries for maximal throughput
-    \item Balance pipeline depth (stages) with shared-memory footprint and occupancy
-\end{itemize}
+    \vspace{0.5em}
+    \textbf{Best Practices:}
+    \begin{itemize}
+        \item Use \texttt{cudaHostAlloc} for true async DMA
+        \item Align data to cache-line boundaries
+    \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Pipelining Example: Single Stage}
-\begin{minted}[fontsize=\fontsize{5}{6}\selectfont, frame=single, bgcolor=gray!10]{cpp}
-__global__ void with_single_stage(int* global_out, int const* global_in,
-                                   size_t size, size_t batch_sz) {
-  auto block = cooperative_groups::this_thread_block();
-  constexpr size_t stages_count = 1;
-  extern __shared__ int shared[];
+\begin{frame}[fragile]{Pipelining with Latency Hiding (1/2)}
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+template <size_t stages_count = 2 (*@\tikzmark{stages}@*)/* Pipeline with stages_count stages */>
+__global__ void with_staging_unified(int* global_out, int const* global_in,
+                                     size_t size, size_t batch_sz) {
+    auto grid = cooperative_groups::this_grid();
+    auto block = cooperative_groups::this_thread_block();
+    assert(size == batch_sz * grid.size()); // Assume input size fits batch_sz * grid_size
 
-  __shared__ cuda::pipeline_shared_state<
-    cuda::thread_scope::thread_scope_block, stages_count> shared_state;
-  auto pipeline = cuda::make_pipeline(block, &shared_state);
+    extern __shared__ int shared[];(*@\tikzmark{shared}@*) // stages_count * block.size() * sizeof(int) bytes
+    size_t shared_offset[stages_count];
+    for (int s = 0; s < stages_count; ++s) shared_offset[s] = s * block.size();
 
-  for (size_t batch = 0; batch < batch_sz; ++batch) {
-    // Acquire pipeline stage
-    pipeline.producer_acquire();
+    __shared__ cuda::pipeline_shared_state<(*@\tikzmark{pipestate}@*)
+        cuda::thread_scope::thread_scope_block,
+        stages_count
+    > shared_state;
+    auto pipeline = cuda::make_pipeline(block, &shared_state);(*@\tikzmark{makepipe}@*)
 
-    // Submit async copy to pipeline's head stage
-    cuda::memcpy_async(block, shared, global_in + block_batch(batch),
-                       sizeof(int) * block.size(), pipeline);
-
-    // Commit (advance) the pipeline's head stage
-    pipeline.producer_commit();
-
-    // Wait for operations to complete
-    pipeline.consumer_wait();
-
-    // Computation overlapped with memcpy_async
-    compute(global_out + block_batch(batch), shared);
-
-    // Release stage resources
-    pipeline.consumer_release();
-  }
-}
-\end{minted}
-\end{frame}
-
-\begin{frame}[fragile]{Pipelining Example: Multi-Stage}
-\begin{minted}[fontsize=\fontsize{5}{6}\selectfont, frame=single, bgcolor=gray!10]{cpp}
-template <size_t stages_count = 2>
-__global__ void with_staging(int* global_out, int const* global_in,
-                              size_t size, size_t batch_sz) {
-  extern __shared__ int shared[]; // stages_count * block.size() elements
-
-  for (size_t compute_batch = 0, fetch_batch = 0;
-       compute_batch < batch_sz; ++compute_batch) {
-    // Inner loop: fill pipeline with multiple stages
-    for (; fetch_batch < batch_sz &&
-           fetch_batch < (compute_batch + stages_count); ++fetch_batch) {
-      pipeline.producer_acquire();
-      size_t shared_idx = fetch_batch % stages_count;
-      cuda::memcpy_async(block, shared + shared_offset[shared_idx],
-                         global_in + block_batch(fetch_batch),
-                         sizeof(int) * block.size(), pipeline);
-      pipeline.producer_commit();
+    auto block_batch = [&](size_t batch) -> int {
+        return block.group_index().x * block.size() + grid.size() * batch;
+    };
+\end{lstlisting}
+\begin{tikzpicture}[remember picture, overlay,
+    callout/.style={rectangle callout, draw=blue!70, fill=blue!10,
+                    font=\tiny, callout absolute pointer={#1},
+                    rounded corners=2pt, text width=22mm, align=center}]
+    \only<2->{
+    \node[callout={(pic cs:stages)}, anchor=south] at ([shift={(0mm,3mm)}]pic cs:stages)
+        {Double buffering\\(2 stages)};
+    \node[callout={(pic cs:shared)}, anchor=west] at ([shift={(50mm,0mm)}]pic cs:shared)
+        {Staging buffers\\in shared memory};
+    \node[callout={(pic cs:pipestate)}, anchor=west] at ([shift={(50mm,0mm)}]pic cs:pipestate)
+        {Pipeline state for\\block synchronization};
     }
+\end{tikzpicture}
+\end{frame}
 
-    pipeline.consumer_wait();
-    int shared_idx = compute_batch % stages_count;
-    // Computation overlapped with fetching next batches
-    compute(global_out + block_batch(compute_batch),
-            shared + shared_offset[shared_idx]);
-    pipeline.consumer_release();
-  }
-}
-\end{minted}
+\begin{frame}[fragile]{Pipelining with Latency Hiding (2/2)}
+\begin{lstlisting}[escapeinside={(*@}{@*)}]
+    // compute_batch: next batch to process
+    // fetch_batch:  next batch to fetch from global memory
+    for (size_t compute_batch = 0, fetch_batch = 0;(*@\tikzmark{twoptr}@*) compute_batch < batch_sz;
+         ++compute_batch) {
+        // The outer loop iterates over the computation of the batches
+        for (; fetch_batch < batch_sz && fetch_batch < (compute_batch + stages_count);(*@\tikzmark{keepfull}@*)
+             ++fetch_batch) {
+            // This inner loop iterates over the memory transfers,
+            // making sure that the pipeline is always full
+            pipeline.producer_acquire();(*@\tikzmark{produce}@*)
+            size_t shared_idx = fetch_batch % stages_count;(*@\tikzmark{modulo}@*)
+            size_t batch_idx = fetch_batch;
+            size_t block_batch_idx = block_batch(batch_idx);
+            cuda::memcpy_async(block, shared + shared_offset[shared_idx],(*@\tikzmark{async}@*)
+                               global_in + block_batch_idx,
+                               sizeof(int) * block.size(), pipeline);
+            pipeline.producer_commit();
+        }
+        pipeline.consumer_wait();(*@\tikzmark{consume}@*)
+        int shared_idx = compute_batch % stages_count;
+        int batch_idx = compute_batch;
+        compute(global_out + block_batch(batch_idx), shared + shared_offset[shared_idx]);
+        pipeline.consumer_release();
+    }
+\end{lstlisting}
+\begin{tikzpicture}[remember picture, overlay,
+    callout/.style={rectangle callout, draw=blue!70, fill=blue!10,
+                    font=\tiny, callout absolute pointer={#1},
+                    rounded corners=2pt, text width=24mm, align=center}]
+    \only<2->{
+    \node[callout={(pic cs:twoptr)}, anchor=south] at ([shift={(0mm,3mm)}]pic cs:twoptr)
+        {Two pointers:\\fetch ahead of compute};
+    \node[callout={(pic cs:keepfull)}, anchor=south west] at ([shift={(3mm,2mm)}]pic cs:keepfull)
+        {Keep pipeline full\\(fetch up to stages\_count ahead)};
+    \node[callout={(pic cs:produce)}, anchor=west] at ([shift={(45mm,0mm)}]pic cs:produce)
+        {Producer: acquire slot,\\async copy, commit};
+    \node[callout={(pic cs:consume)}, anchor=west] at ([shift={(45mm,0mm)}]pic cs:consume)
+        {Consumer: wait for data,\\compute, release slot};
+    }
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Unified Memory}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{A single, shared address space between CPU and GPU}
-\begin{itemize}
-    \item Both processors transparently access the same data
-    \item Automatically migrates pages on-demand
-    \item No hardware coherence
-\end{itemize}
+    \textbf{Single, shared address space between CPU and GPU.}
 
-\textbf{On-demand paging}
+    \vspace{0.5em}
+    \textbf{Features:}
+    \begin{itemize}
+        \item Both processors transparently access the same data
+        \item Automatically migrates pages on-demand
+        \item Enables memory overcommitment
+    \end{itemize}
 
-\textbf{Enables memory overcommitment}
-\end{column}
+    \vspace{1em}
+    \textbf{Considerations:}
+    \begin{itemize}
+        \item No hardware coherence
+        \item All SM translations blocked until page-fault handled
+    \end{itemize}
 
-\begin{column}{0.45\textwidth}
-\textbf{All SM translations are blocked until page-fault is handled}
-
-\vspace{0.3cm}
-\textbf{Best practices:}
-\begin{itemize}
-    \item For predictable access patterns, issue prefetch hints
-    \item Pin or allocate performance-critical buffers
-\end{itemize}
-\end{column}
-\end{columns}
+    \vspace{0.5em}
+    \textbf{Best Practices:}
+    \begin{itemize}
+        \item For predictable access patterns, issue prefetch hints
+        \item Pin or allocate performance-critical buffers explicitly
+    \end{itemize}
 \end{frame}
 
-\section{IO}
+%===============================================================================
+\section{GPU I/O}
+%===============================================================================
 
-\begin{frame}{GPGPU I/O}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{Common CPU--GPU link is often a bottleneck}
+\begin{frame}{GPGPU I/O Challenges}
+    \textbf{CPU--GPU link is often a bottleneck.}
 
-\vspace{0.3cm}
-\textbf{Overheads due to:}
-\begin{itemize}
-    \item Transferring data from/to CPU
-    \item Involving CPU for disk/network I/O
-    \item Synchronous I/O
-\end{itemize}
-\end{column}
+    \vspace{0.5em}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Compute (B200):}
+            \begin{itemize}
+                \item $\sim$2.2 PFLOP/s (FP16 Tensor)
+                \item On-GPU Bandwidth: 8 TB/s
+            \end{itemize}
 
-\begin{column}{0.45\textwidth}
-\small
-\textbf{Performance numbers:}
-\begin{itemize}
-    \item Compute: $\sim$60 TFLOP/s
-    \item On-GPU Bandwidth: $\sim$3 TB/s
-    \item \textbf{Links:}
-    \begin{itemize}
-        \item PCIe 4.0 ×16: $\sim$63 GB/s
-        \item PCIe 5.0 ×16: $\sim$126 GB/s
-        \item PCIe 6.0 ×16: $\sim$242 GB/s
-        \item NVLink 3 (Ampere): 600 GB/s
-        \item NVLink 4 (Hopper): 900 GB/s
-        \item NVLink 5 (Blackwell): 1800 GB/s
-    \end{itemize}
-    \item \textbf{Storage:}
-    \begin{itemize}
-        \item NVMe SSD: 3--7 GB/s
-    \end{itemize}
-\end{itemize}
-\end{column}
-\end{columns}
+            \vspace{0.5em}
+            \textbf{Links:}
+            \begin{itemize}
+                \item PCIe 5.0 $\times$16: $\sim$126 GB/s
+                \item NVLink 5 (Blackwell): 1.8 TB/s
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Overheads:}
+            \begin{itemize}
+                \item Data transfer to/from CPU
+                \item CPU involvement for disk/network I/O
+                \item Synchronous I/O operations
+            \end{itemize}
+
+            \vspace{0.5em}
+            \textbf{Storage:}
+            \begin{itemize}
+                \item NVMe SSD: 3--7 GB/s
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
+    \vspace{1em}
+    \begin{block}{Key Insight}
+        Many workloads choke on data movement and delivery.
+    \end{block}
+
+    {\scriptsize Source: NVIDIA B200 Datasheet, GTC 2024}
 \end{frame}
 
 \begin{frame}{GPUDirect Storage}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{Enables a direct data path between local or remote storage:}
-\begin{itemize}
-    \item NVMe
-    \item NVMe over Fabric (NVMe-oF)
-\end{itemize}
+    \textbf{Direct NVMe/NVMe-oF to GPU path --- bypasses CPU memory.}\\
+    \textbf{GPUDirect RDMA}: Network-to-GPU without CPU involvement.\\
+    {\small Without GPUDirect: CPU memory controller orchestrates two-stage copy.}
 
-\vspace{0.3cm}
-\textbf{Avoids extra copies through a bounce buffer in the CPU's memory}
+    \begin{center}
+    \begin{tikzpicture}[
+        node distance=15mm,
+        icon/.style={inner sep=0pt},
+        lbl/.style={font=\scriptsize\bfseries},
+        link/.style={draw=gray!60, thick},
+        bounce/.style={draw=red!70, very thick, ->},
+        gds/.style={draw=green!60!black, very thick, ->},
+    ]
+        % === Left side: Without GPUDirect Storage ===
+        \node[font=\scriptsize\bfseries] (title1) {Without GPUDirect Storage};
+        \node[icon, below=5mm of title1, label={[lbl]above:Switch}] (sw1)
+            {\includegraphics[height=10mm]{figures/noun-switch-7787836.png}};
+        \node[icon, left of=sw1, label={[lbl]above:CPU}] (cpu1)
+            {\includegraphics[height=8mm]{figures/noun-cpu-8157304.png}};
+        \node[icon, below of=cpu1, label={[lbl]below:Memory}] (mem1)
+            {\includegraphics[height=8mm]{figures/06-ram-dimm-icon.png}};
+        \node[icon, right of=sw1, label={[lbl]above:NVMe}] (nvme1)
+            {\includegraphics[height=5mm]{figures/noun-nvme-5566039.png}};
+        \node[icon, below of=sw1, label={[lbl]below:GPU}] (gpu1)
+            {\includegraphics[height=10mm]{figures/noun-gpu-8141519.png}};
 
-\vspace{0.3cm}
-\textbf{GPUDirect RDMA enables networking without CPU involvement}
-\end{column}
+        % Connections - left side
+        \draw[link] (cpu1) -- (mem1);
+        \draw[link] (cpu1) -- (sw1);
+        \draw[link] (sw1) -- (nvme1);
+        \draw[link] (sw1) -- (gpu1);
+        % Bounce buffer path (red) - two stages via CPU (memory controller)
+        % Stage 1: NVMe -> CPU -> Memory
+        \draw[bounce, transform canvas={yshift=2pt}] (nvme1.west) to[out=180,in=0] (cpu1.east);
+        \draw[bounce, transform canvas={xshift=-2pt}] (cpu1.south) -- (mem1.north);
+        % Stage 2: Memory -> CPU -> GPU (upside-down U)
+        \draw[bounce, transform canvas={xshift=2pt}] (mem1.north) to[out=90,in=180] (cpu1.east)
+            to[out=0,in=90] (gpu1.north);
 
-\begin{column}{0.45\textwidth}
-\begin{tikzpicture}[scale=0.6, every node/.style={font=\tiny}]
-% Without GPUDirect Storage
-\node[anchor=north] at (3,6) {\textbf{Without GPUDirect Storage}};
-\draw[fill=gray!30] (0,4.5) rectangle (1.5,5.5);
-\node at (0.75,5) {Storage};
-\draw[fill=blue!30] (2,4.5) rectangle (4,5.5);
-\node[align=center] at (3,5) {CPU\\Memory};
-\draw[fill=cyan!30] (5,4.5) rectangle (6.5,5.5);
-\node at (5.75,5) {GPU};
+        % === Right side: With GPUDirect Storage ===
+        \begin{scope}[xshift=55mm]
+            \node[font=\scriptsize\bfseries] (title2) {With GPUDirect Storage};
+            \node[icon, below=5mm of title2, label={[lbl]above:Switch}] (sw2)
+                {\includegraphics[height=10mm]{figures/noun-switch-7787836.png}};
+            \node[icon, left of=sw2, label={[lbl]above:CPU}] (cpu2)
+                {\includegraphics[height=8mm]{figures/noun-cpu-8157304.png}};
+            \node[icon, below of=cpu2, label={[lbl]below:Memory}] (mem2)
+                {\includegraphics[height=8mm]{figures/06-ram-dimm-icon.png}};
+            \node[icon, right of=sw2, label={[lbl]above:NVMe}] (nvme2)
+                {\includegraphics[height=5mm]{figures/noun-nvme-5566039.png}};
+            \node[icon, below of=sw2, label={[lbl]below:GPU}] (gpu2)
+                {\includegraphics[height=10mm]{figures/noun-gpu-8141519.png}};
 
-\draw[->, red, very thick] (1.5,5) -- (2,5);
-\draw[->, red, very thick] (4,5) -- (5,5);
-\draw[->, red, very thick] (4,4.8) -- (2,4.8);
+            % Connections - right side (inactive shown lighter)
+            \draw[link, opacity=0.3] (cpu2) -- (mem2);
+            \draw[link, opacity=0.3] (cpu2) -- (sw2);
+            % GPUDirect path (green, direct)
+            \draw[gds] (nvme2) -- (sw2);
+            \draw[gds] (sw2) -- (gpu2);
 
-% With GPUDirect Storage
-\node[anchor=north] at (3,3) {\textbf{With GPUDirect Storage}};
-\draw[fill=gray!30] (0,1.5) rectangle (1.5,2.5);
-\node at (0.75,2) {Storage};
-\draw[fill=blue!30] (2,1.5) rectangle (4,2.5);
-\node[align=center] at (3,2) {CPU\\Memory};
-\draw[fill=cyan!30] (5,1.5) rectangle (6.5,2.5);
-\node at (5.75,2) {GPU};
+            % Legend in bottom-right
+            \node[anchor=north west, font=\scriptsize, align=left, right=5mm of gpu2] {
+                \tikz[baseline=-0.5ex]\draw[red!70, very thick, ->] (0,0) -- (5mm,0); Bounce\\[1pt]
+                \tikz[baseline=-0.5ex]\draw[green!60!black, very thick, ->] (0,0) -- (5mm,0); GPUDirect
+            };
+        \end{scope}
+    \end{tikzpicture}
+    \end{center}
 
-\draw[->, green!60!black, very thick] (1.5,2) .. controls (3,2.8) .. (5,2);
-\draw[->, gray, dashed] (2,1.8) -- (1.5,1.8);
-\end{tikzpicture}
-\end{column}
-\end{columns}
+    \textbf{Performance:} Up to 50 GB/s with GPUDirect Storage
 \end{frame}
 
 \begin{frame}{Multi-Instance GPU (MIG)}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{Isolation and QoS mechanism}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Isolation and QoS mechanism.}
 
-\textbf{Each instance gets its own:}
-\begin{itemize}
-    \item Cores
-    \item On-chip memory and cache
-    \item Memory bandwidth
-\end{itemize}
+            \vspace{0.5em}
+            \textbf{Each instance gets its own:}
+            \begin{itemize}
+                \item Compute cores
+                \item On-chip memory and cache
+                \item Memory bandwidth
+            \end{itemize}
 
-\textbf{GPU can be partitioned into different-sized MIG instances}
+            \vspace{0.5em}
+            \textbf{Features:}
+            \begin{itemize}
+                \item Partitioned into different-sized instances
+                \item Dynamically reconfigurable
+                \item Strong isolation between workloads
+            \end{itemize}
 
-\textbf{Dynamically reconfigurable}
+            \vspace{0.5em}
+            \textbf{Limitations:}
+            \begin{itemize}
+                \item Limited number of instances
+                \item Resources proportionally fixed
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+            \begin{tikzpicture}[
+                slice/.style={draw, minimum width=8mm, minimum height=6mm, font=\footnotesize\ttfamily},
+                gpu/.style={slice, fill=orange!50},
+                mem/.style={slice, fill=gray!25},
+                grp/.style={draw, thick, rounded corners=2pt, inner sep=2pt},
+                joblbl/.style={font=\tiny\bfseries, text depth=0.25ex},
+            ]
+                % GPU slices row
+                \matrix[matrix of nodes, nodes={gpu}, column sep=1pt, row sep=1pt,
+                        ampersand replacement=\&] (gpus) {
+                    GPU \& GPU \& GPU \& GPU \& GPU \& GPU \& GPU \\
+                };
+                % Memory slices row
+                \matrix[matrix of nodes, nodes={mem}, column sep=1pt, row sep=1pt,
+                        ampersand replacement=\&, below=1pt of gpus] (mems) {
+                    Mem \& Mem \& Mem \& Mem \& Mem \& Mem \& Mem \\
+                };
 
-\vspace{0.3cm}
-\textbf{Limitations:}
-\begin{itemize}
-    \item Limited \# of instances
-    \item Resources are proportionally fixed
-\end{itemize}
-\end{column}
+                % Workload grouping boxes on background layer
+                \begin{scope}[on background layer]
+                    \node[grp, fill=blue!15, fit=(gpus-1-1) (gpus-1-3) (mems-1-1) (mems-1-3),
+                          label={[joblbl]above:Job A (3g)}] {};
+                    \node[grp, fill=green!15, fit=(gpus-1-4) (gpus-1-5) (mems-1-4) (mems-1-5),
+                          label={[joblbl]above:Job B (2g)}] {};
+                    \node[grp, fill=purple!15, fit=(gpus-1-6) (mems-1-6),
+                          label={[joblbl]above:Job C}] {};
+                    \node[grp, fill=gray!10, dashed, fit=(gpus-1-7) (mems-1-7),
+                          label={[font=\tiny, text depth=0.25ex]above:Free}] {};
+                \end{scope}
 
-\begin{column}{0.45\textwidth}
-\begin{tikzpicture}[scale=0.6]
-% GPU die
-\draw[very thick, fill=gray!20] (0,0) rectangle (6,6);
-\node[anchor=south] at (3,6) {\textbf{GPU Die}};
-
-% MIG instances
-\draw[fill=blue!30] (0.2,4.2) rectangle (2.8,5.8);
-\node[align=center, font=\tiny] at (1.5,5) {MIG\\Instance 1};
-
-\draw[fill=green!30] (3.2,4.2) rectangle (5.8,5.8);
-\node[align=center, font=\tiny] at (4.5,5) {MIG\\Instance 2};
-
-\draw[fill=yellow!30] (0.2,2.2) rectangle (2.8,3.8);
-\node[align=center, font=\tiny] at (1.5,3) {MIG\\Instance 3};
-
-\draw[fill=orange!30] (3.2,2.2) rectangle (5.8,3.8);
-\node[align=center, font=\tiny] at (4.5,3) {MIG\\Instance 4};
-
-\draw[fill=red!30] (0.2,0.2) rectangle (5.8,1.8);
-\node[align=center, font=\tiny] at (3,1) {MIG Instance 5 (larger)};
-
-% Memory sections
-\foreach \i in {0,...,5} {
-    \draw[fill=purple!20] (\i*1,6.2) rectangle (\i*1+0.8,6.8);
-    \node[font=\fontsize{5}{6}\selectfont] at (\i*1+0.4,6.5) {Mem};
-}
-\end{tikzpicture}
-\end{column}
-\end{columns}
+                % Label
+                \node[below=4mm of mems, font=\scriptsize] {Example: 3g + 2g + 1g + 1g partition};
+            \end{tikzpicture}
+            \end{center}
+        \end{column}
+    \end{columns}
 \end{frame}
 
-\section{Conclusion}
+%===============================================================================
+\section{Summary}
+%===============================================================================
 
-\begin{frame}{Conclusion}
-\begin{itemize}
-    \item GPUs provide massive parallelization
-    \item Has unique challenges in compute due to scheduling (divergence)
-    \item Encounters similar challenges to CPU when it comes to memory, I/O
-    \item Slowly turns into a ``first-class citizen''
-\end{itemize}
+\begin{frame}{Summary}
+    \begin{itemize}
+        \item \textbf{GPGPU}: Massive parallelism for data-parallel workloads
+        \item \textbf{Roofline Model}: Analyze compute vs memory-bound kernels
+        \item \textbf{Warp Scheduling}: Latency hiding through occupancy
+        \item \textbf{Divergence}: Avoid branches within warps
+        \item \textbf{Tensor Cores}: Accelerated matrix operations (FP16, BF16, TF32)
+        \item \textbf{HBM}: High-bandwidth memory (3+ TB/s)
+        \item \textbf{Async Memory}: Overlap compute and data movement
+        \item \textbf{GPUDirect}: Bypass CPU for storage and network I/O
+        \item \textbf{MIG}: Partition GPU for isolation and QoS
+    \end{itemize}
 
-\vspace{1cm}
-\begin{center}
-\begin{tikzpicture}
-\foreach \i in {0,...,4} {
-    \foreach \j in {0,...,2} {
-        \draw[blue!50, thick] (\i*1.2,\j*0.8) -- ++(0.6,0.4) -- ++(0,-0.8) -- cycle;
-        \fill[blue!30] (\i*1.2+0.3,\j*0.8+0.2) circle (0.08);
-    }
-}
-\end{tikzpicture}
-\end{center}
+    \vspace{1em}
+    \begin{block}{Conclusion}
+        GPUs provide massive parallelization with unique challenges in compute (divergence) and I/O (limited links). They are increasingly becoming ``first-class citizens'' in modern computing.
+    \end{block}
 \end{frame}
 
 \end{document}
