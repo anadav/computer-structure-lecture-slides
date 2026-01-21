@@ -840,13 +840,13 @@ some_ioctl:
 
 \begin{frame}{Control Flow Integrity (CFI) - Overview}
     \begin{columns}
-        \begin{column}{0.7\textwidth}
+        \begin{column}{0.5\textwidth}
             \begin{itemize}
                 \item Enforce legitimate control flow transfers
                 \item Prevent code-reuse attacks (ROP/JOP/COP)
                 \item Hardware + software enforcement
             \end{itemize}
-            
+
             \vspace{0.3cm}
             \colorbox{green!20}{\textbf{Forward-Edge CFI:}}
             \begin{itemize}
@@ -854,14 +854,14 @@ some_ioctl:
                 \item Indirect jumps (jmp rbx)
                 \item Virtual function calls
             \end{itemize}
-            
+
             \colorbox{blue!20}{\textbf{Backward-Edge CFI:}}
             \begin{itemize}
                 \item Function returns (ret)
                 \item Return address integrity
             \end{itemize}
         \end{column}
-        \begin{column}{0.3\textwidth}
+        \begin{column}{0.5\textwidth}
             \begin{tikzpicture}[scale=0.6]
                 % Control flow graph
                 \node[draw,circle] (A) at (2,4) {A};
@@ -891,22 +891,22 @@ some_ioctl:
         \end{column}
     \end{columns}
 \end{frame}
-\begin{frame}[fragile]{Pointer Authentication (PAC) - Control Flow Protection}
+\begin{frame}[fragile]{Pointer Authentication (PAC)}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \textbf{ARM PAC Architecture:}
             \begin{itemize}
-                \item Cryptographic signature stored in upper pointer bits
+                \item Cryptographic signature in upper pointer bits
                 \item Uses QARMA block cipher
-                \item 5 128-bit keys (IA, IB, DA, DB, GA)
+                \item Sign on store, verify before use
             \end{itemize}
-            
+
             \vspace{0.3cm}
-            \textbf{Operations:}
+            \textbf{What It Protects:}
             \begin{itemize}
-                \item \texttt{PACIA}: Sign instruction pointer
-                \item \texttt{AUTIA}: Authenticate pointer
-                \item \texttt{PACDA}: Sign data pointer
+                \item Return addresses (IA/IB keys)
+                \item Data pointers, vtables (DA/DB keys)
+                \item General authentication (GA key)
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -2130,30 +2130,21 @@ func:
             \begin{itemize}
                 \item Isolate parts of an application
                 \item Trust boundary \textit{within} a VM/OS
-                \item Small trusted computing base (TCB)
-                \item Application explicitly uses enclave
+                \item Small TCB, app explicitly uses enclave
             \end{itemize}
 
-            \vspace{0.2cm}
-            \textbf{Threat Model:}
-            \begin{itemize}
-                \item Untrusted OS/kernel and applications
-                \item Privileged software is adversary
-            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Threat Model:} Untrusted OS/kernel
 
-            \vspace{0.2cm}
-            \textbf{Examples:}
-            \begin{itemize}
-                \item \textbf{Intel SGX}: x86 enclave instructions
-                \item \textbf{ARM TrustZone}: Secure/Normal worlds
-            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Examples:} Intel SGX, ARM TrustZone
 
-            \vspace{0.2cm}
+            \vspace{0.15cm}
             \textbf{Use Cases:}
             \begin{itemize}
                 \item Protect cryptographic keys
                 \item Secure password verification
-                \item DRM (Digital Rights Management)
+                \item DRM content protection
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -2161,43 +2152,83 @@ func:
             \begin{itemize}
                 \item Isolate entire virtual machines
                 \item Trust boundary at hypervisor level
-                \item Large TCB (entire VM)
-                \item Transparent to guest OS
+                \item Large TCB, transparent to guest OS
             \end{itemize}
 
-            \vspace{0.2cm}
-            \textbf{Threat Model:}
-            \begin{itemize}
-                \item Untrusted hypervisor/cloud provider
-                \item Physical access attacks
-            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Threat Model:} Untrusted hypervisor
 
-            \vspace{0.2cm}
-            \textbf{Examples:}
-            \begin{itemize}
-                \item \textbf{Intel TDX}: Trust Domain Extensions
-                \item \textbf{AMD SEV-SNP}: Secure Nested Paging
-            \end{itemize}
+            \vspace{0.15cm}
+            \textbf{Examples:} Intel TDX, AMD SEV-SNP
 
-            \vspace{0.2cm}
+            \vspace{0.15cm}
             \textbf{Use Cases:}
             \begin{itemize}
-                \item Confidential computing in public cloud
-                \item Lift-and-shift existing workloads
+                \item Confidential cloud computing
+                \item Lift-and-shift workloads
                 \item Multi-tenant isolation
             \end{itemize}
-
-            \vspace{0.2cm}
-            \begin{tcolorbox}[colback=green!10]
-                {\scriptsize \textbf{Key Difference:}\\
-                Enclaves require application changes.\\
-                Secure VMs work with unmodified OS.}
-            \end{tcolorbox}
         \end{column}
     \end{columns}
+
+    \vspace{0.1cm}
+    \begin{tcolorbox}[colback=green!10, boxsep=1mm]
+        \centering
+        {\small \textbf{Key Difference:} Enclaves require app changes; Secure VMs work with unmodified OS}
+    \end{tcolorbox}
 \end{frame}
 
 
+\begin{frame}{MKTME (Multi-Key Total Memory Encryption)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Features:}
+            \begin{itemize}
+                \item Multiple encryption keys
+                \item Per-VM/container isolation
+                \item KeyID in physical address bits
+                \item AES-XTS encryption
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Key Management:}
+            \begin{itemize}
+                \item Up to 15 keys (4-bit KeyID)
+                \item Software-managed keys
+                \item PCONFIG instruction
+                \item Key rotation support
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[scale=0.6, font=\small,
+                addr field/.style={draw, minimum height=0.8cm, anchor=west},
+                vm box/.style={draw, minimum width=2cm, minimum height=1.6cm, align=center}]
+
+                % Physical address bar
+                \node[addr field, fill=red!30, minimum width=1.2cm] (keyid) at (0,4) {};
+                \node at (keyid.center) {KeyID};
+                \node[addr field, fill=blue!30, minimum width=5.2cm, right=0pt of keyid] (paddr) {};
+                \node at (paddr.center) {Physical Address};
+
+                % Memory regions
+                \node[vm box, fill=green!30] (vm1) at (1,1) {VM1\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
+                \node[vm box, fill=blue!30, right=0.4cm of vm1] (vm2) {VM2\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
+                \node[vm box, fill=yellow!30, right=0.4cm of vm2] (vm3) {VM3\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
+
+                % Encryption engine
+                \draw[thick,<->] (vm2.north) -- ++(0,1) node[right, midway] {AES-XTS};
+            \end{tikzpicture}
+            
+            \vspace{0.3cm}
+            \textbf{Encryption Model:}
+            \begin{itemize}
+                \item Encrypt/decrypt on memory bus
+                \item Plaintext in CPU cache
+                \item Transparent to software
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
 \begin{frame}[fragile]{Merkle Trees for Memory Freshness}
     \begin{columns}
         \begin{column}{0.5\textwidth}
@@ -2281,56 +2312,6 @@ func:
     \end{columns}
 \end{frame}
 
-\begin{frame}{MKTME (Multi-Key Total Memory Encryption)}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Features:}
-            \begin{itemize}
-                \item Multiple encryption keys
-                \item Per-VM/container isolation
-                \item KeyID in physical address bits
-                \item AES-XTS encryption
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Key Management:}
-            \begin{itemize}
-                \item Up to 15 keys (4-bit KeyID)
-                \item Software-managed keys
-                \item PCONFIG instruction
-                \item Key rotation support
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[scale=0.6, font=\small,
-                addr field/.style={draw, minimum height=0.8cm, anchor=west},
-                vm box/.style={draw, minimum width=2cm, minimum height=1.6cm, align=center}]
-
-                % Physical address bar
-                \node[addr field, fill=red!30, minimum width=1.2cm] (keyid) at (0,4) {};
-                \node at (keyid.center) {KeyID};
-                \node[addr field, fill=blue!30, minimum width=5.2cm, right=0pt of keyid] (paddr) {};
-                \node at (paddr.center) {Physical Address};
-
-                % Memory regions
-                \node[vm box, fill=green!30] (vm1) at (1,1) {VM1\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
-                \node[vm box, fill=blue!30, right=0.4cm of vm1] (vm2) {VM2\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
-                \node[vm box, fill=yellow!30, right=0.4cm of vm2] (vm3) {VM3\\{\scriptsize Encrypted}\\[-1pt]\includegraphics[height=0.25cm]{figures/noun-key-8095348.png}};
-
-                % Encryption engine
-                \draw[thick,<->] (vm2.north) -- ++(0,1) node[right, midway] {AES-XTS};
-            \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \textbf{Use Cases:}
-            \begin{itemize}
-                \item Cloud multi-tenancy
-                \item Container isolation
-                \item Key-based memory domains
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
 
 % Section 5: Boot Security
 \section{Boot Security}
