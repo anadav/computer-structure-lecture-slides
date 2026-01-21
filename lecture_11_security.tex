@@ -1181,8 +1181,8 @@ sensitive_function:
                     node[midway, above, font=\scriptsize] {Verify};
 
                 % Attack arrow
-                \draw[->, thick, red] ([xshift=-1cm]regstack-2-1.west) -- (regstack-2-1.west)
-                    node[midway, above, font=\scriptsize] {Overflow};
+                \draw[->, thick, red] ([xshift=-1.2cm]regstack-2-1.west) -- (regstack-2-1.west)
+                    node[near start, above, font=\scriptsize] {Overflow};
 
                 % X mark for blocked access
                 \node[inner sep=0pt, right=0.3cm of shadowstack-1-1.east]
@@ -1614,33 +1614,37 @@ func:
                     \draw[->, thin, orange!70] (m-1-\col.south) -- (m-2-\col.north);
                 }
 
-                % Callouts (shown on overlay 2)
+                % Callouts (staged reveal)
                 \visible<2->{
-                    \node[draw, fill=blue!10, font=\tiny, align=left, rounded corners,
-                          above=0.5cm of m-1-4] (gnote) {g = guest};
+                    \node[rectangle callout, draw, fill=blue!10, font=\tiny,
+                          callout absolute pointer={(m-1-2.north)},
+                          above=5mm of m-1-1] {g = Guest};
 
-                    \node[draw, fill=orange!10, font=\tiny, align=left, rounded corners,
-                          left=0.1cm of m-3-2.west] (enote) {e = EPT};
+                    \node[rectangle callout, draw, fill=orange!10, font=\tiny,
+                          callout absolute pointer={(m-3-2.west)},
+                          anchor=east] at ([xshift=-0.5cm]m-3-2.west) {e = EPT};
+                }
 
-                    \node[draw, fill=green!10, font=\tiny, align=center, rounded corners,
-                          below=0.2cm of m-6-2] (hpanote) {reads gPML4\\content};
-                    \draw[->, thin] (hpanote.north) -- (m-6-2.south);
+                \visible<3->{
+                    \node[rectangle callout, draw, fill=green!10, font=\tiny, align=center,
+                          callout absolute pointer={(m-6-6.south)},
+                          below=0.4cm of m-6-5] {Final data\\access (+1)};
                 }
             \end{tikzpicture}
         \end{column}
         \begin{column}{0.4\textwidth}
-            \textbf{Performance:}
+            {\small Memory accesses (worst case):}
 
             \vspace{0.1cm}
             \begin{tcolorbox}[colback=blue!10, fontupper=\small, width=\textwidth-0.5cm]
-                \textbf{Native:} 4 + 1 accesses\\
-                {\scriptsize 4 page walk + data}
+                \textbf{Native:} 4 + 1 = \textbf{5}\\
+                {\scriptsize 4 translation + 1 data}
             \end{tcolorbox}
 
             \vspace{0.1cm}
             \begin{tcolorbox}[colback=orange!15, fontupper=\small, width=\textwidth-0.5cm]
-                \textbf{With EPT:} \textbf{20} + 1\\
-                {\scriptsize 5 $\times$ 4 EPT + access}
+                \textbf{With EPT:} 24 + 1 = \textbf{25}\\
+                {\scriptsize 24 translation + 1 data}
             \end{tcolorbox}
 
             \vspace{0.1cm}
@@ -2490,7 +2494,7 @@ func:
 \section{Summary}
 
 
-\begin{frame}{Key Takeaways}
+\begin{frame}{Summary}
     \begin{itemize}
         \item \textbf{Defense in Depth:} Multiple layers of security mechanisms
         \vspace{0.3cm}
@@ -2504,12 +2508,6 @@ func:
         \vspace{0.3cm}
         \item \textbf{Control Flow:} Hardware enforcement of valid program execution paths
     \end{itemize}
-    
-    \vspace{0.5cm}
-    \begin{tcolorbox}[colback=blue!20]
-        \centering
-        \textbf{Future:} Homomorphic encryption, quantum-resistant crypto, AI-driven security
-    \end{tcolorbox}
 \end{frame}
 
 \appendix
