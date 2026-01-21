@@ -556,16 +556,17 @@
 \begin{column}{0.45\textwidth}
 \begin{lstlisting}[language=C, basicstyle=\ttfamily\small, numbers=left, numberstyle=\tiny, xleftmargin=2em, backgroundcolor={}, escapechar=|]
 int tid = threadIdx.x;
-|\tikzmark{L2s}|if (tid < 4) {|\tikzmark{L2e}|
-    |\tikzmark{L3s}|if (tid < 2) {|\tikzmark{L3e}|
-        |\tikzmark{L4s}|a = foo();|\tikzmark{L4e}|
-    |\tikzmark{L5s}|} else {|\tikzmark{L5e}|
-        |\tikzmark{L6s}|a = bar();|\tikzmark{L6e}|
+if (tid < 4) {
+    |\tikzmark{L3s}|foo();|\tikzmark{L3e}|
+    if (tid < 2) {
+        |\tikzmark{L5s}|bar();|\tikzmark{L5e}|
+    } else {
+        |\tikzmark{L7s}|baz();|\tikzmark{L7e}|
     }
-|\tikzmark{L8s}|} else {|\tikzmark{L8e}|
-    |\tikzmark{L9s}|a = baz();|\tikzmark{L9e}|
+} else {
+    |\tikzmark{L10s}|qux();|\tikzmark{L10e}|
 }
-|\tikzmark{L11s}|// All converge|\tikzmark{L11e}|
+|\tikzmark{L12s}|// All converge|\tikzmark{L12e}|
 \end{lstlisting}
 \end{column}
 
@@ -596,40 +597,40 @@ int tid = threadIdx.x;
 \node[steplbl] at (s1.north west) {Step 1: All 32 Threads Active};
 }
 
-% Stage 3: Step 2 - if (tid < 4)
+% Stage 3: Step 2 - x = qux() for tid < 4
 \only<3->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.1) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
 };
-\node[steplbl] at (s2.north west) {Step 2: if (tid < 4) --- TRUE};
+\node[steplbl] at (s2.north west) {Step 2: foo()};
 }
 
-% Stage 4: Step 3 - if (tid < 2)
+% Stage 4: Step 3 - bar() for tid < 2
 \only<4->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-2.2) {
     |[active]| 0 \& |[active]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
 };
-\node[steplbl] at (s3.north west) {Step 3: if (tid < 2) --- TRUE};
+\node[steplbl] at (s3.north west) {Step 3: bar()};
 }
 
-% Stage 5: Step 4 - else (nested)
+% Stage 5: Step 4 - baz() for 2 <= tid < 4
 \only<5->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-3.3) {
     |[inactive]| 0 \& |[inactive]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
 };
-\node[steplbl] at (s4.north west) {Step 4: else --- Nested FALSE};
+\node[steplbl] at (s4.north west) {Step 4: baz()};
 }
 
-% Stage 6: Step 5 - else (outer)
+% Stage 6: Step 5 - qux() for tid >= 4
 \only<6->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s5) at (0,-4.4) {
     |[inactive]| 0 \& |[inactive]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots \\
 };
-\node[steplbl] at (s5.north west) {Step 5: else --- Outer FALSE};
+\node[steplbl] at (s5.north west) {Step 5: qux()};
 }
 
 % Stage 7: Step 6 - Convergence
@@ -654,44 +655,35 @@ int tid = threadIdx.x;
 % Code highlighting overlay using tikzmarks - yellow background with blend mode
 \begin{tikzpicture}[remember picture, overlay]
     \begin{scope}[blend mode=multiply]
-    % Stage 3: highlight "if (tid < 4) {" - single line
+    % Stage 3: highlight "foo();" - runs for all tid < 4
     \only<3>{
-        \fill[yellow!60, rounded corners=2pt]
-            ([xshift=-2pt, yshift=9pt]pic cs:L2s) rectangle
-            ([xshift=2pt, yshift=-1pt]pic cs:L2e);
-    }
-    % Stage 4: highlight "if (tid < 2) {" and "a = foo();" - two lines
-    \only<4>{
         \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L3s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L3e);
-        \fill[yellow!60, rounded corners=2pt]
-            ([xshift=-2pt, yshift=9pt]pic cs:L4s) rectangle
-            ([xshift=2pt, yshift=-1pt]pic cs:L4e);
     }
-    % Stage 5: highlight "} else {" and "a = bar();" - two lines
-    \only<5>{
+    % Stage 4: highlight "bar();" - runs for tid < 2
+    \only<4>{
         \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L5s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L5e);
-        \fill[yellow!60, rounded corners=2pt]
-            ([xshift=-2pt, yshift=9pt]pic cs:L6s) rectangle
-            ([xshift=2pt, yshift=-1pt]pic cs:L6e);
     }
-    % Stage 6: highlight "} else {" and "a = baz();" - two lines
+    % Stage 5: highlight "baz();" - runs for 2 <= tid < 4
+    \only<5>{
+        \fill[yellow!60, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L7s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L7e);
+    }
+    % Stage 6: highlight "qux();" - runs for tid >= 4
     \only<6>{
         \fill[yellow!60, rounded corners=2pt]
-            ([xshift=-2pt, yshift=9pt]pic cs:L8s) rectangle
-            ([xshift=2pt, yshift=-1pt]pic cs:L8e);
-        \fill[yellow!60, rounded corners=2pt]
-            ([xshift=-2pt, yshift=9pt]pic cs:L9s) rectangle
-            ([xshift=2pt, yshift=-1pt]pic cs:L9e);
+            ([xshift=-2pt, yshift=9pt]pic cs:L10s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L10e);
     }
-    % Stage 7: highlight "// All converge" - single line, green for convergence
+    % Stage 7: highlight "// All converge" - all threads reconverge
     \only<7>{
         \fill[green!60, rounded corners=2pt]
-            ([xshift=-2pt, yshift=9pt]pic cs:L11s) rectangle
-            ([xshift=2pt, yshift=-1pt]pic cs:L11e);
+            ([xshift=-2pt, yshift=9pt]pic cs:L12s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L12e);
     }
     \end{scope}
 \end{tikzpicture}
