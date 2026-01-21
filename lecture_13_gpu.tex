@@ -188,6 +188,113 @@
 
 \begin{frame}{NVIDIA Blackwell Ultra --- Full Chip}
     \begin{center}
+    \begin{tikzpicture}[
+        % Styles
+        gpu/.style={draw, very thick, fill=olive!10, minimum width=100mm, minimum height=46mm},
+        die/.style={draw, thick, fill=olive!25, minimum width=42mm, minimum height=40mm},
+        hbm/.style={draw, fill=purple!40, minimum width=18mm, minimum height=4mm, font=\fontsize{4}{5}\selectfont, align=center},
+        gpc/.style={draw, fill=olive!50, minimum width=12mm, minimum height=8mm, font=\fontsize{5}{6}\selectfont, align=center},
+        l2/.style={draw, fill=olive!70, minimum width=6mm, minimum height=8mm, font=\fontsize{5}{6}\selectfont, align=center},
+        engine/.style={draw, fill=yellow!30, minimum width=32mm, minimum height=5mm, font=\fontsize{4}{5}\selectfont, align=center},
+        nvdec/.style={draw, fill=gray!30, minimum width=4mm, minimum height=5mm, font=\fontsize{3}{4}\selectfont, align=center},
+        nvlinkbar/.style={draw, fill=green!40, text width=6mm, minimum height=32mm, font=\fontsize{4}{5}\selectfont, align=center, inner sep=1pt},
+        hbi/.style={draw, fill=yellow!50, minimum width=3mm, minimum height=40mm, font=\fontsize{5}{6}\selectfont, align=center},
+        pcie/.style={draw, fill=gray!40, text width=6mm, minimum height=8mm, font=\fontsize{3}{4}\selectfont, align=center, inner sep=1pt},
+        callout/.style={rectangle callout, draw=blue!70, fill=blue!10, font=\fontsize{6}{7}\selectfont, align=center, rounded corners=1pt},
+    ]
+        % === GPU (outer rectangle) ===
+        \node[gpu] (gpu) {};
+
+        % === Two dies inside GPU ===
+        \node[die, anchor=east] (dieL) at ([xshift=-4mm]gpu.center) {};
+        \node[die, anchor=west] (dieR) at ([xshift=4mm]gpu.center) {};
+
+        % === High Bandwidth Interface between dies (two narrow bars) ===
+        \node[hbi, anchor=east] (hbiL) at (gpu.center) {\rotatebox{90}{NV-HBI}};
+        \node[hbi, anchor=west] (hbiR) at (gpu.center) {\rotatebox{-90}{NV-HBI}};
+
+        % === NVLink bar on left (positioned below PCIe) ===
+        \node[nvlinkbar, anchor=north east] (nvlink) at ([yshift=-8mm]dieL.north west) {NV\\Link};
+
+        % === NVLink-C2C bar on right ===
+        \node[nvlinkbar, fill=cyan!40, anchor=west] (c2c) at (dieR.east) {NVLink\\C2C};
+
+        % === PCIe at top of NVLink bar ===
+        \node[pcie, anchor=south] (pcie) at (nvlink.north) {PCIe\\Gen\\6};
+
+        % === LEFT DIE CONTENTS ===
+
+        % Top HBM row: 2 controllers
+        \node[hbm, anchor=north] (hbmLT0) at ([xshift=-8mm]dieL.north) {HBM CTRL};
+        \node[hbm, anchor=north] (hbmLT1) at ([xshift=12mm]dieL.north) {HBM CTRL};
+
+        % Bottom HBM row: 2 controllers
+        \node[hbm, anchor=south] (hbmLB0) at ([xshift=-8mm]dieL.south) {HBM CTRL};
+        \node[hbm, anchor=south] (hbmLB1) at ([xshift=12mm]dieL.south) {HBM CTRL};
+
+        % GPCs: 2 above engine, 2 below
+        \node[gpc] (gpcL0) at ([xshift=-10mm, yshift=8mm]dieL.center) {GPC};
+        \node[l2, right=1mm of gpcL0] (l2L0) {L2};
+        \node[gpc, right=1mm of l2L0] (gpcL1) {GPC};
+
+        % NV DEC (west of NV-HBI)
+        \node[nvdec, anchor=east] (nvdecL) at (hbiL.west) {NV\\DEC};
+
+        % Engine: calculated width to fit between nvlink.east and nvdecL.west
+        \path let \p1=(nvlink.east), \p2=(nvdecL.west) in
+            node[engine, minimum width={\x2-\x1}, anchor=west, inner sep=0pt] (engineL) at (nvlink.east) {GIGATHREAD ENGINE w/ MIG CONTROL};
+
+        % GPCs below engine
+        \node[gpc] (gpcL2) at ([xshift=-10mm, yshift=-8mm]dieL.center) {GPC};
+        \node[l2, right=1mm of gpcL2] (l2L1) {L2};
+        \node[gpc, right=1mm of l2L1] (gpcL3) {GPC};
+
+
+        % === RIGHT DIE CONTENTS ===
+
+        % Top HBM row: 2 controllers
+        \node[hbm, anchor=north] (hbmRT0) at ([xshift=-12mm]dieR.north) {HBM CTRL};
+        \node[hbm, anchor=north] (hbmRT1) at ([xshift=8mm]dieR.north) {HBM CTRL};
+
+        % Bottom HBM row: 2 controllers
+        \node[hbm, anchor=south] (hbmRB0) at ([xshift=-12mm]dieR.south) {HBM CTRL};
+        \node[hbm, anchor=south] (hbmRB1) at ([xshift=8mm]dieR.south) {HBM CTRL};
+
+        % GPCs: 2 above engine, 2 below
+        \node[gpc] (gpcR0) at ([xshift=-10mm, yshift=8mm]dieR.center) {GPC};
+        \node[l2, right=1mm of gpcR0] (l2R0) {L2};
+        \node[gpc, right=1mm of l2R0] (gpcR1) {GPC};
+
+        % NV DEC (east of NV-HBI) and Engine (east of NV DEC)
+        \node[nvdec, anchor=west] (nvdecR) at (hbiR.east) {NV\\DEC};
+        \node[engine, anchor=west] (engineR) at (nvdecR.east) {GIGATHREAD ENGINE w/ MIG CONTROL};
+
+        % GPCs below engine
+        \node[gpc] (gpcR2) at ([xshift=-10mm, yshift=-8mm]dieR.center) {GPC};
+        \node[l2, right=1mm of gpcR2] (l2R1) {L2};
+        \node[gpc, right=1mm of l2R1] (gpcR3) {GPC};
+
+        % === CALLOUTS ===
+        \node[callout, callout absolute pointer={(pcie.north)}, anchor=south] at ([yshift=5mm]gpu.north west) {x16 PCIe Gen 6\\256 GB/s CPU Host};
+
+        \node[callout, callout absolute pointer={(hbiL.north)}, anchor=south] at ([yshift=5mm]gpu.north) {High Bandwidth Interface\\10 TB/s Die-to-Die};
+
+        \node[callout, callout absolute pointer={(gpcR1.north)}, anchor=south] at ([yshift=5mm]gpu.north east) {160 SMs per GPU\\640 Tensor Cores\\15 PetaFLOPS};
+
+        \node[callout, callout absolute pointer={(nvlink.west)}, anchor=east] at ([xshift=-5mm]gpu.west) {NVLink v5\\1,800 GB/s};
+
+        \node[callout, callout absolute pointer={(c2c.east)}, anchor=west] at ([xshift=5mm]gpu.east) {NVLink-C2C\\900 GB/s Coherent};
+
+        \node[callout, callout absolute pointer={(hbmLB0.south)}, anchor=north east] at ([xshift=10mm, yshift=-3mm]gpu.south west) {Confidential Computing\\TEE-I/O Capable};
+
+        \node[callout, callout absolute pointer={(hbmRB1.south)}, anchor=north west] at ([xshift=-10mm, yshift=-3mm]gpu.south east) {288GB HBM3E\\12 Stacks, 8 TB/s};
+
+    \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}<0>{NVIDIA Blackwell Ultra --- Full Chip (Original)}
+    \begin{center}
         \includegraphics[height=0.85\textheight]{figures/NVIDIA-Blackwell-Ultra-GPU-chip-explained-png.png}
     \end{center}
 \end{frame}
