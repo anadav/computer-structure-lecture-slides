@@ -15,6 +15,7 @@
 \usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{xcolor}
+\usepackage{minted}
 
 \lstset{
     basicstyle=\ttfamily\tiny,
@@ -526,78 +527,172 @@
 \end{frame}
 
 \begin{frame}{GPU Warp Divergence}
+    \textbf{Problem:} Conditional branches cause threads within a warp to diverge.
+
+    \begin{itemize}
+        \item All 32 threads in a warp share \textbf{one Program Counter}
+        \item When threads take different paths, execution is \textbf{serialized}
+        \item Hardware uses an \textbf{active mask} to track which threads execute
+        \item PC and mask are pushed onto a \textbf{stack} at each branch
+    \end{itemize}
+
+    \vspace{1em}
+    \textbf{Convergence:} When both paths complete, threads merge back and all become active again.
+
+    \vspace{1em}
+    \textbf{Performance Impact:}
+    \begin{itemize}
+        \item Divergent warps take time proportional to \textbf{sum of all paths}
+        \item Worst case: 32$\times$ slowdown if every thread takes a different path
+        \item Nested branches compound the problem
+    \end{itemize}
+
+    \vspace{1em}
+    \textbf{Mitigation strategies:} Data reorganization, predicated instructions, separate kernels, warp-level primitives
+\end{frame}
+
+\begin{frame}[fragile]{GPU Warp Divergence: Example}
 \begin{columns}
 \begin{column}{0.45\textwidth}
-\textbf{Conditional Branch:} An if-statement can cause threads to diverge
-\begin{itemize}
-    \item Some threads take ``true'' path
-    \item Others take the ``false'' path
-    \item PC and active mask pushed to stack
-    \item Code execution is \textbf{serialized}
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Convergence:} Both paths merge back together, all threads become active again
+\begin{lstlisting}[language=C, basicstyle=\ttfamily\small, numbers=left, numberstyle=\tiny, xleftmargin=2em, backgroundcolor={}, escapechar=|]
+int tid = threadIdx.x;
+|\tikzmark{L2s}|if (tid < 4) {|\tikzmark{L2e}|
+    |\tikzmark{L3s}|if (tid < 2) {|\tikzmark{L3e}|
+        |\tikzmark{L4s}|a = foo();|\tikzmark{L4e}|
+    |\tikzmark{L5s}|} else {|\tikzmark{L5e}|
+        |\tikzmark{L6s}|a = bar();|\tikzmark{L6e}|
+    }
+|\tikzmark{L8s}|} else {|\tikzmark{L8e}|
+    |\tikzmark{L9s}|a = baz();|\tikzmark{L9e}|
+}
+|\tikzmark{L11s}|// All converge|\tikzmark{L11e}|
+\end{lstlisting}
 \end{column}
 
 \begin{column}{0.5\textwidth}
 \begin{tikzpicture}[scale=0.92,
     active/.style={draw, fill=green!40, minimum width=5mm, minimum height=4.5mm, font=\scriptsize},
     inactive/.style={draw, fill=white, minimum width=5mm, minimum height=4.5mm, font=\scriptsize},
-    steplbl/.style={font=\scriptsize\bfseries, anchor=west},
+    steplbl/.style={font=\scriptsize\bfseries, anchor=south west, yshift=-3mm},
     dots/.style={font=\scriptsize, minimum width=5mm},
 ]
 
-% Legend
-\node[active, label=right:{\scriptsize Active}] at (0,0) {};
-\node[inactive, label=right:{\scriptsize Inactive (masked)}] at (2.2,0) {};
+% Stage 1: Callout explaining tid = thread index (with proper TikZ callout shape)
+\only<1>{
+\node[rectangle callout, callout relative pointer={(-5cm, 2cm)}, draw, fill=blue!10,
+      font=\scriptsize, align=left, text width=4cm] (tidcallout) at (2, -2) {
+    \textbf{tid} = thread index (0--31)\\[2pt]
+    Each box shows thread's \textbf{tid}\\[2pt]
+    Thread 0 has tid=0, thread 1 has tid=1, etc.
+};
+}
 
-% Step 1: All 32 Threads Active
-\node[steplbl] at (0,-0.6) {Step 1: All 32 Threads Active};
-\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s1) at (0,-0.75) {
+% Stage 2: Step 1 - All 32 Threads Active
+\only<2->{
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s1) at (0,0) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots{} 31 \\
 };
-\node[draw, fill=yellow!40, font=\tiny, right=1mm of s1, minimum height=4.5mm] {if (x > 10)};
+\node[steplbl] at (s1.north west) {Step 1: All 32 Threads Active};
+}
 
-% Step 2: First Branch - TRUE Path (Active: 0-3)
-\node[steplbl] at (0,-1.55) {Step 2: TRUE Path {\normalfont\tiny(Active: 0--3)}};
-\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.7) {
+% Stage 3: Step 2 - if (tid < 4)
+\only<3->{
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.1) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
 };
+\node[steplbl] at (s2.north west) {Step 2: if (tid < 4) --- TRUE};
+}
 
-% Step 3: Nested Branch - TRUE (Active: 0-1)
-\node[steplbl] at (0,-2.5) {Step 3: Nested TRUE {\normalfont\tiny(Active: 0--1)}};
-\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-2.65) {
+% Stage 4: Step 3 - if (tid < 2)
+\only<4->{
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-2.2) {
     |[active]| 0 \& |[active]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
 };
+\node[steplbl] at (s3.north west) {Step 3: if (tid < 2) --- TRUE};
+}
 
-% Step 4: Nested Branch - FALSE (Active: 2-3)
-\node[steplbl] at (0,-3.45) {Step 4: Nested FALSE {\normalfont\tiny(Active: 2--3)}};
-\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-3.6) {
+% Stage 5: Step 4 - else (nested)
+\only<5->{
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-3.3) {
     |[inactive]| 0 \& |[inactive]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
 };
+\node[steplbl] at (s4.north west) {Step 4: else --- Nested FALSE};
+}
 
-% Step 5: First Branch - FALSE (Active: 4-31)
-\node[steplbl] at (0,-4.4) {Step 5: FALSE Path {\normalfont\tiny(Active: 4--31)}};
-\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s5) at (0,-4.55) {
+% Stage 6: Step 5 - else (outer)
+\only<6->{
+\matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s5) at (0,-4.4) {
     |[inactive]| 0 \& |[inactive]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots \\
 };
+\node[steplbl] at (s5.north west) {Step 5: else --- Outer FALSE};
+}
 
-% Step 6: Convergence (All Active)
-\node[steplbl, text=green!50!black] at (0,-5.35) {Step 6: Convergence {\normalfont\tiny(All Active)}};
+% Stage 7: Step 6 - Convergence
+\only<7>{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s6) at (0,-5.5) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots{} 31 \\
 };
+\node[steplbl, text=green!50!black] at (s6.north west) {Step 6: Convergence};
+}
+
+% Legend (show from stage 2 onwards) - moved lower by 8mm and right by 1cm
+\only<2->{
+\node[active, label=right:{\scriptsize Active}] at (1,-7.3) {};
+\node[inactive, label=right:{\scriptsize Inactive (masked)}] at (3,-7.3) {};
+}
 
 \end{tikzpicture}
 \end{column}
 \end{columns}
+
+% Code highlighting overlay using tikzmarks - draw border around relevant code
+\begin{tikzpicture}[remember picture, overlay]
+    % Stage 3: highlight "if (tid < 4) {" - single line
+    \only<3>{
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L2s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L2e);
+    }
+    % Stage 4: highlight "if (tid < 2) {" and "a = foo();" - two lines
+    \only<4>{
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L3s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L3e);
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L4s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L4e);
+    }
+    % Stage 5: highlight "} else {" and "a = bar();" - two lines
+    \only<5>{
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L5s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L5e);
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L6s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L6e);
+    }
+    % Stage 6: highlight "} else {" and "a = baz();" - two lines
+    \only<6>{
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L8s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L8e);
+        \draw[orange, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L9s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L9e);
+    }
+    % Stage 7: highlight "// All converge" - single line, green for convergence
+    \only<7>{
+        \draw[green!60!black, thick, rounded corners=2pt]
+            ([xshift=-2pt, yshift=9pt]pic cs:L11s) rectangle
+            ([xshift=2pt, yshift=-1pt]pic cs:L11e);
+    }
+\end{tikzpicture}
 \end{frame}
 \begin{frame}[fragile]{Warp-Level Primitives Example}
     \begin{columns}
