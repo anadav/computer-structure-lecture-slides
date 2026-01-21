@@ -609,226 +609,6 @@ some_ioctl:
     \end{columns}
 \end{frame}
 
-\begin{frame}{SMEP + SMAP Combined Protection}
-    \begin{center}
-        \begin{tikzpicture}[
-            space/.style={draw, thick, minimum width=8cm, minimum height=1.2cm,
-                         align=center, font=\small},
-            useritem/.style={draw, thick, minimum width=1.8cm, minimum height=0.8cm,
-                           align=center, font=\small, rounded corners=2pt},
-            attack/.style={->, thick, orange!70, dashed},
-            allowed/.style={->, thick, green!60!black}]
-
-            % Kernel Space at top - smaller and more compact
-            \node[space, fill=purple!15, minimum height=0.9cm, text depth=3mm] (kernel) {\textbf{Kernel Space (Ring 0)}};
-
-            % Protection barrier
-            \coordinate (barrier-left) at ([xshift=-4cm]kernel.south);
-            \coordinate (barrier-right) at ([xshift=4cm]kernel.south);
-            \draw[ultra thick, red!70, dashed] (barrier-left) -- (barrier-right);
-            \node[red!70, font=\small, right=2pt of barrier-right] {SMEP/SMAP};
-
-            % User Space below barrier
-            \node[space, fill=cyan!10, below=0.5cm of kernel.south] (user)
-                {\textbf{User Space (Ring 3)}};
-
-            % User components inside user space
-            \node[useritem, fill=blue!20, above=0.2cm of user.south west, anchor=south west,
-                  xshift=0.5cm] (code) {User Code};
-            \node[useritem, fill=yellow!20, right=0.3cm of code] (data) {User Data};
-            \node[useritem, fill=red!20, right=0.3cm of data] (rop) {ROP Chain};
-
-            % Attack attempts from kernel
-            \draw[attack] ([xshift=-2.5cm]kernel.south) -- ++(0, -0.4cm);
-            \node[inner sep=0pt] at ([xshift=-2.5cm, yshift=-2mm]kernel.south)
-                {\includegraphics[width=0.35cm]{figures/noun-x-2222229.png}};
-            \node[orange!70, font=\tiny, above=1pt] at ([xshift=-2.5cm]kernel.south) {Execute};
-            \node[red!70, font=\tiny, below=3mm] at ([xshift=-2.5cm]kernel.south) {SMEP};
-
-            \draw[attack] ([xshift=-0.8cm]kernel.south) -- ++(0, -0.4cm);
-            \node[inner sep=0pt] at ([xshift=-0.8cm, yshift=-2mm]kernel.south)
-                {\includegraphics[width=0.35cm]{figures/noun-x-2222229.png}};
-            \node[orange!70, font=\tiny, above=1pt] at ([xshift=-0.8cm]kernel.south) {Read};
-            \node[red!70, font=\tiny, below=3mm] at ([xshift=-0.8cm]kernel.south) {SMAP};
-
-            \draw[attack] ([xshift=0.8cm]kernel.south) -- ++(0, -0.4cm);
-            \node[inner sep=0pt] at ([xshift=0.8cm, yshift=-2mm]kernel.south)
-                {\includegraphics[width=0.35cm]{figures/noun-x-2222229.png}};
-            \node[orange!70, font=\tiny, above=1pt] at ([xshift=0.8cm]kernel.south) {Write};
-            \node[red!70, font=\tiny, below=3mm] at ([xshift=0.8cm]kernel.south) {SMAP};
-
-            % Legitimate access with STAC
-            \draw[allowed] ([xshift=2.5cm]kernel.south) -- ++(0, -0.4cm);
-            \node[green!60!black, font=\tiny, above=1pt] at ([xshift=2.5cm]kernel.south) {STAC};
-            \node[green!60!black, font=\small, below=2mm] at ([xshift=2.5cm]kernel.south) {$\checkmark$};
-        \end{tikzpicture}
-    \end{center}
-    
-    \vspace{0.3cm}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Protection Matrix:}
-            \begin{tabular}{|l|c|c|}
-                \hline
-                From Kernel & Execute & Access \\
-                \hline
-                No Protection & \checkmark & \checkmark \\
-                SMEP only & $\times$ & \checkmark \\
-                SMAP only & \checkmark & $\times$ \\
-                SMEP+SMAP & $\times$ & $\times$* \\
-                \hline
-            \end{tabular}
-            
-            \small *Except with STAC/CLAC
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Remaining Attack Surface:}
-            \begin{itemize}
-                \item Kernel ROP/JOP only
-                \item Kernel heap/stack spraying
-                \item Race conditions in STAC/CLAC windows
-                \item Hardware vulnerabilities (Spectre/Meltdown)
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{frame}
-
-\begin{frame}{Modern ROP Mitigations Summary}
-    \begin{center}
-        \begin{tikzpicture}[scale=0.8,
-            year/.style={font=\scriptsize, text depth=0.25ex},
-            defense/.style={draw, minimum width=1.4cm, minimum height=0.5cm, font=\footnotesize, text depth=0.25ex},
-            attack/.style={draw, fill=gray!20, minimum width=1.4cm, minimum height=0.5cm, font=\footnotesize, text depth=0.25ex},
-            mitigates/.style={->, thick},
-            crossout/.style={thick, red}]
-
-            % Timeline arrow - extended to avoid overlap with 2020
-            \draw[thick,->] (-1.5,0) -- (13,0) node[right] {Time};
-
-            % Year markers below the timeline
-            \node[year] (y2004) at (-1,-0.5) {2004};
-            \node[year] (y2005) at (2.5,-0.5) {2005};
-            \node[year] (y2012) at (5.5,-0.5) {2012};
-            \node[year] (y2014) at (8,-0.5) {2014};
-            \node[year] (y2020) at (11,-0.5) {2020};
-
-            % Defense nodes above timeline, aligned with years
-            \node[defense, fill=blue!30, above=0.3cm of y2004] (nx) {XD/NX};
-            \node[defense, fill=green!30, above=0.3cm of y2005] (aslr) {ASLR};
-            \node[defense, fill=yellow!30, above=0.3cm of y2012] (smep) {SMEP};
-            \node[defense, fill=orange!30, above=0.3cm of y2014] (smap) {SMAP};
-            \node[defense, fill=red!30, above=0.3cm of y2020] (cet) {CET};
-
-            % Attack nodes above defenses - close to the mechanism that stops them
-            \node[attack, above=0.4cm of nx] (inject) {\sout{Code Injection}};
-            \draw[mitigates] (nx) -- (inject);
-
-            \node[attack, above=0.4cm of aslr] (rop) {Basic ROP};
-            \draw[mitigates, orange] (aslr) -- (rop);
-
-            \node[attack, above=0.4cm of smep] (ret2user) {\sout{ret2user}};
-            \draw[mitigates] (smep) -- (ret2user);
-
-            \node[attack, above=0.4cm of smap] (pivot) {\sout{Stack Pivot}};
-            \draw[mitigates] (smap) -- (pivot);
-
-            \node[attack, above=0.4cm of cet] (advanced) {\sout{Advanced ROP}};
-            \draw[mitigates] (cet) -- (advanced);
-        \end{tikzpicture}
-    \end{center}
-    
-    \vspace{0.5cm}
-    \begin{columns}
-        \begin{column}{0.33\textwidth}
-            \textbf{User Space:}
-            \begin{itemize}
-                \item XD/NX bit
-                \item ASLR
-                \item Stack Canaries
-                \item CFI/CET
-                \item Shadow Stack
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.33\textwidth}
-            \textbf{Kernel Space:}
-            \begin{itemize}
-                \item SMEP (HW)
-                \item SMAP (HW)
-                \item KASLR (SW)
-                \item KPTI* (SW)
-                \item FineIBT (HW+SW)
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.33\textwidth}
-            \textbf{Hardware:}
-            \begin{itemize}
-                \item Intel CET
-                \item ARM PAC/BTI
-                \item ARM MTE
-                \item Control-flow integrity
-            \end{itemize}
-        \end{column}
-    \end{columns}
-    
-    \vspace{0.2cm}
-    \small *KPTI: Kernel Page Table Isolation - software mitigation for Meltdown
-\end{frame}
-
-\begin{frame}{Performance Impact of Security Features}
-    \begin{center}
-        \begin{tabular}{|l|c|c|l|}
-            \hline
-            \textbf{Feature} & \textbf{Type} & \textbf{Impact} & \textbf{Overhead} \\
-            \hline
-            \hline
-            XD/NX Bit & HW & \cellcolor{green!30}Low & Page table bit check \\
-            \hline
-            SMEP & HW & \cellcolor{green!30}Low & Permission check \\
-            \hline
-            SMAP & HW & \cellcolor{green!30}Low & AC flag check \\
-            \hline
-            Stack Canaries & SW & \cellcolor{green!30}Low & Function epilogue check \\
-            \hline
-            ASLR & SW & \cellcolor{green!30}Low & One-time randomization \\
-            \hline
-            CET (Shadow Stack) & HW & \cellcolor{yellow!30}Medium & Parallel stack ops \\
-            \hline
-            PAC (ARM) & HW & \cellcolor{yellow!30}Medium & Crypto ops per call \\
-            \hline
-            BTI (ARM) & HW & \cellcolor{yellow!30}Medium & Branch checks \\
-            \hline
-            KASLR & SW & \cellcolor{yellow!30}Medium & Kernel relocation \\
-            \hline
-            KPTI* & SW & \cellcolor{orange!30}High & Page table switches \\
-            \hline
-            Full CFI** & SW & \cellcolor{orange!30}High & Type checks everywhere \\
-            \hline
-            FineIBT & HW+SW & \cellcolor{yellow!30}Medium & Hash + branch checks \\
-            \hline
-        \end{tabular}
-    \end{center}
-    
-    \vspace{0.3cm}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \small
-            *Software mitigation for Meltdown\\
-            **Software-only implementation
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tcolorbox}[colback=yellow!10]
-                \small
-                \textbf{Impact Categories:}
-                \begin{itemize}
-                    \item \textcolor{green!70!black}{Low}: $<$5\%
-                    \item \textcolor{yellow!70!black}{Medium}: 5-15\%
-                    \item \textcolor{orange!70!black}{High}: $>$15\%
-                \end{itemize}
-            \end{tcolorbox}
-        \end{column}
-    \end{columns}
-\end{frame}
-
 % Section 1: Memory Protection
 \section{Memory Protection Mechanisms}
 
@@ -1058,55 +838,6 @@ some_ioctl:
     \end{tikzpicture}
 \end{frame}
 
-\begin{frame}[fragile]{Pointer Authentication (PAC) - Control Flow Protection}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{ARM PAC Architecture:}
-            \begin{itemize}
-                \item Cryptographic signature stored in upper pointer bits
-                \item Uses QARMA block cipher
-                \item 5 128-bit keys (IA, IB, DA, DB, GA)
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Operations:}
-            \begin{itemize}
-                \item \texttt{PACIA}: Sign instruction pointer
-                \item \texttt{AUTIA}: Authenticate pointer
-                \item \texttt{PACDA}: Sign data pointer
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Function Prologue:}
-            \vspace{-2mm}
-            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{gas}
-; LR (x30) = return addr, SP = stack ptr
-PACIASP    ; Sign LR using SP as context
-STP x29,x30,[sp,#-16]!  ; Save frame ptr & LR
-\end{minted}
-            \end{tcolorbox}
-
-            \vspace{-1mm}
-            \textbf{Function Epilogue:}
-            \vspace{-2mm}
-            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{gas}
-LDP x29,x30,[sp],#16    ; Restore frame ptr & LR
-AUTIASP    ; Verify LR signature
-RET        ; Return if valid, else fault
-\end{minted}
-            \end{tcolorbox}
-
-            \vspace{2mm}
-            \textbf{Security:} Prevents ROP/JOP attacks by cryptographically signing return addresses
-        \end{column}
-    \end{columns}
-\end{frame}
-
-% Section 2: Control Flow Integrity
-\section{Control Flow Integrity}
-
 \begin{frame}{Control Flow Integrity (CFI) - Overview}
     \begin{columns}
         \begin{column}{0.7\textwidth}
@@ -1160,6 +891,55 @@ RET        ; Return if valid, else fault
         \end{column}
     \end{columns}
 \end{frame}
+\begin{frame}[fragile]{Pointer Authentication (PAC) - Control Flow Protection}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{ARM PAC Architecture:}
+            \begin{itemize}
+                \item Cryptographic signature stored in upper pointer bits
+                \item Uses QARMA block cipher
+                \item 5 128-bit keys (IA, IB, DA, DB, GA)
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Operations:}
+            \begin{itemize}
+                \item \texttt{PACIA}: Sign instruction pointer
+                \item \texttt{AUTIA}: Authenticate pointer
+                \item \texttt{PACDA}: Sign data pointer
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Function Prologue:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\scriptsize]{gas}
+; LR (x30) = return addr, SP = stack ptr
+PACIASP    ; Sign LR using SP as context
+STP x29,x30,[sp,#-16]!  ; Save frame ptr & LR
+\end{minted}
+            \end{tcolorbox}
+
+            \vspace{-1mm}
+            \textbf{Function Epilogue:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\scriptsize]{gas}
+LDP x29,x30,[sp],#16    ; Restore frame ptr & LR
+AUTIASP    ; Verify LR signature
+RET        ; Return if valid, else fault
+\end{minted}
+            \end{tcolorbox}
+
+            \vspace{2mm}
+            \textbf{Security:} Prevents ROP/JOP attacks by cryptographically signing return addresses
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% Section 2: Control Flow Integrity
+\section{Control Flow Integrity}
+
 
 \begin{frame}[fragile]{Forward-Edge CFI: Intel CET-IBT \& ARM BTI}
     \begin{columns}
@@ -1452,36 +1232,29 @@ RET:
             \begin{itemize}
                 \item All virtual calls are "valid" targets
                 \item Cannot distinguish object types
-                \item Need type-aware CFI (FineIBT)
             \end{itemize}
         \end{column}
         \begin{column}{0.4\textwidth}
-            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{cpp}
-class Animal {
-  virtual void speak() = 0;
+            \begin{tcolorbox}[colback=gray!10, left=0mm, right=0mm, top=0mm, bottom=0mm]
+\begin{minted}[fontsize=\scriptsize]{c}
+void evil() { system("/bin/sh"); }
+
+struct Object {
+  void (*callback)(); // func ptr
+  int data;
+};
+struct Input {
+  char buffer[16];  // attacker input
 };
 
-class Dog : public Animal {
-  void speak() { bark(); }
-};
+// Type confusion: Input as Object
+struct Input* in = get_input();
+struct Object* obj = (Object*)in;
 
-class Cat : public Animal {
-  void speak() { meow(); }
-  void admin() { system("/bin/sh"); }
-};
-
-// Vulnerability:
-Animal* ptr = getDog();
-// Type confusion happens here!
-Cat* evil = (Cat*)ptr;
-evil->admin(); // Calls wrong vtable!
+// Hijack! buffer interpreted as
+// function pointer -> calls evil()
+obj->callback();
 \end{minted}
-            \end{tcolorbox}
-            
-            \begin{tcolorbox}[colback=red!10]
-                \small
-                \textbf{Impact:} Attacker calls admin() on Dog object, leading to arbitrary code execution
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -2018,63 +1791,6 @@ func:
     \end{columns}
 \end{frame}
 
-\begin{frame}{IOMMU - Shared Buffer Problem}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Problem:}
-            \begin{itemize}
-                \item IOMMU protection is page-granular
-                \item Device needs access to buffer A
-                \item Buffer B is on same 4KB page
-                \item Device can access both!
-            \end{itemize}
-
-            \vspace{0.3cm}
-            \textbf{Solutions:}
-            \begin{itemize}
-                \item Align DMA buffers to page boundaries
-                \item Use bounce buffers (copy to isolated page)
-                \item Sub-page protection (future hardware)
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{tikzpicture}[font=\footnotesize, scale=1.3, every node/.style={scale=1.3},
-                buffer/.style={draw, minimum width=2cm, minimum height=0.8cm, align=center}]
-                % Memory page container
-                \node[draw, fill=gray!10, minimum width=5cm, minimum height=1.8cm] (page) {};
-                \node[font=\small\bfseries, above=0pt of page.north, anchor=south] {4KB Page};
-
-                % Buffers inside page
-                \node[buffer, fill=green!30, left=0.2cm of page.center, anchor=east] (bufA)
-                    {Buffer A\\[-2pt]{\tiny (Intended)}};
-                \node[buffer, fill=red!30, right=0.2cm of page.center, anchor=west] (bufB)
-                    {Buffer B\\[-2pt]{\tiny (Sensitive)}};
-
-                % IOMMU below page with NT=2, NB=2
-                \node[muxdemux, muxdemux def={NT=2, NB=2, Rh=1.2, Lh=1.2, w=2.5},
-                      fill=yellow!30, thick, font=\scriptsize,
-                      external pins width=0, below=1cm of page] (iommu) {IOMMU};
-
-                % Device icon below IOMMU
-                \node[inner sep=0pt, below=0.6cm of iommu] (dev)
-                    {\includegraphics[width=0.8cm]{figures/noun-network-card-7443121.png}};
-                \node[font=\tiny, below=1pt of dev] {Device};
-
-                % Device to IOMMU - two transactions
-                \draw[->, thick, green!60!black] (dev.north) -- ++(0,0.2) -| (iommu.bpin 1);
-                \draw[->, thick, red, dashed] (dev.north) -- ++(0,0.1) -| (iommu.bpin 2);
-
-                % IOMMU to Buffer A (intended)
-                \draw[->, thick, green!60!black] (iommu.tpin 1) -- (bufA.south)
-                    node[midway, left, font=\tiny] {Allowed};
-
-                % IOMMU to Buffer B (unintended leak)
-                \draw[->, thick, red, dashed] (iommu.tpin 2) -- (bufB.south)
-                    node[midway, right, font=\tiny, text=red] {Leaks!};
-            \end{tikzpicture}
-        \end{column}
-    \end{columns}
-\end{frame}
 
 % Section 4: Trusted Execution
 \section{Trusted Execution Environments}
@@ -2106,8 +1822,8 @@ func:
                 \item DRM / content protection
             \end{itemize}
 
-            \vspace{-0.7cm}
-            \begin{tcolorbox}[colback=blue!10, title={\small Goal}]
+            \vspace{-3mm}
+            \begin{tcolorbox}[colback=blue!10, title={\small Goal}, boxsep=1pt]
                 \textbf{Run code on someone else's hardware without them being able to:}%
                 \begin{itemize}
                     \item Read your data
@@ -2117,13 +1833,8 @@ func:
                 Even with physical access!
             \end{tcolorbox}
 
-            \vspace{0.2cm}
-            {\small \textit{Different targets:}
-            \begin{itemize}
-                \item \textbf{Intel TDX/AMD SEV}: Full VM isolation
-                \item \textbf{Intel SGX/ARM TrustZone}: Process-level isolation
-            \end{itemize}
-            }
+            \vspace{0.1cm}
+            {\small \textit{VM-level (TDX/SEV) vs Process-level (SGX/TrustZone)}}
         \end{column}
     \end{columns}
 \end{frame}
@@ -2203,7 +1914,7 @@ func:
                 \draw[arrow] (tee) -- (cpu) node[midway, left, font=\scriptsize] {\tikz\node[num]{\tiny 1}; Hash};
                 \draw[arrow] (cpu) -- ++(2cm,0) |- (client.south west)
                     node[pos=0.25, right, font=\scriptsize] {\tikz\node[num]{\tiny 2}; Signed report};
-                \node[font=\scriptsize, below=0.3cm of client] {\tikz\node[num]{\tiny 3}; Verify};
+                \node[font=\scriptsize, below=0.1cm of client] {\tikz\node[num]{\tiny 3}; Verify};
                 \draw[arrow, dashed] (client) -- (tee) node[midway, above, font=\scriptsize] {\tikz\node[num]{\tiny 4}; Secrets};
             \end{tikzpicture}
 
@@ -2224,8 +1935,8 @@ func:
                 \item Hypervisor/OS \textcolor{red}{blocked} from accessing TEE memory
                 \item Page table attributes control access
                 \item Fast (no encryption overhead)
-                \item \textbf{Ex:} SGX (EPCM), TrustZone (NS bit)
-                \item \textcolor{red}{\textbf{Limit:}} Physical attacks (cold boot, bus snooping)
+                \item \textbf{Example:} SGX (EPCM), TrustZone (NS bit)
+                \item \textcolor{red}{\textbf{Limitation:}} Physical attacks (cold boot, bus snooping)
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -2235,7 +1946,7 @@ func:
                 \item Each TEE has unique key
                 \item Hardware encrypts/decrypts on memory bus
                 \item Protects against physical attacks
-                \item \textbf{Ex:} AMD SEV, Intel MKTME
+                \item \textbf{Example:} AMD SEV, Intel MKTME
             \end{itemize}
         \end{column}
     \end{columns}
@@ -2251,7 +1962,7 @@ func:
             \begin{itemize}
                 \item Access control prevents software attacks
                 \item Encryption prevents physical attacks
-                \item \textbf{Ex:} SEV-SNP (RMP), TDX (SEPT)
+                \item \textbf{Example:} SEV-SNP (RMP), TDX (SEPT)
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
@@ -2278,8 +1989,9 @@ func:
     \end{columns}
 \end{frame}
 
-\begin{frame}{Reverse Map Table (RMP) - AMD SEV-SNP}
+\begin{frame}{Memory Integrity: Reverse Map Table (RMP)}
     \begin{columns}[T]
+        \vspace{-5mm}
         \begin{column}{0.55\textwidth}
             \textbf{Problem:} Hypervisor controls page tables
             \begin{itemize}
@@ -2287,7 +1999,7 @@ func:
                 \item Could redirect VM memory to attacker pages
             \end{itemize}
 
-            \vspace{0.2cm}
+            %\vspace{0.1cm}
             \textbf{Solution: Reverse Map Table (RMP)}
             \begin{itemize}
                 \item One entry per physical page in system
@@ -2295,12 +2007,11 @@ func:
                 \item Hardware checks RMP on \textbf{every} access
             \end{itemize}
 
-            \vspace{0.2cm}
-            \textbf{Key Properties:}
+            %\vspace{0.1cm}
+            \textbf{Key Properties:} {\small (AMD SEV-SNP)}
             \begin{itemize}
                 \item Each physical page has exactly one owner
                 \item Hypervisor cannot access VM-owned pages
-                \item VM must validate pages before use
             \end{itemize}
         \end{column}
         \begin{column}{0.45\textwidth}
@@ -2350,8 +2061,8 @@ func:
             \end{tikzpicture}
 
             \vspace{0.2cm}
-            \begin{tcolorbox}[colback=green!10, fontupper=\scriptsize]
-                \textbf{Access Check:} CPU verifies RMP entry matches expected owner before allowing memory access
+            \begin{tcolorbox}[colback=yellow!10, fontupper=\scriptsize]
+                \textbf{Note:} Prevents remapping attacks but not full replay protection (no Merkle tree)
             \end{tcolorbox}
         \end{column}
     \end{columns}
@@ -2444,12 +2155,12 @@ func:
             \end{itemize}
 
             \vspace{0.2cm}
-            \textbf{Merkle Tree Solution:}
+            \textbf{Merkle Tree Solution:} {\small (Intel SGX)}
             \begin{itemize}
                 \item Tree of cryptographic hashes
-                \item Root stored in secure location
+                \item Root stored in secure on-chip memory
                 \item Each node hashes its children
-                \item Detects any modification
+                \item Detects any modification/replay
             \end{itemize}
 
             %\textbf{Intel SGX Implementation:}
@@ -2728,6 +2439,168 @@ func:
 % Section 6: Summary
 \section{Summary}
 
+
+\begin{frame}{Key Takeaways}
+    \begin{itemize}
+        \item \textbf{Defense in Depth:} Multiple layers of security mechanisms
+        \vspace{0.3cm}
+        \item \textbf{Hardware Acceleration:} Critical security features need hardware support for performance
+        \vspace{0.3cm}
+        \item \textbf{Trust Boundaries:} Clear separation between trusted and untrusted components
+        \vspace{0.3cm}
+        \item \textbf{Attestation:} Cryptographic proof of system state and configuration
+        \vspace{0.3cm}
+        \item \textbf{Memory Protection:} Tags, authentication, and encryption for memory safety
+        \vspace{0.3cm}
+        \item \textbf{Control Flow:} Hardware enforcement of valid program execution paths
+    \end{itemize}
+    
+    \vspace{0.5cm}
+    \begin{tcolorbox}[colback=blue!20]
+        \centering
+        \textbf{Future:} Homomorphic encryption, quantum-resistant crypto, AI-driven security
+    \end{tcolorbox}
+\end{frame}
+
+\appendix
+\begin{frame}
+    \centering
+    \Huge Backup
+\end{frame}
+\begin{frame}{Modern ROP Mitigations Summary}
+    \begin{center}
+        \begin{tikzpicture}[scale=0.8,
+            year/.style={font=\scriptsize, text depth=0.25ex},
+            defense/.style={draw, minimum width=1.4cm, minimum height=0.5cm, font=\footnotesize, text depth=0.25ex},
+            attack/.style={draw, fill=gray!20, minimum width=1.4cm, minimum height=0.5cm, font=\footnotesize, text depth=0.25ex},
+            mitigates/.style={->, thick},
+            crossout/.style={thick, red}]
+
+            % Timeline arrow - extended to avoid overlap with 2020
+            \draw[thick,->] (-1.5,0) -- (13,0) node[right] {Time};
+
+            % Year markers below the timeline
+            \node[year] (y2004) at (-1,-0.5) {2004};
+            \node[year] (y2005) at (2.5,-0.5) {2005};
+            \node[year] (y2012) at (5.5,-0.5) {2012};
+            \node[year] (y2014) at (8,-0.5) {2014};
+            \node[year] (y2020) at (11,-0.5) {2020};
+
+            % Defense nodes above timeline, aligned with years
+            \node[defense, fill=blue!30, above=0.3cm of y2004] (nx) {XD/NX};
+            \node[defense, fill=green!30, above=0.3cm of y2005] (aslr) {ASLR};
+            \node[defense, fill=yellow!30, above=0.3cm of y2012] (smep) {SMEP};
+            \node[defense, fill=orange!30, above=0.3cm of y2014] (smap) {SMAP};
+            \node[defense, fill=red!30, above=0.3cm of y2020] (cet) {CET};
+
+            % Attack nodes above defenses - close to the mechanism that stops them
+            \node[attack, above=0.4cm of nx] (inject) {\sout{Code Injection}};
+            \draw[mitigates] (nx) -- (inject);
+
+            \node[attack, above=0.4cm of aslr] (rop) {Basic ROP};
+            \draw[mitigates, orange] (aslr) -- (rop);
+
+            \node[attack, above=0.4cm of smep] (ret2user) {\sout{ret2user}};
+            \draw[mitigates] (smep) -- (ret2user);
+
+            \node[attack, above=0.4cm of smap] (pivot) {\sout{Stack Pivot}};
+            \draw[mitigates] (smap) -- (pivot);
+
+            \node[attack, above=0.4cm of cet] (advanced) {\sout{Advanced ROP}};
+            \draw[mitigates] (cet) -- (advanced);
+        \end{tikzpicture}
+    \end{center}
+    
+    \vspace{0.5cm}
+    \begin{columns}
+        \begin{column}{0.33\textwidth}
+            \textbf{User Space:}
+            \begin{itemize}
+                \item XD/NX bit
+                \item ASLR
+                \item Stack Canaries
+                \item CFI/CET
+                \item Shadow Stack
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \textbf{Kernel Space:}
+            \begin{itemize}
+                \item SMEP (HW)
+                \item SMAP (HW)
+                \item KASLR (SW)
+                \item KPTI* (SW)
+                \item FineIBT (HW+SW)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \textbf{Hardware:}
+            \begin{itemize}
+                \item Intel CET
+                \item ARM PAC/BTI
+                \item ARM MTE
+                \item Control-flow integrity
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.2cm}
+    \small *KPTI: Kernel Page Table Isolation - software mitigation for Meltdown
+\end{frame}
+\begin{frame}{Performance Impact of Security Features}
+    \begin{center}
+        \begin{tabular}{|l|c|c|l|}
+            \hline
+            \textbf{Feature} & \textbf{Type} & \textbf{Impact} & \textbf{Overhead} \\
+            \hline
+            \hline
+            XD/NX Bit & HW & \cellcolor{green!30}Low & Page table bit check \\
+            \hline
+            SMEP & HW & \cellcolor{green!30}Low & Permission check \\
+            \hline
+            SMAP & HW & \cellcolor{green!30}Low & AC flag check \\
+            \hline
+            Stack Canaries & SW & \cellcolor{green!30}Low & Function epilogue check \\
+            \hline
+            ASLR & SW & \cellcolor{green!30}Low & One-time randomization \\
+            \hline
+            CET (Shadow Stack) & HW & \cellcolor{yellow!30}Medium & Parallel stack ops \\
+            \hline
+            PAC (ARM) & HW & \cellcolor{yellow!30}Medium & Crypto ops per call \\
+            \hline
+            BTI (ARM) & HW & \cellcolor{yellow!30}Medium & Branch checks \\
+            \hline
+            KASLR & SW & \cellcolor{yellow!30}Medium & Kernel relocation \\
+            \hline
+            KPTI* & SW & \cellcolor{orange!30}High & Page table switches \\
+            \hline
+            Full CFI** & SW & \cellcolor{orange!30}High & Type checks everywhere \\
+            \hline
+            FineIBT & HW+SW & \cellcolor{yellow!30}Medium & Hash + branch checks \\
+            \hline
+        \end{tabular}
+    \end{center}
+    
+    \vspace{0.3cm}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \small
+            *Software mitigation for Meltdown\\
+            **Software-only implementation
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tcolorbox}[colback=yellow!10]
+                \small
+                \textbf{Impact Categories:}
+                \begin{itemize}
+                    \item \textcolor{green!70!black}{Low}: $<$5\%
+                    \item \textcolor{yellow!70!black}{Medium}: 5-15\%
+                    \item \textcolor{orange!70!black}{High}: $>$15\%
+                \end{itemize}
+            \end{tcolorbox}
+        \end{column}
+    \end{columns}
+\end{frame}
 \begin{frame}{Hardware Security Evolution}
     \begin{center}
     \begin{tikzpicture}[scale=0.8,
@@ -2780,27 +2653,62 @@ func:
         \end{column}
     \end{columns}
 \end{frame}
+\begin{frame}{IOMMU - Shared Buffer Problem}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Problem:}
+            \begin{itemize}
+                \item IOMMU protection is page-granular
+                \item Device needs access to buffer A
+                \item Buffer B is on same 4KB page
+                \item Device can access both!
+            \end{itemize}
 
-\begin{frame}{Key Takeaways}
-    \begin{itemize}
-        \item \textbf{Defense in Depth:} Multiple layers of security mechanisms
-        \vspace{0.3cm}
-        \item \textbf{Hardware Acceleration:} Critical security features need hardware support for performance
-        \vspace{0.3cm}
-        \item \textbf{Trust Boundaries:} Clear separation between trusted and untrusted components
-        \vspace{0.3cm}
-        \item \textbf{Attestation:} Cryptographic proof of system state and configuration
-        \vspace{0.3cm}
-        \item \textbf{Memory Protection:} Tags, authentication, and encryption for memory safety
-        \vspace{0.3cm}
-        \item \textbf{Control Flow:} Hardware enforcement of valid program execution paths
-    \end{itemize}
-    
-    \vspace{0.5cm}
-    \begin{tcolorbox}[colback=blue!20]
-        \centering
-        \textbf{Future:} Homomorphic encryption, quantum-resistant crypto, AI-driven security
-    \end{tcolorbox}
+            \vspace{0.3cm}
+            \textbf{Solutions:}
+            \begin{itemize}
+                \item Align DMA buffers to page boundaries
+                \item Use bounce buffers (copy to isolated page)
+                \item Sub-page protection (future hardware)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{tikzpicture}[font=\footnotesize, scale=1.3, every node/.style={scale=1.3},
+                buffer/.style={draw, minimum width=2cm, minimum height=0.8cm, align=center}]
+                % Memory page container
+                \node[draw, fill=gray!10, minimum width=5cm, minimum height=1.8cm] (page) {};
+                \node[font=\small\bfseries, above=0pt of page.north, anchor=south] {4KB Page};
+
+                % Buffers inside page
+                \node[buffer, fill=green!30, left=0.2cm of page.center, anchor=east] (bufA)
+                    {Buffer A\\[-2pt]{\tiny (Intended)}};
+                \node[buffer, fill=red!30, right=0.2cm of page.center, anchor=west] (bufB)
+                    {Buffer B\\[-2pt]{\tiny (Sensitive)}};
+
+                % IOMMU below page with NT=2, NB=2
+                \node[muxdemux, muxdemux def={NT=2, NB=2, Rh=1.2, Lh=1.2, w=2.5},
+                      fill=yellow!30, thick, font=\scriptsize,
+                      external pins width=0, below=1cm of page] (iommu) {IOMMU};
+
+                % Device icon below IOMMU
+                \node[inner sep=0pt, below=0.6cm of iommu] (dev)
+                    {\includegraphics[width=0.8cm]{figures/noun-network-card-7443121.png}};
+                \node[font=\tiny, below=1pt of dev] {Device};
+
+                % Device to IOMMU - two transactions
+                \draw[->, thick, green!60!black] (dev.north) -- ++(0,0.2) -| (iommu.bpin 1);
+                \draw[->, thick, red, dashed] (dev.north) -- ++(0,0.1) -| (iommu.bpin 2);
+
+                % IOMMU to Buffer A (intended)
+                \draw[->, thick, green!60!black] (iommu.tpin 1) -- (bufA.south)
+                    node[midway, left, font=\tiny] {Allowed};
+
+                % IOMMU to Buffer B (unintended leak)
+                \draw[->, thick, red, dashed] (iommu.tpin 2) -- (bufB.south)
+                    node[midway, right, font=\tiny, text=red] {Leaks!};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \end{document}
