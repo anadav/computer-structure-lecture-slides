@@ -1118,95 +1118,6 @@ sensitive_function:
     \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Shadow Stack - Hardware Return Address Protection}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Shadow Stack Concept:}
-            \begin{itemize}
-                \item Separate stack for return addresses
-                \item Write-protected by hardware
-                \item Parallel push/pop operations
-                \item Automatic verification on return
-            \end{itemize}
-            
-            \vspace{0.3cm}
-            \textbf{Intel CET Implementation:}
-            \begin{itemize}
-                \item SSP register (Shadow Stack Pointer)
-                \item WRSS/RDSS instructions (privileged)
-                \item Automatic on CALL/RET
-                \item Page table bit for SS pages
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \vspace{-7mm}
-            \begin{tikzpicture}[font=\scriptsize,
-                stack title/.style={font=\scriptsize\bfseries},
-                stack cell/.style={draw, minimum width=2cm, minimum height=0.5cm, anchor=north, inner sep=2pt},
-                stack container/.style={draw, fill=#1, rounded corners=2pt},
-                stack container/.default=blue!20]
-
-                % Regular Stack using matrix
-                \matrix[matrix of nodes,
-                    nodes={stack cell},
-                    row sep=-\pgflinewidth,
-                    column sep=0pt] (regstack) {
-                    |[fill=gray!20]| Local Vars \\
-                    |[fill=yellow!30]| Return Addr \\
-                    |[fill=gray!20]| Saved RBP \\
-                };
-                \node[stack title, above=0.15cm of regstack] {Regular Stack};
-                \begin{scope}[on background layer]
-                    \node[stack container=blue!20, fit=(regstack), inner sep=2pt] {};
-                \end{scope}
-
-                % Shadow Stack using matrix
-                \matrix[matrix of nodes,
-                    nodes={stack cell},
-                    row sep=-\pgflinewidth,
-                    right=1.3cm of regstack] (shadowstack) {
-                    |[fill=green!40]| Return Addr \\
-                };
-                \node[stack title, above=0.15cm of shadowstack] {Shadow Stack};
-                \begin{scope}[on background layer]
-                    \node[stack container=green!20, draw=green!60!black, thick,
-                          fit=(shadowstack), inner sep=2pt] {};
-                \end{scope}
-
-                % Protection label
-                \node[draw, fill=red!20, font=\scriptsize, below=0.5cm of shadowstack] (prot) {Write Protected};
-
-                % Verify arrow between return addresses
-                \draw[<->, thick] (regstack-2-1.east) -- (shadowstack-1-1.west)
-                    node[midway, above, font=\scriptsize] {Verify};
-
-                % Attack arrow
-                \draw[->, thick, red] ([xshift=-1.2cm]regstack-2-1.west) -- (regstack-2-1.west)
-                    node[near start, above, font=\scriptsize] {Overflow};
-
-                % X mark for blocked access
-                \node[inner sep=0pt, right=0.3cm of shadowstack-1-1.east]
-                    {\includegraphics[width=0.4cm]{figures/noun-x-2222229.png}};
-            \end{tikzpicture}
-            
-            \vspace{0.3cm}
-            \textbf{Operation Example:}
-            \vspace{-2mm}
-            \begin{tcolorbox}[colback=yellow!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{text}
-CALL func:
-  - Push addr to regular stack
-  - Push addr to shadow stack
-
-RET:
-  - Pop from regular stack -> RAX
-  - Pop from shadow stack -> RBX
-  - If RAX != RBX -> Fault
-\end{minted}
-            \end{tcolorbox}
-        \end{column}
-    \end{columns}
-\end{frame}
 
 \begin{frame}[fragile]{The Type Confusion Problem}
     \begin{columns}
@@ -1318,6 +1229,96 @@ func:
 \section{Hardware Isolation}
 \subsection{Privilege Levels \& Virtualization}
 
+\begin{frame}[fragile]{Shadow Stack - Hardware Return Address Protection}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{Shadow Stack Concept:}
+            \begin{itemize}
+                \item Separate stack for return addresses
+                \item Write-protected by hardware
+                \item Parallel push/pop operations
+                \item Automatic verification on return
+            \end{itemize}
+            
+            \vspace{0.3cm}
+            \textbf{Intel CET Implementation:}
+            \begin{itemize}
+                \item SSP register (Shadow Stack Pointer)
+                \item WRSS/RDSS instructions (privileged)
+                \item Automatic on CALL/RET
+                \item Page table bit for SS pages
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \begin{tikzpicture}[font=\scriptsize,
+                stack title/.style={font=\scriptsize\bfseries},
+                stack cell/.style={draw, minimum width=1.6cm, minimum height=0.45cm, anchor=north, inner sep=2pt},
+                stack container/.style={draw, fill=#1, rounded corners=2pt}]
+
+                % Regular Stack using matrix
+                \matrix[matrix of nodes,
+                    nodes={stack cell},
+                    row sep=-\pgflinewidth,
+                    column sep=0pt] (regstack) {
+                    |[fill=gray!20]| Local Vars \\
+                    |[fill=yellow!30, font=\scriptsize\bfseries]| Ret Addr 2 \\
+                    |[fill=gray!20]| Saved RBP \\
+                };
+                \node[stack title, above=0.15cm of regstack] (regtitle) {Regular Stack};
+                \begin{scope}[on background layer]
+                    \node[stack container=blue!10, fit=(regstack), inner sep=2pt] {};
+                \end{scope}
+
+                % Shadow Stack using matrix (1.2cm = 0.8cm + 4mm)
+                \matrix[matrix of nodes,
+                    nodes={stack cell},
+                    row sep=-\pgflinewidth,
+                    right=1.2cm of regstack] (shadowstack) {
+                    |[fill=red!15, text=gray]| Ret Addr 3 \\
+                    |[fill=red!25, font=\scriptsize\bfseries]| Ret Addr 2 \\
+                    |[fill=red!15]| Ret Addr 1 \\
+                };
+                \node[stack title, above=0.15cm of shadowstack] (sstitle) {Shadow Stack};
+                \begin{scope}[on background layer]
+                    \node[stack container=red!10, draw=red!60!black, thick,
+                          fit=(shadowstack), inner sep=2pt] (sscontainer) {};
+                \end{scope}
+
+                % RSP pointer (pointing to Ret Addr 2)
+                \node[font=\tiny\ttfamily, left=0.15cm of regstack-2-1.west] (rsp) {RSP $\rightarrow$};
+
+                % SSP pointer (pointing to Ret Addr 2 in shadow stack)
+                \node[font=\tiny\ttfamily, right=0.15cm of shadowstack-2-1.east] (ssp) {$\leftarrow$ SSP};
+
+                % Memory region box (including titles)
+                \begin{scope}[on background layer]
+                    \node[draw=gray, dashed, rounded corners=3pt,
+                          fit=(regtitle)(sstitle)(regstack)(shadowstack),
+                          inner xsep=5pt, inner ysep=4pt,
+                          label={[font=\tiny, gray]below:Memory}] (membox) {};
+                \end{scope}
+
+                % Stage 1: Only HW Write Protected callout
+                \node[rectangle callout, draw=red!70!black, fill=red!10, font=\tiny,
+                      callout absolute pointer={(sscontainer.south)},
+                      below=0.5cm of shadowstack.south, anchor=north] {HW Write Protected};
+
+                % Stage 2: Verify arrow and RET callout
+                \visible<2->{
+                    % Verify arrow between Ret Addr 2 entries
+                    \draw[<->, very thick, blue!70] (regstack-2-1.east) -- (shadowstack-2-1.west)
+                        node[midway, above, font=\scriptsize] {Verify};
+
+                    % RET: verify callout below regular stack
+                    \node[rectangle callout, draw=blue!70, fill=blue!10, font=\tiny,
+                          callout absolute pointer={($(regstack-2-1.east)!0.5!(shadowstack-2-1.west)$)},
+                          below=0.5cm of regstack.south, anchor=north] {\textbf{RET:} compare addresses};
+                }
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
 \begin{frame}{x86 Segmentation - The Original Security Model}
     \begin{columns}
         \begin{column}{0.5\textwidth}
