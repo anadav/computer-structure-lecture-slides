@@ -891,51 +891,6 @@ some_ioctl:
         \end{column}
     \end{columns}
 \end{frame}
-\begin{frame}[fragile]{Pointer Authentication (PAC)}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{ARM PAC Architecture:}
-            \begin{itemize}
-                \item Cryptographic signature in upper pointer bits
-                \item Uses QARMA block cipher
-                \item Sign on store, verify before use
-            \end{itemize}
-
-            \vspace{0.3cm}
-            \textbf{What It Protects:}
-            \begin{itemize}
-                \item Return addresses (IA/IB keys)
-                \item Data pointers, vtables (DA/DB keys)
-                \item General authentication (GA key)
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \textbf{Function Prologue:}
-            \vspace{-2mm}
-            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{gas}
-; LR (x30) = return addr, SP = stack ptr
-PACIASP    ; Sign LR using SP as context
-STP x29,x30,[sp,#-16]!  ; Save frame ptr & LR
-\end{minted}
-            \end{tcolorbox}
-
-            \vspace{-1mm}
-            \textbf{Function Epilogue:}
-            \vspace{-2mm}
-            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
-\begin{minted}[fontsize=\scriptsize]{gas}
-LDP x29,x30,[sp],#16    ; Restore frame ptr & LR
-AUTIASP    ; Verify LR signature
-RET        ; Return if valid, else fault
-\end{minted}
-            \end{tcolorbox}
-
-            \vspace{2mm}
-            \textbf{Security:} Prevents ROP/JOP attacks by cryptographically signing return addresses
-        \end{column}
-    \end{columns}
-\end{frame}
 
 % Subsection: Control Flow Integrity
 \subsection{Control Flow Integrity}
@@ -1316,6 +1271,51 @@ func:
                           below=0.5cm of regstack.south, anchor=north] {\textbf{RET:} compare addresses};
                 }
             \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}[fragile]{Pointer Authentication (PAC)}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{ARM PAC Architecture:}
+            \begin{itemize}
+                \item Cryptographic signature in upper pointer bits
+                \item Uses QARMA block cipher
+                \item Sign on store, verify before use
+            \end{itemize}
+
+            \vspace{0.3cm}
+            \textbf{What It Protects:}
+            \begin{itemize}
+                \item Return addresses (IA/IB keys)
+                \item Data pointers, vtables (DA/DB keys)
+                \item General authentication (GA key)
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \textbf{Function Prologue:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\scriptsize]{gas}
+; LR (x30) = return addr, SP = stack ptr
+PACIASP    ; Sign LR using SP as context
+STP x29,x30,[sp,#-16]!  ; Save frame ptr & LR
+\end{minted}
+            \end{tcolorbox}
+
+            \vspace{-1mm}
+            \textbf{Function Epilogue:}
+            \vspace{-2mm}
+            \begin{tcolorbox}[colback=gray!10, left=1mm, right=1mm, top=1mm, bottom=1mm]
+\begin{minted}[fontsize=\scriptsize]{gas}
+LDP x29,x30,[sp],#16    ; Restore frame ptr & LR
+AUTIASP    ; Verify LR signature
+RET        ; Return if valid, else fault
+\end{minted}
+            \end{tcolorbox}
+
+            \vspace{2mm}
+            \textbf{Security:} Prevents ROP/JOP attacks by cryptographically signing return addresses
         \end{column}
     \end{columns}
 \end{frame}
