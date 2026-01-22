@@ -593,6 +593,9 @@
 \begin{frame}[fragile]{SM Architecture \& Warp Scheduling}
 \begin{center}
 \begin{tikzpicture}[scale=0.85, every node/.style={font=\tiny, transform shape},
+    arrow/.style={-stealth},
+    revarrow/.style={stealth-},
+    doublearrow/.style={stealth-stealth},
     box/.style={draw, fill=#1, minimum height=7mm, align=center},
     box/.default=white,
     lane/.style={draw, fill=red!10, minimum width=6mm, minimum height=5mm, align=center, font=\fontsize{4}{5}\selectfont},
@@ -653,17 +656,17 @@
 \node[box=blue!15, minimum width=16mm, minimum height=10mm, anchor=east, font=\scriptsize] (icache) at ([xshift=-4mm]scoreboard.west) {Instruction\\cache};
 
 % Arrow from instruction cache to scoreboard
-\draw[->, thick] (icache.east) -- (scoreboard.west);
+\draw[arrow, thick] (icache.east) -- (scoreboard.west);
 
 % Instruction register as muxdemux
 \node[ireg, anchor=north]
     (ireg) at ([yshift=-4mm]scoreboard.south) {Instruction register};
 
 % Arrow from SIMD instructions column to instruction register
-\draw[->, thick] (scoretable-7-3.south) -- ++(0, -0.3) -| (ireg.tpin 1);
+\draw[arrow, thick] (scoretable-7-3.south) -- ++(0, -0.3) -| (ireg.tpin 1);
 
 % Arrow from address to instruction cache
-\draw[->, thick] (scoretable-7-2.south) -- ++(0, -0.3) -| (icache.south);
+\draw[arrow, thick] (scoretable-7-2.south) -- ++(0, -0.3) -| (icache.south);
 
 % Draw 16 SIMD lanes below instruction register
 \foreach \i in {1,...,16} {
@@ -680,9 +683,9 @@
     \node[mux, anchor=rpin 1] (mux\i) at ([yshift=2mm]reg\i.tpin 2) {};
 
     % Connect ireg bpin to ALU
-    \draw[->, thin] (ireg.bpin \i) -- (alu\i.north);
+    \draw[arrow, thin] (ireg.bpin \i) -- (alu\i.north);
 
-    \draw[->, thin] (mux\i.rpin 1) -- (reg\i.tpin 2);
+    \draw[arrow, thin] (mux\i.rpin 1) -- (reg\i.tpin 2);
 
     \draw (reg\i.tpin 1) |- ([yshift=1mm]mux\i.lpin 1) -- (mux\i.lpin 1);
 
@@ -707,29 +710,29 @@
 \node[memunit=1] (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
 
 \foreach \i in {1,...,16} {
-    \draw[->, thin] (lsu\i.bpin 1) -- ++(0,-0.4) coordinate (lsuconn\i) -| (coalesce.north);
+    \draw[arrow, thin] (lsu\i.bpin 1) -- ++(0,-0.4) coordinate (lsuconn\i) -| (coalesce.north);
     \node[connector] at (lsuconn\i) {};
 }
 % Horizontal bus connecting all LSU bpin 2 with connectors
 \foreach \i in {1,...,16} {
-    \draw[<-, thin] (lsu\i.bpin 2) -- ++(0,-0.2) coordinate (lsubus\i);
+    \draw[revarrow, thin] (lsu\i.bpin 2) -- ++(0,-0.2) coordinate (lsubus\i);
     \node[connector] at (lsubus\i) {};
 }
 \draw[thin] (lsubus1) -- (lsubus16);
 
-\draw[->, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
+\draw[arrow, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
 
 % Local memory - cyan for memory subsystem (modern GPUs: 64-228KB configurable)
 \node[memunit=2, fill=cyan!20, anchor=tpin 1]
-    (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 96 KB};
+    (localmem) at ([yshift=-6mm]coalesce.bpin 2) {Local Memory 96 KB};
 
 % Arrow between coalescing and local memory
-\draw[->, thick] (coalesce.south) -- (localmem.tpin 1);
+\draw[arrow, thick] (coalesce.bpin 2) -- (localmem.tpin 1);
 
 % To global memory
 \node[anchor=west, font=\scriptsize, align=center] at ([yshift=-3mm]interconnect.south east) (gmem)
     {To Global\\Memory};
-\draw[->, thick] (interconnect.bpin 2) |- (gmem.north);
+\draw[arrow, thick] (interconnect.bpin 2) |- (gmem.west);
 
 % Callout explaining multi-warp scheduling (slide 2 only, right side)
 \only<2>{
