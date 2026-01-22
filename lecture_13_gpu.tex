@@ -605,6 +605,9 @@
     ireg/.style={muxdemux, muxdemux def={Lh=0.6, Rh=0.6, NL=0, NR=0, NB=16, NT=1, w=18},
                 external pins width=0, fill=green!10, font=\scriptsize},
     connector/.style={fill=black, circle, minimum size=1mm, inner sep=0pt},
+    memunit/.style={muxdemux, muxdemux def={Lh=0.8, Rh=0.8, NL=0, NR=0, NT=#1, NB=2, w=7},
+                external pins width=0, fill=cyan!15, font=\scriptsize},
+    memunit/.default=1,
 ]
 
 % Scoreboard table as matrix of nodes
@@ -647,7 +650,7 @@
 \end{scope}
 
 % Instruction cache (positioned left of scoreboard) - blue for fetch
-\node[box=blue!15, minimum width=16mm, minimum height=10mm, anchor=east] (icache) at ([xshift=-4mm]scoreboard.west) {Instruction\\cache};
+\node[box=blue!15, minimum width=16mm, minimum height=10mm, anchor=east, font=\scriptsize] (icache) at ([xshift=-4mm]scoreboard.west) {Instruction\\cache};
 
 % Arrow from instruction cache to scoreboard
 \draw[->, thick] (icache.east) -- (scoreboard.west);
@@ -690,18 +693,18 @@
 % SIMD Lanes label with callout explaining real numbers
 \node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux16.east)
     (lanelabel) {SIMD Lanes\\(Thread\\Processors)};
-\node<3->[rectangle callout, callout absolute pointer={(lanelabel.east)}, draw, fill=white,
-    font=\fontsize{5}{6}\selectfont, align=left, anchor=west]
-    at ([xshift=2mm]lanelabel.east) {Blackwell: 128 cores/SM\\$\div$ 32 threads/warp\\= 4 warps in parallel};
+\only<3>{
+\node[rectangle callout, callout absolute pointer={(lanelabel.north)}, draw, fill=white,
+    font=\footnotesize, align=left, anchor=south]
+    at ([yshift=1.5cm]lanelabel.north) {Blackwell: 128 cores/SM\\$\div$ 32 threads/warp\\= 4 warps in parallel};
+}
 
 % Address coalescing unit - cyan for memory subsystem
-\node[box=cyan!15, minimum width=42mm, minimum height=5mm, anchor=north]
+\node[box=cyan!15, minimum width=42mm, minimum height=5mm, anchor=north, font=\scriptsize]
     (coalesce) at ([yshift=-6mm]lsu5.bpin 1) {Address coalescing unit};
 
 % Interconnection network - cyan for memory subsystem
-\node[muxdemux, muxdemux def={Lh=1, Rh=1, NL=0, NR=0, NT=1, NB=2, w=5},
-    external pins width=0, fill=cyan!15, font=\tiny]
-    (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
+\node[memunit=1] (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
 
 \foreach \i in {1,...,16} {
     \draw[->, thin] (lsu\i.bpin 1) -- ++(0,-0.4) coordinate (lsuconn\i) -| (coalesce.north);
@@ -717,7 +720,7 @@
 \draw[->, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
 
 % Local memory - cyan for memory subsystem (modern GPUs: 64-228KB configurable)
-\node[box=cyan!20, minimum width=42mm, minimum height=6mm, anchor=north]
+\node[memunit=1, fill=cyan!20, anchor=north]
     (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 96 KB};
 
 % Arrow between coalescing and local memory
@@ -728,10 +731,12 @@
     {To Global\\Memory};
 \draw[->, thick] (interconnect.bpin 2) -- ++(0,-3mm) -| (gmem.north);
 
-% Callout explaining multi-warp scheduling (shown on overlay 2+)
-\node<2->[rectangle callout, callout absolute pointer={(scoretable-2-1.west)}, draw, fill=white,
-    font=\fontsize{5}{6}\selectfont, align=left, anchor=east]
-    at ([xshift=-3mm]scoretable.west) {4 warp schedulers:\\issue 4 warps/cycle\\+ dual-issue per warp};
+% Callout explaining multi-warp scheduling (slide 2 only, right side)
+\only<2>{
+\node[rectangle callout, callout absolute pointer={(scoretable.east)}, draw, fill=white,
+    font=\footnotesize, align=left, anchor=west]
+    at ([xshift=5mm]scoretable.east) {4 warp schedulers:\\issue 4 warps/cycle\\+ dual-issue per warp};
+}
 
 \end{tikzpicture}
 \end{center}
