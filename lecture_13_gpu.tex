@@ -240,9 +240,9 @@
         % NV DEC (west of NV-HBI)
         \node[nvdec, anchor=east] (nvdecL) at (hbiL.west) {NV\\DEC};
 
-        % Engine: calculated width to fit between nvlink.east and nvdecL.west
+        % Engine: west of NV DEC, calculated width to fit between nvlink.east and nvdecL.west
         \path let \p1=(nvlink.east), \p2=(nvdecL.west) in
-            node[engine, minimum width={\x2-\x1}, anchor=west, inner sep=0pt] (engineL) at (nvlink.east) {GIGATHREAD ENGINE w/ MIG CONTROL};
+            node[engine, minimum width={\x2-\x1}, anchor=east, inner sep=0pt] (engineL) at (nvdecL.west) {GIGATHREAD ENGINE w/ MIG CONTROL};
 
         % GPCs below engine
         \node[gpc] (gpcL2) at ([xshift=-10mm, yshift=-8mm]dieL.center) {GPC};
@@ -265,9 +265,12 @@
         \node[l2, right=1mm of gpcR0] (l2R0) {L2};
         \node[gpc, right=1mm of l2R0] (gpcR1) {GPC};
 
-        % NV DEC (east of NV-HBI) and Engine (east of NV DEC)
+        % NV DEC (east of NV-HBI)
         \node[nvdec, anchor=west] (nvdecR) at (hbiR.east) {NV\\DEC};
-        \node[engine, anchor=west] (engineR) at (nvdecR.east) {GIGATHREAD ENGINE w/ MIG CONTROL};
+
+        % Engine: calculated width to fit between nvdecR.east and c2c.west
+        \path let \p1=(nvdecR.east), \p2=(c2c.west) in
+            node[engine, minimum width={\x2-\x1}, anchor=west, inner sep=0pt] (engineR) at (nvdecR.east) {GIGATHREAD ENGINE w/ MIG CONTROL};
 
         % GPCs below engine
         \node[gpc] (gpcR2) at ([xshift=-10mm, yshift=-8mm]dieR.center) {GPC};
