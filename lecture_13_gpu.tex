@@ -1520,40 +1520,53 @@ __global__ void wmma_ker(half *a, half *b, float *c) {
 // Thread i accesses A[row][i]
 val = A[row * N + threadIdx.x];
 \end{lstlisting}
-\vspace{-1em}
+\vspace{-1.5em}
             \begin{center}
-            \begin{tikzpicture}
-                \matrix[matrix of nodes,
-                    nodes={draw, minimum width=5mm, minimum height=5mm,
-                           font=\scriptsize, inner sep=0pt, fill=green!25},
-                    column sep=-\pgflinewidth,
-                ] (good) {0 & 1 & 2 & 3 & 4 & 5 & 6 & 7\\};
-                \draw[->, thick, green!50!black] (good.south west) -- (good.south east);
-                \node[font=\scriptsize, green!50!black, below=1mm of good] {1 transaction};
+            \begin{tikzpicture}[
+                cl/.style={matrix of nodes, nodes={draw, minimum width=4mm, minimum height=4mm,
+                           font=\tiny, inner sep=0pt, fill=gray!15}, column sep=-\pgflinewidth},
+                clbrace/.style={decorate, decoration={brace, mirror, amplitude=3pt}, thick},
+                cllbl/.style={font=\tiny, below=0mm},
+            ]
+                % 4 cache lines side by side
+                \matrix[cl, nodes={fill=green!30}] (cl0) {0 & 1 & 2 & 3\\};
+                \matrix[cl, right=1mm of cl0] (cl1) {4 & 5 & 6 & 7\\};
+                \matrix[cl, right=1mm of cl1] (cl2) {8 & 9 & 10 & 11\\};
+                \matrix[cl, right=1mm of cl2] (cl3) {12 & 13 & 14 & 15\\};
+                \draw[clbrace, green!50!black] (cl0.south west) -- (cl0.south east);
+                \node[cllbl, green!50!black] at (cl0.south) {1 transaction};
             \end{tikzpicture}
             \end{center}
 
-\vspace{-8mm}
+\vspace{-6mm}
 \tikz \draw[dashed, gray] (0,0) -- (\linewidth,0);
-\vspace{-8mm}
+\vspace{-6mm}
 
 \begin{lstlisting}[title={\color{red!70!black}\textbf{Non-coalesced (column-major)}},
     basicstyle=\small\ttfamily, xleftmargin=2mm, xrightmargin=2mm]
 // Thread i accesses A[i][col]
 val = A[threadIdx.x * N + col];
 \end{lstlisting}
-\vspace{-1em}
+\vspace{-1.5em}
             \begin{center}
-            \begin{tikzpicture}
-                \matrix[matrix of nodes,
-                    nodes={draw, minimum width=5mm, minimum height=5mm,
-                           font=\scriptsize, inner sep=0pt, fill=red!25},
-                    column sep=-\pgflinewidth,
-                ] (bad) {0 & 1 & 2 & 3 & 4 & 5 & 6 & 7\\};
-                \foreach \i in {1,3,5,7} {
-                    \draw[->, thick, red!70!black] (bad-1-\i.north) -- ++(0,3mm);
+            \begin{tikzpicture}[
+                cl/.style={matrix of nodes, nodes={draw, minimum width=4mm, minimum height=4mm,
+                           font=\tiny, inner sep=0pt, fill=gray!15}, column sep=-\pgflinewidth},
+                clbrace/.style={decorate, decoration={brace, mirror, amplitude=3pt}, thick},
+                cllbl/.style={font=\tiny, below=0mm},
+            ]
+                % 4 cache lines, one cell highlighted per line
+                \matrix[cl] (cl0) {|[fill=red!30]| 0 & 1 & 2 & 3\\};
+                \matrix[cl, right=1mm of cl0] (cl1) {|[fill=red!30]| 4 & 5 & 6 & 7\\};
+                \matrix[cl, right=1mm of cl1] (cl2) {|[fill=red!30]| 8 & 9 & 10 & 11\\};
+                \matrix[cl, right=1mm of cl2] (cl3) {|[fill=red!30]| 12 & 13 & 14 & 15\\};
+                \foreach \m in {cl0, cl1, cl2, cl3} {
+                    \draw[clbrace, red!70!black] (\m.south west) -- (\m.south east);
                 }
-                \node[font=\scriptsize, red!70!black, below=1mm of bad] {4 transactions};
+                \node[cllbl, red!70!black] at (cl0.south) {1,};
+                \node[cllbl, red!70!black] at (cl1.south) {2,};
+                \node[cllbl, red!70!black] at (cl2.south) {3,};
+                \node[cllbl, red!70!black] at (cl3.south) {4 trans.};
             \end{tikzpicture}
             \end{center}
         \end{column}
