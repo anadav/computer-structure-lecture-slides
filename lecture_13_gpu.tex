@@ -599,10 +599,11 @@
                 external pins width=0, fill=white, rotate=-90, anchor=lpin 1},
     lsu/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=2, w=1.1},
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
-    reg/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=1, w=1.1},
+    reg/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=1, NT=2, w=1.1},
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
     ireg/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.5, NL=0, NR=0, NB=16, NT=1, w=18},
                 external pins width=0, fill=white, font=\scriptsize},
+    connector/.style={draw, fill=black, circle, minimum size=1mm},
 ]
 
 % Instruction cache
@@ -642,36 +643,29 @@
 % Arrow from scheduler to instruction register
 \draw[->, thick] (scheduler.south) -- (ireg.north);
 
-% Draw triangular pins below instruction register and 16 SIMD lanes
+% Draw 16 SIMD lanes below instruction register
 \foreach \i in {1,...,16} {
-    % Calculate x position for this lane
-%    \coordinate (pin\i) at ([xshift=\i*6mm-45mm]ireg.south);
+    % ALU - first, below ireg bpin
+    \node[lane, anchor=north, minimum height=10mm] at ([yshift=-2mm]ireg.bpin \i) (alu\i) {};
 
-    % Draw triangular pin marker
-%    \draw[fill=white] (pin\i) -- ++(-1.5mm,0) -- ++(1.5mm,-2.5mm) -- ++(1.5mm,2.5mm) -- cycle;
+    % Registers box below ALU
+    \node[reg, anchor=north, align=center] at (alu\i.south) (reg\i) {Reg\\1K\\$\times$32};
 
-    % Mux below the pin
-    \node[mux] (mux\i) at ([yshift=-8mm]ireg.bpin \i) {};
-
-    % Registers box with size inside
-    \node[reg, anchor=north, align=center] at ([yshift=-0.5mm]mux\i.south) (reg\i) {Reg\\1K\\$\times$32};
-
-    % Load store unit (muxdemux with NB=2)
+    % Load store unit below Reg
     \node[lsu, anchor=north, align=center] at (reg\i.south) (lsu\i) {Load\\Store\\Unit};
 
-    % ALU - directly above Reg
-    \node[lane, anchor=south, minimum height=5mm] at (reg\i.north) (alu\i) {};
+    % Mux above Reg at tpin 2
+    \node[mux, anchor=rpin 1] (mux\i) at ([yshift=2mm]reg\i.tpin 2) {};
 
-    % Connect ireg bpin to mux
-    \draw (ireg.bpin \i) -- (mux\i.north);
+    % Connect ireg bpin to ALU
+    \draw (ireg.bpin \i) -- (alu\i.north);
+
+    \draw (mux\i.rpin 1) -- (reg\i.tpin 2);
+
+    \draw (reg\i.tpin 1) |- ([yshift=2mm]mux\i.lpin 1) -- (mux\i.lpin 1);
+
+    \node[connector] at ([yshift=1mm]mux\i.lpin 2) {};
 }
-
-% Lane labels (only show a few) - black text
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux1.north) {1};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux2.north) {2};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux3.north) {3};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux15.north) {15};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux16.north) {16};
 
 % SIMD Lanes label
 \node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux16.east)
