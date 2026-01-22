@@ -693,13 +693,13 @@
     \draw (conn\i) -- (mux\i.lpin 2);
 }
 
-% SIMD Lanes label with callout explaining real numbers
-\node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux16.east)
-    (lanelabel) {SIMD Lanes\\(Thread\\Processors)};
+% Fit node around rightmost SIMD lane with red highlight
 \only<3>{
-\node[rectangle callout, callout absolute pointer={(lanelabel.north)}, draw, fill=white,
-    font=\footnotesize, align=left, anchor=south]
-    at ([yshift=1.5cm]lanelabel.north) {Blackwell: 128 cores/SM\\$\div$ 32 threads/warp\\= 4 warps in parallel};
+\node[fit=(alu16)(mux16)(reg16)(lsu16), draw=red, thick, inner sep=0.5pt] (lane16fit) {};
+% Combined SIMD Lanes callout
+\node[rectangle callout, callout absolute pointer={(lane16fit.east)}, draw, fill=white,
+    font=\scriptsize, align=left, anchor=west]
+    at ([xshift=2mm]lane16fit.east) {SIMD Lanes\\(Thread Processors)\\[2pt]\footnotesize Blackwell: 128 cores/SM\\$\div$ 32 threads/warp\\= 4 warps in parallel};
 }
 
 % Address coalescing unit - cyan for memory subsystem
@@ -853,7 +853,7 @@ if (tid < 4) {
 \begin{tikzpicture}[scale=0.92,
     active/.style={draw, fill=green!40, minimum width=5mm, minimum height=4.5mm, font=\scriptsize},
     inactive/.style={draw, fill=white, minimum width=5mm, minimum height=4.5mm, font=\scriptsize},
-    steplbl/.style={font=\scriptsize\bfseries, anchor=south west, yshift=-3mm},
+    steplbl/.style={font=\scriptsize\bfseries, anchor=south west, yshift=-2mm},
     dots/.style={font=\scriptsize, minimum width=5mm},
 ]
 
