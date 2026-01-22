@@ -576,8 +576,8 @@
     box/.style={draw, fill=#1, minimum height=7mm, align=center},
     box/.default=white,
     lane/.style={draw, minimum width=6mm, minimum height=5mm, align=center, font=\fontsize{4}{5}\selectfont},
-    alu/.style={draw, fill=white, isosceles triangle, isosceles triangle apex angle=60,
-                shape border rotate=-90, minimum width=4mm, minimum height=3mm, inner sep=0pt},
+    mux/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NR=1, w=0.4, inset w=0.15, inset Lh=0.25, inset Rh=0},
+                external pins width=0, fill=white, rotate=-90},
 ]
 
 % Instruction cache
@@ -624,28 +624,28 @@
     % Draw triangular pin marker
     \draw[fill=white] (pin\i) -- ++(-1.5mm,0) -- ++(1.5mm,-2.5mm) -- ++(1.5mm,2.5mm) -- cycle;
 
-    % ALU triangle below the pin
-    \node[alu] (alu\i) at ([yshift=-8mm]pin\i) {};
+    % Mux below the pin
+    \node[mux] (mux\i) at ([yshift=-8mm]pin\i) {};
 
     % Registers box with size inside
-    \node[lane, anchor=north, minimum height=8mm] at ([yshift=-0.5mm]alu\i.south) (reg\i) {Reg\\{\fontsize{3}{4}\selectfont 1K$\times$32}};
+    \node[lane, anchor=north, minimum height=8mm, align=center] at ([yshift=-0.5mm]mux\i.south) (reg\i) {Reg\\1K\\$\times$32};
 
     % Load store unit
     \node[lane, anchor=north, minimum height=8mm] at ([yshift=-0.5mm]reg\i.south) (lsu\i) {Load\\store\\unit};
 
-    % Connect pin to ALU
-    \draw ([yshift=-2.5mm]pin\i) -- (alu\i.apex);
+    % Connect pin to mux
+    \draw ([yshift=-2.5mm]pin\i) -- (mux\i.north);
 }
 
 % Lane labels (only show a few) - black text
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu0.north) {0};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu1.north) {1};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu2.north) {2};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu14.north) {14};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]alu15.north) {15};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux0.north) {0};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux1.north) {1};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux2.north) {2};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux14.north) {14};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux15.north) {15};
 
 % SIMD Lanes label
-\node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]alu15.east)
+\node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux15.east)
     {SIMD Lanes\\(Thread\\Processors)};
 
 % Address coalescing unit
