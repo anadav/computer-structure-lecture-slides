@@ -7,7 +7,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage[siunitx]{circuitikz}
-\usetikzlibrary{positioning, matrix, fit, backgrounds, shapes.callouts, tikzmark, calc, shapes.geometric, shapes.symbols}
+\usetikzlibrary{positioning, matrix, fit, backgrounds, shapes.callouts, tikzmark, calc, shapes.geometric, shapes.symbols, overlay-beamer-styles}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{listings}
@@ -378,27 +378,27 @@
     \begin{columns}[T]
         \begin{column}{0.55\textwidth}
             \vspace{-0.5em}
-            \textbf{Per SM (Streaming Multiprocessor):}
+            \onslide<1->{\textbf{Per SM (Streaming Multiprocessor):}}
             \begin{itemize}
-                \item 128 FP32 CUDA Cores
-                \item 4 Gen5 Tensor Cores
-                \item 4 Warp Schedulers (64 warps max)
+                \item<1-> 128 FP32 \tikz[baseline=-0.5ex]{\node[fill=green!60, draw, rounded corners=1pt, inner sep=1pt, font=\scriptsize] {CUDA Cores};}
+                \item<1-> 4 Gen5 \tikz[baseline=-0.5ex]{\node[fill=green!60, draw, rounded corners=1pt, inner sep=1pt, font=\scriptsize] {Tensor Cores};}
+                \item<1-> 4 \tikz[baseline=-0.5ex]{\node[fill=orange!50, draw, rounded corners=1pt, inner sep=1pt, font=\scriptsize] {Warp Schedulers};} (64 warps max)
             \end{itemize}
 
             \vspace{0.5em}
-            \textbf{On-Chip Memory per SM:}
+            \onslide<2->{\textbf{On-Chip Memory per SM:}}
             \begin{itemize}
-                \item 256KB Register File
-                \item 228KB Shared Memory / L1 Cache
-                \item 256KB Tensor Memory (TMEM)
+                \item<2-> 256KB \tikz[baseline=-0.5ex]{\node[fill=blue!60, draw, rounded corners=1pt, inner sep=1pt, font=\scriptsize, text=white] {Register File};}
+                \item<2-> 228KB \tikz[baseline=-0.5ex]{\node[fill=blue!30, draw, rounded corners=1pt, inner sep=1pt, font=\scriptsize] {Shared Memory / L1};}
+                \item<2-> 256KB \tikz[baseline=-0.5ex]{\node[fill=cyan!50, draw, rounded corners=1pt, inner sep=1pt, font=\scriptsize] {Tensor Memory};}
             \end{itemize}
 
             \vspace{0.5em}
-            \textbf{Memory Hierarchy:}
+            \onslide<3->{\textbf{Memory Hierarchy:}}
             \begin{itemize}
-                \item \textbf{Per Thread:} Registers (max 255)
-                \item \textbf{Per Block:} Shared Memory
-                \item \textbf{All SMs:} L2 Cache, Global Memory
+                \item<3-> \textbf{Per Thread:} Registers (max 255)
+                \item<3-> \textbf{Per Block:} Shared Memory
+                \item<3-> \textbf{All SMs:} L2 Cache, Global Memory
             \end{itemize}
         \end{column}
         \begin{column}{0.4\textwidth}
@@ -413,17 +413,26 @@
                 %   Green  = Compute units (CUDA Cores, Tensor Cores, LD/ST)
                 %   Cyan   = Tensor-specific (Tensor Memory, TMA)
                 %   Yellow = Special functions (SFU)
-                % Component styles
-                l0/.style={draw, fill=blue!40, minimum width=26mm, minimum height=3mm, align=center},
-                sched/.style={draw, fill=orange!50, minimum width=26mm, minimum height=3mm, align=center},
-                regf/.style={draw, fill=blue!60, minimum width=26mm, minimum height=3mm, align=center, text=white},
-                tmem/.style={draw, fill=cyan!50, minimum width=26mm, minimum height=3mm, align=center},
-                cuda/.style={draw, fill=green!60, minimum width=12mm, minimum height=4mm, align=center},
-                tensor/.style={draw, fill=green!60, minimum width=12mm, minimum height=4mm, align=center},
-                ldst/.style={draw, fill=green!70, minimum width=3mm, minimum height=2.5mm, font=\fontsize{3}{4}\selectfont},
-                sfu/.style={draw, fill=yellow!60, minimum width=3mm, minimum height=2.5mm, font=\fontsize{3}{4}\selectfont},
+                % Component styles with overlay-aware highlighting
+                l0/.style={draw, minimum width=26mm, minimum height=3mm, align=center,
+                    alt=<2->{fill=blue!40}{fill=gray!20}},
+                sched/.style={draw, minimum width=26mm, minimum height=3mm, align=center,
+                    alt=<1->{fill=orange!50}{fill=gray!20}},
+                regf/.style={draw, minimum width=26mm, minimum height=3mm, align=center,
+                    alt=<2->{fill=blue!60, text=white}{fill=gray!30}},
+                tmem/.style={draw, minimum width=26mm, minimum height=3mm, align=center,
+                    alt=<2->{fill=cyan!50}{fill=gray!20}},
+                cuda/.style={draw, minimum width=12mm, minimum height=4mm, align=center,
+                    alt=<1->{fill=green!60}{fill=gray!30}},
+                tensor/.style={draw, minimum width=12mm, minimum height=4mm, align=center,
+                    alt=<1->{fill=green!60}{fill=gray!30}},
+                ldst/.style={draw, minimum width=3mm, minimum height=2.5mm, font=\fontsize{3}{4}\selectfont,
+                    alt=<1->{fill=green!70}{fill=gray!30}},
+                sfu/.style={draw, minimum width=3mm, minimum height=2.5mm, font=\fontsize{3}{4}\selectfont,
+                    alt=<1->{fill=yellow!60}{fill=gray!20}},
                 wide/.style={minimum width=56mm, minimum height=3.5mm, align=center},
-                tex/.style={draw, fill=blue!40, minimum width=13mm, minimum height=3.5mm, align=center},
+                tex/.style={draw, minimum width=13mm, minimum height=3.5mm, align=center,
+                    alt=<2->{fill=blue!40}{fill=gray!20}},
                 % Processing block as reusable pic
                 pics/procblock/.style={code={
                     \node[l0, anchor=north] (-l0) at (0,0) {L0 Instruction Cache};
@@ -443,7 +452,7 @@
                 \node[font=\fontsize{5}{6}\selectfont\bfseries] (title) {Streaming Multiprocessor (SM)};
 
                 % L1 Instruction Cache - relative to title (orange = control)
-                \node[draw, fill=orange!40, wide, anchor=north] (l1i) at ([yshift=-1mm]title.south) {L1 Instruction Cache};
+                \node[draw, wide, anchor=north, alt=<1->{fill=orange!40}{fill=gray!20}] (l1i) at ([yshift=-1mm]title.south) {L1 Instruction Cache};
 
                 % Top row of processing blocks - relative to L1
                 \pic (TL) at ([xshift=-14mm, yshift=-1mm]l1i.south) {procblock};
@@ -454,8 +463,8 @@
                 \pic (BR) at ([yshift=-2mm]TR-ld.south -| TR-l0) {procblock};
 
                 % Bottom section - relative to bottom blocks
-                \node[draw, fill=cyan!40, wide, anchor=north] (tma) at ([yshift=-2mm]BL-ld.south -| title) {Tensor Memory Accelerator};
-                \node[draw, fill=blue!30, wide, anchor=north] (l1d) at ([yshift=-0.5mm]tma.south) {256KB L1 / Shared Mem};
+                \node[draw, wide, anchor=north, alt=<2->{fill=cyan!40}{fill=gray!20}] (tma) at ([yshift=-2mm]BL-ld.south -| title) {Tensor Memory Accelerator};
+                \node[draw, wide, anchor=north, alt=<2->{fill=blue!30}{fill=gray!20}] (l1d) at ([yshift=-0.5mm]tma.south) {256KB L1 / Shared Mem};
 
                 % Tex units as matrix - relative to L1 data
                 \matrix[matrix of nodes, column sep=1mm, anchor=north, nodes={tex}, ampersand replacement=\&] (texunits) at ([yshift=-0.5mm]l1d.south) {
