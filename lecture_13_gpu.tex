@@ -596,7 +596,9 @@
     box/.default=white,
     lane/.style={draw, minimum width=6mm, minimum height=5mm, align=center, font=\fontsize{4}{5}\selectfont},
     mux/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NR=1, w=0.4, inset w=0.15, inset Lh=0.25, inset Rh=0},
-                external pins width=0, fill=white, rotate=-90},
+                external pins width=0, fill=white, rotate=-90, anchor=lpin 1},
+    lsu/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=2, w=1.1},
+                external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
 ]
 
 % Instruction cache
@@ -608,7 +610,7 @@
 \node[anchor=north, font=\scriptsize] at ([yshift=-1mm]scheduler.north) {Warp scheduler};
 
 % Scoreboard table
-\node[anchor=north, yshift=-4mm] at (scheduler.north) {
+\node[anchor=north, yshift=-4mm] at (scheduler.north) (scoretable) {
 \fontsize{6}{7}\selectfont
 \begin{tabular}{|c|c|l|c|}
 \hline
@@ -623,7 +625,8 @@
 \hline
 \end{tabular}
 };
-\node[anchor=south west, font=\scriptsize] at ([xshift=2mm, yshift=-4mm]scheduler.north west) {Scoreboard};
+\node[font=\scriptsize, anchor=south west] at (scoretable.north west) (scoretitle) {Scoreboard};
+\node[draw, fit=(scoretable)(scoretitle), inner sep=1mm] (scoreboard) {};
 
 % Arrow from instruction cache to scheduler
 \draw[->, thick] (icache.east) -- (scheduler.west);
@@ -649,8 +652,11 @@
     % Registers box with size inside
     \node[lane, anchor=north, minimum height=8mm, align=center] at ([yshift=-0.5mm]mux\i.south) (reg\i) {Reg\\1K\\$\times$32};
 
-    % Load store unit
-    \node[lane, anchor=north, minimum height=8mm] at ([yshift=-0.5mm]reg\i.south) (lsu\i) {Load\\store\\unit};
+    % Load store unit (muxdemux with NB=2)
+    \node[lsu, anchor=north, align=center] at (reg\i.south) (lsu\i) {Load\\Store\\Unit};
+
+    % ALU - positioned using mux's lpin 1 anchor, 4mm higher
+    \node[lane, anchor=south, minimum height=5mm] at ([yshift=4mm]mux\i.lpin 1) (alu\i) {ALU};
 
     % Connect pin to mux
     \draw ([yshift=-2.5mm]pin\i) -- (mux\i.north);
