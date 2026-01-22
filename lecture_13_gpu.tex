@@ -604,7 +604,7 @@
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
     ireg/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.5, NL=0, NR=0, NB=16, NT=1, w=18},
                 external pins width=0, fill=white, font=\scriptsize},
-    connector/.style={fill=black, circle, minimum size=0.5mm, inner sep=0pt},
+    connector/.style={fill=black, circle, minimum size=1mm, inner sep=0pt},
 ]
 
 % Scoreboard table as matrix of nodes
@@ -691,15 +691,21 @@
 
 % Address coalescing unit
 \node[box, minimum width=42mm, minimum height=5mm, anchor=north]
-    (coalesce) at ([yshift=-8mm]lsu5.bpin 1) {Address coalescing unit};
+    (coalesce) at ([yshift=-6mm]lsu5.bpin 1) {Address coalescing unit};
 
 % Interconnection network
-\node[box, minimum width=42mm, minimum height=5mm, anchor=north west]
-    (interconnect) at ([xshift=2mm]coalesce.north east) {Interconnection network};
+\node[muxdemux, muxdemux def={Lh=1, Rh=1, NL=0, NR=0, NT=1, NB=2, w=20},
+    external pins width=0, fill=white, font=\tiny]
+    (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
 
 \foreach \i in {1,...,16} {
-    \draw[->, thin] (lsu\i.bpin 1) -- ++(0,-0.4) -| (coalesce.north);
+    \draw[->, thin] (lsu\i.bpin 1) -- ++(0,-0.4) coordinate (lsuconn\i) -| (coalesce.north);
+    \node[connector] at (lsuconn\i) {};
+
+    \draw[<->, thin] (lsu\i.bpin 2) -- ++(0,-0.2) -| (lsu1.bpin 2);
 }
+
+\draw[->, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
 
 % Arrows from lanes to bottom units
 %\foreach \i in {1,4,8} {
@@ -711,15 +717,15 @@
 
 % Local memory
 \node[box, minimum width=42mm, minimum height=6mm, anchor=north]
-    (localmem) at ([yshift=-2mm]coalesce.south) {Local Memory 64 KB};
+    (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 64 KB};
 
 % Arrow between coalescing and local memory
-\draw[<->, thick] (coalesce.south) -- (localmem.north);
+\draw[->, thick] (coalesce.south) -- (localmem.north);
 
 % To global memory
-\node[anchor=north, font=\scriptsize, align=center] at ([yshift=-2mm]interconnect.south)
+\node[anchor=north, font=\scriptsize, align=center] at ([yshift=-8mm]interconnect.south east) (gmem)
     {To Global\\Memory};
-\draw[->, thick] (interconnect.south) -- ++(0,-1.5mm);
+\draw[->, thick] (interconnect.bpin 2) -- ++(0,-3mm) -| (gmem.north);
 
 \end{tikzpicture}
 \end{center}
