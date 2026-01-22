@@ -420,13 +420,13 @@
                 tex/.style={draw, fill=blue!60, minimum width=11mm, minimum height=3mm, align=center, text=white},
                 % Processing block as reusable pic
                 pics/procblock/.style={code={
-                    \node[l0, anchor=north] (-l0) at (0,0) {L0 I-Cache};
-                    \node[sched, anchor=north] (-ws) at (-l0.south) {Warp Scheduler};
-                    \node[sched, anchor=north] (-du) at (-ws.south) {Dispatch};
-                    \node[regf, anchor=north] (-rf) at (-du.south) {Register File};
-                    \node[tmem, anchor=north] (-tm) at (-rf.south) {Tensor Memory};
+                    \node[l0, anchor=north] (-l0) at (0,0) {L0 Instruction Cache};
+                    \node[sched, anchor=north] (-ws) at (-l0.south) {Warp Scheduler (32 thd/clk)};
+                    \node[sched, anchor=north] (-du) at (-ws.south) {Dispatch Unit (32 thd/clk)};
+                    \node[regf, anchor=north] (-rf) at (-du.south) {Register File (16K$\times$32b)};
+                    \node[tmem, anchor=north] (-tm) at (-rf.south) {64KB Tensor Memory};
                     \node[cuda, anchor=north west] (-cc) at (-tm.south west) {CUDA\\Cores};
-                    \node[tensor, anchor=north east] (-tc) at (-tm.south east) {Tensor\\Cores};
+                    \node[tensor, anchor=north east] (-tc) at (-tm.south east) {Tensor\\Cores\\(5th Gen)};
                     \node[ldst, minimum width=17mm, anchor=north west] (-ld) at (-cc.south west) {LD/ST $\times$8};
                     \node[sfu, anchor=north east] (-sf) at (-tc.south east) {SFU};
                     % Border around the block
