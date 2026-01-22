@@ -239,35 +239,21 @@
         \path let \p1=(nvlink.east), \p2=(nvdecL.west) in
             node[engine, minimum width={\x2-\x1}, anchor=east, inner sep=0pt] (engineL) at (nvdecL.west) {GIGATHREAD ENGINE\\w/ MIG CONTROL};
 
-        % Top row: GPC | L2 | GPC (between HBM and Engine)
-        \path let \p1=(nvlink.east), \p2=(nvdecL.west), \p3=(hbmLT0.south), \p4=(engineL.north) in
-            coordinate (gpcLtopLeft) at (\x1, \y3)
-            coordinate (gpcLtopRight) at (\x2, \y4);
+        % === Top row: chain from NV-DEC outward: GPC | L2 | GPC ===
+        % Top right GPC (adjacent to NV-DEC)
+        \node[gpc, minimum height=13mm, anchor=south east, inner sep=1pt] (gpcL1) at (nvdecL.north east) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+        % Top L2 (adjacent to top right GPC)
+        \node[l2, minimum height=13mm, anchor=south east] (l2L0) at (gpcL1.south west) {L2};
+        % Top left GPC (adjacent to L2)
+        \node[gpc, minimum height=13mm, anchor=south east, inner sep=1pt] (gpcL0) at (l2L0.south west) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
 
-        % L2 centered horizontally
-        \path let \p1=(engineL.center), \p2=(hbmLT0.south), \p3=(engineL.north) in
-            node[l2, minimum height={\y2-\y3}, anchor=north] (l2L0) at (\x1, \y2) {L2};
-
-        % Top left GPC
-        \path let \p1=(nvlink.east), \p2=(l2L0.west), \p3=(hbmLT0.south), \p4=(engineL.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcL0) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
-
-        % Top right GPC
-        \path let \p1=(l2L0.east), \p2=(nvdecL.west), \p3=(hbmLT0.south), \p4=(engineL.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcL1) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
-
-        % Bottom row: GPC | L2 | GPC (between Engine and HBM)
-        % L2 centered horizontally
-        \path let \p1=(engineL.center), \p2=(hbmLB0.north), \p3=(engineL.south) in
-            node[l2, minimum height={\y3-\y2}, anchor=south] (l2L1) at (\x1, \y2) {L2};
-
-        % Bottom left GPC
-        \path let \p1=(nvlink.east), \p2=(l2L1.west), \p3=(engineL.south), \p4=(hbmLB0.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcL2) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
-
-        % Bottom right GPC
-        \path let \p1=(l2L1.east), \p2=(nvdecL.west), \p3=(engineL.south), \p4=(hbmLB0.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcL3) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+        % === Bottom row: chain from NV-DEC outward: GPC | L2 | GPC ===
+        % Bottom right GPC (adjacent to NV-DEC)
+        \node[gpc, minimum height=13mm, anchor=north east, inner sep=1pt] (gpcL3) at (nvdecL.south east) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+        % Bottom L2 (adjacent to bottom right GPC)
+        \node[l2, minimum height=13mm, anchor=north east] (l2L1) at (gpcL3.north west) {L2};
+        % Bottom left GPC (adjacent to L2)
+        \node[gpc, minimum height=13mm, anchor=north east, inner sep=1pt] (gpcL2) at (l2L1.north west) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
 
 
         % === RIGHT DIE CONTENTS ===
@@ -287,31 +273,21 @@
         \path let \p1=(nvdecR.east), \p2=(c2c.west) in
             node[engine, minimum width={\x2-\x1}, anchor=west, inner sep=0pt] (engineR) at (nvdecR.east) {GIGATHREAD ENGINE\\w/ MIG CONTROL};
 
-        % Top row: GPC | L2 | GPC (between HBM and Engine)
-        % L2 centered horizontally
-        \path let \p1=(engineR.center), \p2=(hbmRT0.south), \p3=(engineR.north) in
-            node[l2, minimum height={\y2-\y3}, anchor=north] (l2R0) at (\x1, \y2) {L2};
+        % === Top row: chain from NV-DEC outward: GPC | L2 | GPC ===
+        % Top left GPC (adjacent to NV-DEC)
+        \node[gpc, minimum height=13mm, anchor=south west, inner sep=1pt] (gpcR0) at (nvdecR.north west) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+        % Top L2 (adjacent to top left GPC)
+        \node[l2, minimum height=13mm, anchor=south west] (l2R0) at (gpcR0.south east) {L2};
+        % Top right GPC (adjacent to L2)
+        \node[gpc, minimum height=13mm, anchor=south west, inner sep=1pt] (gpcR1) at (l2R0.south east) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
 
-        % Top left GPC
-        \path let \p1=(nvdecR.east), \p2=(l2R0.west), \p3=(hbmRT0.south), \p4=(engineR.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcR0) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
-
-        % Top right GPC
-        \path let \p1=(l2R0.east), \p2=(c2c.west), \p3=(hbmRT0.south), \p4=(engineR.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcR1) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
-
-        % Bottom row: GPC | L2 | GPC (between Engine and HBM)
-        % L2 centered horizontally
-        \path let \p1=(engineR.center), \p2=(hbmRB0.north), \p3=(engineR.south) in
-            node[l2, minimum height={\y3-\y2}, anchor=south] (l2R1) at (\x1, \y2) {L2};
-
-        % Bottom left GPC
-        \path let \p1=(nvdecR.east), \p2=(l2R1.west), \p3=(engineR.south), \p4=(hbmRB0.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcR2) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
-
-        % Bottom right GPC
-        \path let \p1=(l2R1.east), \p2=(c2c.west), \p3=(engineR.south), \p4=(hbmRB0.north) in
-            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcR3) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+        % === Bottom row: chain from NV-DEC outward: GPC | L2 | GPC ===
+        % Bottom left GPC (adjacent to NV-DEC)
+        \node[gpc, minimum height=13mm, anchor=north west, inner sep=1pt] (gpcR2) at (nvdecR.south west) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+        % Bottom L2 (adjacent to bottom left GPC)
+        \node[l2, minimum height=13mm, anchor=north west] (l2R1) at (gpcR2.north east) {L2};
+        % Bottom right GPC (adjacent to L2)
+        \node[gpc, minimum height=13mm, anchor=north west, inner sep=1pt] (gpcR3) at (l2R1.north east) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
 
         % === CALLOUTS ===
         \node[callout, callout absolute pointer={(pcie.north)}, anchor=south] at ([yshift=5mm]gpu.north west) {x16 PCIe Gen 6\\256 GB/s CPU Host};
