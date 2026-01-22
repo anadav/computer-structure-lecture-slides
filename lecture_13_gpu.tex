@@ -485,25 +485,34 @@
 \begin{frame}{CUDA Compilation}
     \begin{center}
     \begin{tikzpicture}[
-        node distance=0.5cm and 0.8cm,
-        box/.style={draw, rounded corners},
+        node distance=0.6cm and 1.2cm,
+        box/.style={draw, rounded corners, minimum width=28mm, minimum height=8mm, font=\small, thick},
+        source/.style={box, fill=blue!20, draw=blue!60},
+        compiler/.style={box, fill=green!20, draw=green!60},
+        ir/.style={box, fill=yellow!25, draw=yellow!70!black},
+        output/.style={box, fill=orange!25, draw=orange!60},
+        arrow/.style={->, thick, >=stealth},
     ]
         % Vertical flow
-        \node[box] (src) {Source Code};
-        \node[box, below=of src] (nvcc) {nvcc (compiler)};
-        \node[box, below=of nvcc] (ptx) {PTX Code (IR)};
+        \node[source] (src) {\texttt{.cu} Source Code};
+        \node[compiler, below=of src] (nvcc) {\textbf{nvcc} (NVIDIA Compiler)};
+        \node[ir, below=of nvcc] (ptx) {PTX Code (IR)};
         % Two branches from PTX
-        \node[box, below left=of ptx] (offline) {Offline Compiler};
-        \node[box, below right=of ptx] (jit) {JIT Compiler};
+        \node[compiler, below left=of ptx] (offline) {Offline Compiler};
+        \node[compiler, below right=of ptx] (jit) {JIT Compiler};
         % Final output
-        \node[box, below=0.9cm of ptx] (machine) {Machine Code};
+        \node[output, below=1.0cm of ptx] (machine) {GPU Machine Code};
 
-        \draw[->] (src) -- (nvcc);
-        \draw[->] (nvcc) -- (ptx);
-        \draw[->] (ptx) -- (offline);
-        \draw[->] (ptx) -- (jit);
-        \draw[->] (offline) -- (machine);
-        \draw[->] (jit) -- (machine);
+        % Labels for branches
+        \node[font=\scriptsize, gray, left=0.1cm of offline] {build time};
+        \node[font=\scriptsize, gray, right=0.1cm of jit] {runtime};
+
+        \draw[arrow, blue!60] (src) -- (nvcc);
+        \draw[arrow, green!60!black] (nvcc) -- (ptx);
+        \draw[arrow, green!60!black] (ptx) -- (offline);
+        \draw[arrow, green!60!black] (ptx) -- (jit);
+        \draw[arrow, orange!70!black] (offline) -- (machine);
+        \draw[arrow, orange!70!black] (jit) -- (machine);
     \end{tikzpicture}
     \end{center}
 
@@ -795,18 +804,8 @@ if (tid < 4) {
     dots/.style={font=\scriptsize, minimum width=5mm},
 ]
 
-% Stage 1: Callout explaining tid = thread index (with proper TikZ callout shape)
-\only<1>{
-\node[rectangle callout, callout relative pointer={(-5cm, 2cm)}, draw, fill=blue!10,
-      font=\scriptsize, align=left, text width=4cm] (tidcallout) at (2, -2) {
-    \textbf{tid} = thread index (0--31)\\[2pt]
-    Each box shows thread's \textbf{tid}\\[2pt]
-    Thread 0 has tid=0, thread 1 has tid=1, etc.
-};
-}
-
-% Stage 2: Step 1 - All 32 Threads Active
-\only<2->{
+% Step 1 - All 32 Threads Active
+\only<1->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s1) at (0,0) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots{} 31 \\
@@ -814,8 +813,8 @@ if (tid < 4) {
 \node[steplbl] at (s1.north west) {Step 1: All 32 Threads Active};
 }
 
-% Stage 3: Step 2 - x = qux() for tid < 4
-\only<3->{
+% Step 2 - foo() for tid < 4
+\only<2->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.1) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
@@ -823,8 +822,8 @@ if (tid < 4) {
 \node[steplbl] at (s2.north west) {Step 2: foo()};
 }
 
-% Stage 4: Step 3 - bar() for tid < 2
-\only<4->{
+% Step 3 - bar() for tid < 2
+\only<3->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-2.2) {
     |[active]| 0 \& |[active]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
@@ -832,8 +831,8 @@ if (tid < 4) {
 \node[steplbl] at (s3.north west) {Step 3: bar()};
 }
 
-% Stage 5: Step 4 - baz() for 2 <= tid < 4
-\only<5->{
+% Step 4 - baz() for 2 <= tid < 4
+\only<4->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-3.3) {
     |[inactive]| 0 \& |[inactive]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[inactive]| 4 \& |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[dots]| \ldots \\
@@ -841,8 +840,8 @@ if (tid < 4) {
 \node[steplbl] at (s4.north west) {Step 4: baz()};
 }
 
-% Stage 6: Step 5 - qux() for tid >= 4
-\only<6->{
+% Step 5 - qux() for tid >= 4
+\only<5->{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s5) at (0,-4.4) {
     |[inactive]| 0 \& |[inactive]| 1 \& |[inactive]| 2 \& |[inactive]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots \\
@@ -850,8 +849,8 @@ if (tid < 4) {
 \node[steplbl] at (s5.north west) {Step 5: qux()};
 }
 
-% Stage 7: Step 6 - Convergence
-\only<7>{
+% Step 6 - Convergence
+\only<6>{
 \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s6) at (0,-5.5) {
     |[active]| 0 \& |[active]| 1 \& |[active]| 2 \& |[active]| 3 \&
     |[active]| 4 \& |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[dots]| \ldots{} 31 \\
@@ -859,8 +858,8 @@ if (tid < 4) {
 \node[steplbl, text=green!50!black] at (s6.north west) {Step 6: Convergence};
 }
 
-% Legend (show from stage 2 onwards) - moved lower by 8mm and right by 1cm
-\only<2->{
+% Legend
+\only<1->{
 \node[active, label=right:{\scriptsize Active}] at (1,-7.3) {};
 \node[inactive, label=right:{\scriptsize Inactive (masked)}] at (3,-7.3) {};
 }
@@ -872,32 +871,32 @@ if (tid < 4) {
 % Code highlighting overlay using tikzmarks - yellow background with blend mode
 \begin{tikzpicture}[remember picture, overlay]
     \begin{scope}[blend mode=multiply]
-    % Stage 3: highlight "foo();" - runs for all tid < 4
-    \only<3>{
+    % Step 2: highlight "foo();" - runs for all tid < 4
+    \only<2>{
         \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L3s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L3e);
     }
-    % Stage 4: highlight "bar();" - runs for tid < 2
-    \only<4>{
+    % Step 3: highlight "bar();" - runs for tid < 2
+    \only<3>{
         \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L5s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L5e);
     }
-    % Stage 5: highlight "baz();" - runs for 2 <= tid < 4
-    \only<5>{
+    % Step 4: highlight "baz();" - runs for 2 <= tid < 4
+    \only<4>{
         \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L7s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L7e);
     }
-    % Stage 6: highlight "qux();" - runs for tid >= 4
-    \only<6>{
+    % Step 5: highlight "qux();" - runs for tid >= 4
+    \only<5>{
         \fill[yellow!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L10s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L10e);
     }
-    % Stage 7: highlight "// All converge" - all threads reconverge
-    \only<7>{
+    % Step 6: highlight "// All converge" - all threads reconverge
+    \only<6>{
         \fill[green!60, rounded corners=2pt]
             ([xshift=-2pt, yshift=9pt]pic cs:L12s) rectangle
             ([xshift=2pt, yshift=-1pt]pic cs:L12e);
