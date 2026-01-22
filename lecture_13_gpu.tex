@@ -694,7 +694,7 @@
     (coalesce) at ([yshift=-6mm]lsu5.bpin 1) {Address coalescing unit};
 
 % Interconnection network
-\node[muxdemux, muxdemux def={Lh=1, Rh=1, NL=0, NR=0, NT=1, NB=2, w=20},
+\node[muxdemux, muxdemux def={Lh=1, Rh=1, NL=0, NR=0, NT=1, NB=2, w=5},
     external pins width=0, fill=white, font=\tiny]
     (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
 
@@ -707,14 +707,6 @@
 
 \draw[->, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
 
-% Arrows from lanes to bottom units
-%\foreach \i in {1,4,8} {
-%    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- coalesce.north);
-%}
-%\foreach \i in {9,12,16} {
-%    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- interconnect.north);
-%}
-
 % Local memory
 \node[box, minimum width=42mm, minimum height=6mm, anchor=north]
     (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 64 KB};
@@ -723,7 +715,7 @@
 \draw[->, thick] (coalesce.south) -- (localmem.north);
 
 % To global memory
-\node[anchor=north, font=\scriptsize, align=center] at ([yshift=-8mm]interconnect.south east) (gmem)
+\node[anchor=north, font=\scriptsize, align=center] at ([yshift=-6mm]interconnect.south east) (gmem)
     {To Global\\Memory};
 \draw[->, thick] (interconnect.bpin 2) -- ++(0,-3mm) -| (gmem.north);
 
