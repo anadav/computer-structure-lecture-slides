@@ -700,7 +700,7 @@
 }
 
 % Address coalescing unit - cyan for memory subsystem
-\node[box=cyan!15, minimum width=42mm, minimum height=5mm, anchor=north, font=\scriptsize]
+\node[memunit=1, anchor=north]
     (coalesce) at ([yshift=-6mm]lsu5.bpin 1) {Address coalescing unit};
 
 % Interconnection network - cyan for memory subsystem
@@ -720,16 +720,16 @@
 \draw[->, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
 
 % Local memory - cyan for memory subsystem (modern GPUs: 64-228KB configurable)
-\node[memunit=1, fill=cyan!20, anchor=north]
+\node[memunit=2, fill=cyan!20, anchor=tpin 1]
     (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 96 KB};
 
 % Arrow between coalescing and local memory
-\draw[->, thick] (coalesce.south) -- (localmem.north);
+\draw[->, thick] (coalesce.south) -- (localmem.tpin 1);
 
 % To global memory
-\node[anchor=north, font=\scriptsize, align=center] at ([yshift=-6mm]interconnect.south east) (gmem)
+\node[anchor=west, font=\scriptsize, align=center] at ([yshift=-3mm]interconnect.south east) (gmem)
     {To Global\\Memory};
-\draw[->, thick] (interconnect.bpin 2) -- ++(0,-3mm) -| (gmem.north);
+\draw[->, thick] (interconnect.bpin 2) |- (gmem.north);
 
 % Callout explaining multi-warp scheduling (slide 2 only, right side)
 \only<2>{
