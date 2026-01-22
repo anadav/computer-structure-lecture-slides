@@ -529,39 +529,38 @@
         \begin{column}{0.5\textwidth}
             \begin{center}
             \begin{tikzpicture}[
-                box/.style={draw, rounded corners, minimum width=20mm, minimum height=6mm, font=\footnotesize},
+                % Node styles
+                box/.style={draw, rounded corners, minimum width=22mm, minimum height=7mm, font=\footnotesize},
                 sw/.style={box, fill=blue!20},
                 hw/.style={box, fill=orange!20},
-                arr/.style={->, thick},
+                header/.style={font=\scriptsize\bfseries},
+                % Arrow styles
+                hierarchy/.style={->, thick},
+                mapping/.style={->, thick, dashed, gray},
             ]
-                % Software side
-                \node[sw] (grid) {Grid};
-                \node[sw, below=4mm of grid] (block) {Thread Block};
-                \node[sw, below=4mm of block] (warp) {Warp (32 threads)};
-                \node[sw, below=4mm of warp] (thread) {Thread};
+                % Matrix layout
+                \matrix[matrix of nodes,
+                        ampersand replacement=\&,
+                        column sep=12mm,
+                        row sep=6mm,
+                        nodes={anchor=center}] (m) {
+                    |[header, blue!70!black]| Software \& |[header, orange!70!black]| Hardware \\
+                    |[sw]| Grid               \& |[hw]| GPU \\
+                    |[sw]| Thread Block       \& |[hw]| SM \\
+                    |[sw]| Warp (32 threads)  \& |[hw]| CUDA Cores \\
+                    |[sw]| Thread             \& |[hw]| Registers \\
+                };
 
-                \draw[arr] (grid) -- (block);
-                \draw[arr] (block) -- (warp);
-                \draw[arr] (warp) -- (thread);
+                % Hierarchy arrows (vertical)
+                \foreach \i/\j in {2/3, 3/4, 4/5} {
+                    \draw[hierarchy] (m-\i-1) -- (m-\j-1);
+                    \draw[hierarchy] (m-\i-2) -- (m-\j-2);
+                }
 
-                % Hardware side
-                \node[hw, right=15mm of grid] (gpu) {GPU};
-                \node[hw, right=15mm of block] (sm) {SM};
-                \node[hw, right=15mm of warp] (cores) {CUDA Cores};
-                \node[hw, right=15mm of thread] (regs) {Registers};
-
-                \draw[arr] (gpu) -- (sm);
-                \draw[arr] (sm) -- (cores);
-                \draw[arr] (cores) -- (regs);
-
-                % Mapping arrows
-                \draw[arr, dashed, gray] (grid) -- (gpu);
-                \draw[arr, dashed, gray] (block) -- (sm);
-                \draw[arr, dashed, gray] (thread) -- (regs);
-
-                % Labels
-                \node[above=1mm of grid, font=\scriptsize\bfseries, blue!70!black] {Software};
-                \node[above=1mm of gpu, font=\scriptsize\bfseries, orange!70!black] {Hardware};
+                % Mapping arrows (horizontal)
+                \foreach \i in {2, 3, 5} {
+                    \draw[mapping] (m-\i-1) -- (m-\i-2);
+                }
             \end{tikzpicture}
             \end{center}
         \end{column}
