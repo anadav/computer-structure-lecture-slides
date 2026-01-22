@@ -1493,20 +1493,20 @@ __global__ void wmma_ker(half *a, half *b, float *c) {
         \begin{column}{0.5\textwidth}
             \textbf{How GPU memory works:}
             \begin{itemize}
-                \item Memory accessed in \textbf{32-byte sectors}
-                \item L1 cache line: 128 bytes (4 sectors)
-                \item Warp (32 threads) issues one memory transaction
+                \item Memory accessed in \textbf{32B sectors}
+                \item L1 cache line: 128B (4 sectors)
+                \item Warp (32 threads) issues one transaction
                 \item \alert{Goal:} Minimize transactions per warp
             \end{itemize}
 
-            \vspace{0.5em}
+            \vspace{0.2em}
             \textbf{Coalesced access:}
             \begin{itemize}
-                \item Adjacent threads access adjacent addresses
-                \item 32 threads $\times$ 4 bytes = 128 bytes = 1 transaction
+                \item Adjacent threads $\to$ adjacent addresses
+                \item 32 threads $\times$ 4B = 128B = 1 transaction
             \end{itemize}
 
-            \vspace{0.5em}
+            \vspace{0.2em}
             \textbf{Strided access:}
             \begin{itemize}
                 \item Threads access non-contiguous addresses
@@ -1515,42 +1515,44 @@ __global__ void wmma_ker(half *a, half *b, float *c) {
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-\begin{lstlisting}[title={\color{green!50!black}\textbf{Coalesced (row-major)}}]
+\begin{lstlisting}[title={\color{green!50!black}\textbf{Coalesced (row-major)}},
+    basicstyle=\small\ttfamily, xleftmargin=2mm, xrightmargin=2mm]
 // Thread i accesses A[row][i]
-float val = A[row * N + threadIdx.x];
+val = A[row * N + threadIdx.x];
 \end{lstlisting}
 
-\begin{lstlisting}[title={\color{red!70!black}\textbf{Non-coalesced (column-major)}}]
+\begin{lstlisting}[title={\color{red!70!black}\textbf{Non-coalesced (column-major)}},
+    basicstyle=\small\ttfamily, xleftmargin=2mm, xrightmargin=2mm]
 // Thread i accesses A[i][col]
-float val = A[threadIdx.x * N + col];
+val = A[threadIdx.x * N + col];
 \end{lstlisting}
 
             \vspace{0.5em}
             \begin{center}
             \begin{tikzpicture}[
-                cell/.style={draw, minimum width=4mm, minimum height=4mm,
-                             font=\tiny, inner sep=0pt},
+                cell/.style={draw, minimum width=5.5mm, minimum height=5.5mm,
+                             font=\scriptsize, inner sep=0pt},
                 good/.style={cell, fill=green!25},
                 bad/.style={cell, fill=red!25},
-                lbl/.style={font=\tiny\bfseries},
+                lbl/.style={font=\scriptsize\bfseries},
             ]
                 % Coalesced access
-                \node[lbl] at (-0.8, 0) {Coalesced:};
+                \node[lbl, anchor=east] at (-0.3, 0) {Coalesced:};
                 \foreach \i in {0,...,7} {
-                    \node[good] at (\i*0.45, 0) {\i};
+                    \node[good] at (\i*0.6, 0) {\i};
                 }
-                \draw[->, thick, green!50!black] (0, -0.4) -- (3.15, -0.4);
-                \node[font=\tiny, green!50!black] at (1.6, -0.65) {1 transaction};
+                \draw[->, thick, green!50!black] (0, -0.5) -- (4.2, -0.5);
+                \node[font=\scriptsize, green!50!black] at (2.1, -0.8) {1 transaction};
 
                 % Strided access
-                \node[lbl] at (-0.8, -1.4) {Strided:};
+                \node[lbl, anchor=east] at (-0.3, -1.8) {Strided:};
                 \foreach \i in {0,...,7} {
-                    \node[bad] at (\i*0.45, -1.4) {\i};
+                    \node[bad] at (\i*0.6, -1.8) {\i};
                 }
                 \foreach \i in {0,2,4,6} {
-                    \draw[->, thick, red!70!black] (\i*0.45, -1.1) -- (\i*0.45, -1.2);
+                    \draw[->, thick, red!70!black] (\i*0.6, -1.4) -- (\i*0.6, -1.55);
                 }
-                \node[font=\tiny, red!70!black] at (1.6, -1.95) {4 transactions};
+                \node[font=\scriptsize, red!70!black] at (2.1, -2.4) {4 transactions};
             \end{tikzpicture}
             \end{center}
         \end{column}
