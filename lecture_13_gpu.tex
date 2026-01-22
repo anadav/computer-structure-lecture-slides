@@ -600,36 +600,49 @@
                 external pins width=0, fill=white, rotate=-90, anchor=lpin 1},
     lsu/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=2, w=1.1},
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
-    reg/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=1, NT=2, w=1.1},
+    reg/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=1, NT=3, w=1.1},
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
     ireg/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.5, NL=0, NR=0, NB=16, NT=1, w=18},
                 external pins width=0, fill=white, font=\scriptsize},
     connector/.style={fill=black, circle, minimum size=0.5mm, inner sep=0pt},
 ]
 
-% Scoreboard table
-\node (scoretable) {
-\fontsize{6}{7}\selectfont
-\begin{tabular}{|c|c|l|c|}
-\hline
-\textbf{Warp No.} & \textbf{Address} & \textbf{SIMD instructions} & \textbf{Operands?} \\
-\hline
-1 & 42 & ld.global.f64 & Ready \\
-\hdashline[0.4pt/1pt]
-1 & 43 & mul.f64 & No \\
-\hdashline[0.4pt/1pt]
-3 & 95 & shl.s32 & Ready \\
-\hdashline[0.4pt/1pt]
-3 & 96 & add.s32 & No \\
-\hdashline[0.4pt/1pt]
-8 & 11 & ld.global.f64 & Ready \\
-\hdashline[0.4pt/1pt]
-8 & 12 & ld.global.f64 & Ready \\
-\hline
-\end{tabular}
+% Scoreboard table as matrix of nodes
+\matrix[matrix of nodes,
+    nodes={font=\fontsize{6}{7}\selectfont, inner sep=1.5pt, anchor=center},
+    column 1/.style={nodes={minimum width=8mm}},
+    column 2/.style={nodes={minimum width=8mm}},
+    column 3/.style={nodes={minimum width=18mm, anchor=west}},
+    column 4/.style={nodes={minimum width=10mm}},
+    row 1/.style={nodes={font=\fontsize{6}{7}\selectfont\bfseries}},
+    row sep=0pt, column sep=2pt,
+    draw, inner sep=1pt,
+    label={[font=\scriptsize]above:Scoreboard},
+] (scoretable) {
+    Warp No. & Address & SIMD instructions & Operands? \\
+    1 & 42 & ld.global.f64 & Ready \\
+    1 & 43 & mul.f64 & No \\
+    3 & 95 & shl.s32 & Ready \\
+    3 & 96 & add.s32 & No \\
+    8 & 11 & ld.global.f64 & Ready \\
+    8 & 12 & ld.global.f64 & Ready \\
 };
-\node[font=\scriptsize, anchor=south west] at (scoretable.north west) (scoretitle) {Scoreboard};
-\node[draw, fit=(scoretable)(scoretitle), inner sep=1mm, label={[font=\scriptsize]north:Warp scheduler}] (scoreboard) {};
+% Draw horizontal lines
+\draw (scoretable.north west) -- (scoretable.north east);
+\draw (scoretable-1-1.south west) -- (scoretable-1-4.south east);
+\draw (scoretable.south west) -- (scoretable.south east);
+% Dotted lines between data rows
+\foreach \row in {2,...,6} {
+    \draw[dotted] (scoretable-\row-1.south west) -- (scoretable-\row-4.south east);
+}
+% Vertical lines (use consistent x from header row)
+\draw (scoretable.north west) -- (scoretable.south west);
+\draw (scoretable.north east) -- (scoretable.south east);
+\foreach \col in {1,2,3} {
+    \draw (scoretable-1-\col.north east |- scoretable.north) -- (scoretable-1-\col.south east |- scoretable.south);
+}
+\node[font=\scriptsize, anchor=south west] at (scoretable.north west) (schedulertitle) {Warp scheduler};
+\node[draw, fit=(scoretable)(schedulertitle), inner sep=1pt] (scoreboard) {};
 
 % Instruction cache (positioned left of scoreboard)
 \node[box, minimum width=16mm, minimum height=10mm, anchor=east] (icache) at ([xshift=-4mm]scoreboard.west) {Instruction\\cache};
@@ -642,8 +655,10 @@
     (ireg) at ([yshift=-6mm]scoreboard.south) {Instruction register};
 
 % Arrow from SIMD instructions column to instruction register
-\coordinate (simd-col) at ([xshift=5mm]scoretable.south);
-\draw[->, thick] (simd-col) -- (simd-col |- ireg.north) -- (ireg.north);
+\draw[->, thick] (scoretable-7-3.south) -- ++(0, -0.3) -| (ireg.tpin 1);
+
+% Arrow from address to instruction cache
+\draw[->, thick] (scoretable-7-2.south) -- ++(0, -0.3) -| (icache.south);
 
 % Draw 16 SIMD lanes below instruction register
 \foreach \i in {1,...,16} {
@@ -676,19 +691,23 @@
 
 % Address coalescing unit
 \node[box, minimum width=42mm, minimum height=5mm, anchor=north]
-    (coalesce) at ([yshift=-2mm, xshift=-23mm]lsu8.south) {Address coalescing unit};
+    (coalesce) at ([yshift=-8mm]lsu5.bpin 1) {Address coalescing unit};
 
 % Interconnection network
 \node[box, minimum width=42mm, minimum height=5mm, anchor=north west]
     (interconnect) at ([xshift=2mm]coalesce.north east) {Interconnection network};
 
+\foreach \i in {1,...,16} {
+    \draw[->, thin] (lsu\i.bpin 1) -- ++(0,-0.4) -| (coalesce.north);
+}
+
 % Arrows from lanes to bottom units
-\foreach \i in {1,4,8} {
-    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- coalesce.north);
-}
-\foreach \i in {9,12,16} {
-    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- interconnect.north);
-}
+%\foreach \i in {1,4,8} {
+%    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- coalesce.north);
+%}
+%\foreach \i in {9,12,16} {
+%    \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- interconnect.north);
+%}
 
 % Local memory
 \node[box, minimum width=42mm, minimum height=6mm, anchor=north]
