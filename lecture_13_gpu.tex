@@ -232,22 +232,42 @@
         \node[hbm, anchor=south] (hbmLB0) at ([xshift=-8mm]dieL.south) {HBM CTRL};
         \node[hbm, anchor=south] (hbmLB1) at ([xshift=12mm]dieL.south) {HBM CTRL};
 
-        % GPCs: 2 above engine, 2 below
-        \node[gpc] (gpcL0) at ([xshift=-10mm, yshift=8mm]dieL.center) {GPC};
-        \node[l2, right=1mm of gpcL0] (l2L0) {L2};
-        \node[gpc, right=1mm of l2L0] (gpcL1) {GPC};
-
         % NV DEC (west of NV-HBI)
         \node[nvdec, anchor=east] (nvdecL) at (hbiL.west) {NV\\DEC};
 
         % Engine: west of NV DEC, calculated width to fit between nvlink.east and nvdecL.west
         \path let \p1=(nvlink.east), \p2=(nvdecL.west) in
-            node[engine, minimum width={\x2-\x1}, anchor=east, inner sep=0pt] (engineL) at (nvdecL.west) {GIGATHREAD ENGINE w/ MIG CONTROL};
+            node[engine, minimum width={\x2-\x1}, anchor=east, inner sep=0pt] (engineL) at (nvdecL.west) {GIGATHREAD ENGINE\\w/ MIG CONTROL};
 
-        % GPCs below engine
-        \node[gpc] (gpcL2) at ([xshift=-10mm, yshift=-8mm]dieL.center) {GPC};
-        \node[l2, right=1mm of gpcL2] (l2L1) {L2};
-        \node[gpc, right=1mm of l2L1] (gpcL3) {GPC};
+        % Top row: GPC | L2 | GPC (between HBM and Engine)
+        \path let \p1=(nvlink.east), \p2=(nvdecL.west), \p3=(hbmLT0.south), \p4=(engineL.north) in
+            coordinate (gpcLtopLeft) at (\x1, \y3)
+            coordinate (gpcLtopRight) at (\x2, \y4);
+
+        % L2 centered horizontally
+        \path let \p1=(engineL.center), \p2=(hbmLT0.south), \p3=(engineL.north) in
+            node[l2, minimum height={\y2-\y3}, anchor=north] (l2L0) at (\x1, \y2) {L2};
+
+        % Top left GPC
+        \path let \p1=(nvlink.east), \p2=(l2L0.west), \p3=(hbmLT0.south), \p4=(engineL.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcL0) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+
+        % Top right GPC
+        \path let \p1=(l2L0.east), \p2=(nvdecL.west), \p3=(hbmLT0.south), \p4=(engineL.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcL1) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+
+        % Bottom row: GPC | L2 | GPC (between Engine and HBM)
+        % L2 centered horizontally
+        \path let \p1=(engineL.center), \p2=(hbmLB0.north), \p3=(engineL.south) in
+            node[l2, minimum height={\y3-\y2}, anchor=south] (l2L1) at (\x1, \y2) {L2};
+
+        % Bottom left GPC
+        \path let \p1=(nvlink.east), \p2=(l2L1.west), \p3=(engineL.south), \p4=(hbmLB0.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcL2) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+
+        % Bottom right GPC
+        \path let \p1=(l2L1.east), \p2=(nvdecL.west), \p3=(engineL.south), \p4=(hbmLB0.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcL3) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
 
 
         % === RIGHT DIE CONTENTS ===
@@ -260,22 +280,38 @@
         \node[hbm, anchor=south] (hbmRB0) at ([xshift=-12mm]dieR.south) {HBM CTRL};
         \node[hbm, anchor=south] (hbmRB1) at ([xshift=8mm]dieR.south) {HBM CTRL};
 
-        % GPCs: 2 above engine, 2 below
-        \node[gpc] (gpcR0) at ([xshift=-10mm, yshift=8mm]dieR.center) {GPC};
-        \node[l2, right=1mm of gpcR0] (l2R0) {L2};
-        \node[gpc, right=1mm of l2R0] (gpcR1) {GPC};
-
         % NV DEC (east of NV-HBI)
         \node[nvdec, anchor=west] (nvdecR) at (hbiR.east) {NV\\DEC};
 
         % Engine: calculated width to fit between nvdecR.east and c2c.west
         \path let \p1=(nvdecR.east), \p2=(c2c.west) in
-            node[engine, minimum width={\x2-\x1}, anchor=west, inner sep=0pt] (engineR) at (nvdecR.east) {GIGATHREAD ENGINE w/ MIG CONTROL};
+            node[engine, minimum width={\x2-\x1}, anchor=west, inner sep=0pt] (engineR) at (nvdecR.east) {GIGATHREAD ENGINE\\w/ MIG CONTROL};
 
-        % GPCs below engine
-        \node[gpc] (gpcR2) at ([xshift=-10mm, yshift=-8mm]dieR.center) {GPC};
-        \node[l2, right=1mm of gpcR2] (l2R1) {L2};
-        \node[gpc, right=1mm of l2R1] (gpcR3) {GPC};
+        % Top row: GPC | L2 | GPC (between HBM and Engine)
+        % L2 centered horizontally
+        \path let \p1=(engineR.center), \p2=(hbmRT0.south), \p3=(engineR.north) in
+            node[l2, minimum height={\y2-\y3}, anchor=north] (l2R0) at (\x1, \y2) {L2};
+
+        % Top left GPC
+        \path let \p1=(nvdecR.east), \p2=(l2R0.west), \p3=(hbmRT0.south), \p4=(engineR.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcR0) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+
+        % Top right GPC
+        \path let \p1=(l2R0.east), \p2=(c2c.west), \p3=(hbmRT0.south), \p4=(engineR.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=north west, inner sep=1pt] (gpcR1) at (\x1, \y3) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+
+        % Bottom row: GPC | L2 | GPC (between Engine and HBM)
+        % L2 centered horizontally
+        \path let \p1=(engineR.center), \p2=(hbmRB0.north), \p3=(engineR.south) in
+            node[l2, minimum height={\y3-\y2}, anchor=south] (l2R1) at (\x1, \y2) {L2};
+
+        % Bottom left GPC
+        \path let \p1=(nvdecR.east), \p2=(l2R1.west), \p3=(engineR.south), \p4=(hbmRB0.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcR2) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
+
+        % Bottom right GPC
+        \path let \p1=(l2R1.east), \p2=(c2c.west), \p3=(engineR.south), \p4=(hbmRB0.north) in
+            node[gpc, minimum width={\x2-\x1}, minimum height={\y3-\y4}, anchor=south west, inner sep=1pt] (gpcR3) at (\x1, \y4) {GRAPHICS\\PROCESSOR\\CLUSTER\\(GPC)};
 
         % === CALLOUTS ===
         \node[callout, callout absolute pointer={(pcie.north)}, anchor=south] at ([yshift=5mm]gpu.north west) {x16 PCIe Gen 6\\256 GB/s CPU Host};
@@ -368,7 +404,57 @@
         \begin{column}{0.35\textwidth}
             \vspace{-1em}
             \begin{center}
-                \includegraphics[width=\textwidth]{figures/Blackwell-Ultra-SM-architecture-png.png}
+            \begin{tikzpicture}[
+                % Base font
+                every node/.style={font=\fontsize{3}{4}\selectfont, inner sep=1pt},
+                % Component styles
+                l0/.style={draw, fill=blue!50, minimum width=22mm, minimum height=2.5mm, align=center},
+                sched/.style={draw, fill=orange!60, minimum width=22mm, minimum height=2mm, align=center, font=\fontsize{2.5}{3}\selectfont},
+                regf/.style={draw, fill=blue!70, minimum width=22mm, minimum height=2.5mm, align=center, text=white},
+                tmem/.style={draw, fill=cyan!60, minimum width=22mm, minimum height=2.5mm, align=center},
+                cuda/.style={draw, fill=green!50!black, minimum width=10mm, minimum height=8mm, align=center, text=white},
+                tensor/.style={draw, fill=green!60!black, minimum width=10mm, minimum height=8mm, align=center, text=white, font=\fontsize{2.5}{3}\selectfont},
+                ldst/.style={draw, fill=green!40!black, minimum width=2.5mm, minimum height=2mm, font=\fontsize{2}{2.5}\selectfont},
+                sfu/.style={draw, fill=yellow!70, minimum width=2.5mm, minimum height=2mm, font=\fontsize{2}{2.5}\selectfont},
+                wide/.style={minimum width=46mm, minimum height=3mm, align=center},
+                tex/.style={draw, fill=blue!60, minimum width=11mm, minimum height=3mm, align=center, text=white},
+                % Processing block as reusable pic
+                pics/procblock/.style={code={
+                    \node[l0, anchor=north] (-l0) at (0,0) {L0 I-Cache};
+                    \node[sched, anchor=north] (-ws) at (-l0.south) {Warp Scheduler};
+                    \node[sched, anchor=north] (-du) at (-ws.south) {Dispatch};
+                    \node[regf, anchor=north] (-rf) at (-du.south) {Register File};
+                    \node[tmem, anchor=north] (-tm) at (-rf.south) {Tensor Memory};
+                    \node[cuda, anchor=north west] (-cc) at (-tm.south west) {CUDA\\Cores};
+                    \node[tensor, anchor=north east] (-tc) at (-tm.south east) {Tensor\\Cores};
+                    \node[ldst, minimum width=17mm, anchor=north west] (-ld) at (-cc.south west) {LD/ST $\times$8};
+                    \node[sfu, anchor=north east] (-sf) at (-tc.south east) {SFU};
+                    % Border around the block
+                    \node[draw, thick, inner sep=1pt, fit=(-l0) (-ld) (-sf)] {};
+                }},
+            ]
+                % Outer SM box
+                \node[draw, thick, fill=gray!20, minimum width=48mm, minimum height=70mm] (sm) {};
+                \node[font=\fontsize{4}{5}\selectfont\bfseries, anchor=north] at ([yshift=-1mm]sm.north) {Streaming Multiprocessor (SM)};
+
+                % L1 Instruction Cache
+                \node[draw, fill=orange!70, wide, anchor=north] (l1i) at ([yshift=-4mm]sm.north) {L1 Instruction Cache};
+
+                % 2x2 grid of processing blocks using the pic macro
+                \pic (TL) at (-12mm, 28mm) {procblock};
+                \pic (TR) at (12mm, 28mm) {procblock};
+                \pic (BL) at (-12mm, 2mm) {procblock};
+                \pic (BR) at (12mm, 2mm) {procblock};
+
+                % Bottom section
+                \node[draw, fill=cyan!50, wide, anchor=south] (tma) at ([yshift=10mm]sm.south) {Tensor Memory Accelerator};
+                \node[draw, fill=green!50, wide, anchor=north] (l1d) at ([yshift=-0.5mm]tma.south) {256KB L1 / Shared Mem};
+
+                % Tex units as matrix
+                \matrix[matrix of nodes, column sep=1mm, anchor=north, nodes={tex}, ampersand replacement=\&] at ([yshift=-0.5mm]l1d.south) {
+                    Tex \& Tex \& Tex \& Tex \\
+                };
+            \end{tikzpicture}
             \end{center}
         \end{column}
     \end{columns}
