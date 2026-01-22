@@ -707,7 +707,7 @@
     (coalesce) at ([yshift=-6mm]lsu5.bpin 1) {Address coalescing unit};
 
 % Interconnection network - cyan for memory subsystem
-\node[memunit=1] (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
+\node[memunit=1] (interconnect) at (coalesce -| lsu12.bpin 1) {Interconnection network};
 
 \foreach \i in {1,...,16} {
     \draw[arrow, thin] (lsu\i.bpin 1) -- ++(0,-0.4) coordinate (lsuconn\i) -| (coalesce.north);
@@ -720,7 +720,7 @@
 }
 \draw[thin] (lsubus1) -- (lsubus16);
 
-\draw[arrow, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
+\draw[arrow, thin] (lsu12.bpin 1) -- (interconnect.tpin 1);
 
 % Local memory - cyan for memory subsystem (modern GPUs: 64-228KB configurable)
 \node[memunit=2, fill=cyan!20, anchor=tpin 1]
@@ -729,10 +729,16 @@
 % Arrow between coalescing and local memory
 \draw[arrow, thick] (coalesce.bpin 2) -- (localmem.tpin 1);
 
+% Arrow between local memory and interconnect
+\draw[doublearrow, thick] (interconnect.bpin 1) -- (localmem.north -| interconnect.bpin 1);
+
 % To global memory
 \node[anchor=west, font=\scriptsize, align=center] at ([yshift=-3mm]interconnect.south east) (gmem)
     {To Global\\Memory};
-\draw[arrow, thick] (interconnect.bpin 2) |- (gmem.west);
+\draw[arrow, thick] (interconnect.bpin 2) |- ([yshift=2mm]gmem.west);
+
+% Draw connector from the line of address coalescing unit to global memory
+\draw[arrow, thick] (coalesce.bpin 2 |- gmem) -- (gmem.west);
 
 % Callout explaining multi-warp scheduling (slide 2 only, right side)
 \only<2>{
