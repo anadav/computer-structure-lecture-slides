@@ -1520,39 +1520,44 @@ __global__ void wmma_ker(half *a, half *b, float *c) {
 // Thread i accesses A[row][i]
 val = A[row * N + threadIdx.x];
 \end{lstlisting}
+\vspace{-0.3em}
+            \begin{center}
+            \begin{tikzpicture}[
+                cell/.style={draw, minimum width=5mm, minimum height=5mm,
+                             font=\scriptsize, inner sep=0pt},
+                good/.style={cell, fill=green!25},
+            ]
+                \foreach \i in {0,...,7} {
+                    \node[good] at (\i*0.55, 0) {\i};
+                }
+                \draw[->, thick, green!50!black] (0, -0.45) -- (3.85, -0.45);
+                \node[font=\scriptsize, green!50!black] at (1.9, -0.75) {1 transaction};
+            \end{tikzpicture}
+            \end{center}
+
+\vspace{-8mm}
+\tikz \draw[dashed, gray] (0,0) -- (\linewidth,0);
+\vspace{-8mm}
 
 \begin{lstlisting}[title={\color{red!70!black}\textbf{Non-coalesced (column-major)}},
     basicstyle=\small\ttfamily, xleftmargin=2mm, xrightmargin=2mm]
 // Thread i accesses A[i][col]
 val = A[threadIdx.x * N + col];
 \end{lstlisting}
-
-            \vspace{0.5em}
+\vspace{-0.3em}
             \begin{center}
             \begin{tikzpicture}[
-                cell/.style={draw, minimum width=5.5mm, minimum height=5.5mm,
+                cell/.style={draw, minimum width=5mm, minimum height=5mm,
                              font=\scriptsize, inner sep=0pt},
-                good/.style={cell, fill=green!25},
                 bad/.style={cell, fill=red!25},
-                lbl/.style={font=\scriptsize\bfseries},
             ]
-                % Coalesced access
-                \node[lbl, anchor=east] at (-0.3, 0) {Coalesced:};
                 \foreach \i in {0,...,7} {
-                    \node[good] at (\i*0.6, 0) {\i};
-                }
-                \draw[->, thick, green!50!black] (0, -0.5) -- (4.2, -0.5);
-                \node[font=\scriptsize, green!50!black] at (2.1, -0.8) {1 transaction};
-
-                % Strided access
-                \node[lbl, anchor=east] at (-0.3, -1.8) {Strided:};
-                \foreach \i in {0,...,7} {
-                    \node[bad] at (\i*0.6, -1.8) {\i};
+                    \node[bad] at (\i*0.55, 0) {\i};
                 }
                 \foreach \i in {0,2,4,6} {
-                    \draw[->, thick, red!70!black] (\i*0.6, -1.4) -- (\i*0.6, -1.55);
+                    \draw[->, thick, red!70!black] (\i*0.55, 0.45) -- (\i*0.55, 0.28);
                 }
-                \node[font=\scriptsize, red!70!black] at (2.1, -2.4) {4 transactions};
+                \node[font=\scriptsize, red!70!black] at (1.9, -0.45) {4 transactions};
             \end{tikzpicture}
             \end{center}
         \end{column}
