@@ -599,6 +599,10 @@
                 external pins width=0, fill=white, rotate=-90, anchor=lpin 1},
     lsu/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=2, w=1.1},
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
+    reg/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=1, w=1.1},
+                external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
+    ireg/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.5, NL=0, NR=0, NB=16, NT=1, w=18},
+                external pins width=0, fill=white, font=\scriptsize},
 ]
 
 % Instruction cache
@@ -607,7 +611,7 @@
 % Warp scheduler box with scoreboard
 \node[box, minimum width=65mm, minimum height=22mm, anchor=west]
     (scheduler) at ([xshift=4mm]icache.east) {};
-\node[anchor=north, font=\scriptsize] at ([yshift=-1mm]scheduler.north) {Warp scheduler};
+\node[anchor=north, font=\scriptsize] at ([yshift=-1mm]scheduler.north) {Scoreboard};
 
 % Scoreboard table
 \node[anchor=north, yshift=-4mm] at (scheduler.north) (scoretable) {
@@ -625,67 +629,67 @@
 \hline
 \end{tabular}
 };
-\node[font=\scriptsize, anchor=south west] at (scoretable.north west) (scoretitle) {Scoreboard};
+\node[font=\scriptsize, anchor=south west] at (scoretable.north west) (scoretitle) {Warp scheduler};
 \node[draw, fit=(scoretable)(scoretitle), inner sep=1mm] (scoreboard) {};
 
 % Arrow from instruction cache to scheduler
 \draw[->, thick] (icache.east) -- (scheduler.west);
 
-% Instruction register as rectangle
-\node[box, minimum width=100mm, minimum height=5mm, anchor=north]
+% Instruction register as muxdemux
+\node[ireg, anchor=north]
     (ireg) at ([yshift=-6mm]scheduler.south) {Instruction register};
 
 % Arrow from scheduler to instruction register
 \draw[->, thick] (scheduler.south) -- (ireg.north);
 
 % Draw triangular pins below instruction register and 16 SIMD lanes
-\foreach \i in {0,...,15} {
+\foreach \i in {1,...,16} {
     % Calculate x position for this lane
-    \coordinate (pin\i) at ([xshift=\i*6mm-45mm]ireg.south);
+%    \coordinate (pin\i) at ([xshift=\i*6mm-45mm]ireg.south);
 
     % Draw triangular pin marker
-    \draw[fill=white] (pin\i) -- ++(-1.5mm,0) -- ++(1.5mm,-2.5mm) -- ++(1.5mm,2.5mm) -- cycle;
+%    \draw[fill=white] (pin\i) -- ++(-1.5mm,0) -- ++(1.5mm,-2.5mm) -- ++(1.5mm,2.5mm) -- cycle;
 
     % Mux below the pin
-    \node[mux] (mux\i) at ([yshift=-8mm]pin\i) {};
+    \node[mux] (mux\i) at ([yshift=-8mm]ireg.bpin \i) {};
 
     % Registers box with size inside
-    \node[lane, anchor=north, minimum height=8mm, align=center] at ([yshift=-0.5mm]mux\i.south) (reg\i) {Reg\\1K\\$\times$32};
+    \node[reg, anchor=north, align=center] at ([yshift=-0.5mm]mux\i.south) (reg\i) {Reg\\1K\\$\times$32};
 
     % Load store unit (muxdemux with NB=2)
     \node[lsu, anchor=north, align=center] at (reg\i.south) (lsu\i) {Load\\Store\\Unit};
 
-    % ALU - positioned using mux's lpin 1 anchor, 4mm higher
-    \node[lane, anchor=south, minimum height=5mm] at ([yshift=4mm]mux\i.lpin 1) (alu\i) {ALU};
+    % ALU - directly above Reg
+    \node[lane, anchor=south, minimum height=5mm] at (reg\i.north) (alu\i) {};
 
-    % Connect pin to mux
-    \draw ([yshift=-2.5mm]pin\i) -- (mux\i.north);
+    % Connect ireg bpin to mux
+    \draw (ireg.bpin \i) -- (mux\i.north);
 }
 
 % Lane labels (only show a few) - black text
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux0.north) {0};
 \node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux1.north) {1};
 \node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux2.north) {2};
-\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux14.north) {14};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux3.north) {3};
 \node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux15.north) {15};
+\node[font=\fontsize{5}{6}\selectfont] at ([yshift=2mm]mux16.north) {16};
 
 % SIMD Lanes label
-\node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux15.east)
+\node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux16.east)
     {SIMD Lanes\\(Thread\\Processors)};
 
 % Address coalescing unit
 \node[box, minimum width=42mm, minimum height=5mm, anchor=north]
-    (coalesce) at ([yshift=-2mm, xshift=-23mm]lsu7.south) {Address coalescing unit};
+    (coalesce) at ([yshift=-2mm, xshift=-23mm]lsu8.south) {Address coalescing unit};
 
 % Interconnection network
 \node[box, minimum width=42mm, minimum height=5mm, anchor=north west]
     (interconnect) at ([xshift=2mm]coalesce.north east) {Interconnection network};
 
 % Arrows from lanes to bottom units
-\foreach \i in {0,3,7} {
+\foreach \i in {1,4,8} {
     \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- coalesce.north);
 }
-\foreach \i in {8,11,15} {
+\foreach \i in {9,12,16} {
     \draw[->, thin] (lsu\i.south) -- (lsu\i.south |- interconnect.north);
 }
 
