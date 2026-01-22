@@ -595,26 +595,26 @@
 \begin{tikzpicture}[scale=0.85, every node/.style={font=\tiny, transform shape},
     box/.style={draw, fill=#1, minimum height=7mm, align=center},
     box/.default=white,
-    lane/.style={draw, minimum width=6mm, minimum height=5mm, align=center, font=\fontsize{4}{5}\selectfont},
+    lane/.style={draw, fill=red!10, minimum width=6mm, minimum height=5mm, align=center, font=\fontsize{4}{5}\selectfont},
     mux/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.25, NL=2, NR=1, w=0.4, inset w=0.15, inset Lh=0.25, inset Rh=0},
                 external pins width=0, fill=white, rotate=-90, anchor=lpin 1},
     lsu/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=2, w=1.1},
-                external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
+                external pins width=0, fill=violet!10, font=\fontsize{4}{5}\selectfont},
     reg/.style={muxdemux, muxdemux def={Lh=1.2, Rh=1.2, NL=0, NR=0, NB=1, NT=3, w=1.1},
-                external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
-    ireg/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.5, NL=0, NR=0, NB=16, NT=1, w=18},
-                external pins width=0, fill=white, font=\scriptsize},
+                external pins width=0, fill=orange!15, font=\fontsize{4}{5}\selectfont},
+    ireg/.style={muxdemux, muxdemux def={Lh=0.6, Rh=0.6, NL=0, NR=0, NB=16, NT=1, w=18},
+                external pins width=0, fill=green!10, font=\scriptsize},
     connector/.style={fill=black, circle, minimum size=1mm, inner sep=0pt},
 ]
 
 % Scoreboard table as matrix of nodes
 \matrix[matrix of nodes,
-    nodes={font=\fontsize{6}{7}\selectfont, inner sep=1.5pt, anchor=center},
+    nodes={font=\fontsize{6}{7}\selectfont, inner sep=1.5pt, anchor=center, text depth=0.5ex},
     column 1/.style={nodes={minimum width=8mm}},
     column 2/.style={nodes={minimum width=8mm}},
     column 3/.style={nodes={minimum width=18mm, anchor=west}},
     column 4/.style={nodes={minimum width=10mm}},
-    row 1/.style={nodes={font=\fontsize{6}{7}\selectfont\bfseries}},
+    row 1/.style={nodes={font=\fontsize{6}{7}\selectfont\bfseries, fill=gray!20}},
     row sep=0pt, column sep=2pt,
     draw, inner sep=1pt,
     label={[font=\scriptsize]above:Scoreboard},
@@ -641,18 +641,20 @@
 \foreach \col in {1,2,3} {
     \draw (scoretable-1-\col.north east |- scoretable.north) -- (scoretable-1-\col.south east |- scoretable.south);
 }
-\node[font=\scriptsize, anchor=south west] at (scoretable.north west) (schedulertitle) {Warp scheduler};
-\node[draw, fit=(scoretable)(schedulertitle), inner sep=1pt] (scoreboard) {};
+\node[font=\fontsize{6}{7}\selectfont, anchor=south west] at (scoretable.north west) (schedulertitle) {Warp scheduler};
+\begin{scope}[on background layer]
+\node[draw, fill=yellow!10, fit=(scoretable)(schedulertitle), inner sep=1pt] (scoreboard) {};
+\end{scope}
 
-% Instruction cache (positioned left of scoreboard)
-\node[box, minimum width=16mm, minimum height=10mm, anchor=east] (icache) at ([xshift=-4mm]scoreboard.west) {Instruction\\cache};
+% Instruction cache (positioned left of scoreboard) - blue for fetch
+\node[box=blue!15, minimum width=16mm, minimum height=10mm, anchor=east] (icache) at ([xshift=-4mm]scoreboard.west) {Instruction\\cache};
 
 % Arrow from instruction cache to scoreboard
 \draw[->, thick] (icache.east) -- (scoreboard.west);
 
 % Instruction register as muxdemux
 \node[ireg, anchor=north]
-    (ireg) at ([yshift=-6mm]scoreboard.south) {Instruction register};
+    (ireg) at ([yshift=-4mm]scoreboard.south) {Instruction register};
 
 % Arrow from SIMD instructions column to instruction register
 \draw[->, thick] (scoretable-7-3.south) -- ++(0, -0.3) -| (ireg.tpin 1);
@@ -665,8 +667,8 @@
     % ALU - first, below ireg bpin
     \node[lane, anchor=north, minimum height=7mm] at ([yshift=-2mm]ireg.bpin \i) (alu\i) {};
 
-    % Registers box below ALU
-    \node[reg, anchor=north, align=center] at (alu\i.south) (reg\i) {Reg\\1K\\$\times$32};
+    % Registers box below ALU (modern GPUs: 64K regs per SM, ~4K per lane)
+    \node[reg, anchor=north, align=center] at (alu\i.south) (reg\i) {Reg\\4K\\$\times$32};
 
     % Load store unit below Reg
     \node[lsu, anchor=north, align=center] at (reg\i.south) (lsu\i) {Load\\Store\\Unit};
@@ -685,31 +687,38 @@
     \draw (conn\i) -- (mux\i.lpin 2);
 }
 
-% SIMD Lanes label
+% SIMD Lanes label with callout explaining real numbers
 \node[anchor=west, font=\scriptsize, align=left] at ([xshift=2mm]mux16.east)
-    {SIMD Lanes\\(Thread\\Processors)};
+    (lanelabel) {SIMD Lanes\\(Thread\\Processors)};
+\node<3->[rectangle callout, callout absolute pointer={(lanelabel.east)}, draw, fill=white,
+    font=\fontsize{5}{6}\selectfont, align=left, anchor=west]
+    at ([xshift=2mm]lanelabel.east) {Blackwell: 128 cores/SM\\$\div$ 32 threads/warp\\= 4 warps in parallel};
 
-% Address coalescing unit
-\node[box, minimum width=42mm, minimum height=5mm, anchor=north]
+% Address coalescing unit - cyan for memory subsystem
+\node[box=cyan!15, minimum width=42mm, minimum height=5mm, anchor=north]
     (coalesce) at ([yshift=-6mm]lsu5.bpin 1) {Address coalescing unit};
 
-% Interconnection network
+% Interconnection network - cyan for memory subsystem
 \node[muxdemux, muxdemux def={Lh=1, Rh=1, NL=0, NR=0, NT=1, NB=2, w=5},
-    external pins width=0, fill=white, font=\tiny]
+    external pins width=0, fill=cyan!15, font=\tiny]
     (interconnect) at (coalesce -| lsu13.bpin 1) {Interconnection network};
 
 \foreach \i in {1,...,16} {
     \draw[->, thin] (lsu\i.bpin 1) -- ++(0,-0.4) coordinate (lsuconn\i) -| (coalesce.north);
     \node[connector] at (lsuconn\i) {};
-
-    \draw[<->, thin] (lsu\i.bpin 2) -- ++(0,-0.2) -| (lsu1.bpin 2);
 }
+% Horizontal bus connecting all LSU bpin 2 with connectors
+\foreach \i in {1,...,16} {
+    \draw[<-, thin] (lsu\i.bpin 2) -- ++(0,-0.2) coordinate (lsubus\i);
+    \node[connector] at (lsubus\i) {};
+}
+\draw[thin] (lsubus1) -- (lsubus16);
 
 \draw[->, thin] (lsu13.bpin 1) -- (interconnect.tpin 1);
 
-% Local memory
-\node[box, minimum width=42mm, minimum height=6mm, anchor=north]
-    (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 64 KB};
+% Local memory - cyan for memory subsystem (modern GPUs: 64-228KB configurable)
+\node[box=cyan!20, minimum width=42mm, minimum height=6mm, anchor=north]
+    (localmem) at ([yshift=-6mm]coalesce.south) {Local Memory 96 KB};
 
 % Arrow between coalescing and local memory
 \draw[->, thick] (coalesce.south) -- (localmem.north);
@@ -718,6 +727,11 @@
 \node[anchor=north, font=\scriptsize, align=center] at ([yshift=-6mm]interconnect.south east) (gmem)
     {To Global\\Memory};
 \draw[->, thick] (interconnect.bpin 2) -- ++(0,-3mm) -| (gmem.north);
+
+% Callout explaining multi-warp scheduling (shown on overlay 2+)
+\node<2->[rectangle callout, callout absolute pointer={(scoretable-2-1.west)}, draw, fill=white,
+    font=\fontsize{5}{6}\selectfont, align=left, anchor=east]
+    at ([xshift=-3mm]scoretable.west) {4 warp schedulers:\\issue 4 warps/cycle\\+ dual-issue per warp};
 
 \end{tikzpicture}
 \end{center}
