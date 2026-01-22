@@ -603,7 +603,7 @@
                 external pins width=0, fill=white, font=\fontsize{4}{5}\selectfont},
     ireg/.style={muxdemux, muxdemux def={Lh=0.5, Rh=0.5, NL=0, NR=0, NB=16, NT=1, w=18},
                 external pins width=0, fill=white, font=\scriptsize},
-    connector/.style={draw, fill=black, circle, minimum size=1mm},
+    connector/.style={fill=black, circle, minimum size=0.5mm, inner sep=0pt},
 ]
 
 % Instruction cache
@@ -646,7 +646,7 @@
 % Draw 16 SIMD lanes below instruction register
 \foreach \i in {1,...,16} {
     % ALU - first, below ireg bpin
-    \node[lane, anchor=north, minimum height=10mm] at ([yshift=-2mm]ireg.bpin \i) (alu\i) {};
+    \node[lane, anchor=north, minimum height=7mm] at ([yshift=-2mm]ireg.bpin \i) (alu\i) {};
 
     % Registers box below ALU
     \node[reg, anchor=north, align=center] at (alu\i.south) (reg\i) {Reg\\1K\\$\times$32};
@@ -658,13 +658,14 @@
     \node[mux, anchor=rpin 1] (mux\i) at ([yshift=2mm]reg\i.tpin 2) {};
 
     % Connect ireg bpin to ALU
-    \draw (ireg.bpin \i) -- (alu\i.north);
+    \draw[->, thin] (ireg.bpin \i) -- (alu\i.north);
 
-    \draw (mux\i.rpin 1) -- (reg\i.tpin 2);
+    \draw[->, thin] (mux\i.rpin 1) -- (reg\i.tpin 2);
 
-    \draw (reg\i.tpin 1) |- ([yshift=2mm]mux\i.lpin 1) -- (mux\i.lpin 1);
+    \draw (reg\i.tpin 1) |- ([yshift=1mm]mux\i.lpin 1) -- (mux\i.lpin 1);
 
-    \node[connector] at ([yshift=1mm]mux\i.lpin 2) {};
+    \node[connector] (conn\i) at ([yshift=1mm]mux\i.lpin 2) {};
+    \draw (conn\i) -- (mux\i.lpin 2);
 }
 
 % SIMD Lanes label
