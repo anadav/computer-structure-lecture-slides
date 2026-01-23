@@ -7,7 +7,7 @@
 \usepackage{makecell}
 \usepackage{ragged2e}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, decorations.pathreplacing, matrix, shapes.callouts}
 \usepackage{tcolorbox}
 \usepackage{array}
 \usepackage{listings}
@@ -73,95 +73,149 @@
     highlightD5/.initial=white,
     highlightD6/.initial=white,
     % Y-spacing between execution unit rows (EX, M, D)
-    yspacing/.initial=1.2cm
+    yspacing/.initial=1.2cm,
+    % Show callouts describing units (for first appearance)
+    showcallouts/.initial=false,
+    % Add extra 3mm spacing between rows
+    spaced/.initial=false
+}
+
+% TikZ styles for pipeline diagram
+\tikzset{
+    pipeline stage/.style={draw, fill=lightblue, minimum width=1.2cm, minimum height=0.8cm},
+    exec unit/.style={draw, minimum width=0.8cm, minimum height=0.6cm},
+    exec unit small/.style={draw, minimum width=0.6cm, minimum height=0.6cm},
+    code box/.style={draw, thick, rounded corners=2pt, inner sep=4pt, align=left, font=\footnotesize},
+    unit callout/.style={
+        rectangle callout,
+        draw,
+        fill=yellow!20,
+        font=\footnotesize,
+        inner sep=3pt,
+        callout absolute pointer={#1}
+    },
 }
 
 % Macro for drawing the pipeline diagram
 \newcommand{\drawPipeline}[1][]{%
     \pgfkeys{/pipeline/.cd,#1}%
+    % Calculate extra spacing (add 3mm if spaced=true)
+    \pgfkeysgetvalue{/pipeline/spaced}{\pipelinespaced}
+    \def\spacedtrue{true}
+    \ifx\pipelinespaced\spacedtrue
+        \def\extraspacing{0.3cm}
+    \else
+        \def\extraspacing{0cm}
+    \fi
     \begin{tikzpicture}[scale=0.8, transform shape]
-        % Pipeline stages
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/ifcolor}, minimum width=1.2cm, minimum height=0.8cm] (IF) {IF};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/idcolor}, minimum width=1.2cm, minimum height=0.8cm, right=of IF] (ID) {ID};
-        
-        % Multiply pipeline (4 stages) - each stage can be individually highlighted
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM1}, minimum width=0.8cm, minimum height=0.6cm, right=2cm of ID.east] (M1) {M1};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM2}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M1] (M2) {M2};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM3}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M2] (M3) {M3};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightM4}, minimum width=0.8cm, minimum height=0.6cm, right=0.5cm of M3] (M4) {M4};
-        
-        % Divider pipeline (multi-stage) - each stage can be individually highlighted
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD2}, minimum width=0.6cm, minimum height=0.6cm] (D2) at ($(M1) + (0,-\pgfkeysvalueof{/pipeline/yspacing})$) {D2};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD1}, minimum width=0.6cm, minimum height=0.6cm, left=0.4cm of D2] (D1) {D1};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD3}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D2] (D3) {D3};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD4}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D3] (D4) {D4};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD5}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D4] (D5) {D5};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightD6}, minimum width=0.6cm, minimum height=0.6cm, right=0.4cm of D5] (D6) {D6};
+        % Pipeline stages IF and ID
+        \node[pipeline stage, fill=\pgfkeysvalueof{/pipeline/ifcolor}] (IF) {IF};
+        \node[pipeline stage, fill=\pgfkeysvalueof{/pipeline/idcolor}, right=of IF] (ID) {ID};
 
-        % Integer unit (single stage) - positioned between M2 and M3 horizontally, same distance above M as M is above D
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/highlightinteger}, minimum width=1cm, minimum height=0.6cm] (EX) at ($(M2)!0.5!(M3) + (0,\pgfkeysvalueof{/pipeline/yspacing})$) {EX};
-         
-        % Labels for units
-        \node[below=0.1cm of EX, font=\footnotesize] (intlabel) {Integer unit};
-        \node[below=0.1cm of M2.south east, font=\footnotesize] (mullabel) {Multiply};
-        \node[below=0.1cm of D3.south east, font=\footnotesize] (divlabel){Divider};
+        % Multiply pipeline matrix (reference row)
+        \matrix (mulmatrix) [
+            matrix of nodes,
+            right=2cm of ID.east,
+            anchor=west,
+            column sep=0.5cm,
+            nodes={exec unit},
+            ampersand replacement=\&,
+        ] {
+            |[fill=\pgfkeysvalueof{/pipeline/highlightM1}]| M1 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightM2}]| M2 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightM3}]| M3 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightM4}]| M4 \\
+        };
 
-        % Execution box (drawn after units to be in background) - fits around all execution units
-        \node[draw, thick, dashed, fit=(EX)(M1)(M2)(M3)(M4)(D1)(D2)(D3)(D4)(D5)(D6)(intlabel)(mullabel)(divlabel), inner sep=0.3cm] (execbox) {};
-        \node[above=0 of execbox.north, anchor=south, font=\small] {Execution};
-         
-        % MEM and WB stages - positioned relative to execution box
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/memcolor}, minimum width=1.2cm, minimum height=0.8cm, right=3cm of M4.west] (MEM) {MEM};
-        \node[draw, fill=\pgfkeysvalueof{/pipeline/wbcolor}, minimum width=1.2cm, minimum height=0.8cm, right=of MEM] (WB) {WB};
-        
+        % Integer unit - centered above multiply row
+        \node[exec unit, minimum width=1cm, fill=\pgfkeysvalueof{/pipeline/highlightinteger}]
+            (EX) at ($(mulmatrix-1-2)!0.5!(mulmatrix-1-3) + (0,\pgfkeysvalueof{/pipeline/yspacing}+\extraspacing)$) {EX};
+
+        % Divider pipeline matrix - centered below multiply row
+        \matrix (divmatrix) [
+            matrix of nodes,
+            column sep=0.4cm,
+            nodes={exec unit small},
+            ampersand replacement=\&,
+        ] at ($(mulmatrix-1-2)!0.5!(mulmatrix-1-3) + (0,-\pgfkeysvalueof{/pipeline/yspacing}-\extraspacing)$) {
+            |[fill=\pgfkeysvalueof{/pipeline/highlightD1}]| D1 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightD2}]| D2 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightD3}]| D3 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightD4}]| D4 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightD5}]| D5 \&
+            |[fill=\pgfkeysvalueof{/pipeline/highlightD6}]| D6 \\
+        };
+
+        % Execution label node (for fitting)
+        \node[anchor=south west, yshift=4mm, font=\small] (execlabel) at (EX.north -| divmatrix-1-1.west) {Execution};
+
+        % Execution box (includes label in fit)
+        \node[draw, thick, dashed, fit=(EX)(mulmatrix)(divmatrix)(execlabel), inner sep=0.3cm] (execbox) {};
+
+        % MEM and WB stages
+        \node[pipeline stage, fill=\pgfkeysvalueof{/pipeline/memcolor}, right=3cm of mulmatrix-1-4.west] (MEM) {MEM};
+        \node[pipeline stage, fill=\pgfkeysvalueof{/pipeline/wbcolor}, right=of MEM] (WB) {WB};
+
         % Connections from IF to ID
         \draw[->, thick] (IF) -- (ID);
-        
-        % Connections from ID to execution units - DO NOT CHANGE
+
+        % Connections from ID to execution units
         \draw[->, thick] (ID.east) -- ([xshift=-2cm]EX.west) |- (EX.west);
-        \draw[->, thick] (ID.east) -- (M1.west);
-        \draw[->, thick] (ID.east) -- ([xshift=-3mm]D1.west) -- (D1.west);
-        
+        \draw[->, thick] (ID.east) -- (mulmatrix-1-1.west);
+        \draw[->, thick] (ID.east) -- ([xshift=-3mm]divmatrix-1-1.west) -- (divmatrix-1-1.west);
+
         % Connections within multiply pipeline
-        \draw[->, thick] (M1) -- (M2);
-        \draw[->, thick] (M2) -- (M3);
-        \draw[->, thick] (M3) -- (M4);
-        
+        \draw[->, thick] (mulmatrix-1-1) -- (mulmatrix-1-2);
+        \draw[->, thick] (mulmatrix-1-2) -- (mulmatrix-1-3);
+        \draw[->, thick] (mulmatrix-1-3) -- (mulmatrix-1-4);
+
         % Connections within divider pipeline
-        \draw[->, thick] (D1) -- (D2);
-        \draw[->, thick] (D2) -- (D3);
-        \draw[->, thick] (D3) -- (D4);
-        \draw[->, thick] (D4) -- (D5);
-        \draw[->, thick] (D5) -- (D6);
-        
-        % Connections from execution units to MEM - DO NOT CHANGE
+        \draw[->, thick] (divmatrix-1-1) -- (divmatrix-1-2);
+        \draw[->, thick] (divmatrix-1-2) -- (divmatrix-1-3);
+        \draw[->, thick] (divmatrix-1-3) -- (divmatrix-1-4);
+        \draw[->, thick] (divmatrix-1-4) -- (divmatrix-1-5);
+        \draw[->, thick] (divmatrix-1-5) -- (divmatrix-1-6);
+
+        % Connections from execution units to MEM
         \draw[->, thick] (EX.east) -- ([xshift=2cm]EX.east) -- ([xshift=-3mm]MEM.west) -- (MEM.west);
-        \draw[->, thick] (M4.east) -- (MEM.west);
-        \draw[->, thick] (D6.east) -- ([xshift=-3mm]MEM.west) -- (MEM.west);
-        
+        \draw[->, thick] (mulmatrix-1-4.east) -- (MEM.west);
+        \draw[->, thick] (divmatrix-1-6.east) -- ([xshift=-3mm]MEM.west) -- (MEM.west);
+
         % Connection from MEM to WB
         \draw[->, thick] (MEM) -- (WB);
-        
+
         % Add content to execution units if specified
         \pgfkeysgetvalue{/pipeline/integercontent}{\intcontent}
         \ifx\intcontent\empty\else
             \node[above=0.1cm of EX, font=\footnotesize, text=blue] {\intcontent};
         \fi
-        
+
         \pgfkeysgetvalue{/pipeline/multiplycontent}{\mulcontent}
         \ifx\mulcontent\empty\else
-            \node[above=0.1cm of M2, font=\footnotesize, text=blue] {\mulcontent};
+            \node[above=0.1cm of mulmatrix-1-2, font=\footnotesize, text=blue] {\mulcontent};
         \fi
-        
+
         \pgfkeysgetvalue{/pipeline/dividercontent}{\divcontent}
         \ifx\divcontent\empty\else
-            \node[above=0.1cm of D3, font=\footnotesize, text=blue] {\divcontent};
+            \node[above=0.1cm of divmatrix-1-3, font=\footnotesize, text=blue] {\divcontent};
         \fi
-        
-        % Instruction list
+
+        % Instruction list in a box
         \pgfkeysgetvalue{/pipeline/instructions}{\instlist}
         \ifx\instlist\empty\else
-            \node[right=0.5cm of WB, align=left, font=\footnotesize] {\instlist};
+            \node[code box, right=0.5cm of WB] {\instlist};
+        \fi
+
+        % Callouts for first appearance (shown on click)
+        \pgfkeysgetvalue{/pipeline/showcallouts}{\showcallouts}
+        \def\calloutstrue{true}
+        \ifx\showcallouts\calloutstrue
+            \node<2->[unit callout={(EX.north)}, above left=0.3cm and 0.5cm of EX]
+                {Integer ALU (1 cycle)};
+            \node<2->[unit callout={(mulmatrix-1-1.north west)}, above left=0.3cm and 0.3cm of mulmatrix-1-1]
+                {Multiply unit (4 cycles)};
+            \node<2->[unit callout={(divmatrix-1-1.north west)}, above left=0.3cm and 0.3cm of divmatrix-1-1]
+                {Divider unit (6+ cycles)};
         \fi
     \end{tikzpicture}%
 }
@@ -396,22 +450,27 @@
     
     \vspace{0.5cm}
     \centering
-    \drawPipeline
+    \drawPipeline[showcallouts=true]
 \end{frame}
 
-\begin{frame}{Pipeline Stage Progression: Multiply Unit}
-    \begin{exampleblock}{Example: R2 $\leftarrow$ R3 * R3}
-        The multiply operation takes 4 cycles, progressing through stages M1 $\rightarrow$ M2 $\rightarrow$ M3 $\rightarrow$ M4
-    \end{exampleblock}
+\begin{frame}{How Does a Multiply Instruction Progress Through the Pipeline?}
     \centering
-    \drawPipeline
+    \drawPipeline[
+        spaced=true,
+        instructions={R2 $\leftarrow$ R3*R3}
+    ]
+    \vspace{0.3cm}
+
+    The multiply operation takes 4 cycles, progressing through stages M1 $\rightarrow$ M2 $\rightarrow$ M3 $\rightarrow$ M4
 \end{frame}
 
 \begin{frame}{Multiply Pipeline: Cycle 1}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightM1=highlightyellow,
-        multiplycontent={R2 $\leftarrow$ R3*R3}
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        instructions={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
     \begin{tcolorbox}[stagebox]
@@ -422,8 +481,10 @@
 \begin{frame}{Multiply Pipeline: Cycle 2}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightM2=highlightyellow,
-        multiplycontent={R2 $\leftarrow$ R3*R3}
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        instructions={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
     \begin{tcolorbox}[stagebox]
@@ -434,8 +495,10 @@
 \begin{frame}{Multiply Pipeline: Cycle 3}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightM3=highlightyellow,
-        multiplycontent={R2 $\leftarrow$ R3*R3}
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        instructions={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
     \begin{tcolorbox}[stagebox]
@@ -446,8 +509,10 @@
 \begin{frame}{Multiply Pipeline: Cycle 4}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightM4=correctgreen,
-        multiplycontent={R2 $\leftarrow$ R3*R3}
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        instructions={R2 $\leftarrow$ R3*R3}
     ]
     \vspace{0.3cm}
     \begin{tcolorbox}[stagebox]
@@ -460,12 +525,13 @@
         Division takes 6+ cycles, progressing through stages D1 $\rightarrow$ D2 $\rightarrow$ D3 $\rightarrow$ D4 $\rightarrow$ D5 $\rightarrow$ D6
     \end{exampleblock}
     \centering
-    \drawPipeline
+    \drawPipeline[spaced=true]
 \end{frame}
 
 \begin{frame}{Divider Pipeline: Cycles 1-2}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightD1=highlightyellow,
         highlightD2=highlightyellow,
         dividercontent={R5 $\leftarrow$ R6/R7}
@@ -479,6 +545,7 @@
 \begin{frame}{Divider Pipeline: Cycles 3-4}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightD3=highlightyellow,
         highlightD4=highlightyellow,
         dividercontent={R5 $\leftarrow$ R6/R7}
@@ -492,6 +559,7 @@
 \begin{frame}{Divider Pipeline: Cycles 5-6}
     \centering
     \drawPipeline[
+        spaced=true,
         highlightD5=highlightyellow,
         highlightD6=correctgreen,
         dividercontent={R5 $\leftarrow$ R6/R7}
@@ -505,6 +573,7 @@
 \begin{frame}{Example - In-Order Execution}
     \centering
     \drawPipeline[
+        spaced=true,
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4}
     ]
 \end{frame}
@@ -512,6 +581,7 @@
 \begin{frame}{In-Order Execution: Cycle 1}
     \centering
     \drawPipeline[
+        spaced=true,
         integercontent={R1 $\leftarrow$ R1+4},
         multiplycontent={R2 $\leftarrow$ R3*R3},
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
@@ -523,6 +593,7 @@
 \begin{frame}{In-Order Execution: Cycle 2}
     \centering
     \drawPipeline[
+        spaced=true,
         integercontent={R4 $\leftarrow$ R3+R4},
         multiplycontent={R2 $\leftarrow$ R3*R3},
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
@@ -537,6 +608,7 @@
 \begin{frame}{In-Order Execution: Cycles 3-4}
     \centering
     \drawPipeline[
+        spaced=true,
         multiplycontent={R2 $\leftarrow$ R3*R3},
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
         highlightmultiply=highlightyellow
@@ -549,6 +621,7 @@
 \begin{frame}{In-Order Execution: Final State}
     \centering
     \drawPipeline[
+        spaced=true,
         integercontent={R4 $\leftarrow$ R3+R4},
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
         highlightinteger=highlightyellow
@@ -580,6 +653,7 @@
 \begin{frame}{Out-of-Order Execution: Cycle 1}
     \centering
     \drawPipeline[
+        spaced=true,
         integercontent={R1 $\leftarrow$ R1+4},
         multiplycontent={R2 $\leftarrow$ R3*R3},
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
@@ -591,6 +665,7 @@
 \begin{frame}{Out-of-Order Execution: Cycle 2}
     \centering
     \drawPipeline[
+        spaced=true,
         integercontent={R4 $\leftarrow$ R3+R4},
         multiplycontent={R2 $\leftarrow$ R3*R3},
         instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
