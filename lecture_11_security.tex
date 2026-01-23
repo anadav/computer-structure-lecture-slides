@@ -840,7 +840,7 @@ some_ioctl:
 
 \begin{frame}{Control Flow Integrity (CFI) - Overview}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.58\textwidth}
             \begin{itemize}
                 \item Enforce legitimate control flow transfers
                 \item Prevent code-reuse attacks (ROP/JOP/COP)
@@ -861,27 +861,28 @@ some_ioctl:
                 \item Return address integrity
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.42\textwidth}
+            \centering
             \begin{tikzpicture}[scale=0.6]
                 % Control flow graph
                 \node[draw,circle] (A) at (2,4) {A};
                 \node[draw,circle] (B) at (0,2) {B};
                 \node[draw,circle] (C) at (4,2) {C};
                 \node[draw,circle] (D) at (2,0) {D};
-                
+
                 % Valid edges (green)
                 \draw[->,thick,green!70!black] (A) -- (B);
                 \draw[->,thick,green!70!black] (A) -- (C);
                 \draw[->,thick,green!70!black] (B) -- (D);
                 \draw[->,thick,green!70!black] (C) -- (D);
-                
+
                 % Invalid edge (red, dashed)
                 \draw[->,thick,red,dashed] (B) to[bend right=20] (C);
                 \node[red] at (2,1.5) {\small Invalid};
-                
-                \node[align=center] at (2,-1) {\textbf{CFG} (Control Flow\\Graph) \textbf{Enforcement}};
+
+                \node at (2,-1) {\textbf{CFG\footnote{Control Flow Graph} Enforcement}};
             \end{tikzpicture}
-            
+
             \vspace{-2mm}
             \begin{tcolorbox}[colback=yellow!10]
                 \small

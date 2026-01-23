@@ -3156,21 +3156,21 @@ Load & 1 GB & 8 & Full \\
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \textbf{INVLPGB (AMD) / TLBSYNC:}
-\begin{itemize}\setlength\itemsep{0pt}
+\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
 \item Broadcast invalidation without IPIs
 \item Hardware handles coherency protocol
 \item Non-blocking for initiator
 \end{itemize}
 
 \textbf{How it works:}
-\begin{enumerate}\setlength\itemsep{0pt}
+\begin{enumerate}[topsep=0pt]\setlength\itemsep{0pt}
 \item Execute INVLPGB with address range
 \item Hardware broadcasts to all cores
 \item TLBSYNC waits for completion
 \end{enumerate}
 
 \textbf{ARM: TLBI with broadcast}
-\begin{itemize}\setlength\itemsep{0pt}
+\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
 \item Inner Shareable scope $\rightarrow$ auto-broadcast
 \item No software IPIs needed
 \end{itemize}
@@ -3178,21 +3178,21 @@ Load & 1 GB & 8 & Full \\
 
 \begin{column}{0.52\textwidth}
 \textbf{Benefits:}
-\begin{itemize}\setlength\itemsep{0pt}
+\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
 \item No IPI overhead (no context switches)
 \item Better scalability with core count
 \item Lower latency for munmap(), mprotect()
 \end{itemize}
 
 \textbf{Limitations:}
-\begin{itemize}\setlength\itemsep{0pt}
+\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
 \item \textbf{All-or-nothing}: cannot skip idle CPUs
 \item Software IPIs allow selective targeting
 \item ASID reuse requires global flush
 \end{itemize}
 
 \textbf{When broadcast wins:}
-\begin{itemize}\setlength\itemsep{0pt}
+\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
 \item JVM GC (unmapping large heaps)
 \item Database buffer pool resizing
 \item High core count systems (>32 cores)
@@ -3341,107 +3341,22 @@ Load & 1 GB & 8 & Full \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{MPK: Use Cases}
-\begin{columns}[T]
-\begin{column}{0.5\textwidth}
-\textbf{Isolation within Process:}
-\begin{itemize}\setlength\itemsep{0pt}
-\item \textbf{Sensitive data protection}:
-  \begin{itemize}\scriptsize
-  \item Cryptographic keys in key=1 region
-  \item Enable access only during crypto ops
-  \item Prevents Spectre/buffer overflow leaks
-  \end{itemize}
-\item \textbf{JIT compiler isolation}:
-  \begin{itemize}\scriptsize
-  \item JIT code region: normally W=0, X=1
-  \item During compilation: W=1, X=0
-  \item Switch via WRPKRU, not mprotect()
-  \end{itemize}
-\item \textbf{Library sandboxing}:
-  \begin{itemize}\scriptsize
-  \item Untrusted library code uses key=2
-  \item Main app disables key=2 when not calling lib
-  \end{itemize}
-\end{itemize}
-\end{column}
-
-\begin{column}{0.5\textwidth}
-\textbf{Performance Benefits:}
-\begin{itemize}\setlength\itemsep{0pt}
-\item mprotect(): ~1000s of cycles (syscall + TLB)
-\item WRPKRU: ~20 cycles (user-mode register write)
-\item $\sim$50x faster permission changes
-\end{itemize}
-
-\textbf{Limitations:}
-\begin{itemize}\setlength\itemsep{0pt}
-\item Only 16 keys per process
-\item Protection is per-thread (PKRU not shared)
-\item Does not prevent code within same key
-\item Requires careful key assignment design
-\end{itemize}
-
-\textbf{OS/Language Support:}
-\begin{itemize}\setlength\itemsep{0pt}\scriptsize
-\item Linux: pkey\_alloc(), pkey\_mprotect()
-\item OpenJDK: Uses MPK for heap isolation
-\item Rust: crates for safe MPK wrappers
-\end{itemize}
-\end{column}
-\end{columns}
-\end{frame}
-
 \begin{frame}{Virtual Memory: Summary}
-\begin{columns}[T]
-\begin{column}{0.5\textwidth}
-\textbf{Core Concepts:}
-\begin{itemize}\setlength\itemsep{1pt}
-\item Virtual $\rightarrow$ Physical translation via page tables
-\item Page: fixed-size unit (4KB, 2MB, 1GB)
-\item Multi-level hierarchy reduces table size
-\item Page faults for on-demand allocation
+\textbf{Big Picture:}
+\begin{itemize}
+\item Virtual memory is the \textbf{primary mechanism for protection} in modern systems
+\item \textbf{Performance-critical}: every memory access involves translation
+\item Hardware support (TLB, page walker) essential for acceptable overhead
 \end{itemize}
 
-\textbf{Translation Performance:}
-\begin{itemize}\setlength\itemsep{1pt}
-\item TLB caches recent translations
-\item TLB miss $\rightarrow$ page walk (4 memory accesses for 4-level)
-\item PMH (Page Miss Handler) in hardware
-\item ASID avoids flush on context switch
+\vspace{3mm}
+\textbf{Key Mechanisms:}
+\begin{itemize}
+\item Hierarchical page tables with TLB caching
+\item Per-page permissions (R/W/X, User/Supervisor)
+\item Hardware-managed A/D bits for OS memory management
+\item Multi-core coherency via TLB shootdown
 \end{itemize}
-
-\textbf{Page Table Entry (PTE) Bits:}
-\begin{itemize}\setlength\itemsep{1pt}
-\item Present, R/W, U/S, Accessed, Dirty
-\item Global, XD (execute disable), Protection Key
-\end{itemize}
-\end{column}
-
-\begin{column}{0.5\textwidth}
-\textbf{Advanced Topics:}
-\begin{itemize}\setlength\itemsep{1pt}
-\item Large pages: fewer TLB entries, less fragmentation
-\item ContPTE: TLB coalescing for contiguous pages
-\item Global entries: survive CR3 reload
-\item ASID: tag TLB entries by address space
-\end{itemize}
-
-\textbf{Multi-core Considerations:}
-\begin{itemize}\setlength\itemsep{1pt}
-\item TLB shootdown: maintain coherency across cores
-\item IPI-based vs. broadcast (INVLPGB/TLBI)
-\item A/D bits: tracked in TLB, must flush on clear
-\end{itemize}
-
-\textbf{Protection Features:}
-\begin{itemize}\setlength\itemsep{1pt}
-\item Per-page R/W/X permissions
-\item User/Supervisor separation
-\item MPK: fast intra-process isolation (16 keys)
-\end{itemize}
-\end{column}
-\end{columns}
 \end{frame}
 
 % Backup slides section
