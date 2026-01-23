@@ -50,10 +50,14 @@
     excolor/.initial=lightblue,
     memcolor/.initial=lightblue,
     wbcolor/.initial=lightblue,
-    % Execution unit contents
+    % Stage contents (instruction labels)
+    ifcontent/.initial={},
+    idcontent/.initial={},
     integercontent/.initial={},
     multiplycontent/.initial={},
     dividercontent/.initial={},
+    memcontent/.initial={},
+    wbcontent/.initial={},
     % Instruction list
     instructions/.initial={},
     % Highlight colors for specific units
@@ -77,7 +81,17 @@
     % Show callouts describing units (for first appearance)
     showcallouts/.initial=false,
     % Add extra 3mm spacing between rows
-    spaced/.initial=false
+    spaced/.initial=false,
+    % Which M stage (1-4) to position multiply label above
+    multiplystage/.initial=0,
+    % Individual instructions (for colored display)
+    inst1/.initial={},
+    inst2/.initial={},
+    inst3/.initial={},
+    % Instruction background colors for code box (use white for no highlight)
+    inst1color/.initial=white,
+    inst2color/.initial=white,
+    inst3color/.initial=white
 }
 
 % TikZ styles for pipeline diagram
@@ -184,7 +198,17 @@
         % Connection from MEM to WB
         \draw[->, thick] (MEM) -- (WB);
 
-        % Add content to execution units if specified
+        % Add content labels to stages if specified
+        \pgfkeysgetvalue{/pipeline/ifcontent}{\ifcontentval}
+        \ifx\ifcontentval\empty\else
+            \node[above=0.1cm of IF, font=\footnotesize, text=blue] {\ifcontentval};
+        \fi
+
+        \pgfkeysgetvalue{/pipeline/idcontent}{\idcontentval}
+        \ifx\idcontentval\empty\else
+            \node[above=0.1cm of ID, font=\footnotesize, text=blue] {\idcontentval};
+        \fi
+
         \pgfkeysgetvalue{/pipeline/integercontent}{\intcontent}
         \ifx\intcontent\empty\else
             \node[above=0.1cm of EX, font=\footnotesize, text=blue] {\intcontent};
@@ -192,7 +216,19 @@
 
         \pgfkeysgetvalue{/pipeline/multiplycontent}{\mulcontent}
         \ifx\mulcontent\empty\else
-            \node[above=0.1cm of mulmatrix-1-2, font=\footnotesize, text=blue] {\mulcontent};
+            % Position based on multiplystage parameter (0=default, 1-4=specific stage)
+            \pgfkeysgetvalue{/pipeline/multiplystage}{\mulstage}
+            \ifnum\mulstage=1
+                \node[above=0.1cm of mulmatrix-1-1, font=\footnotesize, text=blue] {\mulcontent};
+            \else\ifnum\mulstage=2
+                \node[above=0.1cm of mulmatrix-1-2, font=\footnotesize, text=blue] {\mulcontent};
+            \else\ifnum\mulstage=3
+                \node[above=0.1cm of mulmatrix-1-3, font=\footnotesize, text=blue] {\mulcontent};
+            \else\ifnum\mulstage=4
+                \node[above=0.1cm of mulmatrix-1-4, font=\footnotesize, text=blue] {\mulcontent};
+            \else
+                \node[above=0.1cm of mulmatrix-1-2, font=\footnotesize, text=blue] {\mulcontent};
+            \fi\fi\fi\fi
         \fi
 
         \pgfkeysgetvalue{/pipeline/dividercontent}{\divcontent}
@@ -200,10 +236,34 @@
             \node[above=0.1cm of divmatrix-1-3, font=\footnotesize, text=blue] {\divcontent};
         \fi
 
-        % Instruction list in a box
-        \pgfkeysgetvalue{/pipeline/instructions}{\instlist}
-        \ifx\instlist\empty\else
-            \node[code box, right=0.5cm of WB] {\instlist};
+        \pgfkeysgetvalue{/pipeline/memcontent}{\memcontentval}
+        \ifx\memcontentval\empty\else
+            \node[above=0.1cm of MEM, font=\footnotesize, text=blue] {\memcontentval};
+        \fi
+
+        \pgfkeysgetvalue{/pipeline/wbcontent}{\wbcontentval}
+        \ifx\wbcontentval\empty\else
+            \node[above=0.1cm of WB, font=\footnotesize, text=blue] {\wbcontentval};
+        \fi
+
+        % Instruction list in a box (positioned above WB)
+        % Check if individual instructions are provided (for highlighted display)
+        \pgfkeysgetvalue{/pipeline/inst1}{\instOne}
+        \pgfkeysgetvalue{/pipeline/inst2}{\instTwo}
+        \pgfkeysgetvalue{/pipeline/inst3}{\instThree}
+        \ifx\instOne\empty
+            % Fall back to legacy instructions parameter
+            \pgfkeysgetvalue{/pipeline/instructions}{\instlist}
+            \ifx\instlist\empty\else
+                \node[code box, above=0.5cm of WB] {\instlist};
+            \fi
+        \else
+            % Use individual instructions with background highlighting
+            \node[code box, above=0.5cm of WB, align=left] {%
+                \colorbox{\pgfkeysvalueof{/pipeline/inst1color}}{\instOne}%
+                \ifx\instTwo\empty\else\\[-0.5ex]\colorbox{\pgfkeysvalueof{/pipeline/inst2color}}{\instTwo}\fi%
+                \ifx\instThree\empty\else\\[-0.5ex]\colorbox{\pgfkeysvalueof{/pipeline/inst3color}}{\instThree}\fi%
+            };
         \fi
 
         % Callouts for first appearance (shown on click)
@@ -215,7 +275,7 @@
             \node<2->[unit callout={(mulmatrix-1-1.north west)}, above left=0.3cm and 0.3cm of mulmatrix-1-1]
                 {Multiply unit (4 cycles)};
             \node<2->[unit callout={(divmatrix-1-1.north west)}, above left=0.3cm and 0.3cm of divmatrix-1-1]
-                {Divider unit (6+ cycles)};
+                {Divider unit (6 cycles)};
         \fi
     \end{tikzpicture}%
 }
@@ -453,128 +513,25 @@
     \drawPipeline[showcallouts=true]
 \end{frame}
 
-\begin{frame}{How Does a Multiply Instruction Progress Through the Pipeline?}
+
+
+
+
+
+
+
+
+
+\begin{frame}{How Many Cycles Does In-Order Execution Take?}
     \centering
     \drawPipeline[
         spaced=true,
-        instructions={R2 $\leftarrow$ R3*R3}
-    ]
-    \vspace{0.3cm}
-
-    The multiply operation takes 4 cycles, progressing through stages M1 $\rightarrow$ M2 $\rightarrow$ M3 $\rightarrow$ M4
-\end{frame}
-
-\begin{frame}{Multiply Pipeline: Cycle 1}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightM1=highlightyellow,
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R2 $\leftarrow$ R3*R3}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        First stage of multiplication - operand fetch and partial product generation
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Multiply Pipeline: Cycle 2}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightM2=highlightyellow,
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R2 $\leftarrow$ R3*R3}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        Second stage - partial product accumulation
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Multiply Pipeline: Cycle 3}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightM3=highlightyellow,
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R2 $\leftarrow$ R3*R3}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        Third stage - final partial products
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Multiply Pipeline: Cycle 4}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightM4=correctgreen,
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R2 $\leftarrow$ R3*R3}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        Final stage - result ready for writeback
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Pipeline Stage Progression: Divider Unit}
-    \begin{exampleblock}{Example: R5 $\leftarrow$ R6 / R7}
-        Division takes 6+ cycles, progressing through stages D1 $\rightarrow$ D2 $\rightarrow$ D3 $\rightarrow$ D4 $\rightarrow$ D5 $\rightarrow$ D6
-    \end{exampleblock}
-    \centering
-    \drawPipeline[spaced=true]
-\end{frame}
-
-\begin{frame}{Divider Pipeline: Cycles 1-2}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightD1=highlightyellow,
-        highlightD2=highlightyellow,
-        dividercontent={R5 $\leftarrow$ R6/R7}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        Initial quotient digit generation
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Divider Pipeline: Cycles 3-4}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightD3=highlightyellow,
-        highlightD4=highlightyellow,
-        dividercontent={R5 $\leftarrow$ R6/R7}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        Intermediate quotient refinement
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Divider Pipeline: Cycles 5-6}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        highlightD5=highlightyellow,
-        highlightD6=correctgreen,
-        dividercontent={R5 $\leftarrow$ R6/R7}
-    ]
-    \vspace{0.3cm}
-    \begin{tcolorbox}[stagebox]
-        Final quotient and remainder computation
-    \end{tcolorbox}
-\end{frame}
-
-\begin{frame}{Example - In-Order Execution}
-    \centering
-    \drawPipeline[
-        spaced=true,
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4}
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -582,11 +539,14 @@
     \centering
     \drawPipeline[
         spaced=true,
-        integercontent={R1 $\leftarrow$ R1+4},
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
-        highlightinteger=highlightyellow,
-        highlightmultiply=highlightyellow
+        ifcontent={R1 $\leftarrow$ R1+4},
+        ifcolor=highlightyellow,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -594,87 +554,313 @@
     \centering
     \drawPipeline[
         spaced=true,
-        integercontent={R4 $\leftarrow$ R3+R4},
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
+        ifcontent={R2 $\leftarrow$ R3*R3},
+        idcontent={R1 $\leftarrow$ R1+4},
+        ifcolor=highlightorange,
+        idcolor=highlightyellow,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+\end{frame}
+
+\begin{frame}{In-Order Execution: Cycle 3}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        ifcontent={R4 $\leftarrow$ R3+R4},
+        idcontent={R2 $\leftarrow$ R3*R3},
+        integercontent={R1 $\leftarrow$ R1+4},
+        ifcolor=cyan!40,
+        idcolor=highlightorange,
         highlightinteger=highlightyellow,
-        highlightmultiply=highlightyellow
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
-    \vspace{0.5cm}
-    
-    \textcolor{red}{Note: R4 instruction is blocked waiting for R2 multiplication to complete!}
 \end{frame}
 
-\begin{frame}{In-Order Execution: Cycles 3-4}
+\begin{frame}{In-Order Execution: Cycle 4}
     \centering
     \drawPipeline[
         spaced=true,
+        idcontent={R4 $\leftarrow$ R3+R4},
         multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
-        highlightmultiply=highlightyellow
+        multiplystage=1,
+        memcontent={R1 $\leftarrow$ R1+4},
+        idcolor=cyan!40,
+        highlightM1=highlightorange,
+        memcolor=highlightyellow,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
-    \vspace{0.5cm}
-    
-    The multiplication continues through M2, M3, M4 stages...
+    \vspace{0.2cm}
+
+    \textcolor{red}{R4 stalled in ID---must wait for R2 to finish execution!}
 \end{frame}
 
-\begin{frame}{In-Order Execution: Final State}
+\begin{frame}{In-Order Execution: Cycle 5}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        idcontent={R4 $\leftarrow$ R3+R4},
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        multiplystage=2,
+        wbcontent={R1 $\leftarrow$ R1+4},
+        idcolor=cyan!40,
+        highlightM2=highlightorange,
+        wbcolor=highlightyellow,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+    \vspace{0.2cm}
+
+    R4 still stalled... R1 completes
+\end{frame}
+
+\begin{frame}{In-Order Execution: Cycle 6}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        idcontent={R4 $\leftarrow$ R3+R4},
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        multiplystage=3,
+        idcolor=cyan!40,
+        highlightM3=highlightorange,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+    \vspace{0.2cm}
+
+    R4 still stalled...
+\end{frame}
+
+\begin{frame}{In-Order Execution: Cycle 7}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        idcontent={R4 $\leftarrow$ R3+R4},
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        multiplystage=4,
+        idcolor=cyan!40,
+        highlightM4=highlightorange,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+    \vspace{0.2cm}
+
+    R2 finishing M4---R4 can finally proceed!
+\end{frame}
+
+\begin{frame}{In-Order Execution: Cycle 8}
     \centering
     \drawPipeline[
         spaced=true,
         integercontent={R4 $\leftarrow$ R3+R4},
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
-        highlightinteger=highlightyellow
+        memcontent={R2 $\leftarrow$ R3*R3},
+        highlightinteger=cyan!40,
+        memcolor=highlightorange,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
-    \vspace{0.5cm}
-    
-    Finally, R4 can execute after R2 completes
+    \vspace{0.2cm}
+
+    R4 finally executing!
 \end{frame}
 
-\begin{frame}{Execution with Variable Time - The Problem}
-    \begin{block}{Problem}
-        A short operation might get "stuck" waiting for another operation of a different type to leave the Execution phase.
-    \end{block}
-    
-    \begin{block}{Solution}
-        Allow instructions of different types/pipelines to be executed \textbf{Out of Order}.
+\begin{frame}{In-Order Execution: Cycle 9}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        memcontent={R4 $\leftarrow$ R3+R4},
+        wbcontent={R2 $\leftarrow$ R3*R3},
+        memcolor=cyan!40,
+        wbcolor=highlightorange,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+    \vspace{0.2cm}
+
+    R2 completes
+\end{frame}
+
+\begin{frame}{In-Order Execution: Cycle 10}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        wbcontent={R4 $\leftarrow$ R3+R4},
+        wbcolor=cyan!40,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=correctgreen!30,
+        inst3color=cyan!40
+    ]
+    \vspace{0.2cm}
+
+    R4 completes---\textbf{10 cycles total for 3 instructions!}
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution (OOOE)}
+    With multiple execution units having different latencies, a short operation might get ``stuck'' waiting for a longer operation to complete---even when there's no data dependency!
+
+    \vspace{0.5cm}
+    \begin{block}{Solution: Out-of-Order Execution}
+        Allow instructions to execute \textbf{out of program order} when they are independent:
         \begin{itemize}
-            \item Execute many independent instructions in parallel (in different pipelines)
-            \item Improves CPI
-            \item Execution must keep correctness of the code
+            \item Execute multiple independent instructions in parallel across different functional units
+            \item Improves CPI by hiding latency of long operations
+            \item Must preserve program correctness (same results as in-order)
         \end{itemize}
     \end{block}
-    
-    \begin{alertblock}{Note}
-        If an operation gets "stuck" waiting for another operation of the same type to leave the Execution phase $\rightarrow$ \textbf{Structural Hazard} (need to add more execution units to solve).
-    \end{alertblock}
+
+    \vspace{0.3cm}
+    \footnotesize\textit{Note: Waiting for the same execution unit (e.g., two multiplications) is a structural hazard, solved by adding more units.}
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 1}
+\begin{frame}{How Many Cycles Does Out-of-Order Execution Take?}
     \centering
     \drawPipeline[
         spaced=true,
-        integercontent={R1 $\leftarrow$ R1+4},
-        multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
-        highlightinteger=highlightyellow,
-        highlightmultiply=highlightyellow
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
 \end{frame}
 
-\begin{frame}{Out-of-Order Execution: Cycle 2}
+\begin{frame}{Out-of-Order Execution: Cycle 4}
+    Same as in-order for cycles 1--4...
+    \centering
+    \drawPipeline[
+        spaced=true,
+        idcontent={R4 $\leftarrow$ R3+R4},
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        multiplystage=1,
+        memcontent={R1 $\leftarrow$ R1+4},
+        idcolor=cyan!40,
+        highlightM1=highlightorange,
+        memcolor=highlightyellow,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 5}
     \centering
     \drawPipeline[
         spaced=true,
         integercontent={R4 $\leftarrow$ R3+R4},
         multiplycontent={R2 $\leftarrow$ R3*R3},
-        instructions={R1 $\leftarrow$ R1+4\\R2 $\leftarrow$ R3*R3\\R4 $\leftarrow$ R3+R4},
-        highlightinteger=correctgreen,
-        highlightmultiply=highlightyellow
+        multiplystage=2,
+        wbcontent={R1 $\leftarrow$ R1+4},
+        highlightinteger=cyan!40,
+        highlightM2=highlightorange,
+        wbcolor=highlightyellow,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=highlightyellow,
+        inst2color=highlightorange,
+        inst3color=cyan!40
     ]
-    \vspace{0.5cm}
-    
-    \textcolor{correctgreen}{R4 can execute immediately - no need to wait!}
+    \vspace{0.2cm}
+
+    \textcolor{correctgreen}{R4 executes now---doesn't wait for R2!}
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 6}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        multiplystage=3,
+        memcontent={R4 $\leftarrow$ R3+R4},
+        highlightM3=highlightorange,
+        memcolor=cyan!40,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 7}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        multiplycontent={R2 $\leftarrow$ R3*R3},
+        multiplystage=4,
+        wbcontent={R4 $\leftarrow$ R3+R4},
+        highlightM4=highlightorange,
+        wbcolor=cyan!40,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=cyan!40
+    ]
+    \vspace{0.2cm}
+
+    R4 completes! (3 cycles earlier than in-order)
+\end{frame}
+
+\begin{frame}{Out-of-Order Execution: Cycle 9}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        wbcontent={R2 $\leftarrow$ R3*R3},
+        wbcolor=highlightorange,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1color=correctgreen!30,
+        inst2color=highlightorange,
+        inst3color=correctgreen!30
+    ]
+    \vspace{0.2cm}
+
+    R2 completes---\textbf{9 cycles total!} (vs 10 for in-order)
 \end{frame}
 
 \begin{frame}{CPI Limitations}

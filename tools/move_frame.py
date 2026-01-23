@@ -106,6 +106,33 @@ def list_frames(input_file: Path) -> None:
         print(f"  {i}: {title}")
 
 
+def delete_frames(input_file: Path, from_positions: list[int]) -> None:
+    """Delete frame(s) from the file."""
+    content = input_file.read_text()
+    frames = parse_frames(content)
+
+    if not frames:
+        print(f"Error: No frames found in {input_file}", file=sys.stderr)
+        sys.exit(1)
+
+    # Validate all from positions
+    for pos in from_positions:
+        if pos < 1 or pos > len(frames):
+            print(f"Error: --from {pos} is out of range (1-{len(frames)})", file=sys.stderr)
+            sys.exit(1)
+
+    lines = content.split('\n')
+
+    # Remove frames in reverse order to preserve indices
+    for pos in reversed(from_positions):
+        start_idx, end_idx, _ = frames[pos - 1]
+        lines = lines[:start_idx] + lines[end_idx:]
+
+    input_file.write_text('\n'.join(lines))
+    from_range_str = f"{from_positions[0]}-{from_positions[-1]}" if len(from_positions) > 1 else str(from_positions[0])
+    print(f"Deleted frame(s) {from_range_str} from {input_file.name}")
+
+
 def move_frames(input_file: Path, from_positions: list[int], to_pos: int,
                 output_file: Path | None, copy_mode: bool) -> None:
     """Move or copy frame(s) from one position to another."""
@@ -227,6 +254,7 @@ Examples:
   %(prog)s lecture.tex --list                      # List all frames
   %(prog)s lecture.tex --from 5 --to 3             # Move frame 5 to position 3
   %(prog)s lecture.tex --from 3-5 --to 1           # Move frames 3-5 to position 1
+  %(prog)s lecture.tex --from 4-12 --delete        # Delete frames 4-12
   %(prog)s a.tex -o b.tex --from 2-4 --to 1 --copy # Copy frames to another file
 ''')
 
@@ -241,6 +269,8 @@ Examples:
                         help='Copy mode - keep original frame')
     parser.add_argument('--move', action='store_true',
                         help='Move mode - remove from source (default for cross-file)')
+    parser.add_argument('--delete', action='store_true',
+                        help='Delete the specified frame(s)')
     parser.add_argument('--list', action='store_true',
                         help='List all frames with numbers')
 
@@ -254,8 +284,20 @@ Examples:
         list_frames(args.input_file)
         return
 
-    if args.from_pos is None or args.to_pos is None:
-        parser.error("--from and --to are required when not using --list")
+    if args.from_pos is None:
+        parser.error("--from is required when not using --list")
+
+    if args.delete:
+        try:
+            from_positions = parse_range(args.from_pos)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        delete_frames(args.input_file, from_positions)
+        return
+
+    if args.to_pos is None:
+        parser.error("--to is required when not using --list or --delete")
 
     try:
         from_positions = parse_range(args.from_pos)
