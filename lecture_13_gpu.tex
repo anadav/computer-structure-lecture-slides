@@ -989,6 +989,7 @@ result = condition * trueValue
                 inactive/.style={draw, fill=white, minimum width=7mm, minimum height=5mm, font=\scriptsize},
                 steplbl/.style={font=\scriptsize\bfseries, anchor=south west, fill=white, opacity=0.85, text opacity=1, inner sep=1pt},
                 arr/.style={->, thick, red!70!black},
+                dotarr/.style={dotted, thick, gray!70!black},
             ]
 
             % Step 1 - Initial values
@@ -997,55 +998,65 @@ result = condition * trueValue
                 |[active]| 1 \& |[active]| 2 \& |[active]| 3 \& |[active]| 4 \&
                 |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[active]| 8 \\
             };
-            \node[steplbl] at ([yshift=3mm]s1-1-1.north west) {Step 1: Initial};
+            \node[steplbl] at ([yshift=1mm]s1-1-1.north west) {Step 1: Initial};
             }
 
             % Step 2 - After offset=4
             \only<2->{
             % Matrix first (defines nodes)
-            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.6) {
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.4) {
                 |[active]| 6 \& |[active]| 8 \& |[active]| 10 \& |[active]| 12 \&
                 |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[inactive]| 8 \\
             };
-            % Arrows
+            % Shuffle arrows
             \draw[arr] (s1-1-5.south) -- (s2-1-1.north);
             \draw[arr] (s1-1-6.south) -- (s2-1-2.north);
             \draw[arr] (s1-1-7.south) -- (s2-1-3.north);
             \draw[arr] (s1-1-8.south) -- (s2-1-4.north);
+            % Dotted lines for cells staying active
+            \draw[dotarr] (s1-1-1.south) -- (s2-1-1.north);
+            \draw[dotarr] (s1-1-2.south) -- (s2-1-2.north);
+            \draw[dotarr] (s1-1-3.south) -- (s2-1-3.north);
+            \draw[dotarr] (s1-1-4.south) -- (s2-1-4.north);
             % Label on top
-            \node[steplbl] at ([yshift=3mm]s2-1-1.north west) {Step 2: offset=4};
+            \node[steplbl] at ([yshift=1mm]s2-1-1.north west) {Step 2: offset=4};
             }
 
             % Step 3 - After offset=2
             \only<3->{
             % Matrix first
-            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-3.2) {
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-2.8) {
                 |[active]| 16 \& |[active]| 20 \& |[inactive]| 10 \& |[inactive]| 12 \&
                 |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[inactive]| 8 \\
             };
-            % Arrows
+            % Shuffle arrows
             \draw[arr] (s2-1-3.south) -- (s3-1-1.north);
             \draw[arr] (s2-1-4.south) -- (s3-1-2.north);
+            % Dotted lines for cells staying active
+            \draw[dotarr] (s2-1-1.south) -- (s3-1-1.north);
+            \draw[dotarr] (s2-1-2.south) -- (s3-1-2.north);
             % Label on top
-            \node[steplbl] at ([yshift=3mm]s3-1-1.north west) {Step 3: offset=2};
+            \node[steplbl] at ([yshift=1mm]s3-1-1.north west) {Step 3: offset=2};
             }
 
             % Step 4 - After offset=1
             \only<4>{
             % Matrix first
-            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-4.8) {
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-4.2) {
                 |[active, fill=green!60]| 36 \& |[inactive]| 20 \& |[inactive]| 10 \& |[inactive]| 12 \&
                 |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[inactive]| 8 \\
             };
-            % Arrow
+            % Shuffle arrow
             \draw[arr] (s3-1-2.south) -- (s4-1-1.north);
+            % Dotted line for cell staying active
+            \draw[dotarr] (s3-1-1.south) -- (s4-1-1.north);
             % Label on top
-            \node[steplbl, text=green!50!black] at ([yshift=3mm]s4-1-1.north west) {Step 4: Result = 36};
+            \node[steplbl, text=green!50!black] at ([yshift=1mm]s4-1-1.north west) {Step 4: Result = 36};
             }
 
             % Legend (fixed position)
-            \node[active, label=right:{\scriptsize Active}] at (1,-6.3) {};
-            \node[inactive, label=right:{\scriptsize Done}] at (3.5,-6.3) {};
+            \node[active, label=right:{\scriptsize Active}] at (1,-5.5) {};
+            \node[inactive, label=right:{\scriptsize Done}] at (3.5,-5.5) {};
 
             \end{tikzpicture}
         \end{column}
