@@ -868,6 +868,7 @@ Sum of max power $>$ Total package power\\
 $\Rightarrow$ Threads can migrate between core types
 \end{column}
 \begin{column}{0.45\textwidth}
+\centering
 \begin{tikzpicture}[scale=0.7,
     % Styles
     big core/.style={fill=blue!60, minimum size=1.5cm, inner sep=1mm, align=center, font=\scriptsize, text=white},
@@ -897,13 +898,6 @@ $\Rightarrow$ Threads can migrate between core types
     \draw[->, thick, orange] (big0.south) to[bend right=30] (little0.north);
     \draw[->, thick, orange] (big1.south) to[bend left=30] (little3.north);
 \end{tikzpicture}
-
-\vspace{3mm}
-\begin{tcolorbox}[colback=gray!10, boxsep=1mm]
-\small
-Example: ARM big.LITTLE (2011)\\
-Cortex-A15 (big) + Cortex-A7 (little)
-\end{tcolorbox}
 \end{column}
 \end{columns}
 \end{frame}
@@ -925,77 +919,78 @@ Cortex-A15 (big) + Cortex-A7 (little)
     callout base/.style={rectangle callout, draw, fill=yellow!20, font=\scriptsize,
                     text width=2.8cm, align=left, rounded corners=1pt},
 ]
-    % === Column positions (spread wider) ===
+    % === Column positions ===
     \coordinate (col1) at (0, 0);
     \coordinate (col2) at (4.5, 0);
     \coordinate (col3) at (9, 0);
 
     % ============ CLUSTERED SWITCHING ============
-    % Big cores cluster
-    \node[big core] (clust-big1) at ([yshift=10mm, xshift=-5mm]col1) {};
-    \node[big core, right=1mm of clust-big1] (clust-big2) {};
+    % Big cores matrix
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            column sep=1mm, anchor=center,
+            nodes={big core}] (clust-big-mat) at ([yshift=10mm]col1) {
+        |[name=clust-big1]| \& |[name=clust-big2]| \\
+    };
     \node[fit=(clust-big1)(clust-big2), cluster box, red] (clust-big-box) {};
-    \node[fit=(clust-big1)(clust-big2), inner sep=0] (clust-bigs) {};  % for title positioning
 
-    % Little cores cluster
-    \node[little core] (clust-lit1) at ([yshift=-6mm, xshift=-4mm]col1) {};
-    \node[little core, right=1mm of clust-lit1] (clust-lit2) {};
+    % Little cores matrix
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            column sep=1mm, anchor=center,
+            nodes={little core}] (clust-lit-mat) at ([yshift=-6mm]col1) {
+        |[name=clust-lit1]| \& |[name=clust-lit2]| \\
+    };
     \node[fit=(clust-lit1)(clust-lit2), cluster box, red] (clust-lit-box) {};
 
     % OR label
     \node[font=\scriptsize, red] (clust-or) at ($(clust-big-box.south)!0.5!(clust-lit-box.north)$) {OR};
 
-    % Title - use inner sep=0 fit node for consistent positioning
-    \node[approach title, above=2mm of clust-bigs.north] {Clustered Switching};
-
-    % Description
+    % Title and description
+    \node[approach title, above=2mm of clust-big-mat.north] {Clustered Switching};
     \node[desc] at ([yshift=-15mm]col1) {OS sees one cluster. Switch entire cluster based on load.};
 
     % ============ IN-KERNEL SWITCHING ============
-    % Virtual core 1 - big core at same level as clustered big cores
-    \node[big core] (inker-big1) at ([yshift=10mm, xshift=-9mm]col2) {};
-    % Little core aligned with clustered little cores y-position
-    \node[little core] (inker-lit1) at (inker-big1 |- clust-lit1) {};
+    % Virtual core 1 matrix (vertical: big on top, little below)
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            row sep=3mm, anchor=center] (inker-vcore1-mat) at ([xshift=-9mm]col2) {
+        |[big core, name=inker-big1]| \\
+        |[little core, name=inker-lit1]| \\
+    };
     \node[fit=(inker-big1)(inker-lit1), cluster box, orange, inner sep=1mm] (inker-vcore1) {};
     \node[font=\scriptsize, orange] at ($(inker-big1.south)!0.5!(inker-lit1.north)$) {OR};
     \node[font=\tiny, below=-0.5mm of inker-vcore1, anchor=north] {vCore1};
 
-    % Virtual core 2
-    \node[big core] (inker-big2) at ([yshift=10mm, xshift=9mm]col2) {};
-    \node[little core] (inker-lit2) at (inker-big2 |- clust-lit1) {};
+    % Virtual core 2 matrix
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            row sep=3mm, anchor=center] (inker-vcore2-mat) at ([xshift=9mm]col2) {
+        |[big core, name=inker-big2]| \\
+        |[little core, name=inker-lit2]| \\
+    };
     \node[fit=(inker-big2)(inker-lit2), cluster box, orange, inner sep=1mm] (inker-vcore2) {};
     \node[font=\scriptsize, orange] at ($(inker-big2.south)!0.5!(inker-lit2.north)$) {OR};
     \node[font=\tiny, below=-0.5mm of inker-vcore2, anchor=north] {vCore2};
 
-    % Title - use fit node spanning both big cores for consistent positioning
+    % Title and description
     \node[fit=(inker-big1)(inker-big2), inner sep=0] (inker-bigs) {};
     \node[approach title, above=2mm of inker-bigs.north] {In-Kernel Switching};
-
-    % Fit node for both vcores (for callout pointer)
-    \node[fit=(inker-vcore1)(inker-vcore2), inner sep=0] (inker-vcores) {};
-
-    % Description
     \node[desc] at ([yshift=-15mm]col2) {Paired big+little form virtual cores. One active per pair.};
 
-    % ============ GLOBAL SCHEDULING ============
-    % Big cores row
-    \node[big core] (glob-big1) at ([yshift=10mm, xshift=-5mm]col3) {};
-    \node[big core, right=1mm of glob-big1] (glob-big2) {};
+    % ============ GLOBAL SCHEDULING (HMP) ============
+    % Big cores matrix
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            column sep=1mm, anchor=center,
+            nodes={big core}] (glob-big-mat) at ([yshift=10mm]col3) {
+        |[name=glob-big1]| \& |[name=glob-big2]| \\
+    };
 
-    % Little cores row - aligned with clustered little cores
-    \node[little core] (glob-lit1) at ([xshift=-10mm]col3 |- clust-lit1) {};
-    \node[little core, right=1mm of glob-lit1] (glob-lit2) {};
-    \node[little core, right=1mm of glob-lit2] (glob-lit3) {};
-    \node[little core, right=1mm of glob-lit3] (glob-lit4) {};
+    % Little cores matrix
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            column sep=1mm, anchor=center,
+            nodes={little core}] (glob-lit-mat) at ([yshift=-6mm]col3) {
+        |[name=glob-lit1]| \& |[name=glob-lit2]| \& |[name=glob-lit3]| \& |[name=glob-lit4]| \\
+    };
 
-    % Fit node for all global cores (for callout pointer)
-    \node[fit=(glob-big1)(glob-big2)(glob-lit1)(glob-lit4), inner sep=0] (glob-all) {};
-
-    % Title - close to illustration
-    \node[fit=(glob-big1)(glob-big2), inner sep=0] (glob-bigs) {};
-    \node[approach title, above=2mm of glob-bigs.north] {HMP};
-
-    % Description
+    % Title and description
+    \node[approach title, above=2mm of glob-big-mat.north] {HMP};
     \node[desc] at ([yshift=-15mm]col3) {Heterogeneous Multi-Processing. All cores visible.};
 
     % ============ FLEXIBILITY SCALE ============
@@ -1026,7 +1021,7 @@ Cortex-A15 (big) + Cortex-A7 (little)
              Hypervisor switches clusters;\\data passes through L2};
     }
 
-    % In-Kernel callout (overlay 3 only) - positioned relative to right vcore
+    % In-Kernel callout (overlay 3 only)
     \only<3>{
         \node[callout base, callout absolute pointer={(inker-vcore2.east)}, anchor=west,
               text width=3.5cm]
@@ -1035,7 +1030,7 @@ Cortex-A15 (big) + Cortex-A7 (little)
              Can use existing DVFS interface (e.g., cpufreq)};
     }
 
-    % HMP callout (overlay 4+) - left of leftmost small core
+    % HMP callout (overlay 4+)
     \visible<4->{
         \node[callout base, callout absolute pointer={(glob-lit1.west)}, anchor=east,
               text width=3.2cm]
