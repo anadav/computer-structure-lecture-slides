@@ -381,25 +381,27 @@ Four-processor shared-memory system with MESI protocol
 \hline
 Initial State & I & I & I & I & 0000 \\
 \hline
-P0 reads X & E & I & I & I & 1000 \\
+P0 reads X & \onslide<2->{E} & \onslide<2->{I} & \onslide<2->{I} & \onslide<2->{I} & \onslide<2->{1000} \\
 \hline
-P1 reads X & S & S & I & I & 1100 \\
+P1 reads X & \onslide<3->{S} & \onslide<3->{S} & \onslide<3->{I} & \onslide<3->{I} & \onslide<3->{1100} \\
 \hline
-P2 reads X & S & S & S & I & 1110 \\
+P2 reads X & \onslide<4->{S} & \onslide<4->{S} & \onslide<4->{S} & \onslide<4->{I} & \onslide<4->{1110} \\
 \hline
-P3 writes X & I & I & I & M & 0001 \\
+P3 writes X & \onslide<5->{I} & \onslide<5->{I} & \onslide<5->{I} & \onslide<5->{M} & \onslide<5->{0001} \\
 \hline
-P0 reads X & S & I & I & S & 1001 \\
+P0 reads X & \onslide<6->{S} & \onslide<6->{I} & \onslide<6->{I} & \onslide<6->{S} & \onslide<6->{1001} \\
 \hline
 \end{tabular}
 \end{table}
 
+\onslide<7->{
 \textbf{Key observations:}
 \begin{itemize}
 \item First reader gets Exclusive state (if no other copies exist)
 \item Write operation invalidates all other copies
 \item Subsequent reads after a write result in Shared state
 \end{itemize}
+}
 \end{frame}
 
 \section{Protocol Mechanisms}
@@ -458,7 +460,7 @@ GO and data may be sent at different cycles:
 \section{Question 1: MESI Coherence}
 
 %==========================================
-\begin{frame}{MESI Coherence Exercise 1 -- Setup}
+\begin{frame}{Q1: MESI Coherence -- Setup}
 \textbf{System Configuration:}
 \begin{itemize}
 \item 3 Core processor with MESI protocol
@@ -512,7 +514,7 @@ GO and data may be sent at different cycles:
 \vspace{-3mm}
 }
 
-\begin{frame}{MESI Coherence Exercise 1}
+\begin{frame}{Q1: MESI Coherence}
 \mesitwohdr
 \begin{table}[h]
 \centering
@@ -557,7 +559,7 @@ P3 writes A & \onslide<6->{I} & \onslide<6->{I} & \onslide<6->{\textcolor{stateM
 \section{Question 2: MESI Coherence}
 
 %==========================================
-\begin{frame}{MESI Coherence Exercise 2 -- Setup}
+\begin{frame}{Q2: MESI Coherence -- Setup}
 \footnotesize
 \textbf{System Configuration:}
 \begin{itemize}
@@ -590,7 +592,7 @@ For each operation, determine: messages sent, time taken, CVB values, and final 
 %==========================================
 % MESI Coherence Problem - Row by row solution
 \newcommand{\mesicellvs}{-3mm}
-\begin{frame}{MESI Coherence Exercise 2}
+\begin{frame}{Q2: MESI Coherence}
 \scriptsize
 \begin{columns}[t]
 \column{0.5\textwidth}
@@ -1086,7 +1088,7 @@ If $A \rightarrow B$, then $A$'s effects are visible to $B$, and $A$ cannot be r
 \section{Question 3: Memory Model (TSO)}
 
 %==========================================
-\begin{frame}{Question 3: Total Store Order}
+\begin{frame}{Q3: Total Store Order}
 \small
 ($\star$) Stores to the same location have a total order visible to all processors.
 \hfill Initial: \texttt{X=0}. Is \texttt{r1=1, r2=2, r3=2, r4=1} allowed?
@@ -1182,7 +1184,7 @@ Load from \texttt{X}. All \textbf{subsequent memory operations} by this processo
 \end{frame}
 
 %==========================================
-\begin{frame}{Release-Consistency Exercise}
+\begin{frame}{Q4: Release-Consistency}
 \small
 \textbf{Initial:} A = 0, B = 0, flag = 0
 
@@ -1238,7 +1240,7 @@ Is the outcome \texttt{r1=1, r2=0, r3=1} possible?
 \end{frame}
 
 %==========================================
-\begin{frame}{Release-Consistency Exercise -- Solution}
+\begin{frame}{Q4: Release-Consistency -- Solution}
 \textbf{Is \texttt{r1=1, r2=0, r3=1} possible?}
 
 \pause
@@ -1268,7 +1270,7 @@ P1's \emph{observation} of A=1 is not ``passed along'' to P2.
 \end{frame}
 
 %==========================================
-\begin{frame}{Release-Consistency Exercise -- Hardware Intuition}
+\begin{frame}{Q4: Release-Consistency -- Hardware Intuition}
 \textbf{Why can this happen in hardware?}
 
 \vspace{0.5em}
