@@ -460,9 +460,7 @@
 \section{System Specification}
 
 \begin{frame}{OOOE System Specification}
-\begin{block}{System Capabilities}
 Our Out-of-Order Execution system has the following characteristics:
-\end{block}
 
 \begin{itemize}
     \item \textbf{Fetch Stage:} 2 instructions per clock cycle
@@ -482,7 +480,7 @@ Our Out-of-Order Execution system has the following characteristics:
 \begin{frame}{System Components}
 \begin{columns}[t]
 \column{0.48\textwidth}
-\begin{block}{Hardware Structures}
+\textbf{Hardware Structures:}
 \begin{itemize}
     \item \textbf{RS} - Reservation Station (unbounded)
     \item \textbf{MOB} - Memory Order Buffer (unbounded)
@@ -490,16 +488,14 @@ Our Out-of-Order Execution system has the following characteristics:
     \item \textbf{RAT} - Register Alias Table
     \item \textbf{IDQ} - Instruction Decode Queue
 \end{itemize}
-\end{block}
 
 \column{0.48\textwidth}
-\begin{block}{Additional Features}
+\textbf{Additional Features:}
 \begin{itemize}
     \item Full bypassing support between all stages
     \item Ideal branch prediction (never mispredicts)
     \item All queues are effectively unlimited in size
 \end{itemize}
-\end{block}
 \end{columns}
 \end{frame}
 
@@ -525,14 +521,13 @@ L2: R4 = 23
 \end{minted}
 
 \column{0.5\textwidth}
-\begin{block}{Key Points}
+\textbf{Key Points:}
 \begin{itemize}
     \item Loop executes 100 times
     \item Contains mix of ALU and memory operations
     \item Load instruction creates potential dependencies
     \item Several register assignments in loop body
 \end{itemize}
-\end{block}
 \end{columns}
 \end{frame}
 
@@ -557,10 +552,9 @@ L2: ADDI R4, R0, 23        ; R4 = 23
 \section{Execution Analysis}
 
 \begin{frame}{Execution Timeline - Second Loop Iteration}
-\begin{block}{Question}
-Show the system state when completing the fetch of instruction L1 for the second time.
-\end{block}
+\textbf{Question:} Show the system state when completing the fetch of instruction L1 for the second time.
 
+\vspace{0.3cm}
 \begin{itemize}
     \item Track instruction flow through pipeline stages
     \item Monitor reservation stations and ROB entries
@@ -1224,13 +1218,11 @@ Show the system state when completing the fetch of instruction L1 for the second
 \end{tabular}
 \end{table}
 
-\begin{block}{Critical Path}
-The load instruction creates a 5-cycle latency that affects dependent instructions.
-\end{block}
+\textbf{Critical Path:} The load instruction creates a 5-cycle latency that affects dependent instructions.
 \end{frame}
 
 \begin{frame}{CPI Calculation}
-\begin{block}{Performance Metrics}
+\textbf{Performance Metrics:}
 \begin{itemize}
     \item Loop contains 10 instructions
     \item Executes 100 iterations
@@ -1238,7 +1230,6 @@ The load instruction creates a 5-cycle latency that affects dependent instructio
     \item No delays from memory reads after first iteration
     \item Structural hazard doesn't cause delays (only 1 instruction in EXE at times)
 \end{itemize}
-\end{block}
 
 \begin{tcolorbox}[colback=highlightyellow,colframe=darkblue]
 \textbf{Result:} CPI $\approx$ 0.5
@@ -1298,17 +1289,16 @@ Move constant assignments outside the loop!
 \begin{frame}{Impact of Optimization}
 \begin{columns}[t]
 \column{0.48\textwidth}
-\begin{block}{Analysis}
+\textbf{Analysis:}
 \begin{itemize}
     \item \textbf{Before:} 10 instructions in loop
     \item \textbf{After:} 5 instructions in loop
     \item \textbf{BUT:} Load operation still takes 5 cycles
     \item Load operations cannot execute in parallel
 \end{itemize}
-\end{block}
 
 \column{0.48\textwidth}
-\begin{block}{Performance Result}
+\textbf{Performance Result:}
 \begin{itemize}
     \item CPI increases by $\approx 2\times$
     \item IC decreases by $\approx 2\times$
@@ -1318,38 +1308,33 @@ Move constant assignments outside the loop!
 \vspace{0.3cm}
 \textbf{Key Insight:}\\
 Runtime = IC × CPI × Clock Period
-\end{block}
 \end{columns}
 \end{frame}
 
 \section{Hardware Improvements}
 
 \begin{frame}{Proposed Hardware Enhancement}
-\begin{block}{Question}
-Adding a third ALU unit - does it improve performance?
-\end{block}
+\textbf{Question:} Adding a third ALU unit - does it improve performance?
 
 \vspace{0.5cm}
 
 \begin{columns}[t]
 \column{0.48\textwidth}
-\begin{block}{Answer: No}
+\textbf{Answer: No}
 \begin{itemize}
     \item Structural hazard was not the bottleneck
     \item Load latency dominates execution time
     \item Additional ALU remains unused
 \end{itemize}
-\end{block}
 
 \column{0.48\textwidth}
-\begin{block}{Better Improvements}
+\textbf{Better Improvements:}
 \begin{itemize}
     \item Faster load execution ($<$ 5 cycles)
     \item Parallel load execution units
     \item Better memory hierarchy
     \item Prefetching mechanisms
 \end{itemize}
-\end{block}
 \end{columns}
 \end{frame}
 
