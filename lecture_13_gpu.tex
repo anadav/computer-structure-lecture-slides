@@ -983,71 +983,71 @@ result = condition * trueValue
 \end{lstlisting}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{center}
-            \begin{tikzpicture}[
-                val/.style={draw, minimum width=6.5mm, minimum height=5mm,
-                            font=\tiny\ttfamily, fill=green!20, inner sep=0pt},
-                valg/.style={val, fill=gray!15, text=gray},
-                hdr/.style={minimum width=6.5mm, minimum height=4mm,
-                            font=\tiny\ttfamily, inner sep=0pt, text=blue!70!black},
-                lbl/.style={font=\tiny\bfseries, text=black, minimum width=10mm,
-                            align=right, anchor=east},
-                gap/.style={minimum height=6mm, inner sep=0pt},
+            \centering
+            \begin{tikzpicture}[scale=0.92,
+                active/.style={draw, fill=green!40, minimum width=7mm, minimum height=5mm, font=\scriptsize},
+                inactive/.style={draw, fill=white, minimum width=7mm, minimum height=5mm, font=\scriptsize},
+                steplbl/.style={font=\scriptsize\bfseries, anchor=south west, fill=white, opacity=0.85, text opacity=1, inner sep=1pt},
                 arr/.style={->, thick, red!70!black},
             ]
-                \matrix[matrix of nodes, column sep=0pt, row sep=0pt,
-                        ampersand replacement=\&] (m) {
-                    % Row 1: Lane headers
-                    |[lbl]| Lane \&
-                    |[hdr]| 0 \& |[hdr]| 1 \& |[hdr]| 2 \& |[hdr]| 3 \&
-                    |[hdr]| 4 \& |[hdr]| 5 \& |[hdr]| 6 \& |[hdr]| 7 \\
-                    % Row 2: Initial values
-                    |[lbl]| val \&
-                    |[val]| 1 \& |[val]| 2 \& |[val]| 3 \& |[val]| 4 \&
-                    |[val]| 5 \& |[val]| 6 \& |[val]| 7 \& |[val]| 8 \\
-                    % Row 3: Gap for arrows
-                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \&
-                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \\
-                    % Row 4: After offset=4
-                    |[lbl]| val \&
-                    |[val]| 6 \& |[val]| 8 \& |[val]| 10 \& |[val]| 12 \&
-                    |[valg]| 5 \& |[valg]| 6 \& |[valg]| 7 \& |[valg]| 8 \\
-                    % Row 5: Gap for arrows
-                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \&
-                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \\
-                    % Row 6: After offset=2
-                    |[lbl]| val \&
-                    |[val]| 16 \& |[val]| 20 \& |[valg]| 10 \& |[valg]| 12 \&
-                    |[valg]| 5 \& |[valg]| 6 \& |[valg]| 7 \& |[valg]| 8 \\
-                    % Row 7: Gap for arrows
-                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \&
-                    |[gap]| \& |[gap]| \& |[gap]| \& |[gap]| \\
-                    % Row 8: Final result
-                    |[lbl]| val \&
-                    |[val, fill=green!40]| 36 \& |[valg]| 20 \& |[valg]| 10 \& |[valg]| 12 \&
-                    |[valg]| 5 \& |[valg]| 6 \& |[valg]| 7 \& |[valg]| 8 \\
-                };
 
-                % Shuffle arrows: offset=4 (row 2 -> row 4)
-                \foreach \src/\dst in {6/2, 7/3, 8/4, 9/5} {
-                    \draw[arr] (m-2-\src.south) -- (m-4-\dst.north);
-                }
-                % Shuffle arrows: offset=2 (row 4 -> row 6)
-                \foreach \src/\dst in {4/2, 5/3} {
-                    \draw[arr] (m-4-\src.south) -- (m-6-\dst.north);
-                }
-                % Shuffle arrows: offset=1 (row 6 -> row 8)
-                \draw[arr] (m-6-3.south) -- (m-8-2.north);
+            % Step 1 - Initial values
+            \only<1->{
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s1) at (0,0) {
+                |[active]| 1 \& |[active]| 2 \& |[active]| 3 \& |[active]| 4 \&
+                |[active]| 5 \& |[active]| 6 \& |[active]| 7 \& |[active]| 8 \\
+            };
+            \node[steplbl] at ([yshift=3mm]s1-1-1.north west) {Step 1: Initial};
+            }
 
-                % Operation annotations aligned to right edge of last value cell
-                \node[font=\tiny\ttfamily, text=red!70!black, anchor=east, fill=white, inner sep=1pt]
-                    at (m-2-9.east |- m-3-9) {\_\_shfl\_down\_sync(..., 4)};
-                \node[font=\tiny\ttfamily, text=red!70!black, anchor=east, fill=white, inner sep=1pt]
-                    at (m-2-9.east |- m-5-9) {\_\_shfl\_down\_sync(..., 2)};
-                \node[font=\tiny\ttfamily, text=red!70!black, anchor=east, fill=white, inner sep=1pt]
-                    at (m-2-9.east |- m-7-9) {\_\_shfl\_down\_sync(..., 1)};
+            % Step 2 - After offset=4
+            \only<2->{
+            % Matrix first (defines nodes)
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s2) at (0,-1.6) {
+                |[active]| 6 \& |[active]| 8 \& |[active]| 10 \& |[active]| 12 \&
+                |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[inactive]| 8 \\
+            };
+            % Arrows
+            \draw[arr] (s1-1-5.south) -- (s2-1-1.north);
+            \draw[arr] (s1-1-6.south) -- (s2-1-2.north);
+            \draw[arr] (s1-1-7.south) -- (s2-1-3.north);
+            \draw[arr] (s1-1-8.south) -- (s2-1-4.north);
+            % Label on top
+            \node[steplbl] at ([yshift=3mm]s2-1-1.north west) {Step 2: offset=4};
+            }
+
+            % Step 3 - After offset=2
+            \only<3->{
+            % Matrix first
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s3) at (0,-3.2) {
+                |[active]| 16 \& |[active]| 20 \& |[inactive]| 10 \& |[inactive]| 12 \&
+                |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[inactive]| 8 \\
+            };
+            % Arrows
+            \draw[arr] (s2-1-3.south) -- (s3-1-1.north);
+            \draw[arr] (s2-1-4.south) -- (s3-1-2.north);
+            % Label on top
+            \node[steplbl] at ([yshift=3mm]s3-1-1.north west) {Step 3: offset=2};
+            }
+
+            % Step 4 - After offset=1
+            \only<4>{
+            % Matrix first
+            \matrix[matrix of nodes, row sep=0pt, column sep=1pt, anchor=north west, ampersand replacement=\&] (s4) at (0,-4.8) {
+                |[active, fill=green!60]| 36 \& |[inactive]| 20 \& |[inactive]| 10 \& |[inactive]| 12 \&
+                |[inactive]| 5 \& |[inactive]| 6 \& |[inactive]| 7 \& |[inactive]| 8 \\
+            };
+            % Arrow
+            \draw[arr] (s3-1-2.south) -- (s4-1-1.north);
+            % Label on top
+            \node[steplbl, text=green!50!black] at ([yshift=3mm]s4-1-1.north west) {Step 4: Result = 36};
+            }
+
+            % Legend (fixed position)
+            \node[active, label=right:{\scriptsize Active}] at (1,-6.3) {};
+            \node[inactive, label=right:{\scriptsize Done}] at (3.5,-6.3) {};
+
             \end{tikzpicture}
-            \end{center}
         \end{column}
     \end{columns}
 \end{frame}
