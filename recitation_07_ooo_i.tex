@@ -88,10 +88,10 @@
     inst1/.initial={},
     inst2/.initial={},
     inst3/.initial={},
-    % Instruction background colors for code box (use white for no highlight)
-    inst1color/.initial=white,
-    inst2color/.initial=white,
-    inst3color/.initial=white
+    % Checkmarks for completed instructions (true/false)
+    inst1done/.initial=false,
+    inst2done/.initial=false,
+    inst3done/.initial=false
 }
 
 % TikZ styles for pipeline diagram
@@ -255,14 +255,19 @@
             % Fall back to legacy instructions parameter
             \pgfkeysgetvalue{/pipeline/instructions}{\instlist}
             \ifx\instlist\empty\else
-                \node[code box, above=0.5cm of WB] {\instlist};
+                \node[code box, above=0.8cm of WB] {\instlist};
             \fi
         \else
-            % Use individual instructions with background highlighting
-            \node[code box, above=0.5cm of WB, align=left] {%
-                \colorbox{\pgfkeysvalueof{/pipeline/inst1color}}{\instOne}%
-                \ifx\instTwo\empty\else\\[-0.5ex]\colorbox{\pgfkeysvalueof{/pipeline/inst2color}}{\instTwo}\fi%
-                \ifx\instThree\empty\else\\[-0.5ex]\colorbox{\pgfkeysvalueof{/pipeline/inst3color}}{\instThree}\fi%
+            % Get completion status for checkmarks
+            \pgfkeysgetvalue{/pipeline/inst1done}{\instOneDone}
+            \pgfkeysgetvalue{/pipeline/inst2done}{\instTwoDone}
+            \pgfkeysgetvalue{/pipeline/inst3done}{\instThreeDone}
+            \def\donetrue{true}
+            % Use individual instructions with fixed colors (yellow, orange, cyan)
+            \node[code box, above=0.8cm of WB, align=left] {%
+                \colorbox{highlightyellow}{\instOne}\ifx\instOneDone\donetrue\,\textcolor{correctgreen}{\checkmark}\fi%
+                \ifx\instTwo\empty\else\\[-0.5ex]\colorbox{highlightorange}{\instTwo}\ifx\instTwoDone\donetrue\,\textcolor{correctgreen}{\checkmark}\fi\fi%
+                \ifx\instThree\empty\else\\[-0.5ex]\colorbox{cyan!40}{\instThree}\ifx\instThreeDone\donetrue\,\textcolor{correctgreen}{\checkmark}\fi\fi%
             };
         \fi
 
@@ -529,9 +534,6 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -544,9 +546,6 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -561,9 +560,6 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -580,9 +576,6 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -599,14 +592,11 @@
         memcolor=highlightyellow,
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
-        inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst3={R4 $\leftarrow$ R3+R4}
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     \textcolor{red}{R4 stalled in ID---must wait for R2 to finish execution!}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{In-Order Execution: Cycle 5}
@@ -622,14 +612,11 @@
         wbcolor=highlightyellow,
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
-        inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst3={R4 $\leftarrow$ R3+R4}
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R4 still stalled... R1 completes
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{In-Order Execution: Cycle 6}
@@ -644,13 +631,11 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst1done=true
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R4 still stalled...
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{In-Order Execution: Cycle 7}
@@ -665,13 +650,11 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst1done=true
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R2 finishing M4---R4 can finally proceed!
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{In-Order Execution: Cycle 8}
@@ -685,13 +668,11 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst1done=true
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R4 finally executing!
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{In-Order Execution: Cycle 9}
@@ -705,13 +686,11 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst1done=true
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R2 completes
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{In-Order Execution: Cycle 10}
@@ -723,13 +702,12 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=correctgreen!30,
-        inst3color=cyan!40
+        inst1done=true,
+        inst2done=true
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R4 completes---\textbf{10 cycles total for 3 instructions!}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution (OOOE)}
@@ -756,9 +734,6 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -777,9 +752,6 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
     ]
 \end{frame}
 
@@ -796,14 +768,11 @@
         wbcolor=highlightyellow,
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
-        inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=highlightyellow,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst3={R4 $\leftarrow$ R3+R4}
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     \textcolor{correctgreen}{R4 executes now---doesn't wait for R2!}
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution: Cycle 6}
@@ -818,9 +787,7 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst1done=true
     ]
 \end{frame}
 
@@ -836,13 +803,25 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=cyan!40
+        inst1done=true
     ]
-    \vspace{0.2cm}
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \textcolor{correctgreen}{3rd instruction completes before 2nd!} (3 cycles earlier than in-order)
+    \end{tcolorbox}
+\end{frame}
 
-    R4 completes! (3 cycles earlier than in-order)
+\begin{frame}{Out-of-Order Execution: Cycle 8}
+    \centering
+    \drawPipeline[
+        spaced=true,
+        memcontent={R2 $\leftarrow$ R3*R3},
+        memcolor=highlightorange,
+        inst1={R1 $\leftarrow$ R1+4},
+        inst2={R2 $\leftarrow$ R3*R3},
+        inst3={R4 $\leftarrow$ R3+R4},
+        inst1done=true,
+        inst3done=true
+    ]
 \end{frame}
 
 \begin{frame}{Out-of-Order Execution: Cycle 9}
@@ -854,13 +833,12 @@
         inst1={R1 $\leftarrow$ R1+4},
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4},
-        inst1color=correctgreen!30,
-        inst2color=highlightorange,
-        inst3color=correctgreen!30
+        inst1done=true,
+        inst3done=true
     ]
-    \vspace{0.2cm}
-
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
     R2 completes---\textbf{9 cycles total!} (vs 10 for in-order)
+    \end{tcolorbox}
 \end{frame}
 
 \begin{frame}{CPI Limitations}
