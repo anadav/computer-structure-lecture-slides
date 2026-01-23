@@ -127,6 +127,8 @@
 
 %==========================================
 \begin{frame}{Multi-processor System}
+\begin{columns}
+\column{0.55\textwidth}
 \begin{block}{Memory System Coherence}
 A memory system is coherent if:
 \begin{enumerate}
@@ -141,15 +143,33 @@ A memory system is coherent if:
 \end{enumerate}
 \end{block}
 
-\vspace{1em}
-\begin{center}
-% Placeholder for processor-cache-memory diagram
-\framebox[0.6\textwidth][c]{
-\parbox{0.55\textwidth}{\centering
-[Diagram: Two processors with L1 caches\\
-connected to shared L2 cache and memory]
-}}
-\end{center}
+\column{0.45\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.7, every node/.style={font=\scriptsize}]
+  % L2 Cache
+  \node[draw, thick, fill=l2bgcolor, minimum width=4.5cm, minimum height=0.9cm, align=center] (l2) at (1.5,-2.5) {L2 cache (shared)};
+
+  % Processor 1 box
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.6cm, align=center, anchor=south west] (p1) at ([yshift=20]l2.north west) {};
+  \node[above] at (p1.north) {\textbf{Processor 1}};
+
+  % Processor 2 box
+  \node[draw, thick, fill=green!20, minimum width=2.2cm, minimum height=1.6cm, align=center, anchor=south east] (p2) at ([yshift=20]l2.north east) {};
+  \node[above] at (p2.north) {\textbf{Processor 2}};
+
+  % L1 Caches
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.7cm, align=center] (l1p1) at (p1.center) {L1 cache};
+  \node[draw, thick, fill=lightgray!20, minimum width=1.9cm, minimum height=0.7cm, align=center] (l1p2) at (p2.center) {L1 cache};
+
+  % Memory
+  \node[draw, thick, fill=membgcolor, minimum width=3.8cm, minimum height=0.7cm, align=center, anchor=north] (mem) at ([yshift=-20]l2.south) {Memory};
+
+  % Arrows
+  \draw[<->, thick] (p1.south) -- (p1 |- l2.north);
+  \draw[<->, thick] (p2.south) -- (p2 |- l2.north);
+  \draw[<->, thick] (l2.south) -- (mem.north);
+\end{tikzpicture}
+\end{columns}
 \end{frame}
 
 %==========================================
@@ -157,13 +177,13 @@ connected to shared L2 cache and memory]
 Each cache line can be in one of 4 states:
 
 \begin{itemize}
-\item \textbf{Invalid (I)} -- Line's data is not valid
+\item \tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=red!40, minimum size=0.5cm, font=\small\bfseries] {I};} \textbf{Invalid} -- Line's data is not valid
 \vspace{0.5em}
-\item \textbf{Shared (S)} -- Line is valid and not dirty, copies may exist in other processors
+\item \tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=cyan!70, minimum size=0.5cm, font=\small\bfseries] {S};} \textbf{Shared} -- Line is valid and not dirty, copies may exist in other processors
 \vspace{0.5em}
-\item \textbf{Exclusive (E)} -- Line is valid and not dirty, other processors do not have the line in their local caches
+\item \tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=yellow!70, minimum size=0.5cm, font=\small\bfseries] {E};} \textbf{Exclusive} -- Line is valid and not dirty, other processors do not have the line in their local caches
 \vspace{0.5em}
-\item \textbf{Modified (M)} -- Line is valid and dirty, other processors do not have the line in their local caches
+\item \tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=orange!70, minimum size=0.5cm, font=\small\bfseries] {M};} \textbf{Modified} -- Line is valid and dirty, other processors do not have the line in their local caches
 \end{itemize}
 \end{frame}
 
