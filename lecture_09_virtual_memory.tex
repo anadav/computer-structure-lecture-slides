@@ -3152,90 +3152,276 @@ Load & 1 GB & 8 & Full \\
 \end{frame}
 
 \begin{frame}{Modern TLB Invalidation: Broadcast Instructions}
+\small
 \begin{columns}[T]
-\begin{column}{0.5\textwidth}
+\begin{column}{0.48\textwidth}
 \textbf{INVLPGB (AMD) / TLBSYNC:}
-\begin{itemize}
+\begin{itemize}\setlength\itemsep{0pt}
 \item Broadcast invalidation without IPIs
 \item Hardware handles coherency protocol
 \item Non-blocking for initiator
 \end{itemize}
 
 \textbf{How it works:}
-\begin{enumerate}
+\begin{enumerate}\setlength\itemsep{0pt}
 \item Execute INVLPGB with address range
 \item Hardware broadcasts to all cores
 \item TLBSYNC waits for completion
-\item Can continue other work between INVLPGB and TLBSYNC
 \end{enumerate}
 
 \textbf{ARM: TLBI with broadcast}
-\begin{itemize}
-\item TLBI instructions with Inner Shareable scope
-\item Automatic broadcast to all cores in domain
+\begin{itemize}\setlength\itemsep{0pt}
+\item Inner Shareable scope $\rightarrow$ auto-broadcast
 \item No software IPIs needed
 \end{itemize}
 \end{column}
 
-\begin{column}{0.5\textwidth}
+\begin{column}{0.52\textwidth}
 \textbf{Benefits:}
-\begin{itemize}
+\begin{itemize}\setlength\itemsep{0pt}
 \item No IPI overhead (no context switches)
 \item Better scalability with core count
-\item Asynchronous operation possible
 \item Lower latency for munmap(), mprotect()
 \end{itemize}
 
 \textbf{Limitations:}
-\begin{itemize}
+\begin{itemize}\setlength\itemsep{0pt}
 \item \textbf{All-or-nothing}: cannot skip idle CPUs
-\item Only options: all cores or local-only
 \item Software IPIs allow selective targeting
-\item Limited ASID bits (8-16) $\rightarrow$ ASID reuse requires global flush, negating broadcast benefits
+\item ASID reuse requires global flush
 \end{itemize}
 
 \textbf{When broadcast wins:}
-\begin{itemize}
-\item JVM garbage collectors (unmapping large heaps)
+\begin{itemize}\setlength\itemsep{0pt}
+\item JVM GC (unmapping large heaps)
 \item Database buffer pool resizing
-\item Container memory limit changes
 \item High core count systems (>32 cores)
 \end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Software Impact: When These Features Matter}
-\begin{itemize}
-\item \textbf{ASID helps when:}
-    \begin{itemize}
-    \item Many short-lived processes (web servers, shell scripts)
-    \item Frequent system calls with KPTI/Meltdown mitigation
-    \item Container workloads with namespace switches
-    \end{itemize}
-    
-\item \textbf{ContPTE/THP benefits:}
-    \begin{itemize}
-    \item Large memory allocations (databases, scientific computing)
-    \item Better than nothing when huge pages fragment
-    \item mmap() with MAP\_POPULATE for large files
-    \end{itemize}
-    
-\item \textbf{TLB shootdown overhead visible in:}
-    \begin{itemize}
-    \item fork()/exit() in multithreaded programs
-    \item Memory-mapped file operations across threads
-    \item Dynamic memory allocators (malloc/free of large chunks)
-    \item Live migration of VMs
-    \end{itemize}
-    
-\item \textbf{Performance monitoring:}
-    \begin{itemize}
-    \item \texttt{perf stat -e tlb:tlb\_flush} - count TLB flushes
-    \item \texttt{/proc/interrupts} - look for TLB shootdown IPIs
-    \item High system CPU time often indicates TLB management overhead
-    \end{itemize}
+\begin{frame}{Accessed and Dirty Bits}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Motivation:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item OS needs to know: which pages are in use? which were modified?
+\item \textbf{Page replacement}: evict ``cold'' pages (LRU approximation)
+\item \textbf{Write-back}: only write dirty pages to disk
 \end{itemize}
+
+\textbf{Mechanism:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item \textbf{Accessed (A)}: Set by HW on any access
+\item \textbf{Dirty (D)}: Set by HW on write
+\item Both are ``sticky'' -- only SW can clear
+\item HW sets bits via \textbf{atomic} read-modify-write to PTE
+\end{itemize}
+
+\textbf{In Page Table Hierarchy:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item A-bit: Set at \textbf{all levels} (PML4, PDP, PDE, PTE)
+\item D-bit: Set only at \textbf{leaf level}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{TLB Behavior:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item A-bit: Often \textbf{not cached} in TLB
+  \begin{itemize}\scriptsize
+  \item Once in TLB, assumed accessed
+  \end{itemize}
+\item D-bit: \textbf{Cached} in TLB entry
+  \begin{itemize}\scriptsize
+  \item Avoids memory write on every store
+  \end{itemize}
+\end{itemize}
+
+\textbf{TLB Flush After Clearing A/D:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item After clearing bits in PTE, must flush TLB
+\item \textbf{A-bit}: OS may skip flush
+  \begin{itemize}\scriptsize
+  \item Missing some accesses is acceptable for LRU
+  \end{itemize}
+\item \textbf{D-bit}: Must \textbf{always} flush
+  \begin{itemize}\scriptsize
+  \item Correctness! Missing dirty $\rightarrow$ data loss
+  \end{itemize}
+\end{itemize}
+
+\fcolorbox{red!50}{red!10}{\parbox{0.95\linewidth}{\scriptsize A-bit flush = optimization; D-bit flush = correctness}}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Memory Protection Keys (MPK)}
+\definecolor{pkcolor}{HTML}{FF9999}
+\definecolor{addrcolor}{HTML}{E6E6FA}
+\definecolor{flagcolor}{HTML}{90EE90}
+\definecolor{adcolor}{HTML}{FFB366}
+\definecolor{wdcolor}{HTML}{66B3FF}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Problem:} Changing page permissions is expensive
+\begin{itemize}\setlength\itemsep{0pt}
+\item modify PTE $\rightarrow$ TLB flush $\rightarrow$ IPI
+\item System call overhead for mprotect()
+\end{itemize}
+
+\textbf{MPK Solution:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item 4-bit \textbf{protection key} in each PTE
+\item 16 keys (0--15) per address space
+\item Per-key permissions in user-space register (PKRU)
+\item Change via register write -- no syscall!
+\item TLB caches the 4-bit key from PTE
+\end{itemize}
+
+\textbf{Key Operations:}
+\begin{itemize}\setlength\itemsep{0pt}\scriptsize
+\item \texttt{WRPKRU}: Write PKRU ($\sim$20 cycles, user-mode)
+\item \texttt{RDPKRU}: Read PKRU
+\end{itemize}
+\end{column}
+
+\begin{column}{0.52\textwidth}
+\textbf{PTE with Protection Key (x86-64):}\vspace{3mm}
+
+\begin{bytefield}[bitwidth=0.30em, endianness=big, boxformatting={\centering\tiny}]{64}
+\bitheader{62,59,58,52,51,12,11,0} \\
+\bitbox{1}[bgcolor=gray!30]{}
+\bitbox{4}[bgcolor=pkcolor]{PK}
+\bitbox{7}[bgcolor=gray!15]{}
+\bitbox{40}[bgcolor=addrcolor]{Physical Address}
+\bitbox{12}[bgcolor=flagcolor]{Flags}
+\end{bytefield}
+{\tiny\hspace{0.5em}XD \hspace{2.8em} rsvd}
+
+\vspace{5mm}
+\textbf{PKRU Register (user-space):}\vspace{3mm}
+
+\begin{bytefield}[bitwidth=0.58em, endianness=big, boxformatting={\centering\tiny}]{32}
+\bitheader{31,30,29,28,3,2,1,0} \\
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{15}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{15}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{14}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{14}$}}
+\bitbox{24}[bgcolor=blue!15]{$\cdots$}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_1$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_1$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_0$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_0$}}
+\end{bytefield}
+
+\scriptsize AD=Access Disable, WD=Write Disable
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{MPK: Use Cases}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Isolation within Process:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item \textbf{Sensitive data protection}:
+  \begin{itemize}\scriptsize
+  \item Cryptographic keys in key=1 region
+  \item Enable access only during crypto ops
+  \item Prevents Spectre/buffer overflow leaks
+  \end{itemize}
+\item \textbf{JIT compiler isolation}:
+  \begin{itemize}\scriptsize
+  \item JIT code region: normally W=0, X=1
+  \item During compilation: W=1, X=0
+  \item Switch via WRPKRU, not mprotect()
+  \end{itemize}
+\item \textbf{Library sandboxing}:
+  \begin{itemize}\scriptsize
+  \item Untrusted library code uses key=2
+  \item Main app disables key=2 when not calling lib
+  \end{itemize}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Performance Benefits:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item mprotect(): ~1000s of cycles (syscall + TLB)
+\item WRPKRU: ~20 cycles (user-mode register write)
+\item $\sim$50x faster permission changes
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}\setlength\itemsep{0pt}
+\item Only 16 keys per process
+\item Protection is per-thread (PKRU not shared)
+\item Does not prevent code within same key
+\item Requires careful key assignment design
+\end{itemize}
+
+\textbf{OS/Language Support:}
+\begin{itemize}\setlength\itemsep{0pt}\scriptsize
+\item Linux: pkey\_alloc(), pkey\_mprotect()
+\item OpenJDK: Uses MPK for heap isolation
+\item Rust: crates for safe MPK wrappers
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Virtual Memory: Summary}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Core Concepts:}
+\begin{itemize}\setlength\itemsep{1pt}
+\item Virtual $\rightarrow$ Physical translation via page tables
+\item Page: fixed-size unit (4KB, 2MB, 1GB)
+\item Multi-level hierarchy reduces table size
+\item Page faults for on-demand allocation
+\end{itemize}
+
+\textbf{Translation Performance:}
+\begin{itemize}\setlength\itemsep{1pt}
+\item TLB caches recent translations
+\item TLB miss $\rightarrow$ page walk (4 memory accesses for 4-level)
+\item PMH (Page Miss Handler) in hardware
+\item ASID avoids flush on context switch
+\end{itemize}
+
+\textbf{Page Table Entry (PTE) Bits:}
+\begin{itemize}\setlength\itemsep{1pt}
+\item Present, R/W, U/S, Accessed, Dirty
+\item Global, XD (execute disable), Protection Key
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Advanced Topics:}
+\begin{itemize}\setlength\itemsep{1pt}
+\item Large pages: fewer TLB entries, less fragmentation
+\item ContPTE: TLB coalescing for contiguous pages
+\item Global entries: survive CR3 reload
+\item ASID: tag TLB entries by address space
+\end{itemize}
+
+\textbf{Multi-core Considerations:}
+\begin{itemize}\setlength\itemsep{1pt}
+\item TLB shootdown: maintain coherency across cores
+\item IPI-based vs. broadcast (INVLPGB/TLBI)
+\item A/D bits: tracked in TLB, must flush on clear
+\end{itemize}
+
+\textbf{Protection Features:}
+\begin{itemize}\setlength\itemsep{1pt}
+\item Per-page R/W/X permissions
+\item User/Supervisor separation
+\item MPK: fast intra-process isolation (16 keys)
+\end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 % Backup slides section
