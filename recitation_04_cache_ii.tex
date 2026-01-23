@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds, decorations.pathreplacing, patterns}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, fit, backgrounds, decorations.pathreplacing, patterns, shapes.callouts}
 \usepackage{tcolorbox}
 \usepackage{listings}
 \usepackage{minted}
@@ -897,73 +897,124 @@ Design a hardware prefetch system to improve L1 hit rate.
     scale=1,
     instbox/.style={rectangle, draw, minimum height=0.5cm, minimum width=0.5cm, font=\tiny},
     cache/.style={rectangle, draw, fill=green!30, minimum height=0.8cm, minimum width=0.8cm, font=\scriptsize\bfseries},
-    prefetch/.style={rectangle, draw, fill=yellow!50, minimum height=0.8cm, minimum width=0.8cm, font=\scriptsize\bfseries}
+    prefetch/.style={rectangle, draw, fill=yellow!50, minimum height=0.8cm, minimum width=0.8cm, font=\scriptsize\bfseries},
+    mycallout/.style={ellipse callout, draw, fill=blue!10, font=\tiny, align=center}
 ]
-    % Timeline axis - shorter to fit inside figure
+    % Define y-coordinates for rows
+    \pgfmathsetmacro{\prefetchrow}{-1.2}
+    \pgfmathsetmacro{\validrow}{-2.5}
+    \pgfmathsetmacro{\tickspacing}{0.8}
+
+    % Timeline axis
     \draw[->, thick] (0,0) -- (13,0);
 
-    % Instruction label - aligned with instruction boxes
+    % Instruction label
     \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, 0) {Instruction};
 
-    % Instruction tick marks (1-4, then ..., then cycles 32-40)
-    \foreach \i in {1,2,3,4} {
-        \node[above, font=\tiny] at (\i*0.8, 0.3) {\i};
-        \draw (\i*0.8, -0.2) -- (\i*0.8, 0.2);
+    % Define coordinates for early ticks (1-4)
+    \coordinate (tick1) at (0.8, 0);
+    \coordinate (tick2) at (1.6, 0);
+    \coordinate (tick3) at (2.4, 0);
+    \coordinate (tick4) at (3.2, 0);
+
+    % Labels below ticks (same style as 32-40)
+    \foreach \t in {1,2,3,4} {
+        \node[below, font=\tiny] at ([yshift=-0.3cm]tick\t) {\t};
+        \draw ([yshift=-0.2cm]tick\t) -- ([yshift=0.2cm]tick\t);
     }
 
     % Dots separator
     \node[font=\normalsize\bfseries] at (4.6, 0) {\dots};
 
-    % Cycle numbers 32-40 with tick marks
-    \foreach \i/\addr in {0/32, 1/33, 2/34, 3/35, 4/36, 5/37, 6/38, 7/39, 8/40} {
-        \node[below, font=\tiny] at (6+\i*0.8, -0.3) {\addr};
-        \draw (6+\i*0.8, -0.2) -- (6+\i*0.8, 0.2);
+    % Define coordinates for later ticks (32-40)
+    \coordinate (tick32) at (6.0, 0);
+    \coordinate (tick33) at (6.8, 0);
+    \coordinate (tick34) at (7.6, 0);
+    \coordinate (tick35) at (8.4, 0);
+    \coordinate (tick36) at (9.2, 0);
+    \coordinate (tick37) at (10.0, 0);
+    \coordinate (tick38) at (10.8, 0);
+    \coordinate (tick39) at (11.6, 0);
+    \coordinate (tick40) at (12.4, 0);
+
+    \foreach \t in {32,33,34,35,36,37,38,39,40} {
+        \node[below, font=\tiny] at ([yshift=-0.3cm]tick\t) {\t};
+        \draw ([yshift=-0.2cm]tick\t) -- ([yshift=0.2cm]tick\t);
     }
 
-    % Instruction boxes (0-8) positioned above the timeline, aligned with cycle numbers
-    \node[instbox] at (6, 0.6) {\textbf{0}};
-    \node[instbox] at (6.8, 0.6) {\textbf{1}};
-    \node[instbox] at (7.6, 0.6) {\textbf{2}};
-    \node[instbox] at (8.4, 0.6) {\textbf{3}};
-    \node[instbox] at (9.2, 0.6) {\textbf{4}};
-    \node[instbox] at (10, 0.6) {\textbf{5}};
-    \node[instbox] at (10.8, 0.6) {\textbf{6}};
-    \node[instbox] at (11.6, 0.6) {\textbf{7}};
-    \node[instbox] at (12.4, 0.6) {\textbf{8}};
+    % Instruction boxes - positioned relative to tick coordinates
+    \node[instbox] (inst0) at ([yshift=0.6cm]tick32) {\textbf{0}};
+    \node[instbox] (inst1) at ([yshift=0.6cm]tick33) {\textbf{1}};
+    \node[instbox] (inst2) at ([yshift=0.6cm]tick34) {\textbf{2}};
+    \node[instbox] (inst3) at ([yshift=0.6cm]tick35) {\textbf{3}};
+    \node[instbox] (inst4) at ([yshift=0.6cm]tick36) {\textbf{4}};
+    \node[instbox] (inst5) at ([yshift=0.6cm]tick37) {\textbf{5}};
+    \node[instbox] (inst6) at ([yshift=0.6cm]tick38) {\textbf{6}};
+    \node[instbox] (inst7) at ([yshift=0.6cm]tick39) {\textbf{7}};
+    \node[instbox] (inst8) at ([yshift=0.6cm]tick40) {\textbf{8}};
 
-    % Line groupings with braces (not mirrored = upright) - above the instruction boxes
-    \draw[decorate, decoration={brace, amplitude=5pt}] (5.75,1.0) -- (8.65,1.0);
-    \node[above, font=\scriptsize\bfseries] at (7.2, 1.1) {Line 0};
+    % Label explaining instruction boxes = grades[i] access
+    \node[font=\tiny, align=center, anchor=south] at ([yshift=0.15cm]inst0.north) {Accessed\\grades\\element};
 
-    \draw[decorate, decoration={brace, amplitude=5pt}] (8.95,1.0) -- (11.85,1.0);
-    \node[above, font=\scriptsize\bfseries] at (10.4, 1.1) {Line 1};
+    % Line groupings with braces - positioned relative to instruction boxes
+    \coordinate (brace0start) at ([xshift=-0.25cm, yshift=0.35cm]inst0.north);
+    \coordinate (brace0end) at ([xshift=0.25cm, yshift=0.35cm]inst3.north);
+    \draw[decorate, decoration={brace, amplitude=5pt}] (brace0start) -- (brace0end);
+    \node[above, font=\scriptsize\bfseries] at ($(brace0start)!0.5!(brace0end) + (0,0.15)$) {Line 0};
 
-    % Prefetch Request row - closer to timeline
-    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, -1.2) {Prefetch\\Request};
-    \node[prefetch] (p1) at (1, -1.2) {0:3};
+    \coordinate (brace1start) at ([xshift=-0.25cm, yshift=0.35cm]inst4.north);
+    \coordinate (brace1end) at ([xshift=0.25cm, yshift=0.35cm]inst7.north);
+    \draw[decorate, decoration={brace, amplitude=5pt}] (brace1start) -- (brace1end);
+    \node[above, font=\scriptsize\bfseries] at ($(brace1start)!0.5!(brace1end) + (0,0.15)$) {Line 1};
+
+    % Prefetch Request row label
+    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, \prefetchrow) {Prefetch\\Request};
+
+    % Prefetch boxes - centered on specific ticks
+    % p1 centered on tick1 (cycle 1)
+    \node[prefetch] (p1) at (tick1 |- 0,\prefetchrow) {0:3};
     \node[below, font=\tiny] at (p1.south) {Line0};
 
-    \node[prefetch] (p2) at (2.6, -1.2) {4:7};
+    % p2 centered on tick3 (cycle 3)
+    \node[prefetch] (p2) at (tick3 |- 0,\prefetchrow) {4:7};
     \node[below, font=\tiny] at (p2.south) {Line1};
 
-    \node[font=\large\bfseries] at (4.3, -1.2) {\dots};
+    % Dots
+    \node[font=\large\bfseries] at (4.3, \prefetchrow) {\dots};
 
-    % Aligned to cycle 32 (x=6)
-    \node[prefetch] (p3) at (7.2, -1.2) {32:35};
+    % p3 centered on tick33 (middle of cycles 32-35)
+    \node[prefetch] (p3) at (tick33 |- 0,\prefetchrow) {32:35};
     \node[below, font=\tiny] at (p3.south) {Line8};
 
-    % Aligned to cycle 36 (x=9.2)
-    \node[prefetch] (p4) at (10.4, -1.2) {36:39};
+    % p4 centered on tick37 (middle of cycles 36-39)
+    \node[prefetch] (p4) at (tick37 |- 0,\prefetchrow) {36:39};
     \node[below, font=\tiny] at (p4.south) {Line9};
 
-    % Aligned to cycle 40 (x=12.4)
-    \node[prefetch] (p5) at (12.4, -1.2) {40:43};
-    \node[below, font=\tiny] at (p5.south) {Line9};
+    % p5 centered on tick40
+    \node[prefetch] (p5) at (tick40 |- 0,\prefetchrow) {40:43};
+    \node[below, font=\tiny] at (p5.south) {Line10};
 
-    % Data Valid row - closer to Prefetch Request
-    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, -2.5) {Data\\Valid};
-    \node[cache] at (7.2, -2.5) {0:3};
-    \node[cache] at (10.4, -2.5) {4:7};
+    % Data Valid row label
+    \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, \validrow) {Data\\Valid};
+
+    % Data valid boxes - aligned with corresponding ticks
+    \node[cache] (v1) at (tick33 |- 0,\validrow) {0:3};
+    \node[cache] (v2) at (tick37 |- 0,\validrow) {4:7};
+
+    % Stage 2: Dotted line showing prefetch-to-valid relationship
+    \onslide<2->{
+        \draw[dotted, thick, blue!70] (p1.south east) -- (v1.north west);
+        \draw[dotted, thick, blue!70] (p2.south east) -- (v2.north west);
+
+        % Callout explaining the prefetch boxes
+        \node[mycallout, callout absolute pointer={(p1.north)}] at (2.5, 0.3) {Prefetch grades[0:3]\\(Line0) at cycle 1};
+
+        % Callout explaining the instruction box
+        \node[mycallout, callout absolute pointer={(inst0.north)}] at (5.5, 1.8) {Access grades[0]};
+
+        % Callout explaining data valid - to the left of v1
+        \node[mycallout, callout absolute pointer={(v1.west)}] at (4.5, \validrow) {grades[0:3] ready\\after 32 cycles};
+    }
 
 \end{tikzpicture}
 \end{center}

@@ -22,7 +22,7 @@
 \definecolor{incorrectred}{RGB}{200,0,0}
 \definecolor{counterblue}{RGB}{70,130,255}
 \definecolor{highlightyellow}{RGB}{255,230,100}
-\definecolor{lightblue}{RGB}{200,230,250}
+\definecolor{lightblue}{RGB}{240,248,255}
 \definecolor{darkblue}{RGB}{0,100,200}
 \definecolor{highlightorange}{RGB}{255,200,100}
 
@@ -96,7 +96,7 @@
 
 % TikZ styles for pipeline diagram
 \tikzset{
-    pipeline stage/.style={draw, fill=lightblue, minimum width=1.2cm, minimum height=0.8cm},
+    pipeline stage/.style={draw=darkblue!50, fill=lightblue, minimum width=1.2cm, minimum height=0.8cm},
     exec unit/.style={draw, minimum width=0.8cm, minimum height=0.6cm},
     exec unit small/.style={draw, minimum width=0.6cm, minimum height=0.6cm},
     code box/.style={draw, thick, rounded corners=2pt, inner sep=4pt, align=left, font=\footnotesize},
@@ -513,9 +513,9 @@
         \end{itemize}
     \end{itemize}
     
-    \vspace{0.5cm}
+    \vspace{0.3cm}
     \centering
-    \drawPipeline[showcallouts=true]
+    \scalebox{0.85}{\drawPipeline[showcallouts=true]}
 \end{frame}
 
 
@@ -527,7 +527,7 @@
 
 
 
-\begin{frame}{How Many Cycles Does In-Order Execution Take?}
+\begin{frame}{Q1: How Many Cycles Does In-Order Execution Take?}
     \centering
     \drawPipeline[
         spaced=true,
@@ -594,7 +594,7 @@
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4}
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     \textcolor{red}{R4 stalled in ID---must wait for R2 to finish execution!}
     \end{tcolorbox}
 \end{frame}
@@ -614,7 +614,7 @@
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4}
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R4 still stalled... R1 completes
     \end{tcolorbox}
 \end{frame}
@@ -633,7 +633,7 @@
         inst3={R4 $\leftarrow$ R3+R4},
         inst1done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R4 still stalled...
     \end{tcolorbox}
 \end{frame}
@@ -652,7 +652,7 @@
         inst3={R4 $\leftarrow$ R3+R4},
         inst1done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R2 finishing M4---R4 can finally proceed!
     \end{tcolorbox}
 \end{frame}
@@ -670,7 +670,7 @@
         inst3={R4 $\leftarrow$ R3+R4},
         inst1done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R4 finally executing!
     \end{tcolorbox}
 \end{frame}
@@ -688,7 +688,7 @@
         inst3={R4 $\leftarrow$ R3+R4},
         inst1done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R2 completes
     \end{tcolorbox}
 \end{frame}
@@ -705,7 +705,7 @@
         inst1done=true,
         inst2done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R4 completes---\textbf{10 cycles total for 3 instructions!}
     \end{tcolorbox}
 \end{frame}
@@ -770,7 +770,7 @@
         inst2={R2 $\leftarrow$ R3*R3},
         inst3={R4 $\leftarrow$ R3+R4}
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     \textcolor{correctgreen}{R4 executes now---doesn't wait for R2!}
     \end{tcolorbox}
 \end{frame}
@@ -805,7 +805,7 @@
         inst3={R4 $\leftarrow$ R3+R4},
         inst1done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     \textcolor{correctgreen}{3rd instruction completes before 2nd!} (3 cycles earlier than in-order)
     \end{tcolorbox}
 \end{frame}
@@ -836,7 +836,7 @@
         inst1done=true,
         inst3done=true
     ]
-    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt]
+    \begin{tcolorbox}[colback=white, colframe=gray, boxrule=0.5pt, arc=2pt, left=2pt, right=2pt, top=1pt, bottom=1pt, halign=center]
     R2 completes---\textbf{9 cycles total!} (vs 10 for in-order)
     \end{tcolorbox}
 \end{frame}
