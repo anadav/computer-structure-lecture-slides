@@ -3279,19 +3279,13 @@ Load & 1 GB & 8 & Full \\
 \item Change via register write -- no syscall!
 \item TLB caches the 4-bit key from PTE
 \end{itemize}
-
-\textbf{Key Operations:}
-\begin{itemize}\setlength\itemsep{0pt}\scriptsize
-\item \texttt{WRPKRU}: Write PKRU ($\sim$20 cycles, user-mode)
-\item \texttt{RDPKRU}: Read PKRU
-\end{itemize}
 \end{column}
 
 \begin{column}{0.52\textwidth}
 \textbf{PTE with Protection Key (x86-64):}\vspace{3mm}
 
 \begin{bytefield}[bitwidth=0.30em, endianness=big, boxformatting={\centering\tiny}]{64}
-\bitheader{62,59,58,52,51,12,11,0} \\
+\bitheader{62,59,51,12,0} \\
 \bitbox{1}[bgcolor=gray!30]{}
 \bitbox{4}[bgcolor=pkcolor]{PK}
 \bitbox{7}[bgcolor=gray!15]{}
@@ -3304,19 +3298,45 @@ Load & 1 GB & 8 & Full \\
 \textbf{PKRU Register (user-space):}\vspace{3mm}
 
 \begin{bytefield}[bitwidth=0.58em, endianness=big, boxformatting={\centering\tiny}]{32}
-\bitheader{31,30,29,28,3,2,1,0} \\
+\bitheader{31,0} \\
 \bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{15}$}}
 \bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{15}$}}
 \bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{14}$}}
 \bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{14}$}}
-\bitbox{24}[bgcolor=blue!15]{$\cdots$}
-\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_1$}}
-\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_1$}}
-\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_0$}}
-\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_0$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{13}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{13}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{12}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{12}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{11}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{11}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{10}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{10}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{9}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{9}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{8}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{8}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{7}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{7}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{6}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{6}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{5}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{5}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{4}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{4}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{3}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{3}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{2}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{2}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{1}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{1}$}}
+\bitbox{1}[bgcolor=adcolor]{\rotatebox{90}{\tiny AD$_{0}$}}
+\bitbox{1}[bgcolor=wdcolor]{\rotatebox{90}{\tiny WD$_{0}$}}
 \end{bytefield}
 
 \scriptsize AD=Access Disable, WD=Write Disable
+
+\vspace{2mm}
+\textbf{ISA:} \texttt{WRPKRU} (write, $\sim$20 cycles), \texttt{RDPKRU} (read)
 \end{column}
 \end{columns}
 \end{frame}
