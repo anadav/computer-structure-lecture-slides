@@ -1574,34 +1574,81 @@ val = A[threadIdx.x * N + col];
 \end{frame}
 
 \begin{frame}{Asynchronous Memory Copying}
+\begin{columns}
+\begin{column}{0.55\textwidth}
     \textbf{Host $\rightarrow$ Device DMA:}
     \begin{itemize}
-        \item GPU DMA engines transfer over PCIe/NVLink without CPU
-        \item \texttt{cudaMemcpyAsync()} for non-blocking transfers
+        \item GPU DMA engines transfer over PCIe/NVLink
+        \item Async copy API for non-blocking transfers
         \item Requires page-locked (pinned) host buffers
     \end{itemize}
 
-    \vspace{0.5em}
+    \vspace{0.3em}
     \textbf{Device-Side Global $\rightarrow$ Shared:}
     \begin{itemize}
-        \item \texttt{cp.async} or \texttt{cuda::memcpy\_async}
-        \item Data movement decoupled from warp execution
+        \item Hardware async copy instructions
+        \item Data movement decoupled from compute
     \end{itemize}
 
-    \vspace{0.5em}
+    \vspace{0.3em}
     \textbf{Pipelining \& Overlap:}
     \begin{itemize}
         \item Multi-stage pipelines (double-buffering)
         \item Issue next-tile copies before consuming current
-        \item Hides hundreds of cycles of global-memory latency
+        \item Hides hundreds of cycles of latency
     \end{itemize}
 
-    \vspace{0.5em}
+    \vspace{0.3em}
     \textbf{Best Practices:}
     \begin{itemize}
-        \item Use \texttt{cudaHostAlloc} for true async DMA
+        \item Use pinned memory for true async DMA
         \item Align data to cache-line boundaries
     \end{itemize}
+\end{column}
+\begin{column}{0.45\textwidth}
+    \centering
+    \textbf{Double Buffering}
+    \begin{tikzpicture}[
+        buf/.style={draw, thick, minimum width=8mm, minimum height=6mm, font=\scriptsize},
+        bufA/.style={buf, fill=blue!25},
+        bufB/.style={buf, fill=orange!25},
+        op/.style={font=\scriptsize\bfseries},
+        mem/.style={op, above=3mm, xshift=-6mm},
+        comp/.style={op, below=3mm, xshift=6mm},
+        arr/.style={-stealth, very thick, gray!70!black},
+        statebox/.style={draw, dashed, rounded corners=3pt, fill=violet!15, inner sep=2pt},
+    ]
+        % State 1: buffers
+        \node[bufA] (a1) {A};
+        \node[bufB, below=2mm of a1] (b1) {B};
+        \begin{scope}[on background layer]
+            \node[statebox, fit=(a1)(b1)] (s1) {};
+        \end{scope}
+
+        \node[mem] at (s1.north) (mem1) {Memory};
+        \draw[arr] (mem1.south) to[out=-90, in=135, looseness=1.2] (a1.west);
+
+        \node[comp] at (s1.south) (comp1) {Compute};
+        \draw[arr] (b1.east) to[out=-45, in=90, looseness=1.2] (comp1.north);
+
+        % State 2: buffers (aligned with state 1)
+        \node[bufA, right=18mm of a1] (a2) {A};
+        \node[bufB, right=18mm of b1] (b2) {B};
+        \begin{scope}[on background layer]
+            \node[statebox, fit=(a2)(b2)] (s2) {};
+        \end{scope}
+
+        % Swap icon between states
+        \node[inner sep=0pt] at ($(s1.east)!0.5!(s2.west)$) (swap) {\includegraphics[width=8mm]{figures/noun-swap-1940228.png}};
+
+        \node[mem] at (s2.north) (mem2) {Memory};
+        \draw[arr] (mem2.south) to[out=-90, in=135, looseness=1.2] (b2.west);
+
+        \node[comp] at (s2.south) (comp2) {Compute};
+        \draw[arr] (a2.east) to[out=-45, in=90, looseness=1.2] (comp2.north);
+    \end{tikzpicture}
+\end{column}
+\end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{Pipelining with Latency Hiding (1/2)}
