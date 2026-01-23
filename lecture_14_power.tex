@@ -126,8 +126,83 @@ Emits $\sim$7g CO$_2$\\
 %% Slide: Battery Life Comparison
 \begin{frame}{Battery Life: Why Power Matters}
 \begin{center}
-\includegraphics[width=0.75\textwidth]{figures/best-gaming-laptop-battery-life-2023-2048x1152.png}\\[-1mm]
-{\tiny Source: \href{https://jarrods.tech/these-gaming-laptops-have-the-best-battery-life-in-2023/}{jarrods.tech} (2023)}
+\begin{tikzpicture}[
+    y=0.78cm,
+    bar youtube/.style={fill=blue!60, draw=blue!80},
+    bar gaming/.style={fill=red!50, draw=red!70},
+    label/.style={font=\scriptsize, anchor=east},
+    spec/.style={font=\tiny, gray},
+    value/.style={font=\tiny, anchor=west},
+]
+    % Scale: 615 max -> 5.8cm width
+    \def\scale{0.00943}
+    \def\barh{0.28}  % bar height
+    \def\gap{0.08}   % gap between youtube and gaming bars
+
+    % Data: {y-position}{laptop}{spec}{youtube}{gaming}
+    \foreach \ypos/\laptop/\spec/\yt/\gm in {
+        6/{ASUS TUF A16}/{Ryzen 7 7735HS}/615/67,
+        5/{Razer Blade 14}/{Ryzen 9 · RTX 4070}/560/175,
+        4/{ASUS Zephyrus G14}/{Ryzen 9 · RTX 4060}/516/175,
+        3/{HP Victus 16}/{i7-13700H · RTX 4060}/479/118,
+        2/{Razer Blade 16}/{i9-13950HX · RTX 4090}/424/152,
+        1/{Alienware x16}/{i9-13900HK · RTX 4080}/368/98,
+        0/{ASUS ROG G16}/{i7-13650HX · RTX 4060}/301/90%
+    } {
+        % Laptop name and spec
+        \node[label] at (-0.2, \ypos+0.1) {\laptop};
+        \node[spec, anchor=east] at (-0.2, \ypos-0.22) {\spec};
+
+        % YouTube bar (top)
+        \fill[bar youtube] (0, \ypos+\gap) rectangle (\yt*\scale, \ypos+\gap+\barh);
+        \node[value, blue!80] at (\yt*\scale+0.1, \ypos+\gap+\barh/2) {\yt};
+
+        % Gaming bar (bottom)
+        \fill[bar gaming] (0, \ypos-\barh) rectangle (\gm*\scale, \ypos);
+        \node[value, red!70] at (\gm*\scale+0.1, \ypos-\barh/2) {\gm};
+    }
+
+    % X-axis
+    \draw[thick, ->] (0, -0.5) -- (6.5, -0.5);
+
+    % X-axis ticks and labels
+    \foreach \x in {0, 120, 240, 360, 480, 600} {
+        \draw (\x*\scale, -0.4) -- (\x*\scale, -0.6);
+        \node[font=\tiny, below] at (\x*\scale, -0.55) {\x};
+    }
+    \node[font=\scriptsize] at (3, -1.4) {Time [minutes]};
+
+    % Y-axis line
+    \draw[thick] (0, -0.5) -- (0, 6.5);
+
+    % Legend (right side, stacked)
+    \node[anchor=north west, font=\scriptsize] at (6.8, 6.3) {%
+        \begin{tabular}{@{}l@{}}
+        \tikz[baseline=-0.5ex]{\fill[bar youtube] (0,0) rectangle (0.35,0.2);} Video \\[1mm]
+        \tikz[baseline=-0.5ex]{\fill[bar gaming] (0,0) rectangle (0.35,0.2);} Gaming
+        \end{tabular}%
+    };
+
+    % Source (below x-axis, right side)
+    \node[font=\tiny, gray, anchor=north east] at (8.5, -1.5) {Source: \href{https://jarrods.tech/these-gaming-laptops-have-the-best-battery-life-in-2023/}{jarrods.tech} (2023)};
+
+    % Overlay callouts (each appears on one slide only)
+    \only<2>{
+        % Callout: 2x difference - arrow right of bars
+        \draw[very thick, orange, <->] (6.85, 6.35) -- (6.85, -0.15);
+        \node[rectangle callout, callout absolute pointer={(6.85, 3.2)},
+              fill=orange!20, font=\scriptsize, align=center] at (8.3, 3.2)
+            {$2\times$ range\\impacts\\usability!};
+    }
+
+    \only<3>{
+        % Callout: ASUS TUF - dGPU usage drains battery fast (left of figure)
+        \node[rectangle callout, callout absolute pointer={(-2.8, 6.2)},
+              fill=orange!20, font=\scriptsize, align=left, text width=2.4cm,
+              anchor=east] at (-3.2, 4.5)
+            {Best for video, worst for gaming -- dGPU heavily utilized};
+    }
+\end{tikzpicture}
 \end{center}
 \end{frame}
 
