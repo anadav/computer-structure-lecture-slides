@@ -874,27 +874,26 @@ $\Rightarrow$ Threads can migrate between core types
     little core/.style={fill=green!50, minimum size=1cm, inner sep=0.5mm, align=center, font=\tiny},
     section label/.style={font=\scriptsize},
 ]
-    % Big cores - first one anchored, second relative to first
-    \node[big core] (big0) {Big\\Core};
-    \node[big core, right=2mm of big0] (big1) {Big\\Core};
+    % Big cores matrix
+    \matrix[matrix of nodes, ampersand replacement=\&,
+             column sep=2mm,
+             nodes={big core}] (big-cores) {
+        |[name=big0]| {\shortstack{Big\\Core}} \& |[name=big1]| {\shortstack{Big\\Core}} \\
+    };
 
-    % Fit node to get big row bounds
-    \node[fit=(big0)(big1), inner sep=0] (big row) {};
+    % Little cores matrix - positioned below big cores
+    \matrix[matrix of nodes, ampersand replacement=\&,
+             column sep=1.5mm,
+             below=4mm of big-cores,
+             nodes={little core}] (little-cores) {
+        |[name=little0]| {\shortstack{Little\\Core}} \& |[name=little1]| {\shortstack{Little\\Core}} \& |[name=little2]| {\shortstack{Little\\Core}} \& |[name=little3]| {\shortstack{Little\\Core}} \\
+    };
 
-    % Little cores - build row, then position via fit node
-    \node[little core, below right=4mm and 0mm of big row.south west, anchor=north west] (little0) {Little\\Core};
-    \node[little core, right=1.5mm of little0] (little1) {Little\\Core};
-    \node[little core, right=1.5mm of little1] (little2) {Little\\Core};
-    \node[little core, right=1.5mm of little2] (little3) {Little\\Core};
+    % Labels
+    \node[section label, above=2mm of big-cores.north] {High performance};
+    \node[section label, below=2mm of little-cores.south] {Energy efficient};
 
-    % Fit node for little row
-    \node[fit=(little0)(little3), inner sep=0] (little row) {};
-
-    % Labels - positioned relative to fit nodes
-    \node[section label, above=2mm of big row.north] {High performance};
-    \node[section label, below=2mm of little row.south] {Energy efficient};
-
-    % Migration arrows - using node anchors
+    % Migration arrows
     \draw[->, thick, orange] (big0.south) to[bend right=30] (little0.north);
     \draw[->, thick, orange] (big1.south) to[bend left=30] (little3.north);
 \end{tikzpicture}
