@@ -949,21 +949,29 @@ $\Rightarrow$ Threads can migrate between core types
     \node[desc] at ([yshift=-15mm]col1) {OS sees one cluster. Switch entire cluster based on load.};
 
     % ============ IN-KERNEL SWITCHING ============
-    % Virtual core 1 matrix (vertical: big on top, little below)
+    % Virtual core 1 - big core (aligned with clustered big cores)
     \matrix[matrix of nodes, ampersand replacement=\&,
-            row sep=3mm, anchor=center] (inker-vcore1-mat) at ([xshift=-9mm]col2) {
-        |[big core, name=inker-big1]| \\
-        |[little core, name=inker-lit1]| \\
+            anchor=center, nodes={big core}] (inker-big1-mat) at ([xshift=-9mm]col2 |- clust-big-mat) {
+        |[name=inker-big1]| \\
+    };
+    % Virtual core 1 - little core (aligned with clustered little cores)
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            anchor=center, nodes={little core}] (inker-lit1-mat) at ([xshift=-9mm]col2 |- clust-lit-mat) {
+        |[name=inker-lit1]| \\
     };
     \node[fit=(inker-big1)(inker-lit1), cluster box, orange, inner sep=1mm] (inker-vcore1) {};
     \node[font=\scriptsize, orange] at ($(inker-big1.south)!0.5!(inker-lit1.north)$) {OR};
     \node[font=\tiny, below=-0.5mm of inker-vcore1, anchor=north] {vCore1};
 
-    % Virtual core 2 matrix
+    % Virtual core 2 - big core
     \matrix[matrix of nodes, ampersand replacement=\&,
-            row sep=3mm, anchor=center] (inker-vcore2-mat) at ([xshift=9mm]col2) {
-        |[big core, name=inker-big2]| \\
-        |[little core, name=inker-lit2]| \\
+            anchor=center, nodes={big core}] (inker-big2-mat) at ([xshift=9mm]col2 |- clust-big-mat) {
+        |[name=inker-big2]| \\
+    };
+    % Virtual core 2 - little core
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            anchor=center, nodes={little core}] (inker-lit2-mat) at ([xshift=9mm]col2 |- clust-lit-mat) {
+        |[name=inker-lit2]| \\
     };
     \node[fit=(inker-big2)(inker-lit2), cluster box, orange, inner sep=1mm] (inker-vcore2) {};
     \node[font=\scriptsize, orange] at ($(inker-big2.south)!0.5!(inker-lit2.north)$) {OR};
@@ -975,18 +983,18 @@ $\Rightarrow$ Threads can migrate between core types
     \node[desc] at ([yshift=-15mm]col2) {Paired big+little form virtual cores. One active per pair.};
 
     % ============ GLOBAL SCHEDULING (HMP) ============
-    % Big cores matrix
-    \matrix[matrix of nodes, ampersand replacement=\&,
-            column sep=1mm, anchor=center,
-            nodes={big core}] (glob-big-mat) at ([yshift=10mm]col3) {
-        |[name=glob-big1]| \& |[name=glob-big2]| \\
-    };
-
-    % Little cores matrix
+    % Little cores matrix first (to position big cores relative to it)
     \matrix[matrix of nodes, ampersand replacement=\&,
             column sep=1mm, anchor=center,
             nodes={little core}] (glob-lit-mat) at ([yshift=-6mm]col3) {
         |[name=glob-lit1]| \& |[name=glob-lit2]| \& |[name=glob-lit3]| \& |[name=glob-lit4]| \\
+    };
+
+    % Big cores matrix - centered above little cores, same y as clustered big cores
+    \matrix[matrix of nodes, ampersand replacement=\&,
+            column sep=1mm, anchor=center,
+            nodes={big core}] (glob-big-mat) at (glob-lit-mat.center |- clust-big-mat.center) {
+        |[name=glob-big1]| \& |[name=glob-big2]| \\
     };
 
     % Title and description
