@@ -911,14 +911,9 @@ Design a hardware prefetch system to improve L1 hit rate.
     % Instruction label
     \node[left, align=right, font=\scriptsize\bfseries] at (-0.5, 0) {Instruction};
 
-    % Define coordinates for early ticks (1-4)
-    \coordinate (tick1) at (0.8, 0);
-    \coordinate (tick2) at (1.6, 0);
-    \coordinate (tick3) at (2.4, 0);
-    \coordinate (tick4) at (3.2, 0);
-
-    % Labels below ticks (same style as 32-40)
+    % Define coordinates and draw early ticks (1-4): position = t * 0.8
     \foreach \t in {1,2,3,4} {
+        \coordinate (tick\t) at (\t*0.8, 0);
         \node[below, font=\tiny] at ([yshift=-0.3cm]tick\t) {\t};
         \draw ([yshift=-0.2cm]tick\t) -- ([yshift=0.2cm]tick\t);
     }
@@ -926,32 +921,19 @@ Design a hardware prefetch system to improve L1 hit rate.
     % Dots separator
     \node[font=\normalsize\bfseries] at (4.6, 0) {\dots};
 
-    % Define coordinates for later ticks (32-40)
-    \coordinate (tick32) at (6.0, 0);
-    \coordinate (tick33) at (6.8, 0);
-    \coordinate (tick34) at (7.6, 0);
-    \coordinate (tick35) at (8.4, 0);
-    \coordinate (tick36) at (9.2, 0);
-    \coordinate (tick37) at (10.0, 0);
-    \coordinate (tick38) at (10.8, 0);
-    \coordinate (tick39) at (11.6, 0);
-    \coordinate (tick40) at (12.4, 0);
-
-    \foreach \t in {32,33,34,35,36,37,38,39,40} {
+    % Define coordinates and draw later ticks (32-40): position = 6.0 + (t-32) * 0.8
+    \foreach \t in {32,33,...,40} {
+        \pgfmathsetmacro{\xpos}{6.0 + (\t - 32) * 0.8}
+        \coordinate (tick\t) at (\xpos, 0);
         \node[below, font=\tiny] at ([yshift=-0.3cm]tick\t) {\t};
         \draw ([yshift=-0.2cm]tick\t) -- ([yshift=0.2cm]tick\t);
     }
 
     % Instruction boxes - positioned relative to tick coordinates
-    \node[instbox] (inst0) at ([yshift=0.6cm]tick32) {\textbf{0}};
-    \node[instbox] (inst1) at ([yshift=0.6cm]tick33) {\textbf{1}};
-    \node[instbox] (inst2) at ([yshift=0.6cm]tick34) {\textbf{2}};
-    \node[instbox] (inst3) at ([yshift=0.6cm]tick35) {\textbf{3}};
-    \node[instbox] (inst4) at ([yshift=0.6cm]tick36) {\textbf{4}};
-    \node[instbox] (inst5) at ([yshift=0.6cm]tick37) {\textbf{5}};
-    \node[instbox] (inst6) at ([yshift=0.6cm]tick38) {\textbf{6}};
-    \node[instbox] (inst7) at ([yshift=0.6cm]tick39) {\textbf{7}};
-    \node[instbox] (inst8) at ([yshift=0.6cm]tick40) {\textbf{8}};
+    \foreach \i in {0,1,...,8} {
+        \pgfmathtruncatemacro{\ticknum}{32 + \i}
+        \node[instbox] (inst\i) at ([yshift=0.6cm]tick\ticknum) {\textbf{\i}};
+    }
 
     % Label explaining instruction boxes = grades[i] access (same style as row labels)
     \node[align=right, font=\scriptsize\bfseries, anchor=south east] at (-0.5, 0.6) {Accessed\\Grades\\Element};
