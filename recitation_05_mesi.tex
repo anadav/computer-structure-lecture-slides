@@ -255,7 +255,6 @@ Each cache line can be in one of 4 states:
 \item P2 requests ownership (RFO) for write intent
 \end{enumerate}
 
-\vspace{0.5em}
 \textbf{What happens:}
 \begin{itemize}
 \item P2 sends RFO to L2
@@ -264,7 +263,6 @@ Each cache line can be in one of 4 states:
 \item L2 grants exclusive ownership to P2
 \end{itemize}
 
-\vspace{0.5em}
 \textbf{Result:}
 \begin{itemize}
 \item P1: \tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=cyan!70, minimum size=0.4cm, font=\tiny\bfseries] {S};} $\rightarrow$ \tikz[baseline=-0.5ex]{\node[circle, draw, thick, fill=red!40, minimum size=0.4cm, font=\tiny\bfseries] {I};}
@@ -314,7 +312,8 @@ L2 keeps track of the presence of each line in each Core's L1 caches using a bit
 The L2 cache must guarantee that all L1 cache lines are included in L2
 \end{alertblock}
 
-\vspace{0.5em}
+\begin{columns}[t]
+\column{0.48\textwidth}
 \textbf{Why Inclusion Matters:}
 \begin{itemize}
 \item Simplifies coherence protocol
@@ -322,7 +321,14 @@ The L2 cache must guarantee that all L1 cache lines are included in L2
 \item Enables efficient snooping decisions
 \end{itemize}
 
-\vspace{0.5em}
+\textbf{Maintaining Inclusion:}
+\begin{itemize}
+\item L2 capacity $>$ sum of L1 caches
+\item L2 eviction triggers L1 invalidation
+\item Coherence maintained at L2 level
+\end{itemize}
+
+\column{0.52\textwidth}
 \textbf{When L2 Evicts a Line:}
 \begin{itemize}
 \item L2 must first invalidate the line in all L1 caches
@@ -333,14 +339,7 @@ The L2 cache must guarantee that all L1 cache lines are included in L2
     \item L2 writes updated value to memory during eviction
     \end{itemize}
 \end{itemize}
-
-\vspace{0.5em}
-\textbf{Maintaining Inclusion:}
-\begin{itemize}
-\item L2 capacity must be larger than sum of L1 caches
-\item L2 eviction triggers L1 invalidation
-\item Ensures coherence is maintained at L2 level
-\end{itemize}
+\end{columns}
 \end{frame}
 
 %==========================================
