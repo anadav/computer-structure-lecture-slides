@@ -9,6 +9,11 @@
 \usepackage{bytefield}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit, circuits.logic.US, matrix, backgrounds}
+
+% Beamer overlay style for TikZ
+\tikzset{
+    alt/.code args={<#1>#2#3}{\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}},
+}
 \usepackage{circuitikz}
 \usepackage{tcolorbox}
 \usepackage{listings}
@@ -1140,27 +1145,50 @@ Write goes directly to next level; L1 cache is not modified
 \end{frame}
 
 \section{LRU Implementation}
-\begin{frame}{LRU Implementation for 4-Way Cache}
+\begin{frame}{Q: LRU Implementation -- How Many Bits?}
+\textbf{Question:} Implement an LRU policy for a 4-way cache. How many bits per set?
+
 \textbf{Method 1: Full List (8 bits per set)}
 \begin{itemize}
-    \item Maintain linked list of 4 nodes (one per way)
-    \item Store order of usage
-    \item 2 bits per way $\times$ 4 ways = 8 bits
-    \item Update list on every access
+    \item Maintain list of 4 ways in order of usage
+    \item 2 bits per way $\times$ 4 ways = \textbf{8 bits}
 \end{itemize}
 
-\textbf{Example states:}
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-Initial: & Way0(00) & Way1(01) & Way2(10) & Way3(11) \\
-Hit Way1: & Way1(01) & Way0(00) & Way2(10) & Way3(11) \\
-Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
-\hline
-\multicolumn{2}{|l}{MRU} & & & LRU \\
-\hline
-\end{tabular}
+\begin{tikzpicture}[
+    way/.style={minimum width=1cm, minimum height=0.7cm, font=\footnotesize\bfseries},
+    way0/.style={way, fill=green!60!black},
+    way1/.style={way, fill=blue!70},
+    way2/.style={way, fill=red!50!black},
+    way3/.style={way, fill=blue!30!black},
+    rowlabel/.style={font=\footnotesize, minimum height=0.7cm, text depth=0.15cm},
+    header/.style={font=\footnotesize\bfseries}
+]
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        row sep=2mm,
+        column sep=1mm,
+        column 1/.style={nodes={rowlabel, anchor=east}},
+] (m) {
+    Initial state: \& |[way0]| 00 \& |[way1]| 01 \& |[way2]| 10 \& |[way3]| 11 \\
+    \only<2->{Hit way 1:} \& |[alt=<2->{way1}{way}]| \only<2->{01} \& |[alt=<2->{way0}{way}]| \only<2->{00} \& |[alt=<2->{way2}{way}]| \only<2->{10} \& |[alt=<2->{way3}{way}]| \only<2->{11} \\
+    \only<3->{Hit way 2:} \& |[alt=<3->{way2}{way}]| \only<3->{10} \& |[alt=<3->{way1}{way}]| \only<3->{01} \& |[alt=<3->{way0}{way}]| \only<3->{00} \& |[alt=<3->{way3}{way}]| \only<3->{11} \\
+    \only<4->{Hit way 3:} \& |[alt=<4->{way3}{way}]| \only<4->{11} \& |[alt=<4->{way2}{way}]| \only<4->{10} \& |[alt=<4->{way1}{way}]| \only<4->{01} \& |[alt=<4->{way0}{way}]| \only<4->{00} \\
+};
+% Headers
+\node[header, text=blue!70, above=3mm of m-1-2] {MRU};
+\node[header, text=blue!30!black, above=3mm of m-1-5] {LRU};
+
+% On slide 5+: highlight that rightmost is evicted, leftmost not stored
+\only<5->{
+    \node[fit=(m-1-5)(m-4-5), draw=red, thick, rounded corners, inner sep=2pt, label={[font=\tiny, text=red]below:evicted}] {};
+    \node[fit=(m-1-2)(m-4-2), draw=gray, dashed, rounded corners, inner sep=2pt, label={[font=\tiny, text=gray]below:not stored}] {};
+    \fill[white, opacity=0.5] (m-1-2.north west) rectangle (m-4-2.south east);
+}
+\end{tikzpicture}
 \end{center}
+
+\only<5->{\textbf{Optimization:} Store only 3 ways $\rightarrow$ 4th is implicitly LRU $\rightarrow$ \textbf{6 bits}}
 \end{frame}
 
 \begin{frame}{LRU Implementation - Optimized}
@@ -1273,6 +1301,18 @@ Hit Way2: & Way2(10) & Way1(01) & Way0(00) & Way3(11) \\
 \end{center}
 \end{frame}
 
+% Savebox for Q2 code snippet
+\newsavebox{\QTwoCode}
+\begin{lrbox}{\QTwoCode}
+\begin{minipage}{5.5cm}
+\begin{minted}[fontsize=\footnotesize, frame=single, bgcolor=gray!10]{c}
+int array[1024];
+for (int i=0; i<1024; i++)
+    array[i] = 0;
+\end{minted}
+\end{minipage}
+\end{lrbox}
+
 \section{Question 2: Array Initialization}
 \begin{frame}[fragile]{Q2: Array Initialization}
 \begin{columns}
@@ -1303,36 +1343,74 @@ for (int i=0; i<1024; i++)
 \end{columns}
 \end{frame}
 
+% Saveboxes for Q2a address format animation
+% bitwidth=1.6mm gives ~51mm total width, fits 40% column well
+% endianness=big puts MSB (31) on left, LSB (0) on right
+\newsavebox{\addrEmpty}
+\begin{lrbox}{\addrEmpty}
+\begin{bytefield}[bitwidth=1.6mm, bitheight=6mm]{32}
+  \bitheader[endianness=big]{0,31} \\
+  \bitbox{32}[bgcolor=gray!30]{}
+\end{bytefield}
+\end{lrbox}
+
+\newsavebox{\addrOffset}
+\begin{lrbox}{\addrOffset}
+\begin{bytefield}[bitwidth=1.6mm, bitheight=6mm]{32}
+  \bitheader[endianness=big]{0,3,31} \\
+  \bitbox{28}[bgcolor=gray!30]{} & \bitbox{4}[bgcolor=yellow!40]{\tiny offset}
+\end{bytefield}
+\end{lrbox}
+
+\newsavebox{\addrSetOffset}
+\begin{lrbox}{\addrSetOffset}
+\begin{bytefield}[bitwidth=1.6mm, bitheight=6mm]{32}
+  \bitheader[endianness=big]{0,3,4,7,31} \\
+  \bitbox{24}[bgcolor=gray!30]{} & \bitbox{4}[bgcolor=green!40]{\tiny set} & \bitbox{4}[bgcolor=yellow!40]{\tiny off}
+\end{bytefield}
+\end{lrbox}
+
+\newsavebox{\addrFull}
+\begin{lrbox}{\addrFull}
+\begin{bytefield}[bitwidth=1.6mm, bitheight=6mm]{32}
+  \bitheader[endianness=big]{0,3,4,7,8,31} \\
+  \bitbox{24}[bgcolor=blue!40]{\tiny tag} & \bitbox{4}[bgcolor=green!40]{\tiny set} & \bitbox{4}[bgcolor=yellow!40]{\tiny off}
+\end{bytefield}
+\end{lrbox}
+
 \begin{frame}{Q2a: Cache Directory Size}
 \begin{columns}[T]
 \column{0.60\textwidth}
 \textbf{Question:} How many bits in the cache directory?
 
-\textbf{Solution:}
+\uncover<2->{\textbf{Solution:}}
 \begin{itemize}
-    \item Cache size: 1KB = 1024 bytes
-    \item Block size: 16 bytes $\rightarrow$ 4 offset bits
-    \item Number of blocks: $\frac{1024}{16} = 64$ blocks
-    \item 4-way associative $\rightarrow$ 16 sets $\rightarrow$ 4 set bits
-    \item Tag bits: 32 - 4 (offset) - 4 (set) = 24 bits
-    \item Per line: 24 (tag) + 1 (valid) = 25 bits
-    \item No dirty bit (write-through)
-    \item No LRU bits (random replacement)
+    \item<2-> Cache size: 1KB = 1024 bytes
+    \item<2-> Block size: 16 bytes $\rightarrow$ 4 offset bits
+    \item<3-> Number of blocks: $\frac{1024}{16} = 64$ blocks
+    \item<3-> 4-way associative $\rightarrow$ 16 sets $\rightarrow$ 4 set bits
+    \item<4-> Tag bits: 32 - 4 (offset) - 4 (set) = 24 bits
+    \item<5-> Per line: 24 (tag) + 1 (valid) = 25 bits
+    \item<5-> No dirty bit (write-through)
+    \item<5-> No LRU bits (random replacement)
 \end{itemize}
 
-\textbf{Total:} $25 \times 4 \times 16 = 1600$ bits
+\uncover<5->{\textbf{Total:} $25 \times 4 \times 16 = \mathbf{1600}$ \textbf{bits}}
 
 \column{0.40\textwidth}
 \centering
 \textbf{Address Format:}
-\vspace{0.5cm}
+\vspace{0.3cm}
 
-\addressbreakdown{24}{4}{4}
+\only<1>{\usebox{\addrEmpty}}%
+\only<2>{\usebox{\addrOffset}}%
+\only<3>{\usebox{\addrSetOffset}}%
+\only<4->{\usebox{\addrFull}}
 \end{columns}
 \end{frame}
 
 \begin{frame}{Q2b: Number of Misses}
-\textbf{Question:} Maximum number of misses during execution?
+\textbf{Question:} Maximum number of misses during execution? What type are they?
 
 \textbf{Solution:}
 \begin{itemize}
@@ -1344,15 +1422,17 @@ for (int i=0; i<1024; i++)
 \end{itemize}
 
 
-\textbf{Result:} 
+\textbf{Result:}
 \begin{itemize}
-    \item 256 misses total
+    \item \textbf{256} misses total
     \item Miss rate = $\frac{256}{1024} = 0.25 = 25\%$
-    \item All are compulsory misses
+    \item All are \textbf{compulsory} misses
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Q2c: Effect of Alignment}
+\begin{columns}[T]
+\column{0.60\textwidth}
 \textbf{Question:} What if array is not aligned?
 
 \textbf{Answer:}
@@ -1361,17 +1441,22 @@ for (int i=0; i<1024; i++)
     \item Array might span 257 blocks instead of 256
     \item First block: partial use
     \item Last block: partial use
-    \item Maximum misses: 257 (one extra)
+    \item Maximum misses: 257 \textbf{(one extra)}
 \end{itemize}
 
-\begin{center}
-\begin{tcolorbox}[colback=red!10, width=0.8\textwidth]
+\begin{tcolorbox}[colback=red!10]
 Alignment matters for cache performance!
 \end{tcolorbox}
-\end{center}
+
+\column{0.40\textwidth}
+\centering
+\usebox{\QTwoCode}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Q2d: No Write Allocate}
+\begin{columns}[T]
+\column{0.60\textwidth}
 \textbf{Question:} How many blocks transferred if using no-write-allocate?
 
 Given: Variable i at address 0x00000100
@@ -1389,6 +1474,11 @@ Given: Variable i at address 0x00000100
 \end{itemize}
 
 \textbf{Result:} Only 1 block transferred to cache
+
+\column{0.40\textwidth}
+\centering
+\usebox{\QTwoCode}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Q2e: Locality Principles}
