@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, decorations.pathreplacing}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 \title{Multithreading and Power}
@@ -76,11 +76,14 @@ Dependencies reduce throughput/utilization
         column sep=1mm, row sep=1mm,
         ampersand replacement=\&] (m) {
         |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \\
-        |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \\
-        |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \\
-        \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \\
+        |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \\
+        |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \\
+        \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \\
     };
     \node[above=2mm of m.north] {Time $\longrightarrow$};
+    \draw[decorate, decoration={brace, amplitude=5pt, mirror}]
+        (m.north west) -- (m.south west)
+        node[midway, left=6pt, font=\small, align=center] {Issue\\Slots};
 \end{tikzpicture}
 \end{center}
 \end{columns}
@@ -95,6 +98,8 @@ Dependencies, cache misses, and branch mispredictions reduce throughput/utilizat
 \begin{frame}{Blocked Multithreading}
 \framesubtitle{Switch on Event}
 
+\begin{columns}
+\column{0.45\textwidth}
 \begin{itemize}
     \item Switch threads when current thread encounters low utilization event
     \item Examples of switching events:
@@ -105,17 +110,60 @@ Dependencies, cache misses, and branch mispredictions reduce throughput/utilizat
     \item May increase utilization and throughput
 \end{itemize}
 
+\column{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.5,
+    T0/.style={fill=red!70},
+    T1/.style={fill=green!70},
+    T2/.style={fill=blue!70}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=6mm, anchor=center},
+        column sep=1mm, row sep=1mm,
+        ampersand replacement=\&] (m) {
+        |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& \phantom{X} \& |[T2]| \phantom{X} \& |[T2]| \phantom{X} \& |[T2]| \phantom{X} \\
+        |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& \phantom{X} \& |[T2]| \phantom{X} \& |[T2]| \phantom{X} \& \phantom{X} \\
+        |[T0]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[T1]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[T2]| \phantom{X} \& \phantom{X} \& \phantom{X} \\
+        \phantom{X} \& \phantom{X} \& \phantom{X} \& |[T1]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \\
+    };
+    \node[above=2mm of m.north] {Time $\longrightarrow$};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+
 \begin{block}{Benefit}
 Hides long latency events by switching to another thread
 \end{block}
 \end{frame}
 
 \begin{frame}{Fine Grained Multithreading}
+\begin{columns}
+\column{0.45\textwidth}
 \begin{itemize}
     \item Switch threads frequently (e.g., every cycle)
     \item Reduces impact of dependencies
     \item Better latency hiding than blocked multithreading
 \end{itemize}
+
+\column{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.5,
+    T0/.style={fill=blue!70},
+    T1/.style={fill=yellow!70},
+    T2/.style={fill=green!70},
+    T3/.style={fill=red!70}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=6mm, anchor=center},
+        column sep=1mm, row sep=1mm,
+        ampersand replacement=\&] (m) {
+        |[T0]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T3]| \phantom{X} \& |[T0]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T3]| \phantom{X} \& |[T0]| \phantom{X} \\
+        |[T0]| \phantom{X} \& |[T1]| \phantom{X} \& \phantom{X} \& |[T3]| \phantom{X} \& \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T3]| \phantom{X} \& \phantom{X} \\
+        |[T0]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[T3]| \phantom{X} \& \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T3]| \phantom{X} \& \phantom{X} \\
+        \phantom{X} \& \phantom{X} \& \phantom{X} \& |[T3]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& |[T3]| \phantom{X} \& \phantom{X} \\
+    };
+    \node[above=2mm of m.north] {Time $\longrightarrow$};
+\end{tikzpicture}
+\end{center}
+\end{columns}
 
 \begin{block}{Key Advantage}
 Increases utilization/throughput by reducing impact of dependencies
