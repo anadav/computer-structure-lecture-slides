@@ -1357,10 +1357,12 @@ def handle_protection_violation(vaddr, access):
 
 % Tag from address to all TLB comparators (from top with slight offset)
 \foreach \way in {0,...,1} {
-    \draw[arrow, blue] (vtag.south) 
+    \coordinate (tlbtagjunc-\way) at ([xshift={-1mm + 0.3*\way}, yshift=3mm]tlbcomp-\way.north);
+    \draw[arrow, blue] (vtag.south)
         |- ([xshift=5mm, yshift=-2mm] vtag.south west)
-        |- ([xshift={-1mm + 0.3*\way}, yshift=3mm]tlbcomp-\way.north)
+        |- (tlbtagjunc-\way)
         -- ([xshift={-1mm + 0.3*\way}]tlbcomp-\way.north);
+    \fill[blue] (tlbtagjunc-\way) circle (1pt);
 }
 
 % Page offset set to Cache (from left side - highlighted in orange)
@@ -1404,7 +1406,9 @@ def handle_protection_violation(vaddr, access):
 
 % Physical page# to all cache comparators (from top with slight offset)
 \foreach \way in {0,...,3} {
+    \coordinate (ppnturn-\way) at ([xshift={-1mm}]ccomp-\way.north |- ppn.east);
     \draw[arrow, blue, thick] (ppn.east) -| ([xshift={-1mm}]ccomp-\way.north);
+    \fill[blue] (ppnturn-\way) circle (1pt);
 }
 
 % Selected cache row to comparators (consistent with TLB style)
@@ -3275,7 +3279,6 @@ Load & 1 GB & 8 & Full \\
 \bitbox{40}[bgcolor=addrcolor]{Physical Address}
 \bitbox{12}[bgcolor=flagcolor]{Flags}
 \end{bytefield}
-{\tiny\hspace{0.5em}XD \hspace{2.8em} rsvd}
 
 \vspace{5mm}
 \textbf{PKRU Register (user-space):}\vspace{3mm}
