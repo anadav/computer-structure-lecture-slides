@@ -82,9 +82,13 @@
             \node[sectionlabel] at (set.center) {set};
         \fi
 
-        % Add bit numbers below
-        \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {\setstart};
-        \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {\setend};
+        % Add bit numbers below - only one number if single bit
+        \ifnum#3=1
+            \node[bitnumber] at ($(set.south) + (0mm,-1mm)$) {\setstart};
+        \else
+            \node[bitnumber] at ($(set.south west) + (1mm,-1mm)$) {\setstart};
+            \node[bitnumber] at ($(set.south east) + (-1mm,-1mm)$) {\setend};
+        \fi
 
         \pgfmathsetmacro{\xpos}{\xpos + \setwidth}
     \fi
