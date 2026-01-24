@@ -807,8 +807,119 @@ Each set has 2 possible locations\\
 \end{center}
 \end{frame}
 
+\begin{frame}{2-Way Set Associative -- Mapping}
+\centering
+\begin{tikzpicture}[
+    basecell/.style={draw, thick, minimum height=0.38cm, font=\footnotesize, text depth=0.08cm, inner sep=1pt},
+    memblock/.style={basecell, minimum width=3.8cm, fill=white},
+    memhighlight00/.style={basecell, minimum width=3.8cm, fill=white, font=\footnotesize\bfseries},
+    memhighlight10/.style={basecell, minimum width=3.8cm, fill=white, font=\footnotesize\bfseries},
+    tagcell/.style={basecell, minimum width=1.0cm, fill=green!30},
+    datacell/.style={basecell, minimum width=1.2cm, fill=white},
+    setlabel/.style={font=\scriptsize\bfseries},
+    header/.style={font=\small\bfseries},
+    wayheader/.style={font=\footnotesize\bfseries},
+    dots/.style={font=\normalsize, minimum height=0.35cm},
+    waysize/.style={font=\scriptsize\bfseries, align=center},
+]
 
+% Memory blocks on the left
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        row sep=0mm,
+        nodes={memblock},
+        label={[header]above:Main Memory}
+] (mem) {
+    |[memhighlight00]| 0 (set = 00) \\
+    |[memblock]| {} \\
+    |[memhighlight10]| 2 (set = 10) \\
+    |[memblock]| {} \\
+    |[memhighlight00]| 4 (set = 00) \\
+    |[memblock]| {} \\
+    |[memhighlight10]| 6 (set = 10) \\
+    |[memblock]| {} \\
+    |[dots, fill=none, draw=none]| \vdots \\
+    |[memblock]| {} \\
+    |[memhighlight00]| 4n (set = 00) \\
+    |[memblock]| {} \\
+    |[memhighlight10]| 4n+2 (set = 10) \\
+};
 
+% Way Size brackets on the left
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+    ([xshift=-3mm]mem-1-1.north west) -- ([xshift=-3mm]mem-2-1.south west)
+    node[midway, left=5pt, waysize] {Way\\Size};
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+    ([xshift=-3mm]mem-5-1.north west) -- ([xshift=-3mm]mem-6-1.south west)
+    node[midway, left=5pt, waysize] {Way\\Size};
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+    ([xshift=-3mm]mem-11-1.north west) -- ([xshift=-3mm]mem-12-1.south west)
+    node[midway, left=5pt, waysize] {Way\\Size};
+
+% WAY 0 cache
+\node[wayheader, right=3.5cm of mem.north east, anchor=north] (way0title) {WAY 0};
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        below=1mm of way0title,
+        row sep=0mm,
+        column sep=0mm,
+        column 1/.style={nodes={setlabel, minimum width=0.6cm}},
+] (cache0) {
+    |[font=\scriptsize\bfseries, draw=none, fill=none]| Set\# \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Tag \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Data \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+};
+
+% WAY 1 cache
+\node[wayheader, right=30mm of way0title] (way1title) {WAY 1};
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        below=1mm of way1title,
+        row sep=0mm,
+        column sep=0mm,
+        column 1/.style={nodes={setlabel, minimum width=0.6cm}},
+] (cache1) {
+    |[font=\scriptsize\bfseries, draw=none, fill=none]| Set\# \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Tag \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Data \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+};
+
+% Arrows for set 10 - each block can go to either Way 0 or Way 1
+% Block 2 (black)
+\draw[->, thick] (mem-3-1.east) -- (cache0-4-2.west);
+\draw[->, thick] (mem-3-1.east) -- (cache1-4-2.west);
+% Block 6 (red)
+\draw[->, thick, red!70!black] (mem-7-1.east) -- (cache0-4-2.west);
+\draw[->, thick, red!70!black] (mem-7-1.east) -- (cache1-4-2.west);
+% Block 4n+2 (blue)
+\draw[->, thick, blue!70] (mem-13-1.east) -- (cache0-4-2.west);
+\draw[->, thick, blue!70] (mem-13-1.east) -- (cache1-4-2.west);
+
+% Set# labels with semi-transparent background (drawn on top of arrows)
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache0-2-1) {00};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache0-3-1) {01};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache0-4-1) {10};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache0-5-1) {11};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache1-2-1) {00};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache1-3-1) {01};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache1-4-1) {10};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache1-5-1) {11};
+
+% Label explaining the mapping
+\node[below=-2mm of mem, font=\footnotesize, align=center, text width=3.5cm] {Each block can map to\\one of K cache lines};
+
+% Advantages/Disadvantages
+\node[below=8mm of cache1, font=\footnotesize, align=left, anchor=north] (pros) {
+    \textcolor{green!50!black}{\textbf{+}} Balanced tradeoff\\
+    \textcolor{red!70!black}{\textbf{--}} Needs replacement policy
+};
+
+\end{tikzpicture}
+\end{frame}
 
 
 \subsection{Policies \& Miss Types}
