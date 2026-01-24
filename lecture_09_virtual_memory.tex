@@ -1213,10 +1213,10 @@ def handle_protection_violation(vaddr, access):
 \column{0.62\textwidth}
 \begin{tikzpicture}[
     node distance=5mm,
-    addr/.style={draw, rectangle, minimum height=0.35cm, inner sep=1pt, font=\tiny},
-    tlbcell/.style={draw, minimum width=4mm, minimum height=2mm, inner sep=0pt, font=\tiny},
-    cachecell/.style={draw, minimum width=4mm, minimum height=2mm, inner sep=0pt, font=\tiny},
-    comp/.style={circle, draw, inner sep=0pt, minimum size=3mm, font=\tiny},
+    addr/.style={draw, rectangle, minimum height=0.35cm, inner sep=1pt, font=\tiny, text depth=0pt},
+    tlbcell/.style={draw, minimum width=4mm, minimum height=2mm, inner sep=0pt, font=\tiny, text depth=0pt},
+    cachecell/.style={draw, minimum width=4mm, minimum height=2mm, inner sep=0pt, font=\tiny, text depth=0pt},
+    comp/.style={circle, draw, inner sep=0pt, minimum size=3mm, font=\tiny, text depth=0pt},
     label/.style={font=\tiny\bfseries},
     arrow/.style={->, >=latex},
     bgbox/.style={draw=none, rounded corners=2pt, inner sep=2pt}
@@ -1388,7 +1388,8 @@ def handle_protection_violation(vaddr, access):
     % Junction at the corner where wire turns into MUX
     \coordinate (tlbjunc-\way) at (tlbcomp-\way.south |- tlbmux.btpin \muxpin);
     \draw[arrow] (tlbcomp-\way.south) -- (tlbjunc-\way) -- (tlbmux.btpin \muxpin);
-    \draw[arrow] (tlbjunc-\way) |- (tlbor.bin \inputnum);
+    % Staggered route to OR gate
+    \draw[arrow] (tlbjunc-\way) -- ++(0,-1mm - \way*1mm) -| (tlbor.bin \inputnum);
     \fill (tlbjunc-\way) circle (1pt);
 }
 
@@ -1418,7 +1419,8 @@ def handle_protection_violation(vaddr, access):
     % Junction at the corner where wire turns into MUX
     \coordinate (cachejunc-\way) at (ccomp-\way.south |- cachemux.btpin \muxpin);
     \draw[arrow] (ccomp-\way.south) -- (cachejunc-\way) -- (cachemux.btpin \muxpin);
-    \draw[arrow] (cachejunc-\way) |- (cacheor.bin \orpin);
+    % Staggered route to OR gate
+    \draw[arrow] (cachejunc-\way) -- ++(0,-1mm - \way*1mm) -| (cacheor.bin \orpin);
     \fill (cachejunc-\way) circle (1pt);
 }
 
