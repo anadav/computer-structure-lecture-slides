@@ -845,15 +845,15 @@ Each set has 2 possible locations\\
     |[memblock]| {} \\
 };
 
-% Way Size brackets on the left
+% Way Size brackets on the left (spanning 4 rows each)
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
-    ([xshift=-3mm]mem-1-1.north west) -- ([xshift=-3mm]mem-2-1.south west)
+    ([xshift=-3mm]mem-1-1.north west) -- ([xshift=-3mm]mem-4-1.south west)
     node[midway, left=5pt, waysize] {Way\\Size};
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
-    ([xshift=-3mm]mem-5-1.north west) -- ([xshift=-3mm]mem-6-1.south west)
+    ([xshift=-3mm]mem-5-1.north west) -- ([xshift=-3mm]mem-8-1.south west)
     node[midway, left=5pt, waysize] {Way\\Size};
 \draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
-    ([xshift=-3mm]mem-10-1.north west) -- ([xshift=-3mm]mem-11-1.south west)
+    ([xshift=-3mm]mem-10-1.north west) -- ([xshift=-3mm]mem-13-1.south west)
     node[midway, left=5pt, waysize] {Way\\Size};
 
 % WAY 0 cache
@@ -889,15 +889,16 @@ Each set has 2 possible locations\\
 };
 
 % Arrows for set 10 - each block can go to either Way 0 or Way 1
+% Lines to Way 0 go straight, lines to Way 1 curve below both caches
 % Block 2 (black)
 \draw[->, thick] (mem-3-1.east) -- (cache0-4-2.west);
-\draw[->, thick] (mem-3-1.east) -- (cache1-4-2.west);
+\draw[->, thick] (mem-3-1.east) to[out=-15, in=180] ([yshift=-5mm]cache0.south) to[out=0, in=-160] (cache1-4-2.west);
 % Block 6 (red)
 \draw[->, thick, red!70!black] (mem-7-1.east) -- (cache0-4-2.west);
-\draw[->, thick, red!70!black] (mem-7-1.east) -- (cache1-4-2.west);
+\draw[->, thick, red!70!black] (mem-7-1.east) to[out=-10, in=180] ([yshift=-8mm]cache0.south) to[out=0, in=-170] (cache1-4-2.west);
 % Block 4n+2 (blue)
 \draw[->, thick, blue!70] (mem-12-1.east) -- (cache0-4-2.west);
-\draw[->, thick, blue!70] (mem-12-1.east) -- (cache1-4-2.west);
+\draw[->, thick, blue!70] (mem-12-1.east) to[out=-5, in=180] ([yshift=-11mm]cache0.south) to[out=0, in=-175] (cache1-4-2.west);
 
 % Set# labels with semi-transparent background (drawn on top of arrows)
 \node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache0-2-1) {00};
