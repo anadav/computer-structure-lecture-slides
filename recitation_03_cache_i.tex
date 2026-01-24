@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit, circuits.logic.US, matrix, backgrounds, shapes.callouts}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, patterns, fit, circuits.logic.US, matrix, backgrounds, shapes.callouts, decorations.pathreplacing}
 
 % Beamer overlay style for TikZ
 \tikzset{
@@ -214,7 +214,8 @@
 \tableofcontents
 \end{frame}
 
-\section{Introduction}
+\section{Cache Review}
+\subsection{Motivation \& Locality}
 \begin{frame}{The Problem}
 \begin{itemize}
     \item Memory access speed is slow relative to processor performance (up to 1000x slower)
@@ -234,7 +235,6 @@
 \end{itemize}
 \end{frame}
 
-\section{Locality Principles}
 \begin{frame}{Why Does Cache Work?}
 \begin{block}{Temporal Locality}
 \begin{itemize}
@@ -255,7 +255,7 @@
 \textbf{Amdahl's Law Reminder:} Optimize what happens most of the time!
 \end{frame}
 
-\section{Cache Terminology}
+\subsection{Terminology \& Organizations}
 \begin{frame}{Basic Terminology}
 \begin{itemize}
     \item \textbf{Hit:} Data appears at the memory level
@@ -266,7 +266,6 @@
 \end{itemize}
 \end{frame}
 
-\section{Cache Organizations}
 \begin{frame}{Fully Associative Organization}
 \begin{columns}
 \column{0.5\textwidth}
@@ -384,6 +383,79 @@
 \end{tikzpicture}
 \end{frame}
 
+\begin{frame}{Fully Associative -- Any-to-Any Mapping}
+\centering
+\begin{tikzpicture}[
+    basecell/.style={draw, thick, minimum height=0.38cm, font=\footnotesize, text depth=0.08cm, inner sep=1pt},
+    memblock/.style={basecell, minimum width=2.0cm, fill=white},
+    memhighlight/.style={basecell, minimum width=2.0cm, fill=gray!20, font=\footnotesize\bfseries},
+    tagcell/.style={basecell, minimum width=1.2cm, fill=green!30},
+    datacell/.style={basecell, minimum width=1.5cm, fill=white},
+    header/.style={font=\small\bfseries},
+    dots/.style={font=\normalsize, minimum height=0.35cm}
+]
+
+% Memory blocks on the left
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        row sep=0mm,
+        nodes={memblock},
+        label={[header]above:Main Memory}
+] (mem) {
+    Block 1 \\
+    Block 2 \\
+    |[memblock]| {} \\
+    |[memblock]| {} \\
+    |[memhighlight]| Block m \\
+    |[memblock]| {} \\
+    |[memblock]| {} \\
+    |[dots, fill=none, draw=none]| \vdots \\
+    |[memblock]| {} \\
+    |[memhighlight]| Block n \\
+    |[memblock]| {} \\
+};
+
+% Cache on the right
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        right=4cm of mem,
+        row sep=0mm,
+        column sep=0mm,
+        label={[header]above:Cache}
+] (cache) {
+    |[font=\scriptsize\bfseries, draw=none, fill=none]| Tag \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Data \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+    |[tagcell]| \& |[datacell]| \\
+};
+
+% Arrows from Block m (black) to ALL cache lines
+\foreach \i in {2,...,9} {
+    \draw[->, thick] (mem-5-1.east) -- (cache-\i-1.west);
+}
+
+% Arrows from Block n (red/magenta) to ALL cache lines
+\foreach \i in {2,...,9} {
+    \draw[->, thick, red!70!black] (mem-10-1.east) -- (cache-\i-1.west);
+}
+
+% Label explaining the mapping
+\node[below=6mm of mem, font=\footnotesize, align=center, text width=3cm] {Any block can map\\to any cache line};
+
+% Advantages/Disadvantages
+\node[below=6mm of cache, font=\footnotesize, align=left] (pros) {
+    \textcolor{green!50!black}{\textbf{+}} High hit rate\\
+    \textcolor{red!70!black}{\textbf{--}} Expensive hardware
+};
+
+\end{tikzpicture}
+\end{frame}
+
 \begin{frame}{Direct Mapping Organization}
 \begin{columns}
 \column{0.5\textwidth}
@@ -413,6 +485,98 @@ $3$ set bits $\Rightarrow 2^3 = 8$ sets\\
 $5$ offset bits $\Rightarrow 2^5 = 32$ bytes/block
 \end{tcolorbox}
 \end{columns}
+\end{frame}
+
+\begin{frame}{Direct Mapping -- Fixed Location per Block}
+\centering
+\begin{tikzpicture}[
+    basecell/.style={draw, thick, minimum height=0.38cm, font=\footnotesize, text depth=0.08cm, inner sep=1pt},
+    memblock/.style={basecell, minimum width=3.8cm, fill=white},
+    memhighlight00/.style={basecell, minimum width=3.8cm, fill=white, font=\footnotesize\bfseries},
+    memhighlight10/.style={basecell, minimum width=3.8cm, fill=white, font=\footnotesize\bfseries},
+    tagcell/.style={basecell, minimum width=1.2cm, fill=green!30},
+    datacell/.style={basecell, minimum width=1.5cm, fill=white},
+    setlabel/.style={font=\scriptsize\bfseries},
+    header/.style={font=\small\bfseries},
+    dots/.style={font=\normalsize, minimum height=0.35cm},
+    cachesize/.style={font=\scriptsize\bfseries, align=center},
+]
+
+% Memory blocks on the left
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        row sep=0mm,
+        nodes={memblock},
+        label={[header]above:Main Memory}
+] (mem) {
+    |[memhighlight00]| block 0 (set = 00) \\
+    |[memblock]| {} \\
+    |[memhighlight10]| block 2 (set = 10) \\
+    |[memblock]| {} \\
+    |[memhighlight00]| block 4 (set = 00) \\
+    |[memblock]| {} \\
+    |[memhighlight10]| block 6 (set = 10) \\
+    |[memblock]| {} \\
+    |[dots, fill=none, draw=none]| \vdots \\
+    |[memblock]| {} \\
+    |[memhighlight00]| block 4n (set = 00) \\
+    |[memblock]| {} \\
+    |[memhighlight10]| block 4n+2 (set = 10) \\
+};
+
+% Cache Size brackets on the left
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+    ([xshift=-3mm]mem-1-1.north west) -- ([xshift=-3mm]mem-4-1.south west)
+    node[midway, left=5pt, cachesize] {Cache\\Size};
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+    ([xshift=-3mm]mem-5-1.north west) -- ([xshift=-3mm]mem-8-1.south west)
+    node[midway, left=5pt, cachesize] {Cache\\Size};
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+    ([xshift=-3mm]mem-10-1.north west) -- ([xshift=-3mm]mem-13-1.south west)
+    node[midway, left=5pt, cachesize] {Cache\\Size};
+
+% Cache on the right
+\matrix[matrix of nodes,
+        ampersand replacement=\&,
+        right=4cm of mem,
+        row sep=0mm,
+        column sep=0mm,
+        column 1/.style={nodes={setlabel, minimum width=0.8cm}},
+        label={[header]above:Cache}
+] (cache) {
+    |[font=\scriptsize\bfseries, draw=none, fill=none]| Set\# \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Tag \& |[font=\scriptsize\bfseries, draw=none, fill=none]| Data \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+    |[draw=none, fill=none]| \& |[tagcell]| \& |[datacell]| \\
+};
+
+% Arrows for set 00 (black) - blocks 0, 4, 4n all go to cache row 00
+\draw[->, thick] (mem-1-1.east) -- (cache-2-2.west);
+\draw[->, thick] (mem-5-1.east) -- (cache-2-2.west);
+\draw[->, thick] (mem-11-1.east) -- (cache-2-2.west);
+
+% Arrows for set 10 (red) - blocks 2, 6, 4n+2 all go to cache row 10
+\draw[->, thick, red!70!black] (mem-3-1.east) -- (cache-4-2.west);
+\draw[->, thick, red!70!black] (mem-7-1.east) -- (cache-4-2.west);
+\draw[->, thick, red!70!black] (mem-13-1.east) -- (cache-4-2.west);
+
+% Set# labels with semi-transparent background (drawn on top of arrows)
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache-2-1) {00};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache-3-1) {01};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache-4-1) {10};
+\node[font=\scriptsize\bfseries, fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt] at (cache-5-1) {11};
+
+% Label explaining the mapping
+\node[below=-2mm of mem, font=\footnotesize, align=center, text width=3.5cm] {Each block maps to\\exactly one cache line};
+
+% Advantages/Disadvantages
+\node[below=6mm of cache, font=\footnotesize, align=left] (pros) {
+    \textcolor{green!50!black}{\textbf{+}} Simple \& cheap\\
+    \textcolor{red!70!black}{\textbf{--}} Conflicts $\to$ higher miss rate
+};
+
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{K-Way Set Associative Organization}
@@ -647,7 +811,7 @@ Each set has 2 possible locations\\
 
 
 
-\section{Replacement Policies}
+\subsection{Policies \& Miss Types}
 \begin{frame}{Eviction Policies}
 When cache is full and we need to bring in a new block, which block should be evicted?
 
@@ -671,7 +835,6 @@ When cache is full and we need to bring in a new block, which block should be ev
 Note: Direct mapped caches don't need replacement policy!
 \end{frame}
 
-\section{Write Policies}
 \begin{frame}{Write Back Policy}
 \vspace{-0.3cm}
 \begin{itemize}
@@ -1119,7 +1282,6 @@ Block is fetched to cache before writing; evicted blocks marked 'I' (invalid), d
 Write goes directly to next level; L1 cache is not modified
 \end{frame}
 
-\section{Types of Misses}
 \begin{frame}{Three Types of Cache Misses}
 \begin{enumerate}
     \item \textbf{Compulsory (Cold) Misses}
@@ -1144,9 +1306,7 @@ Write goes directly to next level; L1 cache is not modified
 \end{enumerate}
 \end{frame}
 
-\section{Question 4: LRU Implementation}
-
-\section{Cache Performance Metrics}
+\subsection{Performance Metrics}
 \begin{frame}{Cache Performance Metrics}
 \textbf{Important Formulas:}
 \begin{itemize}
@@ -1597,7 +1757,7 @@ B1 & \textcolor{violet}{11} & 0x\textcolor{violet}{3}0000000 - 0x\textcolor{viol
 \end{tcolorbox}
 \end{frame}
 
-\section{Summary}
+\section{Question 4: LRU Implementation}
 \begin{frame}{Q4a: LRU Implementation -- How Many Bits?}
 \begin{columns}[T]
 \column{0.55\textwidth}
@@ -1634,9 +1794,10 @@ B1 & \textcolor{violet}{11} & 0x\textcolor{violet}{3}0000000 - 0x\textcolor{viol
     \only<2->{Hit way 2:} \& |[alt=<3->{way2}{way}]| \only<3->{10} \& |[alt=<3->{way1}{way}]| \only<3->{01} \& |[alt=<3->{way0}{way}]| \only<3->{00} \& |[alt=<3->{way3}{way}]| \only<3->{11} \\
     \only<3->{Hit way 3:} \& |[alt=<4->{way3}{way}]| \only<4->{11} \& |[alt=<4->{way2}{way}]| \only<4->{10} \& |[alt=<4->{way1}{way}]| \only<4->{01} \& |[alt=<4->{way0}{way}]| \only<4->{00} \\
 };
-% Headers
-\node[header, above=3mm of m-1-2] {MRU};
-\node[header, above=3mm of m-1-5] {LRU};
+% Headers with arrow
+\node[header, above=3mm of m-1-2] (mruhead) {MRU};
+\node[header, above=3mm of m-1-5] (lruhead) {LRU};
+\draw[->, thick] (mruhead) -- (lruhead);
 
 % On slide 5+: highlight that rightmost is evicted on miss
 \only<5->{
@@ -1689,9 +1850,10 @@ B1 & \textcolor{violet}{11} & 0x\textcolor{violet}{3}0000000 - 0x\textcolor{viol
     Hit way 2: \& |[way2]| 10 \& |[way1]| 01 \& |[way0]| 00 \& |[way3]| 11 \\
     Hit way 3: \& |[way3]| 11 \& |[way2]| 10 \& |[way1]| 01 \& |[way0]| 00 \\
 };
-% Headers
-\node[header, above=3mm of m-1-2] {MRU};
-\node[header, above=3mm of m-1-5] {LRU};
+% Headers with arrow
+\node[header, above=3mm of m-1-2] (mruhead) {MRU};
+\node[header, above=3mm of m-1-5] (lruhead) {LRU};
+\draw[->, thick] (mruhead) -- (lruhead);
 
 % Highlight: rightmost is evicted on miss
 \node[fit=(m-1-5)(m-4-5), draw=red, thick, rounded corners, inner sep=2pt,
@@ -1703,6 +1865,8 @@ B1 & \textcolor{violet}{11} & 0x\textcolor{violet}{3}0000000 - 0x\textcolor{viol
 \end{tikzpicture}
 \end{columns}
 \end{frame}
+
+\section{Summary}
 \begin{frame}{Cache Design Trade-offs}
 \begin{table}
 \centering
