@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 \title{Multithreading and Power}
@@ -53,6 +53,8 @@ Dependencies reduce throughput/utilization
 \end{frame}
 
 \begin{frame}{Superscalar Execution}
+\begin{columns}
+\column{0.45\textwidth}
 \begin{itemize}
     \item Multiple instructions per cycle
     \item Out-of-order execution capabilities
@@ -64,9 +66,28 @@ Dependencies reduce throughput/utilization
     \end{itemize}
 \end{itemize}
 
-\begin{block}{Impact}
-These factors reduce throughput/utilization even in superscalar processors
-\end{block}
+\column{0.55\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.5,
+    filled/.style={fill=red!70},
+    empty/.style={}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=6mm, anchor=center},
+        column sep=1mm, row sep=1mm,
+        ampersand replacement=\&] (m) {
+        |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \\
+        |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \\
+        |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \\
+        \phantom{X} \& \phantom{X} \& |[filled]| \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \& \phantom{X} \\
+    };
+    \node[above=2mm of m.north] {Time $\longrightarrow$};
+\end{tikzpicture}
+\end{center}
+\end{columns}
+
+\begin{alertblock}{Key Issue}
+Dependencies, cache misses, and branch mispredictions reduce throughput/utilization
+\end{alertblock}
 \end{frame}
 
 \section{Multithreading Approaches}
@@ -607,18 +628,33 @@ where $N$ = number of cores, $F$ = frequency, IPC = instructions per cycle
     \draw[->] (0,0) -- (6,0) node[right] {Freq};
     \draw[->] (0,0) -- (0,5) node[above] {Power};
 
-    % Draw power curve - orange, steeper cubic relationship
-    \draw[thick, orange!80!red, line width=1.2pt] (0.5,0.5) .. controls (1.2,0.6) and (2,0.9) .. (5.5,4.5);
+    % Define point coordinates
+    \coordinate (Pn) at (1,0.6);
+    \coordinate (P2) at (2.5,1.2);
+    \coordinate (P1) at (3.8,2.5);
+    \coordinate (P0) at (5,4.2);
 
-    % Mark points from bottom to top
-    \node[circle,fill=black,inner sep=3pt,label=left:$P_n$] at (1,0.6) {};
-    \node[circle,fill=black,inner sep=3pt,label=left:$P_2$] at (2.5,1.2) {};
-    \node[circle,fill=black,inner sep=3pt,label=left:$P_1$] at (3.8,2.5) {};
-    \node[circle,fill=black,inner sep=3pt,label=left:$P_0$] at (5,4.2) {};
+    % Draw curved segments between points (orange/red)
+    \draw[thick, orange!80!red, line width=1.2pt] (Pn) .. controls (1.6,0.75) and (2,0.95) .. (P2);
+    \draw[thick, orange!80!red, line width=1.2pt] (P2) .. controls (3,1.6) and (3.4,2.1) .. (P1);
+    \draw[thick, orange!80!red, line width=1.2pt] (P1) .. controls (4.2,3.1) and (4.6,3.7) .. (P0);
 
-    % Arrow and annotation for P1 to P0
-    \draw[<->,blue,thick] (3.8,2.5) -- (5,4.2);
-    \node[right,align=left,font=\scriptsize] at (5.2,3.3) {$\sim$3X};
+    % Mark points with black circles
+    \foreach \p in {Pn,P2,P1,P0} {
+        \node[circle,fill=black,inner sep=3pt] at (\p) {};
+    }
+
+    % Labels for points
+    \node[below left] at (Pn) {\textbf{Pn}};
+    \node[right] at (P2) {\textbf{P2}};
+    \node[above left] at (P1) {\textbf{P1}};
+    \node[above] at (P0) {\textbf{P0}};
+
+    % Horizontal arrow (X) from P1 rightward, vertical arrow (~3X) up to P0
+    \draw[<->,thick] (P1) -- (P0 |- P1);
+    \node[below] at ($(P1)!0.5!(P0 |- P1)$) {X};
+    \draw[<->,thick] (P0 |- P1) -- (P0);
+    \node[right] at ($(P0 |- P1)!0.5!(P0)$) {$\sim$3X};
 \end{tikzpicture}
 
 \column{0.55\textwidth}

@@ -754,14 +754,14 @@ Physical address $=$ (PFN $\ll$ 9) $|$ offset $=$ (0x0001C0 $\ll$ 9) $|$ 0x100 $
   % Virtual Address
   \matrix[matrix of nodes, nodes={addrfield}, column sep=-\pgflinewidth,
           ampersand replacement=\&] (vaddr) {
-    |[fill=vpncolor, minimum width=2.5cm]| VPN (n-q bits) \&
+    |[fill=vpncolor, minimum width=3.2cm]| VPN (n-q bits) \&
     |[fill=offsetcolor, minimum width=2.5cm]| Page Offset (q bits) \\
   };
   \node[lbl, right=3mm of vaddr] {Virtual Address};
 
-  % Physical Address
+  % Physical Address - anchor east to align Page Offset fields
   \matrix[matrix of nodes, nodes={addrfield}, column sep=-\pgflinewidth,
-          below=8mm of vaddr, ampersand replacement=\&] (paddr) {
+          anchor=north east, ampersand replacement=\&] (paddr) at ([yshift=-8mm]vaddr.south east) {
     |[fill=pfncolor, minimum width=2.5cm]| PFN (m-q bits) \&
     |[fill=offsetcolor, minimum width=2.5cm]| Page Offset (q bits) \\
   };
