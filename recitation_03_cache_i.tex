@@ -1304,6 +1304,8 @@ for (int i=0; i<1024; i++)
 \end{frame}
 
 \begin{frame}{Q2a: Cache Directory Size}
+\begin{columns}[T]
+\column{0.60\textwidth}
 \textbf{Question:} How many bits in the cache directory?
 
 \textbf{Solution:}
@@ -1314,12 +1316,19 @@ for (int i=0; i<1024; i++)
     \item 4-way associative $\rightarrow$ 16 sets $\rightarrow$ 4 set bits
     \item Tag bits: 32 - 4 (offset) - 4 (set) = 24 bits
     \item Per line: 24 (tag) + 1 (valid) = 25 bits
-    \item No dirty bit (write-through), No LRU bits (random)
+    \item No dirty bit (write-through)
+    \item No LRU bits (random replacement)
 \end{itemize}
 
-\addressbreakdown{24}{4}{4}
-
 \textbf{Total:} $25 \times 4 \times 16 = 1600$ bits
+
+\column{0.40\textwidth}
+\centering
+\textbf{Address Format:}
+\vspace{0.5cm}
+
+\addressbreakdown{24}{4}{4}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Q2b: Number of Misses}
@@ -1439,12 +1448,13 @@ Given: Variable i at address 0x00000100
 \begin{center}
 \begin{tabular}{|c|c|c|}
 \hline
+\rowcolor{gray!30}
 \textbf{Segment} & \textbf{Bits [29:28]} & \textbf{Address Range} \\
 \hline
-A0 & 00 & 0x00000000 - 0x0FFFFFFF \\
-B0 & 01 & 0x10000000 - 0x1FFFFFFF \\
-A1 & 10 & 0x20000000 - 0x2FFFFFFF \\
-B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
+A0 & \textcolor{red}{00} & 0x\textcolor{red}{0}0000000 - 0x\textcolor{red}{0}FFFFFFF \\
+B0 & \textcolor{blue}{01} & 0x\textcolor{blue}{1}0000000 - 0x\textcolor{blue}{1}FFFFFFF \\
+A1 & \textcolor{green!70!black}{10} & 0x\textcolor{green!70!black}{2}0000000 - 0x\textcolor{green!70!black}{2}FFFFFFF \\
+B1 & \textcolor{violet}{11} & 0x\textcolor{violet}{3}0000000 - 0x\textcolor{violet}{3}FFFFFFF \\
 \hline
 \end{tabular}
 \end{center}
@@ -1518,12 +1528,13 @@ B1 & 11 & 0x30000000 - 0x3FFFFFFF \\
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
+\rowcolor{gray!30}
 \textbf{Address} & \textbf{Segment} & \textbf{Bit 28} & \textbf{Maps to Set} \\
 \hline
-\texttt{0x05000010} & A0 & 0 & 0-3 (A sets) \\
-\texttt{0x12345678} & B0 & 0 & 4-7 (B sets) \\
-\texttt{0x25000000} & A1 & 1 & 0-3 (A sets) \\
-\texttt{0x3ABCDEF0} & B1 & 1 & 4-7 (B sets) \\
+\texttt{0x\textcolor{red}{0}5000010} & \textcolor{red}{A0} & 0 & 0-3 (A sets) \\
+\texttt{0x\textcolor{blue}{1}2345678} & \textcolor{blue}{B0} & 1 & 4-7 (B sets) \\
+\texttt{0x\textcolor{green!70!black}{2}5000000} & \textcolor{green!70!black}{A1} & 0 & 0-3 (A sets) \\
+\texttt{0x\textcolor{violet}{3}ABCDEF0} & \textcolor{violet}{B1} & 1 & 4-7 (B sets) \\
 \hline
 \end{tabular}
 \end{center}
