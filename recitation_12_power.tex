@@ -23,7 +23,7 @@
 \tableofcontents
 \end{frame}
 
-\section{Introduction to Execution Models}
+\section{Execution Models and Multithreading}
 
 \begin{frame}{Scalar Execution}
 \begin{itemize}
@@ -34,16 +34,16 @@
 
 \vspace{0.5cm}
 \begin{center}
-\begin{tikzpicture}[scale=0.8]
-    \node at (0,0.5) {Time $\rightarrow$};
-    \foreach \x in {0,0.8,1.6,2.4,3.2,4.0,4.8,5.6,6.4} {
-        \pgfmathparse{int(mod(\x/0.8,2))}
-        \ifnum\pgfmathresult=0
-            \fill[red!70] (\x,0) rectangle (\x+0.7,-0.5);
-        \else
-            \draw (\x,0) rectangle (\x+0.7,-0.5);
-        \fi
-    }
+\begin{tikzpicture}[scale=0.5,
+    filled/.style={fill=red!70},
+    empty/.style={fill=white}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=6mm, anchor=center},
+        column sep=1mm, row sep=1mm,
+        ampersand replacement=\&] (m) {
+        |[filled]| \phantom{X} \& |[filled]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[filled]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[filled]| \phantom{X} \& |[filled]| \phantom{X} \\
+    };
+    \node[above=2mm of m.north] {Time $\longrightarrow$};
 \end{tikzpicture}
 \end{center}
 
@@ -92,8 +92,6 @@ Dependencies reduce throughput/utilization
 Dependencies, cache misses, and branch mispredictions reduce throughput/utilization
 \end{alertblock}
 \end{frame}
-
-\section{Multithreading Approaches}
 
 \begin{frame}{Blocked Multithreading}
 \framesubtitle{Switch on Event}
@@ -271,6 +269,7 @@ Increases utilization/throughput by reducing impact of dependencies, cache misse
 \begin{frame}{Q1a: IPC Equation Development}
 \textbf{Question:} Develop an equation for IPC as a function of running threads (N)
 
+\pause
 \vspace{3mm}
 
 \begin{block}{CPI per Thread}
@@ -292,6 +291,7 @@ $$IPC = \frac{N}{CPI_i + \frac{Q}{M}}$$
 \begin{frame}{Q1b: Best Achievable Performance}
 \textbf{Question:} What is the best achievable performance?
 
+\pause
 \vspace{2mm}
 
 \textbf{Maximum IPC when memory latencies are fully hidden:}
@@ -330,6 +330,7 @@ $$IPC_{Max} = IPC_{ideal}$$
 \begin{frame}{Q1c: Minimum Threads for Maximum Performance}
 \textbf{Question:} How many threads are needed to achieve maximum performance?
 
+\pause
 \vspace{3mm}
 
 Starting from the IPC equation:
@@ -380,9 +381,8 @@ $$N1 = 1 + \frac{Q}{M \cdot CPI_i}$$
 \begin{frame}{Q3a: L1 Cache Addition}
 \textbf{Improvement Proposal:} Add L1 cache with 0 cycles access time
 
-\begin{block}{Modified IPC with Cache}
+\textbf{Modified IPC with Cache:}
 $$IPC = \frac{N}{CPI_i + k \cdot \frac{Q}{M}} \quad \text{where } k = \text{miss rate (k = 1} \rightarrow \text{100\% miss rate)}$$
-\end{block}
 
 \textbf{Question:} What cache hit rate provides maximum performance with $N_1/2$ threads?
 \begin{align*}
@@ -769,9 +769,9 @@ where $N$ = number of cores, $F$ = frequency, IPC = instructions per cycle
     \node[above] at (P0) {\textbf{P0}};
 
     % Horizontal arrow (X) from P1 rightward, vertical arrow (~3X) up to P0
-    \draw[<->,thick] (P1) -- (P0 |- P1);
+    \draw[->,thick] (P1) -- (P0 |- P1);
     \node[below] at ($(P1)!0.5!(P0 |- P1)$) {X};
-    \draw[<->,thick] (P0 |- P1) -- (P0);
+    \draw[->,thick] (P0 |- P1) -- (P0);
     \node[right] at ($(P0 |- P1)!0.5!(P0)$) {$\sim$3X};
 \end{tikzpicture}
 
