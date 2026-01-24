@@ -1224,15 +1224,15 @@ def handle_protection_violation(vaddr, access):
 
 % Virtual Address at top - using current page as reference
 \node[addr, fill=blue!20, minimum width=3cm] (vpn) at (current page.center) {Virtual Page Number};
-\node[addr, fill=yellow!20, minimum width=1.5cm, right=0pt of vpn] (poffset) {Page offset};
+\node[addr, fill=yellow!20, minimum width=1.5cm, right=0pt of vpn] (poffset) {Page Offset};
 
-% Tag and Set below VPN
-\node[addr, fill=green!20, minimum width=2cm, below=3mm of vpn.west, anchor=west] (vtag) {Tag};
-\node[addr, fill=cyan!20, minimum width=1cm, right=0pt of vtag] (vset) {Set};
+% TLB Tag and TLB Set below VPN
+\node[addr, fill=green!20, minimum width=2cm, below=3mm of vpn.west, anchor=west] (vtag) {TLB Tag};
+\node[addr, fill=cyan!20, minimum width=1cm, right=0pt of vtag] (vset) {TLB Set};
 
-% Set# and disp below page offset - as a breakdown of page offset (slightly lower)
-\node[addr, fill=cyan!10, minimum width=0.75cm, below=5mm of poffset.west, anchor=west] (pset) {set};
-\node[addr, fill=gray!10, minimum width=0.75cm, right=0pt of pset] (pdisp) {disp};
+% $set and $disp below page offset - as a breakdown of page offset (slightly lower)
+\node[addr, fill=cyan!10, minimum width=0.75cm, below=5mm of poffset.west, anchor=west] (pset) {\$set};
+\node[addr, fill=gray!10, minimum width=0.75cm, right=0pt of pset] (pdisp) {\$disp};
 
 % TLB Structure
 % TLB Set decoder - positioned below vset
@@ -1381,11 +1381,15 @@ def handle_protection_violation(vaddr, access):
     \draw[arrow] ([xshift=1mm, yshift=-1mm]tlbtag-1-\way.south -| tlbcomp-\way.north) -- ([xshift=1mm]tlbcomp-\way.north);
 }
 
-% Comparator outputs to OR gate for hit detection
+% Comparator outputs to OR gate for hit detection (swapped pins)
 \foreach \way in {0,...,1} {
-    \pgfmathtruncatemacro{\inputnum}{1 + \way}
-    \draw[arrow] (tlbcomp-\way.south) -- ++(0,-0.1) -| (tlbor.bin \inputnum);
-    \draw[arrow] (tlbcomp-\way.south) |- (tlbmux.btpin \inputnum);
+    \pgfmathtruncatemacro{\inputnum}{2 - \way}
+    \pgfmathtruncatemacro{\muxpin}{1 + \way}
+    % Junction at the corner where wire turns into MUX
+    \coordinate (tlbjunc-\way) at (tlbcomp-\way.south |- tlbmux.btpin \muxpin);
+    \draw[arrow] (tlbcomp-\way.south) -- (tlbjunc-\way) -- (tlbmux.btpin \muxpin);
+    \draw[arrow] (tlbjunc-\way) |- (tlbor.bin \inputnum);
+    \fill (tlbjunc-\way) circle (1pt);
 }
 
 % TLB values to mux - from same row as tag outputs, straight down
@@ -1407,17 +1411,15 @@ def handle_protection_violation(vaddr, access):
     \draw[arrow] ([xshift=1mm, yshift=-1mm]ctag-1-\way.south -| ccomp-\way.north) -- ([xshift=1mm]ccomp-\way.north);
 }
 
-% Cache comparator outputs to OR gate for hit detection (staggered to avoid overlaps)
+% Cache comparator outputs to OR gate and MUX (with junction dots at turn points)
 \foreach \way in {0,...,3} {
-    \pgfmathtruncatemacro{\inputnum}{4 - \way}
-    \pgfmathsetmacro{\yoffset}{-1 - \way}  % Start at -3mm, each subsequent 1mm lower
-    \draw[arrow] (ccomp-\way.south) -- ++(0,\yoffset mm) -| (cacheor.bin \inputnum);
-}
-
-% Cache comparator outputs to displacement MUX control
-\foreach \way in {0,...,3} {
-    \pgfmathtruncatemacro{\inputnum}{1 + \way}
-    \draw[arrow] (ccomp-\way.south) |- (cachemux.btpin \inputnum);
+    \pgfmathtruncatemacro{\orpin}{4 - \way}
+    \pgfmathtruncatemacro{\muxpin}{1 + \way}
+    % Junction at the corner where wire turns into MUX
+    \coordinate (cachejunc-\way) at (ccomp-\way.south |- cachemux.btpin \muxpin);
+    \draw[arrow] (ccomp-\way.south) -- (cachejunc-\way) -- (cachemux.btpin \muxpin);
+    \draw[arrow] (cachejunc-\way) |- (cacheor.bin \orpin);
+    \fill (cachejunc-\way) circle (1pt);
 }
 
 % Cache data to mux - from same row as tag outputs, straight down
