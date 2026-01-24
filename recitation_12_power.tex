@@ -8,7 +8,7 @@
 \usepackage{ragged2e}
 \usepackage{bytefield}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, decorations.pathreplacing}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, tikzmark, shapes.misc, matrix, decorations.pathreplacing, backgrounds}
 \usepackage{tcolorbox}
 \usetheme{Madrid}
 \title{Multithreading and Power}
@@ -171,28 +171,44 @@ Increases utilization/throughput by reducing impact of dependencies
 \end{frame}
 
 \begin{frame}{Simultaneous Multithreading (SMT)}
-\begin{columns}
-\column{0.5\textwidth}
-\begin{itemize}
-    \item Multiple threads execute simultaneously
-    \item Shares execution resources
-    \item Best utilization of resources
-\end{itemize}
-
-\column{0.5\textwidth}
-\begin{block}{Benefits}
-\begin{itemize}
-    \item Reduces impact of dependencies
-    \item Hides cache misses
-    \item Masks branch mispredictions
-\end{itemize}
-\end{block}
-\end{columns}
-
-\vspace{0.5cm}
 \begin{center}
-\textbf{Pipeline:} In-order fetch/decode/rename $\rightarrow$ Out-Of-Order Execution $\rightarrow$ In-order Retire
+\begin{tikzpicture}[scale=0.5,
+    T0/.style={fill=blue!70},
+    T1/.style={fill=yellow!70},
+    T2/.style={fill=green!70},
+    T3/.style={fill=red!70},
+    empty/.style={fill=white}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=6mm, anchor=center},
+        column sep=1mm, row sep=1mm,
+        ampersand replacement=\&] (m) {
+        |[T0]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T1]| \phantom{X} \& |[T3]| \phantom{X} \& |[T3]| \phantom{X} \& |[T1]| \phantom{X} \& |[T3]| \phantom{X} \& |[T0]| \phantom{X} \\
+        |[T0]| \phantom{X} \& |[T1]| \phantom{X} \& |[T3]| \phantom{X} \& |[T0]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[empty]| \phantom{X} \\
+        |[T0]| \phantom{X} \& |[empty]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[T0]| \phantom{X} \& |[T3]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[empty]| \phantom{X} \\
+        |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[T1]| \phantom{X} \& |[T2]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \\
+    };
+    \node[above=2mm of m.north] {Time $\longrightarrow$};
+
+    % Pipeline stage labels (as nodes for positioning)
+    \node[font=\tiny, align=center, text depth=0.5ex] (label1) at ([yshift=-10mm]$(m-4-1.south)!0.5!(m-4-3.south)$) {In-order\\fetch/decode/rename};
+    \node[font=\tiny, align=center, text depth=0.5ex] (label2) at ([yshift=-10mm]$(m-4-4.south)!0.5!(m-4-6.south)$) {Out-Of-Order\\Execution};
+    \node[font=\tiny, align=center, text depth=0.5ex] (label3) at ([yshift=-10mm]$(m-4-7.south)!0.5!(m-4-9.south)$) {In-order\\Retire};
+
+    % Common bottom coordinate for all backgrounds
+    \coordinate (bgbottom) at ([yshift=-2mm]label1.south);
+
+    % Background shading for pipeline stages (behind the matrix, extending to labels)
+    \begin{scope}[on background layer]
+        \fill[blue!15] ([xshift=-3mm,yshift=3mm]m-1-1.north west) rectangle ([xshift=0.5mm]m-4-3.south east |- bgbottom);
+        \fill[orange!15] ([xshift=-0.5mm,yshift=3mm]m-1-4.north west) rectangle ([xshift=0.5mm]m-4-6.south east |- bgbottom);
+        \fill[green!15] ([xshift=-0.5mm,yshift=3mm]m-1-7.north west) rectangle ([xshift=3mm]m-4-9.south east |- bgbottom);
+    \end{scope}
+\end{tikzpicture}
 \end{center}
+
+\begin{alertblock}{Key Benefit}
+Increases utilization/throughput by reducing impact of dependencies, cache misses, and branch mispredictions
+\end{alertblock}
 \end{frame}
 
 \section{Performance Analysis}
