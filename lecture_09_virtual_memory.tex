@@ -2837,13 +2837,13 @@ Load & 1 GB & 8 & Full \\
 \begin{column}{0.5\textwidth}
 \textbf{Problem:} TLB flush on every context switch
 \begin{itemize}
-\item Lose all cached translations $\rightarrow$ cold TLB
+\item Cached translations lost $\rightarrow$ cold TLB
 \end{itemize}
 
 \textbf{Solution: Address Space ID (ASID)}
 \begin{itemize}
-\item Tags TLB entries with process context
-\item Lookup requires VA match AND ASID match
+\item Tags TLB entries with process ID
+\item Lookup: VA + ASID must match
 \item No flush on context switch
 \end{itemize}
 
@@ -2856,32 +2856,22 @@ Load & 1 GB & 8 & Full \\
 \end{column}
 
 \begin{column}{0.5\textwidth}
-\textbf{x86: PCID in CR3 (CR4.PCIDE=1)}
-\begin{center}
-\begin{tikzpicture}
-    % CR3 register
-    \draw[thick] (0,0) rectangle (5,0.5);
-    \fill[green!20] (0,0) rectangle (4,0.5);
-    \fill[blue!20] (4,0) rectangle (5,0.5);
+\textbf{x86: PCID in CR3 (CR4.PCIDE=1)}\vspace{4mm}
 
-    % Bit positions
-    \node[above, font=\tiny] at (0,0.5) {63};
-    \node[above, font=\tiny] at (4,0.5) {12};
-    \node[above, font=\tiny] at (5,0.5) {0};
+\begin{bytefield}[bitwidth=\dimexpr\linewidth/64\relax, endianness=big, boxformatting={\centering\tiny}]{64}
+\bitheader{63,12,0} \\
+\bitbox{52}[bgcolor=green!20]{PML4 Base (4KB aligned)}
+\bitbox{12}[bgcolor=blue!20]{PCID}
+\end{bytefield}
 
-    % Labels
-    \node[font=\tiny] at (2,0.25) {PML4 Base (4KB aligned)};
-    \node[font=\tiny] at (4.5,0.25) {PCID};
+\vspace{4mm}
+\textbf{ARM: ASID in TTBR0\_EL1}\vspace{4mm}
 
-    % PCID note
-    \node[below, font=\tiny] at (4.5,-0.1) {12-bit};
-\end{tikzpicture}
-\end{center}
-
-\textbf{ARM: ASID in TTBR0\_EL1}
-\begin{itemize}
-\item 8-bit or 16-bit ASID field
-\end{itemize}
+\begin{bytefield}[bitwidth=\dimexpr\linewidth/64\relax, endianness=big, boxformatting={\centering\tiny}]{64}
+\bitheader{63,48,0} \\
+\bitbox{16}[bgcolor=blue!20]{ASID}
+\bitbox{48}[bgcolor=green!20]{Translation Table Base}
+\end{bytefield}
 \end{column}
 \end{columns}
 \end{frame}
@@ -3155,44 +3145,44 @@ Load & 1 GB & 8 & Full \\
 \small
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\textbf{INVLPGB (AMD) / TLBSYNC:}
-\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
+\textbf{INVLPGB (AMD) / TLBSYNC:}\vspace{-2mm}
+\begin{itemize}\setlength\itemsep{0pt}
 \item Broadcast invalidation without IPIs
 \item Hardware handles coherency protocol
 \item Non-blocking for initiator
 \end{itemize}
 
-\textbf{How it works:}
-\begin{enumerate}[topsep=0pt]\setlength\itemsep{0pt}
+\textbf{How it works:}\vspace{-2mm}
+\begin{enumerate}\setlength\itemsep{0pt}
 \item Execute INVLPGB with address range
 \item Hardware broadcasts to all cores
 \item TLBSYNC waits for completion
 \end{enumerate}
 
-\textbf{ARM: TLBI with broadcast}
-\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
+\textbf{ARM: TLBI with broadcast}\vspace{-2mm}
+\begin{itemize}\setlength\itemsep{0pt}
 \item Inner Shareable scope $\rightarrow$ auto-broadcast
 \item No software IPIs needed
 \end{itemize}
 \end{column}
 
 \begin{column}{0.52\textwidth}
-\textbf{Benefits:}
-\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
+\textbf{Benefits:}\vspace{-2mm}
+\begin{itemize}\setlength\itemsep{0pt}
 \item No IPI overhead (no context switches)
 \item Better scalability with core count
 \item Lower latency for munmap(), mprotect()
 \end{itemize}
 
-\textbf{Limitations:}
-\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
+\textbf{Limitations:}\vspace{-2mm}
+\begin{itemize}\setlength\itemsep{0pt}
 \item \textbf{All-or-nothing}: cannot skip idle CPUs
 \item Software IPIs allow selective targeting
 \item ASID reuse requires global flush
 \end{itemize}
 
-\textbf{When broadcast wins:}
-\begin{itemize}[topsep=0pt]\setlength\itemsep{0pt}
+\textbf{When broadcast wins:}\vspace{-2mm}
+\begin{itemize}\setlength\itemsep{0pt}
 \item JVM GC (unmapping large heaps)
 \item Database buffer pool resizing
 \item High core count systems (>32 cores)
@@ -3206,22 +3196,22 @@ Load & 1 GB & 8 & Full \\
 \begin{column}{0.5\textwidth}
 \textbf{Motivation:}
 \begin{itemize}\setlength\itemsep{0pt}
-\item OS needs to know: which pages are in use? which were modified?
-\item \textbf{Page replacement}: evict ``cold'' pages (LRU approximation)
-\item \textbf{Write-back}: only write dirty pages to disk
+\item OS needs to know: which pages in use? modified?
+\item Page replacement: evict ``cold'' pages
+\item Write-back: only write dirty pages to disk
 \end{itemize}
 
-\textbf{Mechanism:}
+\textbf{HW Mechanism:}
 \begin{itemize}\setlength\itemsep{0pt}
-\item \textbf{Accessed (A)}: Set by HW on any access
-\item \textbf{Dirty (D)}: Set by HW on write
-\item Both are ``sticky'' -- only SW can clear
-\item HW sets bits via \textbf{atomic} read-modify-write to PTE
+\item \textbf{Accessed (A)}: Set on any access
+\item \textbf{Dirty (D)}: Set on write
+\item Both ``sticky'' -- only SW can clear
+\item Set via \textbf{atomic} RMW to PTE
 \end{itemize}
 
 \textbf{In Page Table Hierarchy:}
 \begin{itemize}\setlength\itemsep{0pt}
-\item A-bit: Set at \textbf{all levels} (PML4, PDP, PDE, PTE)
+\item A-bit: Set at \textbf{all levels}
 \item D-bit: Set only at \textbf{leaf level}
 \end{itemize}
 \end{column}
@@ -3229,29 +3219,18 @@ Load & 1 GB & 8 & Full \\
 \begin{column}{0.5\textwidth}
 \textbf{TLB Behavior:}
 \begin{itemize}\setlength\itemsep{0pt}
-\item A-bit: Often \textbf{not cached} in TLB
-  \begin{itemize}\scriptsize
-  \item Once in TLB, assumed accessed
-  \end{itemize}
-\item D-bit: \textbf{Cached} in TLB entry
-  \begin{itemize}\scriptsize
-  \item Avoids memory write on every store
-  \end{itemize}
+\item A-bit: Often \textbf{not cached} (assumed accessed once in TLB)
+\item D-bit: \textbf{Cached} in TLB (avoids memory write on every store)
 \end{itemize}
 
 \textbf{TLB Flush After Clearing A/D:}
 \begin{itemize}\setlength\itemsep{0pt}
 \item After clearing bits in PTE, must flush TLB
-\item \textbf{A-bit}: OS may skip flush
-  \begin{itemize}\scriptsize
-  \item Missing some accesses is acceptable for LRU
-  \end{itemize}
-\item \textbf{D-bit}: Must \textbf{always} flush
-  \begin{itemize}\scriptsize
-  \item Correctness! Missing dirty $\rightarrow$ data loss
-  \end{itemize}
+\item \textbf{A-bit}: OS may skip flush (approx. OK for LRU)
+\item \textbf{D-bit}: Must \textbf{always} flush (correctness!)
 \end{itemize}
 
+\vspace{2mm}
 \fcolorbox{red!50}{red!10}{\parbox{0.95\linewidth}{\scriptsize A-bit flush = optimization; D-bit flush = correctness}}
 \end{column}
 \end{columns}
