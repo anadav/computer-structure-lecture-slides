@@ -216,59 +216,54 @@ Increases utilization/throughput by reducing impact of dependencies, cache misse
 \subsection{Question 1: Switch-on-Event Analysis}
 
 \begin{frame}{Q1: Switch-on-Event Analysis}
-\begin{columns}
-\column{0.5\textwidth}
 \textbf{Given Parameters:}
 \begin{itemize}
-    \item M instructions execute with cache access
-    \item Cache miss takes Q cycles
-    \item Thread switch on cache miss (event)
-    \item $CPI_{ideal}$ when Thread 0 runs
+    \item Every M-th instruction is a memory access
+    \item Memory access takes Q cycles
+    \item Thread switch cost is zero
+    \item Given $CPI_{ideal}$
     \item N threads available
 \end{itemize}
 
-\column{0.5\textwidth}
-\textbf{Analysis:}
-\begin{itemize}
-    \item Each memory access: Q cycles
-    \item Memory access every M instructions
-    \item Context switch overhead considered
-\end{itemize}
-\end{columns}
-
-\vspace{3mm}
+\vspace{2mm}
 \begin{center}
-\begin{tikzpicture}[scale=0.4,
-    T0/.style={fill=blue!70},
-    T1/.style={fill=red!70},
-    empty/.style={fill=white}]
+\begin{tikzpicture}[scale=0.45,
+    T0/.style={fill=blue!70, text=white, font=\tiny\bfseries},
+    T1/.style={fill=red!70, text=white, font=\tiny\bfseries},
+    empty/.style={fill=white},
+    bracelabel/.style={font=\scriptsize, text depth=0.5ex}]
     \matrix[matrix of nodes,
-        nodes={draw=black, minimum size=5mm, anchor=center},
+        nodes={draw=black, minimum size=6mm, anchor=center},
         column sep=0.5mm, row sep=0mm,
         ampersand replacement=\&] (m) {
-        |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \&
-        |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \&
-        |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \&
-        |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \\
+        |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \&
+        |[T1]| $T_1$ \& |[T1]| $T_1$ \& |[T1]| $T_1$ \& |[T1]| $T_1$ \& |[T1]| $T_1$ \&
+        |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \&
+        |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \\
     };
 
-    % Braces and labels above
+    % Braces and labels above for execution
     \draw[decorate, decoration={brace, amplitude=4pt}]
-        (m-1-1.north west) -- (m-1-6.north east)
-        node[midway, above=4pt, font=\scriptsize, blue!70!black] {Execution: M instructions};
+        (m-1-1.north west) -- (m-1-5.north east)
+        node[midway, above=4pt, bracelabel] {M instructions};
     \draw[decorate, decoration={brace, amplitude=4pt}]
-        (m-1-7.north west) -- (m-1-12.north east)
-        node[midway, above=4pt, font=\scriptsize, red!70!black] {Execution: M instructions};
+        (m-1-6.north west) -- (m-1-10.north east)
+        node[midway, above=4pt, bracelabel] {M instructions};
     \draw[decorate, decoration={brace, amplitude=4pt}]
-        (m-1-13.north west) -- (m-1-16.north east)
-        node[midway, above=4pt, font=\scriptsize] {Memory: Q cycles};
+        (m-1-11.north west) -- (m-1-13.north east)
+        node[midway, above=4pt, bracelabel] {Idle};
     \draw[decorate, decoration={brace, amplitude=4pt}]
-        (m-1-17.north west) -- (m-1-22.north east)
-        node[midway, above=4pt, font=\scriptsize, blue!70!black] {Execution: M instructions};
+        (m-1-14.north west) -- (m-1-18.north east)
+        node[midway, above=4pt, bracelabel] {M instructions};
+
+    % Brace below for Q cycles (memory access time for T_0)
+    \draw[decorate, decoration={brace, amplitude=4pt, mirror}]
+        (m-1-5.south east) -- (m-1-14.south west)
+        node[midway, below=4pt, bracelabel, blue!70!black] {$T_0$ memory access: Q cycles};
 
     % Switch on event arrow
-    \draw[->, thick] ([yshift=-3mm]$(m-1-6.south)!0.5!(m-1-7.south)$) -- ([yshift=-10mm]$(m-1-6.south)!0.5!(m-1-7.south)$)
-        node[below, font=\scriptsize] {Switch on event};
+    \draw[->, thick] ([yshift=-3mm]$(m-1-5.south)!0.5!(m-1-6.south)$) -- ([yshift=-12mm]$(m-1-5.south)!0.5!(m-1-6.south)$)
+        node[below, font=\scriptsize] {Switch};
 \end{tikzpicture}
 \end{center}
 \end{frame}
@@ -297,12 +292,35 @@ $$IPC = \frac{N}{CPI_i + \frac{Q}{M}}$$
 \begin{frame}{Q1b: Best Achievable Performance}
 \textbf{Question:} What is the best achievable performance?
 
-\vspace{3mm}
+\vspace{2mm}
 
 \textbf{Maximum IPC when memory latencies are fully hidden:}
 \begin{itemize}
-    \item Achieved when: No memory accesses OR all latencies masked by other threads
+    \item Achieved when all latencies are masked by other threads
 \end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.45,
+    T0/.style={fill=blue!70, text=white, font=\tiny\bfseries},
+    T1/.style={fill=red!70, text=white, font=\tiny\bfseries},
+    T2/.style={fill=green!70, text=white, font=\tiny\bfseries},
+    bracelabel/.style={font=\scriptsize, text depth=0.5ex}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=6mm, anchor=center},
+        column sep=0.5mm, row sep=0mm,
+        ampersand replacement=\&] (m) {
+        |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \&
+        |[T1]| $T_1$ \& |[T1]| $T_1$ \& |[T1]| $T_1$ \& |[T1]| $T_1$ \& |[T1]| $T_1$ \&
+        |[T2]| $T_2$ \& |[T2]| $T_2$ \& |[T2]| $T_2$ \& |[T2]| $T_2$ \& |[T2]| $T_2$ \&
+        |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \& |[T0]| $T_0$ \\
+    };
+
+    % Brace below for Q cycles (memory access time for T_0)
+    \draw[decorate, decoration={brace, amplitude=4pt, mirror}]
+        (m-1-5.south east) -- (m-1-16.south west)
+        node[midway, below=4pt, bracelabel, blue!70!black] {$T_0$ memory access: Q cycles (fully hidden)};
+\end{tikzpicture}
+\end{center}
 
 \begin{alertblock}{Maximum IPC}
 $$IPC_{Max} = IPC_{ideal}$$
