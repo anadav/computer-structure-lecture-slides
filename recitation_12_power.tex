@@ -235,6 +235,42 @@ Increases utilization/throughput by reducing impact of dependencies, cache misse
     \item Context switch overhead considered
 \end{itemize}
 \end{columns}
+
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}[scale=0.4,
+    T0/.style={fill=blue!70},
+    T1/.style={fill=red!70},
+    empty/.style={fill=white}]
+    \matrix[matrix of nodes,
+        nodes={draw=black, minimum size=5mm, anchor=center},
+        column sep=0.5mm, row sep=0mm,
+        ampersand replacement=\&] (m) {
+        |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \&
+        |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \& |[T1]| \phantom{X} \&
+        |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \& |[empty]| \phantom{X} \&
+        |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \& |[T0]| \phantom{X} \\
+    };
+
+    % Braces and labels above
+    \draw[decorate, decoration={brace, amplitude=4pt}]
+        (m-1-1.north west) -- (m-1-6.north east)
+        node[midway, above=4pt, font=\scriptsize, blue!70!black] {Execution: M instructions};
+    \draw[decorate, decoration={brace, amplitude=4pt}]
+        (m-1-7.north west) -- (m-1-12.north east)
+        node[midway, above=4pt, font=\scriptsize, red!70!black] {Execution: M instructions};
+    \draw[decorate, decoration={brace, amplitude=4pt}]
+        (m-1-13.north west) -- (m-1-16.north east)
+        node[midway, above=4pt, font=\scriptsize] {Memory: Q cycles};
+    \draw[decorate, decoration={brace, amplitude=4pt}]
+        (m-1-17.north west) -- (m-1-22.north east)
+        node[midway, above=4pt, font=\scriptsize, blue!70!black] {Execution: M instructions};
+
+    % Switch on event arrow
+    \draw[->, thick] ([yshift=-3mm]$(m-1-6.south)!0.5!(m-1-7.south)$) -- ([yshift=-10mm]$(m-1-6.south)!0.5!(m-1-7.south)$)
+        node[below, font=\scriptsize] {Switch on event};
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{Q1a: IPC Equation Development}
